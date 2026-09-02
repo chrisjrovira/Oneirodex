@@ -1,5 +1,5 @@
 """
-Unit tests for gametheca.routes_apis.admin_search
+Unit tests for oneirodex.routes_apis.admin_search
 
 Tests the admin-only games search endpoint used by the Identify page's
 "link to existing library game" workflow.
@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from sqlalchemy import delete, text
 
-from gametheca.models import User, Game, Library, LibraryPlatform
+from oneirodex.models import User, Game, Library, LibraryPlatform
 
 
 @pytest.fixture

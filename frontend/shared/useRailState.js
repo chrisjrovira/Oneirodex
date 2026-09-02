@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-const STORAGE_KEY = 'gt-rail-state'
+const STORAGE_KEY = 'od-rail-state'
 const MOBILE_QUERY = '(max-width: 900px)'
 
 /**

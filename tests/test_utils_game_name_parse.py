@@ -6,7 +6,7 @@ Path fixtures use Y: / UNC / %TEMP% shapes — never Z: (NAS).
 
 import os
 
-from gametheca.utils.game_name_parse import (
+from oneirodex.utils.game_name_parse import (
     inject_franchise_apostrophes,
     is_bare_franchise,
     parse_game_label,
@@ -455,7 +455,7 @@ def test_strip_helpers_a9_a13_alone():
 # --- W22-M5 UPDATE packaging hints ---
 
 def test_bare_update_package_folder_detected():
-    from gametheca.utils.game_name_parse import (
+    from oneirodex.utils.game_name_parse import (
         detect_update_packaging,
         is_bare_update_package,
     )
@@ -496,7 +496,7 @@ def test_trailing_update_sep_hint():
 
 
 def test_format_why_unmatched_update_package():
-    from gametheca.utils.match_proposal import format_why_unmatched
+    from oneirodex.utils.match_proposal import format_why_unmatched
 
     text = format_why_unmatched(
         status='Unmatched',

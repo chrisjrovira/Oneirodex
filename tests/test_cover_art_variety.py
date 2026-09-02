@@ -12,7 +12,7 @@ gating actually removed the furniture which used to appear on everything.
 
 import pytest
 
-from gametheca.utils.cover_art_studio import (
+from oneirodex.utils.cover_art_studio import (
     ART_DIRECTIONS,
     _title_seed,
     pick_art_direction,
@@ -75,7 +75,7 @@ def test_edge_owning_directions_skip_the_generic_bezel(direction):
     """
     import inspect
 
-    from gametheca.utils import cover_art_studio
+    from oneirodex.utils import cover_art_studio
 
     src = inspect.getsource(cover_art_studio.render_cover_art)
     assert "direction not in ('crt', 'boxart', 'marquee')" in src
@@ -86,7 +86,7 @@ def test_scanlines_are_limited_to_tube_era_directions():
     """Scanlines over a pixel mosaic or a retail box are wrong, and were global."""
     import inspect
 
-    from gametheca.utils import cover_art_studio
+    from oneirodex.utils import cover_art_studio
 
     src = inspect.getsource(cover_art_studio.render_cover_art)
     assert "direction in ('crt', 'marquee', 'neon')" in src

@@ -7,20 +7,20 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, GlobalSettings, Library, ScanJob, User, UserNotification
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_health import (
+from oneirodex.models import Game, GlobalSettings, Library, ScanJob, User, UserNotification
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_health import (
     PATH_STATUS_MISSING,
     PATH_STATUS_OK,
     path_health_fields,
 )
-from gametheca.utils.notifications import (
+from oneirodex.utils.notifications import (
     _flush_library_add_digest,
     _reset_library_add_digests_for_tests,
     notify_admins_new_game,
     schedule_library_add_digest,
 )
-from gametheca.utils.secondary_scrapers import game_card_flags
+from oneirodex.utils.secondary_scrapers import game_card_flags
 
 
 @pytest.fixture(autouse=True)
@@ -281,7 +281,7 @@ def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_
     "N games added" alerts with different Ns. Scan completion is the signal that
     was missing.
     """
-    from gametheca.utils.notifications import (
+    from oneirodex.utils.notifications import (
         _library_add_timers,
         flush_library_add_digest,
     )
@@ -323,7 +323,7 @@ def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_
 
 def test_flushing_an_idle_library_is_harmless(app, db_session, path_library):
     """Called at the end of every scan, including ones that added nothing."""
-    from gametheca.utils.notifications import flush_library_add_digest
+    from oneirodex.utils.notifications import flush_library_add_digest
 
     with app.app_context():
         flush_library_add_digest(path_library.uuid, app)
@@ -336,7 +336,7 @@ def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff,
     The five-second window is right for watch/import. During a scan it is how
     "12 games added" then "30 games added" happened for one library (UX-B7).
     """
-    from gametheca.utils.notifications import (
+    from oneirodex.utils.notifications import (
         _library_add_timers,
         flush_library_add_digest,
         schedule_library_add_digest,

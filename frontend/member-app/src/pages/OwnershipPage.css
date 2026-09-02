@@ -1,29 +1,29 @@
-.gt-ownership {
-  color: var(--gt-text);
+.od-ownership {
+  color: var(--od-text);
 }
 
-.gt-ownership__status {
-  margin-bottom: var(--gt-space-3, 0.75rem);
+.od-ownership__status {
+  margin-bottom: var(--od-space-3, 0.75rem);
 }
 
-.gt-ownership__empty {
-  margin: 0 0 var(--gt-space-2, 0.5rem);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+.od-ownership__empty {
+  margin: 0 0 var(--od-space-2, 0.5rem);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
 }
 
 /* Compact status strip: one tight card, stores as a dense grid, one footnote. */
-.gt-ownership__card {
+.od-ownership__card {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-2, 0.5rem);
+  gap: var(--od-space-2, 0.5rem);
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
 }
 
-.gt-ownership__card-head {
+.od-ownership__card-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -31,39 +31,39 @@
   gap: 0.35rem 0.75rem;
 }
 
-.gt-ownership__card-title {
+.od-ownership__card-title {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.2;
 }
 
-.gt-ownership__card-title strong {
+.od-ownership__card-title strong {
   font-weight: 600;
 }
 
-.gt-ownership__pill {
+.od-ownership__pill {
   display: inline-flex;
   align-items: center;
   padding: 0.05rem 0.35rem;
-  border-radius: var(--gt-radius-pill, 999px);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill, 999px);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
-.gt-ownership__card-counts {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+.od-ownership__card-counts {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
   white-space: nowrap;
 }
 
-.gt-ownership__store-grid {
+.od-ownership__store-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.2rem 0.75rem;
@@ -73,12 +73,12 @@
 }
 
 @media (max-width: 640px) {
-  .gt-ownership__store-grid {
+  .od-ownership__store-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.gt-ownership__store-row {
+.od-ownership__store-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
@@ -86,111 +86,111 @@
   row-gap: 0.05rem;
   min-width: 0;
   padding: 0.2rem 0;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   line-height: 1.25;
 }
 
-.gt-ownership__store-label {
+.od-ownership__store-label {
   grid-column: 1;
   font-weight: 600;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-ownership__store-state {
+.od-ownership__store-state {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   text-align: end;
   white-space: nowrap;
 }
 
-.gt-ownership__store-row[data-connected='1'] .gt-ownership__store-state {
-  color: var(--gt-accent);
+.od-ownership__store-row[data-connected='1'] .od-ownership__store-state {
+  color: var(--od-accent);
 }
 
-.gt-ownership__store-counts {
+.od-ownership__store-counts {
   grid-column: 1;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-ownership__card-note {
+.od-ownership__card-note {
   margin: 0;
   padding-top: 0.15rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+  border-top: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
   line-height: 1.35;
 }
 
-.gt-ownership__meta {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+.od-ownership__meta {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
 }
 
-.gt-ownership__section {
+.od-ownership__section {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
   padding: 1rem;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: var(--gt-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: var(--od-surface);
 }
 
-.gt-ownership__section h2 {
+.od-ownership__section h2 {
   margin: 0;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-ownership__section form {
+.od-ownership__section form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: flex-start;
 }
 
-.gt-ownership__section label {
+.od-ownership__section label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   width: 100%;
   max-width: 32rem;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
-.gt-ownership__section input[type='text'],
-.gt-ownership__section textarea {
+.od-ownership__section input[type='text'],
+.od-ownership__section textarea {
   padding: 0.5rem;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
-  background: var(--gt-surface);
-  color: var(--gt-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-surface);
+  color: var(--od-text);
   font: inherit;
 }
 
-.gt-ownership__actions {
+.od-ownership__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.gt-ownership__message[data-tone='error'] {
-  color: var(--gt-accent);
+.od-ownership__message[data-tone='error'] {
+  color: var(--od-accent);
 }
 
-.gt-ownership__message[data-tone='ok'] {
-  color: var(--gt-text);
+.od-ownership__message[data-tone='ok'] {
+  color: var(--od-text);
 }
 
 /* Shown when no store is chosen. A short line rather than an empty area, so
    the page says what the bar above it is for. */
-.gt-ownership__hint {
+.od-ownership__hint {
   margin: 0.9rem 0 0;
   padding: 0.75rem 0.85rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px dashed color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  color: var(--gt-text-muted);
+  border-radius: var(--od-radius-md);
+  border: 1px dashed color-mix(in srgb, var(--od-accent) 35%, transparent);
+  color: var(--od-text-muted);
 }

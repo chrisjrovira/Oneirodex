@@ -30,7 +30,7 @@ describe('SystemBackdrop', () => {
     expect(
       container.querySelector('[data-play-room="teen_bedroom_90s"]'),
     ).not.toBeNull()
-    expect(container.querySelector('.gt-system-backdrop__wall')).not.toBeNull()
+    expect(container.querySelector('.od-system-backdrop__wall')).not.toBeNull()
   })
 
   it('tags the console family so CSS can tint it', () => {
@@ -49,6 +49,6 @@ describe('SystemBackdrop', () => {
     const { container } = render(<SystemBackdrop platform="NES" label="NES" />)
     // The class carries pointer-events:none; assert it is applied so a refactor
     // that renames it fails here rather than silently blocking tile clicks.
-    expect(container.firstChild).toHaveClass('gt-system-backdrop')
+    expect(container.firstChild).toHaveClass('od-system-backdrop')
   })
 })

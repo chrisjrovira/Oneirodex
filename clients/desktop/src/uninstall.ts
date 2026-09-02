@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 
 import type { AuthStore } from './auth.js'
-import type { GamethecaClient } from './api.js'
+import type { OneirodexClient } from './api.js'
 import { isTauriRuntime } from './config-store.js'
 import { downloadGameArchive } from './download.js'
 import { extractInstallArchive, getInstallRecord } from './install.js'
@@ -62,7 +62,7 @@ export async function kickoffUninstall(
 }
 
 export async function kickoffUpdate(
-  api: GamethecaClient,
+  api: OneirodexClient,
   auth: AuthStore,
   registry: LifecycleRegistry,
   gameUuid: string,

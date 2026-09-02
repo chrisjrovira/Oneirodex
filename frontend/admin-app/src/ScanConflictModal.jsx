@@ -33,7 +33,7 @@ export function ScanConflictModal({
 
   return (
     <div
-      className="gt-scan-conflict"
+      className="od-scan-conflict"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -42,16 +42,16 @@ export function ScanConflictModal({
       }}
     >
       <div
-        className="gt-scan-conflict__panel"
+        className="od-scan-conflict__panel"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="gt-scan-conflict__toolbar">
-          <h2 id={titleId} className="gt-scan-conflict__title">
+        <div className="od-scan-conflict__toolbar">
+          <h2 id={titleId} className="od-scan-conflict__title">
             {title}
           </h2>
           <button
             type="button"
-            className="gt-scan-conflict__close"
+            className="od-scan-conflict__close"
             onClick={onClose}
             disabled={busy}
             aria-label="Close"
@@ -59,32 +59,32 @@ export function ScanConflictModal({
             ×
           </button>
         </div>
-        <p className="gt-scan-conflict__lede">{lede}</p>
-        <div className="gt-scan-conflict__choices">
+        <p className="od-scan-conflict__lede">{lede}</p>
+        <div className="od-scan-conflict__choices">
           <button
             ref={queueRef}
             type="button"
-            className="gt-btn gt-btn--primary gt-scan-conflict__choice"
+            className="od-btn od-btn--primary od-scan-conflict__choice"
             disabled={busy}
             onClick={() => onChoose?.(SCAN_QUEUE_POLICY.QUEUE)}
           >
             {SCAN_CONFLICT_COPY.queueLabel}
           </button>
-          <p className="gt-scan-conflict__hint">{SCAN_CONFLICT_COPY.queueHint}</p>
+          <p className="od-scan-conflict__hint">{SCAN_CONFLICT_COPY.queueHint}</p>
           <button
             type="button"
-            className="gt-btn gt-scan-conflict__choice gt-scan-conflict__choice--force"
+            className="od-btn od-scan-conflict__choice od-scan-conflict__choice--force"
             disabled={busy}
             onClick={() => onChoose?.(SCAN_QUEUE_POLICY.FORCE)}
           >
             {SCAN_CONFLICT_COPY.forceLabel}
           </button>
-          <p className="gt-scan-conflict__warn" role="note">
+          <p className="od-scan-conflict__warn" role="note">
             {SCAN_CONFLICT_COPY.forceWarning}
           </p>
         </div>
-        <div className="gt-scan-conflict__actions">
-          <button type="button" className="gt-btn" disabled={busy} onClick={onClose}>
+        <div className="od-scan-conflict__actions">
+          <button type="button" className="od-btn" disabled={busy} onClick={onClose}>
             {SCAN_CONFLICT_COPY.cancelLabel}
           </button>
         </div>

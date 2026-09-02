@@ -49,7 +49,7 @@ test('error is assertive, loading is polite', () => {
   const status = screen.getByRole('status')
   expect(status).toHaveAttribute('aria-busy', 'true')
   expect(status).toHaveAttribute('aria-live', 'polite')
-  expect(status).toHaveClass('gt-page-status--takeover')
+  expect(status).toHaveClass('od-page-status--takeover')
 })
 
 test('retry is offered only when there is something to retry', () => {
@@ -79,7 +79,7 @@ test('idle renders its children and nothing of its own', () => {
   )
 
   expect(screen.getByText('real content')).toBeInTheDocument()
-  expect(container.querySelector('.gt-page-status')).toBeNull()
+  expect(container.querySelector('.od-page-status')).toBeNull()
 })
 
 test('empty state is a status, and still renders children beneath it', () => {

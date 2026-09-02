@@ -299,20 +299,20 @@ export function CommandPalette({
       open={open}
       onOpenChange={setOpen}
       label="Command palette"
-      className="gt-cmdk"
-      overlayClassName="gt-cmdk__overlay"
-      contentClassName="gt-cmdk__content"
+      className="od-cmdk"
+      overlayClassName="od-cmdk__overlay"
+      contentClassName="od-cmdk__content"
       loop
     >
       <Command.Input
-        className="gt-cmdk__input"
+        className="od-cmdk__input"
         placeholder={libraryMode ? 'Search library…' : 'Search titles or pages…'}
         value={query}
         onValueChange={setQuery}
         autoFocus
       />
-      <Command.List className="gt-cmdk__list">
-        <Command.Empty className="gt-cmdk__empty">
+      <Command.List className="od-cmdk__list">
+        <Command.Empty className="od-cmdk__empty">
           {libraryStatus === 'loading'
             ? 'Searching library…'
             : libraryStatus === 'error'
@@ -323,7 +323,7 @@ export function CommandPalette({
         </Command.Empty>
 
         {recentTiles.length > 0 ? (
-          <Command.Group heading="Recent titles" className="gt-cmdk__group">
+          <Command.Group heading="Recent titles" className="od-cmdk__group">
             {recentTiles.map((hit) => {
               const uuid = hit.uuid
               const name = hit.name || 'Untitled'
@@ -332,11 +332,11 @@ export function CommandPalette({
                   key={`recent-${uuid}`}
                   value={`recent ${name} ${uuid}`}
                   keywords={[name, String(uuid)]}
-                  className="gt-cmdk__item"
+                  className="od-cmdk__item"
                   onSelect={() => openTitle(hit)}
                 >
-                  <span className="gt-cmdk__item-label">{name}</span>
-                  <span className="gt-cmdk__item-hint">{hit.hint || 'Played recently'}</span>
+                  <span className="od-cmdk__item-label">{name}</span>
+                  <span className="od-cmdk__item-hint">{hit.hint || 'Played recently'}</span>
                 </Command.Item>
               )
             })}
@@ -344,7 +344,7 @@ export function CommandPalette({
         ) : null}
 
         {popularTiles.length > 0 ? (
-          <Command.Group heading="Popular here" className="gt-cmdk__group">
+          <Command.Group heading="Popular here" className="od-cmdk__group">
             {popularTiles.map((hit) => {
               const uuid = hit.uuid
               const name = hit.name || 'Untitled'
@@ -353,11 +353,11 @@ export function CommandPalette({
                   key={`popular-${uuid}`}
                   value={`popular ${name} ${uuid}`}
                   keywords={[name, String(uuid)]}
-                  className="gt-cmdk__item"
+                  className="od-cmdk__item"
                   onSelect={() => openTitle(hit)}
                 >
-                  <span className="gt-cmdk__item-label">{name}</span>
-                  <span className="gt-cmdk__item-hint">{hit.hint || 'Favorited here'}</span>
+                  <span className="od-cmdk__item-label">{name}</span>
+                  <span className="od-cmdk__item-hint">{hit.hint || 'Favorited here'}</span>
                 </Command.Item>
               )
             })}
@@ -365,7 +365,7 @@ export function CommandPalette({
         ) : null}
 
         {showLibraryGroup && libraryHits.length > 0 ? (
-          <Command.Group heading="Search library" className="gt-cmdk__group">
+          <Command.Group heading="Search library" className="od-cmdk__group">
             {libraryHits.map((hit) => {
               const uuid = hit.uuid || hit.id
               const name = hit.name || 'Untitled'
@@ -374,11 +374,11 @@ export function CommandPalette({
                   key={`lib-${uuid}`}
                   value={`library ${name} ${uuid}`}
                   keywords={[name, String(uuid)]}
-                  className="gt-cmdk__item"
+                  className="od-cmdk__item"
                   onSelect={() => openTitle({ uuid, name })}
                 >
-                  <span className="gt-cmdk__item-label">{name}</span>
-                  <span className="gt-cmdk__item-hint">Open details</span>
+                  <span className="od-cmdk__item-label">{name}</span>
+                  <span className="od-cmdk__item-hint">Open details</span>
                 </Command.Item>
               )
             })}
@@ -386,20 +386,20 @@ export function CommandPalette({
         ) : null}
 
         {groups.map(([heading, items]) => (
-          <Command.Group key={heading} heading={heading} className="gt-cmdk__group">
+          <Command.Group key={heading} heading={heading} className="od-cmdk__group">
             {items.map((cmd) => (
               <Command.Item
                 key={cmd.id}
                 value={`${cmd.label} ${cmd.id}`}
                 keywords={[cmd.label, cmd.id, cmd.to, cmd.href].filter(Boolean)}
-                className="gt-cmdk__item"
+                className="od-cmdk__item"
                 onSelect={() => {
                   void runCommand(cmd)
                 }}
               >
-                <span className="gt-cmdk__item-label">{cmd.label}</span>
+                <span className="od-cmdk__item-label">{cmd.label}</span>
                 {cmd.to || cmd.href ? (
-                  <span className="gt-cmdk__item-hint">{cmd.to || cmd.href}</span>
+                  <span className="od-cmdk__item-hint">{cmd.to || cmd.href}</span>
                 ) : null}
               </Command.Item>
             ))}

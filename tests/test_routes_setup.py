@@ -4,9 +4,9 @@ from unittest.mock import patch, Mock, MagicMock
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from gametheca import create_app, db
-from gametheca.models import User, GlobalSettings, InviteToken, SystemEvents, DownloadRequest, Newsletter
-from gametheca.forms import SetupForm, IGDBSetupForm
+from oneirodex import create_app, db
+from oneirodex.models import User, GlobalSettings, InviteToken, SystemEvents, DownloadRequest, Newsletter
+from oneirodex.forms import SetupForm, IGDBSetupForm
 from sqlalchemy import select, delete
 
 
@@ -104,7 +104,7 @@ class TestSetupRoute:
         assert response.status_code == 200
         
         # Check that database setup step is set to 1
-        from gametheca.utils.setup import get_current_setup_step
+        from oneirodex.utils.setup import get_current_setup_step
         assert get_current_setup_step() == 1
     
     def test_setup_get_redirects_if_user_exists(self, client, admin_user, db_session):
@@ -124,7 +124,7 @@ class TestSetupRoute:
         assert response.status_code == 302
         assert '/login' in response.location
     
-    @patch('gametheca.routes_setup.render_template')
+    @patch('oneirodex.routes_setup.render_template')
     def test_setup_get_renders_template_when_no_user(self, mock_render, client, db_session):
         """Test GET /setup renders template when no users exist."""
         # Ensure no users exist for this test
@@ -160,8 +160,8 @@ class TestSetupSubmitRoute:
         assert response.status_code == 302
         assert '/login' in response.location
     
-    @patch('gametheca.routes_setup.SetupForm')
-    @patch('gametheca.routes_setup.log_system_event')
+    @patch('oneirodex.routes_setup.SetupForm')
+    @patch('oneirodex.routes_setup.log_system_event')
     def test_setup_submit_creates_admin_user_success(self, mock_log, mock_form_class, client, db_session):
         # Ensure no users exist for this test
         # Clean up database safely respecting foreign key constraints
@@ -176,7 +176,7 @@ class TestSetupSubmitRoute:
         mock_form.csrf_token.data = 'test-csrf-token'
         mock_form_class.return_value = mock_form
         
-        with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.flash') as mock_flash:
             response = client.post('/setup/submit', data={})
             
             assert response.status_code == 302
@@ -193,13 +193,13 @@ class TestSetupSubmitRoute:
             assert user.user_id is not None
             
             # Check database setup step was updated
-            from gametheca.utils.setup import get_current_setup_step
+            from oneirodex.utils.setup import get_current_setup_step
             assert get_current_setup_step() == 2
             
             mock_flash.assert_called_with('Admin account created successfully! Please configure your SMTP settings.', 'success')
             mock_log.assert_called_with("Admin account created during setup", event_type='setup', event_level='information')
     
-    @patch('gametheca.routes_setup.SetupForm')
+    @patch('oneirodex.routes_setup.SetupForm')
     def test_setup_submit_database_error(self, mock_form_class, client, db_session):
         # Ensure no users exist for this test
         # Clean up database safely respecting foreign key constraints
@@ -212,10 +212,10 @@ class TestSetupSubmitRoute:
         mock_form.password.data = 'password123'
         mock_form_class.return_value = mock_form
         
-        with patch('gametheca.routes_setup.db.session.add') as mock_add:
+        with patch('oneirodex.routes_setup.db.session.add') as mock_add:
             mock_add.side_effect = Exception('Database error')
-            with patch('gametheca.routes_setup.db.session.rollback') as mock_rollback:
-                with patch('gametheca.routes_setup.flash') as mock_flash:
+            with patch('oneirodex.routes_setup.db.session.rollback') as mock_rollback:
+                with patch('oneirodex.routes_setup.flash') as mock_flash:
                     response = client.post('/setup/submit', data={})
                     
                     assert response.status_code == 302
@@ -223,7 +223,7 @@ class TestSetupSubmitRoute:
                     mock_rollback.assert_called_once()
                     mock_flash.assert_called_with('Error during setup: Database error', 'error')
     
-    @patch('gametheca.routes_setup.SetupForm')
+    @patch('oneirodex.routes_setup.SetupForm')
     def test_setup_submit_form_validation_failed(self, mock_form_class, client, db_session):
         # Ensure no users exist for this test
         # Clean up database safely respecting foreign key constraints
@@ -235,7 +235,7 @@ class TestSetupSubmitRoute:
         mock_form.errors = {'email': ['Invalid email address'], 'password': ['Field must be at least 8 characters long']}
         mock_form_class.return_value = mock_form
         
-        with patch('gametheca.routes_setup.render_template') as mock_render:
+        with patch('oneirodex.routes_setup.render_template') as mock_render:
             mock_render.return_value = 'error template'
             response = client.post('/setup/submit', data={})
             
@@ -265,21 +265,21 @@ class TestSetupSmtpRoute:
         db_session.execute(delete(GlobalSettings))
         db_session.commit()
         
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(1)  # Should be 2 for SMTP setup
         
-        with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.flash') as mock_flash:
             response = client.get('/setup/smtp')
             
             assert response.status_code == 302
             assert '/setup' in response.location
             mock_flash.assert_called_with('Please complete the admin account setup first.', 'warning')
     
-    @patch('gametheca.routes_setup.render_template')
+    @patch('oneirodex.routes_setup.render_template')
     def test_setup_smtp_get_correct_step(self, mock_render, client, db_session, admin_user):
         """Test GET /setup/smtp renders template in correct step."""
         # Use existing admin_user fixture and set database to step 2
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(2)
         
         mock_render.return_value = 'smtp setup template'
@@ -291,12 +291,12 @@ class TestSetupSmtpRoute:
     def test_setup_smtp_post_skip_button(self, client, db_session, admin_user):
         """Test POST /setup/smtp with skip button."""
         # Use existing admin_user fixture and set database to step 2
-        from gametheca.utils.setup import set_setup_step, get_current_setup_step
+        from oneirodex.utils.setup import set_setup_step, get_current_setup_step
         set_setup_step(2)
         
         form_data = {'skip_smtp': 'true'}
         
-        with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.flash') as mock_flash:
             response = client.post('/setup/smtp', data=form_data)
             
             assert response.status_code == 302
@@ -307,11 +307,11 @@ class TestSetupSmtpRoute:
             
             mock_flash.assert_called_with('SMTP setup skipped. Choose which features to keep enabled.', 'info')
     
-    @patch('gametheca.routes_setup.log_system_event')
+    @patch('oneirodex.routes_setup.log_system_event')
     def test_setup_smtp_post_save_settings_success(self, mock_log, client, db_session, admin_user):
         """Test successful SMTP settings save."""
         # Use existing admin_user fixture and set database to step 2
-        from gametheca.utils.setup import set_setup_step, get_current_setup_step
+        from oneirodex.utils.setup import set_setup_step, get_current_setup_step
         set_setup_step(2)
         
         form_data = {
@@ -324,7 +324,7 @@ class TestSetupSmtpRoute:
             'smtp_enabled': 'true'
         }
         
-        with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.flash') as mock_flash:
             response = client.post('/setup/smtp', data=form_data)
             
             assert response.status_code == 302
@@ -343,7 +343,7 @@ class TestSetupSmtpRoute:
     def test_setup_smtp_post_database_error(self, client, db_session, admin_user):
         """Test database error during SMTP settings save."""
         # Use existing admin_user fixture and set database to step 2
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(2)
         
         form_data = {
@@ -351,9 +351,9 @@ class TestSetupSmtpRoute:
             'smtp_port': '587'
         }
         
-        with patch('gametheca.routes_setup.db.session.commit', side_effect=Exception('Database error')):
-            with patch('gametheca.routes_setup.db.session.rollback') as mock_rollback:
-                with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.db.session.commit', side_effect=Exception('Database error')):
+            with patch('oneirodex.routes_setup.db.session.rollback') as mock_rollback:
+                with patch('oneirodex.routes_setup.flash') as mock_flash:
                     response = client.post('/setup/smtp', data=form_data)
                     
                     assert response.status_code == 200  # Should render template again
@@ -371,21 +371,21 @@ class TestSetupIgdbRoute:
         db_session.execute(delete(GlobalSettings))
         db_session.commit()
         
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(2)  # Should be 4 for IGDB setup
         
-        with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.flash') as mock_flash:
             response = client.get('/setup/igdb')
             
             assert response.status_code == 302
             assert '/setup' in response.location
             mock_flash.assert_called_with('Please complete the previous setup steps first.', 'warning')
     
-    @patch('gametheca.routes_setup.render_template')
+    @patch('oneirodex.routes_setup.render_template')
     def test_setup_igdb_get_correct_step(self, mock_render, client, db_session, admin_user):
         """Test GET /setup/igdb renders template in correct step."""
         # Use existing admin_user fixture and set database to step 3
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         mock_render.return_value = 'igdb setup template'
@@ -399,20 +399,20 @@ class TestSetupIgdbRoute:
         assert isinstance(kwargs['form'], IGDBSetupForm)
         assert kwargs['is_setup_mode'] is True
     
-    @patch('gametheca.routes_setup.IGDBSetupForm')
-    @patch('gametheca.routes_setup.log_system_event')
-    @patch('gametheca.init_data.initialize_library_folders')
-    @patch('gametheca.init_data.initialize_discovery_sections')
-    @patch('gametheca.init_data.insert_default_scanning_filters')
-    @patch('gametheca.init_data.initialize_default_settings')
-    @patch('gametheca.init_data.initialize_allowed_file_types')
+    @patch('oneirodex.routes_setup.IGDBSetupForm')
+    @patch('oneirodex.routes_setup.log_system_event')
+    @patch('oneirodex.init_data.initialize_library_folders')
+    @patch('oneirodex.init_data.initialize_discovery_sections')
+    @patch('oneirodex.init_data.insert_default_scanning_filters')
+    @patch('oneirodex.init_data.initialize_default_settings')
+    @patch('oneirodex.init_data.initialize_allowed_file_types')
     def test_setup_igdb_post_success_complete_setup(self, mock_init_filetypes, mock_init_settings, 
                                                    mock_init_filters, mock_init_discovery, 
                                                    mock_init_folders, mock_log, mock_form_class, 
                                                    client, db_session, admin_user):
         """Test successful IGDB setup completing the entire setup process."""
         # Use existing admin_user fixture and set database to step 3
-        from gametheca.utils.setup import set_setup_step, get_current_setup_step, is_setup_required
+        from oneirodex.utils.setup import set_setup_step, get_current_setup_step, is_setup_required
         set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         # Mock the form
@@ -422,7 +422,7 @@ class TestSetupIgdbRoute:
         mock_form.igdb_client_secret.data = 'test_client_secret_12345'
         mock_form_class.return_value = mock_form
         
-        with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.flash') as mock_flash:
             response = client.post('/setup/igdb', data={})
             
             assert response.status_code == 302
@@ -445,11 +445,11 @@ class TestSetupIgdbRoute:
             mock_log.assert_called_with("IGDB settings configured - Setup completed", event_type='setup', event_level='information')
     
     
-    @patch('gametheca.routes_setup.IGDBSetupForm')
+    @patch('oneirodex.routes_setup.IGDBSetupForm')
     def test_setup_igdb_post_database_error(self, mock_form_class, client, db_session, admin_user):
         """Test database error during IGDB settings save."""
         # Use existing admin_user fixture and set database to step 3
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         mock_form = MagicMock()
@@ -458,20 +458,20 @@ class TestSetupIgdbRoute:
         mock_form.igdb_client_secret.data = 'test_client_secret_12345'
         mock_form_class.return_value = mock_form
         
-        with patch('gametheca.routes_setup.db.session.commit', side_effect=Exception('Database error')):
-            with patch('gametheca.routes_setup.db.session.rollback') as mock_rollback:
-                with patch('gametheca.routes_setup.flash') as mock_flash:
+        with patch('oneirodex.routes_setup.db.session.commit', side_effect=Exception('Database error')):
+            with patch('oneirodex.routes_setup.db.session.rollback') as mock_rollback:
+                with patch('oneirodex.routes_setup.flash') as mock_flash:
                     response = client.post('/setup/igdb', data={})
                     
                     assert response.status_code == 200  # Should render template again
                     mock_rollback.assert_called_once()
                     mock_flash.assert_called_with('Error saving IGDB settings: Database error', 'error')
     
-    @patch('gametheca.routes_setup.IGDBSetupForm')
+    @patch('oneirodex.routes_setup.IGDBSetupForm')
     def test_setup_igdb_post_form_validation_failed(self, mock_form_class, client, db_session, admin_user):
         """Test form validation failure."""
         # Use existing admin_user fixture and set database to step 3
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         mock_form = MagicMock()
@@ -479,7 +479,7 @@ class TestSetupIgdbRoute:
         mock_form.errors = {'igdb_client_id': ['Field must be between 20 and 50 characters']}
         mock_form_class.return_value = mock_form
         
-        with patch('gametheca.routes_setup.render_template') as mock_render:
+        with patch('oneirodex.routes_setup.render_template') as mock_render:
             mock_render.return_value = 'error template'
             response = client.post('/setup/igdb', data={})
             
@@ -503,11 +503,11 @@ class TestSetupWorkflow:
         assert response.status_code == 200
         
         # Check database setup step
-        from gametheca.utils.setup import get_current_setup_step
+        from oneirodex.utils.setup import get_current_setup_step
         assert get_current_setup_step() == 1
         
         # Step 2: POST /setup/submit with valid admin data
-        with patch('gametheca.routes_setup.SetupForm') as mock_form_class:
+        with patch('oneirodex.routes_setup.SetupForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.username.data = 'admin'
@@ -516,7 +516,7 @@ class TestSetupWorkflow:
             mock_form.csrf_token.data = 'test-token'
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_setup.log_system_event'):
+            with patch('oneirodex.routes_setup.log_system_event'):
                 response = client.post('/setup/submit', data={})
                 assert response.status_code == 302
                 assert '/setup/smtp' in response.location
@@ -542,19 +542,19 @@ class TestSetupWorkflow:
         assert get_current_setup_step() == 4
 
         # Step 5: Complete IGDB setup
-        with patch('gametheca.routes_setup.IGDBSetupForm') as mock_igdb_form_class:
+        with patch('oneirodex.routes_setup.IGDBSetupForm') as mock_igdb_form_class:
             mock_igdb_form = MagicMock()
             mock_igdb_form.validate_on_submit.return_value = True
             mock_igdb_form.igdb_client_id.data = 'test_client_id_12345'
             mock_igdb_form.igdb_client_secret.data = 'test_client_secret_12345'
             mock_igdb_form_class.return_value = mock_igdb_form
             
-            with patch('gametheca.init_data.initialize_library_folders'), \
-                 patch('gametheca.init_data.initialize_discovery_sections'), \
-                 patch('gametheca.init_data.insert_default_scanning_filters'), \
-                 patch('gametheca.init_data.initialize_allowed_file_types'), \
-                 patch('gametheca.init_data.initialize_default_settings'), \
-                 patch('gametheca.routes_setup.log_system_event'):
+            with patch('oneirodex.init_data.initialize_library_folders'), \
+                 patch('oneirodex.init_data.initialize_discovery_sections'), \
+                 patch('oneirodex.init_data.insert_default_scanning_filters'), \
+                 patch('oneirodex.init_data.initialize_allowed_file_types'), \
+                 patch('oneirodex.init_data.initialize_default_settings'), \
+                 patch('oneirodex.routes_setup.log_system_event'):
                  
                 # Mock initialize_default_settings to prevent interference with test data
                 response = client.post('/setup/igdb', data={})
@@ -592,7 +592,7 @@ class TestSetupSessionHandling:
         assert response.status_code == 200
         
         # Check database setup state
-        from gametheca.utils.setup import get_current_setup_step, is_setup_required
+        from oneirodex.utils.setup import get_current_setup_step, is_setup_required
         assert get_current_setup_step() == 1
         assert is_setup_required()  # Should still be required since no admin user exists
     
@@ -604,14 +604,14 @@ class TestSetupSessionHandling:
         db_session.execute(delete(GlobalSettings))
         db_session.commit()
         """Test proper setup step progression via database tracking."""
-        from gametheca.utils.setup import get_current_setup_step, is_setup_required
+        from oneirodex.utils.setup import get_current_setup_step, is_setup_required
         
         # Start at step 1
         response = client.get('/setup')
         assert get_current_setup_step() == 1
         
         # Admin creation moves to step 2
-        with patch('gametheca.routes_setup.SetupForm') as mock_form_class:
+        with patch('oneirodex.routes_setup.SetupForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.username.data = 'admin'
@@ -620,7 +620,7 @@ class TestSetupSessionHandling:
             mock_form.csrf_token.data = 'test-token'
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_setup.log_system_event'):
+            with patch('oneirodex.routes_setup.log_system_event'):
                 response = client.post('/setup/submit', data={})
                 
         assert get_current_setup_step() == 2
@@ -636,19 +636,19 @@ class TestSetupSessionHandling:
         assert get_current_setup_step() == 4
         
         # IGDB completion clears setup_step (marks as completed)
-        with patch('gametheca.routes_setup.IGDBSetupForm') as mock_form_class:
+        with patch('oneirodex.routes_setup.IGDBSetupForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.igdb_client_id.data = 'test_client_id_12345'
             mock_form.igdb_client_secret.data = 'test_client_secret_12345'
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.init_data.initialize_library_folders'), \
-                 patch('gametheca.init_data.initialize_discovery_sections'), \
-                 patch('gametheca.init_data.insert_default_scanning_filters'), \
-                 patch('gametheca.init_data.initialize_default_settings'), \
-                 patch('gametheca.init_data.initialize_allowed_file_types'), \
-                 patch('gametheca.routes_setup.log_system_event'):
+            with patch('oneirodex.init_data.initialize_library_folders'), \
+                 patch('oneirodex.init_data.initialize_discovery_sections'), \
+                 patch('oneirodex.init_data.insert_default_scanning_filters'), \
+                 patch('oneirodex.init_data.initialize_default_settings'), \
+                 patch('oneirodex.init_data.initialize_allowed_file_types'), \
+                 patch('oneirodex.routes_setup.log_system_event'):
                 
                 response = client.post('/setup/igdb', data={})
                 
@@ -682,7 +682,7 @@ class TestSetupFormIntegration:
     def test_igdb_form_validation_error_handling(self, client, db_session, admin_user):
         """Test how IGDB setup handles real form validation errors."""
         # Use existing admin_user fixture and set database to step 3
-        from gametheca.utils.setup import set_setup_step
+        from oneirodex.utils.setup import set_setup_step
         set_setup_step(4)  # IGDB is step 4 since the Features step landed
         
         # Submit invalid IGDB data

@@ -17,7 +17,7 @@ export const PEEL_PROFILES = Object.freeze({
   AGGRESSIVE: 'aggressive',
 })
 
-/** Defaults aligned with gametheca.utils.match_scoring when BE omits values. */
+/** Defaults aligned with oneirodex.utils.match_scoring when BE omits values. */
 export const SCAN_MATCH_DEFAULTS = Object.freeze({
   propose_only_scan: false,
   dupe_title_threshold: 0.85,

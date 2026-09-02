@@ -20,7 +20,7 @@ Caps on create: symptom ≤2000 chars, logs ≤4000 chars. List payloads omit lo
 | Variable | Purpose |
 |---|---|
 | `SUPPORT_GITHUB_TOKEN` | PAT with `issues:write`. If unset, ticket still saves; `github_sync=skipped`. |
-| `SUPPORT_GITHUB_REPO` | Default `chrisjrovira/oneirodex` (`chrisjrovira/gametheca` still redirects) |
+| `SUPPORT_GITHUB_REPO` | Default `chrisjrovira/oneirodex` (`chrisjrovira/oneirodex` still redirects) |
 
 ## Admin alert prefs
 

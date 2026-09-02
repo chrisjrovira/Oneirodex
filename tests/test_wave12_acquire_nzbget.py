@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gametheca.utils.acquire_scoring import rank_acquire_hits, score_acquire_hit, title_looks_like_newer_repack
-from gametheca.utils.arr_connectors import nzbget_add_url, send_to_download_client
+from oneirodex.utils.acquire_scoring import rank_acquire_hits, score_acquire_hit, title_looks_like_newer_repack
+from oneirodex.utils.arr_connectors import nzbget_add_url, send_to_download_client
 
 
 def test_score_repack_and_rank():
@@ -31,8 +31,8 @@ def test_score_penalizes_crack_marker():
     assert row['score'] < 50
 
 
-@patch('gametheca.utils.arr_connectors.requests.post')
-@patch('gametheca.utils.arr_connectors.get_arr_config')
+@patch('oneirodex.utils.arr_connectors.requests.post')
+@patch('oneirodex.utils.arr_connectors.get_arr_config')
 def test_nzbget_add_url(mock_cfg, mock_post):
     mock_cfg.return_value = {
         'nzbget_url': 'http://nzbget:6789',
@@ -49,7 +49,7 @@ def test_nzbget_add_url(mock_cfg, mock_post):
     assert kwargs['json']['method'] == 'append'
 
 
-@patch('gametheca.utils.arr_connectors.nzbget_add_url')
+@patch('oneirodex.utils.arr_connectors.nzbget_add_url')
 def test_send_routes_nzbget(mock_nzb):
     mock_nzb.return_value = {'status': 'queued', 'provider': 'nzbget'}
     result = send_to_download_client('https://x/y.nzb', provider='nzbget')
@@ -59,6 +59,6 @@ def test_send_routes_nzbget(mock_nzb):
 
 def test_nzbget_config_keys_documented():
     # Env keys expected by get_arr_config (no live app / DB required).
-    from gametheca.utils import arr_connectors as mod
+    from oneirodex.utils import arr_connectors as mod
     assert 'nzbget_add_url' in dir(mod)
     assert callable(mod.nzbget_add_url)

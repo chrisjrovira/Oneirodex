@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import {
+  burstToastMessages,
   groupLibraryScanToasts,
-  groupedToastMessage,
   markLibraryScanToastSeen,
   pickUnseenLibraryScanToasts,
 } from '../utils/libraryScanNotify'
@@ -37,11 +37,18 @@ export function useLibraryScanToasts({ enabled = true, intervalMs = POLL_MS } = 
           : Array.isArray(data)
             ? data
             : []
-        // One toast per library, not per increment (GT-B11). Every row in a
-        // group is marked seen so the batch cannot re-toast on the next poll.
-        for (const group of groupLibraryScanToasts(pickUnseenLibraryScanToasts(rows))) {
-          showToast(groupedToastMessage(group), 'success')
-          for (const row of group.rows) {
+        // One toast per library, not per increment (GT-B11). More than five
+        // libraries collapse to “N notifications” so a FIFO drain cannot cover
+        // the page. Every row in a burst is marked seen so it cannot re-toast.
+        for (const burst of burstToastMessages(
+          groupLibraryScanToasts(pickUnseenLibraryScanToasts(rows)),
+        )) {
+          if (burst.count > 1) {
+            showToast(burst.message, 'success', { count: burst.count })
+          } else {
+            showToast(burst.message, 'success')
+          }
+          for (const row of burst.rows) {
             markLibraryScanToastSeen(row.id ?? row.uuid ?? row.created_at ?? row.title)
           }
         }

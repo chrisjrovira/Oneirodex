@@ -144,7 +144,7 @@ export function NotificationsPage({ shellConfig = {} }) {
 
   if (error) {
     return (
-      <div className="gt-more-page gt-notifications">
+      <div className="od-more-page od-notifications od-notifications--fill">
         <PageStatus
           error={error}
           errorMessage="Unable to load notifications."
@@ -165,15 +165,18 @@ export function NotificationsPage({ shellConfig = {} }) {
           summary={unread > 0 ? `${unread} unread` : 'All caught up'}
         />
       ) : null}
-    <div className="gt-more-page gt-notifications">
+    <div
+      className="od-more-page od-notifications od-notifications--fill"
+      data-view={filter}
+    >
       {useNewChrome ? null : (
-        <div className="gt-page-header gt-notifications__header">
+        <div className="od-page-header od-notifications__header">
           <div>
             <h1>Notifications</h1>
-            <p className="gt-more-page__lede gt-notifications__lede">
+            <p className="od-more-page__lede od-notifications__lede">
               {unread > 0 ? (
                 <>
-                  <span className="gt-notifications__badge" aria-hidden="true">
+                  <span className="od-notifications__badge" aria-hidden="true">
                     {unread}
                   </span>
                   unread
@@ -183,8 +186,8 @@ export function NotificationsPage({ shellConfig = {} }) {
               )}
             </p>
           </div>
-          <div className="gt-notifications__toolbar">
-            <div className="gt-notifications__filters" role="group" aria-label="Filter">
+          <div className="od-notifications__toolbar">
+            <div className="od-notifications__filters" role="group" aria-label="Filter">
               {NOTIFICATION_VIEWS.map(({ id, label }) => (
                 <button
                   key={id}
@@ -203,19 +206,19 @@ export function NotificationsPage({ shellConfig = {} }) {
         </div>
       )}
 
-      <section className="gt-notifications__inbox" aria-labelledby="notifications-inbox-heading">
+      <section className="od-notifications__inbox" aria-labelledby="notifications-inbox-heading">
         {/* Inbox row owns list-scoped chrome: Preferences (inline expand) and
             Mark all read. Preferences used to be a full-width fold above the
             list — too much vertical chrome for a settings toggle. */}
-        <div className="gt-notifications__inbox-head">
-          <h2 className="gt-notifications__section-title" id="notifications-inbox-heading">
+        <div className="od-notifications__inbox-head">
+          <h2 className="od-notifications__section-title" id="notifications-inbox-heading">
             Inbox
           </h2>
-          <div className="gt-notifications__inbox-actions">
+          <div className="od-notifications__inbox-actions">
             {prefs ? (
               <button
                 type="button"
-                className={`gt-btn gt-btn--ghost gt-btn--sm gt-notifications__prefs-toggle${
+                className={`od-btn od-btn--ghost od-btn--sm od-notifications__prefs-toggle${
                   prefsOpen ? ' is-on' : ''
                 }`}
                 aria-expanded={prefsOpen}
@@ -227,7 +230,7 @@ export function NotificationsPage({ shellConfig = {} }) {
             ) : null}
             <button
               type="button"
-              className="gt-btn gt-btn--ghost gt-btn--sm gt-notifications__mark-all"
+              className="od-btn od-btn--ghost od-btn--sm od-notifications__mark-all"
               disabled={busy || unread === 0}
               onClick={() => void markAll()}
             >
@@ -238,52 +241,52 @@ export function NotificationsPage({ shellConfig = {} }) {
         {prefs && prefsOpen ? (
           <div
             id="notifications-prefs"
-            className="gt-notifications__prefs"
+            className="od-notifications__prefs"
             role="region"
             aria-label="Notification preferences"
           >
-            <ul className="gt-notifications__pref-list">
+            <ul className="od-notifications__pref-list">
               {PREF_ROWS.map(([key, label, kind]) => (
                 <li key={key}>
-                  <label className="gt-notifications__pref">
+                  <label className="od-notifications__pref">
                     <input
                       type="checkbox"
                       checked={Boolean(prefs[key])}
                       onChange={() => void togglePref(key)}
                     />
-                    <span className="gt-notifications__pref-text">
+                    <span className="od-notifications__pref-text">
                       <strong>{label}</strong>
-                      <span className="gt-notifications__pref-kind">{kind}</span>
+                      <span className="od-notifications__pref-kind">{kind}</span>
                     </span>
                   </label>
                 </li>
               ))}
             </ul>
-            <p className="gt-notifications__pref-note">
+            <p className="od-notifications__pref-note">
               Email options need SMTP configured by an admin. Activity sharing is
               limited to accepted friends and is never server-wide.
             </p>
           </div>
         ) : null}
         {visible.length === 0 ? (
-          <p className="gt-more-page__lede">
+          <p className="od-more-page__lede">
             {filter === 'archive'
               ? 'Nothing archived yet — notifications land here once you have read them.'
               : 'All caught up.'}
           </p>
         ) : (
-          <ul className="gt-notifications__list">
+          <ul className="od-notifications__list">
             {visible.map((row) => (
               <li
                 key={row.id}
-                className={`gt-notifications__item${row.unread ? ' is-unread' : ''}`}
+                className={`od-notifications__item${row.unread ? ' is-unread' : ''}`}
               >
-                <div className="gt-notifications__item-main">
-                  <div className="gt-notifications__item-head">
+                <div className="od-notifications__item-main">
+                  <div className="od-notifications__item-head">
                     {row.unread ? (
-                      <span className="gt-notifications__dot" aria-label="Unread" />
+                      <span className="od-notifications__dot" aria-label="Unread" />
                     ) : (
-                      <span className="gt-notifications__dot is-read" aria-hidden="true" />
+                      <span className="od-notifications__dot is-read" aria-hidden="true" />
                     )}
                     <strong>{row.title}</strong>
                     {row.created_at || row.created ? (
@@ -292,9 +295,9 @@ export function NotificationsPage({ shellConfig = {} }) {
                       </time>
                     ) : null}
                   </div>
-                  {row.body ? <p className="gt-notifications__body">{row.body}</p> : null}
+                  {row.body ? <p className="od-notifications__body">{row.body}</p> : null}
                 </div>
-                <div className="gt-notifications__item-actions">
+                <div className="od-notifications__item-actions">
                   {row.link ? (
                     String(row.link).includes('#') ? (
                       <a href={row.link}>Open</a>
@@ -303,7 +306,7 @@ export function NotificationsPage({ shellConfig = {} }) {
                     )
                   ) : null}
                   {row.unread ? (
-                    <button type="button" className="gt-cbtn" disabled={busy} onClick={() => void markOne(row.id)}>
+                    <button type="button" className="od-cbtn" disabled={busy} onClick={() => void markOne(row.id)}>
                       Mark read
                     </button>
                   ) : null}

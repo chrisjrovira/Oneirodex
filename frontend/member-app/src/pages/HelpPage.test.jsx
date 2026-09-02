@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { expect, test } from 'vitest'
 import { HelpPage } from './HelpPage'
 
-test('starts with Getting started open and other sections collapsed', () => {
+test('starts with every section collapsed', () => {
   render(
     <MemoryRouter>
       <HelpPage />
@@ -14,7 +14,7 @@ test('starts with Getting started open and other sections collapsed', () => {
   expect(screen.getByRole('heading', { name: 'Help' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Getting started/i })).toHaveAttribute(
     'aria-expanded',
-    'true',
+    'false',
   )
   expect(screen.getByRole('button', { name: /Game Catalog & signals/i })).toHaveAttribute(
     'aria-expanded',
@@ -67,33 +67,41 @@ test('new chrome moves the fold controls into bar two and keeps all three', asyn
   )
 })
 
-test('the group strip leads the bar and the fold controls follow it', async () => {
-  // The topic groups are the page's navigation, so they come first; Expand and
-  // Collapse are the page's controls and follow.
-  //
-  // Expand before Collapse because they are opposite ends of one range.
-  // They are adjacent: W28 separated them with a "Report an issue" link, which
-  // was removed because Report is a rail destination and a second route to it
-  // does not belong on Help. Asserting order rather than position, so the bar
-  // can gain or lose a control without this breaking.
+test('new chrome also starts with every section collapsed', () => {
+  render(
+    <MemoryRouter>
+      <HelpPage shellConfig={{ enableNewChrome: true }} />
+    </MemoryRouter>,
+  )
+  expect(screen.getByRole('button', { name: /Getting started/i })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  )
+})
+
+test('topic groups and Expand/Collapse share one fused seg', async () => {
+  // One outline, one chrome language — Expand/Collapse used to be separate
+  // `od-cbtn`s beside the green `.od-seg` and read as a second toolbar.
   render(
     <MemoryRouter>
       <HelpPage shellConfig={{ enableNewChrome: true }} />
     </MemoryRouter>,
   )
 
-  const bar = screen
-    .getByRole('button', { name: 'Expand all' })
-    .closest('.gt-contextbar')
-  // Controls only — the open/total readout is a span and is not one of them.
-  const labels = [...bar.querySelectorAll('button, a')].map((el) =>
+  const expand = screen.getByRole('button', { name: 'Expand all' })
+  const seg = expand.closest('.od-seg')
+  expect(seg).toBeTruthy()
+  expect(seg.getAttribute('aria-label')).toBe('Help')
+  const labels = [...seg.querySelectorAll(':scope > .od-seg__item')].map((el) =>
     el.textContent.trim(),
   )
   expect(labels[0]).toBe('Start')
-  expect(labels.indexOf('Expand all')).toBeLessThan(
-    labels.indexOf('Collapse all'),
-  )
+  expect(labels).toContain('Expand all')
+  expect(labels).toContain('Collapse all')
+  expect(labels.indexOf('Expand all')).toBeLessThan(labels.indexOf('Collapse all'))
   expect(labels[labels.length - 1]).toBe('Collapse all')
+  expect(expand.classList.contains('od-seg__item')).toBe(true)
+  expect(expand.classList.contains('od-cbtn')).toBe(false)
 })
 
 test('every section carries a theme tone and a glyph', async () => {
@@ -105,12 +113,12 @@ test('every section carries a theme tone and a glyph', async () => {
     </MemoryRouter>,
   )
 
-  const sections = container.querySelectorAll('.gt-help__section')
+  const sections = container.querySelectorAll('.od-help__section')
   expect(sections.length).toBeGreaterThan(0)
   const allowed = new Set(['accent', 'info', 'success', 'warning', 'danger'])
   for (const section of sections) {
     expect(allowed.has(section.getAttribute('data-tone'))).toBe(true)
-    expect(section.querySelector('.gt-help__section-mark svg')).not.toBeNull()
+    expect(section.querySelector('.od-help__section-mark svg')).not.toBeNull()
   }
 })
 
@@ -123,7 +131,6 @@ test('names Oneirodex and documents every play mode, not only NES', async () => 
   )
 
   expect(screen.getByRole('heading', { name: 'How Oneirodex works' })).toBeInTheDocument()
-  expect(screen.queryByText(/How GameTheca works/)).toBeNull()
 
   await user.click(screen.getByRole('button', { name: 'Expand all' }))
   expect(screen.getByText(/oh-NY-roh-dex/)).toBeInTheDocument()

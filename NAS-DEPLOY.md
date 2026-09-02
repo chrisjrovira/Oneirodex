@@ -1,13 +1,13 @@
 # Unraid Compose — live checkout
 
-The Unraid stack **is** this git tree. Do not copy files to `/mnt/user/isos/gametheca/` (retired).
+The Unraid stack **is** this git tree. Do not copy files to `/mnt/user/isos/oneirodex/` (retired).
 
 | Role | Path |
 |---|---|
 | Unraid compose / env | `/mnt/user/infernal-data-streams/_projects/Oneirodex` |
 | Windows mapping | `Z:\_projects\Oneirodex` |
 | Games scan root (RO) | `/mnt/user/infernal-data-streams/_software/_games` |
-| Library / uploads (RW) | `/mnt/cache/appdata/gametheca/library` |
+| Library / uploads (RW) | `/mnt/cache/appdata/oneirodex/library` |
 
 Full operator runbook: [docs/runbooks/unraid-deploy.md](docs/runbooks/unraid-deploy.md).
 
@@ -34,8 +34,8 @@ Expected: `...@db:5432/...` and `DATABASE_HOST=db`. Confirm readiness with `curl
 
 ## Frontend (member SPA)
 
-The image build runs `frontend/member-app` (Vite) and copies the bundle into `/app/gametheca/static/dist/member-app/`. After rebuild:
+The image build runs `frontend/member-app` (Vite) and copies the bundle into `/app/oneirodex/static/dist/member-app/`. After rebuild:
 
 ```bash
-docker compose exec app test -f /app/gametheca/static/dist/member-app/member-app.js && echo ok
+docker compose exec app test -f /app/oneirodex/static/dist/member-app/member-app.js && echo ok
 ```

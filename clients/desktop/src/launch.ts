@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 
-import type { GamethecaClient } from './api.js'
+import type { OneirodexClient } from './api.js'
 import { isTauriRuntime } from './config-store.js'
 import { getInstallRecord } from './install.js'
 import {
@@ -24,7 +24,7 @@ export function canLaunchGame(state: GameLifecycleState): boolean {
 }
 
 export async function kickoffLaunch(
-  api: GamethecaClient,
+  api: OneirodexClient,
   gameUuid: string,
 ): Promise<{ pid: number; sessionId: number }> {
   if (!isTauriRuntime()) {

@@ -3,9 +3,9 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import {
   createAuthStore,
   describeTokenPaste,
-  isGamethecaToken,
+  isOneirodexToken,
   normalizeBaseUrl,
-  normalizeGamethecaToken,
+  normalizeOneirodexToken,
 } from './auth.js'
 import { createDesktopApi } from './api.js'
 import { isTauriRuntime, loadStoredConfig, saveStoredConfig } from './config-store.js'
@@ -31,7 +31,7 @@ async function openLibraryWindow(baseUrl: string): Promise<'opened' | 'focused' 
     throw new Error('Set Server URL first.')
   }
   if (!isTauriRuntime()) {
-    window.open(url, 'gt-thin-library', 'width=1280,height=800')
+    window.open(url, 'od-thin-library', 'width=1280,height=800')
     return 'browser'
   }
   const existing = await WebviewWindow.getByLabel(LIBRARY_LABEL)
@@ -42,7 +42,7 @@ async function openLibraryWindow(baseUrl: string): Promise<'opened' | 'focused' 
   }
   const webview = new WebviewWindow(LIBRARY_LABEL, {
     url,
-    title: 'GameTheca Library',
+    title: 'Oneirodex Library',
     width: 1280,
     height: 800,
     minWidth: 800,
@@ -67,7 +67,7 @@ async function openLibraryWindow(baseUrl: string): Promise<'opened' | 'focused' 
 export async function mountThinApp(root: HTMLElement): Promise<void> {
   root.innerHTML = `
     <header class="header">
-      <h1>GameTheca Thin</h1>
+      <h1>Oneirodex Thin</h1>
       <p class="tagline">Browse, social &amp; browser play — no local install pipeline</p>
     </header>
     <section class="connect panel">
@@ -80,7 +80,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
         <button type="button" id="openLibraryBtn" class="primary">Open library</button>
         <button type="button" id="openFriendsBtn">Open friends</button>
       </div>
-      <p id="status" class="status" data-tone="info">Enter your GameTheca URL to begin.</p>
+      <p id="status" class="status" data-tone="info">Enter your Oneirodex URL to begin.</p>
     </section>
     <section class="panel honesty">
       <h2>What this client does</h2>
@@ -89,7 +89,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
         <li>Friends popup (bottom-right, always-on-top)</li>
         <li>Uses thin device capabilities (no download / install / native play)</li>
       </ul>
-      <p class="hint">Need Install / Update / Play for PC titles? Use the full <strong>GameTheca</strong> desktop companion.</p>
+      <p class="hint">Need Install / Update / Play for PC titles? Use the full <strong>Oneirodex</strong> desktop companion.</p>
     </section>
   `
 
@@ -104,7 +104,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
   function readNormalizedToken(): string {
     const raw = tokenEl.value
     logCompanion('thin', describeTokenPaste(raw))
-    const token = normalizeGamethecaToken(raw)
+    const token = normalizeOneirodexToken(raw)
     tokenEl.value = token
     return token
   }
@@ -137,7 +137,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       return null
     }
     const token = readNormalizedToken()
-    if (token && !isGamethecaToken(token)) {
+    if (token && !isOneirodexToken(token)) {
       setStatus(shapeInvalidConnectionResult().message, 'error')
       return null
     }
@@ -158,7 +158,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
     if (stored.baseUrl) baseUrlEl.value = stored.baseUrl
     const fromKeychain = await keychainAdapter.load()
     const token = stored.token || fromKeychain
-    if (token) tokenEl.value = normalizeGamethecaToken(token)
+    if (token) tokenEl.value = normalizeOneirodexToken(token)
   } catch (error) {
     logCompanion('thin', `hydrate failed: ${error instanceof Error ? error.message : String(error)}`)
     // first run / keyring load noise

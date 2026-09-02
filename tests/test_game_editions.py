@@ -8,7 +8,7 @@ editions so the popup matches details.
 from types import SimpleNamespace
 from uuid import uuid4
 
-from gametheca.models import (
+from oneirodex.models import (
     Game,
     GameURL,
     Genre,
@@ -18,13 +18,13 @@ from gametheca.models import (
     UserGameProgress,
     UserPreference,
 )
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.game_editions import (
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.game_editions import (
     editions_preview_payload,
     preview_tags,
     store_links_for_games,
 )
-from gametheca.utils.library_acl import set_user_library_allowlist
+from oneirodex.utils.library_acl import set_user_library_allowlist
 
 
 class _Url(SimpleNamespace):

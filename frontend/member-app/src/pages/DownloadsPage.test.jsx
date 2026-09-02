@@ -25,7 +25,7 @@ test('shows empty state when there are no downloads', async () => {
 
   render(<DownloadsPage />)
 
-  expect(screen.getByText('Loading downloads…')).toBeInTheDocument()
+  expect(screen.getByText(/Loading downloads/)).toBeInTheDocument()
   expect(await screen.findByText('You have no downloads yet.')).toBeInTheDocument()
 })
 

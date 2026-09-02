@@ -253,7 +253,7 @@ export function GameActionBar({
 
   return (
     <div
-      className={`gt-action-bar${compact ? ' gt-action-bar--compact' : ''} ${className}`.trim()}
+      className={`od-action-bar${compact ? ' od-action-bar--compact' : ''} ${className}`.trim()}
       role="group"
       aria-label={`Actions for ${gameName}`}
       data-lifecycle={lifecycleState}
@@ -261,7 +261,7 @@ export function GameActionBar({
     >
       {!compact && showPresence ? (
         <span
-          className={`gt-action-bar__presence${clientConnected ? ' is-online' : ''}`}
+          className={`od-action-bar__presence${clientConnected ? ' is-online' : ''}`}
           title={
             clientConnected
               ? 'Companion client is online'
@@ -272,13 +272,13 @@ export function GameActionBar({
         </span>
       ) : null}
       {useLegacyDownloadHref ? (
-        <a className="gt-action-bar__btn gt-action-bar__btn--primary" href={downloadUrl}>
+        <a className="od-action-bar__btn od-action-bar__btn--primary" href={downloadUrl}>
           Download
         </a>
       ) : (
         <button
           type="button"
-          className="gt-action-bar__btn gt-action-bar__btn--primary"
+          className="od-action-bar__btn od-action-bar__btn--primary"
           data-action="download"
           disabled={busyAction === 'download_file'}
           onClick={(event) => {
@@ -290,7 +290,7 @@ export function GameActionBar({
       )}
       <button
         type="button"
-        className="gt-action-bar__btn"
+        className="od-action-bar__btn"
         title={installTitle}
         aria-disabled={!companionInstallReady && !companionDownloadReady}
         data-action="install"
@@ -301,7 +301,7 @@ export function GameActionBar({
       {companionUpdateReady ? (
         <button
           type="button"
-          className="gt-action-bar__btn"
+          className="od-action-bar__btn"
           title={updateTitle}
           data-action="update"
           onClick={() => {
@@ -312,7 +312,7 @@ export function GameActionBar({
         </button>
       ) : (
         <a
-          className={`gt-action-bar__btn${lifecycleState !== 'update_available' ? ' is-disabled' : ''}`}
+          className={`od-action-bar__btn${lifecycleState !== 'update_available' ? ' is-disabled' : ''}`}
           href={updatesUrl}
           title={updateTitle}
           aria-disabled={lifecycleState !== 'update_available'}
@@ -324,7 +324,7 @@ export function GameActionBar({
       )}
       <button
         type="button"
-        className="gt-action-bar__btn gt-action-bar__btn--danger"
+        className="od-action-bar__btn od-action-bar__btn--danger"
         title={uninstallTitle}
         aria-disabled={!companionUninstallReady}
         data-action="uninstall"
@@ -335,7 +335,7 @@ export function GameActionBar({
       {assistPack ? (
         <button
           type="button"
-          className="gt-action-bar__btn"
+          className="od-action-bar__btn"
           data-action="assists"
           title={
             clientConnected
@@ -356,7 +356,7 @@ export function GameActionBar({
       {remotePlay ? (
         <button
           type="button"
-          className="gt-action-bar__btn"
+          className="od-action-bar__btn"
           data-action="remote-play"
           title={
             remotePlay.copy_hint
@@ -369,7 +369,7 @@ export function GameActionBar({
         </button>
       ) : null}
       {statusMessage ? (
-        <span className="gt-action-bar__status" role="status">
+        <span className="od-action-bar__status" role="status">
           {statusMessage}
         </span>
       ) : null}

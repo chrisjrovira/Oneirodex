@@ -121,7 +121,7 @@ directories into `static/library/themes` use the same sandbox.
 
 `themes/default` was still missing from this working copy when the cause was
 found — the nine presets were intact, `default` was not — and has been restored
-from `gametheca/setup/default_theme` (the tree is generated and gitignored, so
+from `oneirodex/setup/default_theme` (the tree is generated and gitignored, so
 a boot or Admin → Reset Default Themes rebuilds it).
 
 ## Still open

@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 
-from gametheca.utils import game_core
+from oneirodex.utils import game_core
 
 
 class FakeLibrary:
@@ -57,7 +57,7 @@ class TestConsolePlatformsSkipSteam:
         """Four platform families' worth of scans used to spend a round trip
         each asking a PC store about a cartridge."""
         with patch.object(game_core, 'enrich_game_with_steam') as steam, \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             cascade.return_value = {'applied': {}, 'trace': {'queried': ['thegamesdb']}}
             game_core.enrich_game_all_sources(FakeGame(platform='SNES'))
 
@@ -69,7 +69,7 @@ class TestConsolePlatformsSkipSteam:
         """That pass fetches more than the cascade does — VR perspectives and
         game modes — so it is not redundant with it."""
         with patch.object(game_core, 'enrich_game_with_steam') as steam, \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             cascade.return_value = {'applied': {}, 'trace': {}}
             game_core.enrich_game_all_sources(FakeGame(platform='PCWIN'))
 
@@ -78,7 +78,7 @@ class TestConsolePlatformsSkipSteam:
     def test_an_unknown_platform_still_asks_steam(self, no_db):
         """Absent platform is not evidence the title is a console one."""
         with patch.object(game_core, 'enrich_game_with_steam') as steam, \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             cascade.return_value = {'applied': {}, 'trace': {}}
             game_core.enrich_game_all_sources(FakeGame(platform=None))
 
@@ -89,7 +89,7 @@ class TestCascadeRunsOnlyWhenNeeded:
     def test_a_complete_game_does_not_trigger_a_single_request(self, no_db):
         complete = FakeGame(summary='A blurb.', genres=['RPG'], developer_id=4)
         with patch.object(game_core, 'enrich_game_with_steam') as steam, \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             steam.return_value = {'applied': True}
             result = game_core.enrich_game_all_sources(complete)
 
@@ -103,7 +103,7 @@ class TestCascadeRunsOnlyWhenNeeded:
     ])
     def test_any_missing_core_field_triggers_the_walk(self, thin, no_db):
         with patch.object(game_core, 'enrich_game_with_steam'), \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             cascade.return_value = {'applied': {}, 'trace': {'queried': ['gog']}}
             game_core.enrich_game_all_sources(FakeGame(**thin))
 
@@ -111,7 +111,7 @@ class TestCascadeRunsOnlyWhenNeeded:
 
     def test_whitespace_only_summary_counts_as_missing(self, no_db):
         with patch.object(game_core, 'enrich_game_with_steam'), \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             cascade.return_value = {'applied': {}, 'trace': {}}
             game_core.enrich_game_all_sources(
                 FakeGame(summary='   ', genres=['RPG'], developer_id=4)
@@ -125,7 +125,7 @@ class TestSteamIsNotAskedTwice:
         """The Steam pass above already answered; a second call is a wasted
         round trip on every PC title in a scan."""
         with patch.object(game_core, 'enrich_game_with_steam'), \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             cascade.return_value = {'applied': {}, 'trace': {}}
             game_core.enrich_game_all_sources(FakeGame(platform='PCWIN'))
 
@@ -135,7 +135,7 @@ class TestSteamIsNotAskedTwice:
 class TestAMetadataMissNeverBreaksTheImport:
     def test_a_failing_cascade_is_swallowed(self, no_db, capsys):
         with patch.object(game_core, 'enrich_game_with_steam') as steam, \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             steam.return_value = {'applied': True}
             cascade.side_effect = RuntimeError('mobygames exploded')
             result = game_core.enrich_game_all_sources(FakeGame())
@@ -147,7 +147,7 @@ class TestAMetadataMissNeverBreaksTheImport:
         """Callers read is_vr and steam_app_id off this dict; adding a cascade
         must not change its shape."""
         with patch.object(game_core, 'enrich_game_with_steam') as steam, \
-             patch('gametheca.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
+             patch('oneirodex.utils.metadata_cascade.hydrate_game_from_cascade') as cascade:
             steam.return_value = {'applied': True, 'is_vr': True, 'steam_app_id': 42}
             cascade.return_value = {'applied': {}, 'trace': {'contributed': ['gog']}}
             result = game_core.enrich_game_all_sources(FakeGame())

@@ -3,7 +3,7 @@
   position: relative;
 }
 
-.gt-tile-hover-trailer {
+.od-tile-hover-trailer {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -12,11 +12,11 @@
   pointer-events: none;
   object-fit: cover;
   z-index: 1;
-  background: var(--gt-surface);
+  background: var(--od-surface);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-tile-hover-trailer {
+  .od-tile-hover-trailer {
     display: none;
   }
 }

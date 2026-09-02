@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build GameTheca desktop installers locally — no GitHub Actions required.
+# Build Oneirodex desktop installers locally — no GitHub Actions required.
 #
 # Tauri bundles for the host it runs on. That is a hard platform constraint, not
 # a configuration gap:

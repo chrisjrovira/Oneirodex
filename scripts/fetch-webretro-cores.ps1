@@ -29,7 +29,7 @@ if ($bash) {
 
 # Native PowerShell fallback
 $CoresDir = if ($env:WEBRETR_CORES_DIR) { $env:WEBRETR_CORES_DIR } else {
-    Join-Path $Root "gametheca\static\vendor\webretro\cores"
+    Join-Path $Root "oneirodex\static\vendor\webretro\cores"
 }
 $Cdn = "https://cdn.jsdelivr.net/gh/BinBashBanana/webretro@6.5/cores"
 $DefaultCores = @(

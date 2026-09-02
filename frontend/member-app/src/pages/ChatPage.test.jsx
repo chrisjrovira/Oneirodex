@@ -68,7 +68,7 @@ test('chat panel loads channels and messages', async () => {
 
 test('/chat deep-link opens chat event and redirects to library', async () => {
   const onOpen = vi.fn()
-  window.addEventListener('gt-open-chat-panel', onOpen)
+  window.addEventListener('od-open-chat-panel', onOpen)
   try {
     render(
       <MemoryRouter initialEntries={['/chat']}>
@@ -83,7 +83,7 @@ test('/chat deep-link opens chat event and redirects to library', async () => {
       expect(screen.getByText('LibraryPage')).toBeInTheDocument()
     })
   } finally {
-    window.removeEventListener('gt-open-chat-panel', onOpen)
+    window.removeEventListener('od-open-chat-panel', onOpen)
   }
 })
 
@@ -94,7 +94,7 @@ test('the pop-out renders chat alone, with no redirect to the library', async ()
   // rendered the rail, the top bar and the library grid with chat sliding over
   // them. "A minimised version of the whole site."
   const onOpen = vi.fn()
-  window.addEventListener('gt-open-chat-panel', onOpen)
+  window.addEventListener('od-open-chat-panel', onOpen)
   const original = window.location.search
   try {
     // jsdom's location is not writable; the module reads window.location.search
@@ -118,9 +118,9 @@ test('the pop-out renders chat alone, with no redirect to the library', async ()
     // No slide-out request either: the window *is* the chat, so asking the
     // (absent) panel to open would be asking the main window to open a second.
     expect(onOpen).not.toHaveBeenCalled()
-    expect(document.querySelector('.gt-chat-standalone')).not.toBeNull()
+    expect(document.querySelector('.od-chat-standalone')).not.toBeNull()
   } finally {
-    window.removeEventListener('gt-open-chat-panel', onOpen)
+    window.removeEventListener('od-open-chat-panel', onOpen)
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: { ...window.location, search: original },

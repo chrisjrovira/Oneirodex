@@ -1,21 +1,21 @@
 #!/bin/bash
 
-echo "🚀 GameTheca container starting up..."
+echo "🚀 Oneirodex container starting up..."
 
-if [[ ! -f /app/gametheca/static/dist/member-app/member-app.js ]]; then
+if [[ ! -f /app/oneirodex/static/dist/member-app/member-app.js ]]; then
     echo "⚠️  Warning: member-app.js not found — React member app may not load. Rebuild the Docker image to include the member-app build stage."
 fi
-if [[ ! -f /app/gametheca/static/dist/member-app/member-app.css ]]; then
+if [[ ! -f /app/oneirodex/static/dist/member-app/member-app.css ]]; then
     echo "⚠️  Warning: member-app.css not found — member SPA chrome will render unstyled. Rebuild the Docker image."
 fi
-if [[ ! -f /app/gametheca/static/dist/admin-app/admin-app.js ]]; then
+if [[ ! -f /app/oneirodex/static/dist/admin-app/admin-app.js ]]; then
     echo "⚠️  Warning: admin-app.js not found — React admin SPA may not load. Rebuild the Docker image."
 fi
-if [[ ! -f /app/gametheca/static/dist/admin-app/admin-app.css ]]; then
+if [[ ! -f /app/oneirodex/static/dist/admin-app/admin-app.css ]]; then
     echo "⚠️  Warning: admin-app.css not found — admin SPA chrome will render unstyled. Rebuild the Docker image."
 fi
-if [[ ! -f /app/gametheca/static/library/themes/default/css/gt-tokens.css ]]; then
-    echo "⚠️  Warning: themes/default/css/gt-tokens.css missing — run init or Admin → Reset Default Themes after boot."
+if [[ ! -f /app/oneirodex/static/library/themes/default/css/od-tokens.css ]]; then
+    echo "⚠️  Warning: themes/default/css/od-tokens.css missing — run init or Admin → Reset Default Themes after boot."
 fi
 
 # Inside Docker Compose, Postgres is the sibling service named "db".
@@ -25,7 +25,7 @@ if [[ -f /.dockerenv ]]; then
     export DATABASE_PORT="${DATABASE_PORT:-5432}"
     export POSTGRES_USER="${POSTGRES_USER:-postgres}"
     export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
-    export POSTGRES_DB="${POSTGRES_DB:-gametheca}"
+    export POSTGRES_DB="${POSTGRES_DB:-oneirodex}"
 
     if [[ -z "${DATABASE_URL}" \
         || "${DATABASE_URL}" == *"@localhost"* \
@@ -70,7 +70,7 @@ host = os.environ.get('DATABASE_HOST', '${DB_HOST}')
 port = int(os.environ.get('DATABASE_PORT', '${DB_PORT}') or 5432)
 user = os.environ.get('POSTGRES_USER', '${DB_USER}')
 password = os.environ.get('POSTGRES_PASSWORD', 'postgres')
-database = os.environ.get('POSTGRES_DB', 'gametheca')
+database = os.environ.get('POSTGRES_DB', 'oneirodex')
 
 url = os.environ.get('DATABASE_URL') or ''
 if url:
@@ -80,7 +80,7 @@ if url:
         port = parsed.port or port
         user = parsed.username or user
         password = parsed.password or password
-        database = (parsed.path or '/gametheca').lstrip('/') or database
+        database = (parsed.path or '/oneirodex').lstrip('/') or database
     else:
         # Force Compose service when URL still points at loopback
         host = 'db'
@@ -108,5 +108,5 @@ except Exception as e:
 
 wait_for_postgres
 
-echo "🎮 Starting GameTheca Docker container..."
+echo "🎮 Starting Oneirodex Docker container..."
 /app/startweb-docker.sh "$@"

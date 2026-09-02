@@ -9,9 +9,9 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, IgdbPlatformRelease, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.licensed_catalog import (
+from oneirodex.models import Game, IgdbPlatformRelease, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.licensed_catalog import (
     DAT_ONLY_REGIONS,
     igdb_region_to_code,
     licensed_catalog_report,
@@ -19,7 +19,7 @@ from gametheca.utils.licensed_catalog import (
     refresh_platform_catalog,
     upsert_releases_from_igdb_payload,
 )
-from gametheca.utils.set_completion import (
+from oneirodex.utils.set_completion import (
     REGION_PREF_ORDER,
     VALID_REGIONS,
     normalize_region,

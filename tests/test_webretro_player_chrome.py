@@ -1,6 +1,6 @@
 """Player chrome (UID-007 + cabinet playback) — pause / rewind / picture on the play shell.
 
-The controls live on `webretro.html` and talk to the iframe through `gt-bridge.js`.
+The controls live on `webretro.html` and talk to the iframe through `od-bridge.js`.
 These are source assertions: a missing toolbar still renders a playable room, so
 nothing else would notice.
 """
@@ -10,40 +10,40 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-WEBRETRO = ROOT / 'gametheca' / 'static' / 'vendor' / 'webretro'
+WEBRETRO = ROOT / 'oneirodex' / 'static' / 'vendor' / 'webretro'
 
 
 def test_play_shell_exposes_playback_controls():
     html = (WEBRETRO / 'webretro.html').read_text(encoding='utf-8')
     for token in (
-        'data-gt-play="pause"',
-        'data-gt-play="reset"',
-        'data-gt-play="mute"',
-        'data-gt-play="power"',
-        'data-gt-play="save"',
-        'data-gt-play="load"',
-        'data-gt-play="rewind"',
-        'data-gt-play="ff"',
-        'data-gt-play="picture"',
-        'data-gt-play="help"',
-        'id="gt-play-volume"',
-        'id="gt-play-help"',
-        'gt-play-overlay',
-        'gt-play-chrome',
+        'data-od-play="pause"',
+        'data-od-play="reset"',
+        'data-od-play="mute"',
+        'data-od-play="power"',
+        'data-od-play="save"',
+        'data-od-play="load"',
+        'data-od-play="rewind"',
+        'data-od-play="ff"',
+        'data-od-play="picture"',
+        'data-od-play="help"',
+        'id="od-play-volume"',
+        'id="od-play-help"',
+        'od-play-overlay',
+        'od-play-chrome',
     ):
         assert token in html, token
 
 
 def test_bridge_handles_playback_messages():
-    src = (WEBRETRO / 'gt-bridge.js').read_text(encoding='utf-8')
+    src = (WEBRETRO / 'od-bridge.js').read_text(encoding='utf-8')
     for token in (
-        "'gt-pause'",
-        "'gt-reset'",
-        "'gt-audio'",
-        "'gt-save-state'",
-        "'gt-load-state'",
-        "'gt-picture'",
-        "'gt-cabinet-key'",
+        "'od-pause'",
+        "'od-reset'",
+        "'od-audio'",
+        "'od-save-state'",
+        "'od-load-state'",
+        "'od-picture'",
+        "'od-cabinet-key'",
         'audio_mute',
         '_cmd_reset',
         '_cmd_save_state',
@@ -72,12 +72,12 @@ def test_rewind_and_fast_forward_are_wired_in_retroarch_cfg():
 
 def test_overlay_css_auto_hides_on_fine_pointers():
     css = (WEBRETRO / 'play-skins.css').read_text(encoding='utf-8')
-    assert '.gt-play-overlay' in css
+    assert '.od-play-overlay' in css
     assert 'prefers-reduced-motion' in css
     assert '(hover: none)' in css
     assert '[data-picture="crt"]' in css
     assert '[data-picture="sharp"]' in css
-    assert '.gt-play-help' in css
+    assert '.od-play-help' in css
 
 
 def test_leave_play_never_uses_history_back():
@@ -88,7 +88,7 @@ def test_leave_play_never_uses_history_back():
     assert 'history.back(' not in html
     assert "window.location.assign('/library')" in html
     assert 'onbeforeunload = null' in html
-    assert 'gt-allow-leave' in html
+    assert 'od-allow-leave' in html
     assert 'leave-guard-1' in html
 
 
@@ -97,16 +97,16 @@ def test_embedded_webretro_skips_beforeunload_trap():
     base = (WEBRETRO / 'assets' / 'base.js').read_text(encoding='utf-8')
     assert 'window.self === window.top' in base
     assert 'window.onbeforeunload = function() { return true; }' in base
-    bridge = (WEBRETRO / 'gt-bridge.js').read_text(encoding='utf-8')
-    assert "type === 'gt-allow-leave'" in bridge
+    bridge = (WEBRETRO / 'od-bridge.js').read_text(encoding='utf-8')
+    assert "type === 'od-allow-leave'" in bridge
     standalone = (WEBRETRO / 'standalone.html').read_text(encoding='utf-8')
     assert 'base.js?v=leave-guard-1' in standalone
 
 
 def test_overlay_shell_stays_click_through():
-    """Visible overlay must not cover Start; only .gt-play-ctrl takes pointers."""
+    """Visible overlay must not cover Start; only .od-play-ctrl takes pointers."""
     css = (WEBRETRO / 'play-skins.css').read_text(encoding='utf-8')
-    assert '.gt-play-overlay .gt-play-ctrl' in css
+    assert '.od-play-overlay .od-play-ctrl' in css
     assert 'pointer-events: auto' in css
     # The always-on touch rule must not re-arm the full shell as a hit target.
     touch = css.split('@media (hover: none)')[1].split('@media')[0]

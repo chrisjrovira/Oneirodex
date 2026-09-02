@@ -5,8 +5,8 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -112,7 +112,7 @@ def test_announcements_admin_create_member_read(client, app, db_session, admin_u
     with client:
         created = client.post(
             '/api/announcements',
-            json={'title': 'Hello', 'body': 'Welcome to GameTheca', 'published': True},
+            json={'title': 'Hello', 'body': 'Welcome to Oneirodex', 'published': True},
         )
         assert created.status_code == 201, created.get_data(as_text=True)
 

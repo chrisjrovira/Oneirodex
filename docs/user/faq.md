@@ -40,13 +40,13 @@ Game details lists installs with honest presence: a version marked **Missing on 
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
 **Can I switch Game Catalog off the cover grid?**  
-**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is one title per line, Grid packs smaller covers. The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider still applies to Tile and Grid.
+**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is a title list that scales with the slider, Grid is Steam-like genre shelves (same row chrome as Discover). The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider applies at full size to Tile, Rows, Grid, and Discover.
 
 **What are Signals chips?**  
 Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).
 
 **When do “N games added” toasts show?**  
-When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. Toasts are dismissible (×) on member and admin, including classic admin pages.
+When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. More than five toasts at once collapse to **N notifications** (inbox still has every row). Toasts are dismissible (×) on member and admin, including classic admin pages.
 
 **Where did the Game Catalog Filters column go?**  
 Two-bar chrome opens Filters from a **Filters** button on the catalog bar (popover with Apply · Clear · Done). There is no sticky left-hand Filters column to collapse.
@@ -76,7 +76,7 @@ Those blocks are fill-only from Steam `appdetails` when a title was identified t
 Game details → **Extras & DLC**. Rows show honest **on-server** when the vault has the folder; PC libraries pick up common `DLC`/`extras` sidecars on scan — console DLC ingest is deferred. Discover may show **Extras not on the vault** for titles you already play or favourite when a catalogued extra is missing on disk. That row is an acquire hint, not a sale.
 
 **What is a genre hub?**  
-A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront.
+A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront. The **News** shelf’s See all opens the News page (`/news`).
 
 **What is on a game details page besides Play and Download?**  
 A breadcrumb (Catalog or Systems › genre › title), a media stage when a trailer or screenshot exists, capability chips that filter the catalog, **About** when a storyline was stored, and — only if Steam filled them — system requirements and a store-language matrix. ROM region chips stay filename truth. **More from** this developer or publisher lists other vault titles you can already see (hidden when there are fewer than two). No cart, price, or Deck Verified.
@@ -116,7 +116,7 @@ Fixed. On a build from before that fix, the whole install served whichever theme
 Fixed. The grouped room-card picker crashed while rendering because Jinja treated each group's `items` as `dict.items`. See [troubleshooting](troubleshooting.md#preferences-will-not-open).
 
 **Theme/prefs look wrong after deploy?**  
-Ask an admin for **Reset Default Themes** if `gt-account.css` / `modal-components` lag on the library volume — [themes-reset.md](../admin/themes-reset.md).
+Ask an admin for **Reset Default Themes** if `od-account.css` / `modal-components` lag on the library volume — [themes-reset.md](../admin/themes-reset.md).
 
 ## Social & voice
 
@@ -182,9 +182,9 @@ No — claim on the store, then sync Ownership for badges. Steam / GOG / Epic / 
 **More → Report issue**. Title required; symptom and logs optional. Start with title, area, and severity. **Context** (deploy / client / URL) and **Logs** stay collapsed until you expand them. Tickets go to admins and sync to GitHub Issues when configured — confirmation shows a ticket id (and GitHub link if synced).
 
 **Where is Help?**  
-**More → Help** — accordion sections (Getting started open by default); use the topic chips or Expand all. Deep links like `/help#translations` still open that section.
+**More → Help** — accordion sections start collapsed; use the topic groups, open one section, or **Expand all**. Deep links like `/help#translations` still open that section.
 
-Each section carries a colour and a glyph drawn from the theme's own semantic set (accent · info · success · warning · danger), so a topic can be found at a glance instead of by re-reading twelve identical headings — and a theme or icon pack restyles them along with the rest of the product. In the bar, **Expand all** is first and **Collapse all** is last, with *Report an issue* between them: they used to be adjacent, so overshooting Expand by one button collapsed everything you had just opened.
+Each section carries a colour and a glyph drawn from the theme's own semantic set (accent · info · success · warning · danger), so a topic can be found at a glance instead of by re-reading twelve identical headings — and a theme or icon pack restyles them along with the rest of the product. In the bar, topic groups and **Expand all** / **Collapse all** share one fused control; Expand comes before Collapse.
 
 ## Big Picture
 

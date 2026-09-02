@@ -1,16 +1,17 @@
 export {
-  createGamethecaClient,
   createOneirodexClient,
+  createGamethecaClient,
   formatBearerAuthorization,
+  OneirodexApiError,
   GamethecaApiError,
-} from './gametheca-client.js'
+} from './oneirodex-client.js'
 export { createRequester } from './client.js'
 export type {
-  GamethecaClientConfig,
   OneirodexClientConfig,
+  GamethecaClientConfig,
   Requester,
 } from './client.js'
-export type { GamethecaClient, OneirodexClient } from './gametheca-client.js'
+export type { OneirodexClient, GamethecaClient } from './oneirodex-client.js'
 export type * from './types.js'
 export type { TokensApi } from './tokens.js'
 export type { PlaytimeApi } from './playtime.js'

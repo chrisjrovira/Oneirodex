@@ -81,7 +81,7 @@ export function TileSizeControl({
 
     // Suppress the tile-size transition while the slider is moving (W27-B2).
     //
-    // `html` transitions --gt-tile-min over 0.22s, which is right for a
+    // `html` transitions --od-tile-min over 0.22s, which is right for a
     // discrete change (restoring a saved preference) and wrong during a drag:
     // the rendered size chases the slider a fifth of a second behind, and every
     // grid reflow threshold is crossed mid-animation. Two things animating the
@@ -113,18 +113,18 @@ export function TileSizeControl({
   const displayPercent = Math.round(percent)
 
   return (
-    <div className="gt-tile-size" role="group" aria-label="Game Catalog tile size">
+    <div className="od-tile-size" role="group" aria-label="Game Catalog tile size">
       {/* The resting affordance. The slider collapses to nothing until you are
           on it, so without this the control would be an invisible gap in the
           bar — you cannot hover what you cannot see. Drawn in CSS as a 2x2 dot
           grid rather than shipped as an icon: it is four dots. */}
-      <span className="gt-tile-size__grip" aria-hidden="true" />
-      <span className="gt-tile-size__label" aria-hidden="true">
+      <span className="od-tile-size__grip" aria-hidden="true" />
+      <span className="od-tile-size__label" aria-hidden="true">
         {displayPercent}%
       </span>
       <input
         type="range"
-        className="gt-tile-size__slider"
+        className="od-tile-size__slider"
         min={TILE_PERCENT_MIN}
         max={TILE_PERCENT_MAX}
         step="any"

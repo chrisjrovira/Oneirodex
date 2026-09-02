@@ -127,22 +127,22 @@ export function ProposeLeafLibraries({
   }
 
   return (
-    <section className="gt-propose-leaf" aria-labelledby="gt-propose-leaf-title">
-      <div className="gt-propose-leaf__header">
-        <h2 id="gt-propose-leaf-title" className="gt-admin-panel-title">
+    <section className="od-propose-leaf" aria-labelledby="od-propose-leaf-title">
+      <div className="od-propose-leaf__header">
+        <h2 id="od-propose-leaf-title" className="od-admin-panel-title">
           {heading}
         </h2>
-        <p className="gt-admin-lede">{lede}</p>
+        <p className="od-admin-lede">{lede}</p>
       </div>
 
-      <form className="gt-propose-leaf__form" onSubmit={onPropose}>
-        <label className="gt-propose-leaf__label" htmlFor="gt-propose-leaf-root">
+      <form className="od-propose-leaf__form" onSubmit={onPropose}>
+        <label className="od-propose-leaf__label" htmlFor="od-propose-leaf-root">
           Root path
         </label>
-        <div className="gt-propose-leaf__row">
+        <div className="od-propose-leaf__row">
           <input
-            id="gt-propose-leaf-root"
-            className="gt-propose-leaf__input"
+            id="od-propose-leaf-root"
+            className="od-propose-leaf__input"
             type="text"
             value={root}
             onChange={(e) => setRoot(e.target.value)}
@@ -152,19 +152,19 @@ export function ProposeLeafLibraries({
           />
           <button
             type="submit"
-            className="gt-btn gt-btn--accent"
+            className="od-btn od-btn--accent"
             disabled={loading || confirming || !root.trim()}
           >
             {loading ? 'Proposing…' : 'Propose'}
           </button>
         </div>
-        <p className="gt-propose-leaf__hint">
+        <p className="od-propose-leaf__hint">
           Absolute path under allowed bases. Propose lists candidates only — create happens on Confirm.
         </p>
       </form>
 
       {unavailable ? (
-        <div className="gt-propose-leaf__banner gt-propose-leaf__banner--soft" role="status">
+        <div className="od-propose-leaf__banner od-propose-leaf__banner--soft" role="status">
           {error}
         </div>
       ) : null}
@@ -175,12 +175,12 @@ export function ProposeLeafLibraries({
       {!unavailable ? <PageStatus error={error} /> : null}
 
       {status ? (
-        <p className="gt-propose-leaf__status" role="status" aria-live="polite">
+        <p className="od-propose-leaf__status" role="status" aria-live="polite">
           {status}
           {proposedRoot ? (
             <>
               {' '}
-              <span className="gt-propose-leaf__muted">
+              <span className="od-propose-leaf__muted">
                 Root: <code>{proposedRoot}</code>
               </span>
             </>
@@ -189,9 +189,9 @@ export function ProposeLeafLibraries({
       ) : null}
 
       {candidates.length > 0 ? (
-        <div className="gt-admin-panel gt-propose-leaf__panel">
-          <div className="gt-propose-leaf__toolbar">
-            <label className="gt-propose-leaf__check">
+        <div className="od-admin-panel od-propose-leaf__panel">
+          <div className="od-propose-leaf__toolbar">
+            <label className="od-propose-leaf__check">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -202,7 +202,7 @@ export function ProposeLeafLibraries({
             </label>
             <button
               type="button"
-              className="gt-btn gt-btn--accent"
+              className="od-btn od-btn--accent"
               onClick={() => void onConfirm()}
               disabled={confirming || selectedCount === 0}
             >
@@ -254,7 +254,7 @@ export function ProposeLeafLibraries({
                 key: 'path',
                 label: 'Path',
                 render: (row) => (
-                  <code className="gt-propose-leaf__path">{row.path}</code>
+                  <code className="od-propose-leaf__path">{row.path}</code>
                 ),
               },
               {
@@ -268,8 +268,8 @@ export function ProposeLeafLibraries({
       ) : null}
 
       {confirmLog.length > 0 ? (
-        <div className="gt-propose-leaf__log" aria-live="polite">
-          <h3 className="gt-admin-panel-title">Confirm results</h3>
+        <div className="od-propose-leaf__log" aria-live="polite">
+          <h3 className="od-admin-panel-title">Confirm results</h3>
           <ul>
             {confirmLog.map((row) => (
               <li key={`${row.path}-${row.stage}-${row.ok}`}>
@@ -277,10 +277,10 @@ export function ProposeLeafLibraries({
                 {row.ok ? (
                   <span> — {row.note || 'OK'}</span>
                 ) : (
-                  <span className="gt-propose-leaf__fail"> — {row.error || 'Failed'}</span>
+                  <span className="od-propose-leaf__fail"> — {row.error || 'Failed'}</span>
                 )}
                 <br />
-                <code className="gt-propose-leaf__path">{row.path}</code>
+                <code className="od-propose-leaf__path">{row.path}</code>
               </li>
             ))}
           </ul>

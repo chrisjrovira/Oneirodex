@@ -6,8 +6,8 @@ Filesystem-only — no app, no database.
 import re
 from pathlib import Path
 
-from gametheca.utils.play_rooms import ROOMS
-from gametheca.utils.preset_themes import (
+from oneirodex.utils.play_rooms import ROOMS
+from oneirodex.utils.preset_themes import (
     DEFAULT_ERA,
     PRESET_THEMES,
     era_for_theme,
@@ -16,8 +16,8 @@ from gametheca.utils.preset_themes import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-THEME_SOURCE = REPO_ROOT / 'gametheca' / 'setup' / 'default_theme'
-TEMPLATES = REPO_ROOT / 'gametheca' / 'templates'
+THEME_SOURCE = REPO_ROOT / 'oneirodex' / 'setup' / 'default_theme'
+TEMPLATES = REPO_ROOT / 'oneirodex' / 'templates'
 
 
 def test_default_and_unknown_themes_use_the_wood_den():
@@ -32,7 +32,7 @@ def test_every_preset_names_a_real_play_room():
     for preset in PRESET_THEMES:
         era = era_for_theme(preset['slug'])
         assert era in ROOMS, f"{preset['slug']} era {era} is not a play room"
-        assert preset_tokens(preset)['gt-era'] == era
+        assert preset_tokens(preset)['od-era'] == era
 
 
 def test_decade_presets_cover_every_play_room():
@@ -58,11 +58,11 @@ def test_picker_groups_decade_rooms_ahead_of_cabinets():
 
 
 def test_era_css_and_atmosphere_are_wired_into_every_shell():
-    era_css = (THEME_SOURCE / 'css' / 'gt-era.css').read_text(encoding='utf-8')
+    era_css = (THEME_SOURCE / 'css' / 'od-era.css').read_text(encoding='utf-8')
     assert 'html[data-era=' in era_css
-    assert '#gt-era-atmosphere' in era_css
-    assert 'gt-era-wall-drift' in era_css
-    assert '--gt-era-furniture' in era_css
+    assert '#od-era-atmosphere' in era_css
+    assert 'od-era-wall-drift' in era_css
+    assert '--od-era-furniture' in era_css
     for room_id in ROOMS:
         assert f"data-era='{room_id}'" in era_css
     blob = ' '.join(ROOMS[r]['label'] + ' ' + ROOMS[r]['blurb'] for r in ROOMS).lower()
@@ -71,27 +71,27 @@ def test_era_css_and_atmosphere_are_wired_into_every_shell():
         assert brand not in era_css.lower()
 
     atmosphere = (TEMPLATES / 'partials' / 'era_atmosphere.html').read_text(encoding='utf-8')
-    assert 'id="gt-era-atmosphere"' in atmosphere
-    assert 'gt-era-stand' in atmosphere
+    assert 'id="od-era-atmosphere"' in atmosphere
+    assert 'od-era-stand' in atmosphere
     for name in ('base.html', 'base_admin.html', 'base_empty.html'):
         html = (TEMPLATES / name).read_text(encoding='utf-8')
         assert 'data-era=' in html
-        assert 'css/gt-era.css' in html
+        assert 'css/od-era.css' in html
         assert "partials/era_atmosphere.html" in html
-        assert html.index('css/gt-shell.css') < html.index('css/gt-era.css')
+        assert html.index('css/od-shell.css') < html.index('css/od-era.css')
 
 
 def test_admin_chrome_stacks_above_era_atmosphere():
-    """Admin #admin-app-root / .gt-admin-shell are display:contents.
+    """Admin #admin-app-root / .od-admin-shell are display:contents.
 
-    #gt-era-atmosphere is position:fixed behind the UI (z-index:-1). Chrome
+    #od-era-atmosphere is position:fixed behind the UI (z-index:-1). Chrome
     still gets its own stacking context; z-index on a flattened wrapper is a
     no-op so rail / topbar / main must be named explicitly.
     """
-    era = (THEME_SOURCE / 'css' / 'gt-era.css').read_text(encoding='utf-8')
-    shell = (THEME_SOURCE / 'css' / 'gt-shell.css').read_text(encoding='utf-8')
+    era = (THEME_SOURCE / 'css' / 'od-era.css').read_text(encoding='utf-8')
+    shell = (THEME_SOURCE / 'css' / 'od-shell.css').read_text(encoding='utf-8')
     assert 'display: contents' in shell
-    assert re.search(r'#gt-era-atmosphere\s*\{[^}]*z-index:\s*-1', era, re.S)
+    assert re.search(r'#od-era-atmosphere\s*\{[^}]*z-index:\s*-1', era, re.S)
     assert re.search(r'html\[data-era\]\s*\{[^}]*background-color:', era, re.S)
 
     match = re.search(
@@ -101,24 +101,27 @@ def test_admin_chrome_stacks_above_era_atmosphere():
     )
     assert match, 'era stacking rule with z-index: 1 is missing'
     selectors = match.group(1)
-    for needed in ('.gt-admin-main', '#admin-legacy-content'):
+    for needed in ('.od-admin-main', '#admin-legacy-content'):
         assert needed in selectors, f'{needed} must stack above the atmosphere'
     rail = re.search(
-        r'(html\[data-era\][^{]*\.gt-rail[^{]*)\{[^}]*z-index:\s*2',
+        r'(html\[data-era\][^{]*\.od-rail[^{]*)\{[^}]*z-index:\s*2',
         era,
         re.S,
     )
     assert rail, 'rail stacking rule with z-index: 2 is missing'
     topbar = re.search(
-        r'(html\[data-era\][^{]*\.gt-topbar[^{]*)\{[^}]*z-index:\s*30',
+        r'(html\[data-era\][^{]*\.od-topbar[^{]*)\{[^}]*z-index:\s*30',
         era,
         re.S,
     )
     assert topbar, 'topbar overlay stacking rule with z-index: 30 is missing'
-    assert 'html[data-era] .gt-shell:has(.game-card:hover) .gt-topbar' in era
-    assert 'html[data-era] .gt-shell:has(.game-card:has(:focus-visible))' not in era
+    assert 'html[data-era] .od-shell:has(.game-card:hover) .od-topbar' not in era
+    assert 'html[data-era] .od-shell:has(.game-card:hover) .od-shell__main' in era
+    assert 'html[data-era] .od-shell:has(.game-card:has(:focus-visible))' not in era
     assert 'z-index: 40' in era
-    for flattened in ('#admin-app-root', '.gt-admin-shell'):
+    assert 'opacity: 0' not in topbar.group(0)
+    assert 'transition: opacity' not in era
+    for flattened in ('#admin-app-root', '.od-admin-shell'):
         assert flattened not in selectors, (
             f'{flattened} is display:contents; z-index there cannot lift chrome'
         )
@@ -134,7 +137,7 @@ def test_system_backdrop_sits_behind_library_tiles():
         / 'chrome'
         / 'systemBackdrop.css'
     ).read_text(encoding='utf-8')
-    match = re.search(r'\.gt-system-backdrop\s*\{([^}]*)\}', css, re.S)
+    match = re.search(r'\.od-system-backdrop\s*\{([^}]*)\}', css, re.S)
     assert match, 'system backdrop rule missing'
     body = match.group(1)
     assert re.search(r'z-index:\s*-1', body)

@@ -68,7 +68,7 @@ function formatPlaytime(seconds) {
 
 function TaxonomyChip({ kind, name }) {
   return (
-    <Link className="chip gt-chip" to={taxonomyHref(kind, name)}>
+    <Link className="chip od-chip" to={taxonomyHref(kind, name)}>
       {name}
     </Link>
   )
@@ -334,7 +334,7 @@ export function GameDetailsPage() {
 
   if (!game) {
     return (
-      <div className="gt-more-page gt-details-page">
+      <div className="od-more-page od-details-page">
         <PageStatus
           loading={!error}
           error={error}
@@ -352,7 +352,7 @@ export function GameDetailsPage() {
   const hasMedia = videoEmbeds.length > 0 || shownShots.length > 0
 
   return (
-    <div className="gt-more-page gt-details-page">
+    <div className="od-more-page od-details-page">
       {/* Wide, title-free art behind the page.
           Two rules make this work as atmosphere rather than as a picture the
           content is sitting on top of: it is never the cover (the cover carries
@@ -364,11 +364,11 @@ export function GameDetailsPage() {
           Absent when a title has no wide art, which leaves the page on its flat
           surface exactly as before. */}
       {game.backdrop_url ? (
-        <div className="gt-details-page__backdrop" aria-hidden="true">
+        <div className="od-details-page__backdrop" aria-hidden="true">
           <img src={game.backdrop_url} alt="" loading="lazy" />
         </div>
       ) : null}
-      <nav className="gt-details-page__crumbs" aria-label="Breadcrumb">
+      <nav className="od-details-page__crumbs" aria-label="Breadcrumb">
         <ol>
           <li>
             <Link to={rootCrumb.to}>{rootCrumb.label}</Link>
@@ -384,25 +384,25 @@ export function GameDetailsPage() {
         </ol>
       </nav>
 
-      <div className="gt-details-page__hero">
+      <div className="od-details-page__hero">
         <div
-          className={`gt-details-page__cover-wrap${adminMenuOpen ? ' gt-details-page__cover-wrap--menu-open' : ''}`}
+          className={`od-details-page__cover-wrap${adminMenuOpen ? ' od-details-page__cover-wrap--menu-open' : ''}`}
         >
           <img
-            className="gt-details-page__cover"
+            className="od-details-page__cover"
             src={coverUrl(game.cover_url)}
             alt=""
           />
           <BadgeStack game={game} preferredCorner="top-left" maxVisible={2} />
           {game.is_admin ? (
-            <div className="gt-details-page__admin-menu" ref={adminMenuRef}>
+            <div className="od-details-page__admin-menu" ref={adminMenuRef}>
               <button
                 type="button"
-                className="gt-details-page__admin-menu-btn"
+                className="od-details-page__admin-menu-btn"
                 data-chrome-anchor="top-right"
                 aria-expanded={adminMenuOpen}
                 aria-haspopup="menu"
-                aria-controls={adminMenuOpen ? 'gt-details-admin-menu' : undefined}
+                aria-controls={adminMenuOpen ? 'od-details-admin-menu' : undefined}
                 aria-label="Admin actions"
                 onClick={() => setAdminMenuOpen((open) => !open)}
               >
@@ -410,19 +410,19 @@ export function GameDetailsPage() {
               </button>
               {adminMenuOpen ? (
                 <div
-                  id="gt-details-admin-menu"
-                  className="gt-details-page__admin-menu-panel"
+                  id="od-details-admin-menu"
+                  className="od-details-page__admin-menu-panel"
                   role="menu"
                 >
                   <a
-                    className="gt-details-page__admin-menu-item"
+                    className="od-details-page__admin-menu-item"
                     role="menuitem"
                     href={`/game_edit/${game.uuid}`}
                   >
                     Edit Details
                   </a>
                   <a
-                    className="gt-details-page__admin-menu-item"
+                    className="od-details-page__admin-menu-item"
                     role="menuitem"
                     href={`/edit_game_images/${game.uuid}`}
                   >
@@ -431,7 +431,7 @@ export function GameDetailsPage() {
                   {pathRows[0] ? (
                     <button
                       type="button"
-                      className="gt-details-page__admin-menu-item"
+                      className="od-details-page__admin-menu-item"
                       role="menuitem"
                       onClick={() => {
                         setAdminMenuOpen(false)
@@ -446,9 +446,9 @@ export function GameDetailsPage() {
             </div>
           ) : null}
         </div>
-        <div className="gt-details-page__hero-main">
+        <div className="od-details-page__hero-main">
           <h1>{game.name}</h1>
-          <p className="gt-details-page__meta-line">
+          <p className="od-details-page__meta-line">
             {[
               game.developer,
               game.publisher,
@@ -461,7 +461,7 @@ export function GameDetailsPage() {
               .join(' · ')}
           </p>
           {game.game_modes?.length || game.player_perspectives?.length ? (
-            <div className="gt-details-page__features" aria-label="How this plays">
+            <div className="od-details-page__features" aria-label="How this plays">
               {(game.game_modes || []).map((name) => (
                 <TaxonomyChip key={`mode:${name}`} kind="game_mode" name={name} />
               ))}
@@ -470,34 +470,34 @@ export function GameDetailsPage() {
               ))}
             </div>
           ) : null}
-          <div className="gt-details-page__chips">
+          <div className="od-details-page__chips">
             {itemKind !== 'game' ? (
               <span
-                className="chip gt-chip"
+                className="chip od-chip"
                 title="Library item kind - gaming software, not a main-game catalog match"
               >
                 {ITEM_KIND_LABEL[itemKind]}
               </span>
             ) : null}
             {game.local_version ? (
-              <span className="chip gt-chip" title="Installed / library version">
+              <span className="chip od-chip" title="Installed / library version">
                 Version {game.local_version}
               </span>
             ) : null}
             {game.remote_version_summary ? (
-              <span className="chip gt-chip" title="Remote / store version summary">
+              <span className="chip od-chip" title="Remote / store version summary">
                 Remote {game.remote_version_summary}
               </span>
             ) : null}
-            {game.size ? <span className="chip gt-chip">{game.size}</span> : null}
+            {game.size ? <span className="chip od-chip">{game.size}</span> : null}
             {discChips.map((chip) => (
-              <span key={chip.key} className="chip gt-chip" title={chip.title}>
+              <span key={chip.key} className="chip od-chip" title={chip.title}>
                 {chip.text}
               </span>
             ))}
-            {game.status_label ? <span className="chip gt-chip">{game.status_label}</span> : null}
+            {game.status_label ? <span className="chip od-chip">{game.status_label}</span> : null}
             {game.rom_region || game.rom_languages ? (
-              <span className="chip gt-chip" title="ROM region / languages from filename">
+              <span className="chip od-chip" title="ROM region / languages from filename">
                 {[game.rom_region, game.rom_languages].filter(Boolean).join(' · ') || 'ROM lang'}
                 {game.preferred_locale_matches === true
                   ? ` · matches ${game.preferred_game_locale || 'en-US'}`
@@ -509,12 +509,12 @@ export function GameDetailsPage() {
               </span>
             ) : null}
             {game.freshness_status ? (
-              <span className="chip gt-chip">Freshness: {game.freshness_status}</span>
+              <span className="chip od-chip">Freshness: {game.freshness_status}</span>
             ) : null}
             {/* Companion presence reads as status, so it belongs on the status
                 row rather than floating above the action buttons. */}
             <span
-              className={`chip gt-chip${game.client_connected ? '' : ' gt-chip--muted'}`}
+              className={`chip od-chip${game.client_connected ? '' : ' od-chip--muted'}`}
               title={
                 game.client_connected
                   ? 'Companion client is online'
@@ -524,9 +524,9 @@ export function GameDetailsPage() {
               {game.client_connected ? 'Companion online' : 'Companion offline'}
             </span>
             {game.hltb_main_story != null ? (
-              <span className="chip gt-chip">HLTB main {Number(game.hltb_main_story).toFixed(1)}h</span>
+              <span className="chip od-chip">HLTB main {Number(game.hltb_main_story).toFixed(1)}h</span>
             ) : null}
-            {game.is_favorite ? <span className="chip gt-chip">Favorite</span> : null}
+            {game.is_favorite ? <span className="chip od-chip">Favorite</span> : null}
           </div>
           <GameActionBar
             gameUuid={game.uuid}
@@ -536,11 +536,11 @@ export function GameDetailsPage() {
             variant="full"
             showPresence={false}
           />
-          <div className="gt-details-page__quick">
+          <div className="od-details-page__quick">
             {playHref ? (
               <>
                 {Array.isArray(game.emulator_cores) && game.emulator_cores.length > 1 ? (
-                  <label className="gt-details-page__core-picker">
+                  <label className="od-details-page__core-picker">
                     Core{' '}
                     <select
                       value={selectedCore || game.emulator_core || game.emulator_cores[0]}
@@ -554,14 +554,14 @@ export function GameDetailsPage() {
                     </select>
                   </label>
                 ) : null}
-                <a className="gt-btn gt-btn--primary" href={playHref}>
+                <a className="od-btn od-btn--primary" href={playHref}>
                   Play in browser
                 </a>
               </>
             ) : firmwareBlocked || game.play_blocker === 'unsupported_archive' ? (
               <button
                 type="button"
-                className="gt-btn gt-btn--primary"
+                className="od-btn od-btn--primary"
                 disabled
                 title={
                   firmwareBlocked
@@ -595,13 +595,13 @@ export function GameDetailsPage() {
                 play → where else this exists → launch it there → go and look
                 for changes. */}
             {game.steam_app_id ? (
-              <a className="gt-btn" href={`steam://run/${game.steam_app_id}`}>
+              <a className="od-btn" href={`steam://run/${game.steam_app_id}`}>
                 Launch Steam
               </a>
             ) : null}
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               disabled={freshnessBusy}
               title="Re-read the store listing for a newer version, updates, or DLC"
               onClick={() => {
@@ -614,10 +614,10 @@ export function GameDetailsPage() {
             </button>
           </div>
           {firmwareBlocked ? (
-            <p className="gt-details-page__play-honesty" role="status">
+            <p className="od-details-page__play-honesty" role="status">
               <span>{firmwareMessage}</span>
               {firmwareHint ? (
-                <span className="gt-details-page__muted"> {firmwareHint}</span>
+                <span className="od-details-page__muted"> {firmwareHint}</span>
               ) : null}{' '}
               <Link to={FIRMWARE_HELP_HREF}>Help → Browser play</Link>
               {game.is_admin ? (
@@ -633,13 +633,13 @@ export function GameDetailsPage() {
             <PageStatus
               error={freshnessError}
               errorMessage={`Update check failed: ${String(freshnessError.message || freshnessError)}`}
-              className="gt-details-page__muted"
+              className="od-details-page__muted"
             />
           ) : null}
         </div>
       </div>
 
-      <div className={`gt-details-page__fold${hasMedia ? ' gt-details-page__fold--media' : ''}`}>
+      <div className={`od-details-page__fold${hasMedia ? ' od-details-page__fold--media' : ''}`}>
         {hasMedia ? (
           <DetailsMediaStage
             videoEmbeds={videoEmbeds}
@@ -649,20 +649,20 @@ export function GameDetailsPage() {
             onShotBroken={markShotBroken}
           />
         ) : null}
-      <div className="gt-details-page__content-grid">
+      <div className="od-details-page__content-grid">
         {game.summary ? (
-          <section className="gt-details-page__section gt-details-page__section--summary">
+          <section className="od-details-page__section od-details-page__section--summary">
             <h2>Summary</h2>
             <p
               ref={summaryRef}
-              className={`gt-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
+              className={`od-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
             >
               {game.summary}
             </p>
             {summaryOverflows ? (
               <button
                 type="button"
-                className="gt-btn gt-details-page__summary-toggle"
+                className="od-btn od-details-page__summary-toggle"
                 onClick={() => setSummaryExpanded((open) => !open)}
               >
                 {summaryExpanded ? 'Show less' : 'Show more'}
@@ -671,19 +671,19 @@ export function GameDetailsPage() {
           </section>
         ) : null}
 
-        <section className="gt-details-page__section gt-details-page__section--facts">
+        <section className="od-details-page__section od-details-page__section--facts">
           <h2>Details</h2>
           {pathRows.length > 0 ? (
-            <div className="gt-details-page__paths" aria-label="Admin paths">
+            <div className="od-details-page__paths" aria-label="Admin paths">
               {pathRows.map((row) => (
-                <div key={`${row.label}-${row.path}`} className="gt-details-page__path-row">
-                  <span className="gt-details-page__path-label">{row.label}</span>
-                  <code className="gt-details-page__path-value" title={row.path}>
+                <div key={`${row.label}-${row.path}`} className="od-details-page__path-row">
+                  <span className="od-details-page__path-label">{row.label}</span>
+                  <code className="od-details-page__path-value" title={row.path}>
                     {row.path}
                   </code>
                   <button
                     type="button"
-                    className="gt-btn"
+                    className="od-btn"
                     onClick={() => setPathModal(row)}
                   >
                     Open path
@@ -692,7 +692,7 @@ export function GameDetailsPage() {
               ))}
             </div>
           ) : null}
-          <dl className="gt-details-page__facts">
+          <dl className="od-details-page__facts">
             {game.rating != null ? (
               <>
                 <dt>Rating</dt>
@@ -764,20 +764,20 @@ export function GameDetailsPage() {
           </dl>
         </section>
 
-        <div className="gt-details-page__flow">
+        <div className="od-details-page__flow">
       {game.storyline ? (
-        <section className="gt-details-page__section">
+        <section className="od-details-page__section">
           <h2>About</h2>
-          <p className="gt-details-page__about">{game.storyline}</p>
+          <p className="od-details-page__about">{game.storyline}</p>
         </section>
       ) : null}
 
       <DetailsStoreSpecs storeSpecs={game.store_specs} />
 
       {game.show_translations_block ? (
-        <section className="gt-details-page__section" id="translations">
+        <section className="od-details-page__section" id="translations">
           <h2>Translations &amp; patches</h2>
-          <p className="gt-details-page__muted">
+          <p className="od-details-page__muted">
             {game.needs_translation
               ? `This ROM may not match your preferred game language (${game.preferred_game_locale || 'en-US'}).`
               : 'Translation patches available for this title.'}{' '}
@@ -786,7 +786,7 @@ export function GameDetailsPage() {
             {' '}or <code>docs/user/translation-patches.md</code>.
           </p>
           {Array.isArray(game.translation_patches) && game.translation_patches.length > 0 ? (
-            <ul className="gt-details-page__versions">
+            <ul className="od-details-page__versions">
               {game.translation_patches.map((patch) => {
                 const versionKey = `patch:${patch.uuid}`
                 const applyBusy = busyVersionKey === versionKey
@@ -795,22 +795,22 @@ export function GameDetailsPage() {
                   Boolean(game.rom_patch_apply_enabled)
                 return (
                   <li key={patch.uuid}>
-                    <div className="gt-details-page__version-row">
+                    <div className="od-details-page__version-row">
                       <div>
                         <strong>{patch.label}</strong>
-                        <span className="gt-details-page__muted">
+                        <span className="od-details-page__muted">
                           {' '}
                           · {(patch.patch_format || 'patch').toUpperCase()}
                           {patch.target_language ? ` · → ${patch.target_language}` : ''}
                         </span>
                       </div>
-                      <div className="gt-details-page__version-actions">
-                        <a className="gt-btn" href={patch.download_url}>
+                      <div className="od-details-page__version-actions">
+                        <a className="od-btn" href={patch.download_url}>
                           Download patch
                         </a>
                         {patch.source_url ? (
                           <a
-                            className="gt-btn"
+                            className="od-btn"
                             href={patch.source_url}
                             target="_blank"
                             rel="noreferrer"
@@ -821,7 +821,7 @@ export function GameDetailsPage() {
                         {canApplyPatch ? (
                           <button
                             type="button"
-                            className="gt-btn"
+                            className="od-btn"
                             disabled={Boolean(busyVersionKey)}
                             onClick={() => {
                               setBusyVersionKey(versionKey)
@@ -846,7 +846,7 @@ export function GameDetailsPage() {
                             {applyBusy ? 'Queuing…' : 'Apply with companion'}
                           </button>
                         ) : (
-                          <Link className="gt-btn" to="/help#translations">
+                          <Link className="od-btn" to="/help#translations">
                             How to apply
                           </Link>
                         )}
@@ -857,16 +857,16 @@ export function GameDetailsPage() {
               })}
             </ul>
           ) : (
-            <p className="gt-details-page__muted">
+            <p className="od-details-page__muted">
               No patch files in extras yet. Ask a librarian to add a curated{' '}
               <code>.ips</code>/<code>.bps</code>/<code>.ups</code> under the game extras folder,
               or follow the how-to for applying a patch you already have.
             </p>
           )}
           {game.rom_ai_translate?.show_panel ? (
-            <div className="gt-details-page__ai-translate">
+            <div className="od-details-page__ai-translate">
               <h3>Live translate (RetroArch AI)</h3>
-              <p className="gt-details-page__muted">
+              <p className="od-details-page__muted">
                 {game.rom_ai_translate.note}{' '}
                 Target language hint: <code>{game.rom_ai_translate.target_lang || 'en'}</code>
                 {game.rom_ai_translate.service_url_hint
@@ -874,20 +874,20 @@ export function GameDetailsPage() {
                   : ''}
                 . Offline dump→rebuild is not available for this system yet.
               </p>
-              <Link className="gt-btn" to="/help#translations">
+              <Link className="od-btn" to="/help#translations">
                 Setup guide
               </Link>
             </div>
           ) : null}
           {game.is_admin && game.patch_catalog_enabled ? (
-            <div className="gt-details-page__catalog">
+            <div className="od-details-page__catalog">
               <h3>Operator catalog</h3>
-              <p className="gt-details-page__muted">
+              <p className="od-details-page__muted">
                 Search your local YAML/JSON patch guide catalog (metadata only - no third-party scrape).
               </p>
               <button
                 type="button"
-                className="gt-btn"
+                className="od-btn"
                 disabled={catalogBusy}
                 onClick={() => {
                   setCatalogBusy(true)
@@ -913,31 +913,31 @@ export function GameDetailsPage() {
                 {catalogBusy ? 'Searching…' : 'Search catalog'}
               </button>
               {catalogStatus ? (
-                <p className="gt-details-page__muted" role="status">
+                <p className="od-details-page__muted" role="status">
                   {catalogStatus}
                 </p>
               ) : null}
               {catalogHits.length > 0 ? (
-                <ul className="gt-details-page__versions">
+                <ul className="od-details-page__versions">
                   {catalogHits.map((hit) => (
                     <li key={hit.id}>
-                      <div className="gt-details-page__version-row">
+                      <div className="od-details-page__version-row">
                         <div>
                           <strong>{hit.title}</strong>
-                          <span className="gt-details-page__muted">
+                          <span className="od-details-page__muted">
                             {' '}
                             · {hit.provider}
                             {hit.patch_format ? ` · ${hit.patch_format}` : ''}
                             {hit.target_language ? ` · → ${hit.target_language}` : ''}
                           </span>
                           {hit.notes ? (
-                            <p className="gt-details-page__muted">{hit.notes}</p>
+                            <p className="od-details-page__muted">{hit.notes}</p>
                           ) : null}
                         </div>
-                        <div className="gt-details-page__version-actions">
+                        <div className="od-details-page__version-actions">
                           {hit.source_url ? (
                             <a
-                              className="gt-btn"
+                              className="od-btn"
                               href={hit.source_url}
                               target="_blank"
                               rel="noreferrer"
@@ -947,7 +947,7 @@ export function GameDetailsPage() {
                           ) : null}
                           <button
                             type="button"
-                            className="gt-btn"
+                            className="od-btn"
                             disabled={catalogBusy}
                             onClick={() => {
                               setCatalogBusy(true)
@@ -985,13 +985,13 @@ export function GameDetailsPage() {
       ) : null}
 
       {baseAndUpdates.length > 0 ? (
-        <section className="gt-details-page__section" id="updates">
-          <div className="gt-details-page__section-head">
+        <section className="od-details-page__section" id="updates">
+          <div className="od-details-page__section-head">
             <h2>Versions</h2>
             {game.is_admin ? (
               <button
                 type="button"
-                className="gt-btn gt-btn--secondary"
+                className="od-btn od-btn--secondary"
                 disabled={cleanupBusy}
                 onClick={() => void handleCleanupOrphans()}
                 title={
@@ -1005,11 +1005,11 @@ export function GameDetailsPage() {
             ) : null}
           </div>
           {versionActionStatus ? (
-            <p className="gt-details-page__muted" role="status">
+            <p className="od-details-page__muted" role="status">
               {versionActionStatus}
             </p>
           ) : null}
-          <ul className="gt-details-page__versions">
+          <ul className="od-details-page__versions">
             {baseAndUpdates.map((row) => {
               const versionKey = `${row.kind}:${row.uuid}`
               const downloadKey = `download:${row.kind}:${row.uuid || 'base'}`
@@ -1022,27 +1022,27 @@ export function GameDetailsPage() {
               const downloadBusy = busyVersionKey === downloadKey
               return (
                 <li key={`${row.kind}-${row.id || row.uuid}`}>
-                  <div className="gt-details-page__version-row">
-                    <div className="gt-details-page__version-meta">
+                  <div className="od-details-page__version-row">
+                    <div className="od-details-page__version-meta">
                       <strong>{row.label}</strong>
                       {row.is_default ? (
-                        <span className="chip gt-chip" title="Default download version">
+                        <span className="chip od-chip" title="Default download version">
                           Default
                         </span>
                       ) : null}
-                      <span className="gt-details-page__muted">
+                      <span className="od-details-page__muted">
                         {' '}
                         · {row.kind}
                         {sizeLabel ? ` · ${sizeLabel}` : ''}
                       </span>
                       {pathMissing ? (
-                        <span className="gt-details-page__muted gt-details-page__version-missing">
+                        <span className="od-details-page__muted od-details-page__version-missing">
                           {' '}
                           · Missing on disk
                         </span>
                       ) : null}
                     </div>
-                    <div className="gt-details-page__version-actions">
+                    <div className="od-details-page__version-actions">
                       {/* Updates get a Download; the base row does not.
                           Downloading the base game is what the action bar at
                           the top of the page is for, and it is the *primary*
@@ -1054,7 +1054,7 @@ export function GameDetailsPage() {
                       {canDownload && row.kind === 'update' ? (
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={Boolean(busyVersionKey)}
                           onClick={() => {
                             void handleVersionDownload({
@@ -1070,7 +1070,7 @@ export function GameDetailsPage() {
                       {canApply ? (
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={Boolean(busyVersionKey)}
                           onClick={() => {
                             setBusyVersionKey(versionKey)
@@ -1120,16 +1120,16 @@ export function GameDetailsPage() {
         canEdit={Boolean(game.can_edit)}
       />
 
-      <section className="gt-details-page__section" id="extras">
+      <section className="od-details-page__section" id="extras">
         <h2>Extras &amp; DLC</h2>
         {extrasModel.loading ? (
-          <p className="gt-details-page__muted">Loading extras…</p>
+          <p className="od-details-page__muted">Loading extras…</p>
         ) : extrasModel.rows.length === 0 ? (
-          <p className="gt-details-page__muted">
+          <p className="od-details-page__muted">
             No extras or DLC listed for this title yet.
           </p>
         ) : (
-          <ul className="gt-details-page__versions">
+          <ul className="od-details-page__versions">
             {extrasModel.rows.map((row) => {
               const versionKey = `extra:${row.uuid || row.id}`
               const applyBusy = busyVersionKey === versionKey
@@ -1139,10 +1139,10 @@ export function GameDetailsPage() {
               const pathMissing = row.path_missing === true || isVersionPathMissing(row)
               return (
                 <li key={row.id || row.uuid || row.label}>
-                  <div className="gt-details-page__version-row">
-                    <div className="gt-details-page__version-meta">
+                  <div className="od-details-page__version-row">
+                    <div className="od-details-page__version-meta">
                       <strong>{row.label}</strong>
-                      <span className="gt-details-page__muted">
+                      <span className="od-details-page__muted">
                         {' '}
                         · {row.kind}
                         {row.kind === 'disc' && row.disc_index != null
@@ -1152,17 +1152,17 @@ export function GameDetailsPage() {
                         {onServer ? ` · ${onServer}` : ''}
                       </span>
                       {pathMissing ? (
-                        <span className="gt-details-page__muted gt-details-page__version-missing">
+                        <span className="od-details-page__muted od-details-page__version-missing">
                           {' '}
                           · Missing on disk
                         </span>
                       ) : null}
                     </div>
-                    <div className="gt-details-page__version-actions">
+                    <div className="od-details-page__version-actions">
                       {row.download_url && !pathMissing ? (
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={Boolean(busyVersionKey)}
                           onClick={() => {
                             void handleVersionDownload({
@@ -1180,7 +1180,7 @@ export function GameDetailsPage() {
                       {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={Boolean(busyVersionKey)}
                           onClick={() => {
                             setBusyVersionKey(versionKey)
@@ -1221,14 +1221,14 @@ export function GameDetailsPage() {
       <DetailsMoreFrom gameUuid={game.uuid} />
 
       {shownShots.length ? (
-        <section className="gt-details-page__section">
+        <section className="od-details-page__section">
           <h2>Screenshots</h2>
-          <div className="gt-details-page__shots">
+          <div className="od-details-page__shots">
             {shownShots.map((url, index) => (
               <button
                 key={url}
                 type="button"
-                className="gt-details-page__shot"
+                className="od-details-page__shot"
                 onClick={() => setShotIndex(index)}
                 onDoubleClick={() => setShotIndex(index)}
                 aria-label={`Open screenshot ${index + 1}`}
@@ -1246,22 +1246,22 @@ export function GameDetailsPage() {
         </section>
       ) : null}
 
-      <section className="gt-details-page__section">
+      <section className="od-details-page__section">
         <h2>Trailers &amp; videos</h2>
         {videoEmbeds.length > 0 ? (
-          <div className="gt-details-page__videos">
+          <div className="od-details-page__videos">
             {videoEmbeds.map((src, index) => (
-              <div key={src} className="gt-details-page__video-card">
+              <div key={src} className="od-details-page__video-card">
                 <iframe
                   title={`Game trailer ${index + 1}`}
                   src={src}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                   allowFullScreen
                 />
-                <div className="gt-details-page__video-actions">
+                <div className="od-details-page__video-actions">
                   <button
                     type="button"
-                    className="gt-btn"
+                    className="od-btn"
                     onClick={() => setVideoIndex(index)}
                   >
                     Theater
@@ -1271,14 +1271,14 @@ export function GameDetailsPage() {
             ))}
           </div>
         ) : demoLink ? (
-          <p className="gt-details-page__muted">
+          <p className="od-details-page__muted">
             No embedded trailer yet.{' '}
-            <a className="gt-btn" href={demoLink.href} target="_blank" rel="noreferrer">
+            <a className="od-btn" href={demoLink.href} target="_blank" rel="noreferrer">
               {demoLink.label}
             </a>
           </p>
         ) : (
-          <p className="gt-details-page__muted">
+          <p className="od-details-page__muted">
             No trailers or videos for this title yet.
           </p>
         )}

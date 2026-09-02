@@ -2,7 +2,7 @@
 
 const NINTENDO = new Set([
   'NES', 'SNES', 'NGC', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB', 'WII', 'N3DS', 'SWITCH',
-  'WII_U', 'POKE_MINI',
+  'WII_U', 'POKE_MINI', 'GAME_WATCH',
 ])
 const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'PSVITA'])
 const XBOX = new Set(['XBOX', 'X360', 'XONE', 'XSX'])
@@ -22,7 +22,7 @@ const ATARI = new Set([
 const PC = new Set([
   'PCWIN', 'PCDOS', 'MAC', 'OTHER', 'AMIGA', 'AMIGA_CD32',
   'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
-  'ATARI_8BIT', 'X68000', 'PC_98',
+  'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO',
 ])
 
 const FAMILY_BY_PLATFORM = {
@@ -83,6 +83,8 @@ export const ART_STUDIO_SYSTEMS = [
   { id: 'ATARI_8BIT', label: 'Atari 8-bit' },
   { id: 'X68000', label: 'Sharp X68000' },
   { id: 'PC_98', label: 'NEC PC-98' },
+  { id: 'BBC_MICRO', label: 'BBC Micro' },
+  { id: 'GAME_WATCH', label: 'Game & Watch' },
 ]
 
 export function platformFamily(platformId) {

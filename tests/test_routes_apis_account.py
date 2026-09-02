@@ -10,13 +10,13 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import InviteToken, User
-from gametheca.utils.accounts import (
+from oneirodex.models import InviteToken, User
+from oneirodex.utils.accounts import (
     display_email,
     is_placeholder_email,
     placeholder_email,
 )
-from gametheca.utils.avatar import (
+from oneirodex.utils.avatar import (
     DEFAULT_AVATAR,
     LEGACY_DEFAULT_AVATAR,
     STOCK_AVATARS,
@@ -267,7 +267,7 @@ class TestStockAvatars:
     def test_every_shipped_file_exists_on_disk(self):
         from pathlib import Path
 
-        static_root = Path(__file__).resolve().parents[1] / 'gametheca' / 'static'
+        static_root = Path(__file__).resolve().parents[1] / 'oneirodex' / 'static'
         for entry in STOCK_AVATARS:
             assert (static_root / entry['path']).is_file(), entry['id']
         assert (static_root / DEFAULT_AVATAR).is_file()

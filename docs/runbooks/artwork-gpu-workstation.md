@@ -117,7 +117,7 @@ python scripts/fetch-free-roms.py --out $env:TEMP\oneirodex-free-roms
 
 | What | Where |
 |---|---|
-| Rail / Preferences **glyphs** | SVG under `gametheca/setup/icon_themes/{pack}/icons/` — `currentColor`, not photos |
+| Rail / Preferences **glyphs** | SVG under `oneirodex/setup/icon_themes/{pack}/icons/` — `currentColor`, not photos |
 | Pack **preview** rasters | `preview.png` in each pack (art-direction samples; chips still use SVG) |
 | Game **covers** | Art Studio → this SD.Next URL |
 | **Systems hub marks** | Art Studio → **System marks** tab (`#marks`) **Lab** (one platform, editable prompt, preview + attempt log), or `python scripts/generate_system_marks.py --theme default --platform nes`. Batch: `POST /admin/api/art-studio/system-marks/generate`. Files: `static/library/system-marks/<theme>/<platform>.webp`. Prefer the lab until quality is accepted; do not `--all --force`. |

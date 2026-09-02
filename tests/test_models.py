@@ -5,8 +5,8 @@ from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, func, text
 
-from gametheca import create_app, db
-from gametheca.models import (
+from oneirodex import create_app, db
+from oneirodex.models import (
     User, Game, Library, Genre, GameMode, Theme, Platform, 
     PlayerPerspective, Developer, Publisher, MultiplayerMode,
     Image, GameURL, GameUpdate, GameExtra, DownloadRequest,
@@ -16,13 +16,13 @@ from gametheca.models import (
     JSONEncodedDict, Category, Status,
     user_favorites, game_genre_association
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 
 
 def safe_cleanup_database(db_session):
     """Completely clean up ALL test data - this is a test database, nuke everything!"""
     from sqlalchemy import text, delete
-    from gametheca.models import (
+    from oneirodex.models import (
         Game, User, Library, DownloadRequest, Newsletter, 
         SystemEvents, InviteToken, Image, GameURL, ScanJob,
         UnmatchedFolder, GameUpdate, GameExtra, GlobalSettings,
@@ -598,7 +598,7 @@ class TestGlobalSettingsModel:
         so a second INSERT is rejected as soon as anything else has made the row.
         """
         settings_data = {
-            'site_name': 'GameTheca',
+            'site_name': 'Oneirodex',
             'max_downloads': 5
         }
 
@@ -741,7 +741,7 @@ class TestModelChoiceFunctions:
     
     def test_genre_choices(self, db_session):
         """Test genre_choices function."""
-        from gametheca.models import genre_choices
+        from oneirodex.models import genre_choices
         
         # Use get_or_create pattern to avoid unique constraint violations
         # Use helper function to avoid unique constraint violations
@@ -759,7 +759,7 @@ class TestModelChoiceFunctions:
     
     def test_platform_choices(self, db_session):
         """Test platform_choices function."""
-        from gametheca.models import platform_choices
+        from oneirodex.models import platform_choices
         
         # Use helper functions to avoid unique constraint violations
         test_id = str(uuid4())[:8]

@@ -12,8 +12,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, GlobalSettings, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Game, GlobalSettings, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture

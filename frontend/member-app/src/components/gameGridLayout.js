@@ -1,6 +1,6 @@
 /**
  * Layout helpers for library grid virtualization.
- * Matches CSS `repeat(auto-fill, minmax(var(--gt-tile-min), 1fr))` + gap.
+ * Matches CSS `repeat(auto-fill, minmax(var(--od-tile-min), 1fr))` + gap.
  */
 
 export function readCssPx(el, varName, fallback) {
@@ -30,7 +30,7 @@ export function computeGridColumns(width, tileMin = 180, gap = 10) {
  *
  *   1. this estimate returned `tileWidth * 4/3 + gap`
  *   2. GameGrid passes `gap` to the virtualizer, which spaces rows itself
- *   3. `.game-library-row` carried `padding-bottom: var(--gt-tile-gap)`, and
+ *   3. `.game-library-row` carried `padding-bottom: var(--od-tile-gap)`, and
  *      rows are measured with `virtualizer.measureElement`, so that padding
  *      landed in the measured height too
  *
@@ -58,7 +58,7 @@ export function estimateGridRowHeight(width, columnCount, gap = 10) {
  * Nearest scrollable ancestor, or `null` when the page itself scrolls.
  *
  * The library grid virtualises against whatever actually scrolls. In the member
- * shell that is `.gt-shell__main` — the shell is `height: 100dvh; overflow:
+ * shell that is `.od-shell__main` — the shell is `height: 100dvh; overflow:
  * hidden` and the content pane is "the only scroll container in the shell" —
  * so the window never scrolls at all. Walking up for a real scroller keeps the
  * grid working in both cases without hardcoding a shell class here.

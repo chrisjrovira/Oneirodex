@@ -1,6 +1,6 @@
 """Tests for library doctor dry-run helpers (no DB / no network)."""
 
-from gametheca.utils.library_doctor import iter_game_folders, dry_run_folder, doctor_dry_run, doctor_write_proposals
+from oneirodex.utils.library_doctor import iter_game_folders, dry_run_folder, doctor_dry_run, doctor_write_proposals
 
 
 def test_iter_game_folders_flat(tmp_path):
@@ -55,11 +55,11 @@ def test_doctor_write_proposals(tmp_path):
     rows = [{'path': str(folder), 'raw_name': 'Game X'}]
     results = doctor_write_proposals(rows, candidates_by_path={str(folder): [{'id': 1, 'name': 'Game X'}]})
     assert results[0]['ok'] is True
-    assert (folder / 'gametheca.proposal.json').exists()
+    assert (folder / 'oneirodex.proposal.json').exists()
 
 
 def test_doctor_apply_renames(tmp_path):
-    from gametheca.utils.library_doctor import doctor_apply_renames
+    from oneirodex.utils.library_doctor import doctor_apply_renames
     folder = tmp_path / 'Game [FitGirl Repack]'
     folder.mkdir()
     rows = [{'path': str(folder), 'cleaned_name': 'Game'}]

@@ -1,10 +1,10 @@
 import { csrfHeaders } from '../api/csrf'
 import { errorFromBody } from '../api/envelopeError'
 
-const STORAGE_OPEN = 'gt-social-companion-open'
-const STORAGE_PINNED = 'gt-social-companion-pinned'
+const STORAGE_OPEN = 'od-social-companion-open'
+const STORAGE_PINNED = 'od-social-companion-pinned'
 /** CustomEvent name — TopNav / CommandPalette open the dock without SPA navigation. */
-export const OPEN_SOCIAL_EVENT = 'gt-open-social-companion'
+export const OPEN_SOCIAL_EVENT = 'od-open-social-companion'
 
 export function presenceLabel(status) {
   if (status === 'in-game') return 'In game'
@@ -112,7 +112,7 @@ export function shareGamePath(gameUuid) {
 
 export function openSocialPopoutWindow() {
   const features = 'width=380,height=720,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
-  const win = window.open('/social-companion', 'gt-social-companion', features)
+  const win = window.open('/social-companion', 'od-social-companion', features)
   if (win) {
     try {
       win.focus()

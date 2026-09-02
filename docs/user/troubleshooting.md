@@ -41,7 +41,7 @@ face, but nothing on any page ever changed — including back to the default.
 
 The stylesheet that declares the font families, `/api/theme/fonts.css`, failed
 on every request with a server error. So the `@font-face` rules were never
-delivered and `--gt-font-family` was never set: the browser fell through to its
+delivered and `--od-font-family` was never set: the browser fell through to its
 own defaults no matter what was chosen. It affected everyone equally, signed in
 or out, which is why it did not look preference-shaped.
 

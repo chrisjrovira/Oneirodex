@@ -234,7 +234,7 @@ test('admin path rows show the full library folder string', async () => {
   renderDetails()
   expect(await screen.findByText(fullPath)).toBeInTheDocument()
   expect(screen.getByLabelText('Admin paths')).toBeInTheDocument()
-  const pathValue = document.querySelector('.gt-details-page__path-value')
+  const pathValue = document.querySelector('.od-details-page__path-value')
   expect(pathValue?.textContent).toBe(fullPath)
 })
 
@@ -271,11 +271,11 @@ test('admin ⋮ menu exposes Edit Details / Edit Images', async () => {
   const { container } = renderDetails()
 
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
-  const coverWrap = container.querySelector('.gt-details-page__cover-wrap')
+  const coverWrap = container.querySelector('.od-details-page__cover-wrap')
   expect(coverWrap).toBeTruthy()
   const adminBtn = within(coverWrap).getByRole('button', { name: 'Admin actions' })
   expect(adminBtn).toHaveAttribute('data-chrome-anchor', 'top-right')
-  expect(container.querySelector('.gt-details-page__hero-main .gt-details-page__admin-menu')).toBeNull()
+  expect(container.querySelector('.od-details-page__hero-main .od-details-page__admin-menu')).toBeNull()
   await user.click(adminBtn)
   expect(within(coverWrap).getByRole('menuitem', { name: 'Edit Details' })).toHaveAttribute(
     'href',
@@ -684,11 +684,11 @@ test('later sections sit in the content grid beside the facts rail', async () =>
   renderDetails()
 
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
-  const grid = document.querySelector('.gt-details-page__content-grid')
+  const grid = document.querySelector('.od-details-page__content-grid')
   expect(grid).toBeTruthy()
-  expect(grid.querySelector('.gt-details-page__section--summary')).toBeTruthy()
-  expect(grid.querySelector('.gt-details-page__section--facts')).toBeTruthy()
-  const flow = grid.querySelector('.gt-details-page__flow')
+  expect(grid.querySelector('.od-details-page__section--summary')).toBeTruthy()
+  expect(grid.querySelector('.od-details-page__section--facts')).toBeTruthy()
+  const flow = grid.querySelector('.od-details-page__flow')
   expect(flow).toBeTruthy()
   expect(within(flow).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
   expect(within(flow).getByRole('heading', { name: 'Extras & DLC' })).toBeInTheDocument()
@@ -721,10 +721,10 @@ test('facts rail stays in the grid when there is no summary', async () => {
   renderDetails()
 
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
-  const grid = document.querySelector('.gt-details-page__content-grid')
-  expect(grid.querySelector('.gt-details-page__section--summary')).toBeNull()
-  expect(grid.querySelector('.gt-details-page__section--facts')).toBeTruthy()
-  expect(within(grid.querySelector('.gt-details-page__flow')).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
+  const grid = document.querySelector('.od-details-page__content-grid')
+  expect(grid.querySelector('.od-details-page__section--summary')).toBeNull()
+  expect(grid.querySelector('.od-details-page__section--facts')).toBeTruthy()
+  expect(within(grid.querySelector('.od-details-page__flow')).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
 })
 
 test('breadcrumb is Catalog then primary genre then title', async () => {
@@ -814,7 +814,7 @@ test('media stage sits beside the summary when trailers exist', async () => {
     'src',
     'https://www.youtube.com/embed/abc123DEF',
   )
-  expect(document.querySelector('.gt-details-page__fold--media')).toBeTruthy()
-  expect(document.querySelector('.gt-details-page__content-grid')).toBeTruthy()
+  expect(document.querySelector('.od-details-page__fold--media')).toBeTruthy()
+  expect(document.querySelector('.od-details-page__content-grid')).toBeTruthy()
 })
 

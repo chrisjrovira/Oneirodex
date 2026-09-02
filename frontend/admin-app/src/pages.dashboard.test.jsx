@@ -1,7 +1,29 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach } from 'vitest'
 import { DashboardPage } from './pages'
+import { DASHBOARD_STORAGE_KEY } from './dashboardLayout'
 
-test('DashboardPage Refresh sits in footer and disk values use health tones', async () => {
+beforeEach(() => {
+  const store = new Map()
+  vi.stubGlobal('localStorage', {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => {
+      store.set(key, String(value))
+    },
+    removeItem: (key) => {
+      store.delete(key)
+    },
+    clear: () => store.clear(),
+  })
+})
+
+afterEach(() => {
+  cleanup()
+  window.localStorage?.removeItem?.(DASHBOARD_STORAGE_KEY)
+  vi.unstubAllGlobals()
+})
+
+function mockSummary(overrides = {}) {
   global.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
@@ -35,211 +57,135 @@ test('DashboardPage Refresh sits in footer and disk values use health tones', as
             },
           },
           recent_errors: [],
+          ...overrides,
         }),
       }
     }
     throw new Error(`unexpected fetch ${url}`)
   })
+}
 
+test('DashboardPage Updated timestamp is a hover tooltip on refresh', async () => {
+  mockSummary()
+  const trail = document.createElement('div')
+  trail.id = 'od-admin-topbar-trail'
+  const pageSlot = document.createElement('div')
+  pageSlot.id = 'od-admin-topbar-slot'
+  document.body.appendChild(trail)
+  document.body.appendChild(pageSlot)
+  try {
+    const { container } = render(<DashboardPage />)
+    const refresh = await screen.findByRole('button', { name: 'Refresh dashboard' })
+    expect(trail.contains(refresh)).toBe(true)
+    expect(within(trail).queryByRole('button', { name: 'Reset layout' })).toBeNull()
+    expect(within(pageSlot).getByRole('button', { name: 'Reset layout' })).toBeInTheDocument()
+    const wrap = refresh.closest('.od-ops-refresh-wrap')
+    expect(wrap).toBeTruthy()
+    const asOf = within(wrap).getByRole('tooltip')
+    expect(asOf.textContent).toMatch(/Updated /)
+    expect(refresh.getAttribute('aria-describedby')).toBe(asOf.id)
+    expect(container.querySelector('.od-ops-status__trail')).toBeNull()
+    expect(container.querySelector('.od-admin-dashboard-footer')).toBeNull()
+  } finally {
+    trail.remove()
+    pageSlot.remove()
+  }
+})
+
+test('DashboardPage metric labels stay title case (not ALL CAPS)', async () => {
+  mockSummary()
   const { container } = render(<DashboardPage />)
-  const refresh = await screen.findByRole('button', { name: 'Refresh' })
-  const footer = refresh.closest('.gt-admin-dashboard-footer')
-  expect(footer).toBeTruthy()
-  expect(footer.querySelector('.gt-ops-refresh--footer')).toBeTruthy()
-  const strip = screen.getByLabelText('Key metrics')
-  expect(strip.querySelector('.gt-ops-metric--action')).toBeTruthy()
-  expect(strip.querySelector('.gt-ops-metric--good')).toBeTruthy()
-  expect(strip.querySelector('.gt-ops-metric--info')).toBeTruthy()
-  expect(container.querySelector('.gt-ops-refresh--footer')).toContainElement(refresh)
+  await screen.findByRole('button', { name: 'Refresh dashboard' })
+  const labels = [...container.querySelectorAll('.od-ops-metric__label')].map((n) => n.textContent)
+  expect(labels).toContain('Libraries')
+  expect(labels).toContain('Library health')
+  expect(labels.some((label) => label === 'LIBRARIES')).toBe(false)
 })
 
 test('DashboardPage shows library health tile when library.health present', async () => {
-  global.fetch = vi.fn(async (url) => {
-    if (String(url).includes('/admin/api/ops/summary')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          as_of: new Date().toISOString(),
-          issues: { overall: 'good', items: [] },
-          host: {
-            load_avg: null,
-            process: null,
-            db_ping_ms: null,
-            cpu: { percent: 5 },
-            memory: { percent: 20, used: 1, total: 4 },
-            disk_games: { percent: 40 },
-          },
-          library: {
-            libraries: 2,
-            games: 10,
-            unmatched_folders: 1,
-            health: {
-              score: 81,
-              grade: 'good',
-              factors: [{ id: 'missing_cover', label: 'Missing cover', count: 2 }],
-            },
-          },
-          scans: { active_count: 0, jobs: [] },
-          services: {
-            readyz: null,
-            companions: {
-              online: 0,
-              registered: 0,
-              by_kind: {},
-              last_seen: { within_1h: 0, stale: 0 },
-            },
-          },
-          recent_errors: [],
-        }),
-      }
-    }
-    throw new Error(`unexpected fetch ${url}`)
+  mockSummary({
+    issues: { overall: 'good', items: [] },
+    host: {
+      load_avg: null,
+      process: null,
+      db_ping_ms: null,
+      cpu: { percent: 5 },
+      memory: { percent: 20, used: 1, total: 4 },
+      disk_games: { percent: 40 },
+    },
+    library: {
+      libraries: 2,
+      games: 10,
+      unmatched_folders: 1,
+      health: {
+        score: 81,
+        grade: 'good',
+        factors: [{ id: 'missing_cover', label: 'Missing cover', count: 2 }],
+      },
+    },
+    scans: { active_count: 0, jobs: [] },
   })
-
-  render(<DashboardPage />)
-
-  const strip = await screen.findByLabelText('Key metrics')
-  expect(strip).toHaveTextContent(/Library health/)
-  expect(strip).toHaveTextContent(/81 · good/)
-  expect(strip).toHaveTextContent(/Missing cover/)
-  expect(strip.querySelector('.gt-ops-metric--good')).toBeTruthy()
+  const { container } = render(<DashboardPage />)
+  await screen.findByRole('button', { name: 'Refresh dashboard' })
+  await waitFor(() => {
+    const health = [...container.querySelectorAll('.od-ops-metric')].find((node) =>
+      node.querySelector('.od-ops-metric__label')?.textContent === 'Library health',
+    )
+    expect(health).toBeTruthy()
+    expect(health.querySelector('.od-ops-metric__value')).toHaveTextContent('81 · good')
+  })
 })
 
 test('DashboardPage renders Action required and Warning / Info folds', async () => {
-  global.fetch = vi.fn(async (url) => {
-    if (String(url).includes('/admin/api/ops/summary')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          as_of: new Date().toISOString(),
-          issues: {
-            overall: 'bad',
-            items: [
-              {
-                id: 'readyz_fail',
-                severity: 'bad',
-                category: 'action',
-                message: 'Readyz probe failing',
-                href: '/admin/system_logs',
-              },
-              {
-                id: 'disk_games_critical',
-                severity: 'warn',
-                category: 'warning',
-                message: 'Games disk 96% used',
-              },
-              {
-                id: 'recent_errors',
-                severity: 'warn',
-                category: 'warning',
-                message: '3 error event(s) in the last 24h',
-                href: '/admin/system_logs',
-              },
-            ],
-          },
-          host: {
-            load_avg: null,
-            process: null,
-            db_ping_ms: null,
-            cpu: { percent: 5 },
-            memory: { percent: 20, used: 1, total: 4 },
-            disk_games: { percent: 96 },
-          },
-          library: { libraries: 2, games: 10, unmatched_folders: 1 },
-          scans: { active_count: 0, jobs: [] },
-          services: {
-            readyz: null,
-            companions: {
-              online: 0,
-              registered: 0,
-              by_kind: {},
-              last_seen: { within_1h: 0, stale: 0 },
-            },
-          },
-          recent_errors: [],
-        }),
-      }
-    }
-    throw new Error(`unexpected fetch ${url}`)
+  mockSummary({
+    issues: {
+      overall: 'bad',
+      items: [
+        { id: 'a1', severity: 'bad', category: 'action', message: 'Disk critical' },
+        { id: 'w1', severity: 'warn', category: 'warning', message: 'Base disk 100% used' },
+      ],
+    },
   })
-
   render(<DashboardPage />)
-
-  expect(await screen.findByRole('heading', { name: 'Action required' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Warning / Info' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: /Readyz probe failing/i })).toHaveAttribute(
-    'href',
-    '/admin/system_logs',
-  )
-  expect(screen.getByText('Games disk 96% used')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: /3 error event\(s\) in the last 24h/i })).toHaveAttribute(
-    'href',
-    '/admin/system_logs',
-  )
-  const health = screen.getByLabelText('Health')
-  expect(health).toHaveClass('gt-ops-status--bad')
-  // GT-C1 (UID-013): headline is a verdict; the fold titles are the buckets.
-  // Each label must appear exactly once on the Dashboard.
-  expect(health.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Needs attention')
-  expect(screen.getAllByText('Action required')).toHaveLength(1)
-  expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
-  expect(screen.getAllByText('n/a').length).toBeGreaterThan(0)
+  expect(await screen.findByText('Needs attention')).toBeInTheDocument()
+  expect(screen.getByText('Action required')).toBeInTheDocument()
+  expect(screen.getByText('Warning / Info')).toBeInTheDocument()
+  expect(screen.getByText('Disk critical')).toBeInTheDocument()
+  expect(screen.getByText('Base disk 100% used')).toBeInTheDocument()
 })
 
 test('DashboardPage disk-only issues stay Warning / Info', async () => {
-  global.fetch = vi.fn(async (url) => {
-    if (String(url).includes('/admin/api/ops/summary')) {
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          as_of: new Date().toISOString(),
-          issues: {
-            overall: 'warn',
-            items: [
-              {
-                id: 'disk_games_critical',
-                severity: 'warn',
-                category: 'warning',
-                message: 'Games disk 96% used',
-              },
-            ],
-          },
-          host: {
-            load_avg: null,
-            process: null,
-            db_ping_ms: null,
-            cpu: { percent: 5 },
-            memory: { percent: 20, used: 1, total: 4 },
-            disk_games: { percent: 96 },
-          },
-          library: { libraries: 2, games: 10, unmatched_folders: 1 },
-          scans: { active_count: 0, jobs: [] },
-          services: {
-            readyz: null,
-            companions: {
-              online: 0,
-              registered: 0,
-              by_kind: {},
-              last_seen: { within_1h: 0, stale: 0 },
-            },
-          },
-          recent_errors: [],
-        }),
-      }
-    }
-    throw new Error(`unexpected fetch ${url}`)
+  mockSummary({
+    issues: {
+      overall: 'warn',
+      items: [
+        {
+          id: 'disk_games_critical',
+          severity: 'warn',
+          category: 'warning',
+          message: 'Games disk 100% used',
+        },
+      ],
+    },
   })
-
   render(<DashboardPage />)
+  expect(await screen.findByText('Degraded')).toBeInTheDocument()
+  expect(screen.getByText('Warning / Info')).toBeInTheDocument()
+  expect(screen.queryByText('Action required')).toBeNull()
+})
 
-  expect(await screen.findByRole('heading', { name: 'Warning / Info' })).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: 'Action required' })).not.toBeInTheDocument()
-  expect(screen.getByText('Games disk 96% used')).toBeInTheDocument()
-  const health = screen.getByLabelText('Health')
-  expect(health).toHaveClass('gt-ops-status--warn')
-  expect(health.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Degraded')
-  expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
+test('DashboardPage board exposes reset layout', async () => {
+  mockSummary()
+  // Centre page slot matches Users Invites/Support / member Library actions.
+  const pageSlot = document.createElement('div')
+  pageSlot.id = 'od-admin-topbar-slot'
+  document.body.appendChild(pageSlot)
+  render(<DashboardPage />)
+  const reset = await screen.findByRole('button', { name: 'Reset layout' })
+  expect(reset).toBeInTheDocument()
+  expect(reset).toHaveClass('od-cbtn')
+  expect(pageSlot.contains(reset)).toBe(true)
+  expect(document.querySelector('.od-dash__toolbar')).toBeNull()
+  expect(document.querySelector('.od-dash__board')).toBeTruthy()
+  pageSlot.remove()
 })

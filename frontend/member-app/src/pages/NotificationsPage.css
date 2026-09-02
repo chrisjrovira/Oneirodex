@@ -1,6 +1,6 @@
 /* Notifications — dense inbox, clear unread, prefs folded */
 
-.gt-notifications__header {
+.od-notifications__header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -8,73 +8,73 @@
   gap: 0.75rem;
 }
 
-.gt-notifications__lede {
+.od-notifications__lede {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   margin-bottom: 0;
 }
 
-.gt-notifications__badge {
+.od-notifications__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 1.35rem;
   height: 1.35rem;
   padding: 0 0.35rem;
-  border-radius: var(--gt-radius-pill);
-  background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
-  color: var(--gt-accent);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-accent) 22%, transparent);
+  color: var(--od-accent);
+  font-size: var(--od-font-xs);
   font-weight: 700;
 }
 
-.gt-notifications__toolbar {
+.od-notifications__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
 
-.gt-notifications__filters {
+.od-notifications__filters {
   display: inline-flex;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: var(--gt-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  border-radius: var(--od-radius-sm);
   overflow: hidden;
 }
 
-.gt-notifications__filters button {
+.od-notifications__filters button {
   padding: 0.35rem 0.65rem;
   border: none;
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-notifications__filters button + button {
-  border-left: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+.od-notifications__filters button + button {
+  border-left: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
 }
 
-.gt-notifications__filters button.is-active,
-.gt-notifications__filters button:hover,
-.gt-notifications__filters button:focus-visible {
-  color: var(--gt-accent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+.od-notifications__filters button.is-active,
+.od-notifications__filters button:hover,
+.od-notifications__filters button:focus-visible {
+  color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
   outline: none;
 }
 
 /* Prefs open under the Inbox head — not a full-width fold above the list. */
-.gt-notifications__prefs {
+.od-notifications__prefs {
   margin: 0 0 0.55rem;
   padding: 0.35rem 0.5rem 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-surface) 80%, transparent);
 }
 
-.gt-notifications__pref-list {
+.od-notifications__pref-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -83,23 +83,23 @@
   gap: 0.1rem 0.65rem;
 }
 
-.gt-notifications__pref {
+.od-notifications__pref {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   min-width: 0;
   padding: 0.15rem 0;
   cursor: pointer;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.25;
 }
 
-.gt-notifications__pref input {
+.od-notifications__pref input {
   flex: 0 0 auto;
   margin: 0;
 }
 
-.gt-notifications__pref-text {
+.od-notifications__pref-text {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -107,39 +107,39 @@
   min-width: 0;
 }
 
-.gt-notifications__pref strong {
+.od-notifications__pref strong {
   font-weight: 600;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-notifications__pref-kind {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+.od-notifications__pref-kind {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
-.gt-notifications__pref-note {
+.od-notifications__pref-note {
   margin: 0.35rem 0 0;
   padding: 0.25rem 0 0;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 45%, transparent);
-  font-size: var(--gt-font-xs);
+  border-top: 1px solid color-mix(in srgb, var(--od-border) 45%, transparent);
+  font-size: var(--od-font-xs);
   line-height: 1.3;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 /* Inbox | Preferences · Mark all read — one baseline. Prefs expand under this
    row when toggled; they are not a second full-width section. */
-.gt-notifications__inbox-head {
+.od-notifications__inbox-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--gt-space-4);
+  gap: var(--od-space-4);
   margin: 0 0 0.55rem;
 }
 
-.gt-notifications__inbox-actions {
+.od-notifications__inbox-actions {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -147,107 +147,107 @@
   gap: 0.35rem;
 }
 
-.gt-notifications__prefs-toggle.is-on {
-  color: var(--gt-accent);
+.od-notifications__prefs-toggle.is-on {
+  color: var(--od-accent);
 }
 
-.gt-notifications__section-title {
+.od-notifications__section-title {
   margin: 0;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 /* Quiet until it can do something: with nothing unread the control is disabled,
    and a full-strength disabled button beside a muted label reads as broken. */
-.gt-notifications__mark-all:disabled {
+.od-notifications__mark-all:disabled {
   opacity: 0.45;
 }
 
-.gt-notifications__list {
+.od-notifications__list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--od-border) 75%, transparent);
 }
 
-.gt-notifications__item {
+.od-notifications__item {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.55rem 1rem;
   padding: 0.65rem 0.15rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 65%, transparent);
 }
 
-.gt-notifications__item.is-unread {
-  background: color-mix(in srgb, var(--gt-accent) 5%, transparent);
+.od-notifications__item.is-unread {
+  background: color-mix(in srgb, var(--od-accent) 5%, transparent);
   margin: 0 -0.35rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
 }
 
-.gt-notifications__item-main {
+.od-notifications__item-main {
   min-width: 0;
   flex: 1 1 16rem;
 }
 
-.gt-notifications__item-head {
+.od-notifications__item-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem 0.55rem;
 }
 
-.gt-notifications__item-head strong {
-  font-size: var(--gt-font-base);
+.od-notifications__item-head strong {
+  font-size: var(--od-font-base);
 }
 
-.gt-notifications__item-head time {
+.od-notifications__item-head time {
   margin-left: auto;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-notifications__dot {
+.od-notifications__dot {
   width: 0.45rem;
   height: 0.45rem;
-  border-radius: var(--gt-radius-circle);
-  background: var(--gt-accent);
+  border-radius: var(--od-radius-circle);
+  background: var(--od-accent);
   flex-shrink: 0;
   align-self: center;
 }
 
-.gt-notifications__dot.is-read {
+.od-notifications__dot.is-read {
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-border) 90%, transparent);
 }
 
-.gt-notifications__body {
+.od-notifications__body {
   margin: 0.25rem 0 0 0.95rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.4;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-notifications__item-actions {
+.od-notifications__item-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   align-items: center;
 }
 
-.gt-notifications__item-actions a,
-.gt-notifications__item-actions button {
+.od-notifications__item-actions a,
+.od-notifications__item-actions button {
   font: inherit;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-accent);
+  font-size: var(--od-font-sm);
+  color: var(--od-accent);
   background: transparent;
   border: none;
   padding: 0.2rem 0;
@@ -255,18 +255,62 @@
   text-decoration: none;
 }
 
-.gt-notifications__item-actions button:disabled {
+.od-notifications__item-actions button:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-.gt-notifications__item-actions a:hover,
-.gt-notifications__item-actions a:focus-visible,
-.gt-notifications__item-actions button:hover:not(:disabled),
-.gt-notifications__item-actions button:focus-visible:not(:disabled) {
+.od-notifications__item-actions a:hover,
+.od-notifications__item-actions a:focus-visible,
+.od-notifications__item-actions button:hover:not(:disabled),
+.od-notifications__item-actions button:focus-visible:not(:disabled) {
   text-decoration: underline;
   outline: none;
 }
 
-/* .gt-btn--ghost moved to gt-primitives.css (GT-A4), including its disabled
-   state — the base .gt-btn there already carries :disabled styling. */
+/* .od-btn--ghost moved to od-primitives.css (GT-A4), including its disabled
+   state — the base .od-btn there already carries :disabled styling. */
+
+/* Fill the main pane like News: inbox head stays put; the list scrolls here
+   instead of lengthening the shell into doom-scroll. */
+.od-more-page.od-notifications--fill {
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.od-notifications--fill .od-notifications__header {
+  flex: 0 0 auto;
+}
+
+.od-notifications--fill .od-notifications__inbox {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.od-notifications--fill .od-notifications__inbox-head,
+.od-notifications--fill .od-notifications__prefs {
+  flex: 0 0 auto;
+}
+
+.od-notifications--fill .od-notifications__prefs {
+  max-height: min(40vh, 16rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-bottom: 0.55rem;
+}
+
+.od-notifications--fill .od-notifications__list,
+.od-notifications--fill .od-notifications__inbox > .od-more-page__lede {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

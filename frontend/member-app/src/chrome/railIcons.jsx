@@ -229,6 +229,15 @@ export const railIconPaths = {
       <circle cx="15.8" cy="11.6" r="1.5" fill="currentColor" stroke="none"/>
     </>
   ),
+  'ways-to-play': (
+    <>
+      <rect x="3.5" y="8" width="17" height="10.5" rx="3.2"/>
+      <path d="M8 13.2h.01M16 12.2h.01M18 14.2h.01"/>
+      <path d="M7.2 11.4v3.6M5.4 13.2h3.6"/>
+      <circle cx="16" cy="12.2" r="1.05" fill="currentColor" stroke="none"/>
+      <circle cx="18.1" cy="14.2" r="1.05" fill="currentColor" stroke="none"/>
+    </>
+  ),
   'wishlist': (
     <>
       <path d="m12 3.2 2.7 5.5 6 .9-4.35 4.24 1.03 6-5.38-2.83-5.38 2.83 1.03-6L3.3 9.6l6-.9L12 3.2z"/>

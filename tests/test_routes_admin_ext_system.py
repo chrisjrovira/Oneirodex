@@ -2,10 +2,10 @@ import pytest
 from flask import url_for
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
-from gametheca.models import User, SystemEvents, DiscoverySection, Game, Library
-from gametheca.platform import LibraryPlatform
-from gametheca import db
-from gametheca.routes_admin_ext.system import (
+from oneirodex.models import User, SystemEvents, DiscoverySection, Game, Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex import db
+from oneirodex.routes_admin_ext.system import (
     validate_pagination_params, 
     parse_date_filter, 
     validate_json_request,
@@ -246,101 +246,27 @@ class TestSystemLogsRoute:
         response = client.get('/admin/system_logs')
         assert response.status_code == 302
     
-    def test_system_logs_get_success(self, client, admin_user, sample_system_events):
-        """Test successful GET request to system logs."""
+    def test_system_logs_redirects_to_ops_full_log(self, client, admin_user, sample_system_events):
+        """Standalone System logs page is now Ops Full-log popup."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        
-        response = client.get('/admin/system_logs')
-        assert response.status_code == 200
-        assert b'System startup completed' in response.data
 
-    def test_server_logs_alias_reachable(self, client, admin_user, sample_system_events):
-        """Admin SPA nav uses /admin/server_logs — must not 404."""
+        response = client.get('/admin/system_logs')
+        assert response.status_code == 302
+        assert '/admin/ops' in response.location
+        assert 'open=full-log' in response.location
+
+    def test_server_logs_alias_redirects_to_ops(self, client, admin_user, sample_system_events):
+        """Legacy /admin/server_logs bookmark must not 404."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
 
         response = client.get('/admin/server_logs')
-        assert response.status_code == 200
-        assert b'System startup completed' in response.data
-
-    def test_system_logs_pagination(self, client, admin_user, sample_system_events):
-        """Test pagination parameters."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        response = client.get('/admin/system_logs?page=1&per_page=2')
-        assert response.status_code == 200
-    
-    def test_system_logs_event_type_filter(self, client, admin_user, sample_system_events):
-        """Test filtering by event type."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        response = client.get('/admin/system_logs?event_type=admin_action')
-        assert response.status_code == 200
-    
-    def test_system_logs_event_level_filter(self, client, admin_user, sample_system_events):
-        """Test filtering by event level."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        response = client.get('/admin/system_logs?event_level=error')
-        assert response.status_code == 200
-    
-    def test_system_logs_date_filter(self, client, admin_user, sample_system_events):
-        """Test filtering by date range."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        yesterday = (datetime.now() - timedelta(days=1)).strftime(DATE_FORMAT)
-        response = client.get(f'/admin/system_logs?date_from={yesterday}')
-        assert response.status_code == 200
-    
-    def test_system_logs_date_to_filter(self, client, admin_user, sample_system_events):
-        """Test filtering by end date."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        yesterday = (datetime.now() - timedelta(days=1)).strftime(DATE_FORMAT)
-        response = client.get(f'/admin/system_logs?date_to={yesterday}')
-        assert response.status_code == 200
-    
-    def test_system_logs_date_range_filter(self, client, admin_user, sample_system_events):
-        """Test filtering by date range (both from and to)."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        yesterday = (datetime.now() - timedelta(days=1)).strftime(DATE_FORMAT)
-        today = datetime.now().strftime(DATE_FORMAT)
-        response = client.get(f'/admin/system_logs?date_from={yesterday}&date_to={today}')
-        assert response.status_code == 200
-    
-    def test_system_logs_invalid_date_filter(self, client, admin_user, sample_system_events):
-        """Test with invalid date filter."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        response = client.get('/admin/system_logs?date_from=invalid-date')
-        assert response.status_code == 200  # Should not crash, just ignore invalid date
-    
-    def test_system_logs_excessive_per_page(self, client, admin_user, sample_system_events):
-        """Test with excessive per_page parameter."""
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(admin_user.id)
-            sess['_fresh'] = True
-        
-        response = client.get('/admin/system_logs?per_page=500')
-        assert response.status_code == 200
+        assert response.status_code == 302
+        assert '/admin/ops' in response.location
+        assert 'open=full-log' in response.location
 
 
 class TestDiscoverySectionsRoute:
@@ -523,7 +449,7 @@ class TestUpdateSectionOrderAPI:
                              json=data, content_type='application/json')
         assert response.status_code == 302
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_update_section_order_success(self, mock_log, client, admin_user, sample_discovery_sections, db_session):
         """Test successful section order update."""
         with client.session_transaction() as sess:
@@ -693,7 +619,7 @@ class TestUpdateSectionVisibilityAPI:
                              json=data, content_type='application/json')
         assert response.status_code == 302
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_update_section_visibility_success(self, mock_log, client, admin_user, sample_discovery_sections, db_session):
         """Test successful section visibility update."""
         with client.session_transaction() as sess:
@@ -808,7 +734,7 @@ class TestUpdateSectionVisibilityAPI:
 class TestSystemIntegration:
     """Integration tests for system functionality."""
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_complete_section_management_workflow(self, mock_log, client, admin_user, sample_discovery_sections, db_session):
         """Test complete workflow of managing discovery sections."""
         with client.session_transaction() as sess:
@@ -900,7 +826,7 @@ class TestClearSystemLogsAPI:
         assert f"System logs cleared by admin user '{admin_user.name}' (ID: {admin_user.id})" in audit_log.event_text
         assert f"{initial_count} logs were deleted" in audit_log.event_text
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_clear_logs_empty_database(self, mock_log, client, admin_user, db_session):
         """Test clearing logs when database is already empty."""
         with client.session_transaction() as sess:
@@ -927,7 +853,7 @@ class TestClearSystemLogsAPI:
             audit_user=admin_user.id
         )
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_clear_logs_database_error(self, mock_log, client, admin_user, sample_system_events, db_session):
         """Test error handling when database operation fails."""
         with client.session_transaction() as sess:
@@ -946,7 +872,7 @@ class TestClearSystemLogsAPI:
                 # Allow other operations (like count queries) to proceed normally
                 return original_execute(statement)
         
-        with patch('gametheca.routes_admin_ext.system.db.session.execute', side_effect=mock_execute):
+        with patch('oneirodex.routes_admin_ext.system.db.session.execute', side_effect=mock_execute):
             response = client.delete('/admin/api/system_logs/clear')
             
             assert response.status_code == 500
@@ -980,7 +906,7 @@ class TestClearSystemLogsAPI:
         response = client.put('/admin/api/system_logs/clear')
         assert response.status_code == 405  # Method Not Allowed
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_clear_logs_includes_user_details(self, mock_log, client, admin_user, sample_system_events, db_session):
         """Test that the log entry includes proper user details."""
         with client.session_transaction() as sess:
@@ -1048,7 +974,7 @@ class TestSystemIntegrationExtended:
         assert response.status_code == 200
         # Should only show admin_action events with information level from yesterday onwards
     
-    @patch('gametheca.routes_admin_ext.system.log_system_event')
+    @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_error_handling_with_database_rollback(self, mock_log, client, admin_user, sample_discovery_sections, db_session):
         """Test that database errors are handled properly with rollback."""
         with client.session_transaction() as sess:
@@ -1059,7 +985,7 @@ class TestSystemIntegrationExtended:
         section = sample_discovery_sections[0]
         
         # Simulate a database error by mocking the commit method
-        with patch('gametheca.routes_admin_ext.system.db.session.commit') as mock_commit:
+        with patch('oneirodex.routes_admin_ext.system.db.session.commit') as mock_commit:
             mock_commit.side_effect = Exception("Database connection lost")
             
             data = {'sections': [{'id': section.id, 'order': 1}]}

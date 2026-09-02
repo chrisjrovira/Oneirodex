@@ -4,13 +4,13 @@ import os
 
 import pytest
 
-from gametheca.utils.functions import (
+from oneirodex.utils.functions import (
     DEFAULT_SKIP_DIR_GLOBS,
     DEFAULT_SKIP_DIR_REGEXES,
     load_skip_dir_patterns,
     load_skip_dir_regex_patterns,
 )
-from gametheca.utils.gamenames import (
+from oneirodex.utils.gamenames import (
     _list_game_dirs,
     get_game_names_from_folder,
     should_skip_scan_dir,
@@ -163,8 +163,8 @@ def test_get_game_names_from_folder_honors_skip_patterns(tmp_path):
 
 
 def test_load_skip_dir_patterns_includes_dir_prefix(db_session):
-    from gametheca.models import ReleaseGroup
-    from gametheca import db
+    from oneirodex.models import ReleaseGroup
+    from oneirodex import db
 
     db.session.add(ReleaseGroup(filter_pattern="dir:_MyTools", case_sensitive="no"))
     db.session.add(ReleaseGroup(filter_pattern="GOG", case_sensitive="no"))
@@ -178,8 +178,8 @@ def test_load_skip_dir_patterns_includes_dir_prefix(db_session):
 
 
 def test_load_skip_dir_regex_patterns_includes_re_prefix(db_session):
-    from gametheca.models import ReleaseGroup
-    from gametheca import db
+    from oneirodex.models import ReleaseGroup
+    from oneirodex import db
 
     db.session.add(
         ReleaseGroup(filter_pattern=r"re:\[Demo\s+Build\]", case_sensitive="no")
@@ -196,9 +196,9 @@ def test_load_skip_dir_regex_patterns_includes_re_prefix(db_session):
 
 
 def test_dir_prefix_not_in_name_clean_patterns(db_session):
-    from gametheca.models import ReleaseGroup
-    from gametheca import db
-    from gametheca.utils.functions import load_scanning_filter_patterns
+    from oneirodex.models import ReleaseGroup
+    from oneirodex import db
+    from oneirodex.utils.functions import load_scanning_filter_patterns
 
     db.session.add(ReleaseGroup(filter_pattern="dir:_SkipMe", case_sensitive="no"))
     db.session.add(

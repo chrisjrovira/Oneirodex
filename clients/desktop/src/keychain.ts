@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import type { KeychainAdapter } from './auth.js'
 
-/** OS credential account for the GameTheca API token. */
+/** OS credential account for the Oneirodex API token. */
 export const SECURE_STORE_ACCOUNT = 'api_token'
 
 export type InvokeFn = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>

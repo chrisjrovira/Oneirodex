@@ -1,14 +1,14 @@
 # tests/test_utils_worker_caps.py
 import os
 
-from gametheca.models import GlobalSettings
-from gametheca.routes_admin_ext.settings import (
+from oneirodex.models import GlobalSettings
+from oneirodex.routes_admin_ext.settings import (
     DEFAULT_BATCH_SIZE,
     DEFAULT_DOWNLOAD_THREADS,
     DEFAULT_SETTINGS,
     MAX_SCAN_THREADS,
 )
-from gametheca.utils.worker_caps import (
+from oneirodex.utils.worker_caps import (
     clamp_image_download_batch,
     clamp_image_download_threads,
     clamp_scan_threads,

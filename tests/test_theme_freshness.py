@@ -6,12 +6,12 @@ the previous copy, and nothing said so — the only symptom was "the fix didn't
 work", which sends everyone to read the stylesheet rather than the copy step.
 
 On the install these were written against, 36 of 85 tracked assets were behind
-source and 3 had never been deployed at all — including gt-shell.css, the entire
+source and 3 had never been deployed at all — including od-shell.css, the entire
 rail and shell stylesheet. Every CSS fix in that file had been invisible since
 it was written.
 """
 
-from gametheca.utils.theme_freshness import theme_freshness, theme_freshness_summary
+from oneirodex.utils.theme_freshness import theme_freshness, theme_freshness_summary
 
 
 def _write(path, text='body { color: red }'):
@@ -44,13 +44,13 @@ class TestThemeFreshness:
         assert 'Reset Themes' in theme_freshness_summary(tmp_path)
 
     def test_a_never_deployed_file_is_missing_not_fresh(self, tmp_path):
-        """The gt-shell.css case: a new file no reset has ever copied."""
-        _write(tmp_path / 'setup' / 'default_theme' / 'css' / 'gt-shell.css')
+        """The od-shell.css case: a new file no reset has ever copied."""
+        _write(tmp_path / 'setup' / 'default_theme' / 'css' / 'od-shell.css')
 
         data = theme_freshness(tmp_path)
 
         assert data['stale'] is True
-        assert data['missing'] == ['css/gt-shell.css']
+        assert data['missing'] == ['css/od-shell.css']
         assert data['outdated_count'] == 0
 
     def test_only_css_and_js_are_tracked(self, tmp_path):

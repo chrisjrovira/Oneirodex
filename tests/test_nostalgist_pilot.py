@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-HOST = ROOT / 'gametheca' / 'static' / 'vendor' / 'nostalgist'
+HOST = ROOT / 'oneirodex' / 'static' / 'vendor' / 'nostalgist'
 
 
 def test_pilot_host_loads_umd_and_household_resolvers():

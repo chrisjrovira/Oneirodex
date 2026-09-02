@@ -35,7 +35,7 @@ test('shows loading then renders the random trailer', async () => {
 
   render(<TrailersPage />)
 
-  expect(screen.getByText('Loading random trailer…')).toBeInTheDocument()
+  expect(screen.getByText(/Loading random trailer/)).toBeInTheDocument()
 
   expect(await screen.findByRole('heading', { name: 'Doom' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Doom' })).toHaveAttribute(
@@ -45,7 +45,7 @@ test('shows loading then renders the random trailer', async () => {
 
   const frame = screen.getByTitle('Game trailer')
   expect(frame.getAttribute('src')).toContain('https://www.youtube.com/embed/dQw4w9WgXcQ')
-  expect(screen.queryByText('Loading random trailer…')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Loading random trailer/)).not.toBeInTheDocument()
 })
 
 test('shows the no-results state when nothing matches', async () => {
@@ -126,7 +126,7 @@ test('applies selected filters when asking for another trailer', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Filters' }))
   await user.selectOptions(await screen.findByLabelText('Library'), 'lib-1')
-  await user.selectOptions(screen.getByLabelText('Genres'), '3')
+  await user.selectOptions(screen.getByLabelText(/Genres/), '3')
   await user.click(screen.getByRole('button', { name: 'Another one' }))
 
   await waitFor(() => {
@@ -165,7 +165,7 @@ test('another trailer keeps the player up while the next one loads', async () =>
   await user.click(screen.getByRole('button', { name: 'Another one' }))
 
   expect(screen.getByRole('heading', { name: 'Doom' })).toBeInTheDocument()
-  expect(screen.queryByText('Loading random trailer…')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Loading random trailer/)).not.toBeInTheDocument()
 
   releaseSecond({
     has_videos: true,
@@ -220,7 +220,7 @@ test('new chrome keeps every playback action reachable', async () => {
 
 test('trailers shows exactly one Filters control under the new chrome', async () => {
   // The page's own toggle used to be suppressed with `hidden`, which did
-  // nothing: `.gt-trailers__filters` sets `display: flex`, and an author rule
+  // nothing: `.od-trailers__filters` sets `display: flex`, and an author rule
   // beats the UA stylesheet's `[hidden]`. Both the page toggle and the context
   // bar's popover rendered — the duplication W27-F1 set out to remove.
   //
@@ -250,11 +250,35 @@ test('new chrome fuses Filters, Another one, and More into one cluster', async (
   const { container } = render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
   await screen.findByRole('button', { name: /^filters$/i })
 
-  const group = container.querySelector('.gt-cbtn-group')
+  const group = container.querySelector('.od-cbtn-group')
   expect(group).toBeTruthy()
   expect(within(group).getByRole('button', { name: /^filters$/i })).toBeInTheDocument()
   expect(within(group).getByRole('button', { name: 'Another one' })).toBeInTheDocument()
   expect(within(group).getByRole('button', { name: /^more$/i })).toBeInTheDocument()
+})
+
+test('Filters popover matches Library panel chrome', async () => {
+  // Chromeless panel (no Filters/Done head), Apply/Clear fused at the top,
+  // same `.library-filters` form Library uses — not a nested box under Done.
+  const user = userEvent.setup()
+  trailersApi.fetchRandomTrailer.mockResolvedValue({
+    has_videos: true,
+    game_uuid: 'game-uuid-1',
+    game_name: 'Doom',
+    video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
+  })
+
+  const { container } = render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  await user.click(await screen.findByRole('button', { name: /^filters$/i }))
+
+  const panel = container.querySelector('.od-pop__panel')
+  expect(panel).toBeTruthy()
+  expect(panel.classList.contains('od-pop__panel--bare')).toBe(true)
+  expect(within(panel).queryByText('Done')).toBeNull()
+  expect(within(panel).getByRole('button', { name: 'Apply' })).toBeInTheDocument()
+  expect(within(panel).getByRole('button', { name: 'Clear' })).toBeInTheDocument()
+  expect(panel.querySelector('.library-filters')).toBeTruthy()
+  expect(panel.querySelector('.library-filters__actions .od-cbtn-group')).toBeTruthy()
 })
 
 test('trailers keeps its own Filters toggle on the old chrome', async () => {

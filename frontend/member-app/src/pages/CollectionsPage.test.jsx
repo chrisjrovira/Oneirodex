@@ -311,7 +311,8 @@ test('new chrome puts the create form behind one button', async () => {
   expect(screen.queryByPlaceholderText('Cozy co-op nights')).toBeNull()
 
   const newShelf = screen.getByRole('button', { name: /New shelf/ })
-  expect(newShelf.className).toContain('gt-cbtn--primary')
+  expect(newShelf.className).not.toContain('od-cbtn--primary')
+  expect(newShelf.querySelector('svg')).toBeNull()
   await user.click(newShelf)
   expect(screen.getByPlaceholderText('Cozy co-op nights')).toBeInTheDocument()
 })
@@ -329,7 +330,7 @@ test('the empty state points at the control that actually exists', async () => {
 })
 
 test('new chrome still says which collection you are looking at', async () => {
-  // Regression: the v2 retirement rule matches `.gt-page-header > h1`, and on
+  // Regression: the v2 retirement rule matches `.od-page-header > h1`, and on
   // this page that h1 is the *collection's name*. Before the move, the page
   // rendered under the new chrome with nothing identifying it at all.
   collectionsApi.fetchCollection.mockResolvedValue({

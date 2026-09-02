@@ -31,14 +31,15 @@ identifier `new_library_games`, or re-run init.
 
 ## Storefront shelves
 
-Two built-in shelves give `/discover` a storefront feel. Both are derived
-**only** from on-box signals — no external recommender, no telemetry leaving the
-box.
+Built-in shelves that hide when empty. `curated_for_you` / `upcoming` /
+`extras_missing` are on-box only. **Deep discounts** is the exception: it
+reads CheapShark (public HTTPS) and never checks out.
 
 | Identifier | What it shows |
 |---|---|
 | `curated_for_you` | Unplayed titles in genres the member already favourites, best-rated first, then most recently added |
 | `upcoming` | Titles whose release date is still ahead, soonest first — reuses the dates the Calendar already keeps; no new scraping |
+| `store_deals` | **Deep discounts** — CheapShark deals ≥75% off across Steam / GOG / Humble / Epic. Article tiles with HTTPS store redirects. Skips titles on the member’s ownership register. No cart, no DRM download queues, no prices on Game tiles. |
 
 Honesty rules worth knowing before you go looking for a bug:
 
@@ -87,12 +88,12 @@ Both modes are ACL-filtered per member on `/discover` (parental / library-access
 
 ## How a shelf is built
 
-The member feed is assembled in two passes, in `gametheca/routes_discover.py`:
+The member feed is assembled in two passes, in `oneirodex/routes_discover.py`:
 
 1. **Selection** — each visible, in-window shelf resolves to `Game` rows and
    nothing more. One query per shelf.
 2. **Hydration** — every shelf's games are then fetched *together* by
-   `gametheca/utils/discover_hydrate.py`: one query for all cover images, one
+   `oneirodex/utils/discover_hydrate.py`: one query for all cover images, one
    for update counts, one per card relationship, and a single companion-presence
    check for the whole page. Folder-level checks for local metadata and images
    are memoised per path, so a folder backing several shelves is stat'd once.
@@ -156,13 +157,14 @@ row advertising a finished giveaway is worse than a shorter row.
 
 A shelf ships a **window** of `ROW_WINDOW` (12) tiles and fills itself in as the
 member scrolls it, up to a ceiling of `ROW_MAX` (40). Both live in
-`gametheca/utils/discover_providers.py`.
+`oneirodex/utils/discover_providers.py`.
 
 Forty is a ceiling, not a quota. A shelf shows what it honestly has — no
 padding from looser criteria to reach a number — so a small library gets short
 shelves, which is the truth. The **See all** tile appears at the end of a shelf
-only when the shelf holds more than it will ever display; a "see all" that leads
-to the same tiles would be a lie.
+when the shelf holds more than it will ever display, **or** when the row has a
+real destination of its own (the News row always links to `/news`). A "see all"
+that leads to the same tiles would be a lie.
 
 Where that tile goes depends on the shelf:
 
@@ -170,6 +172,7 @@ Where that tile goes depends on the shelf:
 |---|---|
 | Filter zone on `genre` | `/discover/hub/genre/…` — unplayed / newly added / loved shelves for that genre; **Browse the catalog** is still the full list |
 | Filter zone on `platform` | `/library?library_platform=…` — the catalog already parses this |
+| News / articles | `/news` — the full News page, not a second Discover shelf of the same articles |
 | Everything else | `/discover/<identifier>` — a paginated page for that shelf alone |
 
 A **genre hub** is not an admin `DiscoverySection`. `GET /api/discover/hubs/genre/<name>` builds the rows on the fly (404 if the genre name is unknown). Empty hub shelves are omitted. Hub rows cannot be pinned or hidden.
@@ -184,7 +187,7 @@ played, own, downloaded and marked finished, scored against metadata already
 scraped. **Nothing leaves the box**, there is no model file, and no heavy
 dependency is added to the default install.
 
-Lives in `gametheca/utils/discover_ml/`. Everything expensive runs on a schedule
+Lives in `oneirodex/utils/discover_ml/`. Everything expensive runs on a schedule
 and is materialised, so a Discover load is only ever a handful of SELECTs.
 
 ### Content is the primary engine, not collaborative filtering
@@ -272,7 +275,7 @@ walks every game.
 
 A feed holds at most **20 rows**. The cap exists so that generated rows compete
 for a finite page rather than extending it. Assembly lives in
-`gametheca/utils/discover_feed.py`.
+`oneirodex/utils/discover_feed.py`.
 
 **Order is yours.** Inclusion is decided in code; sequence is not. Rows arrive in
 the `display_order` you set on this screen and stay in it — nothing re-sorts by
@@ -370,6 +373,6 @@ the visibility toggle.
 - Reorder / visibility toggle use the existing discovery-sections endpoints (drag handle, switch).
 - `GET /api/discover/sections` — what members actually receive; already ACL-filtered and schedule-filtered.
 
-Validation (`gametheca/utils/discovery_zones.py`): unknown platform/library/genre values are rejected with a 400; an empty/all-unmatched manual list is rejected rather than silently rendering an empty shelf.
+Validation (`oneirodex/utils/discovery_zones.py`): unknown platform/library/genre values are rejected with a 400; an empty/all-unmatched manual list is rejected rather than silently rendering an empty shelf.
 
 Related: [libraries-and-scans.md](libraries-and-scans.md) · [library-and-systems.md](../user/library-and-systems.md)

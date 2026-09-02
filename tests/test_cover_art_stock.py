@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.utils.cover_art_stock import (
+from oneirodex.utils.cover_art_stock import (
     ERA_STOCK_PACKS,
     MAJOR_PLATFORM_PACKS,
     STOCK_MOTIFS,
@@ -22,8 +22,8 @@ from gametheca.utils.cover_art_stock import (
 def test_stock_catalog_non_empty_and_has_platforms(tmp_path):
     stock = tmp_path / 'stock'
     stock.mkdir()
-    with patch('gametheca.utils.cover_art_stock.stock_root', return_value=stock):
-        with patch('gametheca.utils.cover_art_studio.stock_root', return_value=stock):
+    with patch('oneirodex.utils.cover_art_stock.stock_root', return_value=stock):
+        with patch('oneirodex.utils.cover_art_studio.stock_root', return_value=stock):
             items = list_stock_catalog(package_root=tmp_path)
 
     assert len(items) >= 20
@@ -56,8 +56,8 @@ def test_stock_catalog_non_empty_and_has_platforms(tmp_path):
 
 def test_generate_stock_pack_writes_files(tmp_path):
     stock = tmp_path / 'stock'
-    with patch('gametheca.utils.cover_art_stock.stock_root', return_value=stock):
-        with patch('gametheca.utils.cover_art_studio.stock_root', return_value=stock):
+    with patch('oneirodex.utils.cover_art_stock.stock_root', return_value=stock):
+        with patch('oneirodex.utils.cover_art_studio.stock_root', return_value=stock):
             manifest = save_stock_pack('stock-controller', package_root=tmp_path)
             assert manifest['pack_id'] == 'stock-controller'
             pack_dir = stock / 'stock-controller'
@@ -78,8 +78,8 @@ def test_generate_stock_pack_writes_files(tmp_path):
 
 def test_generate_stock_packs_batch(tmp_path):
     stock = tmp_path / 'stock'
-    with patch('gametheca.utils.cover_art_stock.stock_root', return_value=stock):
-        with patch('gametheca.utils.cover_art_studio.stock_root', return_value=stock):
+    with patch('oneirodex.utils.cover_art_stock.stock_root', return_value=stock):
+        with patch('oneirodex.utils.cover_art_studio.stock_root', return_value=stock):
             result = generate_stock_packs(
                 ['stock-disc-ring', 'platform-gba'],
                 package_root=tmp_path,
@@ -99,13 +99,13 @@ def test_apply_pack_updates_library_image_url(tmp_path):
     execute_result = MagicMock()
     execute_result.scalars.return_value.first.return_value = library
 
-    with patch('gametheca.utils.cover_art_stock.stock_root', return_value=stock):
-        with patch('gametheca.utils.cover_art_studio.stock_root', return_value=stock):
+    with patch('oneirodex.utils.cover_art_stock.stock_root', return_value=stock):
+        with patch('oneirodex.utils.cover_art_studio.stock_root', return_value=stock):
             save_stock_pack('platform-nes', package_root=tmp_path)
-            with patch('gametheca.utils.cover_art_stock.db') as mock_db:
+            with patch('oneirodex.utils.cover_art_stock.db') as mock_db:
                 mock_db.session.execute.return_value = execute_result
                 with patch(
-                    'gametheca.utils.cover_art_stock.url_for',
+                    'oneirodex.utils.cover_art_stock.url_for',
                     side_effect=lambda _ep, filename='': f'/static/{filename}',
                 ):
                     result = apply_pack_to_library(
@@ -121,7 +121,7 @@ def test_apply_pack_updates_library_image_url(tmp_path):
 
 @pytest.fixture
 def admin_user(db_session):
-    from gametheca.models import User
+    from oneirodex.models import User
 
     uid = str(uuid4())
     suffix = uid[:8]
@@ -144,8 +144,8 @@ def test_art_studio_stock_api_catalog_and_generate(client, db_session, admin_use
         sess['_user_id'] = str(admin_user.id)
         sess['_fresh'] = True
 
-    with patch('gametheca.utils.cover_art_stock.stock_root', return_value=stock):
-        with patch('gametheca.utils.cover_art_studio.stock_root', return_value=stock):
+    with patch('oneirodex.utils.cover_art_stock.stock_root', return_value=stock):
+        with patch('oneirodex.utils.cover_art_studio.stock_root', return_value=stock):
             catalog = client.get('/admin/api/art-studio/stock')
             assert catalog.status_code == 200
             body = catalog.get_json()
@@ -165,7 +165,7 @@ def test_art_studio_stock_api_catalog_and_generate(client, db_session, admin_use
 
 
 def test_art_studio_apply_library_mode(client, db_session, admin_user, tmp_path):
-    from gametheca.models import Library, LibraryPlatform
+    from oneirodex.models import Library, LibraryPlatform
 
     stock = tmp_path / 'stock'
     library = Library(name=f'ApplyLib_{uuid4().hex[:6]}', platform=LibraryPlatform.SNES)
@@ -176,8 +176,8 @@ def test_art_studio_apply_library_mode(client, db_session, admin_user, tmp_path)
         sess['_user_id'] = str(admin_user.id)
         sess['_fresh'] = True
 
-    with patch('gametheca.utils.cover_art_stock.stock_root', return_value=stock):
-        with patch('gametheca.utils.cover_art_studio.stock_root', return_value=stock):
+    with patch('oneirodex.utils.cover_art_stock.stock_root', return_value=stock):
+        with patch('oneirodex.utils.cover_art_studio.stock_root', return_value=stock):
             save_stock_pack('stock-neon-court', package_root=tmp_path)
             resp = client.post(
                 '/admin/api/art-studio/apply',

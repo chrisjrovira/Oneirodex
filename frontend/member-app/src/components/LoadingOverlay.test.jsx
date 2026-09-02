@@ -56,11 +56,11 @@ test('delayMs 0 shows immediately, without waiting a tick', () => {
 test('only dims the page when explicitly blocking', () => {
   const { container, rerender } = render(<LoadingOverlay active delayMs={0} />)
   advance(10)
-  expect(container.querySelector('.gt-loading-overlay--blocking')).toBeNull()
+  expect(container.querySelector('.od-loading-overlay--blocking')).toBeNull()
 
   rerender(<LoadingOverlay active delayMs={0} blocking />)
   advance(10)
-  expect(container.querySelector('.gt-loading-overlay--blocking')).not.toBeNull()
+  expect(container.querySelector('.od-loading-overlay--blocking')).not.toBeNull()
 })
 
 test('hides again when work completes', () => {

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/static/dist/ops-glance/',
   build: {
-    outDir: path.resolve(__dirname, '../../gametheca/static/dist/ops-glance'),
+    outDir: path.resolve(__dirname, '../../oneirodex/static/dist/ops-glance'),
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),

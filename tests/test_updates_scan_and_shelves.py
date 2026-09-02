@@ -20,9 +20,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import DiscoverySection, Game, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex import db
+from oneirodex.models import DiscoverySection, Game, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -102,12 +102,12 @@ class TestUpdatesScanRoute:
             return {'status': 'behind'}
 
         monkeypatch.setattr(
-            'gametheca.utils.freshness.check_and_store_freshness', fake_check
+            'oneirodex.utils.freshness.check_and_store_freshness', fake_check
         )
 
         # Scoped to this run's library. `scan_library` is function-scoped with a
         # fresh uuid, so this pins the sweep to the four games above — without
-        # it the batch is every due game in `gamethecatest`, which nothing ever
+        # it the batch is every due game in `oneirodextest`, which nothing ever
         # cleans up, and `remaining` counts years of other test files' fixtures.
         with app.test_request_context(
             '/api/updates/scan',
@@ -116,7 +116,7 @@ class TestUpdatesScanRoute:
             from flask_login import login_user
 
             login_user(scan_user)
-            from gametheca.routes_apis.updates import updates_scan
+            from oneirodex.routes_apis.updates import updates_scan
 
             body = _body(updates_scan())
         assert body['ok'] is True
@@ -141,7 +141,7 @@ class TestUpdatesScanRoute:
             return {'status': 'current'}
 
         monkeypatch.setattr(
-            'gametheca.utils.freshness.check_and_store_freshness', fake_check
+            'oneirodex.utils.freshness.check_and_store_freshness', fake_check
         )
 
         # Scoped for the same reason as above: an unscoped sweep checks every
@@ -152,7 +152,7 @@ class TestUpdatesScanRoute:
             from flask_login import login_user
 
             login_user(scan_user)
-            from gametheca.routes_apis.updates import updates_scan
+            from oneirodex.routes_apis.updates import updates_scan
 
             response = updates_scan()
 
@@ -165,14 +165,14 @@ class TestUpdatesScanRoute:
 
     def test_limit_is_clamped(self, app, db_session, scan_user, scan_library, monkeypatch):
         monkeypatch.setattr(
-            'gametheca.utils.freshness.check_and_store_freshness',
+            'oneirodex.utils.freshness.check_and_store_freshness',
             lambda game, **kwargs: {'status': 'current'},
         )
         with app.test_request_context('/api/updates/scan', json={'limit': 5000}):
             from flask_login import login_user
 
             login_user(scan_user)
-            from gametheca.routes_apis.updates import UPDATES_SCAN_MAX, updates_scan
+            from oneirodex.routes_apis.updates import UPDATES_SCAN_MAX, updates_scan
 
             body = _body(updates_scan())
         # Each title is a live store probe, so an unbounded sweep would sit on a
@@ -208,13 +208,13 @@ class TestLatestGamesIsNewestReleased:
     def test_latest_orders_by_release_and_excludes_the_unreleased(
         self, app, db_session, scan_user, scan_library
     ):
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         # The release dates are minutes apart rather than years, because the
         # shelf is a global `limit(8)` and `conftest.db_session` never cleans up
         # (`db.drop_all()` is commented out for speed) — so every game any other
-        # test file has ever committed to `gamethecatest` is still there and
+        # test file has ever committed to `oneirodextest` is still there and
         # competing for those eight slots. Dated in years, these two fixtures
         # sort below the accumulated rows and the shelf never contains them at
         # all, which is a fact about the test database rather than about the

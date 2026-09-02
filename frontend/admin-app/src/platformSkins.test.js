@@ -5,6 +5,7 @@ test('maps platforms to family accents for Art Studio chrome', () => {
   expect(platformFamily('SWITCH')).toBe('nintendo')
   expect(platformFamily('WII_U')).toBe('nintendo')
   expect(platformFamily('POKE_MINI')).toBe('nintendo')
+  expect(platformFamily('GAME_WATCH')).toBe('nintendo')
   expect(platformFamily('PS2')).toBe('sony')
   expect(platformFamily('PSP')).toBe('sony')
   expect(platformFamily('X360')).toBe('xbox')
@@ -25,6 +26,7 @@ test('maps platforms to family accents for Art Studio chrome', () => {
   expect(platformFamily('ATARI_8BIT')).toBe('pc')
   expect(platformFamily('X68000')).toBe('pc')
   expect(platformFamily('PC_98')).toBe('pc')
+  expect(platformFamily('BBC_MICRO')).toBe('pc')
   for (const id of [
     'PCE_CD', 'SUPERVISION', 'GX4000', 'ASTROCADE', 'ARCADIA',
     'CREATIVISION', 'ADVISION', 'STUDIO2', 'ACTIONMAX', 'DAPHNE', 'PINBALL',

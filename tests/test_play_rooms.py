@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from gametheca.utils.play_rooms import (
+from oneirodex.utils.play_rooms import (
     DEFAULT_ROOM,
     PLATFORM_ROOMS,
     ROOMS,
@@ -43,9 +43,14 @@ class TestRoomMapping:
         with app.app_context():
             for key in (
                 'PCDOS', 'AMIGA', 'VICE_X64SC', 'MSX', 'ZX_SPECTRUM', 'CPC',
-                'ATARI_ST', 'APPLE_II', 'ATARI_8BIT', 'X68000', 'PC_98',
+                'ATARI_ST', 'APPLE_II', 'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO',
             ):
                 assert room_id_for_platform(key) == 'desk'
+
+    def test_game_watch_shares_the_80s_wood_den(self, app):
+        with app.app_context():
+            assert room_id_for_platform('GAME_WATCH') == 'wood_den_80s'
+            assert room_id_for_platform('GAME_WATCH') == room_id_for_platform('NES')
 
     def test_unmapped_platform_gets_a_plausible_default(self, app):
         """A console added tomorrow should look fine, not break the page."""
@@ -84,8 +89,8 @@ class TestRoomPayload:
         with app.app_context():
             css = room_css_vars('PSX')
             assert set(css) == {
-                '--gt-room-backdrop', '--gt-room-glow',
-                '--gt-room-accent', '--gt-room-font',
+                '--od-room-backdrop', '--od-room-glow',
+                '--od-room-accent', '--od-room-font',
             }
             assert all(v for v in css.values())
 

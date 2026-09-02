@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import GlobalSettings, User
+from oneirodex.models import GlobalSettings, User
 
 
 def _login(client, db_session, *, role='admin'):
@@ -53,7 +53,7 @@ def test_member_status_when_configured(client, app, db_session, global_settings,
     global_settings.enable_remote_play = True
     db_session.commit()
     with app.app_context():
-        from gametheca.utils.remote_play import save_remote_play_config
+        from oneirodex.utils.remote_play import save_remote_play_config
 
         save_remote_play_config({
             'enabled': True,
@@ -103,7 +103,7 @@ def test_save_validates_lan_url(app, db_session, global_settings, monkeypatch):
     global_settings.enable_remote_play = True
     db_session.commit()
     with app.app_context():
-        from gametheca.utils.remote_play import save_remote_play_config
+        from oneirodex.utils.remote_play import save_remote_play_config
 
         with pytest.raises(ValueError, match='ALLOW_PRIVATE_LAN_URLS'):
             save_remote_play_config({
@@ -120,7 +120,7 @@ def test_admin_config_requires_admin(client, app, db_session, monkeypatch):
 
 
 def test_build_copy_hint():
-    from gametheca.utils.remote_play import build_copy_hint
+    from oneirodex.utils.remote_play import build_copy_hint
 
     hint = build_copy_hint({
         'configured': True,

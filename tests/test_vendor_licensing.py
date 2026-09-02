@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-VENDOR = REPO_ROOT / 'gametheca' / 'static' / 'vendor'
+VENDOR = REPO_ROOT / 'oneirodex' / 'static' / 'vendor'
 NOTICES = VENDOR / 'THIRD-PARTY-NOTICES.md'
 
 
@@ -36,14 +36,14 @@ def _tracked(pattern: str) -> list[str]:
 class TestCoreBinariesNotTracked:
     def test_no_wasm_core_is_committed(self):
         """71MB of GPL / non-commercial WASM does not belong in the repo."""
-        assert _tracked('gametheca/static/vendor/webretro/cores/*_libretro.wasm') == []
+        assert _tracked('oneirodex/static/vendor/webretro/cores/*_libretro.wasm') == []
 
     def test_no_core_loader_is_committed(self):
-        assert _tracked('gametheca/static/vendor/webretro/cores/*_libretro.js') == []
+        assert _tracked('oneirodex/static/vendor/webretro/cores/*_libretro.js') == []
 
     def test_the_cores_readme_stays(self):
         """The directory still has to explain itself."""
-        assert _tracked('gametheca/static/vendor/webretro/cores/README.md')
+        assert _tracked('oneirodex/static/vendor/webretro/cores/README.md')
 
     def test_gitignore_covers_both_halves(self):
         ignored = (REPO_ROOT / '.gitignore').read_text(encoding='utf-8')
@@ -62,7 +62,7 @@ class TestThirdPartyPagesRemoved:
         assert not (VENDOR / 'webretro' / 'info' / name).exists()
 
     def test_info_directory_is_untracked(self):
-        assert _tracked('gametheca/static/vendor/webretro/info/*') == []
+        assert _tracked('oneirodex/static/vendor/webretro/info/*') == []
 
     def test_nothing_links_to_the_removed_pages(self):
         standalone = VENDOR / 'webretro' / 'standalone.html'
@@ -131,7 +131,7 @@ class TestNotices:
 
 # --- Load sites: heavy vendor JS stays off the member shell ---------------
 
-TEMPLATES = REPO_ROOT / 'gametheca' / 'templates'
+TEMPLATES = REPO_ROOT / 'oneirodex' / 'templates'
 _DATATABLES_PATH = 'vendor/datatables/'
 _CROPPER_PATH = 'vendor/cropperjs/'
 

@@ -22,10 +22,10 @@ import threading
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import Library
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.background import run_in_background
+from oneirodex import db
+from oneirodex.models import Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.background import run_in_background
 
 
 def test_worker_gets_its_own_session(app, db_session):
@@ -41,12 +41,12 @@ def test_worker_gets_its_own_session(app, db_session):
 
     with app.app_context():
         caller_session = db.session()
-        thread = run_in_background(app, _work, name='gt-test-worker')
+        thread = run_in_background(app, _work, name='od-test-worker')
         thread.join(timeout=10)
 
     assert not thread.is_alive(), 'worker did not finish'
     assert seen['worker_session'] is not caller_session
-    assert seen['thread'] == 'gt-test-worker'
+    assert seen['thread'] == 'od-test-worker'
 
 
 def test_worker_has_an_app_context(app):
@@ -59,7 +59,7 @@ def test_worker_has_an_app_context(app):
         seen['has_context'] = has_app_context()
         seen['app_name'] = current_app.name
 
-    thread = run_in_background(app, _work, name='gt-test-context')
+    thread = run_in_background(app, _work, name='od-test-context')
     thread.join(timeout=10)
 
     assert seen['has_context'] is True
@@ -86,7 +86,7 @@ def test_worker_can_commit_without_the_caller(app, db_session):
         row.name = 'Renamed By Worker'
         db.session.commit()
 
-    thread = run_in_background(app, _work, name='gt-test-commit')
+    thread = run_in_background(app, _work, name='od-test-commit')
     thread.join(timeout=10)
 
     with app.app_context():
@@ -107,12 +107,12 @@ def test_worker_failure_is_logged_not_silent(app, caplog):
     def _work():
         raise RuntimeError('worker exploded')
 
-    with caplog.at_level('ERROR', logger='gametheca.utils.background'):
-        thread = run_in_background(app, _work, name='gt-test-boom')
+    with caplog.at_level('ERROR', logger='oneirodex.utils.background'):
+        thread = run_in_background(app, _work, name='od-test-boom')
         thread.join(timeout=10)
 
     assert not thread.is_alive()
-    assert any('gt-test-boom' in record.getMessage() for record in caplog.records)
+    assert any('od-test-boom' in record.getMessage() for record in caplog.records)
 
 
 def test_worker_failure_does_not_escape_to_the_caller(app):
@@ -121,7 +121,7 @@ def test_worker_failure_does_not_escape_to_the_caller(app):
         raise RuntimeError('worker exploded')
 
     # No pytest.raises: a throw here would mean the exception crossed back.
-    thread = run_in_background(app, _work, name='gt-test-contained')
+    thread = run_in_background(app, _work, name='od-test-contained')
     thread.join(timeout=10)
     assert not thread.is_alive()
 
@@ -135,8 +135,8 @@ def test_library_deletion_worker_actually_deletes(app, db_session):
     request's session — running it in a test would have been the very hazard
     being fixed — and is worth having now that it does not.
     """
-    from gametheca.models import Game
-    from gametheca.routes import delete_library_background, deletion_progress
+    from oneirodex.models import Game
+    from oneirodex.routes import delete_library_background, deletion_progress
 
     with app.app_context():
         library = Library(name='Doomed Library', platform=LibraryPlatform.PCWIN)
@@ -183,10 +183,10 @@ def test_library_deletion_worker_actually_deletes(app, db_session):
 @pytest.mark.parametrize(
     'module_name',
     [
-        'gametheca.routes',
-        'gametheca.routes_apis.game',
-        'gametheca.routes_games_ext.add',
-        'gametheca.routes_games_ext.edit',
+        'oneirodex.routes',
+        'oneirodex.routes_apis.game',
+        'oneirodex.routes_games_ext.add',
+        'oneirodex.routes_games_ext.edit',
     ],
 )
 def test_route_modules_no_longer_copy_the_request_context(module_name):

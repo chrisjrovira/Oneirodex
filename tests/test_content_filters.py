@@ -6,10 +6,10 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import Game, Genre, Library, Theme, User
-from gametheca.models import Game as GameModel
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_acl import (
+from oneirodex.models import Game, Genre, Library, Theme, User
+from oneirodex.models import Game as GameModel
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_acl import (
     apply_game_access_filters,
     apply_game_content_filters,
     denied_genre_names,

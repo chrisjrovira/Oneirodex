@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gametheca.utils.ai_artwork import (
+from oneirodex.utils.ai_artwork import (
     A1111Generator,
     ArtworkGenerationError,
     ComfyUIGenerator,
@@ -58,7 +58,7 @@ class TestPrompt:
 
 
 class TestA1111Adapter:
-    @patch('gametheca.utils.ai_artwork.requests.post')
+    @patch('oneirodex.utils.ai_artwork.requests.post')
     def test_decodes_returned_image(self, mock_post):
         mock_post.return_value = MagicMock(
             status_code=200, json=lambda: {'images': [PNG_B64]},
@@ -68,7 +68,7 @@ class TestA1111Adapter:
         )
         assert data.startswith(b'\x89PNG')
 
-    @patch('gametheca.utils.ai_artwork.requests.post')
+    @patch('oneirodex.utils.ai_artwork.requests.post')
     def test_tolerates_a_data_url_prefix(self, mock_post):
         mock_post.return_value = MagicMock(
             status_code=200, json=lambda: {'images': [f'data:image/png;base64,{PNG_B64}']},
@@ -78,19 +78,19 @@ class TestA1111Adapter:
         )
         assert data.startswith(b'\x89PNG')
 
-    @patch('gametheca.utils.ai_artwork.requests.post')
+    @patch('oneirodex.utils.ai_artwork.requests.post')
     def test_http_error_is_reported_not_swallowed(self, mock_post):
         mock_post.return_value = MagicMock(status_code=500, json=lambda: {})
         with pytest.raises(ArtworkGenerationError, match='HTTP 500'):
             A1111Generator('http://sd:7860').generate('x', width=1, height=1, timeout=1)
 
-    @patch('gametheca.utils.ai_artwork.requests.post')
+    @patch('oneirodex.utils.ai_artwork.requests.post')
     def test_empty_image_list_is_an_error(self, mock_post):
         mock_post.return_value = MagicMock(status_code=200, json=lambda: {'images': []})
         with pytest.raises(ArtworkGenerationError, match='no image'):
             A1111Generator('http://sd:7860').generate('x', width=1, height=1, timeout=1)
 
-    @patch('gametheca.utils.ai_artwork.requests.post')
+    @patch('oneirodex.utils.ai_artwork.requests.post')
     def test_unreachable_endpoint_is_an_error(self, mock_post):
         import requests as _requests
 

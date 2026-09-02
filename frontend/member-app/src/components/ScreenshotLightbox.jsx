@@ -66,43 +66,43 @@ export function ScreenshotLightbox({
 
   return (
     <div
-      className="gt-lightbox"
+      className="od-lightbox"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={onClose}
     >
       <div
-        className="gt-lightbox__panel"
+        className="od-lightbox__panel"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="gt-lightbox__toolbar">
-          <h2 id={titleId} className="gt-lightbox__title">
+        <div className="od-lightbox__toolbar">
+          <h2 id={titleId} className="od-lightbox__title">
             {isVideo ? 'Video' : 'Screenshot'} {safeIndex + 1} / {items.length}
           </h2>
-          <div className="gt-lightbox__toolbar-actions">
+          <div className="od-lightbox__toolbar-actions">
             <button
               type="button"
-              className="gt-lightbox__fs"
+              className="od-lightbox__fs"
               onClick={() => void enterFullscreen()}
             >
               Fullscreen
             </button>
-            <button type="button" className="gt-lightbox__close" onClick={onClose} aria-label="Close">
+            <button type="button" className="od-lightbox__close" onClick={onClose} aria-label="Close">
               ×
             </button>
           </div>
         </div>
         {fsError ? (
-          <p className="gt-lightbox__fs-error" role="status">
+          <p className="od-lightbox__fs-error" role="status">
             {fsError}
           </p>
         ) : null}
-        <div className="gt-lightbox__stage" ref={stageRef}>
+        <div className="od-lightbox__stage" ref={stageRef}>
           {items.length > 1 ? (
             <button
               type="button"
-              className="gt-lightbox__nav"
+              className="od-lightbox__nav"
               onClick={() => setIndex((current) => current - 1)}
               aria-label="Previous"
             >
@@ -111,7 +111,7 @@ export function ScreenshotLightbox({
           ) : null}
           {isVideo ? (
             <iframe
-              className="gt-lightbox__video"
+              className="od-lightbox__video"
               title={`Game trailer ${safeIndex + 1}`}
               src={current}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -121,7 +121,7 @@ export function ScreenshotLightbox({
             <img
               src={current}
               alt=""
-              className="gt-lightbox__img"
+              className="od-lightbox__img"
               onDoubleClick={() => void enterFullscreen()}
               title="Double-click for fullscreen"
             />
@@ -129,7 +129,7 @@ export function ScreenshotLightbox({
           {items.length > 1 ? (
             <button
               type="button"
-              className="gt-lightbox__nav"
+              className="od-lightbox__nav"
               onClick={() => setIndex((current) => current + 1)}
               aria-label="Next"
             >

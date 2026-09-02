@@ -10,8 +10,8 @@ from uuid import uuid4
 
 from flask import url_for
 
-from gametheca.models import User
-from gametheca.routes_admin_ext.settings import (
+from oneirodex.models import User
+from oneirodex.routes_admin_ext.settings import (
     SETTINGS_SHELL_SECTIONS, DEFAULT_SETTINGS_SHELL_SECTION
 )
 

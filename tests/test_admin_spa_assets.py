@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_admin_spa_dist_built():
-    dist = ROOT / 'gametheca' / 'static' / 'dist' / 'admin-app'
+    dist = ROOT / 'oneirodex' / 'static' / 'dist' / 'admin-app'
     assert (dist / 'admin-app.js').is_file()
     assert (dist / 'admin-app.css').is_file()
 

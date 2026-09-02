@@ -1,9 +1,9 @@
 export {
   createAuthStore,
   describeTokenPaste,
-  isGamethecaToken,
+  isOneirodexToken,
   normalizeBaseUrl,
-  normalizeGamethecaToken,
+  normalizeOneirodexToken,
 } from './auth.js'
 export type { AuthConfig, AuthSnapshot, AuthStore, KeychainAdapter } from './auth.js'
 export { createDesktopApi } from './api.js'

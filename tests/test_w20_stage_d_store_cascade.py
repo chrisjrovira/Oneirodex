@@ -7,11 +7,12 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, GameURL, Library
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.software_identify import (
+from oneirodex.models import Game, GameURL, Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.software_identify import (
     CUSTOM_IGDB_BASE,
     exact_title_hits,
+    igdb_retry_title_from_store,
     resolve_stage_d_store_candidate,
     scrub_stage_d_payload,
     try_stage_d_store_identify,
@@ -63,7 +64,7 @@ def test_app_id_path_resolves_custom_candidate():
         'short_description': 'A naval adventure.',
     }
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ):
         hit = resolve_stage_d_store_candidate(
@@ -89,13 +90,13 @@ def test_app_id_details_miss_falls_through_to_exact_steam():
         'item_kind': 'game',
     }]
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=None,
     ), patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=steam_hits,
     ) as mock_steam, patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
         return_value=[],
     ):
         # Exact title still casefold-strict — use store-exact cleaned name.
@@ -111,13 +112,16 @@ def test_app_id_details_miss_falls_through_to_exact_steam():
 
 def test_app_id_details_miss_no_exact_returns_none():
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=None,
     ), patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=[{'name': 'Other', 'steam_app_id': 1}],
     ), patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
+        return_value=[],
+    ), patch(
+        'oneirodex.utils.software_identify.search_epic_games',
         return_value=[],
     ):
         hit = resolve_stage_d_store_candidate(
@@ -136,13 +140,13 @@ def test_app_id_title_mismatch_falls_through():
         'short_description': None,
     }
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ), patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=[],
     ), patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
         return_value=[{
             'source': 'gog',
             'id': 99,
@@ -150,6 +154,9 @@ def test_app_id_title_mismatch_falls_through():
             'url': 'https://www.gog.com/game/broken_sword_2',
             'gog_id': 99,
         }],
+    ), patch(
+        'oneirodex.utils.software_identify.search_epic_games',
+        return_value=[],
     ):
         hit = resolve_stage_d_store_candidate(
             cleaned_name='Broken Sword 2',
@@ -169,10 +176,10 @@ def test_app_id_remaster_subtitle_corroborates():
         'short_description': 'Adventure',
     }
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ), patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
     ) as mock_steam:
         hit = resolve_stage_d_store_candidate(
             cleaned_name='Broken Sword 2',
@@ -213,10 +220,10 @@ def test_igdb_miss_steam_exact_title(monkeypatch):
         },
     ]
     with patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=steam_hits,
     ) as mock_steam, patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
         return_value=[],
     ) as mock_gog:
         hit = resolve_stage_d_store_candidate(cleaned_name='Dota 2')
@@ -233,10 +240,10 @@ def test_ambiguous_steam_exact_no_auto():
         {'name': 'keeper', 'steam_app_id': 2, 'steam_type': 'game', 'item_kind': 'game'},
     ]
     with patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=steam_hits,
     ), patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
         return_value=[{'name': 'Keeper', 'gog_id': 9}],
     ):
         hit = resolve_stage_d_store_candidate(cleaned_name='Keeper')
@@ -245,10 +252,10 @@ def test_ambiguous_steam_exact_no_auto():
 
 def test_gog_exact_when_steam_misses():
     with patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=[{'name': 'Other Title', 'steam_app_id': 1}],
     ), patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
         return_value=[{
             'source': 'gog',
             'id': 1207658691,
@@ -260,12 +267,94 @@ def test_gog_exact_when_steam_misses():
             'slug': 'the_witcher_3',
             'download_url': 'https://should.not/persist',
         }],
-    ):
+    ), patch(
+        'oneirodex.utils.software_identify.search_epic_games',
+    ) as mock_epic:
         hit = resolve_stage_d_store_candidate(cleaned_name='The Witcher 3')
+        mock_epic.assert_not_called()
     assert hit is not None
     assert hit['source'] == 'gog'
     assert hit['gog_id'] == 1207658691
     assert 'download_url' not in hit
+
+
+def test_epic_exact_when_steam_and_gog_miss():
+    with patch(
+        'oneirodex.utils.software_identify.search_steam_games',
+        return_value=[],
+    ), patch(
+        'oneirodex.utils.software_identify.search_gog_games',
+        return_value=[],
+    ), patch(
+        'oneirodex.utils.software_identify.search_epic_games',
+        return_value=[{
+            'source': 'epic',
+            'id': 'fortnite',
+            'name': 'Fortnite',
+            'url': 'https://store.epicgames.com/en-US/p/fortnite',
+            'slug': 'fortnite',
+            'download_url': 'https://should.not/persist',
+        }],
+    ):
+        hit = resolve_stage_d_store_candidate(cleaned_name='Fortnite')
+    assert hit is not None
+    assert hit['source'] == 'epic'
+    assert hit['name'] == 'Fortnite'
+    assert 'download_url' not in hit
+    assert hit['url'].startswith('https://store.epicgames.com/')
+
+
+def test_sources_toggle_skips_steam():
+    with patch(
+        'oneirodex.utils.software_identify.search_steam_games',
+    ) as mock_steam, patch(
+        'oneirodex.utils.software_identify.search_gog_games',
+        return_value=[{
+            'source': 'gog',
+            'id': 1,
+            'name': 'Celeste',
+            'url': 'https://www.gog.com/game/celeste',
+            'gog_id': 1,
+        }],
+    ), patch(
+        'oneirodex.utils.software_identify.search_epic_games',
+        return_value=[],
+    ):
+        hit = resolve_stage_d_store_candidate(
+            cleaned_name='Celeste',
+            sources=('gog', 'epic'),
+        )
+        mock_steam.assert_not_called()
+    assert hit is not None
+    assert hit['source'] == 'gog'
+
+
+def test_igdb_retry_title_from_store_skips_already_tried():
+    assert igdb_retry_title_from_store({'name': 'Hades'}, ['hades', 'HADES']) is None
+    assert igdb_retry_title_from_store({'name': 'Hades II'}, ['Hades']) == 'Hades II'
+    assert igdb_retry_title_from_store(None, ['x']) is None
+
+
+def test_commit_epic_exact_registers_store_url(app, db_session, sample_library):
+    path = f'/test/stage-d/Epic-{uuid4().hex[:6]}'
+    candidate = {
+        'source': 'epic',
+        'name': 'Fortnite',
+        'url': 'https://store.epicgames.com/en-US/p/fortnite',
+        'item_kind': 'game',
+        'match_mode': 'exact_title',
+        'install_url': 'https://nope.example/install',
+    }
+    game = upsert_stage_d_custom_game(
+        candidate=candidate,
+        full_disk_path=path,
+        library_uuid=sample_library.uuid,
+    )
+    db_session.flush()
+    urls = db_session.query(GameURL).filter_by(game_uuid=game.uuid).all()
+    assert len(urls) == 1
+    assert urls[0].url_type == 'epic'
+    assert 'install' not in urls[0].url
 
 
 def test_software_item_kind_from_steam_type():
@@ -277,7 +366,7 @@ def test_software_item_kind_from_steam_type():
         'short_description': 'NES emulator in VR',
     }
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ):
         hit = resolve_stage_d_store_candidate(
@@ -356,12 +445,12 @@ def test_try_stage_d_end_to_end_mocked(app, db_session, sample_library):
         'short_description': 'Roguelike',
     }
     with patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ), patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
     ) as mock_steam, patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
     ) as mock_gog:
         game = try_stage_d_store_identify(
             raw_label='barony (89881)',
@@ -383,10 +472,10 @@ def test_retrieve_and_save_game_stage_d_on_igdb_miss(
     app, db_session, sample_library,
 ):
     """IGDB empty → Stage D App-ID custom Game; Unmatched not required."""
-    from gametheca.utils.game_core import retrieve_and_save_game
+    from oneirodex.utils.game_core import retrieve_and_save_game
 
     # Trailing (digits) must be end-of-basename for A5 steam_app_id extract.
-    path = f'/tmp/gametheca-stage-d-test/Abandon Ship (81735)'
+    path = f'/tmp/oneirodex-stage-d-test/Abandon Ship (81735)'
     details = {
         'steam_app_id': 81735,
         'name': 'Abandon Ship',
@@ -396,24 +485,27 @@ def test_retrieve_and_save_game_stage_d_on_igdb_miss(
     }
 
     with patch(
-        'gametheca.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.game_core.search_igdb_for_game',
         return_value=[],
     ), patch(
-        'gametheca.utils.game_core.fetch_steam_title_by_app_id',
+        'oneirodex.utils.game_core.fetch_steam_title_by_app_id',
         return_value='Abandon Ship',
     ), patch(
-        'gametheca.utils.steam_lookup.fetch_steam_app_details',
+        'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ), patch(
-        'gametheca.utils.game_core.notify_admins_new_game',
+        'oneirodex.utils.game_core.notify_admins_new_game',
     ), patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=[],
     ), patch(
-        'gametheca.utils.software_identify.search_gog_games',
+        'oneirodex.utils.software_identify.search_gog_games',
         return_value=[],
     ), patch(
-        'gametheca.utils.game_core.get_folder_size_in_bytes_updates',
+        'oneirodex.utils.software_identify.search_epic_games',
+        return_value=[],
+    ), patch(
+        'oneirodex.utils.game_core.get_folder_size_in_bytes_updates',
         return_value=0,
     ):
         result = retrieve_and_save_game(
@@ -424,7 +516,7 @@ def test_retrieve_and_save_game_stage_d_on_igdb_miss(
                 'use_local_metadata': False,
                 'write_local_metadata': False,
                 'use_local_images': False,
-                'local_metadata_filename': 'gametheca.json',
+                'local_metadata_filename': 'oneirodex.json',
                 'propose_only_scan': False,
             },
         )
@@ -438,20 +530,20 @@ def test_retrieve_and_save_game_stage_d_on_igdb_miss(
 def test_retrieve_skips_stage_d_when_propose_only(
     app, db_session, sample_library,
 ):
-    from gametheca.utils.game_core import retrieve_and_save_game
+    from oneirodex.utils.game_core import retrieve_and_save_game
 
     path = f'/test/stage-d/ProposeOnly-{uuid4().hex[:4]}'
 
     with patch(
-        'gametheca.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.game_core.search_igdb_for_game',
         return_value=[],
     ), patch(
-        'gametheca.utils.software_identify.try_stage_d_store_identify',
+        'oneirodex.utils.software_identify.try_stage_d_store_identify',
     ) as mock_stage_d, patch(
-        'gametheca.utils.software_identify.enrich_proposal_with_software',
+        'oneirodex.utils.software_identify.enrich_proposal_with_software',
         side_effect=lambda p, *_a, **_k: p,
     ), patch(
-        'gametheca.utils.game_core.write_match_proposal',
+        'oneirodex.utils.game_core.write_match_proposal',
         return_value=True,
     ):
         result = retrieve_and_save_game(
@@ -462,7 +554,7 @@ def test_retrieve_skips_stage_d_when_propose_only(
                 'use_local_metadata': False,
                 'write_local_metadata': False,
                 'use_local_images': False,
-                'local_metadata_filename': 'gametheca.json',
+                'local_metadata_filename': 'oneirodex.json',
                 'propose_only_scan': True,
             },
         )

@@ -1,6 +1,6 @@
 # Settings & modules
 
-Admin settings use a **card grid** at `/admin/settings` (whole card → destination; `?section=` redirects). Chrome is the React admin top bar (`frontend/admin-app`); many forms remain Jinja until migrated. Live React bodies include Dashboard, Libraries/Scans hubs, Themes, Plugins, Announcements, **Support inbox**, and the **Integrations hub** (grouped cards for IGDB · Artwork & secondary metadata · SMTP · OIDC · LiveKit · Community · Acquire/Arr · Ownership · Remote play · Export packs · Support, with deep links into classic forms).
+Admin settings use **grouped rows** at `/admin/settings` (one sheet, section headings, whole row → destination; `?section=` redirects). Chrome is the React admin top bar (`frontend/admin-app`); many forms remain Jinja until migrated. Live React bodies include Dashboard, Libraries/Scans hubs, Themes, Plugins, Announcements, **Support inbox**, and the **Integrations hub** (grouped cards for IGDB · Artwork & secondary metadata · SMTP · OIDC · LiveKit · Community · Acquire/Arr · Ownership · Remote play · Export packs · Support, with deep links into classic forms).
 
 **Integrations inventory API:** `GET /api/admin/integrations/inventory` (admin) returns `{integrations[{id,name,category,status,configured,enabled,admin_href,settings_href,notes}], count, hub_href}` covering IGDB, SteamGridDB, Giant Bomb, HLTB, Meta/Quest, SMTP, OIDC, Support, community chat, LiveKit, Arr connectors, and ownership register links — so the hub is not IGDB-only. The React Integrations page renders a **Provider inventory** grouped by category (with status + notes) under the hub cards. Classic `/admin/integrations` artwork tab anchors (`#steamgriddb`, `#giantbomb`, `#hltb`, `#meta_quest`, `#ownership`, `#livekit`, `#support`, `#indexers`, `#community`, `#email`, `#igdb`) deep-link the same surfaces.
 
@@ -8,7 +8,7 @@ Admin settings use a **card grid** at `/admin/settings` (whole card → destinat
 
 **Export packs:** Admin → Integrations → **Export packs** (and member Systems secondary section) download ES-DE `gamelist.xml` (`/api/export/esde`) and Pegasus metadata (`/api/export/pegasus`). Paths are portable under library roots — NAS/home mounts are not leaked.
 
-**Server logs alias:** Admin server logs/status is also at **`/admin/server_logs`**.
+**Server logs:** Admin → Ops → Full log (`/admin/ops?open=full-log`). Legacy `/admin/server_logs` redirects.
 
 **Worker caps (scan/turbo):** New installs default scan threads **1**, turbo threads **4**, turbo batch **100**; runtime hard-caps via `GT_SCAN_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_BATCH_CAP` — not Compose `SCAN_*` env vars. See [libraries-and-scans.md](libraries-and-scans.md) · [unraid-deploy.md](../runbooks/unraid-deploy.md#cpu--scan-load-unraid-safe-defaults).
 
@@ -23,7 +23,7 @@ Admin settings use a **card grid** at `/admin/settings` (whole card → destinat
 
 ## Hub badges
 
-Settings hub shows On/Off (and Storage “Apply off”) for optional modules so you can see state without opening each page.
+Settings hub shows On/Off (and Storage “Apply off”) as pills beside the module title so you can see state without opening each page. Badge CSS ships in `admin-app.css` — Reset Themes is not required for the hub look; an **admin SPA rebuild** is.
 
 ## Feature defaults
 
@@ -59,7 +59,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 - **Admin UI:** Arr page shows indexer table (ready/enabled/source, toggle, delete), add-one form, bulk JSON/CSV import, preset multi-select + Enable selected, hub URL fields, and `indexer_warnings` from status/search.
 - APIs: `GET/POST /api/arr/indexers`, `POST /api/arr/indexers/bulk`, `POST /api/arr/indexers/enable-presets`, `PUT|PATCH|DELETE /api/arr/indexers/<id>`.
 - Native indexer URLs use outbound SSRF checks (no LAN); hub URLs still respect `ALLOW_PRIVATE_LAN_URLS`.
-- Preset pack: `gametheca/data/indexer_presets.json` (no secrets; admin-only display names).
+- Preset pack: `oneirodex/data/indexer_presets.json` (no secrets; admin-only display names).
 - **Remote path mapping (`ARR_REMOTE_PATH_MAP`)** — set this whenever your download client runs in a **different container** than Oneirodex, which is the normal Unraid/Compose layout. qBittorrent reports paths from *its* mounts (`/downloads/…`), Oneirodex sees the same bytes somewhere else (`/storage/downloads/…`), and without a mapping the hardlink pipeline stats a path that does not exist here. The preview then says *"no source file found"* — true, but baffling when the file is plainly on disk.
   - Format: `remote=>local` pairs joined by `|`. `=>` because Windows paths contain colons; `|` because paths can contain commas.
   - Example: `ARR_REMOTE_PATH_MAP=/downloads=>/storage/downloads|/data/torrents=>/mnt/user/torrents`

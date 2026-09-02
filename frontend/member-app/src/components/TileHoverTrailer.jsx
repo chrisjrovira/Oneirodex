@@ -44,7 +44,7 @@ export function TileHoverTrailer({ src, active }) {
   if (isDirectVideoUrl(playSrc)) {
     return (
       <video
-        className="gt-tile-hover-trailer"
+        className="od-tile-hover-trailer"
         src={playSrc}
         muted
         autoPlay
@@ -58,7 +58,7 @@ export function TileHoverTrailer({ src, active }) {
 
   return (
     <iframe
-      className="gt-tile-hover-trailer"
+      className="od-tile-hover-trailer"
       src={playSrc}
       title=""
       aria-hidden="true"

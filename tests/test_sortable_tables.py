@@ -3,12 +3,12 @@
 Sorting on the Jinja side used to be per page: the unmatched table carried its
 own sorter, its own hand-written header buttons and its own `.unmatched-sort-btn`
 rules, while the active scan jobs table beside it had nothing — which is what
-W27-C2 reported. Both now go through `js/gt_sortable_table.js`.
+W27-C2 reported. Both now go through `js/od_sortable_table.js`.
 
 These are source assertions rather than behaviour tests. The behaviour lives in
-`frontend/admin-app/src/gtSortableTable.test.js`, which runs the real module
+`frontend/admin-app/src/odSortableTable.test.js`, which runs the real module
 against a DOM; what cannot be checked there is whether the *templates* still opt
-in, because a table that quietly loses `data-gt-sortable` keeps rendering
+in, because a table that quietly loses `data-od-sortable` keeps rendering
 perfectly and simply stops sorting. That failure is invisible to every other
 test in the suite, which is the reason for this file.
 
@@ -21,13 +21,13 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-THEME_JS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'js'
-THEME_CSS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css'
-TEMPLATES = ROOT / 'gametheca' / 'templates'
+THEME_JS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'js'
+THEME_CSS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css'
+TEMPLATES = ROOT / 'oneirodex' / 'templates'
 
 SCANJOBS_HTML = TEMPLATES / 'admin' / 'admin_manage_scanjobs.html'
 SCANJOBS_JS = THEME_JS / 'admin_manage_scanjobs.js'
-MODULE = THEME_JS / 'gt_sortable_table.js'
+MODULE = THEME_JS / 'od_sortable_table.js'
 
 
 def _read(path: Path) -> str:
@@ -46,7 +46,7 @@ def test_both_base_templates_load_the_module():
     step for a page. A base that stops loading it silently disables sorting
     across every page that extends it."""
     for base in ('base.html', 'base_admin.html'):
-        assert 'js/gt_sortable_table.js' in _read(TEMPLATES / base), base
+        assert 'js/od_sortable_table.js' in _read(TEMPLATES / base), base
 
 
 def test_the_scan_jobs_table_opts_in():
@@ -55,7 +55,7 @@ def test_the_scan_jobs_table_opts_in():
     table = markup[markup.index('id="scanJobsTable"'):]
     head = table[: table.index('</thead>')]
 
-    assert 'data-gt-sortable' in table[:200]
+    assert 'data-od-sortable' in table[:200]
     for key in ('id', 'library', 'path', 'status', 'progress'):
         assert f'data-sort-key="{key}"' in head, key
 
@@ -85,8 +85,8 @@ def test_the_unmatched_table_keeps_its_default_order():
     table = markup[markup.index('id="unmatchedTable"'):]
     header = table[: table.index('</thead>')]
 
-    assert 'data-gt-sortable' in header
-    assert 'data-gt-sort-default="folder"' in header
+    assert 'data-od-sortable' in header
+    assert 'data-od-sort-default="folder"' in header
     for key in ('folder', 'status', 'library', 'platform'):
         assert f'data-sort-key="{key}"' in header, key
 
@@ -105,11 +105,11 @@ def test_the_bespoke_unmatched_sorter_is_retired():
 
 
 def test_the_shared_button_style_ships_with_the_shared_module():
-    """`.gt-sort-btn` is built by the module, so it must be styled in the
+    """`.od-sort-btn` is built by the module, so it must be styled in the
     stylesheet both bases already load rather than beside one page's table —
     the per-page split is what let the two tables diverge."""
-    assert '.gt-sort-btn' in _read(THEME_CSS / 'table-components.css')
-    assert 'gt-sort-btn' in _read(MODULE)
+    assert '.od-sort-btn' in _read(THEME_CSS / 'table-components.css')
+    assert 'od-sort-btn' in _read(MODULE)
 
 
 def test_the_module_does_not_clear_the_header_cell():

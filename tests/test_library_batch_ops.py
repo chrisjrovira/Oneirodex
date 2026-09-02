@@ -7,9 +7,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_batch import (
+from oneirodex.models import Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_batch import (
     LIBRARY_BATCH_DELETE_CAP,
     names_match,
     parse_library_uuids,
@@ -126,6 +126,37 @@ class TestBatchEditLibraries:
         assert a.watch_enabled is False
         assert b.watch_enabled is False
 
+    def test_batch_edit_group_name(self, client, admin_user, db_session):
+        a = _make_library(db_session, name='Group A')
+        b = _make_library(db_session, name='Group B')
+        _login(client, admin_user)
+
+        resp = client.post(
+            '/api/admin/libraries/batch/edit',
+            json={
+                'library_uuids': [a.uuid, b.uuid],
+                'group_name': 'Arcade',
+            },
+        )
+        assert resp.status_code == 200
+        db_session.refresh(a)
+        db_session.refresh(b)
+        assert a.group_name == 'Arcade'
+        assert b.group_name == 'Arcade'
+
+        clear = client.post(
+            '/api/admin/libraries/batch/edit',
+            json={
+                'library_uuids': [a.uuid],
+                'group_name': '',
+            },
+        )
+        assert clear.status_code == 200
+        db_session.refresh(a)
+        assert a.group_name is None
+        db_session.refresh(b)
+        assert b.group_name == 'Arcade'
+
     def test_batch_edit_requires_fields(self, client, admin_user, db_session):
         lib = _make_library(db_session)
         _login(client, admin_user)
@@ -157,7 +188,7 @@ class TestBatchScanLibraries:
         _login(client, admin_user)
 
         with patch(
-            'gametheca.utils.scan_queue.start_or_queue_scan',
+            'oneirodex.utils.scan_queue.start_or_queue_scan',
             return_value={
                 'status': 'queued',
                 'job_id': 'job-1',
@@ -217,12 +248,12 @@ class TestBatchDeleteLibraries:
         lib = _make_library(db_session, name='Exact Name')
         _login(client, admin_user)
         with patch(
-            'gametheca.routes_apis.library.delete_library_background',
+            'oneirodex.routes_apis.library.delete_library_background',
             create=True,
         ):
             # Patch where used: _start_library_delete_job imports from routes
             with patch(
-                'gametheca.routes.delete_library_background'
+                'oneirodex.routes.delete_library_background'
             ) as mock_bg:
                 mock_bg.return_value = None
                 resp = client.post(
@@ -246,7 +277,7 @@ class TestBatchDeleteLibraries:
         a = _make_library(db_session, name='A')
         b = _make_library(db_session, name='B')
         _login(client, admin_user)
-        with patch('gametheca.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             resp = client.post(
                 '/api/admin/libraries/batch/delete',
@@ -267,7 +298,7 @@ class TestBatchDeleteLibraries:
     ):
         lib = _make_library(db_session, name='Solo')
         _login(client, admin_user)
-        with patch('gametheca.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             # Wrong confirm without force → 400
             bad = client.post(

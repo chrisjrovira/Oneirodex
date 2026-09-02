@@ -57,7 +57,7 @@ export function patchedOutputName(romBasename: string, patchBasename: string): s
 
 async function getPatchesDir(): Promise<string> {
   if (!isTauriRuntime()) {
-    return '/tmp/gametheca/patches'
+    return '/tmp/oneirodex/patches'
   }
   return invoke<string>('get_app_subdir', { subdir: 'patches' })
 }

@@ -14,10 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from gametheca.utils.security import sanitize_path_for_logging
+from oneirodex.utils.security import sanitize_path_for_logging
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TEMPLATES = REPO_ROOT / 'gametheca' / 'templates'
+TEMPLATES = REPO_ROOT / 'oneirodex' / 'templates'
 
 
 # --- S9: path scrubbing ---------------------------------------------------
@@ -118,7 +118,7 @@ class TestSourceOffer:
 
     def test_admin_renders_the_offer(self):
         base = (TEMPLATES / 'base_admin.html').read_text(encoding='utf-8')
-        assert 'gt-admin-licence' in base
+        assert 'od-admin-licence' in base
         assert 'source_url' in base
         assert 'agpl-3.0' in base.lower()
 
@@ -148,5 +148,5 @@ class TestAttribution:
         page = self._help_page()
         assert 'sourceUrl' in page
         # The source offer must come from config, not a baked GitHub URL.
-        assert 'href="https://github.com/chrisjrovira/gametheca"' not in page
+        assert 'href="https://github.com/chrisjrovira/oneirodex"' not in page
         assert 'href="https://github.com/chrisjrovira/oneirodex"' not in page

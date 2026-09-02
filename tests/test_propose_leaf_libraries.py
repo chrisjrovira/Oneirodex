@@ -2,8 +2,8 @@
 
 import os
 
-from gametheca.utils.functions import DEFAULT_SKIP_DIR_GLOBS
-from gametheca.utils.propose_leaf_libraries import (
+from oneirodex.utils.functions import DEFAULT_SKIP_DIR_GLOBS
+from oneirodex.utils.propose_leaf_libraries import (
     FAMILY_PARENT_NAMES,
     infer_platform_from_name,
     is_family_parent_name,
@@ -131,6 +131,11 @@ def test_infer_platform_home_computers():
     assert infer_platform_from_name('X68000') == 'X68000'
     assert infer_platform_from_name('NEC PC-98') == 'PC_98'
     assert infer_platform_from_name('PC-98') == 'PC_98'
+    assert infer_platform_from_name('BBC Micro') == 'BBC_MICRO'
+    assert infer_platform_from_name('Beeb') == 'BBC_MICRO'
+    assert infer_platform_from_name('Nintendo Game & Watch') == 'GAME_WATCH'
+    assert infer_platform_from_name('Game Watch') == 'GAME_WATCH'
+    assert infer_platform_from_name('Game Boy') == 'GB'
 
 
 def test_infer_platform_commodore_8bit():
@@ -251,7 +256,7 @@ def test_propose_is_side_effect_free(tmp_path):
     leaf = tmp_path / 'Switch'
     leaf.mkdir()
     (leaf / 'Game').mkdir()
-    import gametheca.utils.propose_leaf_libraries as mod
+    import oneirodex.utils.propose_leaf_libraries as mod
     assert not hasattr(mod, 'Library')
     out = propose_leaf_libraries(str(leaf))
     assert len(out) == 1

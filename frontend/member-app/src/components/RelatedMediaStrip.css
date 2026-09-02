@@ -1,36 +1,36 @@
 /* Related media on a game page — context, not tracking. */
 
-.gt-relmedia { margin: 0 0 1.25rem; }
+.od-relmedia { margin: 0 0 1.25rem; }
 
-.gt-relmedia__head {
+.od-relmedia__head {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
 }
 
-.gt-relmedia__head h2 { margin: 0; font-size: var(--gt-font-base); }
+.od-relmedia__head h2 { margin: 0; font-size: var(--od-font-base); }
 
-.gt-relmedia__count {
+.od-relmedia__count {
   padding: 0.05rem 0.4rem;
-  border-radius: var(--gt-radius-pill);
-  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-accent) 18%, transparent);
+  font-size: var(--od-font-xs);
 }
 
-.gt-relmedia__lede {
+.od-relmedia__lede {
   margin: 0.2rem 0 0.6rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-relmedia__filters {
+.od-relmedia__filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 0.6rem;
 }
 
-.gt-relmedia__list {
+.od-relmedia__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -39,70 +39,70 @@
   gap: 0.6rem;
 }
 
-.gt-relmedia__card {
+.od-relmedia__card {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
   padding: 0;
   overflow: hidden;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
   color: inherit;
   text-align: left;
   cursor: pointer;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
-.gt-relmedia__card:hover,
-.gt-relmedia__card:focus-visible {
+.od-relmedia__card:hover,
+.od-relmedia__card:focus-visible {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
+  border-color: color-mix(in srgb, var(--od-accent) 50%, transparent);
 }
 
-.gt-relmedia__art {
+.od-relmedia__art {
   display: block;
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
-  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+  background: color-mix(in srgb, var(--od-surface-2) 85%, transparent);
 }
 
-.gt-relmedia__art.is-broken { display: none; }
+.od-relmedia__art.is-broken { display: none; }
 
-.gt-relmedia__art--empty {
+.od-relmedia__art--empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--gt-font-4xl);
+  font-size: var(--od-font-4xl);
 }
 
-.gt-relmedia__card-body {
+.od-relmedia__card-body {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.5rem 0.6rem 0.6rem;
 }
 
-.gt-relmedia__kind {
-  font-size: var(--gt-font-xs);
+.od-relmedia__kind {
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-relmedia__title { font-size: var(--gt-font-md); line-height: 1.3; }
+.od-relmedia__title { font-size: var(--od-font-md); line-height: 1.3; }
 
-.gt-relmedia__year {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-relmedia__year {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
 /* --- popup --- */
 
-.gt-relmedia__scrim {
+.od-relmedia__scrim {
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -114,79 +114,79 @@
   backdrop-filter: blur(3px);
 }
 
-.gt-relmedia__modal {
+.od-relmedia__modal {
   position: relative;
   width: min(100%, 38rem);
   max-height: min(84vh, 32rem);
   overflow-y: auto;
   padding: 1rem 1.15rem;
-  border-radius: var(--gt-radius-xl);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 32%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
+  border-radius: var(--od-radius-xl);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 32%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
-.gt-relmedia__close {
+.od-relmedia__close {
   position: absolute;
   top: 0.5rem;
   right: 0.6rem;
   width: 2rem;
   height: 2rem;
   border: 0;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   background: transparent;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xl);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xl);
   cursor: pointer;
 }
 
-.gt-relmedia__close:hover,
-.gt-relmedia__close:focus-visible {
-  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  color: var(--gt-text);
+.od-relmedia__close:hover,
+.od-relmedia__close:focus-visible {
+  background: color-mix(in srgb, var(--od-accent) 18%, transparent);
+  color: var(--od-text);
 }
 
-.gt-relmedia__modal-body {
+.od-relmedia__modal-body {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
 }
 
-.gt-relmedia__modal-art {
+.od-relmedia__modal-art {
   flex: 0 0 auto;
   width: 9rem;
   max-width: 34%;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
 }
 
-.gt-relmedia__modal-text { flex: 1 1 auto; min-width: 0; }
+.od-relmedia__modal-text { flex: 1 1 auto; min-width: 0; }
 
-.gt-relmedia__modal-text h3 {
+.od-relmedia__modal-text h3 {
   margin: 0.25rem 2rem 0.3rem 0;
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
   line-height: 1.25;
 }
 
-.gt-relmedia__meta {
+.od-relmedia__meta {
   margin: 0 0 0.5rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-relmedia__summary {
+.od-relmedia__summary {
   margin: 0 0 0.9rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.5;
 }
 
 @media (max-width: 640px) {
-  .gt-relmedia__modal-body { flex-direction: column; }
-  .gt-relmedia__modal-art { width: 7.5rem; max-width: 45%; }
+  .od-relmedia__modal-body { flex-direction: column; }
+  .od-relmedia__modal-art { width: 7.5rem; max-width: 45%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-relmedia__card { transition: none; }
-  .gt-relmedia__card:hover,
-  .gt-relmedia__card:focus-visible { transform: none; }
+  .od-relmedia__card { transition: none; }
+  .od-relmedia__card:hover,
+  .od-relmedia__card:focus-visible { transform: none; }
 }

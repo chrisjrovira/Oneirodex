@@ -1,5 +1,5 @@
 export const base = {
-  className: 'gt-icon',
+  className: 'od-icon',
   // Every glyph in this file and in railIcons.jsx is drawn on a 24x24 grid, so
   // the viewBox belongs with the rest of the shared attributes.
   //

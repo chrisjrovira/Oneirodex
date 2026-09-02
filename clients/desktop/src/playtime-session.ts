@@ -1,4 +1,4 @@
-import type { GamethecaClient } from './api.js'
+import type { OneirodexClient } from './api.js'
 import { isProcessRunning as defaultIsProcessRunning } from './process-status.js'
 
 export interface PlaySessionWatcher {
@@ -15,7 +15,7 @@ export interface WatchPlaySessionOptions {
 const DEFAULT_POLL_INTERVAL_MS = 30_000
 
 export function watchPlaySession(
-  api: GamethecaClient,
+  api: OneirodexClient,
   pid: number,
   sessionId: number,
   options: WatchPlaySessionOptions = {},

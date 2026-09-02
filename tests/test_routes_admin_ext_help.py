@@ -1,7 +1,7 @@
 import pytest
 from flask import url_for
-from gametheca.models import User
-from gametheca import db
+from oneirodex.models import User
+from oneirodex import db
 from uuid import uuid4
 
 

@@ -23,27 +23,27 @@ export function DetailsStoreSpecs({ storeSpecs }) {
   return (
     <>
       {osRows.length ? (
-        <section className="gt-details-page__section">
+        <section className="od-details-page__section">
           <h2>System requirements</h2>
-          <p className="gt-details-page__muted">
+          <p className="od-details-page__muted">
             From the store listing when this title was identified — not invented for ROM-only copies.
           </p>
-          <div className="gt-details-page__reqs">
+          <div className="od-details-page__reqs">
             {osRows.map(([key, label]) => {
               const block = reqs[key]
               return (
-                <div key={key} className="gt-details-page__req-os">
+                <div key={key} className="od-details-page__req-os">
                   <h3>{label}</h3>
                   {block.minimum ? (
                     <>
                       <h4>Minimum</h4>
-                      <p className="gt-details-page__req-text">{block.minimum}</p>
+                      <p className="od-details-page__req-text">{block.minimum}</p>
                     </>
                   ) : null}
                   {block.recommended ? (
                     <>
                       <h4>Recommended</h4>
-                      <p className="gt-details-page__req-text">{block.recommended}</p>
+                      <p className="od-details-page__req-text">{block.recommended}</p>
                     </>
                   ) : null}
                 </div>
@@ -54,13 +54,13 @@ export function DetailsStoreSpecs({ storeSpecs }) {
       ) : null}
 
       {languages.length ? (
-        <section className="gt-details-page__section">
+        <section className="od-details-page__section">
           <h2>Store languages</h2>
-          <p className="gt-details-page__muted">
+          <p className="od-details-page__muted">
             Interface / audio / subtitles from the store listing. ROM region chips above stay filename truth.
           </p>
-          <div className="gt-details-page__langs-wrap">
-            <table className="gt-details-page__langs">
+          <div className="od-details-page__langs-wrap">
+            <table className="od-details-page__langs">
               <thead>
                 <tr>
                   <th scope="col">Language</th>

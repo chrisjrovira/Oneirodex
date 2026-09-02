@@ -1,0 +1,39 @@
+{% extends "base_admin.html" %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_smtp_settings.css'|theme_asset }}">
+
+<div class="container-settings od-adminpage od-adminpage--xl">
+    <div class="od-adminpage-header">
+        <div>
+            <h1 class="od-adminpage-title">{{ icons.icon('envelope', size=26) }} SMTP Settings</h1>
+            <p class="od-adminpage-lede">
+                Prefer the
+                <a href="{{ url_for('admin2.integrations') }}">Integrations</a>
+                hub — this page remains as a deep link.
+            </p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="alert">
+        This page has moved. Manage SMTP alongside IGDB from the
+        <a href="{{ url_for('admin2.integrations') }}">Integrations</a> hub.
+    </div>
+
+    <div class="od-adminpage-panel">
+        <div class="od-adminpage-panel-header">
+            <h2>SMTP Settings
+                <button type="button" class="btn btn-info btn-sm smtp-help-open" title="SMTP help" aria-haspopup="dialog" aria-controls="smtpHelpModal">
+                    {{ icons.icon('help') }}
+                </button>
+            </h2>
+        </div>
+        {% include 'partials/integrations/smtp_form.html' %}
+    </div>
+</div>
+
+<script src="{{ 'js/admin_manage_smtp_settings.js'|theme_asset }}"></script>
+
+{% endblock %}

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gametheca.utils.ambient_lighting import (
+from oneirodex.utils.ambient_lighting import (
     HyperionClient,
     HomeAssistantClient,
     ambient_lighting_status,
@@ -20,7 +20,7 @@ from gametheca.utils.ambient_lighting import (
 def _disable_ambient(app, db_session, monkeypatch):
     from sqlalchemy.orm.attributes import flag_modified
 
-    from gametheca.models import GlobalSettings
+    from oneirodex.models import GlobalSettings
 
     monkeypatch.setitem(app.config, 'ENABLE_AMBIENT_LIGHTING', False)
     monkeypatch.setitem(app.config, 'LIGHTING_PROVIDER', 'off')
@@ -96,7 +96,7 @@ def test_notify_play_session_skips_child(app, db_session, monkeypatch):
 
     from uuid import uuid4
 
-    from gametheca.models import User
+    from oneirodex.models import User
 
     uid = uuid4().hex[:8]
     child = User(
@@ -110,7 +110,7 @@ def test_notify_play_session_skips_child(app, db_session, monkeypatch):
     db_session.commit()
 
     with app.app_context():
-        with patch('gametheca.utils.ambient_lighting._run_async') as mock_async:
+        with patch('oneirodex.utils.ambient_lighting._run_async') as mock_async:
             notify_play_session_started(child, None)
             notify_play_session_stopped(user=child)
     mock_async.assert_not_called()
@@ -124,7 +124,7 @@ def test_notify_play_session_start_async_hyperion(app, db_session, monkeypatch):
 
     from uuid import uuid4
 
-    from gametheca.models import User
+    from oneirodex.models import User
 
     uid = uuid4().hex[:8]
     user = User(
@@ -138,7 +138,7 @@ def test_notify_play_session_start_async_hyperion(app, db_session, monkeypatch):
     db_session.commit()
 
     with app.app_context():
-        with patch('gametheca.utils.ambient_lighting._run_async') as mock_async:
+        with patch('oneirodex.utils.ambient_lighting._run_async') as mock_async:
             notify_play_session_started(user, None)
     mock_async.assert_called_once()
 
@@ -147,7 +147,7 @@ def test_ambient_lighting_status_api(client, app, db_session, monkeypatch):
     _disable_ambient(app, db_session, monkeypatch)
     from uuid import uuid4
 
-    from gametheca.models import User
+    from oneirodex.models import User
 
     admin = User(
         user_id=str(uuid4()),
@@ -172,7 +172,7 @@ def test_ambient_lighting_status_api(client, app, db_session, monkeypatch):
 def test_ambient_lighting_test_probe_mocked(app, db_session, monkeypatch):
     from sqlalchemy.orm.attributes import flag_modified
 
-    from gametheca.models import GlobalSettings
+    from oneirodex.models import GlobalSettings
 
     monkeypatch.setitem(app.config, 'ENABLE_AMBIENT_LIGHTING', True)
     monkeypatch.setitem(app.config, 'LIGHTING_PROVIDER', 'hyperion')
@@ -187,7 +187,7 @@ def test_ambient_lighting_test_probe_mocked(app, db_session, monkeypatch):
         db_session.commit()
 
     with app.app_context():
-        with patch('gametheca.utils.ambient_lighting.HyperionClient') as mock_cls:
+        with patch('oneirodex.utils.ambient_lighting.HyperionClient') as mock_cls:
             inst = MagicMock()
             mock_cls.return_value = inst
             status = ambient_lighting_status(probe=True)

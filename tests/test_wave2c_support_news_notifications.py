@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Announcement, User
+from oneirodex.models import Announcement, User
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def _login(client, app, account):
 
 def test_support_ticket_title_only_optional_symptom_logs(client, app, db_session, member_user):
     _login(client, app, member_user)
-    with patch('gametheca.routes_apis.support.create_github_issue', return_value={'ok': False, 'skipped': True}):
+    with patch('oneirodex.routes_apis.support.create_github_issue', return_value={'ok': False, 'skipped': True}):
         created = client.post(
             '/api/support/tickets',
             json={'title': 'Launcher flicker', 'area': 'companion', 'severity': 'P2'},
@@ -71,7 +71,7 @@ def test_support_ticket_truncates_huge_logs_and_list_is_compact(client, app, db_
     _login(client, app, member_user)
     huge = 'L' * 9000
     long_body = 'B' * 3000
-    with patch('gametheca.routes_apis.support.create_github_issue', return_value={'ok': False, 'skipped': True}):
+    with patch('oneirodex.routes_apis.support.create_github_issue', return_value={'ok': False, 'skipped': True}):
         created = client.post(
             '/api/support/tickets',
             json={
@@ -145,7 +145,7 @@ def test_news_feeds_never_500_on_empty_or_failure(client, app, db_session, membe
     assert a['empty'] is True
 
     with patch(
-        'gametheca.utils.gaming_news.fetch_gaming_headlines',
+        'oneirodex.utils.gaming_news.fetch_gaming_headlines',
         side_effect=RuntimeError('rss down'),
     ):
         news = client.get('/api/news/gaming?limit=12')

@@ -1,0 +1,279 @@
+/* Density layer (GT-B1)
+ * ---------------------------------------------------------------------------
+ * One token set, two densities: media-forward for browsing, compact for admin.
+ *
+ * The problem this solves
+ *   Discover and Library want big art, air and few items per screen. A user
+ *   table or a scan-job list wants the opposite — as many rows as will fit.
+ *   Previously each surface hardcoded its own padding to get there, which is a
+ *   large part of why no two pages shared a rhythm.
+ *
+ * What varies, and what deliberately does not
+ *   Only *layout* tokens are density-dependent: gutters, control heights, row
+ *   padding, tile sizing. The primitive scales (--od-space-*, --od-font-*,
+ *   --od-radius-*) stay fixed across densities on purpose — if the type scale
+ *   moved too, "compact" would become a second design language rather than a
+ *   second spacing of the same one, and every component would need testing
+ *   twice. Components should reference the semantic tokens below, not raw steps.
+ *
+ * Why its own file rather than od-tokens.css
+ *   od-tokens.css is preset-managed: preset_themes rewrites named variables in
+ *   it with a first-match regex. A scoped [data-density] block there would risk
+ *   a preset value landing inside the wrong block. This file is not managed, so
+ *   presets never touch it.
+ *
+ * Usage
+ *   Default is comfortable. Opt a subtree into compact with data-density:
+ *     <body data-density="compact">          whole surface (admin)
+ *     <section data-density="compact">       one region (a table inside browse)
+ *   The attribute cascades, so nesting works and a compact region inside a
+ *   comfortable page needs no other change.
+ */
+
+:root,
+[data-density='comfortable'] {
+  /* Page frame */
+  --od-gutter: 1.5rem;
+  --od-stack: 1.25rem;
+  --od-section-gap: 2rem;
+
+  /* Controls — one height for every button, input and select on a row, so
+     mixed rows line up without per-component nudging. */
+  --od-control-h: 2.25rem;
+  --od-control-pad-x: var(--od-space-4);
+
+  /* Lists and tables */
+  --od-row-pad-y: var(--od-space-4);
+  --od-row-pad-x: var(--od-space-5);
+
+  /* Cards and panels */
+  --od-card-pad: var(--od-space-5);
+  --od-card-gap: var(--od-space-4);
+
+  /* Cover-art grids. The tile floor is what makes browse feel cinematic —
+     larger tiles, fewer of them, art doing the work. */
+  --od-tile-min: 200px;
+  --od-tile-gap: var(--od-space-5);
+  --od-tile-radius: var(--od-radius-lg);
+
+  /* Chrome */
+  --od-topbar-h: 3.25rem;
+  --od-rail-w: 13.5rem;
+  --od-rail-w-collapsed: 3.25rem;
+  --od-rail-item-h: 1.9rem;
+  /* One left edge for the whole rail. `--od-rail-inset` is where a glyph
+     starts, brand and nav rows alike; `--od-rail-gutter` is how much of that
+     the scroll container contributes, the link supplying the remainder so its
+     highlight still spans the rail. `--od-rail-icon-w` is the destination
+     glyph column only — the brand mark uses `--od-rail-mark-expanded` so
+     growing the icons cannot grow the logo. */
+  --od-rail-inset: 0.9rem;
+  --od-rail-gutter: 0.4rem;
+  --od-rail-icon-w: 1.125rem;
+  /* Expanded rail glyphs match the icon column. 1.8 was a previous enlargement
+     that made the labels look small beside them; 1 keeps icon and type in step. */
+  --od-rail-icon-scale: 1;
+  --od-rail-mark-expanded: 5.5rem;
+  --od-rail-mark-collapsed: 1.6rem;
+}
+
+[data-density='compact'] {
+  --od-gutter: 0.85rem;
+  --od-stack: 0.65rem;
+  --od-section-gap: 1.1rem;
+
+  --od-control-h: 1.85rem;
+  --od-control-pad-x: var(--od-space-3);
+
+  --od-row-pad-y: var(--od-space-2);
+  --od-row-pad-x: var(--od-space-3);
+
+  --od-card-pad: var(--od-space-4);
+  --od-card-gap: var(--od-space-3);
+
+  --od-tile-min: 132px;
+  --od-tile-gap: var(--od-space-3);
+  --od-tile-radius: var(--od-radius-md);
+
+  --od-topbar-h: 2.6rem;
+  --od-rail-w: 12rem;
+  --od-rail-w-collapsed: 3rem;
+  --od-rail-item-h: 1.7rem;
+  --od-rail-inset: 0.75rem;
+  --od-rail-gutter: 0.35rem;
+  --od-rail-icon-w: 1rem;
+  --od-rail-mark-expanded: 4.5rem;
+  --od-rail-mark-collapsed: 1.45rem;
+}
+
+/* Touch targets win over density below the tablet breakpoint. A 1.85rem control
+   is ~30px, under the 44px floor a finger needs, so compact stops applying to
+   controls on small screens even where the attribute is set. Density is a
+   information-density preference, never an accessibility regression. */
+@media (max-width: 900px) {
+  [data-density='compact'] {
+    --od-control-h: 2.4rem;
+    --od-row-pad-y: var(--od-space-3);
+    --od-rail-item-h: 2.4rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Density-aware primitives.
+
+   These override the fixed metrics in od-primitives.css / od-bootstrap-bridge
+   so a button inside a compact region shrinks with it, without either file
+   needing to know densities exist.
+   -------------------------------------------------------------------------- */
+
+.od-btn,
+.btn {
+  min-height: var(--od-control-h);
+  padding-inline: var(--od-control-pad-x);
+}
+
+.od-input,
+.od-select,
+.form-control,
+.form-select {
+  min-height: var(--od-control-h);
+}
+
+.od-card,
+.card {
+  padding: var(--od-card-pad);
+}
+
+/* Cover grids read from the tile tokens rather than their own media queries. */
+.od-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--od-tile-min), 1fr));
+  gap: var(--od-tile-gap);
+}
+
+/* --------------------------------------------------------------------------
+   Card surface (GT-B10)
+
+   Every panel-ish thing in the product had picked its own fill: the scan tab
+   and the image queue came out mid-grey, Add Library came out near-black, and
+   admin panels sat somewhere between. That is why pages that do the same job
+   look like they belong to different apps.
+
+   One rule, one token. Cards are the *page* colour with a border, not a lighter
+   slab floating on it — the border does the separating, so nested panels do not
+   stack into progressively paler boxes. Override --od-card-bg in a theme preset
+   to change all of them at once.
+   -------------------------------------------------------------------------- */
+
+:root,
+[data-density='comfortable'],
+[data-density='compact'] {
+  --od-card-bg: var(--od-bg);
+  --od-card-border: var(--od-border);
+}
+
+.od-card,
+.card,
+.od-admin-card,
+.od-admin-panel,
+.od-adminpage,
+.od-adminpage-panel,
+.od-ops-panel,
+.container-settings,
+.glass-panel {
+  background: var(--od-card-bg);
+  border: 1px solid var(--od-card-border);
+  border-radius: var(--od-radius-lg);
+  box-shadow: none;
+}
+
+/* A panel inside a panel gets separation from a hairline, never a second fill —
+   two nested translucent surfaces was where the grey stacking came from. */
+.od-card .od-card,
+.od-admin-panel .od-admin-panel,
+.od-adminpage .od-adminpage-panel,
+.od-ops-panel .od-ops-panel {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--od-card-border) 70%, transparent);
+}
+
+/* Headers sit on the card, not on their own tinted strip. */
+.card-header,
+.od-adminpage-header,
+.od-adminpage-panel-header {
+  background: transparent;
+  border-bottom: 1px solid var(--od-card-border);
+}
+
+/* --------------------------------------------------------------------------
+   Segmented button group (GT-B10)
+
+   One control with rounded ends and hairline dividers, rather than a row of
+   separate pills. Divider comes from a border on the adjacent item, so labels
+   cannot overlap the seam the way the unmatched-folders bar did — that overlap
+   was a negative margin trying to fake the join.
+   -------------------------------------------------------------------------- */
+
+.od-segbar {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--od-card-border);
+  border-radius: var(--od-radius-pill);
+  overflow: hidden;
+  /* Stops a long group forcing horizontal page scroll on narrow admin tables. */
+  max-width: 100%;
+}
+
+.od-segbar > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--od-space-2);
+  min-height: var(--od-control-h);
+  padding-inline: var(--od-space-5);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--od-text-muted);
+  font: inherit;
+  font-size: var(--od-font-md);
+  /* No wrapping and no shrinking below the label: the overlap being fixed here
+     was text being squeezed past its own button edge. */
+  white-space: nowrap;
+  flex: 0 0 auto;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.od-segbar > * + * {
+  border-left: 1px solid var(--od-card-border);
+}
+
+.od-segbar > *:hover:not(:disabled) {
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-text) 7%, transparent);
+}
+
+.od-segbar > .is-active,
+.od-segbar > [aria-pressed='true'],
+.od-segbar > [aria-current='page'] {
+  background: color-mix(in srgb, var(--od-accent) 16%, transparent);
+  color: var(--od-accent);
+}
+
+.od-segbar > *:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Scrolls rather than wraps — a wrapped pill group breaks its own rounded ends. */
+@media (max-width: 900px) {
+  .od-segbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .od-segbar::-webkit-scrollbar {
+    display: none;
+  }
+}

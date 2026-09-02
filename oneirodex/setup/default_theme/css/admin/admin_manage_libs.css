@@ -1,0 +1,161 @@
+/* Libraries panel + unified Libraries & scans chrome (W22-1) */
+
+.od-libraries-unified-tabs {
+  margin-bottom: 1rem;
+}
+
+.od-libraries-panel {
+  position: relative;
+}
+
+.od-libraries-panel__toolbar {
+  margin-bottom: 0.5rem;
+}
+
+/* Selection count sits on the table edge, not far-right of the page toolbar. */
+.od-libraries-panel__meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  margin: 0 0 0.35rem;
+  min-height: 1.25rem;
+}
+
+.od-libraries-panel__meta #odLibrariesSelectionCount {
+  margin: 0;
+}
+
+.od-libraries-batch-bar {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 20;
+  margin: 0.75rem 0 1rem;
+}
+
+.od-libraries-batch-bar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--od-bg) 35%, transparent);
+}
+
+.od-libraries-batch-bar__count {
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
+  margin-right: 0.25rem;
+}
+
+#librariesTable .drag-handle {
+  cursor: grab;
+  opacity: 0.7;
+}
+
+#librariesTable .od-library-row-check {
+  cursor: pointer;
+}
+
+#deleteSpinner.spinner-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--od-bg) 55%, transparent);
+  z-index: 1070;
+}
+
+#deleteSpinner .spinner-container {
+  text-align: center;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--od-radius-xl);
+  background: color-mix(in srgb, var(--od-surface) 95%, transparent);
+  border: 1px solid var(--od-border);
+  min-width: 240px;
+}
+
+#deleteSpinner .progress-bar {
+  position: relative;
+  height: 8px;
+  margin-top: 0.75rem;
+  border-radius: var(--od-radius-xs);
+  background: color-mix(in srgb, var(--od-bg) 40%, transparent);
+  overflow: hidden;
+}
+
+#deleteSpinner .progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--od-accent);
+  transition: width 0.2s ease;
+}
+
+#deleteSpinner .progress-counter {
+  margin-top: 0.35rem;
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
+}
+
+/* Aurora toast host (shared with scanjobs showToast via odShowAdminToast) */
+.od-toast-host {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(360px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.od-toast {
+  pointer-events: auto;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 94%, transparent);
+  color: var(--od-text);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--od-bg) 40%, transparent);
+  backdrop-filter: blur(10px);
+  font-size: var(--od-font-md);
+  animation: od-toast-in 0.18s ease-out;
+}
+
+.od-toast--success {
+  border-color: color-mix(in srgb, var(--od-success) 55%, transparent);
+}
+
+.od-toast--info {
+  border-color: color-mix(in srgb, var(--od-info) 55%, transparent);
+}
+
+.od-toast--error {
+  border-color: color-mix(in srgb, var(--od-danger) 55%, transparent);
+}
+
+.od-toast--warn {
+  border-color: color-mix(in srgb, var(--od-warning) 55%, transparent);
+}
+
+.od-toast--out {
+  opacity: 0;
+  transform: translateX(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@keyframes od-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

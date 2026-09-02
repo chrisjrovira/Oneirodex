@@ -41,9 +41,9 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 | | |
 |---|---|
 | 🏷️ **Release** | [1.0.0-beta](CHANGELOG.md) · [`VERSION`](VERSION) |
-| 📦 **Package** | `gametheca/` (class/package rename still exclusive-last) |
-| 🐙 **GitHub** | [chrisjrovira/oneirodex](https://github.com/chrisjrovira/oneirodex) (old `gametheca` URL redirects) |
-| 🐳 **Containers** | `oneirodex-app` · `oneirodex-db` (pin `APP_CONTAINER_NAME=gametheca-app` on live Unraid until FIFO idle) · optional `gametheca-livekit` |
+| 📦 **Package** | `oneirodex/` (class/package rename still exclusive-last) |
+| 🐙 **GitHub** | [chrisjrovira/oneirodex](https://github.com/chrisjrovira/oneirodex) (old `oneirodex` URL redirects) |
+| 🐳 **Containers** | `oneirodex-app` · `oneirodex-db` (pin `APP_CONTAINER_NAME=oneirodex-app` on live Unraid until FIFO idle) · optional `oneirodex-livekit` |
 | 🌐 **Default URL** | http://localhost:5006 |
 | 🖼️ **Image** | Local Compose build `oneirodex:1.0.0-beta` (Hub publish optional) |
 
@@ -115,7 +115,7 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 <details>
 <summary>📷 Asset credits</summary>
 
-Live UI captures live in [`docs/assets/readme/`](docs/assets/readme/) (synced from [`docs/media/screenshots/`](docs/media/screenshots/) via [`scripts/capture_docs_media.py`](scripts/capture_docs_media.py)). The mark is the product SVG (`gametheca_mark.svg`) — game cases on a shelf, since *theca* means repository; PNG/ICO variants are rendered from the same geometry by [`scripts/render-brand-assets.py`](scripts/render-brand-assets.py). Docs re-runs capture on every commit/ship pass that touches member or admin UI.
+Live UI captures live in [`docs/assets/readme/`](docs/assets/readme/) (synced from [`docs/media/screenshots/`](docs/media/screenshots/) via [`scripts/capture_docs_media.py`](scripts/capture_docs_media.py)). The mark is the product SVG (`oneirodex_mark.svg`) — game cases on a shelf, since *theca* means repository; PNG/ICO variants are rendered from the same geometry by [`scripts/render-brand-assets.py`](scripts/render-brand-assets.py). Docs re-runs capture on every commit/ship pass that touches member or admin UI.
 
 </details>
 
@@ -216,7 +216,7 @@ Open **http://localhost:5006** — Postgres is the `db` service; games mount at 
 
 ### 🔧 Manual install
 
-1. PostgreSQL **17+** with a `gametheca` database  
+1. PostgreSQL **17+** with a `oneirodex` database  
 2. Copy `.env.example` → `.env` — set `DATABASE_URL`, `SECRET_KEY`, `DATA_FOLDER_GAMES`, `UPLOAD_FOLDER`  
 3. `pip install -r requirements.txt`  
 4. `./startweb.sh` or `startweb_windows.cmd`
@@ -265,7 +265,7 @@ Per-OS mounting recipes, Docker binds, permissions and troubleshooting:
 | `SECRET_KEY` | **Required** — container refuses the placeholder |
 | `DATA_FOLDER_GAMES` | Root of on-disk games — **required** (see upgrade note below) |
 | `GT_LIBRARY_ROOTS` | Extra scan locations beyond that one folder — NAS shares, second disks. Pipe-separated, optional `Label=` prefix. Docker: use the *container* path — [remote-scan-locations.md](docs/runbooks/remote-scan-locations.md) |
-| `UPLOAD_FOLDER` | Covers / themes (Compose: `/app/gametheca/static/library`) |
+| `UPLOAD_FOLDER` | Covers / themes (Compose: `/app/oneirodex/static/library`) |
 | `LIBRARY_HOST_PATH` | Host path mounted to `UPLOAD_FOLDER` in Docker |
 | `ENABLE_LIVEKIT` / `LIVEKIT_*` | Household voice (on by default; needs secrets + profile) |
 | `ENABLE_MALWARE_SCAN` / `MALWARE_SCAN_BLOCK_ON_HIT` / `CLAMAV_*` | Malware scanner — heuristics on by default; blocks/skips adds on hit; optional `--profile clamav` |
@@ -301,7 +301,7 @@ Full lists: [`.env.example`](.env.example) · [`.env.docker.example`](.env.docke
          └───────────┬───────────┴─────────────────────┘
                      ▼
             ┌────────────────┐
-            │  Flask app     │  ← gametheca/  :5006
+            │  Flask app     │  ← oneirodex/  :5006
             │  APIs + auth   │
             └───────┬────────┘
                     │
@@ -314,7 +314,7 @@ Full lists: [`.env.example`](.env.example) · [`.env.docker.example`](.env.docke
 |---|---|
 | Member UI | `frontend/member-app` → `/static/dist/member-app/` |
 | Admin UI | `frontend/admin-app` → `/static/dist/admin-app/` |
-| API / server | `gametheca/` |
+| API / server | `oneirodex/` |
 | Desktop | `clients/desktop/` |
 | Docs | `docs/` |
 
@@ -395,7 +395,7 @@ cd ../admin-app && npm ci && npm test && npm run build
 pytest tests/test_security_suite.py tests/test_set_completion.py tests/test_login_rate_limit.py -q
 ```
 
-Set `TEST_DATABASE_URL` (DB name must contain `test`, default `gamethecatest`) for DB-backed tests — [local-postgres-pytest.md](docs/runbooks/local-postgres-pytest.md).
+Set `TEST_DATABASE_URL` (DB name must contain `test`, default `oneirodextest`) for DB-backed tests — [local-postgres-pytest.md](docs/runbooks/local-postgres-pytest.md).
 
 ### Versioning
 
@@ -435,9 +435,9 @@ Oneirodex only with software you are authorized to share. Unauthorized
 distribution of copyrighted material is not supported.
 
 **Third-party code.** The browser libraries under
-`gametheca/static/vendor/` are separate works under their own licences —
+`oneirodex/static/vendor/` are separate works under their own licences —
 inventory in
-[THIRD-PARTY-NOTICES.md](gametheca/static/vendor/THIRD-PARTY-NOTICES.md). The
+[THIRD-PARTY-NOTICES.md](oneirodex/static/vendor/THIRD-PARTY-NOTICES.md). The
 libretro emulator cores are **not** distributed here: they carry GPL and
 non-commercial terms, so they are fetched onto your machine at first boot
 ([webretro-cores.md](docs/runbooks/webretro-cores.md)).
@@ -445,7 +445,7 @@ non-commercial terms, so they are fetched onto your machine at first boot
 ---
 
 <p align="center">
-  <img src="docs/assets/readme/gametheca_mark.svg" alt="" width="40" height="40" />
+  <img src="docs/assets/readme/oneirodex_mark.svg" alt="" width="40" height="40" />
   <br/>
   <sub>Built for households that keep their own libraries.</sub>
 </p>

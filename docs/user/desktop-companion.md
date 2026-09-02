@@ -79,7 +79,7 @@ The browser cannot open Unraid/host paths. When the companion is Online:
 
 ## Limits (this polish pass)
 
-- **Unsigned only (product stance).** CI ships unsigned `gametheca-desktop.exe`; Windows code-signing certs will never be pursued ([desktop-code-signing.md](../runbooks/desktop-code-signing.md)).
+- **Unsigned only (product stance).** CI ships unsigned `oneirodex-desktop.exe`; Windows code-signing certs will never be pursued ([desktop-code-signing.md](../runbooks/desktop-code-signing.md)).
 - Emulator systems that are companion-only still need the mapped core / external app — see [browser-play.md](browser-play.md).
 
 ## Troubleshooting

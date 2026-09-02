@@ -22,7 +22,7 @@ def test_readyz_ok_when_db_up(client, db_session):
 def test_health_probes_skip_setup_redirect(client, monkeypatch):
     """Probes must stay reachable before setup wizard completes."""
     monkeypatch.setattr(
-        'gametheca.utils.setup.should_redirect_to_setup',
+        'oneirodex.utils.setup.should_redirect_to_setup',
         lambda: True,
     )
     assert client.get('/healthz').status_code == 200

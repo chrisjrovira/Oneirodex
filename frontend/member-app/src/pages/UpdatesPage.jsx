@@ -247,13 +247,13 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="gt-more-page gt-updates gt-panels">
+    <div className="od-more-page od-updates od-panels">
       {useNewChrome ? null : (
         <>
-        <div className="gt-page-header gt-updates__header gt-panels__full">
+        <div className="od-page-header od-updates__header od-panels__full">
           <div>
             <h1>Updates</h1>
-            <p className="gt-more-page__lede">
+            <p className="od-more-page__lede">
               Library titles that look behind store versions. Download local Update/DLC packs from your
               library, or queue the companion to apply them. Store search is discovery-only (Steam / GOG
               links).
@@ -271,24 +271,24 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
           is a table of titles, versions and actions, and it is the only thing
           here that benefits from width. Store search and the calendar teaser
           are both lookups, so they pair up underneath it. */}
-      <section className="gt-updates__inbox gt-panels__wide">
+      <section className="od-updates__inbox od-panels__wide">
         {/* The refresh control sits on the heading of the thing it refreshes.
             In bar two it was a word ("Refresh") a long way from the list it
             acted on, and nothing said *what* it would refresh. As a symbol on
             the inbox rule it is unambiguous and costs no width. The label lives
             in the hover tooltip rather than on the button. */}
-        <div className="gt-updates__section-head">
+        <div className="od-updates__section-head">
           <h2>Library freshness inbox</h2>
-          <div className="gt-updates__inbox-tools">
+          <div className="od-updates__inbox-tools">
             {/* Time first, then the glyph: the timestamp is what the button
                 changes, so it reads left-to-right as "this is how old it is,
                 here is how to fix that". */}
             {busyRefreshing ? (
-              <span className="gt-updates__refresh-status" role="status" aria-live="polite">
+              <span className="od-updates__refresh-status" role="status" aria-live="polite">
                 {scanning ? 'Checking library…' : 'Refreshing…'}
               </span>
             ) : lastUpdatedAt ? (
-              <span className="gt-updates__refresh-status gt-updates__refresh-status--muted">
+              <span className="od-updates__refresh-status od-updates__refresh-status--muted">
                 Updated {lastUpdatedAt.toLocaleTimeString()}
               </span>
             ) : null}
@@ -305,10 +305,10 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
                 the call at the end of it). So the surviving control does
                 everything the deleted one did and more, and "refresh" means one
                 thing on this page again. */}
-            <span className="gt-tip">
+            <span className="od-tip">
               <button
                 type="button"
-                className="gt-iconbtn gt-updates__refresh-btn"
+                className="od-iconbtn od-updates__refresh-btn"
                 aria-label="Check the library against store versions"
                 aria-busy={busyRefreshing ? 'true' : undefined}
                 disabled={busyRefreshing}
@@ -316,7 +316,7 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
               >
                 <RailIcon name="updates" size={16} />
               </button>
-              <span className="gt-tip__bubble" role="tooltip">
+              <span className="od-tip__bubble" role="tooltip">
                 {busyRefreshing
                   ? 'Checking your library against store versions…'
                   : 'Check your library against store versions. Runs on its own periodically; this asks now.'}
@@ -325,7 +325,7 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
           </div>
         </div>
         {scanResult ? (
-          <p className="gt-updates__scan-result" role="status">
+          <p className="od-updates__scan-result" role="status">
             Checked {scanResult.checked} title
             {scanResult.checked === 1 ? '' : 's'} ·{' '}
             {scanResult.behind_count > 0
@@ -352,13 +352,13 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
         ) : null}
 
         {!error && items && items.length > 0 ? (
-          <ul className="gt-updates__list gt-updates__inbox-list">
+          <ul className="od-updates__list od-updates__inbox-list">
             {items.map((game) => {
               const pack = game.latest_update || game.latest_extra
               const applyKey = pack ? `${game.uuid}:${pack.uuid}` : null
               return (
-                <li key={game.uuid} className="gt-updates__inbox-item">
-                  <div className="gt-updates__inbox-main">
+                <li key={game.uuid} className="od-updates__inbox-item">
+                  <div className="od-updates__inbox-main">
                     <Link to={`/game_details/${game.uuid}`}>
                       <strong>{game.name}</strong>
                     </Link>
@@ -379,21 +379,21 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
                         .join(' · ')}
                     </span>
                     {statusByUuid[game.uuid] ? (
-                      <span className="gt-updates__status" role="status">
+                      <span className="od-updates__status" role="status">
                         {statusByUuid[game.uuid]}
                       </span>
                     ) : null}
                   </div>
-                  <div className="gt-updates__inbox-actions">
+                  <div className="od-updates__inbox-actions">
                     {pack?.download_url ? (
-                      <a className="gt-btn" href={pack.download_url}>
+                      <a className="od-btn" href={pack.download_url}>
                         Download {pack.kind}
                       </a>
                     ) : null}
                     {pack && game.client_connected ? (
                       <button
                         type="button"
-                        className="gt-btn"
+                        className="od-btn"
                         disabled={busyKey === applyKey}
                         onClick={() => {
                           void applyPack(game, pack)
@@ -402,7 +402,7 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
                         {busyKey === applyKey ? 'Queuing…' : 'Apply with companion'}
                       </button>
                     ) : null}
-                    <Link className="gt-btn" to={`/game_details/${game.uuid}`}>
+                    <Link className="od-btn" to={`/game_details/${game.uuid}`}>
                       Details
                     </Link>
                   </div>
@@ -413,11 +413,11 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
         ) : null}
       </section>
 
-      <section className="gt-updates__search">
-        <div className="gt-updates__section-head">
+      <section className="od-updates__search">
+        <div className="od-updates__section-head">
           <h2>Search stores</h2>
         </div>
-        <form className="gt-updates__search-form" onSubmit={handleSearch}>
+        <form className="od-updates__search-form" onSubmit={handleSearch}>
           <label>
             Game name
             <input
@@ -435,7 +435,7 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
               <option value="gog">GOG</option>
             </select>
           </label>
-          <button className="gt-btn" type="submit" disabled={searching}>
+          <button className="od-btn" type="submit" disabled={searching}>
             {searching ? 'Searching…' : 'Search'}
           </button>
         </form>
@@ -447,11 +447,11 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
         ) : null}
         {hits && hits.length === 0 ? <p>No store hits.</p> : null}
         {hits && hits.length > 0 ? (
-          <ul className="gt-updates__list">
+          <ul className="od-updates__list">
             {hits.map((hit, index) => (
               <li key={`${hit.source}-${hit.steam_app_id || hit.gog_id || hit.url || index}`}>
-                <div className="gt-updates__inbox-item">
-                  <div className="gt-updates__inbox-main">
+                <div className="od-updates__inbox-item">
+                  <div className="od-updates__inbox-main">
                     {hit.url ? (
                       <a href={hit.url} target="_blank" rel="noreferrer">
                         <strong>{hit.name}</strong>
@@ -474,11 +474,11 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
                       <span>No library match</span>
                     )}
                   </div>
-                  <div className="gt-updates__inbox-actions">
+                  <div className="od-updates__inbox-actions">
                     {hit.matched_game_uuid ? (
                       <button
                         type="button"
-                        className="gt-btn"
+                        className="od-btn"
                         onClick={() => {
                           void addWantedUpdate({
                             game_uuid: hit.matched_game_uuid,
@@ -506,26 +506,26 @@ export function UpdatesPage({ shellConfig = {} } = {}) {
         ) : null}
       </section>
 
-      <section className="gt-updates__calendar" aria-labelledby="updates-calendar-heading">
+      <section className="od-updates__calendar" aria-labelledby="updates-calendar-heading">
         {/* Same head as Search stores and the inbox — it was the one section
             with its own heading markup, so its title sat on a different
             baseline and its link on a different line from the controls the
             other two put there. */}
-        <div className="gt-updates__section-head">
+        <div className="od-updates__section-head">
           <h2 id="updates-calendar-heading">Upcoming releases</h2>
-          <Link className="gt-updates__calendar-link" to="/calendar">
+          <Link className="od-updates__calendar-link" to="/calendar">
             Open calendar
           </Link>
         </div>
-        {calendarTeaser === null ? <p className="gt-updates__calendar-empty">Loading releases…</p> : null}
+        {calendarTeaser === null ? <p className="od-updates__calendar-empty">Loading releases…</p> : null}
         {calendarTeaser && calendarTeaser.length === 0 ? (
-          <p className="gt-updates__calendar-empty">
+          <p className="od-updates__calendar-empty">
             No upcoming releases in the next window.{' '}
             <Link to="/calendar">Browse the full calendar</Link>
           </p>
         ) : null}
         {calendarTeaser && calendarTeaser.length > 0 ? (
-          <ul className="gt-updates__calendar-list">
+          <ul className="od-updates__calendar-list">
             {calendarTeaser.map((item, index) => (
               <li key={`${item.igdb_id || item.slug || item.name}-${item.first_release_date || index}`}>
                 <time dateTime={item.first_release_date || undefined}>

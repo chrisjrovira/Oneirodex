@@ -7,11 +7,11 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import ClientDevice, Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.api_tokens import TOKEN_SCOPE_PRESETS, VALID_SCOPES, generate_api_token
-from gametheca.utils.client_capabilities import resolve_client_capabilities
-from gametheca.utils import client_commands as cc
+from oneirodex.models import ClientDevice, Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.api_tokens import TOKEN_SCOPE_PRESETS, VALID_SCOPES, generate_api_token
+from oneirodex.utils.client_capabilities import resolve_client_capabilities
+from oneirodex.utils import client_commands as cc
 
 
 @pytest.fixture

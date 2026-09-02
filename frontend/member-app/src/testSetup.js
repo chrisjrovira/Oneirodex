@@ -74,7 +74,7 @@ function installMemoryLocalStorage() {
 if (typeof window !== 'undefined') {
   let needsPolyfill = false
   try {
-    const probe = '__gt_ls_probe__'
+    const probe = '__od_ls_probe__'
     window.localStorage?.setItem(probe, '1')
     if (window.localStorage?.getItem(probe) !== '1') {
       needsPolyfill = true

@@ -8,12 +8,12 @@ from unittest.mock import MagicMock
 
 from PIL import Image as PILImage
 
-from gametheca.utils.cover_quality import (
+from oneirodex.utils.cover_quality import (
     inspect_cover_file,
     qualify_downloaded_image,
     replace_cover_if_degenerate,
 )
-from gametheca.utils.functions import download_image
+from oneirodex.utils.functions import download_image
 
 
 def _save(path: Path, image: PILImage.Image, fmt='JPEG') -> Path:
@@ -95,10 +95,10 @@ def test_download_image_replaces_wash_cover(tmp_path, monkeypatch):
     response.status_code = 200
     response.content = _jpeg_bytes(PILImage.new('RGB', (200, 300), (8, 8, 8)))
     monkeypatch.setattr(
-        'gametheca.utils.functions.validate_user_outbound_http_url',
+        'oneirodex.utils.functions.validate_user_outbound_http_url',
         lambda url: (True, url),
     )
-    monkeypatch.setattr('gametheca.utils.functions.safe_get', lambda *a, **k: response)
+    monkeypatch.setattr('oneirodex.utils.functions.safe_get', lambda *a, **k: response)
 
     ok, error = download_image(
         'https://example.com/c.jpg',
@@ -118,10 +118,10 @@ def test_download_image_leaves_screenshot_wash(tmp_path, monkeypatch):
     response.status_code = 200
     response.content = _jpeg_bytes(PILImage.new('RGB', (200, 300), (0, 0, 0)))
     monkeypatch.setattr(
-        'gametheca.utils.functions.validate_user_outbound_http_url',
+        'oneirodex.utils.functions.validate_user_outbound_http_url',
         lambda url: (True, url),
     )
-    monkeypatch.setattr('gametheca.utils.functions.safe_get', lambda *a, **k: response)
+    monkeypatch.setattr('oneirodex.utils.functions.safe_get', lambda *a, **k: response)
 
     ok, error = download_image(
         'https://example.com/s.jpg',

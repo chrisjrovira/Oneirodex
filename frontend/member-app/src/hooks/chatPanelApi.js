@@ -1,9 +1,9 @@
 import { csrfHeaders } from '../api/csrf'
 
-const STORAGE_OPEN = 'gt-chat-panel-open'
+const STORAGE_OPEN = 'od-chat-panel-open'
 /** CustomEvent — TopNav / CommandPalette / deep-link open chat without a full-page takeover. */
-export const OPEN_CHAT_EVENT = 'gt-open-chat-panel'
-export const CLOSE_CHAT_EVENT = 'gt-close-chat-panel'
+export const OPEN_CHAT_EVENT = 'od-open-chat-panel'
+export const CLOSE_CHAT_EVENT = 'od-close-chat-panel'
 
 export function readChatPanelOpen(defaultOpen = false) {
   try {
@@ -181,7 +181,7 @@ export function openChatPopoutWindow(channelId) {
   if (channelId != null) params.set('channel', String(channelId))
   const features =
     'width=420,height=760,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
-  const win = window.open(`/chat?${params.toString()}`, 'gt-chat-popout', features)
+  const win = window.open(`/chat?${params.toString()}`, 'od-chat-popout', features)
   if (win) {
     try {
       win.focus()

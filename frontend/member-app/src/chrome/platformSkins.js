@@ -2,7 +2,7 @@
 
 const NINTENDO = new Set([
   'NES', 'SNES', 'NGC', 'N64', 'GB', 'GBA', 'GBC', 'NDS', 'VB', 'WII', 'N3DS', 'SWITCH',
-  'WII_U', 'POKE_MINI',
+  'WII_U', 'POKE_MINI', 'GAME_WATCH',
 ])
 const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'PSVITA'])
 const XBOX = new Set(['XBOX', 'X360', 'XONE', 'XSX'])
@@ -22,7 +22,7 @@ const ATARI = new Set([
 const PC = new Set([
   'PCWIN', 'PCDOS', 'MAC', 'OTHER', 'AMIGA', 'AMIGA_CD32',
   'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
-  'ATARI_8BIT', 'X68000', 'PC_98',
+  'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO',
 ])
 
 const FAMILY_BY_PLATFORM = {
@@ -109,8 +109,8 @@ export function applyPlatformSkin(platformId) {
     root.removeAttribute('data-platform')
     root.removeAttribute('data-platform-family')
     root.removeAttribute('data-platform-motion')
-    root.style.removeProperty('--gt-platform-accent')
-    root.style.removeProperty('--gt-platform-motion')
+    root.style.removeProperty('--od-platform-accent')
+    root.style.removeProperty('--od-platform-motion')
     return null
   }
 
@@ -118,11 +118,11 @@ export function applyPlatformSkin(platformId) {
   root.setAttribute('data-platform-family', skin.family)
   root.setAttribute('data-platform-motion', skin.motion)
   if (skin.accent) {
-    root.style.setProperty('--gt-platform-accent', skin.accent)
+    root.style.setProperty('--od-platform-accent', skin.accent)
   } else {
-    root.style.removeProperty('--gt-platform-accent')
+    root.style.removeProperty('--od-platform-accent')
   }
-  root.style.setProperty('--gt-platform-motion', skin.motion)
+  root.style.setProperty('--od-platform-motion', skin.motion)
   return skin
 }
 

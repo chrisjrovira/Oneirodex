@@ -76,7 +76,7 @@ test('the row CSS does not re-add the gap it no longer owns', () => {
 test('library grid uses auto-fill so a lone tile stays tile-sized', () => {
   const css = readFileSync(join(HERE, 'GameGrid.css'), 'utf8')
   const start = css.indexOf(
-    '.game-library-container[data-library-grid]:not([data-library-virtual]) {',
+    '.game-library-container[data-library-grid]:not([data-library-virtual]):not(.catalog-grid-sections) {',
   )
   expect(start).toBeGreaterThanOrEqual(0)
   const block = css.slice(start, css.indexOf('}', start))
@@ -85,7 +85,7 @@ test('library grid uses auto-fill so a lone tile stays tile-sized', () => {
 })
 
 test('findScrollParent finds the scrolling ancestor, not the window', () => {
-  // The member shell locks the page and scrolls `.gt-shell__main` instead, so a
+  // The member shell locks the page and scrolls `.od-shell__main` instead, so a
   // window virtualizer never advances and everything past the first screenful
   // renders as empty space. jsdom has no layout, so this exercises the
   // computed-style walk rather than real scrolling.
@@ -155,10 +155,21 @@ test('hovered tiles grow from the centre, not an edge', () => {
   expect(css).not.toMatch(/transform-origin:\s*center top/)
   expect(css).not.toMatch(/transform-origin:\s*left top/)
   expect(css).not.toMatch(/transform-origin:\s*right top/)
+  expect(css).not.toMatch(/transform-origin:\s*left center/)
+  expect(css).not.toMatch(/transform-origin:\s*right center/)
   // Padding the virtual container would not move absolute rows and would
   // throw getTotalSize off; bleed lives on the shell instead.
   const virtual = css.slice(css.indexOf('.game-library-container[data-library-virtual] {'))
   expect(virtual.slice(0, virtual.indexOf('}'))).not.toMatch(/padding-block-start/)
+})
+
+test('Play control on tiles uses --od-tile-* size tokens', () => {
+  const css = readFileSync(join(HERE, '..', 'chrome', 'glass.css'), 'utf8')
+  const start = css.indexOf('.game-card .od-tile-play {')
+  expect(start).toBeGreaterThanOrEqual(0)
+  const block = css.slice(start, css.indexOf('}', start))
+  expect(block).toMatch(/var\(--od-tile-btn/)
+  expect(block).not.toMatch(/min-width:\s*2\.5rem/)
 })
 
 test('rows layout puts one title on each virtual row', () => {
@@ -171,9 +182,33 @@ test('rows layout puts one title on each virtual row', () => {
   expect(screen.getByText('Game 1', { selector: '.game-card__row-title' })).toBeInTheDocument()
 })
 
-test('grid layout writes a denser column min than the slider', () => {
-  render(<GameGrid games={makeGames(4)} layout="grid" showPlayStatus={false} isAdmin={false} />)
-  const root = document.querySelector('[data-library-grid]')
+test('rows CSS sizes covers from the tile slider, not a fixed 4.75rem', () => {
+  const css = readFileSync(join(HERE, 'GameGrid.css'), 'utf8')
+  expect(css).toMatch(/--od-row-h:\s*clamp\(56px/)
+  expect(css).not.toMatch(/\[data-layout='rows'\][^{]*\{[^}]*height:\s*4\.75rem/)
+})
+
+test('grid layout renders genre shelves instead of the wrap virtualizer', () => {
+  const games = makeGames(4).map((game, index) => ({
+    ...game,
+    genres: index < 2 ? ['Action'] : ['RPG'],
+  }))
+  render(<GameGrid games={games} layout="grid" showPlayStatus={false} isAdmin={false} />)
+  const root = document.querySelector('.catalog-grid-sections')
   expect(root).toHaveAttribute('data-layout', 'grid')
-  expect(root.style.getPropertyValue('--gt-catalog-col-min')).toMatch(/px$/)
+  expect(root).toHaveAttribute('data-library-shelves')
+  // Must not carry data-library-grid — shell hover-pad pullback clips titles.
+  expect(root).not.toHaveAttribute('data-library-grid')
+  expect(root.style.getPropertyValue('--od-tile-min')).toBe('')
+  expect(root.querySelectorAll('.od-shelf').length).toBe(2)
+  expect(screen.getByText('Action')).toBeInTheDocument()
+  expect(screen.getByText('RPG')).toBeInTheDocument()
+  expect(document.querySelector('[data-library-virtual]')).toBeNull()
+})
+
+test('catalog grid CSS keeps shelves out of the shell tile pullback', () => {
+  const css = readFileSync(join(HERE, 'CatalogGridSections.css'), 'utf8')
+  expect(css).toMatch(/margin-inline:\s*0/)
+  expect(css).toMatch(/\.catalog-grid-sections \.od-shelf__head/)
+  expect(css).toMatch(/padding-inline-start:\s*var\(--od-gutter/)
 })

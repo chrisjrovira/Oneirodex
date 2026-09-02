@@ -34,7 +34,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
 }
 
 function ownedTitlesCounts() {
-  const el = document.querySelector('.gt-ownership__card-counts')
+  const el = document.querySelector('.od-ownership__card-counts')
   return (el?.textContent || '').replace(/\s+/g, ' ').trim()
 }
 

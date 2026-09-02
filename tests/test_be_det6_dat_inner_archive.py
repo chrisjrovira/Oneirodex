@@ -9,18 +9,18 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Library
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.rom_hash import (
+from oneirodex.models import Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.rom_hash import (
     hash_archive_inner_primary_dumps,
     hash_fileobj,
     hash_rom_file,
 )
-from gametheca.utils.set_completion import (
+from oneirodex.utils.set_completion import (
     try_dat_hash_identify,
     upsert_reference_set,
 )
-from gametheca.utils.software_identify import CUSTOM_IGDB_BASE
+from oneirodex.utils.software_identify import CUSTOM_IGDB_BASE
 
 
 def _dat_with_hashes(tag: str, *, shared_crc: str | None = None) -> bytes:
@@ -177,7 +177,7 @@ def test_non_archive_unchanged_outer_path(db_session, gb_library, tmp_path):
     rom.write_bytes(b'loose-rom-bytes')
 
     with patch(
-        'gametheca.utils.rom_hash.hash_archive_inner_primary_dumps',
+        'oneirodex.utils.rom_hash.hash_archive_inner_primary_dumps',
     ) as mock_inner:
         game = try_dat_hash_identify(
             full_disk_path=str(rom),

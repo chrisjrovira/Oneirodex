@@ -80,8 +80,8 @@ export function DetailsMediaStage({
   const showIframe = isVideo && (videoArmed || !reducedMotion)
 
   return (
-    <div className="gt-details-media">
-      <div className="gt-details-media__stage">
+    <div className="od-details-media">
+      <div className="od-details-media__stage">
         {isVideo && showIframe ? (
           <iframe
             title="Primary trailer"
@@ -93,7 +93,7 @@ export function DetailsMediaStage({
         {isVideo && !showIframe ? (
           <button
             type="button"
-            className="gt-btn gt-details-media__arm"
+            className="od-btn od-details-media__arm"
             onClick={() => setVideoArmed(true)}
           >
             Play trailer
@@ -102,7 +102,7 @@ export function DetailsMediaStage({
         {!isVideo ? (
           <button
             type="button"
-            className="gt-details-media__still"
+            className="od-details-media__still"
             onClick={() => onFullscreen(current.index)}
             aria-label="Open screenshot fullscreen"
           >
@@ -114,14 +114,14 @@ export function DetailsMediaStage({
           </button>
         ) : null}
       </div>
-      <div className="gt-details-media__bar">
+      <div className="od-details-media__bar">
         {items.length > 1 ? (
-          <div className="gt-details-media__thumbs">
+          <div className="od-details-media__thumbs">
             {items.map((item, index) => (
               <button
                 key={item.key}
                 type="button"
-                className={`gt-btn gt-details-media__thumb${index === selected ? ' is-active' : ''}`}
+                className={`od-btn od-details-media__thumb${index === selected ? ' is-active' : ''}`}
                 aria-pressed={index === selected}
                 aria-label={item.kind === 'video' ? `Show trailer ${item.index + 1}` : `Show screenshot ${item.index + 1}`}
                 onClick={() => {
@@ -138,11 +138,11 @@ export function DetailsMediaStage({
             ))}
           </div>
         ) : null}
-        <div className="gt-details-media__actions">
+        <div className="od-details-media__actions">
           {isVideo ? (
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               onClick={() => onTheater(current.index)}
             >
               Theater
@@ -150,7 +150,7 @@ export function DetailsMediaStage({
           ) : (
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               onClick={() => onFullscreen(current.index)}
             >
               Fullscreen

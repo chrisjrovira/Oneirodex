@@ -36,7 +36,7 @@ export function MemberProfilePage() {
 
   if (error || !data) {
     return (
-      <div className="gt-more-page">
+      <div className="od-more-page">
         <PageStatus
           loading={!error}
           error={error}
@@ -51,11 +51,11 @@ export function MemberProfilePage() {
   const presence = data.presence || {}
 
   return (
-    <div className="gt-more-page">
-      <div className="gt-page-header">
+    <div className="od-more-page">
+      <div className="od-page-header">
         <h1>{user.name}</h1>
       </div>
-      <p className="gt-more-page__lede">
+      <p className="od-more-page__lede">
         {presence.status === 'in-game' && presence.game_name
           ? `Playing ${presence.game_name}`
           : presence.status || 'offline'}
@@ -68,7 +68,7 @@ export function MemberProfilePage() {
       <section>
         <h2>Recent games</h2>
         {(data.recent_games || []).length === 0 ? (
-          <p className="gt-more-page__lede">No recent games visible to you.</p>
+          <p className="od-more-page__lede">No recent games visible to you.</p>
         ) : (
           <ul>
             {data.recent_games.map((row) => (

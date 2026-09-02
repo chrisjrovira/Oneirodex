@@ -189,7 +189,7 @@ def test_a_double_wrapped_envelope_is_caught():
 def test_the_helper_itself_is_exempt():
     """It defines the envelope, including the compatibility keys that keep old
     callers working — flagging it would mean the fix trips its own rule."""
-    assert 'gametheca/utils/api_response.py' in lint.EXEMPT
+    assert 'oneirodex/utils/api_response.py' in lint.EXEMPT
 
 
 def test_a_syntax_error_does_not_crash_the_lint(tmp_path):

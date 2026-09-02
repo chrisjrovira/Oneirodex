@@ -21,18 +21,38 @@ function whenLabel(value) {
   return when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+function badgeFor(item) {
+  if (item.kind === 'deal') {
+    const store = STORE_LABELS[item.store] || 'Deal'
+    const savings = Number(item.savings)
+    if (Number.isFinite(savings) && savings > 0) {
+      return `${store} -${Math.round(savings)}%`
+    }
+    return store
+  }
+  if (item.kind === 'free_game') {
+    return STORE_LABELS[item.store] || 'Free'
+  }
+  return 'News'
+}
+
 /**
- * A tile on the Discover news row.
+ * A tile on the Discover news / deals rows.
  *
- * Art fills the same 2×3 frame as a game cover. Badge + date + title overlay
- * the image (game-tile rhythm). Wide store banners letterbox on a blurred
- * copy of themselves so nothing stretches and empty bands are not bare.
+ * Art is a 3:4 cover in the same tile box as a game card. Badge + date +
+ * title overlay the image so the scrollbar lane matches every other row.
+ * Wide store banners letterbox on a blurred copy of themselves so nothing
+ * stretches and empty bands are not bare.
+ *
+ * Deal tiles use HTTPS store redirects — those must be plain anchors, not
+ * React Router links.
  */
 export function NewsCard({ item }) {
-  const isOffer = item.kind === 'free_game'
-  const badge = isOffer ? STORE_LABELS[item.store] || 'Free' : 'News'
+  const badge = badgeFor(item)
   const when = whenLabel(item.published_at)
   const [fit, setFit] = useState('cover')
+  const href = item.href || '/news'
+  const external = /^https?:\/\//i.test(href)
 
   const onArtLoad = useCallback((event) => {
     const img = event.currentTarget
@@ -42,38 +62,55 @@ export function NewsCard({ item }) {
     setFit(w / h > LETTERBOX_RATIO ? 'letterbox' : 'cover')
   }, [])
 
-  return (
-    <Link className="gt-news-card" to={item.href || '/news'}>
-      <span className="gt-news-card__art-wrap">
-        {item.image_url ? (
-          <>
-            {fit === 'letterbox' ? (
-              <img
-                className="gt-news-card__art-fill"
-                src={item.image_url}
-                alt=""
-                aria-hidden="true"
-                loading="lazy"
-              />
-            ) : null}
+  const body = (
+    <span className="od-news-card__art-wrap">
+      {item.image_url ? (
+        <>
+          {fit === 'letterbox' ? (
             <img
-              className="gt-news-card__art"
-              data-fit={fit}
+              className="od-news-card__art-fill"
               src={item.image_url}
               alt=""
+              aria-hidden="true"
               loading="lazy"
-              onLoad={onArtLoad}
             />
-          </>
-        ) : (
-          <span className="gt-news-card__art gt-news-card__art--empty" aria-hidden="true" />
-        )}
-        <span className="gt-news-card__badge" data-kind={item.kind}>
-          {badge}
-        </span>
-        {when ? <span className="gt-news-card__when">{when}</span> : null}
-        <span className="gt-news-card__title">{item.title}</span>
+          ) : null}
+          <img
+            className="od-news-card__art"
+            data-fit={fit}
+            src={item.image_url}
+            alt=""
+            loading="lazy"
+            onLoad={onArtLoad}
+          />
+        </>
+      ) : (
+        <span className="od-news-card__art od-news-card__art--empty" aria-hidden="true" />
+      )}
+      <span className="od-news-card__badge" data-kind={item.kind || 'announcement'}>
+        {badge}
       </span>
+      {when ? <span className="od-news-card__when">{when}</span> : null}
+      <span className="od-news-card__title">{item.title}</span>
+    </span>
+  )
+
+  if (external) {
+    return (
+      <a
+        className="od-news-card"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {body}
+      </a>
+    )
+  }
+
+  return (
+    <Link className="od-news-card" to={href}>
+      {body}
     </Link>
   )
 }

@@ -5,9 +5,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import DiscoverySection, User, UserPreference
-from gametheca.utils.discover_feed import MAX_ADMIN_FORCED, MAX_MEMBER_PINS
+from oneirodex import db
+from oneirodex.models import DiscoverySection, User, UserPreference
+from oneirodex.utils.discover_feed import MAX_ADMIN_FORCED, MAX_MEMBER_PINS
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def _force(db_session, identifier, rank):
 
 class TestMemberPins:
     def test_a_member_with_no_preferences_row_has_no_pins(self, app, pin_user):
-        from gametheca.utils.discover_pins import member_pins
+        from oneirodex.utils.discover_pins import member_pins
 
         with app.app_context():
             assert member_pins(pin_user) == []
@@ -62,7 +62,7 @@ class TestMemberPins:
     # app context — pushing one makes a second scoped session, and the new
     # preferences row ends up attached to the wrong one.
     def test_pins_round_trip(self, app, db_session, pin_user):
-        from gametheca.utils.discover_pins import member_pins, set_member_pins
+        from oneirodex.utils.discover_pins import member_pins, set_member_pins
 
         stored = set_member_pins(
             pin_user, ['latest_games'], available=['latest_games', 'highest_rated']
@@ -71,7 +71,7 @@ class TestMemberPins:
         assert member_pins(pin_user) == ['latest_games']
 
     def test_more_than_three_pins_are_trimmed(self, app, db_session, pin_user):
-        from gametheca.utils.discover_pins import set_member_pins
+        from oneirodex.utils.discover_pins import set_member_pins
 
         available = [f'row{i}' for i in range(10)]
         stored = set_member_pins(pin_user, available, available=available)
@@ -79,7 +79,7 @@ class TestMemberPins:
         assert len(stored) == MAX_MEMBER_PINS
 
     def test_a_repeated_pin_is_one_pin_not_two_slots(self, app, db_session, pin_user):
-        from gametheca.utils.discover_pins import set_member_pins
+        from oneirodex.utils.discover_pins import set_member_pins
 
         stored = set_member_pins(pin_user, ['a', 'a', 'b'], available=['a', 'b'])
 
@@ -87,7 +87,7 @@ class TestMemberPins:
 
     def test_pinning_an_unknown_row_is_rejected(self, app, db_session, pin_user):
         """On the way in, a bad identifier is a client bug worth surfacing."""
-        from gametheca.utils.discover_pins import set_member_pins
+        from oneirodex.utils.discover_pins import set_member_pins
 
         with pytest.raises(ValueError):
             set_member_pins(pin_user, ['nope'], available=['a'])
@@ -100,7 +100,7 @@ class TestMemberPins:
         A genre row can go away when a member's taste moves, and an admin can
         hide a shelf somebody had pinned. Neither is an error.
         """
-        from gametheca.utils.discover_pins import member_pins, set_member_pins
+        from oneirodex.utils.discover_pins import member_pins, set_member_pins
 
         set_member_pins(pin_user, ['a', 'b'], available=['a', 'b'])
         assert member_pins(pin_user, available=['a']) == ['a']
@@ -108,7 +108,7 @@ class TestMemberPins:
     def test_a_corrupt_pin_value_reads_as_no_pins(self, app, db_session, pin_user):
         """The JSON column returns {} when a value fails to decode, so a list
         column can legitimately hand back a dict."""
-        from gametheca.utils.discover_pins import member_pins
+        from oneirodex.utils.discover_pins import member_pins
 
         prefs = UserPreference(user_id=pin_user.id)
         prefs.discover_pins = {'not': 'a list'}
@@ -121,7 +121,7 @@ class TestMemberPins:
 
 class TestAdminForced:
     def test_forced_shelves_come_back_lowest_rank_first(self, app, db_session):
-        from gametheca.utils.discover_pins import admin_forced
+        from oneirodex.utils.discover_pins import admin_forced
 
         _force(db_session, 'highest_rated', 2)
         _force(db_session, 'latest_games', 1)
@@ -133,7 +133,7 @@ class TestAdminForced:
 
     def test_an_admin_cannot_force_more_than_their_share(self, app, db_session):
         """Capped so a member's pins are never pushed below the fold."""
-        from gametheca.utils.discover_pins import admin_forced
+        from oneirodex.utils.discover_pins import admin_forced
 
         sections = db.session.execute(
             select(DiscoverySection).limit(MAX_ADMIN_FORCED + 3)
@@ -148,7 +148,7 @@ class TestAdminForced:
             assert len(admin_forced()) == MAX_ADMIN_FORCED
 
     def test_no_forced_shelves_is_an_empty_list(self, app):
-        from gametheca.utils.discover_pins import admin_forced
+        from oneirodex.utils.discover_pins import admin_forced
 
         with app.app_context():
             assert admin_forced() == []
@@ -215,7 +215,7 @@ class TestPinsEndpoint:
 
 class TestForcedShelvesReachTheFeed:
     def test_a_forced_shelf_leads_the_feed(self, app, db_session, pin_user):
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         _force(db_session, 'highest_rated', 1)
 

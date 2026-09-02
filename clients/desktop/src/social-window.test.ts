@@ -77,7 +77,7 @@ describe('social-window', () => {
     const features = String(open.mock.calls[0]?.[2] || '')
     expect(open).toHaveBeenCalledWith(
       'https://games.home/social-companion',
-      'gt-social-companion',
+      'od-social-companion',
       expect.stringContaining('width=360'),
     )
     expect(features).toMatch(/left=\d+/)

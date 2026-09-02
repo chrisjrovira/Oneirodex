@@ -85,55 +85,55 @@ def _host_patches(**overrides):
 def test_build_ops_summary_includes_required_keys():
     values = _host_patches()
     with patch(
-        'gametheca.utils.ops_summary.get_cpu_usage',
+        'oneirodex.utils.ops_summary.get_cpu_usage',
         return_value=values['get_cpu_usage'],
     ) as get_cpu_usage, patch(
-        'gametheca.utils.ops_summary.get_memory_usage',
+        'oneirodex.utils.ops_summary.get_memory_usage',
         return_value=values['get_memory_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_disk_usage',
+        'oneirodex.utils.ops_summary.get_disk_usage',
         return_value=values['get_disk_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_games_folder_usage',
+        'oneirodex.utils.ops_summary.get_games_folder_usage',
         return_value=values['get_games_folder_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_system_info',
+        'oneirodex.utils.ops_summary.get_system_info',
         return_value=values['get_system_info'],
     ), patch(
-        'gametheca.utils.ops_summary.get_config_values',
+        'oneirodex.utils.ops_summary.get_config_values',
         return_value=values['get_config_values'],
     ), patch(
-        'gametheca.utils.ops_summary.get_formatted_system_uptime',
+        'oneirodex.utils.ops_summary.get_formatted_system_uptime',
         return_value=values['get_formatted_system_uptime'],
     ), patch(
-        'gametheca.utils.ops_summary.get_formatted_app_uptime',
+        'oneirodex.utils.ops_summary.get_formatted_app_uptime',
         return_value=values['get_formatted_app_uptime'],
     ), patch(
-        'gametheca.utils.ops_summary.get_load_average',
+        'oneirodex.utils.ops_summary.get_load_average',
         return_value=values['get_load_average'],
     ), patch(
-        'gametheca.utils.ops_summary.get_process_memory',
+        'oneirodex.utils.ops_summary.get_process_memory',
         return_value=values['get_process_memory'],
     ), patch(
-        'gametheca.utils.ops_summary._db_ping_ms',
+        'oneirodex.utils.ops_summary._db_ping_ms',
         return_value=values['_db_ping_ms'],
     ), patch(
-        'gametheca.utils.ops_summary.get_network_stats',
+        'oneirodex.utils.ops_summary.get_network_stats',
         return_value=values['get_network_stats'],
     ), patch(
-        'gametheca.utils.ops_summary._library_pulse',
+        'oneirodex.utils.ops_summary._library_pulse',
         return_value=values['_library_pulse'],
     ), patch(
-        'gametheca.utils.ops_summary._scan_snapshot',
+        'oneirodex.utils.ops_summary._scan_snapshot',
         return_value=values['_scan_snapshot'],
     ), patch(
-        'gametheca.utils.ops_summary._recent_errors',
+        'oneirodex.utils.ops_summary._recent_errors',
         return_value=values['_recent_errors'],
     ), patch(
-        'gametheca.utils.ops_summary._services_snapshot',
+        'oneirodex.utils.ops_summary._services_snapshot',
         return_value=values['_services_snapshot'],
     ):
-        from gametheca.utils.ops_summary import build_ops_summary
+        from oneirodex.utils.ops_summary import build_ops_summary
 
         result = build_ops_summary(datetime.now(timezone.utc))
 
@@ -166,58 +166,58 @@ def test_build_ops_summary_host_enrichment_none_when_unavailable():
         _db_ping_ms=None,
     )
     with patch(
-        'gametheca.utils.ops_summary.get_cpu_usage',
+        'oneirodex.utils.ops_summary.get_cpu_usage',
         return_value=values['get_cpu_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_memory_usage',
+        'oneirodex.utils.ops_summary.get_memory_usage',
         return_value=values['get_memory_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_disk_usage',
+        'oneirodex.utils.ops_summary.get_disk_usage',
         return_value=values['get_disk_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_games_folder_usage',
+        'oneirodex.utils.ops_summary.get_games_folder_usage',
         return_value=values['get_games_folder_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_system_info',
+        'oneirodex.utils.ops_summary.get_system_info',
         return_value=values['get_system_info'],
     ), patch(
-        'gametheca.utils.ops_summary.get_config_values',
+        'oneirodex.utils.ops_summary.get_config_values',
         return_value=values['get_config_values'],
     ), patch(
-        'gametheca.utils.ops_summary.get_formatted_system_uptime',
+        'oneirodex.utils.ops_summary.get_formatted_system_uptime',
         return_value=values['get_formatted_system_uptime'],
     ), patch(
-        'gametheca.utils.ops_summary.get_formatted_app_uptime',
+        'oneirodex.utils.ops_summary.get_formatted_app_uptime',
         return_value=values['get_formatted_app_uptime'],
     ), patch(
-        'gametheca.utils.ops_summary.get_load_average',
+        'oneirodex.utils.ops_summary.get_load_average',
         return_value=None,
     ), patch(
-        'gametheca.utils.ops_summary.get_process_memory',
+        'oneirodex.utils.ops_summary.get_process_memory',
         return_value=None,
     ), patch(
-        'gametheca.utils.ops_summary._db_ping_ms',
+        'oneirodex.utils.ops_summary._db_ping_ms',
         return_value=None,
     ), patch(
-        'gametheca.utils.ops_summary.get_network_stats',
+        'oneirodex.utils.ops_summary.get_network_stats',
         return_value=values['get_network_stats'],
     ), patch(
-        'gametheca.utils.ops_summary._library_pulse',
+        'oneirodex.utils.ops_summary._library_pulse',
         return_value=values['_library_pulse'],
     ), patch(
-        'gametheca.utils.ops_summary._scan_snapshot',
+        'oneirodex.utils.ops_summary._scan_snapshot',
         return_value=values['_scan_snapshot'],
     ), patch(
-        'gametheca.utils.ops_summary._recent_errors',
+        'oneirodex.utils.ops_summary._recent_errors',
         return_value=values['_recent_errors'],
     ), patch(
-        'gametheca.utils.ops_summary._services_snapshot',
+        'oneirodex.utils.ops_summary._services_snapshot',
         return_value={
             **values['_services_snapshot'],
             'readyz': None,
         },
     ):
-        from gametheca.utils.ops_summary import build_ops_summary
+        from oneirodex.utils.ops_summary import build_ops_summary
 
         result = build_ops_summary(datetime.now(timezone.utc))
 
@@ -257,10 +257,10 @@ def test_scan_snapshot_counts_active_folder_failures():
     failure_result.scalar.return_value = 3
 
     with patch(
-        'gametheca.utils.ops_summary.db.session.execute',
+        'oneirodex.utils.ops_summary.db.session.execute',
         side_effect=(active_result, queued_result, recent_result, failure_result),
     ) as execute:
-        from gametheca.utils.ops_summary import _scan_snapshot
+        from oneirodex.utils.ops_summary import _scan_snapshot
 
         result = _scan_snapshot()
 
@@ -304,10 +304,10 @@ def test_scan_snapshot_includes_recent_terminal_jobs():
     failure_result.scalar.return_value = 0
 
     with patch(
-        'gametheca.utils.ops_summary.db.session.execute',
+        'oneirodex.utils.ops_summary.db.session.execute',
         side_effect=(active_result, queued_result, recent_result, failure_result),
     ):
-        from gametheca.utils.ops_summary import _scan_snapshot
+        from oneirodex.utils.ops_summary import _scan_snapshot
 
         result = _scan_snapshot()
 
@@ -326,55 +326,55 @@ def test_scan_snapshot_includes_recent_terminal_jobs():
 def test_build_ops_summary_keeps_other_sections_on_network_failure():
     values = _host_patches()
     with patch(
-        'gametheca.utils.ops_summary.get_cpu_usage',
+        'oneirodex.utils.ops_summary.get_cpu_usage',
         return_value=values['get_cpu_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_memory_usage',
+        'oneirodex.utils.ops_summary.get_memory_usage',
         return_value=values['get_memory_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_disk_usage',
+        'oneirodex.utils.ops_summary.get_disk_usage',
         return_value=values['get_disk_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_games_folder_usage',
+        'oneirodex.utils.ops_summary.get_games_folder_usage',
         return_value=values['get_games_folder_usage'],
     ), patch(
-        'gametheca.utils.ops_summary.get_system_info',
+        'oneirodex.utils.ops_summary.get_system_info',
         return_value=values['get_system_info'],
     ), patch(
-        'gametheca.utils.ops_summary.get_config_values',
+        'oneirodex.utils.ops_summary.get_config_values',
         return_value=values['get_config_values'],
     ), patch(
-        'gametheca.utils.ops_summary.get_formatted_system_uptime',
+        'oneirodex.utils.ops_summary.get_formatted_system_uptime',
         return_value=values['get_formatted_system_uptime'],
     ), patch(
-        'gametheca.utils.ops_summary.get_formatted_app_uptime',
+        'oneirodex.utils.ops_summary.get_formatted_app_uptime',
         return_value=values['get_formatted_app_uptime'],
     ), patch(
-        'gametheca.utils.ops_summary.get_load_average',
+        'oneirodex.utils.ops_summary.get_load_average',
         return_value=values['get_load_average'],
     ), patch(
-        'gametheca.utils.ops_summary.get_process_memory',
+        'oneirodex.utils.ops_summary.get_process_memory',
         return_value=values['get_process_memory'],
     ), patch(
-        'gametheca.utils.ops_summary._db_ping_ms',
+        'oneirodex.utils.ops_summary._db_ping_ms',
         return_value=values['_db_ping_ms'],
     ), patch(
-        'gametheca.utils.ops_summary.get_network_stats',
+        'oneirodex.utils.ops_summary.get_network_stats',
         side_effect=RuntimeError('secret connection string'),
     ), patch(
-        'gametheca.utils.ops_summary._library_pulse',
+        'oneirodex.utils.ops_summary._library_pulse',
         return_value=values['_library_pulse'],
     ), patch(
-        'gametheca.utils.ops_summary._scan_snapshot',
+        'oneirodex.utils.ops_summary._scan_snapshot',
         return_value=values['_scan_snapshot'],
     ), patch(
-        'gametheca.utils.ops_summary._recent_errors',
+        'oneirodex.utils.ops_summary._recent_errors',
         return_value=values['_recent_errors'],
     ), patch(
-        'gametheca.utils.ops_summary._services_snapshot',
+        'oneirodex.utils.ops_summary._services_snapshot',
         return_value=values['_services_snapshot'],
     ):
-        from gametheca.utils.ops_summary import build_ops_summary
+        from oneirodex.utils.ops_summary import build_ops_summary
 
         result = build_ops_summary(datetime.now(timezone.utc))
 
@@ -391,17 +391,17 @@ def test_build_ops_summary_keeps_other_sections_on_network_failure():
 
 def test_db_ping_ms_returns_none_on_failure():
     with patch(
-        'gametheca.utils.ops_summary.db.session.execute',
+        'oneirodex.utils.ops_summary.db.session.execute',
         side_effect=RuntimeError('db down'),
     ):
-        from gametheca.utils.ops_summary import _db_ping_ms
+        from oneirodex.utils.ops_summary import _db_ping_ms
 
         assert _db_ping_ms() is None
 
 
 def test_db_ping_ms_returns_latency():
-    with patch('gametheca.utils.ops_summary.db.session.execute', return_value=None):
-        from gametheca.utils.ops_summary import _db_ping_ms
+    with patch('oneirodex.utils.ops_summary.db.session.execute', return_value=None):
+        from oneirodex.utils.ops_summary import _db_ping_ms
 
         ms = _db_ping_ms()
     assert isinstance(ms, float)
@@ -418,10 +418,10 @@ def test_readyz_pulse_includes_timing_and_checks():
         },
     }
     with patch(
-        'gametheca.utils.ops_summary.build_readiness',
+        'oneirodex.utils.ops_summary.build_readiness',
         return_value=(payload, 200),
     ):
-        from gametheca.utils.ops_summary import _readyz_pulse
+        from oneirodex.utils.ops_summary import _readyz_pulse
 
         result = _readyz_pulse()
 
@@ -434,10 +434,10 @@ def test_readyz_pulse_includes_timing_and_checks():
 
 def test_readyz_pulse_none_when_unavailable():
     with patch(
-        'gametheca.utils.ops_summary.build_readiness',
+        'oneirodex.utils.ops_summary.build_readiness',
         side_effect=RuntimeError('no app'),
     ):
-        from gametheca.utils.ops_summary import _readyz_pulse
+        from oneirodex.utils.ops_summary import _readyz_pulse
 
         assert _readyz_pulse() is None
 
@@ -458,10 +458,10 @@ def test_companion_pulse_last_seen_breakdown():
         return scalars.pop(0)
 
     with patch(
-        'gametheca.utils.ops_summary.db.session.execute',
+        'oneirodex.utils.ops_summary.db.session.execute',
         side_effect=_execute,
     ):
-        from gametheca.utils.ops_summary import _companion_pulse
+        from oneirodex.utils.ops_summary import _companion_pulse
 
         result = _companion_pulse()
 
@@ -481,7 +481,7 @@ def test_companion_pulse_last_seen_breakdown():
 
 
 def test_get_load_average_none_when_unavailable():
-    import gametheca.utils.system_stats as stats_mod
+    import oneirodex.utils.system_stats as stats_mod
 
     with patch.object(
         stats_mod.os,
@@ -493,7 +493,7 @@ def test_get_load_average_none_when_unavailable():
 
 
 def test_get_load_average_returns_values_when_available():
-    import gametheca.utils.system_stats as stats_mod
+    import oneirodex.utils.system_stats as stats_mod
 
     with patch.object(
         stats_mod.os,
@@ -506,9 +506,9 @@ def test_get_load_average_returns_values_when_available():
 
 def test_get_process_memory_none_when_unavailable():
     with patch(
-        'gametheca.utils.system_stats.psutil.Process',
+        'oneirodex.utils.system_stats.psutil.Process',
         side_effect=RuntimeError('denied'),
     ):
-        from gametheca.utils.system_stats import get_process_memory
+        from oneirodex.utils.system_stats import get_process_memory
 
         assert get_process_memory() is None

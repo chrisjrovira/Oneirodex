@@ -213,16 +213,16 @@ export function ActivityPage({ shellConfig = {} } = {}) {
           onSelectView={(id) => setFriendsOnly(id === 'friends')}
         />
       ) : null}
-    <div className="gt-more-page gt-panels">
+    <div className="od-more-page od-panels">
       {useNewChrome ? null : (
         <>
-        <div className="gt-page-header gt-panels__full">
+        <div className="od-page-header od-panels__full">
           <h1>Activity</h1>
         </div>
-        <p className="gt-more-page__lede">
+        <p className="od-more-page__lede">
           Friends, presence, and who’s playing — social hangout is on by default for the household.
         </p>
-        <label className="gt-more-page__lede">
+        <label className="od-more-page__lede">
           <input
             type="checkbox"
             checked={friendsOnly}
@@ -236,7 +236,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
       {social?.community_chat_url ? (
         <p>
           <a
-            className="gt-btn"
+            className="od-btn"
             href={social.community_chat_url}
             target="_blank"
             rel="noopener noreferrer"
@@ -249,7 +249,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
 
       <section>
         <h2>Friends</h2>
-        <form className="gt-updates__search-form" onSubmit={requestFriend}>
+        <form className="od-updates__search-form" onSubmit={requestFriend}>
           <label>
             Add by username
             <input
@@ -259,7 +259,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
               autoComplete="off"
             />
           </label>
-          <button className="gt-btn" type="submit">
+          <button className="od-btn" type="submit">
             Request
           </button>
         </form>
@@ -280,10 +280,10 @@ export function ActivityPage({ shellConfig = {} } = {}) {
                 {row.direction === 'incoming' && row.status === 'pending' ? (
                   <>
                     {' '}
-                    <button type="button" className="gt-btn" onClick={() => void acceptFriend(row.id)}>
+                    <button type="button" className="od-btn" onClick={() => void acceptFriend(row.id)}>
                       Accept
                     </button>{' '}
-                    <button type="button" className="gt-btn" onClick={() => void rejectFriend(row.id)}>
+                    <button type="button" className="od-btn" onClick={() => void rejectFriend(row.id)}>
                       Decline
                     </button>
                   </>
@@ -291,7 +291,7 @@ export function ActivityPage({ shellConfig = {} } = {}) {
                 {row.status === 'accepted' ? (
                   <>
                     {' '}
-                    <button type="button" className="gt-btn" onClick={() => void removeFriend(row.id)}>
+                    <button type="button" className="od-btn" onClick={() => void removeFriend(row.id)}>
                       Unfriend
                     </button>
                   </>

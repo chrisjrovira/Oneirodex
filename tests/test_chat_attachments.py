@@ -9,9 +9,9 @@ import pytest
 from PIL import Image
 from werkzeug.datastructures import FileStorage
 
-from gametheca.models import User
-from gametheca.utils.chat import create_household_channel, list_messages, post_message
-from gametheca.utils.chat_attachments import (
+from oneirodex.models import User
+from oneirodex.utils.chat import create_household_channel, list_messages, post_message
+from oneirodex.utils.chat_attachments import (
     MAX_ATTACHMENT_BYTES,
     upload_attachment,
 )

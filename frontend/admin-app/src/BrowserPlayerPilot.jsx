@@ -61,11 +61,11 @@ export function BrowserPlayerPilot() {
   )
 
   return (
-    <section className="gt-adminpage-panel" aria-labelledby="gt-browser-player-heading">
-      <h2 id="gt-browser-player-heading" className="gt-section-head__title">
+    <section className="od-adminpage-panel" aria-labelledby="od-browser-player-heading">
+      <h2 id="od-browser-player-heading" className="od-section-head__title">
         Browser play engine
       </h2>
-      <p className="gt-adminpage-lede">
+      <p className="od-adminpage-lede">
         Play uses WebRetro. The NES Nostalgist host is optional, off by default,
         and still loads household cores and ROMs from this box. It does not yet
         have Save / Load / Rewind.

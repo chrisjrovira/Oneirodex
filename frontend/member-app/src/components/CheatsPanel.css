@@ -1,30 +1,30 @@
-.gt-cheats-panel {
+.od-cheats-panel {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.gt-cheats-panel__lede {
+.od-cheats-panel__lede {
   margin: 0;
   line-height: 1.45;
   opacity: 0.78;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-cheats-panel__lede a {
+.od-cheats-panel__lede a {
   color: inherit;
 }
 
-.gt-cheats-panel__status {
+.od-cheats-panel__status {
   margin: 0;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-cheats-panel__status[role='alert'] {
-  color: color-mix(in srgb, var(--gt-danger) 80%, var(--gt-text));
+.od-cheats-panel__status[role='alert'] {
+  color: color-mix(in srgb, var(--od-danger) 80%, var(--od-text));
 }
 
-.gt-cheats-panel__list {
+.od-cheats-panel__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -33,19 +33,19 @@
   gap: 0.55rem;
 }
 
-.gt-cheats-panel__row {
+.od-cheats-panel__row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem 0.75rem;
   align-items: center;
   justify-content: space-between;
   padding: 0.55rem 0.65rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  background: color-mix(in srgb, var(--od-surface-2) 70%, transparent);
 }
 
-.gt-cheats-panel__row-meta {
+.od-cheats-panel__row-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem 0.65rem;
@@ -53,108 +53,108 @@
   min-width: 0;
 }
 
-.gt-cheats-panel__row-meta strong {
+.od-cheats-panel__row-meta strong {
   font-weight: 600;
   word-break: break-word;
 }
 
-.gt-cheats-panel__row-actions {
+.od-cheats-panel__row-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
 
-.gt-cheats-panel__form,
-.gt-cheats-panel__upload {
+.od-cheats-panel__form,
+.od-cheats-panel__upload {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.75rem 0.85rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px dashed color-mix(in srgb, var(--gt-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  border-radius: var(--od-radius-lg);
+  border: 1px dashed color-mix(in srgb, var(--od-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
 }
 
-.gt-cheats-panel__form h3,
-.gt-cheats-panel__upload h3 {
+.od-cheats-panel__form h3,
+.od-cheats-panel__upload h3 {
   margin: 0;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   font-weight: 600;
 }
 
-.gt-cheats-panel__field {
+.od-cheats-panel__field {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   min-width: 0;
 }
 
-.gt-cheats-panel__field > span {
-  font-size: var(--gt-font-sm);
+.od-cheats-panel__field > span {
+  font-size: var(--od-font-sm);
   letter-spacing: 0.02em;
   opacity: 0.72;
 }
 
-.gt-cheats-panel__field input,
-.gt-cheats-panel__field select,
-.gt-cheats-panel__code-row input {
+.od-cheats-panel__field input,
+.od-cheats-panel__field select,
+.od-cheats-panel__code-row input {
   width: 100%;
   min-height: 2.1rem;
   padding: 0.4rem 0.55rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
   font: inherit;
 }
 
-.gt-cheats-panel__field input:focus-visible,
-.gt-cheats-panel__field select:focus-visible,
-.gt-cheats-panel__code-row input:focus-visible {
-  outline: 2px solid var(--gt-accent);
+.od-cheats-panel__field input:focus-visible,
+.od-cheats-panel__field select:focus-visible,
+.od-cheats-panel__code-row input:focus-visible {
+  outline: 2px solid var(--od-accent);
   outline-offset: 1px;
 }
 
-.gt-cheats-panel__grid {
+.od-cheats-panel__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(8rem, 0.8fr);
   gap: 0.65rem;
 }
 
-.gt-cheats-panel__codes {
+.od-cheats-panel__codes {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
 }
 
-.gt-cheats-panel__code-row {
+.od-cheats-panel__code-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
   gap: 0.4rem;
   align-items: end;
 }
 
-.gt-cheats-panel__actions {
+.od-cheats-panel__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   align-items: center;
 }
 
-.gt-cheats-panel__file {
-  font-size: var(--gt-font-md);
+.od-cheats-panel__file {
+  font-size: var(--od-font-md);
 }
 
 @media (max-width: 900px) {
-  .gt-cheats-panel__grid {
+  .od-cheats-panel__grid {
     grid-template-columns: 1fr;
   }
 
-  .gt-cheats-panel__code-row {
+  .od-cheats-panel__code-row {
     grid-template-columns: 1fr;
   }
 
-  .gt-cheats-panel__row {
+  .od-cheats-panel__row {
     flex-direction: column;
     align-items: flex-start;
   }

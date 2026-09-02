@@ -1,5 +1,5 @@
 """
-ASGI config for GameTheca production deployment.
+ASGI config for Oneirodex production deployment.
 This file wraps the Flask app to be compatible with ASGI servers like uvicorn
 and provides async file streaming for downloads and static assets.
 
@@ -20,23 +20,23 @@ from pathlib import Path
 import aiofiles
 from asgiref.wsgi import WsgiToAsgi
 
-from gametheca import create_app, db
-from gametheca.async_streaming import (
+from oneirodex import create_app, db
+from oneirodex.async_streaming import (
     async_generate_zipstream_response,
     create_async_streaming_response,
 )
-from gametheca.models import DownloadRequest, Game, User
-from gametheca.utils.event_logging import log_system_event
-from gametheca.utils.library_acl import user_can_access_game
-from gametheca.utils.play_url import library_platform_key
-from gametheca.utils.rom_archive import (
+from oneirodex.models import DownloadRequest, Game, User
+from oneirodex.utils.event_logging import log_system_event
+from oneirodex.utils.library_acl import user_can_access_game
+from oneirodex.utils.play_url import library_platform_key
+from oneirodex.utils.rom_archive import (
     ArchiveRomError,
     bundle_playable_rom_zip,
     resolve_playable_rom_path,
 )
-from gametheca.utils.security import get_allowed_base_directories, is_safe_path
-from gametheca.utils.security_headers import baseline_static_headers
-from gametheca.utils.static_files import resolve_static_path
+from oneirodex.utils.security import get_allowed_base_directories, is_safe_path
+from oneirodex.utils.security_headers import baseline_static_headers
+from oneirodex.utils.static_files import resolve_static_path
 from sqlalchemy import select
 
 
@@ -113,7 +113,7 @@ class LazyASGIApp:
         if not user_id:
             return 401
         with self._flask_app.app_context():
-            from gametheca.utils.rbac import normalize_role
+            from oneirodex.utils.rbac import normalize_role
 
             user = db.session.get(User, user_id)
             if not user:
@@ -150,7 +150,7 @@ class LazyASGIApp:
             )
             return
 
-        from gametheca.utils.event_bus import encode_sse, event_bus
+        from oneirodex.utils.event_bus import encode_sse, event_bus
 
         subscriber = event_bus.subscribe()
 
@@ -541,7 +541,7 @@ class LazyASGIApp:
         if auth_header.lower().startswith("bearer "):
             await self._ensure_flask()
             with self._flask_app.app_context():
-                from gametheca.utils.api_tokens import verify_bearer_token
+                from oneirodex.utils.api_tokens import verify_bearer_token
 
                 raw = auth_header.split(" ", 1)[1].strip()
                 user, token = verify_bearer_token(raw)
@@ -733,7 +733,7 @@ class LazyASGIApp:
 
         if message["type"] == "lifespan.startup":
             try:
-                from gametheca.utils.shutdown import register_shutdown_handlers
+                from oneirodex.utils.shutdown import register_shutdown_handlers
 
                 register_shutdown_handlers()
                 # Eager-init Flask so first browser burst does not race WsgiToAsgi setup.
@@ -745,7 +745,7 @@ class LazyASGIApp:
 
         elif message["type"] == "lifespan.shutdown":
             try:
-                from gametheca.utils.shutdown import request_shutdown
+                from oneirodex.utils.shutdown import request_shutdown
 
                 request_shutdown()
                 print("🛑 ASGI lifespan shutdown initiated")

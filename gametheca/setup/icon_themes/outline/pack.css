@@ -1,8 +1,0 @@
-/* Outline — default Oneirodex stroke icons; theme --gt-icon-* may refine. */
-html[data-icon-pack="outline"] .gt-icon {
-  stroke-width: var(--gt-icon-stroke, 2);
-  stroke-linecap: var(--gt-icon-linecap, round);
-  stroke-linejoin: var(--gt-icon-linejoin, round);
-  fill: var(--gt-icon-fill, none);
-  fill-opacity: var(--gt-icon-fill-opacity, 1);
-}

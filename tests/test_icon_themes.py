@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from gametheca.utils.icon_themes import (
+from oneirodex.utils.icon_themes import (
     BUILTIN_PACKS,
     CORE_ICON_KEYS,
     DRAWING_PACKS,
@@ -16,14 +16,14 @@ from gametheca.utils.icon_themes import (
 )
 
 REPO = Path(__file__).resolve().parents[1]
-SETUP = REPO / 'gametheca' / 'setup' / 'icon_themes'
+SETUP = REPO / 'oneirodex' / 'setup' / 'icon_themes'
 
 
 def test_builtin_packs_have_css():
     assert len(BUILTIN_PACKS) >= 6
     for pack in BUILTIN_PACKS:
         assert pack['id'] in PACK_CSS
-        assert 'gt-icon' in PACK_CSS[pack['id']] or pack['id'] == 'outline'
+        assert 'od-icon' in PACK_CSS[pack['id']] or pack['id'] == 'outline'
 
 
 def test_core_icon_keys_cover_nav():
@@ -71,7 +71,7 @@ def test_chrome_icon_components_expose_leftover_data_icons():
 
 def test_preferences_pack_chips_preview_pack_glyph_keys():
     html = (
-        REPO / 'gametheca' / 'templates' / 'settings' / 'modal_preferences.html'
+        REPO / 'oneirodex' / 'templates' / 'settings' / 'modal_preferences.html'
     ).read_text(encoding='utf-8')
     chip = html.split('id="iconPackPreview"', 1)[1].split('icon-pack-chip-label', 1)[0]
     keys = tuple(

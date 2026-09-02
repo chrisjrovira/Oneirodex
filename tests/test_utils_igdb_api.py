@@ -3,9 +3,9 @@ import time
 import threading
 from unittest.mock import patch, MagicMock
 
-from gametheca import create_app, db
-from gametheca.models import GlobalSettings
-from gametheca.utils.igdb_api import (
+from oneirodex import create_app, db
+from oneirodex.models import GlobalSettings
+from oneirodex.utils.igdb_api import (
     make_igdb_api_request,
     get_access_token,
     clear_access_token_cache,
@@ -66,7 +66,7 @@ def mock_cover_image_id_response():
 class TestMakeIgdbApiRequest:
     """Tests for make_igdb_api_request function."""
     
-    @patch('gametheca.utils.igdb_api.get_access_token')
+    @patch('oneirodex.utils.igdb_api.get_access_token')
     @patch('requests.post')
     def test_successful_api_request(self, mock_requests_post, mock_get_token, 
                                   db_session, sample_global_settings):
@@ -110,7 +110,7 @@ class TestMakeIgdbApiRequest:
         
         assert result == {"error": "IGDB settings not configured in database"}
 
-    @patch('gametheca.utils.igdb_api.get_access_token')
+    @patch('oneirodex.utils.igdb_api.get_access_token')
     def test_failed_access_token_retrieval(self, mock_get_token, db_session, sample_global_settings):
         """Test API request when access token retrieval fails."""
         mock_get_token.return_value = None
@@ -119,7 +119,7 @@ class TestMakeIgdbApiRequest:
         
         assert result == {"error": "Failed to retrieve access token"}
 
-    @patch('gametheca.utils.igdb_api.get_access_token')
+    @patch('oneirodex.utils.igdb_api.get_access_token')
     @patch('requests.post')
     def test_request_exception(self, mock_requests_post, mock_get_token,
                              db_session, sample_global_settings):
@@ -132,7 +132,7 @@ class TestMakeIgdbApiRequest:
         assert "error" in result
         assert "An unexpected error occurred" in result["error"]
 
-    @patch('gametheca.utils.igdb_api.get_access_token')
+    @patch('oneirodex.utils.igdb_api.get_access_token')
     @patch('requests.post')
     def test_invalid_json_response(self, mock_requests_post, mock_get_token,
                                  db_session, sample_global_settings):
@@ -207,7 +207,7 @@ class TestGetAccessToken:
 class TestGetCoverThumbnailUrl:
     """Tests for get_cover_thumbnail_url function."""
     
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     def test_successful_cover_thumbnail_retrieval(self, mock_api_request, mock_cover_response):
         """Test successful cover thumbnail URL retrieval."""
         mock_api_request.return_value = mock_cover_response
@@ -220,7 +220,7 @@ class TestGetCoverThumbnailUrl:
             'fields url; where game=12345;'
         )
 
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     @patch('builtins.print')
     def test_api_error_response(self, mock_print, mock_api_request):
         """Test cover thumbnail retrieval with API error."""
@@ -233,7 +233,7 @@ class TestGetCoverThumbnailUrl:
             "Failed to retrieve cover for IGDB ID 12345. Response: {'error': 'API Error'}"
         )
 
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     @patch('builtins.print')
     def test_empty_response(self, mock_print, mock_api_request):
         """Test cover thumbnail retrieval with empty response."""
@@ -246,7 +246,7 @@ class TestGetCoverThumbnailUrl:
             "Failed to retrieve cover for IGDB ID 12345. Response: []"
         )
 
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     @patch('builtins.print')
     def test_missing_url_in_response(self, mock_print, mock_api_request):
         """Test cover thumbnail retrieval with missing URL in response."""
@@ -261,7 +261,7 @@ class TestGetCoverThumbnailUrl:
 class TestGetCoverUrl:
     """Tests for get_cover_url function."""
     
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     def test_successful_cover_url_retrieval(self, mock_api_request, mock_cover_image_id_response):
         """Test successful cover URL retrieval."""
         mock_api_request.return_value = mock_cover_image_id_response
@@ -274,7 +274,7 @@ class TestGetCoverUrl:
             'fields image_id; where game=12345;'
         )
 
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     @patch('builtins.print')
     def test_api_error_response(self, mock_print, mock_api_request):
         """Test cover URL retrieval with API error."""
@@ -287,7 +287,7 @@ class TestGetCoverUrl:
             "Failed to retrieve cover image ID for IGDB ID 12345. Response: {'error': 'API Error'}"
         )
 
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     @patch('builtins.print')
     def test_empty_response(self, mock_print, mock_api_request):
         """Test cover URL retrieval with empty response."""
@@ -300,7 +300,7 @@ class TestGetCoverUrl:
             "Failed to retrieve cover image ID for IGDB ID 12345. Response: []"
         )
 
-    @patch('gametheca.utils.igdb_api.make_igdb_api_request')
+    @patch('oneirodex.utils.igdb_api.make_igdb_api_request')
     @patch('builtins.print')
     def test_missing_image_id_in_response(self, mock_print, mock_api_request):
         """Test cover URL retrieval with missing image_id in response."""

@@ -1,7 +1,10 @@
 import { renderHook, act } from '@testing-library/react'
 import {
   CATALOG_LAYOUT_KEY,
-  denseCatalogTileMin,
+  CATALOG_ROW_HEIGHT,
+  CATALOG_ROW_MAX_PX,
+  CATALOG_ROW_MIN_PX,
+  catalogRowHeightPx,
   normalizeCatalogLayout,
   persistCatalogLayout,
   readCatalogLayout,
@@ -18,9 +21,11 @@ test('unknown values fall back to tile', () => {
   expect(normalizeCatalogLayout('rows')).toBe('rows')
 })
 
-test('dense grid min is a fraction of the slider, never smaller than 108', () => {
-  expect(denseCatalogTileMin(180)).toBe(Math.max(108, Math.round(180 * 0.58)))
-  expect(denseCatalogTileMin(80)).toBe(108)
+test('row height follows the tile slider between a floor and a ceiling', () => {
+  expect(catalogRowHeightPx(180)).toBe(CATALOG_ROW_HEIGHT)
+  expect(catalogRowHeightPx(80)).toBe(CATALOG_ROW_MIN_PX)
+  expect(catalogRowHeightPx(400)).toBe(CATALOG_ROW_MAX_PX)
+  expect(catalogRowHeightPx(260)).toBeGreaterThan(catalogRowHeightPx(180))
 })
 
 test('the hook remembers the last layout', () => {

@@ -1,7 +1,7 @@
 import pytest
 from flask import url_for
-from gametheca.models import GlobalSettings, User
-from gametheca import db
+from oneirodex.models import GlobalSettings, User
+from oneirodex import db
 from uuid import uuid4
 import time
 import json
@@ -202,7 +202,7 @@ class TestIGDBSettingsRoute:
         response_data = response.get_json()
         assert response_data['status'] == 'success'
     
-    @patch('gametheca.routes_admin_ext.igdb.db.session.commit')
+    @patch('oneirodex.routes_admin_ext.igdb.db.session.commit')
     def test_igdb_settings_post_database_error(self, mock_commit, client, admin_user):
         """Test POST request handles database errors."""
         mock_commit.side_effect = Exception("Database error")
@@ -276,7 +276,7 @@ class TestIGDBTestRoute:
         # Configure the singleton rather than inserting a second row — the
         # secret is cleared explicitly because the row may carry one from an
         # earlier test, and "incomplete" is the whole point here.
-        from gametheca.utils.global_settings import global_settings_row_or_create
+        from oneirodex.utils.global_settings import global_settings_row_or_create
 
         settings = global_settings_row_or_create()
         settings.igdb_client_id = 'test_id'
@@ -294,7 +294,7 @@ class TestIGDBTestRoute:
         assert response_data['success'] is False
         assert 'not configured' in response_data['message']
     
-    @patch('gametheca.routes_admin_ext.igdb.make_igdb_api_request')
+    @patch('oneirodex.routes_admin_ext.igdb.make_igdb_api_request')
     def test_test_igdb_successful_api_call(self, mock_api_request, client, admin_user, clean_global_settings):
         """Test successful IGDB API test."""
         # Mock successful API response
@@ -320,7 +320,7 @@ class TestIGDBTestRoute:
         db.session.refresh(clean_global_settings)
         assert clean_global_settings.igdb_last_tested is not None
     
-    @patch('gametheca.routes_admin_ext.igdb.make_igdb_api_request')
+    @patch('oneirodex.routes_admin_ext.igdb.make_igdb_api_request')
     def test_test_igdb_invalid_api_response(self, mock_api_request, client, admin_user, clean_global_settings):
         """Test IGDB test with invalid API response."""
         # Mock invalid API response (not a list)
@@ -337,7 +337,7 @@ class TestIGDBTestRoute:
         assert response_data['success'] is False
         assert 'Invalid API response' in response_data['message']
     
-    @patch('gametheca.routes_admin_ext.igdb.make_igdb_api_request')
+    @patch('oneirodex.routes_admin_ext.igdb.make_igdb_api_request')
     def test_test_igdb_api_exception(self, mock_api_request, client, admin_user, clean_global_settings):
         """Test IGDB test when API call raises exception."""
         # Mock API request to raise an exception
@@ -394,7 +394,7 @@ class TestIGDBIntegration:
             assert url_for('admin2.igdb_settings') == '/admin/igdb_settings'
             assert url_for('admin2.test_igdb') == '/admin/test_igdb'
     
-    @patch('gametheca.routes_admin_ext.igdb.make_igdb_api_request')
+    @patch('oneirodex.routes_admin_ext.igdb.make_igdb_api_request')
     def test_igdb_last_tested_timestamp_update(self, mock_api_request, client, admin_user, clean_global_settings):
         """Test that igdb_last_tested timestamp is properly updated."""
         # Mock successful API response

@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from gametheca.utils import free_games as fg
+from oneirodex.utils import free_games as fg
 
 
 def test_normalize_store_map():
@@ -185,7 +185,7 @@ def test_claim_assist_requires_connection(monkeypatch):
             return FakeScalars()
 
     monkeypatch.setattr(
-        'gametheca.db.session.execute',
+        'oneirodex.db.session.execute',
         lambda *_a, **_k: FakeResult(),
     )
     result = fg.claim_assist_for_user(1, offer)

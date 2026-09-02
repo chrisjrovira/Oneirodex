@@ -6,9 +6,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, Image, Library, UnmatchedFolder, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_health import (
+from oneirodex.models import Game, Image, Library, UnmatchedFolder, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_health import (
     HEALTH_FACTOR_SPECS,
     PATH_STATUS_MISSING,
     PATH_STATUS_OK,
@@ -20,7 +20,7 @@ from gametheca.utils.library_health import (
     score_game,
     score_library_health_from_counts,
 )
-from gametheca.utils.software_identify import CUSTOM_IGDB_BASE
+from oneirodex.utils.software_identify import CUSTOM_IGDB_BASE
 
 
 def test_health_factor_weights_sum_100():

@@ -1,38 +1,50 @@
-/* Discover news tiles: same 2×3 cover frame as game tiles. Badge, date, and
-   title overlay the art so the shelf scrollbar sits under the cover like every
-   other row — not under a caption strip. */
+/* Discover news tiles: 3:4 art in the same box as game covers, so the
+   scrollbar lane sits the same distance under every row. Badge, date, and
+   title overlay the art; the leftover caption strip stays empty like a
+   game tile. In-flow images used to inflate this wrap past 3:4 and park
+   the slider against the art. */
 
-.gt-news-card {
+.od-news-card {
   display: block;
-  height: 100%;
-  min-height: var(--gt-tile-h, 280px);
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
   padding: 0;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-lg, 10px);
-  background: var(--gt-surface);
-  color: var(--gt-text);
+  border: 0;
+  border-radius: var(--od-radius-lg, 10px);
+  background: transparent;
+  color: var(--od-text);
   text-decoration: none;
-  overflow: hidden;
+  overflow: visible;
 }
 
-/* One accent ring on hover / keyboard focus. */
-.gt-news-card:hover,
-.gt-news-card:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--gt-accent) 80%, transparent);
-  outline-offset: 2px;
+.od-news-card:hover,
+.od-news-card:focus-visible {
+  outline: none;
 }
 
-.gt-news-card__art-wrap {
+.od-news-card__art-wrap {
   position: relative;
   display: block;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 3 / 4;
+  height: auto;
+  max-height: 100%;
+  flex: 0 0 auto;
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+  border: 0;
+  border-radius: var(--od-radius-lg, 10px);
+  background: color-mix(in srgb, var(--od-surface-2) 85%, transparent);
+}
+
+.od-news-card:hover .od-news-card__art-wrap,
+.od-news-card:focus-visible .od-news-card__art-wrap {
+  outline: 2px solid color-mix(in srgb, var(--od-accent) 80%, transparent);
+  outline-offset: 0;
 }
 
 /* Blurred fill behind letterboxed wide banners. */
-.gt-news-card__art-fill {
+.od-news-card__art-fill {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -44,8 +56,9 @@
   user-select: none;
 }
 
-.gt-news-card__art {
-  position: relative;
+.od-news-card__art {
+  position: absolute;
+  inset: 0;
   z-index: 1;
   display: block;
   width: 100%;
@@ -53,35 +66,35 @@
   object-fit: cover;
 }
 
-.gt-news-card__art[data-fit='letterbox'] {
+.od-news-card__art[data-fit='letterbox'] {
   object-fit: contain;
 }
 
-.gt-news-card__art--empty {
+.od-news-card__art--empty {
   display: block;
   width: 100%;
   height: 100%;
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--gt-accent) 14%, transparent),
+      color-mix(in srgb, var(--od-accent) 14%, transparent),
       transparent 60%
     ),
-    color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+    color-mix(in srgb, var(--od-surface-2) 85%, transparent);
 }
 
-.gt-news-card__badge,
-.gt-news-card__when {
+.od-news-card__badge,
+.od-news-card__when {
   position: absolute;
   z-index: 2;
-  bottom: 2.55rem;
-  font-size: var(--gt-font-xs, 0.75rem);
+  bottom: clamp(1.55rem, calc(var(--od-tile-w) * 0.22), 2.55rem);
+  font-size: clamp(0.5rem, calc(var(--od-tile-w) * 0.05), 0.75rem);
   font-weight: 650;
   line-height: 1.2;
   padding: 0.15rem 0.4rem;
-  border-radius: var(--gt-radius-sm, 6px);
-  color: var(--gt-text);
-  background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
+  border-radius: var(--od-radius-sm, 6px);
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-bg) 72%, transparent);
   backdrop-filter: blur(4px);
   max-width: calc(50% - 0.5rem);
   overflow: hidden;
@@ -89,46 +102,47 @@
   white-space: nowrap;
 }
 
-.gt-news-card__badge {
+.od-news-card__badge {
   left: 0.4rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.gt-news-card__badge[data-kind='free_game'] {
-  color: var(--gt-accent);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 55%, transparent);
+.od-news-card__badge[data-kind='free_game'] {
+  color: var(--od-accent);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 55%, transparent);
 }
 
-.gt-news-card__when {
+.od-news-card__when {
   right: 0.4rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--gt-text) 92%, transparent);
+  color: color-mix(in srgb, var(--od-text) 92%, transparent);
 }
 
-/* Title on the cover with a scrim — clamps so long giveaway names cannot spill. */
-.gt-news-card__title {
+/* Title on the cover with a scrim — size follows the tile-width slider so the
+   smallest setting cannot overflow a 2×3. */
+.od-news-card__title {
   position: absolute;
   z-index: 2;
   left: 0;
   right: 0;
   bottom: 0;
   margin: 0;
-  padding: 1.6rem 0.45rem 0.4rem;
-  font-size: var(--gt-font-sm, 0.875rem);
+  padding: clamp(0.7rem, calc(var(--od-tile-w) * 0.08), 1.6rem) 0.45rem 0.35rem;
+  font-size: clamp(0.58rem, calc(var(--od-tile-w) * 0.065), 0.875rem);
   font-weight: 650;
-  line-height: 1.2;
+  line-height: 1.15;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  color: var(--gt-text);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  color: var(--od-text);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--od-bg) 55%, transparent);
   background: linear-gradient(
     180deg,
     transparent 0%,
-    color-mix(in srgb, var(--gt-bg) 55%, transparent) 45%,
-    color-mix(in srgb, var(--gt-bg) 82%, transparent) 100%
+    color-mix(in srgb, var(--od-bg) 55%, transparent) 45%,
+    color-mix(in srgb, var(--od-bg) 82%, transparent) 100%
   );
 }

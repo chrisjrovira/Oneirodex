@@ -35,7 +35,7 @@ describe('open-path validation', () => {
   })
 
   it('enforces optional allowed roots for local installs', () => {
-    const root = 'C:\\GameTheca\\installs'
+    const root = 'C:\\Oneirodex\\installs'
     expect(isRevealAllowedUnderRoots(`${root}\\game-1`, [root])).toBe(true)
     expect(isRevealAllowedUnderRoots('C:\\Windows\\System32', [root])).toBe(false)
     expect(isRevealAllowedUnderRoots('C:\\Windows\\System32', [])).toBe(true)
@@ -49,17 +49,17 @@ describe('revealPathInOs', () => {
 
   it('invokes Tauri reveal with validated absolute path', async () => {
     vi.mocked(invoke).mockResolvedValue({
-      path: 'C:\\GameTheca\\installs\\game-1',
+      path: 'C:\\Oneirodex\\installs\\game-1',
       revealed_as: 'directory',
     })
-    const result = await revealPathInOs('C:\\GameTheca\\installs\\game-1')
+    const result = await revealPathInOs('C:\\Oneirodex\\installs\\game-1')
     expect(result).toEqual({
       ok: true,
-      path: 'C:\\GameTheca\\installs\\game-1',
+      path: 'C:\\Oneirodex\\installs\\game-1',
       revealed_as: 'directory',
     })
     expect(invoke).toHaveBeenCalledWith('reveal_path_in_os', {
-      path: 'C:\\GameTheca\\installs\\game-1',
+      path: 'C:\\Oneirodex\\installs\\game-1',
       select: true,
     })
   })
@@ -72,7 +72,7 @@ describe('revealPathInOs', () => {
 
   it('blocks paths outside allowedRoots', async () => {
     const result = await revealPathInOs('C:\\Windows', {
-      allowedRoots: ['C:\\GameTheca\\installs'],
+      allowedRoots: ['C:\\Oneirodex\\installs'],
     })
     expect(result).toEqual({ ok: false, error: 'Path is outside allowed roots' })
     expect(invoke).not.toHaveBeenCalled()

@@ -1,7 +1,7 @@
 """Offline ROM translate capability stubs."""
 
-from gametheca.utils.rom_translate import get_pipeline_for_platform, list_rom_translate_capabilities
-from gametheca.utils.rom_translate.pipeline import GbaOfflineStub
+from oneirodex.utils.rom_translate import get_pipeline_for_platform, list_rom_translate_capabilities
+from oneirodex.utils.rom_translate.pipeline import GbaOfflineStub
 
 
 def test_list_capabilities_includes_gba_stub_and_known_platforms():

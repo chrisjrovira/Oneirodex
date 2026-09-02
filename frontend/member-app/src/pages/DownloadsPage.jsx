@@ -127,7 +127,7 @@ export function DownloadsPage({ shellConfig: _shellConfig } = {}) {
   if (error || !downloads) {
     return (
       <PageStatus
-        className="gt-downloads"
+        className="od-downloads"
         loading={!error}
         error={error}
         errorMessage="Unable to load downloads."
@@ -138,12 +138,12 @@ export function DownloadsPage({ shellConfig: _shellConfig } = {}) {
   }
 
   if (downloads.length === 0) {
-    return <p className="gt-downloads">You have no downloads yet.</p>
+    return <p className="od-downloads">You have no downloads yet.</p>
   }
 
   return (
-    <div className="gt-downloads">
-      <table className="gt-downloads__table">
+    <div className="od-downloads">
+      <table className="od-downloads__table">
         <thead>
           <tr>
             <th scope="col">Game</th>
@@ -166,7 +166,7 @@ export function DownloadsPage({ shellConfig: _shellConfig } = {}) {
                 ) : null}{' '}
                 <button
                   type="button"
-                  className="gt-cbtn gt-cbtn--danger"
+                  className="od-cbtn od-cbtn--danger"
                   disabled={deletingId === row.id}
                   onClick={() => handleDelete(row.id)}
                 >

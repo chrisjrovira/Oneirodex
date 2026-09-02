@@ -114,11 +114,11 @@ export function AcquirePage() {
   const displayWarnings = [...statusWarnings, ...warnings].filter(Boolean)
 
   return (
-    <div className="gt-more-page">
-      <div className="gt-page-header">
+    <div className="od-more-page">
+      <div className="od-page-header">
         <h1>Acquire</h1>
       </div>
-      <p className="gt-more-page__lede">
+      <p className="od-more-page__lede">
         BYO acquisition via admin-configured native indexers / hubs / debrid. Oneirodex does not host
         torrents. Results are ranked by score (seeders, repack/quality cues).
       </p>
@@ -140,7 +140,7 @@ export function AcquirePage() {
         <PageStatus loading loadingMessage="Loading Acquire…" />
       ) : null}
       {displayWarnings.length > 0 ? (
-        <p className="gt-more-page__lede" role="status">
+        <p className="od-more-page__lede" role="status">
           Indexer warnings: {displayWarnings.join(' · ')}
         </p>
       ) : null}
@@ -152,19 +152,19 @@ export function AcquirePage() {
           entries (or enable presets and set API keys) under Admin → Arr.
         </p>
       ) : (
-        <form className="gt-updates__search-form" onSubmit={onSearch}>
+        <form className="od-updates__search-form" onSubmit={onSearch}>
           <label>
             Search indexers
             <input value={query} onChange={(e) => setQuery(e.target.value)} required />
           </label>
-          <button className="gt-btn" type="submit" disabled={busy || !status.arr_enabled}>
+          <button className="od-btn" type="submit" disabled={busy || !status.arr_enabled}>
             {busy ? 'Searching…' : 'Search'}
           </button>
         </form>
       )}
       {hits && hits.length === 0 ? <p>No indexer hits.</p> : null}
       {hits && hits.length > 0 ? (
-        <ul className="gt-updates__list">
+        <ul className="od-updates__list">
           {hits.map((hit, index) => (
             <li key={`${hit.title}-${hit.indexer || ''}-${index}`}>
               <strong>{hit.title}</strong>
@@ -182,15 +182,15 @@ export function AcquirePage() {
                   .join(' · ')}
               </span>
               {hit.score_reasons?.length ? (
-                <span className="gt-more-page__lede">{hit.score_reasons.join(', ')}</span>
+                <span className="od-more-page__lede">{hit.score_reasons.join(', ')}</span>
               ) : null}
               {status?.can_send ? (
-                <div className="gt-updates__inbox-actions">
+                <div className="od-updates__inbox-actions">
                   {CLIENT_BUTTONS.filter((c) => clients.has(c.id)).map((c) => (
                     <button
                       key={c.id}
                       type="button"
-                      className="gt-btn"
+                      className="od-btn"
                       disabled={busy}
                       onClick={() => void sendHit(hit, c.id)}
                     >
@@ -202,7 +202,7 @@ export function AcquirePage() {
                         <button
                           key={d.id}
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={busy}
                           onClick={() => void sendHit(hit, d.id)}
                         >

@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 
-from gametheca.utils.match_proposal import build_match_proposal, write_match_proposal
+from oneirodex.utils.match_proposal import build_match_proposal, write_match_proposal
 
 
 def test_build_match_proposal_from_scene_repack_label():
@@ -32,7 +32,7 @@ def test_write_match_proposal_roundtrip():
     with tempfile.TemporaryDirectory() as tmp:
         payload = build_match_proposal('Test Game', [{'id': 5, 'name': 'Test Game'}])
         assert write_match_proposal(tmp, payload) is True
-        path = os.path.join(tmp, 'gametheca.proposal.json')
+        path = os.path.join(tmp, 'oneirodex.proposal.json')
         with open(path, encoding='utf-8') as handle:
             loaded = json.load(handle)
         assert loaded['proposal']['cleaned_name'] == 'Test Game'

@@ -1,4 +1,4 @@
-# GameTheca Compose overlay — hand the artwork sidecar an NVIDIA GPU.
+# Oneirodex Compose overlay — hand the artwork sidecar an NVIDIA GPU.
 #
 # OPT-IN. Nothing in the base stack requests a GPU, and that is deliberate: the
 # reference deployment is Unraid on a box with no discrete GPU, and a `deploy`
@@ -16,7 +16,7 @@
 # Use it when the DOCKER HOST ITSELF has the NVIDIA driver and the NVIDIA
 # Container Toolkit. If the GPU is on a *different* machine, do not use this at
 # all — run SD.Next / AUTOMATIC1111 / Forge over there and point
-# AI_ARTWORK_URL at it. `gametheca/utils/ai_artwork.py` only ever speaks HTTP to
+# AI_ARTWORK_URL at it. `oneirodex/utils/ai_artwork.py` only ever speaks HTTP to
 # that URL, so a GPU box elsewhere on the LAN needs no compose changes here.
 #
 # Enable, on a Linux host (Unraid, NAS, plain Docker) — in .env:

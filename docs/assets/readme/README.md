@@ -5,7 +5,7 @@ Product mark and **live** UI captures used by the root [README.md](../../README.
 | File | Use | Source |
 |---|---|---|
 | `app-icon.png` | Centered README icon | Product icon |
-| `gametheca_mark.svg` | Product controller mark | SVG mark |
+| `oneirodex_mark.svg` | Product controller mark | SVG mark |
 | `hero-banner.png` | Hero strip | Playwright capture (`/library`) |
 | `screenshot-library.png` | Library preview | `library-free-roms.png` capture |
 | `screenshot-systems.png` | Systems preview | `systems-platforms.png` capture |

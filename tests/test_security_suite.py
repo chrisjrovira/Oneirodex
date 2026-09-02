@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from gametheca.utils.security import (
+from oneirodex.utils.security import (
     is_blocked_outbound_host,
     validate_community_chat_url,
     validate_outbound_http_url,

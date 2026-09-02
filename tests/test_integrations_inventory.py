@@ -3,8 +3,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import User
-from gametheca.utils.integrations_inventory import build_integrations_inventory
+from oneirodex.models import User
+from oneirodex.utils.integrations_inventory import build_integrations_inventory
 
 
 @pytest.fixture

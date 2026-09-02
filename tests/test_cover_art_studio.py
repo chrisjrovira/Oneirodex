@@ -11,8 +11,8 @@ from uuid import uuid4
 import pytest
 from PIL import Image
 
-from gametheca.models import Game, Image as GameImage, Library, LibraryPlatform, User
-from gametheca.utils.cover_art_studio import (
+from oneirodex.models import Game, Image as GameImage, Library, LibraryPlatform, User
+from oneirodex.utils.cover_art_studio import (
     bake_default_fallbacks,
     build_zip_bytes,
     generate_size_matrix,
@@ -43,7 +43,7 @@ def test_render_cover_art_returns_valid_image():
 
 def test_system_templates_differ_by_platform_pixels():
     """At least three platforms produce distinct palettes / pixels at tile size."""
-    from gametheca.utils.cover_art_studio import resolve_system_template
+    from oneirodex.utils.cover_art_studio import resolve_system_template
 
     nes = resolve_system_template('NES')
     snes = resolve_system_template('SNES')
@@ -117,7 +117,7 @@ def test_generate_size_matrix_has_all_outlets():
 def test_safe_pack_dir_blocks_traversal(tmp_path):
     root = tmp_path / 'generated'
     root.mkdir()
-    with patch('gametheca.utils.cover_art_studio.generated_root', return_value=root):
+    with patch('oneirodex.utils.cover_art_studio.generated_root', return_value=root):
         assert safe_pack_dir('valid-pack_1') == root / 'valid-pack_1'
         with pytest.raises(ValueError):
             safe_pack_dir('../etc')
@@ -133,7 +133,7 @@ def test_safe_pack_file_only_known_names(tmp_path, app):
     pack.mkdir()
     (pack / 'tile_400x600.webp').write_bytes(b'x')
     with app.app_context():
-        with patch('gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path):
+        with patch('oneirodex.utils.cover_art_studio.generated_root', return_value=tmp_path):
             path = safe_pack_file('pack1', 'tile_400x600.webp')
             assert path.is_file()
             with pytest.raises(ValueError):
@@ -141,7 +141,7 @@ def test_safe_pack_file_only_known_names(tmp_path, app):
 
 
 def test_save_pack_and_zip(tmp_path, app):
-    with app.app_context(),          patch('gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path):
+    with app.app_context(),          patch('oneirodex.utils.cover_art_studio.generated_root', return_value=tmp_path):
         manifest = save_pack('Zip Test', system='GBA', pack_id='testpack01')
         assert manifest['pack_id'] == 'testpack01'
         assert (tmp_path / 'testpack01' / 'manifest.json').is_file()
@@ -153,7 +153,7 @@ def test_save_pack_and_zip(tmp_path, app):
 
 def test_bake_default_fallbacks(tmp_path):
     ns = tmp_path / 'newstyle'
-    with patch('gametheca.utils.cover_art_studio.newstyle_root', return_value=ns):
+    with patch('oneirodex.utils.cover_art_studio.newstyle_root', return_value=ns):
         paths = bake_default_fallbacks()
     assert Path(paths['default_cover']).is_file()
     assert Path(paths['default_library']).is_file()
@@ -206,7 +206,7 @@ def test_art_studio_generate_surfaces_permission_error(client, db_session, admin
         sess['_fresh'] = True
 
     with patch(
-        'gametheca.routes_admin_ext.art_studio.save_pack',
+        'oneirodex.routes_admin_ext.art_studio.save_pack',
         side_effect=PermissionError('Permission denied'),
     ):
         response = client.post(
@@ -226,7 +226,7 @@ def test_art_studio_apply_fallback_surfaces_disk_error(client, db_session, admin
         sess['_fresh'] = True
 
     with patch(
-        'gametheca.routes_admin_ext.art_studio.apply_pack_as_fallback',
+        'oneirodex.routes_admin_ext.art_studio.apply_pack_as_fallback',
         side_effect=OSError('Disk full'),
     ):
         response = client.post(
@@ -245,9 +245,9 @@ def test_art_studio_download_surfaces_disk_error(client, db_session, admin_user)
         sess['_user_id'] = str(admin_user.id)
         sess['_fresh'] = True
 
-    with patch('gametheca.routes_admin_ext.art_studio.safe_pack_dir', return_value=Path('/fake')):
+    with patch('oneirodex.routes_admin_ext.art_studio.safe_pack_dir', return_value=Path('/fake')):
         with patch(
-            'gametheca.routes_admin_ext.art_studio.build_zip_bytes',
+            'oneirodex.routes_admin_ext.art_studio.build_zip_bytes',
             side_effect=PermissionError('Permission denied'),
         ):
             response = client.get('/admin/api/art-studio/download/some-pack')
@@ -260,7 +260,7 @@ def test_art_studio_download_surfaces_disk_error(client, db_session, admin_user)
 def test_apply_pack_to_game_rolls_back_and_removes_file_on_db_failure(tmp_path, db_session):
     """If the DB commit fails after the cover file is written, the orphaned
     file must be cleaned up and the original exception re-raised."""
-    from gametheca.utils.cover_art_studio import apply_pack_to_game, save_pack
+    from oneirodex.utils.cover_art_studio import apply_pack_to_game, save_pack
 
     game_uuid = str(uuid4())
     library = Library(name=f'ArtLib_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)
@@ -274,12 +274,12 @@ def test_apply_pack_to_game_rolls_back_and_removes_file_on_db_failure(tmp_path, 
     img_root = tmp_path / 'images'
     img_root.mkdir()
 
-    with patch('gametheca.utils.cover_art_studio.generated_root', return_value=gen_root):
+    with patch('oneirodex.utils.cover_art_studio.generated_root', return_value=gen_root):
         manifest = save_pack('Rollback Test', pack_id='rollbackpack01')
 
-        with patch('gametheca.utils.cover_art_studio.current_app') as mock_app:
+        with patch('oneirodex.utils.cover_art_studio.current_app') as mock_app:
             mock_app.config = {'IMAGE_SAVE_PATH': str(img_root)}
-            with patch('gametheca.utils.cover_art_studio.db.session.commit', side_effect=RuntimeError('db down')):
+            with patch('oneirodex.utils.cover_art_studio.db.session.commit', side_effect=RuntimeError('db down')):
                 with pytest.raises(RuntimeError, match='db down'):
                     apply_pack_to_game(manifest['pack_id'], game_uuid)
 
@@ -305,7 +305,7 @@ def test_art_studio_generate_apply_game(client, db_session, admin_user, app, tmp
         sess['_user_id'] = str(admin_user.id)
         sess['_fresh'] = True
 
-    with patch('gametheca.utils.cover_art_studio.generated_root', return_value=gen_root):
+    with patch('oneirodex.utils.cover_art_studio.generated_root', return_value=gen_root):
         gen = client.post(
             '/admin/api/art-studio/generate',
             json={'title': 'Apply Test', 'system': 'PS1'},
@@ -338,7 +338,7 @@ def test_generated_pack_honours_the_text_overrides(tmp_path, app):
     save_pack would have produced a preview that lied about its own output.
     """
     with app.app_context(), patch(
-        'gametheca.utils.cover_art_studio.generated_root', return_value=tmp_path
+        'oneirodex.utils.cover_art_studio.generated_root', return_value=tmp_path
     ):
         plain = save_pack('Override Test', system='SNES', pack_id='ovr_plain')
         scaled = save_pack(
@@ -362,7 +362,7 @@ def test_generate_route_forwards_the_overrides(client, db_session, admin_user):
         sess['_user_id'] = str(admin_user.id)
         sess['_fresh'] = True
 
-    with patch('gametheca.routes_admin_ext.art_studio.save_pack') as fake:
+    with patch('oneirodex.routes_admin_ext.art_studio.save_pack') as fake:
         fake.return_value = {'pack_id': 'p1', 'files': [], 'title': 'T', 'system': '', 'format': 'webp'}
         client.post(
             '/admin/api/art-studio/generate',

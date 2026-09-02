@@ -7,10 +7,10 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, Library
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.match_proposal import hint_fields_from_proposal
-from gametheca.utils.software_identify import (
+from oneirodex.models import Game, Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.match_proposal import hint_fields_from_proposal
+from oneirodex.utils.software_identify import (
     CUSTOM_IGDB_BASE,
     enrich_proposal_with_stage_e,
     filter_tgdb_hits_for_platform,
@@ -47,8 +47,8 @@ def test_filter_tgdb_hits_for_platform():
     assert filtered[0]['platforms'] == ['Nintendo Game Boy']
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
-@patch('gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value=None)
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
+@patch('oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value=None)
 def test_stage_e_keys_unset_skips_silently(mock_tgdb_key, mock_moby_key):
     hints = resolve_stage_e_catalog_hints(
         cleaned_name='Doom',
@@ -59,8 +59,8 @@ def test_stage_e_keys_unset_skips_silently(mock_tgdb_key, mock_moby_key):
     assert 'mobygames_key_unset' in hints['skipped']
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
-@patch('gametheca.utils.software_identify.search_mobygames_games')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.utils.software_identify.search_mobygames_games')
 def test_stage_e_moby_exact_propose_only(mock_moby, mock_key, sample_pc_library, db_session):
     mock_moby.return_value = [{
         'source': 'mobygames',
@@ -73,7 +73,7 @@ def test_stage_e_moby_exact_propose_only(mock_moby, mock_key, sample_pc_library,
         'platforms': ['DOS', 'Windows'],
     }]
     with patch(
-        'gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key',
+        'oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key',
         return_value=None,
     ):
         hints = resolve_stage_e_catalog_hints(
@@ -93,9 +93,9 @@ def test_stage_e_moby_exact_propose_only(mock_moby, mock_key, sample_pc_library,
     assert games == []
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
-@patch('gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value='tgdb-key')
-@patch('gametheca.utils.software_identify.search_thegamesdb_games')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
+@patch('oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value='tgdb-key')
+@patch('oneirodex.utils.software_identify.search_thegamesdb_games')
 def test_stage_e_tgdb_exact_propose_only(mock_tgdb, mock_tgdb_key, mock_moby_key):
     mock_tgdb.return_value = [
         {
@@ -128,8 +128,8 @@ def test_stage_e_tgdb_exact_propose_only(mock_tgdb, mock_tgdb_key, mock_moby_key
     assert hints['match_reason'] == 'stage_e_tgdb_exact'
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
-@patch('gametheca.utils.software_identify.search_mobygames_games')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.utils.software_identify.search_mobygames_games')
 def test_stage_e_enrich_proposal_sidecar_fields(mock_moby, mock_key):
     mock_moby.return_value = [{
         'source': 'mobygames',
@@ -139,7 +139,7 @@ def test_stage_e_enrich_proposal_sidecar_fields(mock_moby, mock_key):
         'mobygames_id': 7,
     }]
     with patch(
-        'gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key',
+        'oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key',
         return_value=None,
     ):
         proposal = {'proposal': {'cleaned_name': 'Keeper', 'suggested_kind': 'game'}}
@@ -158,8 +158,8 @@ def test_stage_e_enrich_proposal_sidecar_fields(mock_moby, mock_key):
     assert hint['suggested_candidate_name'] == 'Keeper'
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
-@patch('gametheca.utils.software_identify.search_mobygames_games')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.utils.software_identify.search_mobygames_games')
 def test_stage_e_never_creates_game(mock_moby, mock_key, sample_pc_library, db_session):
     mock_moby.return_value = [{
         'source': 'mobygames',
@@ -171,7 +171,7 @@ def test_stage_e_never_creates_game(mock_moby, mock_key, sample_pc_library, db_s
 
     before = db_session.execute(select(func.count()).select_from(Game)).scalar()
     with patch(
-        'gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key',
+        'oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key',
         return_value=None,
     ):
         hints = resolve_stage_e_catalog_hints(
@@ -188,11 +188,11 @@ def test_stage_e_never_creates_game(mock_moby, mock_key, sample_pc_library, db_s
     assert after == before
 
 
-@patch('gametheca.utils.steam_lookup.fetch_steam_app_details')
-@patch('gametheca.utils.software_identify.search_steam_games')
-@patch('gametheca.utils.software_identify.search_gog_games', return_value=[])
-@patch('gametheca.utils.software_identify.search_mobygames_games')
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.utils.steam_lookup.fetch_steam_app_details')
+@patch('oneirodex.utils.software_identify.search_steam_games')
+@patch('oneirodex.utils.software_identify.search_gog_games', return_value=[])
+@patch('oneirodex.utils.software_identify.search_mobygames_games')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
 def test_stage_d_still_preferred_when_it_hits(
     mock_moby_key,
     mock_moby,
@@ -226,8 +226,8 @@ def test_stage_d_still_preferred_when_it_hits(
     mock_moby.assert_not_called()
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
-@patch('gametheca.utils.software_identify.search_mobygames_games')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.utils.software_identify.search_mobygames_games')
 def test_stage_e_fuzzy_multi_hit_not_preferred(mock_moby, mock_key):
     """Near matches without exact title → no preferred propose name."""
     mock_moby.return_value = [
@@ -235,7 +235,7 @@ def test_stage_e_fuzzy_multi_hit_not_preferred(mock_moby, mock_key):
         {'source': 'mobygames', 'id': 2, 'name': 'Final Fantasy', 'mobygames_id': 2},
     ]
     with patch(
-        'gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key',
+        'oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key',
         return_value=None,
     ):
         hints = resolve_stage_e_catalog_hints(

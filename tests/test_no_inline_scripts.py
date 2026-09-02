@@ -3,7 +3,7 @@
 Executable inline ``<script>`` and inline event handlers (``onclick=``) are
 what kept CSP on ``'unsafe-inline'`` for pages. JSON
 ``<script type="application/json">`` tags are data, not script. Classic pages
-declare intent on ``data-gt-*`` and ``static/js/gt_dom_actions.js`` runs it.
+declare intent on ``data-od-*`` and ``static/js/od_dom_actions.js`` runs it.
 
 See docs/strategy/security-legal-playbook.md.
 """
@@ -13,11 +13,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'gametheca' / 'templates'
-STATIC_JS = Path(__file__).resolve().parents[1] / 'gametheca' / 'static' / 'js'
+TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'oneirodex' / 'templates'
+STATIC_JS = Path(__file__).resolve().parents[1] / 'oneirodex' / 'static' / 'js'
 THEME_JS = (
     Path(__file__).resolve().parents[1]
-    / 'gametheca' / 'setup' / 'default_theme' / 'js'
+    / 'oneirodex' / 'setup' / 'default_theme' / 'js'
 )
 JINJA_RE = re.compile(r'\{\{|\{%')
 
@@ -76,15 +76,15 @@ def test_templates_have_no_inline_event_handlers():
             if EVENT_ATTR_RE.search(line) or JS_URL_RE.search(line):
                 hits.append(f'{rel}:{index}')
     assert hits == [], (
-        'Inline event handler or javascript: URL — use data-gt-click / '
-        'data-gt-change / data-gt-confirm / data-gt-open:\n  ' + '\n  '.join(hits)
+        'Inline event handler or javascript: URL — use data-od-click / '
+        'data-od-change / data-od-confirm / data-od-open:\n  ' + '\n  '.join(hits)
     )
 
 
 def test_extracted_static_js_has_no_jinja():
     """A mechanical extract that left `{% if %}` in a .js file is a SyntaxError."""
     hits = []
-    for path in sorted(STATIC_JS.glob('gt_*.js')):
+    for path in sorted(STATIC_JS.glob('od_*.js')):
         text = path.read_text(encoding='utf-8')
         if JINJA_RE.search(text):
             hits.append(path.name)
@@ -94,16 +94,16 @@ def test_extracted_static_js_has_no_jinja():
 def test_shipped_js_does_not_inject_inline_handlers():
     """innerHTML + onclick= recreates the handler CSP just dropped."""
     hits = []
-    paths = list(STATIC_JS.glob('gt_*.js'))
+    paths = list(STATIC_JS.glob('od_*.js'))
     if THEME_JS.is_dir():
         paths.extend(THEME_JS.glob('*.js'))
     for path in sorted(paths):
-        if path.name == 'gt_dom_actions.js':
+        if path.name == 'od_dom_actions.js':
             continue
         text = path.read_text(encoding='utf-8')
         if INLINE_HANDLER_IN_JS_RE.search(text):
             hits.append(path.name)
     assert hits == [], (
-        'JS still injects onclick=/onchange=/onsubmit= — switch to data-gt-*:\n  '
+        'JS still injects onclick=/onchange=/onsubmit= — switch to data-od-*:\n  '
         + '\n  '.join(hits)
     )

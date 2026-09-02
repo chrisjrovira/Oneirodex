@@ -2,16 +2,16 @@
 
 from unittest.mock import patch
 
-from gametheca.utils.item_kind import (
+from oneirodex.utils.item_kind import (
     infer_item_kind_from_steam_type,
     is_denied_auto_game_match,
     normalize_item_kind,
     steam_type_is_software,
     suggest_item_kind,
 )
-from gametheca.utils.game_name_parse import parse_game_label, strip_vr_noise_tail
-from gametheca.utils.match_proposal import build_match_proposal
-from gametheca.utils.software_identify import (
+from oneirodex.utils.game_name_parse import parse_game_label, strip_vr_noise_tail
+from oneirodex.utils.match_proposal import build_match_proposal
+from oneirodex.utils.software_identify import (
     build_software_search_queries,
     collect_software_identify_candidates,
     enrich_proposal_with_software,
@@ -28,8 +28,8 @@ def test_normalize_item_kind_aliases():
 
 
 def test_item_kind_plain_language_labels():
-    from gametheca.utils.item_kind import ITEM_KIND_LABELS
-    from gametheca.utils.match_proposal import SUGGESTED_KIND_LABELS
+    from oneirodex.utils.item_kind import ITEM_KIND_LABELS
+    from oneirodex.utils.match_proposal import SUGGESTED_KIND_LABELS
 
     assert ITEM_KIND_LABELS['experience'] == 'Soft title'
     assert ITEM_KIND_LABELS['tool'] == 'Utility'
@@ -105,7 +105,7 @@ def test_collect_software_candidates_synthetic_non_game(monkeypatch):
     ]
 
     with patch(
-        'gametheca.utils.software_identify.search_steam_games',
+        'oneirodex.utils.software_identify.search_steam_games',
         return_value=synthetic,
     ) as mock_search:
         hits = collect_software_identify_candidates('3DSenVR', limit=10)
@@ -120,7 +120,7 @@ def test_collect_software_candidates_synthetic_non_game(monkeypatch):
 
 def test_enrich_proposal_adds_software_path():
     with patch(
-        'gametheca.utils.software_identify.collect_software_identify_candidates',
+        'oneirodex.utils.software_identify.collect_software_identify_candidates',
         return_value=[{
             'source': 'steam',
             'steam_app_id': 1,
@@ -144,7 +144,7 @@ def test_enrich_proposal_adds_software_path():
 
 
 def test_search_steam_games_tags_software_type():
-    from gametheca.utils.secondary_scrapers import search_steam_games
+    from oneirodex.utils.secondary_scrapers import search_steam_games
 
     class _Resp:
         def json(self):
@@ -160,7 +160,7 @@ def test_search_steam_games_tags_software_type():
             }
 
     with patch(
-        'gametheca.utils.secondary_scrapers.request_with_backoff',
+        'oneirodex.utils.secondary_scrapers.request_with_backoff',
         return_value=_Resp(),
     ):
         results = search_steam_games('Demo Tool', limit=5, include_software=True)

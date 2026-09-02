@@ -7,14 +7,14 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, Library
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.set_completion import (
+from oneirodex.models import Game, Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.set_completion import (
     lookup_unique_dat_hash_hit,
     try_dat_hash_identify,
     upsert_reference_set,
 )
-from gametheca.utils.software_identify import CUSTOM_IGDB_BASE
+from oneirodex.utils.software_identify import CUSTOM_IGDB_BASE
 
 
 def _dat_with_hashes(tag: str, *, shared_crc: str | None = None) -> bytes:
@@ -169,7 +169,7 @@ def test_try_dat_hash_identify_ambiguous_returns_none(db_session, gb_library):
 
 
 def test_retrieve_unique_dat_auto_before_stage_e(app, db_session, gb_library, tmp_path):
-    from gametheca.utils.game_core import retrieve_and_save_game
+    from oneirodex.utils.game_core import retrieve_and_save_game
 
     tag = uuid4().hex[:8]
     upsert_reference_set(
@@ -182,22 +182,22 @@ def test_retrieve_unique_dat_auto_before_stage_e(app, db_session, gb_library, tm
     rom.write_bytes(b'rom-payload')
 
     with patch(
-        'gametheca.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.game_core.search_igdb_for_game',
         return_value=[],
     ), patch(
-        'gametheca.utils.software_identify.try_stage_d_store_identify',
+        'oneirodex.utils.software_identify.try_stage_d_store_identify',
         return_value=None,
     ), patch(
-        'gametheca.utils.rom_hash.hash_rom_file',
+        'oneirodex.utils.rom_hash.hash_rom_file',
         return_value={
             'crc': 'aabbcc01',
             'md5': '11111111111111111111111111111111',
             'sha1': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         },
     ), patch(
-        'gametheca.utils.game_core.notify_admins_new_game',
+        'oneirodex.utils.game_core.notify_admins_new_game',
     ), patch(
-        'gametheca.utils.software_identify.enrich_proposal_with_stage_e',
+        'oneirodex.utils.software_identify.enrich_proposal_with_stage_e',
     ) as mock_stage_e:
         result = retrieve_and_save_game(
             f'Tetris {tag}',
@@ -207,7 +207,7 @@ def test_retrieve_unique_dat_auto_before_stage_e(app, db_session, gb_library, tm
                 'use_local_metadata': False,
                 'write_local_metadata': False,
                 'use_local_images': False,
-                'local_metadata_filename': 'gametheca.json',
+                'local_metadata_filename': 'oneirodex.json',
                 'propose_only_scan': False,
                 'scan_mode': 'files',
             },
@@ -220,26 +220,26 @@ def test_retrieve_unique_dat_auto_before_stage_e(app, db_session, gb_library, tm
 
 
 def test_retrieve_skips_dat_when_propose_only(app, db_session, gb_library, tmp_path):
-    from gametheca.utils.game_core import retrieve_and_save_game
+    from oneirodex.utils.game_core import retrieve_and_save_game
 
     rom = tmp_path / f'SkipPropose-{uuid4().hex[:4]}.gb'
     rom.write_bytes(b'x')
 
     with patch(
-        'gametheca.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.game_core.search_igdb_for_game',
         return_value=[],
     ), patch(
-        'gametheca.utils.set_completion.try_dat_hash_identify',
+        'oneirodex.utils.set_completion.try_dat_hash_identify',
     ) as mock_dat, patch(
-        'gametheca.utils.software_identify.try_stage_d_store_identify',
+        'oneirodex.utils.software_identify.try_stage_d_store_identify',
     ) as mock_stage_d, patch(
-        'gametheca.utils.software_identify.enrich_proposal_with_software',
+        'oneirodex.utils.software_identify.enrich_proposal_with_software',
         side_effect=lambda p, *_a, **_k: p,
     ), patch(
-        'gametheca.utils.software_identify.enrich_proposal_with_stage_e',
+        'oneirodex.utils.software_identify.enrich_proposal_with_stage_e',
         side_effect=lambda p, **_k: p,
     ), patch(
-        'gametheca.utils.game_core.write_match_proposal',
+        'oneirodex.utils.game_core.write_match_proposal',
         return_value=True,
     ):
         result = retrieve_and_save_game(
@@ -250,7 +250,7 @@ def test_retrieve_skips_dat_when_propose_only(app, db_session, gb_library, tmp_p
                 'use_local_metadata': False,
                 'write_local_metadata': False,
                 'use_local_images': False,
-                'local_metadata_filename': 'gametheca.json',
+                'local_metadata_filename': 'oneirodex.json',
                 'propose_only_scan': True,
                 'scan_mode': 'files',
             },

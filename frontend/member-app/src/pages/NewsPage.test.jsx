@@ -160,11 +160,11 @@ test('News layout smoke: hero strip and magazine densify', async () => {
   const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
 
   expect(await screen.findByText('Household note')).toBeInTheDocument()
-  expect(container.querySelector('.gt-news__hero')).toBeTruthy()
-  expect(container.querySelector('.gt-news__hero-title')).toHaveTextContent('Household note')
+  expect(container.querySelector('.od-news__hero')).toBeTruthy()
+  expect(container.querySelector('.od-news__hero-title')).toHaveTextContent('Household note')
   expect(screen.getByText('Second note')).toBeInTheDocument()
   // UX-C14: headlines are image-forward cards now, not text-only rows.
-  expect(container.querySelector('.gt-news__cards')).toBeTruthy()
+  expect(container.querySelector('.od-news__cards')).toBeTruthy()
   expect(screen.getByText('Studio ships patch')).toBeInTheDocument()
   expect(screen.getByLabelText('News sections')).toBeInTheDocument()
 })
@@ -187,14 +187,14 @@ test('headline cards show artwork when the feed supplies it', async () => {
   })
   const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
   await screen.findByText('Studio ships patch')
-  const wrap = container.querySelector('.gt-news__card-art-wrap')
+  const wrap = container.querySelector('.od-news__card-art-wrap')
   expect(wrap).toBeTruthy()
-  const art = wrap.querySelector('img.gt-news__card-art')
+  const art = wrap.querySelector('img.od-news__card-art')
   expect(art).toBeTruthy()
   expect(art).toHaveAttribute('src', 'https://cdn.example.com/art.jpg')
-  expect(wrap.querySelector('.gt-news__card-badge')).toHaveTextContent('Example')
-  expect(wrap.querySelector('time.gt-news__card-when')).toBeTruthy()
-  expect(container.querySelector('.gt-news__card-body .gt-news__meta')).toBeNull()
+  expect(wrap.querySelector('.od-news__card-badge')).toHaveTextContent('Example')
+  expect(wrap.querySelector('time.od-news__card-when')).toBeTruthy()
+  expect(container.querySelector('.od-news__card-body .od-news__meta')).toBeNull()
 })
 
 test('a feed with no artwork gets a placeholder, never a broken frame', async () => {
@@ -207,8 +207,8 @@ test('a feed with no artwork gets a placeholder, never a broken frame', async ()
   })
   const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
   await screen.findByText('No art here')
-  expect(container.querySelector('.gt-news__card-art--empty')).toBeTruthy()
-  expect(container.querySelector('img.gt-news__card-art')).toBeNull()
+  expect(container.querySelector('.od-news__card-art--empty')).toBeTruthy()
+  expect(container.querySelector('img.od-news__card-art')).toBeNull()
 })
 
 test('new chrome puts the sections in bar two with live counts', async () => {
@@ -244,7 +244,7 @@ test('section counts stay hidden until the feeds have actually answered', async 
   expect(screen.getByRole('button', { name: /Free now/ }).textContent).not.toMatch(/\d/)
 })
 
-test('new chrome unfurls Card Grid RSS under View on the section bar', async () => {
+test('new chrome unfurls Card Grid RSS under the active layout name on the section bar', async () => {
   const user = userEvent.setup()
   announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
   gamingNewsApi.fetchGamingNews.mockResolvedValue({
@@ -254,11 +254,12 @@ test('new chrome unfurls Card Grid RSS under View on the section bar', async () 
   render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
   await screen.findByRole('heading', { name: 'Gaming headlines' })
 
-  expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'Card' })).not.toBeInTheDocument()
+  const trigger = screen.getByRole('button', { name: 'Card' })
+  expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.queryByRole('button', { name: 'Grid' })).not.toBeInTheDocument()
 
-  await user.click(screen.getByRole('button', { name: 'View' }))
-  expect(screen.getByRole('button', { name: 'Card' })).toBeInTheDocument()
+  await user.click(trigger)
+  expect(screen.getByRole('group', { name: 'View' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'RSS' })).toBeInTheDocument()
 })
@@ -282,11 +283,11 @@ test('RSS layout renders headline magazine rows instead of cards', async () => {
   })
   await screen.findByText('Studio ships patch')
   await user.click(screen.getByRole('button', { name: /Headlines/ }))
-  await user.click(screen.getByRole('button', { name: 'View' }))
+  await user.click(screen.getByRole('button', { name: 'Card' }))
   await user.click(screen.getByRole('button', { name: 'RSS' }))
 
-  expect(container.querySelector('.gt-news__magazine')).toBeTruthy()
-  expect(container.querySelector('.gt-news__cards')).toBeNull()
+  expect(container.querySelector('.od-news__magazine')).toBeTruthy()
+  expect(container.querySelector('.od-news__cards')).toBeNull()
   expect(window.localStorage.getItem('gt.news.layout')).toBe('rss')
 })
 
@@ -311,8 +312,8 @@ test('the Free now tab fills the stage rather than a half column', async () => {
   await screen.findByText('Free Space Adventure')
   await user.click(screen.getByRole('button', { name: /Free now/ }))
 
-  expect(container.querySelector('.gt-news--fill')).toBeTruthy()
-  expect(container.querySelector('.gt-news--fill')?.getAttribute('data-tab')).toBe('free')
-  expect(container.querySelector('.gt-news__stage')).toBeTruthy()
-  expect(container.querySelector('.gt-news__headlines')).toBeNull()
+  expect(container.querySelector('.od-news--fill')).toBeTruthy()
+  expect(container.querySelector('.od-news--fill')?.getAttribute('data-tab')).toBe('free')
+  expect(container.querySelector('.od-news__stage')).toBeTruthy()
+  expect(container.querySelector('.od-news__headlines')).toBeNull()
 })

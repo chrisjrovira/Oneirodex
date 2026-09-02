@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_no_admin2_admin_dashboard_url_for():
-    admin_templates = ROOT / 'gametheca' / 'templates' / 'admin'
+    admin_templates = ROOT / 'oneirodex' / 'templates' / 'admin'
     hits = []
     for path in admin_templates.rglob('*.html'):
         text = path.read_text(encoding='utf-8')
@@ -16,7 +16,7 @@ def test_no_admin2_admin_dashboard_url_for():
 
 
 def test_edit_library_seeds_scan_depth_only_on_get():
-    src = (ROOT / 'gametheca' / 'routes_admin_ext' / 'libraries.py').read_text(encoding='utf-8')
+    src = (ROOT / 'oneirodex' / 'routes_admin_ext' / 'libraries.py').read_text(encoding='utf-8')
     assert "if request.method == 'GET':" in src
     assert 'form.scan_depth.data = getattr(library, \'scan_depth\', 1) or 1' in src
     # Must not assign scan_depth from DB unconditionally before validate_on_submit
@@ -42,7 +42,7 @@ def test_base_html_collapses_member_nav_on_admin_paths():
     still means something: admin pages would otherwise open with the member nav
     expanded over the admin chrome.
     """
-    base = (ROOT / 'gametheca' / 'templates' / 'base.html').read_text(encoding='utf-8')
+    base = (ROOT / 'oneirodex' / 'templates' / 'base.html').read_text(encoding='utf-8')
     assert "request.path.startswith('/admin')" in base
     assert 'admin_chrome' in base
 

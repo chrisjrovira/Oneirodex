@@ -1,5 +1,5 @@
 """
-Unit tests for gametheca.routes_apis.filters
+Unit tests for oneirodex.routes_apis.filters
 
 Tests the filter API endpoints including authentication, successful data retrieval,
 error handling, and logging functionality.
@@ -10,13 +10,13 @@ from unittest.mock import patch, MagicMock
 from uuid import uuid4
 from sqlalchemy.exc import SQLAlchemyError
 
-from gametheca.models import User, Genre, Theme, GameMode, PlayerPerspective
+from oneirodex.models import User, Genre, Theme, GameMode, PlayerPerspective
 
 
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints."""
     from sqlalchemy import delete
-    from gametheca.models import SystemEvents
+    from oneirodex.models import SystemEvents
     
     # Clean up in order of dependencies
     db_session.execute(delete(SystemEvents))
@@ -283,8 +283,8 @@ class TestFiltersAPISuccessful:
         assert 'Top Down' in names
 
     def test_get_library_platforms_used_only(self, client, regular_user, db_session):
-        from gametheca.models import Library
-        from gametheca.platform import LibraryPlatform
+        from oneirodex.models import Library
+        from oneirodex.platform import LibraryPlatform
         from uuid import uuid4
 
         lib = Library(
@@ -312,8 +312,8 @@ class TestFiltersAPISuccessful:
         assert isinstance(nes['game_count'], int)
 
     def test_get_igdb_platforms_used_only(self, client, regular_user, db_session):
-        from gametheca.models import Library, Game, Platform
-        from gametheca.platform import LibraryPlatform
+        from oneirodex.models import Library, Game, Platform
+        from oneirodex.platform import LibraryPlatform
         from uuid import uuid4
 
         lib = Library(
@@ -429,7 +429,7 @@ class TestFiltersAPIEmptyDatabase:
 class TestFiltersAPIErrorHandling:
     """Test error handling scenarios."""
     
-    @patch('gametheca.routes_apis.filters.db.session.execute')
+    @patch('oneirodex.routes_apis.filters.db.session.execute')
     def test_genres_database_error(self, mock_execute, client, regular_user):
         """Test handling of database errors in genres endpoint."""
         mock_execute.side_effect = SQLAlchemyError("Database connection failed")
@@ -446,7 +446,7 @@ class TestFiltersAPIErrorHandling:
         assert data['success'] is False
         assert 'Database error retrieving genres' in data['message']
     
-    @patch('gametheca.routes_apis.filters.db.session.execute')
+    @patch('oneirodex.routes_apis.filters.db.session.execute')
     def test_themes_general_exception(self, mock_execute, client, regular_user):
         """Test handling of general exceptions in themes endpoint."""
         mock_execute.side_effect = Exception("Unexpected error")
@@ -463,7 +463,7 @@ class TestFiltersAPIErrorHandling:
         assert data['success'] is False
         assert 'Error retrieving themes' in data['message']
     
-    @patch('gametheca.routes_apis.filters.db.session.execute')
+    @patch('oneirodex.routes_apis.filters.db.session.execute')
     def test_game_modes_database_error(self, mock_execute, client, regular_user):
         """Test handling of database errors in game modes endpoint."""
         mock_execute.side_effect = SQLAlchemyError("Table not found")
@@ -480,7 +480,7 @@ class TestFiltersAPIErrorHandling:
         assert data['success'] is False
         assert 'Database error retrieving game_modes' in data['message']
     
-    @patch('gametheca.routes_apis.filters.db.session.execute')
+    @patch('oneirodex.routes_apis.filters.db.session.execute')
     def test_player_perspectives_general_exception(self, mock_execute, client, regular_user):
         """Test handling of general exceptions in player perspectives endpoint."""
         mock_execute.side_effect = Exception("Memory error")
@@ -501,8 +501,8 @@ class TestFiltersAPIErrorHandling:
 class TestFiltersAPILogging:
     """Test logging behavior for filter endpoints."""
     
-    @patch('gametheca.routes_apis.filters.log_system_event')
-    @patch('gametheca.routes_apis.filters.db.session.execute')
+    @patch('oneirodex.routes_apis.filters.log_system_event')
+    @patch('oneirodex.routes_apis.filters.db.session.execute')
     def test_themes_error_logging(self, mock_execute, mock_log, client, regular_user):
         """Test that error logging occurs for failed themes retrieval."""
         mock_execute.side_effect = SQLAlchemyError("Connection timeout")
@@ -549,7 +549,7 @@ class TestFiltersAPIResponseFormat:
             assert isinstance(item['id'], int)
             assert isinstance(item['name'], str)
     
-    @patch('gametheca.routes_apis.filters.db.session.execute')
+    @patch('oneirodex.routes_apis.filters.db.session.execute')
     def test_error_response_structure(self, mock_execute, client, regular_user):
         """Test that error responses have correct structure."""
         mock_execute.side_effect = SQLAlchemyError("Test error")

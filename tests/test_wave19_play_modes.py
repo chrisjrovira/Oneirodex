@@ -2,13 +2,13 @@
 
 from types import SimpleNamespace
 
-from gametheca.platform import (
+from oneirodex.platform import (
     LibraryPlatform,
     cheat_surface_for_platform,
     platforms_for_play_mode,
     play_mode_for_platform,
 )
-from gametheca.utils.play_url import browse_play_fields
+from oneirodex.utils.play_url import browse_play_fields
 
 
 def test_new_wave19_platforms_exist():
@@ -55,7 +55,7 @@ def test_browse_play_fields_companion_no_fake_play(monkeypatch):
     library = SimpleNamespace(platform=SimpleNamespace(name='WII'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['dolphin'], 'preferred': 'dolphin'},
     )
     fields = browse_play_fields(game)
@@ -126,7 +126,7 @@ def test_wave19a_pce_companion_cores_until_wasm(monkeypatch):
     library = SimpleNamespace(platform=SimpleNamespace(name='PCE'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['mednafen_pce_fast'], 'preferred': 'mednafen_pce_fast'},
     )
     fields = browse_play_fields(game)
@@ -140,7 +140,7 @@ def test_wave19a_c64_companion_until_wasm(monkeypatch):
     library = SimpleNamespace(platform=SimpleNamespace(name='VICE_X64SC'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['vice_x64'], 'preferred': 'vice_x64'},
     )
     fields = browse_play_fields(game)
@@ -150,20 +150,20 @@ def test_wave19a_c64_companion_until_wasm(monkeypatch):
 
 def test_wave19a_browser_unlocks_when_wasm_vendored(monkeypatch):
     monkeypatch.setattr(
-        'gametheca.platform.WEBRETR_INSTALLED_CORES',
+        'oneirodex.platform.WEBRETR_INSTALLED_CORES',
         frozenset({'mednafen_pce_fast'}),
     )
-    from gametheca.platform import play_mode_for_platform as pm
+    from oneirodex.platform import play_mode_for_platform as pm
 
     assert pm('PCE') == 'browser'
 
 
 def test_wave19a_vice_browser_unlocks_when_wasm_vendored(monkeypatch):
     monkeypatch.setattr(
-        'gametheca.platform.WEBRETR_INSTALLED_CORES',
+        'oneirodex.platform.WEBRETR_INSTALLED_CORES',
         frozenset({'vice_x64'}),
     )
-    from gametheca.platform import play_mode_for_platform as pm
+    from oneirodex.platform import play_mode_for_platform as pm
 
     assert pm('VICE_X64SC') == 'browser'
 
@@ -181,26 +181,26 @@ def test_wave19b_pcdos_companion_by_default():
 
 
 def test_wave19b_pcdos_browser_when_flag_and_wasm(monkeypatch):
-    monkeypatch.setattr('gametheca.platform.pcdos_browser_enabled', lambda: True)
+    monkeypatch.setattr('oneirodex.platform.pcdos_browser_enabled', lambda: True)
     monkeypatch.setattr(
-        'gametheca.platform.WEBRETR_INSTALLED_CORES',
+        'oneirodex.platform.WEBRETR_INSTALLED_CORES',
         frozenset({'dosbox_pure'}),
     )
     monkeypatch.setattr(
-        'gametheca.platform.core_is_browser_playable',
+        'oneirodex.platform.core_is_browser_playable',
         lambda c: c == 'dosbox_pure',
     )
-    from gametheca.platform import play_mode_for_platform as pm
+    from oneirodex.platform import play_mode_for_platform as pm
 
     assert pm('PCDOS') == 'browser'
 
-    monkeypatch.setattr('gametheca.utils.play_url.pcdos_browser_enabled', lambda: True)
+    monkeypatch.setattr('oneirodex.utils.play_url.pcdos_browser_enabled', lambda: True)
     monkeypatch.setattr(
-        'gametheca.utils.play_url.core_is_browser_playable',
+        'oneirodex.utils.play_url.core_is_browser_playable',
         lambda c: c == 'dosbox_pure',
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['dosbox_pure'], 'preferred': 'dosbox_pure'},
     )
     library = SimpleNamespace(platform=SimpleNamespace(name='PCDOS'))
@@ -212,7 +212,7 @@ def test_wave19b_pcdos_browser_when_flag_and_wasm(monkeypatch):
 
 
 def test_wave19b_pcdos_flag_on_but_no_wasm(monkeypatch):
-    monkeypatch.setattr('gametheca.utils.play_url.pcdos_browser_enabled', lambda: True)
+    monkeypatch.setattr('oneirodex.utils.play_url.pcdos_browser_enabled', lambda: True)
     library = SimpleNamespace(platform=SimpleNamespace(name='PCDOS'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     fields = browse_play_fields(game)

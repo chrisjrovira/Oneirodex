@@ -41,17 +41,17 @@ export function SystemBackdrop({ platform, label }) {
 
   return (
     <div
-      className="gt-system-backdrop"
+      className="od-system-backdrop"
       data-backdrop-family={family}
       data-play-room={room}
       style={roomStyle(platform)}
       aria-hidden="true"
     >
-      <div className="gt-system-backdrop__wall" />
-      <div className="gt-system-backdrop__wash" />
-      <div className="gt-system-backdrop__grid" />
+      <div className="od-system-backdrop__wall" />
+      <div className="od-system-backdrop__wash" />
+      <div className="od-system-backdrop__grid" />
       <span
-        className="gt-system-backdrop__name"
+        className="od-system-backdrop__name"
         style={{ fontFamily: FAMILY_FACE[family] || FAMILY_FACE.pc }}
       >
         {name}

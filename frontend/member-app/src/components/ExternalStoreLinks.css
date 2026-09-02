@@ -1,4 +1,4 @@
-.gt-store-links {
+.od-store-links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
@@ -7,47 +7,47 @@
   padding: 0;
 }
 
-.gt-store-links__item {
+.od-store-links__item {
   display: contents;
 }
 
-.gt-store-link {
+.od-store-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   min-height: 2.1rem;
   padding: 0.3rem 0.7rem 0.3rem 0.5rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid color-mix(in srgb, var(--gt-store-color, var(--gt-accent)) 50%, transparent);
-  background: color-mix(in srgb, var(--gt-store-color, var(--gt-accent)) 14%, var(--gt-surface));
-  color: var(--gt-text);
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-store-color, var(--od-accent)) 50%, transparent);
+  background: color-mix(in srgb, var(--od-store-color, var(--od-accent)) 14%, var(--od-surface));
+  color: var(--od-text);
   text-decoration: none;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 600;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.gt-store-link:hover,
-.gt-store-link:focus-visible {
-  border-color: var(--gt-store-color, var(--gt-accent));
-  background: color-mix(in srgb, var(--gt-store-color, var(--gt-accent)) 22%, var(--gt-surface));
+.od-store-link:hover,
+.od-store-link:focus-visible {
+  border-color: var(--od-store-color, var(--od-accent));
+  background: color-mix(in srgb, var(--od-store-color, var(--od-accent)) 22%, var(--od-surface));
   outline: none;
 }
 
-.gt-store-link__icon {
+.od-store-link__icon {
   width: 1.15rem;
   height: 1.15rem;
   flex: 0 0 auto;
-  color: var(--gt-store-color, var(--gt-accent));
+  color: var(--od-store-color, var(--od-accent));
 }
 
 /* PNG silhouettes: recolor with theme text via mask + currentColor */
-.gt-store-link__icon--mask {
+.od-store-link__icon--mask {
   display: inline-block;
   background-color: currentColor;
-  color: var(--gt-text);
-  -webkit-mask-image: var(--gt-store-mask);
-  mask-image: var(--gt-store-mask);
+  color: var(--od-text);
+  -webkit-mask-image: var(--od-store-mask);
+  mask-image: var(--od-store-mask);
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -56,14 +56,14 @@
   mask-position: center;
 }
 
-.gt-store-link--epic .gt-store-link__icon,
-.gt-store-link--wikipedia .gt-store-link__icon,
-.gt-store-link--twitter .gt-store-link__icon,
-.gt-store-link--apple .gt-store-link__icon,
-.gt-store-link--ubisoft .gt-store-link__icon {
-  color: var(--gt-text);
+.od-store-link--epic .od-store-link__icon,
+.od-store-link--wikipedia .od-store-link__icon,
+.od-store-link--twitter .od-store-link__icon,
+.od-store-link--apple .od-store-link__icon,
+.od-store-link--ubisoft .od-store-link__icon {
+  color: var(--od-text);
 }
 
-.gt-store-link__label {
+.od-store-link__label {
   line-height: 1;
 }

@@ -10,7 +10,7 @@ load_dotenv()
 test_db_url = os.getenv('TEST_DATABASE_URL')
 if test_db_url:
     # Additional safety: ensure we're not accidentally overriding with production DB
-    if 'gametheca' in test_db_url.lower() and 'test' not in test_db_url.lower():
+    if 'oneirodex' in test_db_url.lower() and 'test' not in test_db_url.lower():
         raise RuntimeError(
             f"CRITICAL: TEST_DATABASE_URL appears to point to production database: {test_db_url}. "
             "TEST_DATABASE_URL must contain 'test' in the database name for safety."
@@ -24,7 +24,7 @@ else:
         "Tests cannot run without explicit test database configuration."
     )
 
-from gametheca import create_app, db
+from oneirodex import create_app, db
 
 
 def _install_lock_timeout():
@@ -78,8 +78,8 @@ def app():
         )
     
     # Enhanced safety checks: ensure we're not using production database
-    production_indicators = ['gametheca', 'oneirodex', 'prod', 'production']
-    test_indicators = ['test', 'testing', 'gamethecatest', 'oneirodextest']
+    production_indicators = ['oneirodex', 'oneirodex', 'prod', 'production']
+    test_indicators = ['test', 'testing', 'oneirodextest', 'oneirodextest']
     
     # Check if URL contains production indicators without test indicators
     contains_production = any(indicator in test_db_url.lower() for indicator in production_indicators)
@@ -88,7 +88,7 @@ def app():
     if contains_production and not contains_test:
         pytest.fail(
             f"CRITICAL: TEST_DATABASE_URL appears to point to production database: {test_db_url}. "
-            "Test database MUST contain 'test' in the name (e.g., 'gamethecatest' or 'oneirodextest'). "
+            "Test database MUST contain 'test' in the name (e.g., 'oneirodextest' or 'oneirodextest'). "
             "Tests will NOT run against production database for safety."
         )
     
@@ -154,7 +154,7 @@ def _truncate_all_tables():
     """Empty every table once, at the start of a run.
 
     Nothing used to remove rows at all — `db.drop_all()` sat commented out
-    "for performance" — so `gamethecatest` kept every row any test had ever
+    "for performance" — so `oneirodextest` kept every row any test had ever
     committed, going back months. That is not inert:
 
     * a test asserting on a query with `LIMIT` measures whatever else is in the
@@ -210,7 +210,7 @@ def db_session(app):
             db.create_all()
             # Incremental updates for a test DB that already exists from a
             # previous run — idempotent, and now paid for once.
-            from gametheca.updateschema import DatabaseManager
+            from oneirodex.updateschema import DatabaseManager
             DatabaseManager().add_column_if_not_exists()
             # After the schema is settled, so the truncate names every table
             # this build knows about — including any the migration just added.
@@ -241,7 +241,7 @@ def configured_install(db_session):
     """
     from uuid import uuid4
     from sqlalchemy import select
-    from gametheca.models import User, GlobalSettings
+    from oneirodex.models import User, GlobalSettings
 
     if db_session.execute(select(User)).scalars().first() is None:
         anchor = User(
@@ -285,11 +285,11 @@ def global_settings(db_session):
     whoever created it. Mutate the returned object and commit for tests that need
     particular values on it — that is an UPDATE, which the constraint permits.
 
-    Mirrors `ensure_global_settings()` in `gametheca/utils/module_status.py`,
+    Mirrors `ensure_global_settings()` in `oneirodex/utils/module_status.py`,
     which is what production code uses for the same reason.
     """
     from sqlalchemy import select
-    from gametheca.models import GlobalSettings
+    from oneirodex.models import GlobalSettings
 
     row = db_session.execute(select(GlobalSettings)).scalars().first()
     if row is None:

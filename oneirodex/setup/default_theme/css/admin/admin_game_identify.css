@@ -1,0 +1,175 @@
+/* Identify workbench — densified under .od-adminpage / --od-* tokens */
+
+.od-identify .od-identify__meta {
+    margin-bottom: var(--od-adminpage-gap);
+}
+
+.od-identify .game-edit-library-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin: 0;
+    font-size: var(--od-font-base);
+    color: var(--od-text-muted);
+}
+
+.od-identify #library_display,
+.od-identify #platform_display {
+    font-size: var(--od-font-base);
+    font-weight: 600;
+    color: var(--od-text);
+    text-shadow: none;
+}
+
+.od-identify .game_edit-form-group-id,
+.od-identify .game_edit-form-group-name,
+.od-identify .game_edit-form-group-path,
+.od-identify .game_edit-form-group-summary,
+.od-identify .game_edit-form-group-storyline,
+.od-identify .game_edit-form-group-url,
+.od-identify .game_edit-form-group-video-url,
+.od-identify .game_edit-form-group-status,
+.od-identify .game_edit-form-group-release-type,
+.od-identify .game_edit-form-group-rating,
+.od-identify .game_edit-form-group-release-date,
+.od-identify .game_edit-form-group-developer,
+.od-identify .game_edit-form-group-publisher {
+    background: color-mix(in srgb, var(--od-text) 4%, var(--od-surface));
+    padding: 0.85rem 1rem;
+    border-radius: var(--od-adminpage-radius-sm);
+    margin-bottom: 0.85rem;
+    border: 1px solid var(--od-border);
+}
+
+.od-identify .od-identify__search-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0.65rem 0 0.35rem;
+}
+
+.od-identify label {
+    color: var(--od-text);
+    margin-bottom: 0.35rem;
+    display: block;
+    font-size: var(--od-font-md);
+    font-weight: 500;
+}
+
+.od-identify .form-control {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    color: var(--od-text);
+    border-radius: var(--od-adminpage-radius-sm);
+}
+
+.od-identify .form-control:focus {
+    background: var(--od-surface-2);
+    border-color: var(--od-accent);
+    color: var(--od-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 28%, transparent);
+}
+
+.od-identify #search-results,
+.od-identify .existing-game-results {
+    background: color-mix(in srgb, var(--od-text) 3%, var(--od-surface));
+    border-radius: var(--od-adminpage-radius-sm);
+    padding: 0.5rem;
+    margin-top: 0.65rem;
+    border: 1px solid var(--od-border);
+}
+
+.od-identify .search-result-item,
+.od-identify .existing-game-result-item {
+    padding: 0.55rem 0.65rem;
+    border-radius: var(--od-radius-sm);
+    margin-bottom: 0.35rem;
+    background: color-mix(in srgb, var(--od-text) 5%, transparent);
+    transition: background 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 1px solid transparent;
+}
+
+.od-identify .search-result-item:hover,
+.od-identify .existing-game-result-item:hover {
+    background: color-mix(in srgb, var(--od-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--od-accent) 35%, transparent);
+    transform: none;
+}
+
+.od-identify .details-section {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-top: 0;
+}
+
+.od-identify .group-game-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.85rem;
+    margin-top: 0.85rem;
+    background: color-mix(in srgb, var(--od-text) 3%, var(--od-surface));
+    padding: 0.85rem;
+    border-radius: var(--od-adminpage-radius-sm);
+    border: 1px solid var(--od-border);
+}
+
+.od-identify .checkbox {
+    margin: 0.25rem 0;
+}
+
+.od-identify .form-check-input {
+    background-color: var(--od-surface-2);
+    border-color: var(--od-border);
+}
+
+.od-identify .form-check-label {
+    color: var(--od-text);
+}
+
+.od-identify .form-text-muted {
+    color: var(--od-text-muted);
+    font-size: var(--od-font-md);
+}
+
+.od-identify .link-existing-game-panel h3 {
+    margin-top: 0;
+    font-size: var(--od-font-lg);
+}
+
+.od-identify .link-existing-search-row {
+    margin: 0.65rem 0;
+}
+
+.od-identify .link-existing-selection {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.75rem;
+}
+
+/* Spinner overlay (unchanged behavior, aurora colors) */
+.od-identify + .spinner-overlay,
+.spinner-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--od-bg) 72%, transparent);
+}
+
+.spinner-container {
+    text-align: center;
+    color: var(--od-text);
+}
+
+.progress-text {
+    margin-top: 0.75rem;
+    color: var(--od-text-muted);
+}

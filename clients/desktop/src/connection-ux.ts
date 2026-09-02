@@ -12,7 +12,7 @@ export type CompanionUiAction =
   | 'open_path'
   | 'reveal_path'
 
-/** Actions that need a reachable GameTheca server (download stream / patch stage). */
+/** Actions that need a reachable Oneirodex server (download stream / patch stage). */
 export function actionNeedsServer(action: CompanionUiAction): boolean {
   return (
     action === 'download' ||

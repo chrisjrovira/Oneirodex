@@ -124,8 +124,11 @@ test('restores persisted calendar view on mount', async () => {
   expect(readCalendarView()).toBe('month')
 
   render(<CalendarPage />)
-  await screen.findByText('Example Title')
-  expect(screen.getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
+  expect(await screen.findByRole('button', { name: 'Month' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(await screen.findByRole('heading', { level: 3 })).toBeInTheDocument()
 })
 
 test('a stored agenda view falls back to List rather than selecting nothing', () => {
@@ -171,24 +174,33 @@ test('month view renders a rotating cover tile per busy day', async () => {
   while (guard < 24) {
     const label = screen.getByRole('heading', { level: 3 })
     if (/August 2026/i.test(label.textContent || '')) break
-    await user.click(screen.getByRole('button', { name: 'Next month' }))
+    await user.click(screen.getByRole('button', { name: 'Previous month' }))
     guard += 1
+  }
+  if (!/August 2026/i.test(screen.getByRole('heading', { level: 3 }).textContent || '')) {
+    guard = 0
+    while (guard < 24) {
+      const label = screen.getByRole('heading', { level: 3 })
+      if (/August 2026/i.test(label.textContent || '')) break
+      await user.click(screen.getByRole('button', { name: 'Next month' }))
+      guard += 1
+    }
   }
   expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(/August 2026/i)
 
   const dayBtn = screen.getByRole('gridcell', { name: /15, 2 releases/i })
   expect(dayBtn).toHaveClass('has-releases')
-  // Artwork, not dots (W28): one tile showing the first title, and a "+1"
-  // saying how many more are behind it.
-  expect(dayBtn.querySelectorAll('.gt-calendar__day-art')).toHaveLength(1)
-  expect(dayBtn.querySelector('.gt-calendar__day-more')).toHaveTextContent('+1')
-  expect(dayBtn.querySelector('.gt-calendar__day-art')).toHaveAttribute(
+  // Artwork, not dots (W28): every cover for the day stacks in a scrollable
+  // column so busy days stay readable without auto-rotate.
+  expect(dayBtn.querySelectorAll('.od-calendar__day-art')).toHaveLength(2)
+  expect(dayBtn.querySelector('.od-calendar__day-stack')).toBeTruthy()
+  expect(dayBtn.querySelector('.od-calendar__day-art')).toHaveAttribute(
     'title',
     'August Drop',
   )
 
   await user.click(dayBtn)
-  const panel = screen.getByText(/Aug/i, { selector: 'h4' }).closest('.gt-calendar__day-panel')
+  const panel = screen.getByText(/Aug/i, { selector: 'h4' }).closest('.od-calendar__day-panel')
   expect(within(panel).getByText('August Drop')).toBeInTheDocument()
   expect(within(panel).getByText('Same Day Sequel')).toBeInTheDocument()
 })

@@ -159,23 +159,23 @@ export function CheatsPanel({
   }
 
   return (
-    <section className="gt-details-page__section gt-cheats-panel" id="cheats" aria-labelledby={`${formId}-heading`}>
+    <section className="od-details-page__section od-cheats-panel" id="cheats" aria-labelledby={`${formId}-heading`}>
       <h2 id={`${formId}-heading`}>Cheats</h2>
-      <p className="gt-cheats-panel__lede">
+      <p className="od-cheats-panel__lede">
         Household RetroArch <code>.cht</code> files for this title. Browser play loads them from the
         play bar cheat list; companion stages the same files before RetroArch. Quick Menu may still
         be required to enable codes. See <Link to="/help#cheats">Help → Cheats</Link>.
       </p>
 
       {loading ? (
-        <PageStatus loading inline loadingMessage="Loading cheats…" className="gt-cheats-panel__status" />
+        <PageStatus loading inline loadingMessage="Loading cheats…" className="od-cheats-panel__status" />
       ) : null}
       {error ? (
-        <PageStatus error={error} className="gt-cheats-panel__status" />
+        <PageStatus error={error} className="od-cheats-panel__status" />
       ) : null}
       {status ? (
         <p
-          className="gt-cheats-panel__status"
+          className="od-cheats-panel__status"
           role={/not available|failed|required|Add at least/i.test(status) ? 'alert' : 'status'}
         >
           {status}
@@ -185,27 +185,27 @@ export function CheatsPanel({
       {!loading && !error && cheats.length === 0 ? (
         <PageStatus
           emptyMessage="No .cht files yet - create one or upload."
-          className="gt-cheats-panel__status"
+          className="od-cheats-panel__status"
         />
       ) : null}
 
       {cheats.length > 0 ? (
-        <ul className="gt-cheats-panel__list">
+        <ul className="od-cheats-panel__list">
           {cheats.map((row) => (
-            <li key={row.name} className="gt-cheats-panel__row">
-              <div className="gt-cheats-panel__row-meta">
+            <li key={row.name} className="od-cheats-panel__row">
+              <div className="od-cheats-panel__row-meta">
                 <strong>{row.name}</strong>
-                <span className="gt-details-page__muted">{formatSize(row.size)}</span>
+                <span className="od-details-page__muted">{formatSize(row.size)}</span>
               </div>
-              <div className="gt-cheats-panel__row-actions">
+              <div className="od-cheats-panel__row-actions">
                 {row.url ? (
-                  <a className="gt-btn" href={row.url} download={row.name}>
+                  <a className="od-btn" href={row.url} download={row.name}>
                     Download
                   </a>
                 ) : null}
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={busy}
                   onClick={() => {
                     void handleDelete(row.name)
@@ -220,19 +220,19 @@ export function CheatsPanel({
       ) : null}
 
       {playHref ? (
-        <p className="gt-cheats-panel__lede">
+        <p className="od-cheats-panel__lede">
           After saving, open{' '}
-          <a className="gt-btn" href={playHref}>
+          <a className="od-btn" href={playHref}>
             Play in browser
           </a>{' '}
           and pick the file from the cheat dropdown (same library list).
         </p>
       ) : null}
 
-      <form className="gt-cheats-panel__form" onSubmit={handleCreate} aria-label="New cheat">
+      <form className="od-cheats-panel__form" onSubmit={handleCreate} aria-label="New cheat">
         <h3>New cheat</h3>
-        <div className="gt-cheats-panel__grid">
-          <label className="gt-cheats-panel__field">
+        <div className="od-cheats-panel__grid">
+          <label className="od-cheats-panel__field">
             <span>Name</span>
             <input
               type="text"
@@ -244,7 +244,7 @@ export function CheatsPanel({
               required
             />
           </label>
-          <label className="gt-cheats-panel__field">
+          <label className="od-cheats-panel__field">
             <span>Dialect hint</span>
             <select
               name="cheat-dialect"
@@ -259,10 +259,10 @@ export function CheatsPanel({
             </select>
           </label>
         </div>
-        <div className="gt-cheats-panel__codes" aria-label="Code rows">
+        <div className="od-cheats-panel__codes" aria-label="Code rows">
           {codeRows.map((row, index) => (
-            <div key={row.id} className="gt-cheats-panel__code-row">
-              <label className="gt-cheats-panel__field">
+            <div key={row.id} className="od-cheats-panel__code-row">
+              <label className="od-cheats-panel__field">
                 <span>Description {index === 0 ? '(optional)' : ''}</span>
                 <input
                   type="text"
@@ -277,7 +277,7 @@ export function CheatsPanel({
                   autoComplete="off"
                 />
               </label>
-              <label className="gt-cheats-panel__field">
+              <label className="od-cheats-panel__field">
                 <span>Code</span>
                 <input
                   type="text"
@@ -295,7 +295,7 @@ export function CheatsPanel({
               </label>
               <button
                 type="button"
-                className="gt-btn"
+                className="od-btn"
                 disabled={codeRows.length <= 1 || busy}
                 aria-label={`Remove code row ${index + 1}`}
                 onClick={() => {
@@ -307,27 +307,27 @@ export function CheatsPanel({
             </div>
           ))}
         </div>
-        <div className="gt-cheats-panel__actions">
+        <div className="od-cheats-panel__actions">
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={busy}
             onClick={() => setCodeRows((rows) => [...rows, emptyCodeRow()])}
           >
             Add code row
           </button>
-          <button type="submit" className="gt-btn gt-btn--primary" disabled={busy}>
+          <button type="submit" className="od-btn od-btn--primary" disabled={busy}>
             {busy ? 'Saving…' : 'Save cheat'}
           </button>
         </div>
       </form>
 
-      <form className="gt-cheats-panel__upload" onSubmit={handleUpload} aria-label="Upload cheat file">
+      <form className="od-cheats-panel__upload" onSubmit={handleUpload} aria-label="Upload cheat file">
         <h3>Upload <code>.cht</code></h3>
-        <label className="gt-cheats-panel__field">
+        <label className="od-cheats-panel__field">
           <span>File</span>
           <input
-            className="gt-cheats-panel__file"
+            className="od-cheats-panel__file"
             type="file"
             accept=".cht,text/plain"
             disabled={busy}
@@ -336,8 +336,8 @@ export function CheatsPanel({
             }}
           />
         </label>
-        <div className="gt-cheats-panel__actions">
-          <button type="submit" className="gt-btn" disabled={busy || !uploadFile}>
+        <div className="od-cheats-panel__actions">
+          <button type="submit" className="od-btn" disabled={busy || !uploadFile}>
             {busy ? 'Uploading…' : 'Upload'}
           </button>
         </div>

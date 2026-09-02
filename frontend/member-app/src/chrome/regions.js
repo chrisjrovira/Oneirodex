@@ -1,4 +1,4 @@
-/** DAT + IGDB region codes. Keep in sync with gametheca.utils.set_completion.REGION_PREF_ORDER. */
+/** DAT + IGDB region codes. Keep in sync with oneirodex.utils.set_completion.REGION_PREF_ORDER. */
 
 export const REGION_PREF_ORDER = Object.freeze([
   'USA',

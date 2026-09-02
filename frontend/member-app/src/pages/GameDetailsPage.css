@@ -1,114 +1,114 @@
 /* Details uses the shared more-page shell but needs more width on desktop. */
-.gt-more-page.gt-details-page {
+.od-more-page.od-details-page {
   max-width: min(100%, 90rem);
   min-width: 0;
   overflow-wrap: break-word;
 }
 
-.gt-details-page__nav {
+.od-details-page__nav {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.gt-details-page__crumbs {
-  margin-bottom: var(--gt-space-5);
+.od-details-page__crumbs {
+  margin-bottom: var(--od-space-5);
 }
 
-.gt-details-page__crumbs ol {
+.od-details-page__crumbs ol {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-details-page__crumbs li:not(:last-child)::after {
+.od-details-page__crumbs li:not(:last-child)::after {
   content: '›';
-  margin-inline-start: var(--gt-space-2);
+  margin-inline-start: var(--od-space-2);
   opacity: 0.65;
 }
 
-.gt-details-page__crumbs [aria-current='page'] {
+.od-details-page__crumbs [aria-current='page'] {
   opacity: 0.8;
 }
 
-.gt-details-page__features {
+.od-details-page__features {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gt-space-2);
-  margin-bottom: var(--gt-space-4);
+  gap: var(--od-space-2);
+  margin-bottom: var(--od-space-4);
 }
 
-.gt-details-page__fold--media {
+.od-details-page__fold--media {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: var(--gt-space-6);
+  gap: var(--od-space-6);
   align-items: start;
-  margin-bottom: var(--gt-space-5);
+  margin-bottom: var(--od-space-5);
 }
 
-.gt-details-page__fold--media .gt-details-page__content-grid {
+.od-details-page__fold--media .od-details-page__content-grid {
   grid-template-columns: 1fr;
   margin-bottom: 0;
 }
 
-.gt-details-page__fold--media .gt-details-page__section--summary,
-.gt-details-page__fold--media .gt-details-page__section--facts,
-.gt-details-page__fold--media .gt-details-page__flow {
+.od-details-page__fold--media .od-details-page__section--summary,
+.od-details-page__fold--media .od-details-page__section--facts,
+.od-details-page__fold--media .od-details-page__flow {
   grid-column: auto;
   grid-row: auto;
 }
 
-.gt-details-page__about,
-.gt-details-page__req-text {
+.od-details-page__about,
+.od-details-page__req-text {
   white-space: pre-wrap;
   margin: 0;
 }
 
-.gt-details-page__reqs {
+.od-details-page__reqs {
   display: grid;
-  gap: var(--gt-space-5);
+  gap: var(--od-space-5);
 }
 
-.gt-details-page__req-os h3 {
-  margin: 0 0 var(--gt-space-3);
-  font-size: var(--gt-font-lg);
+.od-details-page__req-os h3 {
+  margin: 0 0 var(--od-space-3);
+  font-size: var(--od-font-lg);
 }
 
-.gt-details-page__req-os h4 {
-  margin: var(--gt-space-3) 0 var(--gt-space-2);
-  font-size: var(--gt-font-sm);
+.od-details-page__req-os h4 {
+  margin: var(--od-space-3) 0 var(--od-space-2);
+  font-size: var(--od-font-sm);
   opacity: 0.8;
 }
 
-.gt-details-page__langs-wrap {
+.od-details-page__langs-wrap {
   overflow-x: auto;
 }
 
-.gt-details-page__langs {
+.od-details-page__langs {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-details-page__langs th,
-.gt-details-page__langs td {
+.od-details-page__langs th,
+.od-details-page__langs td {
   text-align: start;
-  padding: var(--gt-space-2) var(--gt-space-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-text) 12%, transparent);
+  padding: var(--od-space-2) var(--od-space-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-text) 12%, transparent);
 }
 
-.gt-details-page__more-from {
+.od-details-page__more-from {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-6);
+  gap: var(--od-space-6);
 }
 
-.gt-details-page__hero {
+.od-details-page__hero {
   display: grid;
   grid-template-columns: minmax(140px, 220px) 1fr;
   gap: 20px;
@@ -116,45 +116,45 @@
   margin-bottom: 28px;
 }
 
-.gt-details-page__cover-wrap {
+.od-details-page__cover-wrap {
   position: relative;
-  border-radius: var(--gt-radius-lg);
+  border-radius: var(--od-radius-lg);
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 80%, transparent);
 }
 
-.gt-details-page__cover-wrap--menu-open {
+.od-details-page__cover-wrap--menu-open {
   overflow: visible;
   z-index: 5;
 }
 
-.gt-details-page__cover {
+.od-details-page__cover {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 3 / 4;
   object-fit: cover;
-  border-radius: var(--gt-radius-lg);
+  border-radius: var(--od-radius-lg);
 }
 
-.gt-details-page__hero-main h1 {
+.od-details-page__hero-main h1 {
   margin: 0 0 8px;
-  font-size: clamp(var(--gt-font-2xl), 2.4vw, var(--gt-font-4xl));
+  font-size: clamp(var(--od-font-2xl), 2.4vw, var(--od-font-4xl));
 }
 
-.gt-details-page__meta-line {
+.od-details-page__meta-line {
   margin: 0 0 12px;
   opacity: 0.8;
 }
 
-.gt-details-page__chips {
+.od-details-page__chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 14px;
 }
 
-.gt-details-page__admin-edit {
+.od-details-page__admin-edit {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -162,7 +162,7 @@
 }
 
 /* Admin ⋮ — cover tile overlay (Library GameCard top-right chrome). */
-.gt-details-page__admin-menu {
+.od-details-page__admin-menu {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -172,7 +172,7 @@
   display: block;
 }
 
-.gt-details-page__admin-menu-btn {
+.od-details-page__admin-menu-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -180,26 +180,26 @@
   height: 2.25rem;
   min-width: 2.25rem;
   padding: 0;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 100%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 78%, transparent);
-  color: var(--gt-text);
-  font-size: var(--gt-font-lg);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-border) 100%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 78%, transparent);
+  color: var(--od-text);
+  font-size: var(--od-font-lg);
   line-height: 1;
   letter-spacing: 0.05em;
   cursor: pointer;
   backdrop-filter: blur(8px);
 }
 
-.gt-details-page__admin-menu-btn:hover,
-.gt-details-page__admin-menu-btn:focus-visible,
-.gt-details-page__admin-menu-btn[aria-expanded='true'] {
-  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
-  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+.od-details-page__admin-menu-btn:hover,
+.od-details-page__admin-menu-btn:focus-visible,
+.od-details-page__admin-menu-btn[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
+  border-color: color-mix(in srgb, var(--od-accent) 40%, transparent);
   outline: none;
 }
 
-.gt-details-page__admin-menu-panel {
+.od-details-page__admin-menu-panel {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -209,46 +209,46 @@
   display: flex;
   flex-direction: column;
   padding: 0.35rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
-.gt-details-page__admin-menu-item {
+.od-details-page__admin-menu-item {
   display: block;
   width: 100%;
   text-align: left;
   padding: 0.55rem 0.7rem;
   border: 0;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   background: transparent;
-  color: var(--gt-text);
+  color: var(--od-text);
   font: inherit;
   text-decoration: none;
   cursor: pointer;
 }
 
-.gt-details-page__admin-menu-item:hover,
-.gt-details-page__admin-menu-item:focus-visible {
-  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
+.od-details-page__admin-menu-item:hover,
+.od-details-page__admin-menu-item:focus-visible {
+  background: color-mix(in srgb, var(--od-accent) 16%, transparent);
   outline: none;
 }
 
-.gt-details-page__quick {
+.od-details-page__quick {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
 
-.gt-details-page__section {
+.od-details-page__section {
   margin-bottom: 28px;
 }
 
-.gt-details-page__section h2 {
+.od-details-page__section h2 {
   margin: 0 0 10px;
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
 }
 
 /* Two-column body (UX-B4).
@@ -256,13 +256,13 @@
  * The first pass only put summary + facts in this grid, so later sections
  * started below the taller column and left a hole under a short summary.
  * Facts now occupy column 2 across summary + the rest of the page body;
- * everything after Details lives in `.gt-details-page__flow` so it climbs
+ * everything after Details lives in `.od-details-page__flow` so it climbs
  * beside the rail rather than waiting for it to finish.
  *
  * `grid-row: 1 / -1` does not work here: -1 is the last *explicit* line, and
  * this grid has no explicit rows. Facts spans the two implicit rows we create
  * (summary + flow), or the single flow row when there is no summary. */
-.gt-details-page__content-grid {
+.od-details-page__content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
   gap: 1.6rem 2rem;
@@ -270,18 +270,18 @@
   margin-bottom: 8px;
 }
 
-.gt-details-page__section--summary {
+.od-details-page__section--summary {
   grid-column: 1;
   grid-row: 1;
 }
 
-.gt-details-page__section--facts {
+.od-details-page__section--facts {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: start;
 }
 
-.gt-details-page__flow {
+.od-details-page__flow {
   grid-column: 1;
   min-width: 0;
   display: flex;
@@ -289,60 +289,60 @@
   gap: 1.6rem;
 }
 
-.gt-details-page__content-grid:has(.gt-details-page__section--summary) .gt-details-page__flow {
+.od-details-page__content-grid:has(.od-details-page__section--summary) .od-details-page__flow {
   grid-row: 2;
 }
 
-.gt-details-page__content-grid:not(:has(.gt-details-page__section--summary)) .gt-details-page__section--facts {
+.od-details-page__content-grid:not(:has(.od-details-page__section--summary)) .od-details-page__section--facts {
   grid-row: 1;
 }
 
 /* Gap or margin, not both — the grid (and the flow column) already space
  * their children. The class keeps its margin for any section rendered
  * outside this grid. */
-.gt-details-page__content-grid > .gt-details-page__section,
-.gt-details-page__flow > .gt-details-page__section {
+.od-details-page__content-grid > .od-details-page__section,
+.od-details-page__flow > .od-details-page__section {
   margin-bottom: 0;
 }
 
-.gt-details-page__flow > .gt-relmedia,
-.gt-details-page__flow > .gt-pccheats {
+.od-details-page__flow > .od-relmedia,
+.od-details-page__flow > .od-pccheats {
   margin-bottom: 0;
 }
 
-.gt-details-page__paths {
+.od-details-page__paths {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
   margin-bottom: 1rem;
 }
 
-.gt-details-page__path-row {
+.od-details-page__path-row {
   display: grid;
   grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr) auto;
   gap: 0.5rem;
   align-items: start;
 }
 
-.gt-details-page__path-label {
-  font-size: var(--gt-font-xs);
+.od-details-page__path-label {
+  font-size: var(--od-font-xs);
   opacity: 0.7;
 }
 
-.gt-details-page__path-value {
+.od-details-page__path-value {
   display: block;
   overflow: visible;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.4;
   padding: 0.35rem 0.5rem;
-  border-radius: var(--gt-radius-sm);
-  background: var(--gt-surface-2);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-surface-2);
 }
 
-.gt-details-page__summary {
+.od-details-page__summary {
   margin: 0;
   max-width: none;
   width: 100%;
@@ -355,28 +355,28 @@
   overflow: hidden;
 }
 
-.gt-details-page__summary.is-expanded {
+.od-details-page__summary.is-expanded {
   display: block;
   -webkit-line-clamp: unset;
   overflow: visible;
 }
 
-.gt-details-page__summary-toggle {
+.od-details-page__summary-toggle {
   margin-top: 0.55rem;
 }
 
-.gt-details-page__facts {
+.od-details-page__facts {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: 8px 16px;
   margin: 0 0 12px;
 }
 
-.gt-details-page__facts dt {
+.od-details-page__facts dt {
   opacity: 0.7;
 }
 
-.gt-details-page__facts dd {
+.od-details-page__facts dd {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
@@ -384,7 +384,7 @@
   align-items: center;
 }
 
-.gt-details-page__links {
+.od-details-page__links {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -393,7 +393,7 @@
   gap: 10px;
 }
 
-.gt-details-page__version-row {
+.od-details-page__version-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -402,7 +402,7 @@
   margin-bottom: 8px;
 }
 
-.gt-details-page__section-head {
+.od-details-page__section-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -411,154 +411,154 @@
   margin-bottom: 0.35rem;
 }
 
-.gt-details-page__section-head h2 {
+.od-details-page__section-head h2 {
   margin: 0;
 }
 
-.gt-details-page__version-meta {
+.od-details-page__version-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
 
-.gt-details-page__version-meta .chip,
-.gt-details-page__version-meta .gt-chip {
+.od-details-page__version-meta .chip,
+.od-details-page__version-meta .od-chip {
   min-height: 1.4rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   padding: 0.15rem 0.55rem;
 }
 
-.gt-details-page__version-missing {
+.od-details-page__version-missing {
   font-style: italic;
 }
 
-.gt-details-page__version-actions {
+.od-details-page__version-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.gt-details-page__play-honesty {
+.od-details-page__play-honesty {
   margin: 10px 0 0;
   max-width: 42rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.45;
   opacity: 0.92;
 }
 
-.gt-details-page__play-honesty a {
+.od-details-page__play-honesty a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.gt-details-page__muted {
+.od-details-page__muted {
   opacity: 0.7;
 }
 
-.gt-details-page__shots {
+.od-details-page__shots {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
 
-.gt-details-page__shot {
+.od-details-page__shot {
   display: block;
   width: 100%;
   padding: 0;
   border: 0;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   background: transparent;
   cursor: zoom-in;
   overflow: hidden;
 }
 
-.gt-details-page__shot:focus-visible {
-  outline: 2px solid var(--gt-accent);
+.od-details-page__shot:focus-visible {
+  outline: 2px solid var(--od-accent);
   outline-offset: 2px;
 }
 
-.gt-details-page__shots img {
+.od-details-page__shots img {
   width: 100%;
   height: 140px;
   object-fit: cover;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   display: block;
 }
 
-.gt-details-page__videos {
+.od-details-page__videos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
 }
 
-.gt-details-page__video-card {
+.od-details-page__video-card {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.gt-details-page__videos iframe {
+.od-details-page__videos iframe {
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
 }
 
-.gt-details-page__video-actions {
+.od-details-page__video-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
 
 @media (max-width: 900px) {
-  .gt-details-page__fold--media {
+  .od-details-page__fold--media {
     grid-template-columns: 1fr;
   }
 
-  .gt-details-page__hero {
+  .od-details-page__hero {
     grid-template-columns: 1fr;
   }
 
-  .gt-details-page__cover-wrap {
+  .od-details-page__cover-wrap {
     max-width: 220px;
   }
 
-  .gt-details-page__content-grid {
+  .od-details-page__content-grid {
     grid-template-columns: 1fr;
   }
 
-  .gt-details-page__section--summary,
-  .gt-details-page__section--facts,
-  .gt-details-page__flow {
+  .od-details-page__section--summary,
+  .od-details-page__section--facts,
+  .od-details-page__flow {
     grid-column: auto;
     grid-row: auto;
   }
 
-  .gt-details-page__summary {
+  .od-details-page__summary {
     max-width: none;
   }
 
-  .gt-details-page__quick .gt-store-links {
+  .od-details-page__quick .od-store-links {
     flex: 1 1 100%;
   }
 
-  .gt-details-page .gt-action-bar {
+  .od-details-page .od-action-bar {
     width: 100%;
   }
 
-  .gt-details-page .gt-action-bar__btn {
+  .od-details-page .od-action-bar__btn {
     flex: 1 1 calc(50% - 4px);
     min-width: 7rem;
   }
 
-  .gt-details-page .gt-action-bar__presence,
-  .gt-details-page .gt-action-bar__status {
+  .od-details-page .od-action-bar__presence,
+  .od-details-page .od-action-bar__status {
     flex: 1 1 100%;
   }
 
-  .gt-details-page__version-row {
+  .od-details-page__version-row {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -583,7 +583,7 @@
  * most distracting thing it could do.
  */
 
-.gt-details-page__backdrop {
+.od-details-page__backdrop {
   position: absolute;
   inset-inline: 0;
   inset-block-start: 0;
@@ -593,7 +593,7 @@
   pointer-events: none;
 }
 
-.gt-details-page__backdrop img {
+.od-details-page__backdrop img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -612,13 +612,13 @@
   );
 }
 
-/* The page's own content has to sit above it. `.gt-details-page` is the
+/* The page's own content has to sit above it. `.od-details-page` is the
    positioning context; everything in it that is not the backdrop stacks over. */
-.gt-details-page {
+.od-details-page {
   position: relative;
 }
 
-.gt-details-page > *:not(.gt-details-page__backdrop) {
+.od-details-page > *:not(.od-details-page__backdrop) {
   position: relative;
   z-index: 1;
 }
@@ -629,21 +629,21 @@
  * — which would paint the Versions section over anything the hero's action row
  * opens downward (the "Add to collection…" list). One step up is enough, and it
  * cannot reach the backdrop, which is deliberately below all of them. */
-.gt-details-page__hero {
+.od-details-page__hero {
   z-index: 2;
 }
 
 /* A member who asked for less motion is usually also asking for less noise.
    The art stays — it is not moving — but it steps further back. */
 @media (prefers-reduced-motion: reduce) {
-  .gt-details-page__backdrop img {
+  .od-details-page__backdrop img {
     opacity: 0.18;
   }
 }
 
 /* Forced colours: no decorative art at all. */
 @media (forced-colors: active) {
-  .gt-details-page__backdrop {
+  .od-details-page__backdrop {
     display: none;
   }
 }

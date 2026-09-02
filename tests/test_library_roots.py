@@ -9,7 +9,7 @@ import os
 
 import pytest
 
-from gametheca.utils.library_roots import (
+from oneirodex.utils.library_roots import (
     library_root_paths,
     library_roots,
     parse_library_roots,
@@ -17,9 +17,9 @@ from gametheca.utils.library_roots import (
     resolve_scan_path,
     root_availability,
 )
-from gametheca.utils.security import get_allowed_base_directories
-import gametheca.utils.status as status_mod
-from gametheca.utils.status import LIBRARY_ROOT_KEY_PREFIX, get_config_values
+from oneirodex.utils.security import get_allowed_base_directories
+import oneirodex.utils.status as status_mod
+from oneirodex.utils.status import LIBRARY_ROOT_KEY_PREFIX, get_config_values
 
 BASE_KEY = 'BASE_FOLDER_WINDOWS' if os.name == 'nt' else 'BASE_FOLDER_POSIX'
 

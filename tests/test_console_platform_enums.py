@@ -7,20 +7,21 @@ See docs/strategy/console-gaming-libraries.md
 
 from types import SimpleNamespace
 
-from gametheca.platform import (
+from oneirodex.platform import (
     Emulator,
     LibraryPlatform,
     WEBRETRO_BROWSER_KEYS,
+    WEBRETR_INSTALLED_CORES,
     mapped_core_ids,
     play_mode_for_platform,
     platform_emulator_mapping,
 )
-from gametheca.utils.functions import (
+from oneirodex.utils.functions import (
     PLATFORM_IDS,
     PLATFORM_IDS_UNMAPPED,
     igdb_platform_id_for,
 )
-from gametheca.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
+from oneirodex.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
 
 
 LOCKED_NO_WASM = (
@@ -40,6 +41,7 @@ def test_locked_console_leaf_enums_exist():
     assert not hasattr(LibraryPlatform, 'MAME')
     assert LibraryPlatform.WII_U.value == 'Nintendo Wii U'
     assert LibraryPlatform.POKE_MINI.value == 'Pokémon Mini'
+    assert LibraryPlatform.GAME_WATCH.value == 'Nintendo Game & Watch'
     assert LibraryPlatform.CD_I.value == 'Philips CD-i'
     assert LibraryPlatform.SEGA_PICO.value == 'Sega Pico'
     assert LibraryPlatform.JAGUAR_CD.value == 'Atari Jaguar CD'
@@ -76,6 +78,14 @@ def test_locked_wave_have_no_webretro_browser_keys():
     assert 'AMIGA_CD32' not in WEBRETRO_PLATFORMS
 
 
+def test_game_watch_maps_gw_companion_not_browser():
+    assert mapped_core_ids('GAME_WATCH') == ['gw']
+    assert Emulator.GW.value == 'gw'
+    assert 'GAME_WATCH' not in WEBRETRO_BROWSER_KEYS
+    assert 'GAME_WATCH' not in WEBRETRO_PLATFORMS
+    assert 'gw' not in WEBRETR_INSTALLED_CORES
+
+
 def test_locked_play_mode_honesty():
     assert play_mode_for_platform('NEOGEO') == 'catalog'
     assert play_mode_for_platform('SWITCH') == 'catalog'
@@ -83,6 +93,7 @@ def test_locked_play_mode_honesty():
     assert play_mode_for_platform('WII_U') == 'catalog'
     assert play_mode_for_platform('PSP') == 'companion'
     assert play_mode_for_platform('POKE_MINI') == 'companion'
+    assert play_mode_for_platform('GAME_WATCH') == 'companion'
     assert play_mode_for_platform('CD_I') == 'companion'
     assert play_mode_for_platform('SEGA_PICO') == 'companion'
     assert play_mode_for_platform('JAGUAR_CD') == 'companion'
@@ -117,7 +128,7 @@ def test_browse_play_fields_psp_companion_no_browser():
 
 
 def test_browse_play_fields_new_companion_wave_no_browser():
-    for name in ('POKE_MINI', 'CD_I', 'SEGA_PICO', 'JAGUAR_CD', 'AMIGA_CD32'):
+    for name in ('POKE_MINI', 'GAME_WATCH', 'CD_I', 'SEGA_PICO', 'JAGUAR_CD', 'AMIGA_CD32'):
         game = SimpleNamespace(
             uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
             library=SimpleNamespace(platform=SimpleNamespace(name=name)),
@@ -135,6 +146,7 @@ def test_platform_ids_wired_for_locked_enums():
     assert PLATFORM_IDS.get('ARCADE') == 52
     assert PLATFORM_IDS.get('WII_U') == 41
     assert PLATFORM_IDS.get('POKE_MINI') == 166
+    assert PLATFORM_IDS.get('GAME_WATCH') == 307
     assert PLATFORM_IDS.get('CD_I') == 117
     assert PLATFORM_IDS.get('SEGA_PICO') == 339
     assert PLATFORM_IDS.get('JAGUAR_CD') == 410

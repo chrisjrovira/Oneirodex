@@ -34,14 +34,14 @@ test('no new design-token violations against the baseline', () => {
 
 test('lint flags literals in declarations but not in token definitions', () => {
   const css = `
-    :root { --gt-accent: #2fd67b; --gt-radius-sm: 6px; }
+    :root { --od-accent: #2fd67b; --od-radius-sm: 6px; }
     .a { color: #2fd67b; }
-    .b { color: var(--gt-accent); }
+    .b { color: var(--od-accent); }
     .c { border-radius: 7px; }
-    .d { border-radius: var(--gt-radius-sm); }
+    .d { border-radius: var(--od-radius-sm); }
     .e { border-radius: 0; }
     .f { font-size: 0.81rem; }
-    .g { font-size: var(--gt-font-sm); }
+    .g { font-size: var(--od-font-sm); }
   `
 
   const rules = lintCss(css, 'probe.css').map((f) => `${f.rule}:${f.detail}`)
@@ -73,7 +73,7 @@ test('lint sees literals in JSX inline styles', () => {
   const jsx = `
     <div style={{ marginTop: '1rem' }} />
     <div style={{ color: '#2fd67b' }} />
-    <div style={{ padding: 'var(--gt-space-4)' }} />
+    <div style={{ padding: 'var(--od-space-4)' }} />
   `
   const rules = lintJsxInlineStyles(jsx, 'Example.jsx').map((f) => f.rule)
 

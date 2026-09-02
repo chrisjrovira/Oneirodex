@@ -9,9 +9,9 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import DuplicateFixLog, Game, Library, UnmatchedFolder, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.pc_extras import (
+from oneirodex.models import DuplicateFixLog, Game, Library, UnmatchedFolder, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.pc_extras import (
     classify_pc_extra_folder,
     discover_pc_extra_folders,
     discover_pc_sidecar_dlc,

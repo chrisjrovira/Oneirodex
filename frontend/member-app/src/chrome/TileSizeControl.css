@@ -8,7 +8,7 @@
  * read-out is gone: the grid in front of you is the read-out, and a number
  * nobody types into does not need permanent space.
  *
- * `.gt-page-header` used to live in this file too and was one of two competing
+ * `.od-page-header` used to live in this file too and was one of two competing
  * definitions of it. Page titles moved to the top bar (GT-B5), so the block was
  * deleted rather than reconciled.
  */
@@ -26,7 +26,7 @@
  * rest, which is invisible.
  *
  * Which side the reserve empties onto is the whole point of `flex-end`. This
- * control sits first in `.gt-topbar__actions`, ahead of the result count and
+ * control sits first in `.od-topbar__actions`, ahead of the result count and
  * the account button, and that group is right-packed — so packing this group's
  * own contents right too puts the resting dot hard against the count, one bar
  * gap away, and leaves the unused reserve on the left where it merges into the
@@ -39,34 +39,34 @@
  * second gap on top of the bar's own, and the dot would no longer read as
  * belonging to the count beside it.
  */
-.gt-tile-size {
+.od-tile-size {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
   flex: 0 0 auto;
   width: 6.9rem;
-  height: var(--gt-control-h);
-  padding-inline-start: var(--gt-space-2);
+  height: var(--od-control-h);
+  padding-inline-start: var(--od-space-2);
   padding-inline-end: 0;
   border: 0;
   background: transparent;
-  color: var(--gt-text-muted);
-  transition: color var(--gt-motion-fast) var(--gt-motion-ease);
+  color: var(--od-text-muted);
+  transition: color var(--od-motion-fast) var(--od-motion-ease);
 }
 
 /* Colour only. The bordered box this used to draw on hover was the outline
    around the slider: a frame appearing under the pointer around a control that
    is already unmistakably a slider once it opens. Keyboard focus keeps a
    visible ring — on the range itself, below — because that one is not optional. */
-.gt-tile-size:hover,
-.gt-tile-size:focus-within {
-  color: var(--gt-text);
+.od-tile-size:hover,
+.od-tile-size:focus-within {
+  color: var(--od-text);
 }
 
 /* Kept in the accessibility tree — the slider needs a name — but it no longer
    occupies a fixed 2.4rem of the bar. */
-.gt-tile-size__label {
+.od-tile-size__label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -82,24 +82,24 @@
  * is the handle you are about to drag, so the resting state *is* the slider,
  * just with its track not drawn yet. Sized to the native range thumb so the
  * swap on hover lands the circle where the mark already was. */
-.gt-tile-size__grip {
+.od-tile-size__grip {
   flex: 0 0 auto;
   width: 0.75rem;
   height: 0.75rem;
-  border-radius: var(--gt-radius-circle, 50%);
+  border-radius: var(--od-radius-circle, 50%);
   /* The theme's own colour, at rest.
-     `currentColor` resolved to `--gt-text-muted` here, so the one pixel of this
+     `currentColor` resolved to `--od-text-muted` here, so the one pixel of this
      control that is visible when nobody is touching it was grey on every theme
      — the slider looked switched off, and the accent only appeared once you
      were already using it. The thumb is the control; it should say which theme
      you are in. */
-  background: var(--gt-accent);
+  background: var(--od-accent);
 }
 
 /* Hovered, the real range takes over and the accent moves to `accent-color`
    below, so the dot does not need to hold it any more. */
-.gt-tile-size:hover .gt-tile-size__grip {
-  background: var(--gt-accent);
+.od-tile-size:hover .od-tile-size__grip {
+  background: var(--od-accent);
 }
 
 /* Collapsed until you are on it.
@@ -113,19 +113,19 @@
  * Width and opacity rather than `display: none`, so the transition has
  * something to run on and the range keeps its place in the tab order — a
  * keyboard user tabs to it and it opens on :focus-within. */
-.gt-tile-size__slider {
+.od-tile-size__slider {
   width: 0;
   padding: 0;
   opacity: 0;
-  accent-color: var(--gt-accent);
+  accent-color: var(--od-accent);
   cursor: pointer;
   transition:
-    width var(--gt-motion-normal, 180ms) var(--gt-motion-ease, ease),
-    opacity var(--gt-motion-fast, 120ms) var(--gt-motion-ease, ease);
+    width var(--od-motion-normal, 180ms) var(--od-motion-ease, ease),
+    opacity var(--od-motion-fast, 120ms) var(--od-motion-ease, ease);
 }
 
-.gt-tile-size:hover .gt-tile-size__slider,
-.gt-tile-size:focus-within .gt-tile-size__slider {
+.od-tile-size:hover .od-tile-size__slider,
+.od-tile-size:focus-within .od-tile-size__slider {
   width: 100%;
   opacity: 1;
 }
@@ -133,22 +133,22 @@
 /* The circle hands over to the real slider on hover. Nothing outside the group
    moves when it does, because the width is reserved either way — that was the
    reason the old grip had to stay visible. */
-.gt-tile-size:hover .gt-tile-size__grip,
-.gt-tile-size:focus-within .gt-tile-size__grip {
+.od-tile-size:hover .od-tile-size__grip,
+.od-tile-size:focus-within .od-tile-size__grip {
   display: none;
 }
 
 
 /* The only focus ring in the group, and it belongs to the control that actually
-   takes focus. Matches `.gt-cbtn:focus-visible` rather than inventing a second
+   takes focus. Matches `.od-cbtn:focus-visible` rather than inventing a second
    treatment. */
-.gt-tile-size__slider:focus-visible {
-  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+.od-tile-size__slider:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-tile-size__slider {
+  .od-tile-size__slider {
     transition: none;
   }
 }
@@ -156,7 +156,7 @@
 /* Below the tablet breakpoint the bar is tight and tile size is a desktop
    refinement — the grid already reflows on its own. */
 @media (max-width: 900px) {
-  .gt-tile-size {
+  .od-tile-size {
     display: none;
   }
 }

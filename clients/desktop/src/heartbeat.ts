@@ -3,7 +3,7 @@ import { formatBearerAuthorization } from '@oneirodex/api-client'
 import type { AuthStore } from './auth.js'
 import type { LifecycleAction } from './lifecycle.js'
 
-const DEVICE_ID_STORAGE_KEY = 'gametheca-device-id'
+const DEVICE_ID_STORAGE_KEY = 'oneirodex-device-id'
 
 function getOrCreateDeviceId(): string {
   if (typeof localStorage === 'undefined') {
@@ -114,7 +114,7 @@ export async function postClientHeartbeat(
     },
     body: JSON.stringify({
       device_id: options.deviceId ?? getOrCreateDeviceId(),
-      device_name: options.deviceName ?? 'GameTheca Desktop',
+      device_name: options.deviceName ?? 'Oneirodex Desktop',
       client_version: options.clientVersion ?? '0.1.0',
     }),
   })

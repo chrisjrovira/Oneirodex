@@ -6,9 +6,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, GlobalSettings, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.game_details_payload import browse_trailer_fields
+from oneirodex.models import Game, GlobalSettings, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.game_details_payload import browse_trailer_fields
 
 
 def test_browse_trailer_fields_youtube_watch_becomes_embed():

@@ -85,7 +85,7 @@ function OpsIssueRows({ items, toneFallback = 'warn' }) {
     return (
       <li
         key={item.id || item.message}
-        className={`gt-ops-issues__item gt-ops-issues__item--${tone}`}
+        className={`od-ops-issues__item od-ops-issues__item--${tone}`}
       >
         {item.href ? <a href={item.href}>{item.message}</a> : <span>{item.message}</span>}
       </li>
@@ -97,19 +97,19 @@ export function OpsIssuesList({ items }) {
   const { action, soft } = partitionIssues(items)
   if (!action.length && !soft.length) return null
   return (
-    <div className="gt-ops-issues-folds">
+    <div className="od-ops-issues-folds">
       {action.length ? (
-        <section className="gt-ops-issues-fold gt-ops-issues-fold--action" aria-label="Action required">
-          <h2 className="gt-ops-issues-fold__title">Action required</h2>
-          <ul className="gt-ops-issues">
+        <section className="od-ops-issues-fold od-ops-issues-fold--action" aria-label="Action required">
+          <h2 className="od-ops-issues-fold__title">Action required</h2>
+          <ul className="od-ops-issues">
             <OpsIssueRows items={action} toneFallback="bad" />
           </ul>
         </section>
       ) : null}
       {soft.length ? (
-        <section className="gt-ops-issues-fold gt-ops-issues-fold--soft" aria-label="Warning / Info">
-          <h2 className="gt-ops-issues-fold__title">Warning / Info</h2>
-          <ul className="gt-ops-issues">
+        <section className="od-ops-issues-fold od-ops-issues-fold--soft" aria-label="Warning / Info">
+          <h2 className="od-ops-issues-fold__title">Warning / Info</h2>
+          <ul className="od-ops-issues">
             <OpsIssueRows items={soft} toneFallback="warn" />
           </ul>
         </section>
@@ -118,13 +118,58 @@ export function OpsIssuesList({ items }) {
   )
 }
 
-export function OpsStatusBanner({ severity = 'good', asOf, items, ariaLabel = 'System status' }) {
+function IconReset(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="1.15em" height="1.15em" aria-hidden="true" {...props}>
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"
+      />
+    </svg>
+  )
+}
+
+export function OpsStatusBanner({
+  severity = 'good',
+  asOf,
+  items,
+  ariaLabel = 'System status',
+  onRefresh = null,
+  refreshing = false,
+  refreshDisabled = false,
+}) {
   const tone = resolveBannerSeverity(items, severity)
   return (
-    <section className={`gt-ops-status gt-ops-status--${tone}`} aria-label={ariaLabel}>
-      <div className="gt-ops-status__head">
+    <section className={`od-ops-status od-ops-status--${tone}`} aria-label={ariaLabel}>
+      <div className="od-ops-status__head">
         <strong>{severityLabel(tone)}</strong>
-        {asOf ? <span className="gt-ops-status__asof">Updated {new Date(asOf).toLocaleString()}</span> : null}
+        {/* Trail chrome only when this banner owns Updated/refresh. Dashboard
+            and Ops put those in the top bar, so leave the slot empty. */}
+        {asOf || onRefresh ? (
+          <div className="od-ops-status__trail">
+            {asOf ? (
+              <span className="od-ops-status__asof">
+                Updated {new Date(asOf).toLocaleString()}
+              </span>
+            ) : null}
+            {onRefresh ? (
+              <button
+                type="button"
+                className="od-cbtn od-ops-status__refresh"
+                aria-label={refreshing ? 'Refreshing' : 'Refresh dashboard'}
+                title="Refresh"
+                onClick={onRefresh}
+                disabled={refreshDisabled || refreshing}
+              >
+                <IconReset />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       <OpsIssuesList items={items} />
     </section>
@@ -165,15 +210,15 @@ export function MeterBar({ label, percent, detail }) {
   const tone =
     pct == null ? 'na' : pct >= 95 ? 'bad' : pct >= 85 ? 'warn' : 'good'
   return (
-    <div className={`gt-ops-meter gt-ops-meter--${tone}`}>
-      <div className="gt-ops-meter__label">
+    <div className={`od-ops-meter od-ops-meter--${tone}`}>
+      <div className="od-ops-meter__label">
         <span>{label}</span>
         <span>{pct == null ? 'n/a' : `${pct}%`}</span>
       </div>
-      <div className="gt-ops-meter__track" aria-hidden="true">
-        <div className="gt-ops-meter__fill" style={{ width: pct == null ? '0%' : `${pct}%` }} />
+      <div className="od-ops-meter__track" aria-hidden="true">
+        <div className="od-ops-meter__fill" style={{ width: pct == null ? '0%' : `${pct}%` }} />
       </div>
-      {detail ? <div className="gt-ops-meter__detail">{detail}</div> : null}
+      {detail ? <div className="od-ops-meter__detail">{detail}</div> : null}
     </div>
   )
 }
@@ -189,12 +234,12 @@ const METRIC_TONES = new Set([
 ])
 
 export function MetricTile({ label, value, hint, tone }) {
-  const toneClass = METRIC_TONES.has(tone) ? ` gt-ops-metric--${tone}` : ''
+  const toneClass = METRIC_TONES.has(tone) ? ` od-ops-metric--${tone}` : ''
   return (
-    <div className={`gt-ops-metric${toneClass}`}>
-      <div className="gt-ops-metric__label">{label}</div>
-      <div className="gt-ops-metric__value">{value}</div>
-      {hint ? <div className="gt-ops-metric__hint">{hint}</div> : null}
+    <div className={`od-ops-metric${toneClass}`}>
+      <div className="od-ops-metric__label">{label}</div>
+      <div className="od-ops-metric__value">{value}</div>
+      {hint ? <div className="od-ops-metric__hint">{hint}</div> : null}
     </div>
   )
 }
@@ -217,7 +262,7 @@ export function MetricStrip({ items = [], label = 'Key metrics' }) {
   )
   if (!rows.length) return null
   return (
-    <div className="gt-ops-strip" aria-label={label}>
+    <div className="od-ops-strip" aria-label={label}>
       {rows.map((item) => (
         <MetricTile
           key={item.id || item.label}
@@ -481,8 +526,8 @@ export function formatLibraryHealthHint(health, limit = 2) {
 
 /** Left-edge grade cue class — poor=danger, fair=warn-gold; good/na unchanged. */
 export function libraryHealthFactorsGradeClass(grade) {
-  if (grade === 'poor') return ' gt-ops-health-factors--poor'
-  if (grade === 'fair') return ' gt-ops-health-factors--fair'
+  if (grade === 'poor') return ' od-ops-health-factors--poor'
+  if (grade === 'fair') return ' od-ops-health-factors--fair'
   return ''
 }
 
@@ -495,7 +540,7 @@ export function LibraryHealthFactors({ health, limit = 3 }) {
   const n = normalizeLibraryHealth(health)
   if (!n) {
     return (
-      <p className="gt-admin-lede gt-ops-health-factors gt-ops-health-factors--empty">
+      <p className="od-admin-lede od-ops-health-factors od-ops-health-factors--empty">
         Library health not scored yet.
       </p>
     )
@@ -505,7 +550,7 @@ export function LibraryHealthFactors({ health, limit = 3 }) {
   if (!factors.length) {
     return (
       <p
-        className={`gt-admin-lede gt-ops-health-factors gt-ops-health-factors--empty${gradeClass}`}
+        className={`od-admin-lede od-ops-health-factors od-ops-health-factors--empty${gradeClass}`}
       >
         {n.thin
           ? n.note || 'Library health sample thin — no factor breakdown yet.'
@@ -516,15 +561,15 @@ export function LibraryHealthFactors({ health, limit = 3 }) {
     )
   }
   return (
-    <ul className={`gt-ops-health-factors${gradeClass}`} aria-label="Top health factors">
+    <ul className={`od-ops-health-factors${gradeClass}`} aria-label="Top health factors">
       {factors.map((f) => {
         const key = f.id || f.label
         const label = f.label || f.id || 'factor'
         return (
-          <li key={key} className="gt-ops-health-factors__item">
-            <span className="gt-ops-health-factors__label">{label}</span>
+          <li key={key} className="od-ops-health-factors__item">
+            <span className="od-ops-health-factors__label">{label}</span>
             {f.count != null && Number.isFinite(Number(f.count)) ? (
-              <span className="gt-ops-health-factors__count">{f.count}</span>
+              <span className="od-ops-health-factors__count">{f.count}</span>
             ) : null}
           </li>
         )

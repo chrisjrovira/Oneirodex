@@ -1,97 +1,97 @@
 /* Help — scannable accordion, not a FAQ wall */
 
-/* Mirrors --gt-adminpage-radius so the member panels match the admin guide
-   exactly rather than approximately. On the page root, not on .gt-help__toc:
+/* Mirrors --od-adminpage-radius so the member panels match the admin guide
+   exactly rather than approximately. On the page root, not on .od-help__toc:
    the toc is a *sibling* of the sections, so a definition there never reaches
    them and the fallback would be doing all the work. */
-.gt-help {
-  --gt-help-panel-radius: 14px;
+.od-help {
+  --od-help-panel-radius: 14px;
   /* Resolved per section from `data-tone` below. Anything that wants the
      section's colour reads this one variable, so adding a tone is one rule
      rather than five. */
-  --gt-help-tone: var(--gt-accent);
+  --od-help-tone: var(--od-accent);
 }
 
 /* Five tones, all from the theme's own semantic set — never a hex invented
    here, so a preset or an icon pack restyles Help along with everything else.
    See the FAQ_SECTIONS docblock for why the page is colour-coded at all. */
-.gt-help [data-tone='accent'] {
-  --gt-help-tone: var(--gt-accent);
+.od-help [data-tone='accent'] {
+  --od-help-tone: var(--od-accent);
 }
 
-.gt-help [data-tone='info'] {
-  --gt-help-tone: var(--gt-info);
+.od-help [data-tone='info'] {
+  --od-help-tone: var(--od-info);
 }
 
-.gt-help [data-tone='success'] {
-  --gt-help-tone: var(--gt-success);
+.od-help [data-tone='success'] {
+  --od-help-tone: var(--od-success);
 }
 
-.gt-help [data-tone='warning'] {
-  --gt-help-tone: var(--gt-warning);
+.od-help [data-tone='warning'] {
+  --od-help-tone: var(--od-warning);
 }
 
-.gt-help [data-tone='danger'] {
-  --gt-help-tone: var(--gt-danger);
+.od-help [data-tone='danger'] {
+  --od-help-tone: var(--od-danger);
 }
 
 /* ---------- hero ---------- */
 
-.gt-help__hero {
+.od-help__hero {
   display: flex;
   align-items: flex-start;
-  gap: var(--gt-space-5);
-  margin: 0 0 var(--gt-space-6);
+  gap: var(--od-space-5);
+  margin: 0 0 var(--od-space-6);
   padding: clamp(1rem, 2.2vw, 1.6rem);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 24%, var(--gt-border));
-  border-radius: var(--gt-help-panel-radius, 14px);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 24%, var(--od-border));
+  border-radius: var(--od-help-panel-radius, 14px);
   background:
     radial-gradient(
       120% 140% at 0% 0%,
-      color-mix(in srgb, var(--gt-accent) 14%, transparent),
+      color-mix(in srgb, var(--od-accent) 14%, transparent),
       transparent 58%
     ),
-    var(--gt-surface);
+    var(--od-surface);
 }
 
-.gt-help__hero-mark {
+.od-help__hero-mark {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 3rem;
   height: 3rem;
-  border-radius: var(--gt-radius-circle);
-  color: var(--gt-accent-contrast);
-  background: var(--gt-accent);
+  border-radius: var(--od-radius-circle);
+  color: var(--od-accent-contrast);
+  background: var(--od-accent);
 }
 
-.gt-help__hero-copy {
+.od-help__hero-copy {
   min-width: 0;
 }
 
-.gt-help__hero-title {
-  margin: 0 0 var(--gt-space-2);
+.od-help__hero-title {
+  margin: 0 0 var(--od-space-2);
   font-family: var(--font-display);
-  font-size: var(--gt-font-2xl);
+  font-size: var(--od-font-2xl);
   line-height: 1.1;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-help__hero-lede {
+.od-help__hero-lede {
   margin: 0;
   max-width: 60ch;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   line-height: 1.6;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 @media (max-width: 600px) {
-  .gt-help__hero {
+  .od-help__hero {
     flex-direction: column;
   }
 }
 
-.gt-help__toolbar {
+.od-help__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -99,29 +99,29 @@
   margin: 0 0 0.85rem;
 }
 
-.gt-help__support-link {
+.od-help__support-link {
   margin-left: auto;
-  color: var(--gt-accent);
-  font-size: var(--gt-font-md);
+  color: var(--od-accent);
+  font-size: var(--od-font-md);
   text-decoration: none;
 }
 
-.gt-help__support-link:hover,
-.gt-help__support-link:focus-visible {
+.od-help__support-link:hover,
+.od-help__support-link:focus-visible {
   text-decoration: underline;
 }
 
 /* An underline is also the hover treatment, so it tells a keyboard user
    nothing about where they are. */
-.gt-help__support-link:focus-visible {
-  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+.od-help__support-link:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
   outline-offset: 2px;
 }
 
 /* Quick navigation: one strip with rounded ends, flush to the rail.
  *
  * These were individually bordered pills that wrapped into two or three ragged
- * rows. Built on the shared `.gt-seg` now, so the divider lines, hover and
+ * rows. Built on the shared `.od-seg` now, so the divider lines, hover and
  * selected states are the ones used by the context bar and the admin tab strips
  * rather than a third set invented here.
  *
@@ -130,26 +130,26 @@
  * the top lhn like it extends from it". It only applies where the rail is
  * actually beside the content; on narrow viewports the rail is a drawer and
  * there is nothing to attach to. */
-.gt-help__toc {
+.od-help__toc {
   max-width: 100%;
   overflow-x: auto;
   margin: 0 0 1rem;
-  border-radius: var(--gt-radius-pill);
+  border-radius: var(--od-radius-pill);
 }
 
 @media (min-width: 900px) {
-  .gt-help__toc {
-    margin-left: calc(-1 * var(--gt-gutter, 0.75rem));
+  .od-help__toc {
+    margin-left: calc(-1 * var(--od-gutter, 0.75rem));
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     border-left: 0;
   }
 }
 
-.gt-help__toc-chip {
+.od-help__toc-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
   text-decoration: none;
   font-weight: 600;
   white-space: nowrap;
@@ -158,20 +158,20 @@
 /* The chip carries its section's colour in the glyph only. Tinting the whole
    chip would make the strip a rainbow of twelve filled pills, which is exactly
    the ragged wall of chips this strip replaced. */
-.gt-help__toc-mark {
+.od-help__toc-mark {
   display: inline-flex;
-  color: var(--gt-help-tone);
+  color: var(--od-help-tone);
 }
 
-.gt-help__toc-chip:hover {
-  color: var(--gt-help-tone);
+.od-help__toc-chip:hover {
+  color: var(--od-help-tone);
 }
 
 /* A visible ring, not `outline: none`. The chips previously cleared their
    outline and leaned on a border-colour change that the segmented control does
    not have, which left keyboard users with no focus indicator at all. */
-.gt-help__toc-chip:focus-visible {
-  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+.od-help__toc-chip:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
   outline-offset: -2px;
 }
 
@@ -182,7 +182,7 @@
  * different ways, which is the "should align like admin help" report. These are
  * the admin panel's own values (14px radius, the clamped pad, 1.25rem gap) so
  * the two genuinely match rather than approximately. */
-.gt-help__sections {
+.od-help__sections {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -193,7 +193,7 @@
  *
  * These were large soft cards with generous padding: a different object from
  * the bordered glass panels every admin surface uses, on a page whose whole job
- * is reference material. Matching `.gt-admin-panel` makes Help read as
+ * is reference material. Matching `.od-admin-panel` makes Help read as
  * documentation rather than as a marketing page.
  *
  * The tone lands on that leading edge and on the section's glyph, and nowhere
@@ -201,52 +201,52 @@
  * different kinds of alert; a 3px edge reads as an index — which is what fixes
  * "twelve identical grey panels" without giving up the admin panel shape.
  */
-.gt-help__section {
+.od-help__section {
   position: relative;
   padding: 1rem;
-  background: var(--gt-glass-bg, var(--gt-surface));
-  border: 1px solid var(--gt-glass-border, var(--gt-border));
-  border-left: 3px solid color-mix(in srgb, var(--gt-help-tone) 55%, transparent);
-  border-radius: var(--gt-radius-lg);
-  color: var(--gt-text);
+  background: var(--od-glass-bg, var(--od-surface));
+  border: 1px solid var(--od-glass-border, var(--od-border));
+  border-left: 3px solid color-mix(in srgb, var(--od-help-tone) 55%, transparent);
+  border-radius: var(--od-radius-lg);
+  color: var(--od-text);
   transition:
-    border-color var(--gt-motion-base) var(--gt-motion-ease),
-    background-color var(--gt-motion-base) var(--gt-motion-ease);
+    border-color var(--od-motion-base) var(--od-motion-ease),
+    background-color var(--od-motion-base) var(--od-motion-ease);
 }
 
-.gt-help__section:hover,
-.gt-help__section.is-open {
-  border-left-color: var(--gt-help-tone);
+.od-help__section:hover,
+.od-help__section.is-open {
+  border-left-color: var(--od-help-tone);
 }
 
-.gt-help__section.is-open {
-  background: color-mix(in srgb, var(--gt-help-tone) 5%, var(--gt-surface));
+.od-help__section.is-open {
+  background: color-mix(in srgb, var(--od-help-tone) 5%, var(--od-surface));
 }
 
-.gt-help__section-mark {
+.od-help__section-mark {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 2.1rem;
   height: 2.1rem;
   margin-top: 0.1rem;
-  border-radius: var(--gt-radius-md);
-  color: var(--gt-help-tone);
-  background: color-mix(in srgb, var(--gt-help-tone) 14%, transparent);
+  border-radius: var(--od-radius-md);
+  color: var(--od-help-tone);
+  background: color-mix(in srgb, var(--od-help-tone) 14%, transparent);
 }
 
 /* The open one is the one you are reading; the accent edge says so without
    moving anything. */
-.gt-help__section.is-open {
-  border-color: color-mix(in srgb, var(--gt-accent) 40%, var(--gt-border));
+.od-help__section.is-open {
+  border-color: color-mix(in srgb, var(--od-accent) 40%, var(--od-border));
 }
 
-.gt-help__section h2 {
+.od-help__section h2 {
   margin: 0;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-help__section-toggle {
+.od-help__section-toggle {
   display: flex;
   width: 100%;
   align-items: flex-start;
@@ -254,24 +254,24 @@
   padding: 0.7rem 0.15rem;
   background: transparent;
   border: none;
-  color: var(--gt-text);
+  color: var(--od-text);
   font: inherit;
   cursor: pointer;
   text-align: left;
 }
 
-.gt-help__section-toggle:hover,
-.gt-help__section-toggle:focus-visible {
-  color: var(--gt-help-tone);
+.od-help__section-toggle:hover,
+.od-help__section-toggle:focus-visible {
+  color: var(--od-help-tone);
 }
 
 /* Same reason: the accent colour is the hover state too. */
-.gt-help__section-toggle:focus-visible {
-  outline: 2px solid var(--gt-focus-ring, var(--gt-accent));
+.od-help__section-toggle:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
   outline-offset: -2px;
 }
 
-.gt-help__section-copy {
+.od-help__section-copy {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -282,94 +282,94 @@
   flex: 1 1 auto;
 }
 
-.gt-help__section-title {
+.od-help__section-title {
   font-weight: 650;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-help__section-summary {
-  font-size: var(--gt-font-md);
+.od-help__section-summary {
+  font-size: var(--od-font-md);
   font-weight: 400;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   line-height: 1.5;
 }
 
-.gt-help__chevron {
+.od-help__chevron {
   flex-shrink: 0;
   width: 1.4rem;
   height: 1.4rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--gt-radius-xs);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-base);
+  border-radius: var(--od-radius-xs);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-base);
   line-height: 1;
 }
 
-.gt-help__section.is-open .gt-help__chevron {
-  border-color: color-mix(in srgb, var(--gt-help-tone) 45%, transparent);
-  color: var(--gt-help-tone);
+.od-help__section.is-open .od-help__chevron {
+  border-color: color-mix(in srgb, var(--od-help-tone) 45%, transparent);
+  color: var(--od-help-tone);
 }
 
-.gt-help__section ul {
+.od-help__section ul {
   margin: 0 0 0.75rem;
   padding: 0 0 0 1.05rem;
   list-style: disc;
   /* Body copy, so it takes the reading colour rather than the muted one —
      muted is for supporting text, and this is the answer you came for. */
-  color: var(--gt-text);
-  font-size: var(--gt-font-base);
+  color: var(--od-text);
+  font-size: var(--od-font-base);
   line-height: 1.65;
   max-width: 72ch;
 }
 
-.gt-help__section li {
+.od-help__section li {
   margin-bottom: 0.35rem;
 }
 
-.gt-help__section li::marker {
-  color: color-mix(in srgb, var(--gt-help-tone) 70%, transparent);
+.od-help__section li::marker {
+  color: color-mix(in srgb, var(--od-help-tone) 70%, transparent);
 }
 
-.gt-help__footer {
+.od-help__footer {
   margin: 1.25rem 0 0;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-help__footer a {
-  color: var(--gt-accent);
+.od-help__footer a {
+  color: var(--od-accent);
 }
 
 /* Credit and source links under a section's bullets — the AGPL §13 offer and
    the metadata providers' attribution. A row that wraps, not a list, so it
    reads as a credit line rather than more instructions. */
-.gt-help__links {
+.od-help__links {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gt-space-3);
-  margin: var(--gt-space-3) 0 0;
+  gap: var(--od-space-3);
+  margin: var(--od-space-3) 0 0;
 }
 
-.gt-help__link {
-  color: var(--gt-accent);
-  font-size: var(--gt-font-md);
+.od-help__link {
+  color: var(--od-accent);
+  font-size: var(--od-font-md);
 }
 
-.gt-help__link + .gt-help__link::before {
+.od-help__link + .od-help__link::before {
   content: '·';
-  color: var(--gt-text-muted);
-  margin-right: var(--gt-space-3);
+  color: var(--od-text-muted);
+  margin-right: var(--od-space-3);
 }
 
-/* .gt-btn--ghost moved to gt-primitives.css (GT-A4) — it was defined here, in
+/* .od-btn--ghost moved to od-primitives.css (GT-A4) — it was defined here, in
    NewsPage.css and in NotificationsPage.css as three near-identical copies, so
    which one applied depended on which route chunks had been loaded. */
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-help__section {
+  .od-help__section {
     transition: none;
   }
 }

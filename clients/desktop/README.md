@@ -1,6 +1,6 @@
-# GameTheca Desktop Companion
+# Oneirodex Desktop Companion
 
-Windows-first Tauri client with **two build flavors** against a GameTheca server:
+Windows-first Tauri client with **two build flavors** against a Oneirodex server:
 
 | Flavor | Command | What it does |
 |---|---|---|
@@ -44,24 +44,24 @@ This starts the Vite dev server on port **1420** and opens the Tauri window (ful
 | `npm run tauri:build` | Full companion unsigned EXE (requires Rust) |
 | `npm run tauri:build:thin` | Thin flavor via `src-tauri/tauri.thin.conf.json` (connect + library/Friends; no FS lifecycle ACL) |
 
-**Caveat:** both flavors write the same Cargo output path (`src-tauri/target/release/gametheca-desktop.exe`). Copy/rename (`GameTheca-full.exe` / `GameTheca-thin.exe`) before rebuilding the other flavor — [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
+**Caveat:** both flavors write the same Cargo output path (`src-tauri/target/release/oneirodex-desktop.exe`). Copy/rename (`Oneirodex-full.exe` / `Oneirodex-thin.exe`) before rebuilding the other flavor — [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
 
 ## Auth & config persistence
 
-1. Enter your **server base URL** (e.g. `https://gametheca.example.com`).
+1. Enter your **server base URL** (e.g. `https://oneirodex.example.com`).
 2. Enter a personal **API token** (`gt_<hexprefix>_<urlsafe-secret>`; secret may include `_`/`-`) from **Account → API tokens** (or Admin). Full companion needs the **Desktop companion** preset (`read:library` + **`write:download`**). Thin uses the **Thin client** preset (no download).
 3. Click **Connect** — validates via `GET /api/collections`, then loads a library preview via search.
 4. Non-secret settings (base URL) are saved to app data as JSON; the API token goes to the OS credential store:
 
-   - Windows: `%APPDATA%\com.gametheca.desktop\config.json` (base URL only) + Windows Credential Manager (`com.gametheca.desktop` / `api_token`)
-   - macOS: `~/Library/Application Support/com.gametheca.desktop/config.json` + Keychain
-   - Linux: `~/.local/share/com.gametheca.desktop/config.json` + Secret Service
+   - Windows: `%APPDATA%\com.oneirodex.desktop\config.json` (base URL only) + Windows Credential Manager (`com.oneirodex.desktop` / `api_token`)
+   - macOS: `~/Library/Application Support/com.oneirodex.desktop/config.json` + Keychain
+   - Linux: `~/.local/share/com.oneirodex.desktop/config.json` + Secret Service
 
 Legacy plaintext `token` fields in `config.json` are migrated into the secure store on next load and scrubbed from the file. `KeychainAdapter` in `src/auth.ts` is wired via `src/keychain.ts` → Tauri `secure_store_*` commands.
 
 ## Download & install pipeline
 
-The desktop client downloads **DRM-free library files from your GameTheca server only** (no Steam/GOG acquisition).
+The desktop client downloads **DRM-free library files from your Oneirodex server only** (no Steam/GOG acquisition).
 
 ### On-disk layout (app data)
 
@@ -74,8 +74,8 @@ The desktop client downloads **DRM-free library files from your GameTheca server
 
 Example (Windows):
 
-- `%APPDATA%\com.gametheca.desktop\downloads\…`
-- `%APPDATA%\com.gametheca.desktop\installs\…`
+- `%APPDATA%\com.oneirodex.desktop\downloads\…`
+- `%APPDATA%\com.oneirodex.desktop\installs\…`
 
 ### Server flow
 
@@ -111,7 +111,7 @@ clients/desktop/
   index.html              # Vite entry
   src/
     auth.ts               # Base URL + Bearer token store
-    api.ts                # GamethecaClient wrapper
+    api.ts                # OneirodexClient wrapper
     lifecycle.ts          # Install state machine
     connection-ux.ts      # Online/offline action gating helpers
     lifecycle-store.ts    # Tauri lifecycle.json persistence
@@ -142,7 +142,7 @@ npm install
 npm test
 ```
 
-Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no live GameTheca server required.
+Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no live Oneirodex server required.
 
 ## Out of scope (this track)
 
@@ -150,13 +150,13 @@ Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no li
 - Bundled torrent/debrid acquisition (BYO connectors only)
 - OIDC / Authentik setup (see server runbooks separately)
 - **Android APK** — spike notes only (local strategy); not built from this README
-- Native OpenXR / Quest-store GameTheca shell — headset path is browser `/vr` + Big Picture ([controllers-and-vr.md](../../docs/user/controllers-and-vr.md))
+- Native OpenXR / Quest-store Oneirodex shell — headset path is browser `/vr` + Big Picture ([controllers-and-vr.md](../../docs/user/controllers-and-vr.md))
 
 ## Distribution (unsigned only)
 
-**Product stance:** Windows code-signing certificates will never be pursued. Unsigned `gametheca-desktop.exe` is the supported path (full **or** thin flavor). CI (`.github/workflows/desktop-build.yml`) builds and uploads an unsigned **full** companion artifact — do not set signing secrets. Thin: run `npm run tauri:build:thin` locally and rename before a full rebuild. See [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
+**Product stance:** Windows code-signing certificates will never be pursued. Unsigned `oneirodex-desktop.exe` is the supported path (full **or** thin flavor). CI (`.github/workflows/desktop-build.yml`) builds and uploads an unsigned **full** companion artifact — do not set signing secrets. Thin: run `npm run tauri:build:thin` locally and rename before a full rebuild. See [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
 
 ## Server prerequisites
 
-- GameTheca server with user API token — full: `read:library` + **`write:download`**; thin: thin preset (no download)
+- Oneirodex server with user API token — full: `read:library` + **`write:download`**; thin: thin preset (no download)
 - HTTPS recommended

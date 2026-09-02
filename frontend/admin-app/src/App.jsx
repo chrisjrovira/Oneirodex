@@ -1,14 +1,19 @@
+import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { useRailState } from '../../shared/useRailState'
 import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
 import { useAdminShellFrame } from './useAdminShellFrame'
+import { useLegacyContextbarPortal } from './useLegacyContextbarPortal'
+import { useLibrariesContextbarUnfurl } from './useLibrariesContextbarUnfurl'
+import { useLibrariesPanelMount } from './useLibrariesPanelMount'
 import { useLibraryScanToasts } from './useLibraryScanToasts'
 import { AnnouncementsPage } from './AnnouncementsPage'
 import { SupportInboxPage } from './SupportInboxPage'
 import { InvitesPage } from './InvitesPage'
 import { UsersPage } from './UsersPage'
 import { OpsPage } from './OpsPage'
+import { SystemDangerPage } from './SystemDangerPage'
 import { ArtStudioPage } from './ArtStudioPage'
 import { ImagesPage } from './ImagesPage'
 import { RemotePlayPage } from './RemotePlayPage'
@@ -48,7 +53,7 @@ function hasLegacyBody() {
   }
   return Boolean(
     legacy.querySelector(
-      'form, table, .gt-adminpage, .gt-admin-card, .settings-shell, .settings-shell-cards, .settings-shell-card, .container-settings-dashboard, .container, .card, .datatable, #proposalsList, .admin-page, .admin-section',
+      'form, table, .od-adminpage, .od-admin-card, .settings-shell, .settings-shell-cards, .settings-shell-card, .container-settings-dashboard, .container, .card, .datatable, #proposalsList, .admin-page, .admin-section',
     ),
   )
 }
@@ -134,6 +139,8 @@ function RoutedAdminPage() {
       return <UsersPage />
     case 'system':
       return <OpsPage />
+    case 'system-danger':
+      return <SystemDangerPage />
     case 'integrations':
       return <IntegrationsPage />
     case 'content':
@@ -168,21 +175,41 @@ export function App() {
 
   useAdminShellFrame(railState)
   useLibraryScanToasts({ enabled: true })
+  // Jinja chrome.contextbar → thin top bar (member ContextBar parity).
+  useLegacyContextbarPortal(legacy)
+  useLibrariesContextbarUnfurl(legacy)
+  useLibrariesPanelMount(legacy)
+
+  // SPA pages: park #admin-legacy-content so it cannot steal the main grid
+  // cell (whitespace used to keep it painted as a dead column). Legacy Jinja
+  // pages keep it visible — that is their body.
+  useEffect(() => {
+    const node = document.getElementById('admin-legacy-content')
+    if (!node) return undefined
+    if (legacy) {
+      node.hidden = false
+      node.classList.remove('is-spa-idle')
+    } else {
+      node.hidden = true
+      node.classList.add('is-spa-idle')
+    }
+    return undefined
+  }, [legacy])
 
   return (
-    <div className="gt-admin-shell">
+    <div className="od-admin-shell">
       <AdminSideRail railState={railState} onCloseDrawer={closeDrawer} />
       {drawerOpen ? (
         <button
           type="button"
-          className="gt-rail__scrim"
+          className="od-rail__scrim"
           aria-label="Close navigation"
           onClick={closeDrawer}
         />
       ) : null}
       <AdminTopNav onToggleRail={toggleRail} railState={railState} />
       {!legacy ? (
-        <main className="gt-admin-main">
+        <main className="od-admin-main">
           <Routes>
             <Route path="*" element={<RoutedAdminPage />} />
           </Routes>

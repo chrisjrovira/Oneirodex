@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = REPO_ROOT / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'preferences_modal.js'
+SCRIPT = REPO_ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'js' / 'preferences_modal.js'
 HARNESS = Path(__file__).parent / 'js' / 'preferences_modal_delegation.test.mjs'
 
 NODE = shutil.which('node')

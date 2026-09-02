@@ -3,8 +3,8 @@
 Why this exists: the brand mark disappeared from the rail, and every check that
 could have caught it asked the wrong question.
 
-`.gt-brand-mark` paints `var(--gt-accent)` through
-`mask: url('/static/newstyle/gametheca_glyph.svg')`, so the mark is a *mask
+`.od-brand-mark` paints `var(--od-accent)` through
+`mask: url('/static/newstyle/oneirodex_glyph.svg')`, so the mark is a *mask
 source*, not an image. The file's own `<desc>` explained the design and, in
 doing so, wrote a bare tag in prose. An SVG is XML: that opened an element which
 was never closed, so the document failed to parse. A mask whose source will not
@@ -28,11 +28,11 @@ import xml.etree.ElementTree as ET
 import pytest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_ROOT = os.path.join(REPO_ROOT, 'gametheca', 'static')
+STATIC_ROOT = os.path.join(REPO_ROOT, 'oneirodex', 'static')
 
 
 def _svg_paths():
-    """Every .svg under gametheca/static, vendored trees excluded.
+    """Every .svg under oneirodex/static, vendored trees excluded.
 
     Vendor bundles are third-party output — we do not edit them, so a failure
     there is not a regression this suite can act on.
@@ -74,7 +74,7 @@ def test_the_brand_glyph_has_opaque_geometry_for_the_mask():
     still paint nothing. The mark is built from filled rects; assert at least
     one shape carries a fill that is neither `none` nor fully transparent.
     """
-    path = os.path.join(STATIC_ROOT, 'newstyle', 'gametheca_glyph.svg')
+    path = os.path.join(STATIC_ROOT, 'newstyle', 'oneirodex_glyph.svg')
     root = ET.parse(path).getroot()
 
     def opaque(el):

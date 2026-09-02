@@ -13,7 +13,7 @@ import './ChatSlideOut.css'
 
 /**
  * Left slide-out chat chrome — dismissible, reopen from launcher / More / Cmd+K / /chat deep-link.
- * TopNav stays available; panel sits under --gt-topnav-offset. Expand widens to a full room.
+ * TopNav stays available; panel sits under --od-topnav-offset. Expand widens to a full room.
  */
 export function ChatSlideOut({
   defaultOpen,
@@ -92,7 +92,7 @@ export function ChatSlideOut({
       {!hideLauncher && !open ? (
         <button
           type="button"
-          className="gt-chat-slide__launcher"
+          className="od-chat-slide__launcher"
           onClick={handleOpen}
           title="Open chat"
           aria-label="Open chat"
@@ -105,31 +105,31 @@ export function ChatSlideOut({
         <>
           <button
             type="button"
-            className="gt-chat-slide__scrim"
+            className="od-chat-slide__scrim"
             aria-label="Dismiss chat"
             onClick={handleClose}
           />
           <aside
-            className={`gt-chat-slide gt-glass-panel is-open${expanded ? ' is-expanded' : ''}`}
+            className={`od-chat-slide od-glass-panel is-open${expanded ? ' is-expanded' : ''}`}
             role="dialog"
             aria-modal="false"
             aria-labelledby={titleId}
           >
-            <header className="gt-chat-slide__header">
+            <header className="od-chat-slide__header">
               <div>
-                <h2 id={titleId} className="gt-chat-slide__title">
+                <h2 id={titleId} className="od-chat-slide__title">
                   Chat
                 </h2>
-                <p className="gt-chat-slide__sub">
+                <p className="od-chat-slide__sub">
                   {expanded
                     ? 'Full household room — channels, thread, voice'
                     : 'Household rooms & DMs'}
                 </p>
               </div>
-              <div className="gt-chat-slide__header-actions">
+              <div className="od-chat-slide__header-actions">
                 <button
                   type="button"
-                  className="gt-chat-slide__expand"
+                  className="od-chat-slide__expand"
                   aria-pressed={expanded}
                   onClick={() => setExpanded((v) => !v)}
                 >
@@ -140,7 +140,7 @@ export function ChatSlideOut({
                     a panel over the library. */}
                 <button
                   type="button"
-                  className="gt-chat-slide__expand"
+                  className="od-chat-slide__expand"
                   title="Open chat in its own window"
                   onClick={() => openChatPopoutWindow(channelId)}
                 >
@@ -148,7 +148,7 @@ export function ChatSlideOut({
                 </button>
                 <button
                   type="button"
-                  className="gt-chat-slide__close"
+                  className="od-chat-slide__close"
                   aria-label="Hide chat"
                   onClick={handleClose}
                 >

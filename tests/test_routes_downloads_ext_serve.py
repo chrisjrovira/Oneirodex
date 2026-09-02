@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 from uuid import uuid4
 
-from gametheca.models import DownloadRequest, Game, User
+from oneirodex.models import DownloadRequest, Game, User
 
 
 def authenticate_user(client, user):
@@ -34,8 +34,8 @@ def authenticated_user(db_session):
 @pytest.fixture
 def test_library(db_session):
     """Create a test library for testing."""
-    from gametheca.models import Library
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Library
+    from oneirodex.platform import LibraryPlatform
     library = Library(
         uuid=str(uuid4()),
         name='Test Library',
@@ -91,7 +91,7 @@ class TestDownloadZipRoute:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    @patch('gametheca.routes_downloads_ext.serve.log_system_event')
+    @patch('oneirodex.routes_downloads_ext.serve.log_system_event')
     def test_download_zip_returns_asgi_error(self, mock_log, client, authenticated_user, sample_download_request):
         """Test that Flask download route returns error since ASGI should handle downloads."""
         authenticate_user(client, authenticated_user)

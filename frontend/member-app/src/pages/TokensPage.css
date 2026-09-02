@@ -1,55 +1,55 @@
-.gt-tokens__create,
-.gt-tokens__list-wrap,
-.gt-tokens__secret {
+.od-tokens__create,
+.od-tokens__list-wrap,
+.od-tokens__secret {
   margin: 0 0 1.5rem;
 }
 
-.gt-tokens h2 {
+.od-tokens h2 {
   margin: 0 0 0.65rem;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-tokens__form {
+.od-tokens__form {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
   max-width: 36rem;
 }
 
-.gt-tokens__field {
+.od-tokens__field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-.gt-tokens__field span {
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+.od-tokens__field span {
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-tokens__field input {
+.od-tokens__field input {
   font: inherit;
   padding: 0.45rem 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
-  color: var(--gt-text);
+  border: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
+  color: var(--od-text);
 }
 
-.gt-tokens__presets {
+.od-tokens__presets {
   margin: 0;
   padding: 0.65rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
-  border-radius: var(--gt-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-border) 55%, transparent);
+  border-radius: var(--od-radius-md);
 }
 
-.gt-tokens__presets legend {
+.od-tokens__presets legend {
   padding: 0 0.25rem;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-tokens__preset {
+.od-tokens__preset {
   display: flex;
   gap: 0.55rem;
   align-items: flex-start;
@@ -57,53 +57,53 @@
   cursor: pointer;
 }
 
-.gt-tokens__preset strong {
+.od-tokens__preset strong {
   display: block;
 }
 
-.gt-tokens__preset-scopes,
-.gt-tokens__preset-hint {
+.od-tokens__preset-scopes,
+.od-tokens__preset-hint {
   display: block;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   line-height: 1.35;
 }
 
-.gt-tokens__preset-summary {
+.od-tokens__preset-summary {
   margin: 0;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-tokens__secret {
+.od-tokens__secret {
   padding: 0.85rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  border-radius: var(--gt-radius-md);
-  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 45%, transparent);
+  border-radius: var(--od-radius-md);
+  background: color-mix(in srgb, var(--od-accent) 8%, transparent);
 }
 
-.gt-tokens__warning {
+.od-tokens__warning {
   margin: 0 0 0.55rem;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   user-select: none;
 }
 
-.gt-tokens__secret-meta {
+.od-tokens__secret-meta {
   margin: 0 0 0.45rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   user-select: none;
 }
 
-.gt-tokens__secret-label {
+.od-tokens__secret-label {
   display: block;
   margin: 0 0 0.3rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   user-select: none;
 }
 
-.gt-tokens__secret-value {
+.od-tokens__secret-value {
   display: block;
   box-sizing: border-box;
   width: 100%;
@@ -111,41 +111,41 @@
   padding: 0.55rem 0.65rem;
   margin: 0 0 0.35rem;
   overflow-x: auto;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-surface) 95%, transparent);
-  color: var(--gt-text);
+  border: 1px solid color-mix(in srgb, var(--od-border) 55%, transparent);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-surface) 95%, transparent);
+  color: var(--od-text);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.35;
   white-space: nowrap;
   cursor: text;
 }
 
-.gt-tokens__secret-value:focus {
-  outline: 2px solid color-mix(in srgb, var(--gt-accent) 65%, transparent);
+.od-tokens__secret-value:focus {
+  outline: 2px solid color-mix(in srgb, var(--od-accent) 65%, transparent);
   outline-offset: 2px;
 }
 
-.gt-tokens__secret-hint {
+.od-tokens__secret-hint {
   margin: 0 0 0.65rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   user-select: none;
 }
 
-.gt-tokens__copy-status {
+.od-tokens__copy-status {
   margin: 0.55rem 0 0;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-tokens__secret-actions {
+.od-tokens__secret-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.gt-tokens__list {
+.od-tokens__list {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -154,18 +154,18 @@
   padding: 0;
 }
 
-.gt-tokens__row {
+.od-tokens__row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.65rem;
   padding: 0.7rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 50%, transparent);
-  border-radius: var(--gt-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-border) 50%, transparent);
+  border-radius: var(--od-radius-md);
 }
 
-.gt-tokens__row-main {
+.od-tokens__row-main {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -173,9 +173,9 @@
   flex: 1;
 }
 
-.gt-tokens__prefix,
-.gt-tokens__scopes,
-.gt-tokens__meta {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+.od-tokens__prefix,
+.od-tokens__scopes,
+.od-tokens__meta {
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }

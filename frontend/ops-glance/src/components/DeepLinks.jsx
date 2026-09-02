@@ -2,7 +2,7 @@ export function DeepLinks() {
   return (
     <nav className="ops-deep-links" aria-label="Operations pages">
       <a href="/admin/statistics">Statistics</a>
-      <a href="/admin/system_logs">System logs</a>
+      <a href="/admin/ops?open=full-log">System logs</a>
       <a href="/scan_management">Scan management</a>
       <a href="/admin/manage-downloads">Manage downloads</a>
       {/* The Server info link is gone with the page (W27-D1). It pointed at a

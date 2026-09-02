@@ -45,62 +45,62 @@ const MARKUP = {
   // NES / SNES era — the d-pad presses around its axis.
   dpad: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect className="gt-loading-motif__pad" x="18" y="8" width="12" height="32" rx="2" />
-      <rect className="gt-loading-motif__pad" x="8" y="18" width="32" height="12" rx="2" />
-      <circle className="gt-loading-motif__dpad-press" cx="24" cy="13" r="3" />
-      <circle className="gt-loading-motif__dpad-press gt-loading-motif__dpad-press--r" cx="35" cy="24" r="3" />
-      <circle className="gt-loading-motif__dpad-press gt-loading-motif__dpad-press--d" cx="24" cy="35" r="3" />
-      <circle className="gt-loading-motif__dpad-press gt-loading-motif__dpad-press--l" cx="13" cy="24" r="3" />
+      <rect className="od-loading-motif__pad" x="18" y="8" width="12" height="32" rx="2" />
+      <rect className="od-loading-motif__pad" x="8" y="18" width="32" height="12" rx="2" />
+      <circle className="od-loading-motif__dpad-press" cx="24" cy="13" r="3" />
+      <circle className="od-loading-motif__dpad-press od-loading-motif__dpad-press--r" cx="35" cy="24" r="3" />
+      <circle className="od-loading-motif__dpad-press od-loading-motif__dpad-press--d" cx="24" cy="35" r="3" />
+      <circle className="od-loading-motif__dpad-press od-loading-motif__dpad-press--l" cx="13" cy="24" r="3" />
     </svg>
   ),
   // Disc era — platter spins, tracking head sweeps.
   disc: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <g className="gt-loading-motif__platter">
-        <circle className="gt-loading-motif__disc-edge" cx="24" cy="24" r="15" />
-        <path className="gt-loading-motif__disc-glint" d="M24 9a15 15 0 0 1 13 7.5" />
+      <g className="od-loading-motif__platter">
+        <circle className="od-loading-motif__disc-edge" cx="24" cy="24" r="15" />
+        <path className="od-loading-motif__disc-glint" d="M24 9a15 15 0 0 1 13 7.5" />
       </g>
-      <circle className="gt-loading-motif__disc-hub" cx="24" cy="24" r="4" />
-      <rect className="gt-loading-motif__head" x="23" y="30" width="2" height="12" rx="1" />
+      <circle className="od-loading-motif__disc-hub" cx="24" cy="24" r="4" />
+      <rect className="od-loading-motif__head" x="23" y="30" width="2" height="12" rx="1" />
     </svg>
   ),
   // Modern pad — analog stick tilts around its gate.
   stick: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <circle className="gt-loading-motif__gate" cx="24" cy="24" r="15" />
-      <g className="gt-loading-motif__stick">
-        <circle className="gt-loading-motif__stick-cap" cx="24" cy="24" r="7" />
+      <circle className="od-loading-motif__gate" cx="24" cy="24" r="15" />
+      <g className="od-loading-motif__stick">
+        <circle className="od-loading-motif__stick-cap" cx="24" cy="24" r="7" />
       </g>
     </svg>
   ),
   // Handheld — screen refreshes under a pulsing power LED.
   handheld: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect className="gt-loading-motif__shell" x="12" y="6" width="24" height="36" rx="3" />
-      <rect className="gt-loading-motif__screen" x="16" y="11" width="16" height="13" rx="1" />
-      <rect className="gt-loading-motif__scanline" x="16" y="12" width="16" height="2" />
-      <circle className="gt-loading-motif__led" cx="16.5" cy="28.5" r="1.5" />
-      <rect className="gt-loading-motif__pad" x="17" y="32" width="7" height="2.2" rx="1" />
-      <rect className="gt-loading-motif__pad" x="19.4" y="29.6" width="2.2" height="7" rx="1" />
+      <rect className="od-loading-motif__shell" x="12" y="6" width="24" height="36" rx="3" />
+      <rect className="od-loading-motif__screen" x="16" y="11" width="16" height="13" rx="1" />
+      <rect className="od-loading-motif__scanline" x="16" y="12" width="16" height="2" />
+      <circle className="od-loading-motif__led" cx="16.5" cy="28.5" r="1.5" />
+      <rect className="od-loading-motif__pad" x="17" y="32" width="7" height="2.2" rx="1" />
+      <rect className="od-loading-motif__pad" x="19.4" y="29.6" width="2.2" height="7" rx="1" />
     </svg>
   ),
   // Cartridge slotting home.
   cart: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <path className="gt-loading-motif__slot" d="M11 30h26v10H11z" />
-      <g className="gt-loading-motif__cart">
-        <rect className="gt-loading-motif__cart-body" x="15" y="8" width="18" height="20" rx="2" />
-        <rect className="gt-loading-motif__cart-label" x="18" y="11" width="12" height="7" rx="1" />
-        <path className="gt-loading-motif__cart-pins" d="M18 25h12" />
+      <path className="od-loading-motif__slot" d="M11 30h26v10H11z" />
+      <g className="od-loading-motif__cart">
+        <rect className="od-loading-motif__cart-body" x="15" y="8" width="18" height="20" rx="2" />
+        <rect className="od-loading-motif__cart-label" x="18" y="11" width="12" height="7" rx="1" />
+        <path className="od-loading-motif__cart-pins" d="M18 25h12" />
       </g>
     </svg>
   ),
   // CRT — the set the whole library grew up on.
   crt: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect className="gt-loading-motif__tube" x="7" y="10" width="34" height="24" rx="4" />
-      <rect className="gt-loading-motif__raster" x="10" y="13" width="28" height="4" />
-      <path className="gt-loading-motif__stand" d="M19 34v4h10v-4M15 38h18" />
+      <rect className="od-loading-motif__tube" x="7" y="10" width="34" height="24" rx="4" />
+      <rect className="od-loading-motif__raster" x="10" y="13" width="28" height="4" />
+      <path className="od-loading-motif__stand" d="M19 34v4h10v-4M15 38h18" />
     </svg>
   ),
 }
@@ -150,13 +150,13 @@ export function LoadingMotif({
   // here would render an empty span for any unrecognised id.
   const id = normalizeLoadingMotifId(motifId) || 'dpad'
   const sizeClass = size === 'sm'
-    ? 'gt-loading-motif--sm'
+    ? 'od-loading-motif--sm'
     : size === 'lg'
-      ? 'gt-loading-motif--lg'
+      ? 'od-loading-motif--lg'
       : ''
   return (
     <span
-      className={`gt-loading-motif ${sizeClass}${className ? ` ${className}` : ''}`.trim()}
+      className={`od-loading-motif ${sizeClass}${className ? ` ${className}` : ''}`.trim()}
       data-motif={id}
       role="img"
       aria-label={title}

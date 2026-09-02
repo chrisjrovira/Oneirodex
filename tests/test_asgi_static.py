@@ -1,6 +1,6 @@
 """Unit tests for ASGI static path resolution (no server required)."""
 
-from gametheca.utils.static_files import resolve_static_path
+from oneirodex.utils.static_files import resolve_static_path
 
 
 def test_static_path_rejects_traversal(tmp_path):

@@ -1,10 +1,10 @@
-"""Unit tests for GameTheca freshness (local vs store) helpers."""
+"""Unit tests for Oneirodex freshness (local vs store) helpers."""
 
 from types import SimpleNamespace
 
-from gametheca.utils.freshness.compare import compare_freshness, parse_version_tuple
-from gametheca.utils.freshness.ids import resolve_steam_app_id
-from gametheca.utils.freshness.local import detect_local_facts
+from oneirodex.utils.freshness.compare import compare_freshness, parse_version_tuple
+from oneirodex.utils.freshness.ids import resolve_steam_app_id
+from oneirodex.utils.freshness.local import detect_local_facts
 
 
 def test_parse_version_tuple():

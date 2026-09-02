@@ -11,7 +11,7 @@ import { expect, test } from 'vitest'
  * old style" was reported separately against Collections, Wishlist, Trailers,
  * Updates and Favorites. Five reports, one cause, and it was never the page:
  *
- *   1. `.gt-btn` and `.gt-cbtn` were two different geometries. Fixed at the
+ *   1. `.od-btn` and `.od-cbtn` were two different geometries. Fixed at the
  *      root — both now resolve to the same shape in the theme CSS, so a page
  *      cannot look "old" by picking the wrong one. Nothing here guards that;
  *      the stylesheet does.
@@ -80,7 +80,7 @@ test('every rendered button carries a class', () => {
 test('the check sees an unclassed button and ignores a classed one', () => {
   const probe = [
     '<button type="button" onClick={x}>A</button>',
-    '<button className="gt-cbtn">B</button>',
+    '<button className="od-cbtn">B</button>',
     // Multi-line form, which is how most of the real offenders were written.
     '<button\n  type="button"\n  disabled={busy}\n>C</button>',
   ].join('\n')

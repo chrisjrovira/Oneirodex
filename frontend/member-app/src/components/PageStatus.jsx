@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import './PageStatus.css'
-import { LoadingMotif } from './LoadingMotif'
+import { LoadingMotif, LOADING_MOTIF_IDS, normalizeLoadingMotifId } from './LoadingMotif'
 import { useLoadingMotifId } from './loadingMotifApi'
+import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText'
 
 /**
  * Read the human sentence out of a failed request (GT-A2).
@@ -50,27 +52,64 @@ export function resolveErrorDetail(error) {
   return parts.length ? parts.join(' · ') : null
 }
 
+const MOTIF_ROTATE_MS = 900
+const ELLIPSIS_MS = 420
+
 function LoadingStatus({
   inline,
   className,
-  resolvedMotif,
+  seedMotif,
   loadingMessage,
 }) {
+  const base = loadingMessageBase(loadingMessage)
+  const [tick, setTick] = useState(0)
+  const [motifIndex, setMotifIndex] = useState(0)
+
+  const pool = LOADING_MOTIF_IDS
+  const startId = normalizeLoadingMotifId(seedMotif) || pool[0]
+  const startIndex = Math.max(0, pool.indexOf(startId))
+
+  useEffect(() => {
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    if (reduce) return undefined
+
+    const ellipsisTimer = window.setInterval(() => {
+      setTick((n) => n + 1)
+    }, ELLIPSIS_MS)
+    const motifTimer = window.setInterval(() => {
+      setMotifIndex((n) => n + 1)
+    }, MOTIF_ROTATE_MS)
+    return () => {
+      window.clearInterval(ellipsisTimer)
+      window.clearInterval(motifTimer)
+    }
+  }, [])
+
+  const motifId = pool[(startIndex + motifIndex) % pool.length]
+  const label = `${base}${loadingEllipsisFrame(tick)}`
+
   return (
     <div
-      className={`gt-page-status gt-page-status--loading${
-        inline ? '' : ' gt-page-status--takeover'
+      className={`od-page-status od-page-status--loading${
+        inline ? '' : ' od-page-status--takeover'
       }${className ? ` ${className}` : ''}`}
       role="status"
       aria-busy="true"
       aria-live="polite"
     >
       <LoadingMotif
-        motifId={resolvedMotif}
+        motifId={motifId}
         size={inline ? 'md' : 'lg'}
-        title={loadingMessage}
+        title={label}
       />
-      <p className="gt-page-status__message">{loadingMessage}</p>
+      <p className="od-page-status__message">
+        <span className="od-page-status__message-base">{base}</span>
+        <span className="od-page-status__ellipsis" aria-hidden="true">
+          {loadingEllipsisFrame(tick)}
+        </span>
+      </p>
     </div>
   )
 }
@@ -107,15 +146,15 @@ export function PageStatus({
     const detail = resolveErrorDetail(error)
     return (
       <div
-        className={`gt-page-status gt-page-status--error${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--error${className ? ` ${className}` : ''}`}
         role="alert"
       >
-        <div className="gt-page-status__body">
-          <p className="gt-page-status__message">{message}</p>
-          {detail ? <p className="gt-page-status__detail">{detail}</p> : null}
+        <div className="od-page-status__body">
+          <p className="od-page-status__message">{message}</p>
+          {detail ? <p className="od-page-status__detail">{detail}</p> : null}
         </div>
         {onRetry ? (
-          <button type="button" className="gt-btn gt-btn--sm" onClick={onRetry}>
+          <button type="button" className="od-btn od-btn--sm" onClick={onRetry}>
             {retryLabel}
           </button>
         ) : null}
@@ -128,7 +167,7 @@ export function PageStatus({
       <LoadingStatus
         inline={inline}
         className={className}
-        resolvedMotif={resolvedMotif}
+        seedMotif={resolvedMotif}
         loadingMessage={loadingMessage}
       />
     )
@@ -139,10 +178,10 @@ export function PageStatus({
   if (emptyMessage) {
     return (
       <div
-        className={`gt-page-status gt-page-status--empty${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--empty${className ? ` ${className}` : ''}`}
         role="status"
       >
-        <p className="gt-page-status__message">{emptyMessage}</p>
+        <p className="od-page-status__message">{emptyMessage}</p>
         {children}
       </div>
     )

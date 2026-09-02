@@ -1,0 +1,171 @@
+/* Discovery Sections — viewport-fit card tile board (not a doom-scroll row list). */
+
+.od-discovery-sections {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.od-discovery-sections .od-adminpage-header {
+    flex: 0 0 auto;
+    margin-bottom: 0.75rem;
+}
+
+.od-discovery-sections__panel,
+.od-discovery-sections .od-adminpage-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.sections-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
+    gap: 0.75rem;
+    align-content: start;
+    padding: 0.15rem 0.15rem 0.75rem;
+}
+
+.section-item {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-radius-lg, var(--od-radius-md));
+    margin: 0;
+    padding: 0.85rem 0.9rem;
+    cursor: grab;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    min-height: 8.5rem;
+    display: flex;
+}
+
+.section-item:hover {
+    background: color-mix(in srgb, var(--od-surface-2) 82%, var(--od-text));
+    border-color: color-mix(in srgb, var(--od-accent) 35%, var(--od-border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--od-accent) 18%, transparent);
+}
+
+.section-item.sortable-ghost {
+    opacity: 0.45;
+}
+
+.section-item.sortable-drag {
+    cursor: grabbing;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--od-bg) 55%, transparent);
+}
+
+.section-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.section-item__top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.drag-handle-container {
+    flex: 0 0 auto;
+    line-height: 1;
+    margin-top: 0.1rem;
+}
+
+.drag-handle {
+    color: var(--od-text-muted);
+    cursor: grab;
+    padding: 2px;
+}
+
+.drag-handle:hover {
+    color: var(--od-accent);
+}
+
+.section-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--od-text);
+    font-weight: 600;
+    font-size: var(--od-font-lg, 1rem);
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.section-count {
+    color: var(--od-text-muted);
+    font-size: var(--od-font-sm, 0.85rem);
+    margin: 0;
+    font-style: normal;
+    line-height: 1.35;
+}
+
+.section-controls {
+    margin-left: 0;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.section-badge {
+    flex: 0 0 auto;
+    font-size: var(--od-font-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: var(--od-radius-pill);
+    margin-left: 0;
+}
+
+.section-badge--custom {
+    background: color-mix(in srgb, var(--od-accent) 22%, transparent);
+    color: var(--od-accent);
+    border: 1px solid color-mix(in srgb, var(--od-accent) 45%, transparent);
+}
+
+.zone-mode-toggle .btn-check:checked + .btn-outline-secondary {
+    background: var(--od-accent);
+    border-color: var(--od-accent);
+    color: var(--od-bg);
+}
+
+#zoneFilterFields .form-select + .form-select {
+    margin-top: 8px;
+}
+
+/* Legacy unused card chrome kept for any residual markup. */
+.card {
+    background: var(--od-surface);
+    border-radius: var(--od-radius-2xl);
+    margin-top: 20px;
+    border: 1px solid var(--od-border);
+}
+
+.alert-info {
+    background: color-mix(in srgb, var(--od-info) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--od-info) 35%, transparent);
+    color: var(--od-text);
+}

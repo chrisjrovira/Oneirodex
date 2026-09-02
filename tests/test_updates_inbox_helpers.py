@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 
-from gametheca.routes_apis import updates as updates_mod
+from oneirodex.routes_apis import updates as updates_mod
 
 
 def test_dlc_summary_reads_compare_payload_keys():

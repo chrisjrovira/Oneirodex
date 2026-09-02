@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Download the OFL theme fonts GameTheca's font picker offers.
+"""Download the OFL theme fonts Oneirodex's font picker offers.
 
 Why this exists
 ---------------
-The font registry in ``gametheca/utils/theme_fonts.py`` names five open-licence
+The font registry in ``oneirodex/utils/theme_fonts.py`` names five open-licence
 faces, but the **binaries are not vendored** in this repo — same stance as
 WebRetro cores and reference DATs. Without them every built-in except
 ``system-ui`` silently falls through to a CSS fallback, so the picker appears to
@@ -13,7 +13,7 @@ All five are **SIL Open Font License 1.1** from the official `google/fonts`
 repository. The OFL permits redistribution, so an operator may also mirror these
 internally; we fetch rather than vendor to keep binaries out of git history.
 
-Files land in ``gametheca/static/library/fonts/`` (gitignored) under exactly the
+Files land in ``oneirodex/static/library/fonts/`` (gitignored) under exactly the
 names the registry expects — a mismatch means the face still won't load.
 
 Usage:
@@ -33,7 +33,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_OUT = ROOT / "gametheca" / "static" / "library" / "fonts"
+DEFAULT_OUT = ROOT / "oneirodex" / "static" / "library" / "fonts"
 
 USER_AGENT = "Oneirodex-fetch-fonts/1.0 (+https://github.com/chrisjrovira/oneirodex)"
 

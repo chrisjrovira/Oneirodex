@@ -35,27 +35,27 @@ function FriendRow({
   const key = String(user.id || row.id)
 
   return (
-    <li className={`gt-social-dock__friend gt-social-dock__friend--${status}`}>
-      <div className="gt-social-dock__friend-main">
-        <span className={`gt-social-dock__dot gt-social-dock__dot--${status}`} aria-hidden="true" />
-        <div className="gt-social-dock__friend-text">
+    <li className={`od-social-dock__friend od-social-dock__friend--${status}`}>
+      <div className="od-social-dock__friend-main">
+        <span className={`od-social-dock__dot od-social-dock__dot--${status}`} aria-hidden="true" />
+        <div className="od-social-dock__friend-text">
           {user.id ? (
-            <Link className="gt-social-dock__name" to={`/members/${user.id}`}>
+            <Link className="od-social-dock__name" to={`/members/${user.id}`}>
               {user.name || 'Friend'}
             </Link>
           ) : (
-            <strong className="gt-social-dock__name">{user.name || 'Friend'}</strong>
+            <strong className="od-social-dock__name">{user.name || 'Friend'}</strong>
           )}
-          <span className="gt-social-dock__presence">
+          <span className="od-social-dock__presence">
             {presenceLabel(status)}
             {presence.game_name ? ` · ${presence.game_name}` : ''}
           </span>
         </div>
       </div>
-      <div className="gt-social-dock__friend-actions">
+      <div className="od-social-dock__friend-actions">
         <button
           type="button"
-          className="gt-social-dock__mini"
+          className="od-social-dock__mini"
           disabled={busyKey === `dm-${key}`}
           onClick={() => onMessage(user)}
           title="Direct message"
@@ -64,7 +64,7 @@ function FriendRow({
         </button>
         <button
           type="button"
-          className="gt-social-dock__mini"
+          className="od-social-dock__mini"
           disabled={busyKey === `invite-${key}`}
           onClick={() => onInvite(user)}
           title="Invite to party voice"
@@ -74,7 +74,7 @@ function FriendRow({
         {gameUuid ? (
           <button
             type="button"
-            className="gt-social-dock__mini"
+            className="od-social-dock__mini"
             disabled={busyKey === `share-${key}`}
             onClick={() => onShare(user)}
             title="Share focused game"
@@ -83,7 +83,7 @@ function FriendRow({
           </button>
         ) : null}
         {presence.game_uuid ? (
-          <Link className="gt-social-dock__mini" to={shareGamePath(presence.game_uuid)} title="Open what they’re playing">
+          <Link className="od-social-dock__mini" to={shareGamePath(presence.game_uuid)} title="Open what they’re playing">
             Join
           </Link>
         ) : null}
@@ -243,22 +243,22 @@ export function SocialCompanionDock({
 
   const panel = (
     <aside
-      className={`gt-social-dock gt-glass-panel gt-social-dock--${mode}${open ? ' is-open' : ''}${pinned ? ' is-pinned' : ''}`}
+      className={`od-social-dock od-glass-panel od-social-dock--${mode}${open ? ' is-open' : ''}${pinned ? ' is-pinned' : ''}`}
       aria-label="Friends companion"
     >
-      <header className="gt-social-dock__header">
+      <header className="od-social-dock__header">
         <div>
-          <h2 className="gt-social-dock__title">Friends</h2>
-          <p className="gt-social-dock__sub">
+          <h2 className="od-social-dock__title">Friends</h2>
+          <p className="od-social-dock__sub">
             {social.onlineCount} online
             {social.pendingCount ? ` · ${social.pendingCount} pending` : ''}
           </p>
         </div>
-        <div className="gt-social-dock__header-actions">
+        <div className="od-social-dock__header-actions">
           {!standalone ? (
             <button
               type="button"
-              className="gt-social-dock__icon-btn"
+              className="od-social-dock__icon-btn"
               aria-pressed={pinned}
               title={pinned ? 'Unpin (can auto-collapse)' : 'Pin open'}
               onClick={() => setPinned((value) => !value)}
@@ -269,7 +269,7 @@ export function SocialCompanionDock({
           {!standalone ? (
             <button
               type="button"
-              className="gt-social-dock__icon-btn"
+              className="od-social-dock__icon-btn"
               title="Pop out stay-open window"
               onClick={() => openSocialPopoutWindow()}
             >
@@ -279,7 +279,7 @@ export function SocialCompanionDock({
           {!standalone && !forceOpen ? (
             <button
               type="button"
-              className="gt-social-dock__icon-btn"
+              className="od-social-dock__icon-btn"
               aria-label="Hide friends"
               onClick={() => setOpen(false)}
             >
@@ -295,23 +295,23 @@ export function SocialCompanionDock({
           errorMessage="Unable to load friends."
           onRetry={() => void social.reload()}
           retryLabel="Retry"
-          className="gt-social-dock__empty"
+          className="od-social-dock__empty"
         />
       ) : null}
 
       {social.pendingIncoming.length > 0 ? (
-        <section className="gt-social-dock__section">
+        <section className="od-social-dock__section">
           <h3>Requests</h3>
-          <ul className="gt-social-dock__list">
+          <ul className="od-social-dock__list">
             {social.pendingIncoming.map((row) => (
-              <li key={`pending-${row.id}`} className="gt-social-dock__friend">
-                <div className="gt-social-dock__friend-main">
+              <li key={`pending-${row.id}`} className="od-social-dock__friend">
+                <div className="od-social-dock__friend-main">
                   <strong>{row.user?.name || 'Someone'}</strong>
                 </div>
-                <div className="gt-social-dock__friend-actions">
+                <div className="od-social-dock__friend-actions">
                   <button
                     type="button"
-                    className="gt-social-dock__mini"
+                    className="od-social-dock__mini"
                     onClick={() => {
                       void fetch(`/api/social/friends/${row.id}/accept`, {
                         method: 'POST',
@@ -329,14 +329,14 @@ export function SocialCompanionDock({
         </section>
       ) : null}
 
-      <section className="gt-social-dock__section gt-social-dock__section--grow">
+      <section className="od-social-dock__section od-social-dock__section--grow">
         <h3>Household</h3>
         {social.loading && social.accepted.length === 0 ? (
-          <PageStatus loading inline className="gt-social-dock__empty" />
+          <PageStatus loading inline className="od-social-dock__empty" />
         ) : social.accepted.length === 0 ? (
-          <p className="gt-social-dock__empty">No friends yet — add someone below.</p>
+          <p className="od-social-dock__empty">No friends yet — add someone below.</p>
         ) : (
-          <ul className="gt-social-dock__list">
+          <ul className="od-social-dock__list">
             {social.accepted.map((row) => (
               <FriendRow
                 key={row.id}
@@ -353,9 +353,9 @@ export function SocialCompanionDock({
       </section>
 
       {social.nowPlaying.length > 0 ? (
-        <section className="gt-social-dock__section">
+        <section className="od-social-dock__section">
           <h3>Now playing</h3>
-          <ul className="gt-social-dock__now">
+          <ul className="od-social-dock__now">
             {social.nowPlaying.slice(0, 6).map((row) => (
               <li key={`np-${row.session_id || row.user_id}-${row.game_uuid}`}>
                 <strong>{row.user}</strong>
@@ -367,7 +367,7 @@ export function SocialCompanionDock({
         </section>
       ) : null}
 
-      <form className="gt-social-dock__add" onSubmit={handleAddFriend}>
+      <form className="od-social-dock__add" onSubmit={handleAddFriend}>
         <input
           value={addName}
           onChange={(event) => setAddName(event.target.value)}
@@ -375,15 +375,15 @@ export function SocialCompanionDock({
           autoComplete="off"
           aria-label="Add friend by username"
         />
-        <button type="submit" className="gt-btn" disabled={busyKey === 'add'}>
+        <button type="submit" className="od-btn" disabled={busyKey === 'add'}>
           Add
         </button>
       </form>
 
-      <footer className="gt-social-dock__footer">
+      <footer className="od-social-dock__footer">
         <button
           type="button"
-          className="gt-social-dock__footer-link"
+          className="od-social-dock__footer-link"
           onClick={() => {
             if (standalone) {
               window.location.href = '/chat'
@@ -394,21 +394,21 @@ export function SocialCompanionDock({
         >
           Chat
         </button>
-        <Link className="gt-social-dock__footer-link" to="/activity">
+        <Link className="od-social-dock__footer-link" to="/activity">
           Activity
         </Link>
         {gameUuid ? (
-          <button type="button" className="gt-social-dock__footer-link" onClick={() => void handleShare()}>
+          <button type="button" className="od-social-dock__footer-link" onClick={() => void handleShare()}>
             Copy game
           </button>
         ) : null}
-        {toast ? <span className="gt-social-dock__toast">{toast}</span> : null}
+        {toast ? <span className="od-social-dock__toast">{toast}</span> : null}
       </footer>
     </aside>
   )
 
   if (standalone) {
-    return <div className="gt-social-companion-page">{panel}</div>
+    return <div className="od-social-companion-page">{panel}</div>
   }
 
   return (
@@ -416,15 +416,15 @@ export function SocialCompanionDock({
       {!hideLauncher && !open ? (
         <button
           type="button"
-          className={`gt-social-dock__launcher${bigPicture ? ' gt-social-dock__launcher--bp' : ''}`}
+          className={`od-social-dock__launcher${bigPicture ? ' od-social-dock__launcher--bp' : ''}`}
           onClick={() => setOpen(true)}
           title={bigPicture ? 'Friends (Y)' : 'Friends companion'}
           aria-label="Open friends companion"
         >
           Friends
-          {social.onlineCount > 0 ? <span className="gt-social-dock__badge">{social.onlineCount}</span> : null}
+          {social.onlineCount > 0 ? <span className="od-social-dock__badge">{social.onlineCount}</span> : null}
           {social.pendingCount > 0 ? (
-            <span className="gt-social-dock__badge gt-social-dock__badge--pending">{social.pendingCount}</span>
+            <span className="od-social-dock__badge od-social-dock__badge--pending">{social.pendingCount}</span>
           ) : null}
         </button>
       ) : null}

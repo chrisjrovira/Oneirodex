@@ -57,7 +57,7 @@ const SCOPES = [
  * The one promise worth repeating everywhere it can be read: this never deletes
  * files. Scanned games, artwork and firmware live on disk and are not touched.
  * The server enforces that by having no filesystem access in the reset path at
- * all — see gametheca/utils/system_reset.py — so this is a description of a
+ * all — see oneirodex/utils/system_reset.py — so this is a description of a
  * guarantee rather than a claim the UI is making on its own.
  */
 export function SystemResetPanel() {
@@ -68,6 +68,8 @@ export function SystemResetPanel() {
   const [error, setError] = useState(null)
   const [done, setDone] = useState(null)
   const [counts, setCounts] = useState({})
+  /** Explicit gate before preview — stops a mis-click from even planning a wipe. */
+  const [acknowledged, setAcknowledged] = useState(false)
 
   const toggle = useCallback((scope) => {
     setSelected((previous) => {
@@ -170,15 +172,31 @@ export function SystemResetPanel() {
   const confirmed = CONFIRM_ALIASES.has(confirm)
 
   return (
-    <section className="gt-ops-panel gt-ops-panel--wide gt-danger-zone">
-      <h2>Danger zone — reset this install</h2>
-      <p className="gt-danger-zone__lede">
+    <section className="od-ops-panel od-ops-panel--wide od-danger-zone">
+      <h2>Reset this install</h2>
+      <p className="od-danger-zone__lede">
         Clears Oneirodex&rsquo;s database. <strong>No files are deleted.</strong>{' '}
         Everything on disk — your scanned games, artwork you supplied and BIOS
         files — is left exactly as it is, so a rescan rebuilds the catalog.
       </p>
 
-      <ul className="gt-danger-zone__scopes">
+      <label className="od-danger-zone__ack">
+        <input
+          type="checkbox"
+          checked={acknowledged}
+          onChange={(event) => {
+            setAcknowledged(event.target.checked)
+            setPlan(null)
+            setConfirm('')
+          }}
+        />
+        <span>
+          I understand this cannot be undone and I am on the correct Oneirodex
+          install.
+        </span>
+      </label>
+
+      <ul className="od-danger-zone__scopes">
         {SCOPES.map((scope) => (
           <li key={scope.id}>
             <label>
@@ -186,24 +204,25 @@ export function SystemResetPanel() {
                 type="checkbox"
                 checked={selected.has(scope.id)}
                 onChange={() => toggle(scope)}
+                disabled={!acknowledged}
               />
-              <span className="gt-danger-zone__scope-title">{scope.title}</span>
+              <span className="od-danger-zone__scope-title">{scope.title}</span>
               {counts[scope.id] ? (
-                <span className="gt-danger-zone__scope-count">
+                <span className="od-danger-zone__scope-count">
                   clears {counts[scope.id]} tables
                 </span>
               ) : null}
             </label>
-            <p className="gt-danger-zone__scope-blurb">{scope.blurb}</p>
+            <p className="od-danger-zone__scope-blurb">{scope.blurb}</p>
           </li>
         ))}
       </ul>
 
-      <div className="gt-btn-bar">
+      <div className="od-btn-bar">
         <button
           type="button"
-          className="gt-btn"
-          disabled={!chosen || busy}
+          className="od-btn"
+          disabled={!acknowledged || !chosen || busy}
           onClick={preview}
         >
           Show me what this clears
@@ -211,7 +230,7 @@ export function SystemResetPanel() {
       </div>
 
       {plan ? (
-        <div className="gt-danger-zone__plan" role="status">
+        <div className="od-danger-zone__plan" role="status">
           <p>
             This will empty <strong>{plan.table_count}</strong> table
             {plan.table_count === 1 ? '' : 's'}
@@ -225,7 +244,7 @@ export function SystemResetPanel() {
             <code>{[...plan.tables, ...(plan.cascaded || [])].sort().join(', ')}</code>
           </details>
 
-          <label className="gt-danger-zone__confirm">
+          <label className="od-danger-zone__confirm">
             Type <code>{CONFIRM_PHRASE}</code> to confirm:
             <input
               type="text"
@@ -236,10 +255,10 @@ export function SystemResetPanel() {
             />
           </label>
 
-          <div className="gt-btn-bar">
+          <div className="od-btn-bar">
             <button
               type="button"
-              className="gt-btn gt-btn--danger"
+              className="od-btn od-btn--danger"
               disabled={!confirmed || busy}
               onClick={perform}
             >
@@ -250,7 +269,7 @@ export function SystemResetPanel() {
       ) : null}
 
       {done ? (
-        <p className="gt-danger-zone__done" role="status">
+        <p className="od-danger-zone__done" role="status">
           Reset complete — {done.table_count} table
           {done.table_count === 1 ? '' : 's'} cleared
           {done.actor_restored ? ', your admin account was kept' : ''}. No files

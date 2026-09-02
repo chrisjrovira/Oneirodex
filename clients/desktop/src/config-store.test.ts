@@ -37,7 +37,7 @@ describe('config-store secure migration', () => {
 
   it('migrates plaintext token into secure store and scrubs JSON', async () => {
     config = {
-      base_url: 'https://gametheca.local',
+      base_url: 'https://oneirodex.local',
       token: 'gt_ab12cd34_secretpart',
     }
 
@@ -47,7 +47,7 @@ describe('config-store secure migration', () => {
     })
 
     expect(stored).toEqual({
-      baseUrl: 'https://gametheca.local',
+      baseUrl: 'https://oneirodex.local',
       token: 'gt_ab12cd34_secretpart',
     })
     expect(vault.get(SECURE_STORE_ACCOUNT)).toBe('gt_ab12cd34_secretpart')
@@ -57,13 +57,13 @@ describe('config-store secure migration', () => {
       secret: 'gt_ab12cd34_secretpart',
     })
     expect(invokeFn).toHaveBeenCalledWith('save_config', {
-      config: { base_url: 'https://gametheca.local', token: null },
+      config: { base_url: 'https://oneirodex.local', token: null },
     })
   })
 
   it('leaves plaintext token when secure store write fails', async () => {
     config = {
-      base_url: 'https://gametheca.local',
+      base_url: 'https://oneirodex.local',
       token: 'gt_ab12cd34_secretpart',
     }
     invokeFn = vi.fn(async (cmd: string, args?: Record<string, unknown>) => {
@@ -92,16 +92,16 @@ describe('config-store secure migration', () => {
 
   it('never writes token when saving config', async () => {
     await saveStoredConfig(
-      { baseUrl: 'https://gametheca.local', token: 'gt_ab12cd34_secretpart' },
+      { baseUrl: 'https://oneirodex.local', token: 'gt_ab12cd34_secretpart' },
       { invokeFn: invokeFn as InvokeFn, isRuntime: () => true },
     )
 
     expect(config).toEqual({
-      base_url: 'https://gametheca.local',
+      base_url: 'https://oneirodex.local',
       token: null,
     })
     expect(invokeFn).toHaveBeenCalledWith('save_config', {
-      config: { base_url: 'https://gametheca.local', token: null },
+      config: { base_url: 'https://oneirodex.local', token: null },
     })
   })
 })

@@ -54,20 +54,20 @@ export function AnnouncementsPage() {
   }
 
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>Announcements</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Publish blasts that appear on the member News page alongside gaming headlines. Save as draft
         to keep an unpublished note in this list.
       </p>
 
       <PageStatus error={error} />
 
-      <form className="gt-admin-panel" onSubmit={handleSubmit}>
+      <form className="od-admin-panel" onSubmit={handleSubmit}>
         <label>
           Title
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -77,14 +77,14 @@ export function AnnouncementsPage() {
         <label>
           Body
           <textarea
-            className="gt-admin-input"
+            className="od-admin-input"
             rows={5}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             required
           />
         </label>
-        <label className="gt-admin-check">
+        <label className="od-admin-check">
           <input
             type="checkbox"
             checked={publishNow}
@@ -92,20 +92,20 @@ export function AnnouncementsPage() {
           />{' '}
           Publish immediately
         </label>
-        <button className="gt-btn" type="submit" disabled={saving}>
+        <button className="od-btn" type="submit" disabled={saving}>
           {saving ? 'Saving…' : publishNow ? 'Publish announcement' : 'Save draft'}
         </button>
       </form>
 
-      <h2 style={{ marginTop: 'var(--gt-space-6)' }}>Recent</h2>
+      <h2 style={{ marginTop: 'var(--od-space-6)' }}>Recent</h2>
       <PageStatus loading={!rows} loadingMessage="Loading announcements…" />
       {rows && rows.length === 0 ? (
         <PageStatus emptyMessage="No announcements yet." />
       ) : null}
       {rows && rows.length > 0 ? (
-        <ul className="gt-admin-list">
+        <ul className="od-admin-list">
           {rows.map((row) => (
-            <li key={row.id} className="gt-admin-panel">
+            <li key={row.id} className="od-admin-panel">
               <strong>{row.title}</strong>
               {!row.published ? <span className="chip">Draft</span> : null}
               <p>{row.body}</p>

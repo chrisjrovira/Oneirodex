@@ -78,11 +78,11 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
   const games = catalog?.games || []
 
   return (
-    <div className="gt-more-page gt-vr">
-      <div className="gt-page-header">
+    <div className="od-more-page od-vr">
+      <div className="od-page-header">
         <h1>VR Library</h1>
       </div>
-      <p className="gt-more-page__lede">
+      <p className="od-more-page__lede">
         Large-tap browse for headset browsers. Install as a PWA from the browser menu. Browse
         only — no downloads.
       </p>
@@ -96,7 +96,7 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
       />
 
       {!error && catalog ? (
-        <p className="gt-vr__status">{catalog.total || 0} games</p>
+        <p className="od-vr__status">{catalog.total || 0} games</p>
       ) : null}
 
       {!error && catalog && games.length === 0 ? (
@@ -104,12 +104,12 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
       ) : null}
 
       {!error && games.length > 0 ? (
-        <div className="gt-vr__grid">
+        <div className="od-vr__grid">
           {games.map((game) => (
             <button
               key={game.uuid}
               type="button"
-              className="gt-vr__card"
+              className="od-vr__card"
               data-uuid={game.uuid}
               onClick={() => setSelectedUuid(game.uuid)}
             >
@@ -121,8 +121,8 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
       ) : null}
 
       {!error && catalog && catalog.pages > 1 ? (
-        <nav className="gt-vr__pager" aria-label="Catalog pages">
-          <button type="button" className="gt-cbtn" disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>
+        <nav className="od-vr__pager" aria-label="Catalog pages">
+          <button type="button" className="od-cbtn" disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>
             Previous
           </button>
           <span>
@@ -130,7 +130,7 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
           </span>
           <button
             type="button"
-            className="gt-cbtn"
+            className="od-cbtn"
             disabled={page >= catalog.pages}
             onClick={() => setPage((n) => n + 1)}
           >
@@ -140,10 +140,10 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
       ) : null}
 
       {selectedUuid ? (
-        <div className="gt-vr__detail">
+        <div className="od-vr__detail">
           <button
             type="button"
-            className="gt-vr__back"
+            className="od-vr__back"
             onClick={() => setSelectedUuid(null)}
           >
             Back
@@ -159,10 +159,10 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
           {!detailError && detail ? (
             <>
               {detail.cover_url ? (
-                <img className="gt-vr__detail-cover" src={detail.cover_url} alt="" />
+                <img className="od-vr__detail-cover" src={detail.cover_url} alt="" />
               ) : null}
               <h2>{detail.name}</h2>
-              {detail.size ? <p className="gt-vr__meta">{detail.size}</p> : null}
+              {detail.size ? <p className="od-vr__meta">{detail.size}</p> : null}
               <p>{detail.summary || 'No summary'}</p>
             </>
           ) : null}

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Remove hardcoded fallbacks from `var(--gt-*, <literal>)` where the token is
- * always defined by gt-tokens.css.
+ * always defined by od-tokens.css.
  *
  * A fallback that can never fire is not harmless: it hardcodes the *default*
  * theme's identity at ~280 call sites, and it converts "this token is missing"
@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url'
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 const SCAN_ROOTS = [
-  'gametheca/setup/default_theme/css',
+  'oneirodex/setup/default_theme/css',
   'frontend/member-app/src',
   'frontend/admin-app/src',
   'frontend/ops-glance/src',
@@ -88,7 +88,7 @@ function topLevelComma(text) {
 /**
  * Rewrite every `var()` in `text`, innermost included.
  *
- * Recursing through the fallback matters: `var(--gt-focus-ring, var(--gt-accent,
+ * Recursing through the fallback matters: `var(--od-focus-ring, var(--od-accent,
  * #2fd67b))` must keep its outer fallback (focus-ring may be absent) while
  * losing the inner one.
  */

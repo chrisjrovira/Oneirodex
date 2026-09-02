@@ -60,12 +60,12 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
           summary={data ? `${formatDuration(data.total_seconds)} · ${gameCountLabel}` : null}
         />
       ) : null}
-      <div className="gt-more-page gt-playtime">
+      <div className="od-more-page od-playtime">
         {useNewChrome ? null : (
-          <div className="gt-page-header gt-playtime__header">
+          <div className="od-page-header od-playtime__header">
             <div>
               <h1>Playtime</h1>
-              <p className="gt-more-page__lede">Your play history and time across the library.</p>
+              <p className="od-more-page__lede">Your play history and time across the library.</p>
             </div>
           </div>
         )}
@@ -81,11 +81,11 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
         {!error && data ? (
           <>
             {useNewChrome ? null : (
-              <section className="gt-playtime__summary" aria-label="Playtime summary">
+              <section className="od-playtime__summary" aria-label="Playtime summary">
                 <span>
                   Total <strong>{formatDuration(data.total_seconds)}</strong>
                 </span>
-                <span className="gt-playtime__summary-sep" aria-hidden="true">
+                <span className="od-playtime__summary-sep" aria-hidden="true">
                   ·
                 </span>
                 <span>
@@ -95,22 +95,22 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
             )}
 
             {games.length === 0 ? (
-              <p className="gt-playtime__empty">
+              <p className="od-playtime__empty">
                 No playtime recorded yet. Start a session from any game page.
               </p>
             ) : (
               <section aria-labelledby="playtime-games-heading">
-                <div className="gt-playtime__section-head">
+                <div className="od-playtime__section-head">
                   <h2 id="playtime-games-heading">Games</h2>
-                  <span className="gt-playtime__count">{games.length}</span>
+                  <span className="od-playtime__count">{games.length}</span>
                 </div>
-                <ul className="gt-playtime__list">
+                <ul className="od-playtime__list">
                   {games.map((row) => (
-                    <li key={row.game_uuid} className="gt-playtime__row">
-                      <a className="gt-playtime__title-link" href={`/game_details/${row.game_uuid}`}>
+                    <li key={row.game_uuid} className="od-playtime__row">
+                      <a className="od-playtime__title-link" href={`/game_details/${row.game_uuid}`}>
                         <strong>{row.game_name || row.game_uuid}</strong>
                       </a>
-                      <span className="gt-playtime__meta">
+                      <span className="od-playtime__meta">
                         {formatDuration(row.total_seconds)}
                         {' · '}
                         {row.session_count || 0} session

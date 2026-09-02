@@ -183,7 +183,7 @@ test('clicking the scrim itself dismisses', () => {
   // <body> so `position: fixed` is measured against the viewport rather than
   // against a transformed tile ancestor. Rendered in place it dimmed only the
   // tile's row.
-  fireEvent.click(document.querySelector('.gt-preview__scrim'))
+  fireEvent.click(document.querySelector('.od-preview__scrim'))
   expect(onClose).toHaveBeenCalled()
 })
 
@@ -193,8 +193,8 @@ test('the scrim is portalled out of the card, not rendered inside it', () => {
   // overlay could never cover the page, no matter what its CSS said.
   const { container } = renderPopup({})
 
-  expect(container.querySelector('.gt-preview__scrim')).toBeNull()
-  expect(document.querySelector('.gt-preview__scrim')).not.toBeNull()
+  expect(container.querySelector('.od-preview__scrim')).toBeNull()
+  expect(document.querySelector('.od-preview__scrim')).not.toBeNull()
 })
 
 test('opening a second preview closes the first', () => {
@@ -228,7 +228,7 @@ test('lists every system the title is held on, current copy marked', async () =>
   await waitFor(() => expect(screen.getByText('Game Boy Advance')).toBeInTheDocument())
   // Scoped to the section: "PC Windows" is also the tile's platform fact, and an
   // unscoped query matches both.
-  const systems = document.querySelector('.gt-preview__systems')
+  const systems = document.querySelector('.od-preview__systems')
   expect(within(systems).getByText('PC Windows')).toBeInTheDocument()
   expect(within(systems).getByText('This copy')).toBeInTheDocument()
   expect(within(systems).getByText('2 systems')).toBeInTheDocument()

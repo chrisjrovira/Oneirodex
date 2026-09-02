@@ -1,0 +1,118 @@
+/* Admin → Server Status — densified under .od-adminpage / aurora meters */
+
+.od-server-status .server-status-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    align-items: center;
+    font-size: var(--od-font-md);
+    color: var(--od-text-muted);
+}
+
+.od-server-status .info-block {
+    /* panels already provide surface; keep light section chrome only */
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 0;
+    border-radius: 0;
+}
+
+.od-server-status .info-block h3,
+.od-server-status .info-block h4 {
+    color: var(--od-text);
+}
+
+.od-server-status .info-block h4 {
+    font-size: var(--od-font-lg);
+    margin-bottom: 0.75rem;
+}
+
+.od-meter.is-warn .od-meter__fill {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--od-warning) 50%, var(--od-bg)),
+        color-mix(in srgb, var(--od-warning) 65%, var(--od-bg))
+    );
+}
+
+.od-meter.is-danger .od-meter__fill {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--od-danger) 50%, var(--od-bg)),
+        color-mix(in srgb, var(--od-danger) 65%, var(--od-bg))
+    );
+}
+
+.cpu-details {
+    background: color-mix(in srgb, var(--od-text) 5%, transparent);
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--od-adminpage-radius-sm);
+    margin-top: 0.65rem;
+}
+
+.cpu-details p {
+    margin: 0.25rem 0;
+    color: var(--od-text);
+    font-size: var(--od-font-md);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: var(--od-radius-circle);
+    margin-left: 0.35rem;
+    vertical-align: middle;
+}
+
+.status-good {
+    background-color: var(--od-success);
+}
+
+.status-warning {
+    background-color: var(--od-warning);
+}
+
+.status-error {
+    background-color: var(--od-danger);
+}
+
+.chart-container {
+    position: relative;
+    height: 200px;
+    margin-bottom: 20px;
+}
+
+canvas#memoryChart,
+canvas#diskChart,
+canvas#gamesDiskChart {
+    max-width: 200px !important;
+    max-height: 200px !important;
+    margin: 0 auto;
+}
+
+.resource-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.permission-icons {
+    float: right;
+    display: inline-flex;
+    gap: 12px;
+    margin-left: 15px;
+}
+
+.permission-icons i {
+    font-size: var(--od-font-lg);
+    width: 20px;
+    text-align: center;
+}
+
+.text-success { color: var(--od-success) !important; }
+.text-danger { color: var(--od-danger) !important; }
+.text-end { text-align: right !important; }

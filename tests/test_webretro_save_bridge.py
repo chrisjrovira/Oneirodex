@@ -1,11 +1,11 @@
-"""WebRetro save-bridge expectations (O1) — mirrors gt-bridge.js pickSramBytes ranking."""
+"""WebRetro save-bridge expectations (O1) — mirrors od-bridge.js pickSramBytes ranking."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 
-BRIDGE = Path(__file__).resolve().parents[1] / 'gametheca' / 'static' / 'vendor' / 'webretro' / 'gt-bridge.js'
+BRIDGE = Path(__file__).resolve().parents[1] / 'oneirodex' / 'static' / 'vendor' / 'webretro' / 'od-bridge.js'
 
 
 def _rank(ext: str) -> int:

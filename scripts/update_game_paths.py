@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GameTheca Game Path Update Script
+Oneirodex Game Path Update Script
 
 This script helps update game paths in the database after extracting archives or reorganizing files.
 It preserves all metadata (favorites, ratings, downloads, etc.) while fixing broken paths.
@@ -17,7 +17,7 @@ import sys
 import argparse
 from difflib import SequenceMatcher
 
-# Reads `config` and `gametheca.models` from the repo root, so the root has to
+# Reads `config` and `oneirodex.models` from the repo root, so the root has to
 # be importable however the script is invoked — not only from the root itself.
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
@@ -26,7 +26,7 @@ if REPO_ROOT not in sys.path:
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from config import Config
-from gametheca.models import Game, Library
+from oneirodex.models import Game, Library
 
 # Color codes for terminal output
 class Colors:
@@ -313,7 +313,7 @@ def print_summary(valid_count, invalid_count, updated_count, skipped_count, fail
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Update game paths in GameTheca database after extracting or reorganizing files.",
+        description="Update game paths in Oneirodex database after extracting or reorganizing files.",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
@@ -357,7 +357,7 @@ def main():
     try:
         # Print header
         print(f"\n{Colors.HEADER}{'='*80}{Colors.ENDC}")
-        print(f"{Colors.HEADER}GameTheca Game Path Update Script{Colors.ENDC}")
+        print(f"{Colors.HEADER}Oneirodex Game Path Update Script{Colors.ENDC}")
         print(f"{Colors.HEADER}{'='*80}{Colors.ENDC}\n")
 
         if args.dry_run:

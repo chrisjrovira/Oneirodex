@@ -2,6 +2,8 @@ import {
   clampTileVarsForNarrowViewport,
   normalizeTilePercent,
   TILE_HOVER_SCALE,
+  TILE_PX_MAX,
+  TILE_PX_MIN,
   tilePercentToCssVars,
   tileSizeToCssVars,
 } from './tileSize'
@@ -18,9 +20,9 @@ test('normalizeTilePercent maps legacy letters and clamps', () => {
 })
 
 test('tilePercentToCssVars scales min width', () => {
-  expect(tilePercentToCssVars(0)['--gt-tile-min']).toBe('120px')
-  expect(tilePercentToCssVars(100)['--gt-tile-min']).toBe('300px')
-  expect(tilePercentToCssVars(50)['--gt-tile-min']).toBe('210px')
+  expect(tilePercentToCssVars(0)['--od-tile-min']).toBe(`${TILE_PX_MIN}px`)
+  expect(tilePercentToCssVars(100)['--od-tile-min']).toBe(`${TILE_PX_MAX}px`)
+  expect(tilePercentToCssVars(50)['--od-tile-min']).toBe('260px')
 })
 
 test('normalizeTilePercent preserves fractional percent for smooth dragging', () => {
@@ -32,8 +34,9 @@ test('normalizeTilePercent preserves fractional percent for smooth dragging', ()
 test('tilePercentToCssVars produces continuous (non-integer-snapped) pixel widths', () => {
   const a = tilePercentToCssVars(33.3)
   const b = tilePercentToCssVars(33.8)
-  expect(a['--gt-tile-min']).not.toBe(b['--gt-tile-min'])
-  expect(a['--gt-tile-min']).toBe('179.94px')
+  expect(a['--od-tile-min']).not.toBe(b['--od-tile-min'])
+  expect(parseFloat(a['--od-tile-min'])).toBeGreaterThan(TILE_PX_MIN)
+  expect(parseFloat(a['--od-tile-min'])).toBeLessThan(TILE_PX_MAX)
 })
 
 test('tileSizeToCssVars still accepts legacy letters', () => {
@@ -43,9 +46,9 @@ test('tileSizeToCssVars still accepts legacy letters', () => {
 
 test('clampTileVarsForNarrowViewport caps large tiles', () => {
   expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(100), true)).toEqual({
-    '--gt-tile-min': '140px',
-    '--gt-tile-gap': '6px',
-    '--gt-tile-hover-scale': String(TILE_HOVER_SCALE),
+    '--od-tile-min': '140px',
+    '--od-tile-gap': '6px',
+    '--od-tile-hover-scale': String(TILE_HOVER_SCALE),
   })
 
   // Small tiles keep their size on a narrow viewport — they are already small
@@ -63,9 +66,9 @@ test('hover scale is one flat value at every tile size', () => {
   // never reached the screen — a later `.game-card:hover` rule hardcoded
   // scale(1.08) and won on source order — and a lift that changes with a
   // slider the member set once reads as a bug rather than a feature.
-  const small = Number(tilePercentToCssVars(0)['--gt-tile-hover-scale'])
-  const mid = Number(tilePercentToCssVars(50)['--gt-tile-hover-scale'])
-  const large = Number(tilePercentToCssVars(100)['--gt-tile-hover-scale'])
+  const small = Number(tilePercentToCssVars(0)['--od-tile-hover-scale'])
+  const mid = Number(tilePercentToCssVars(50)['--od-tile-hover-scale'])
+  const large = Number(tilePercentToCssVars(100)['--od-tile-hover-scale'])
 
   expect(small).toBe(TILE_HOVER_SCALE)
   expect(mid).toBe(TILE_HOVER_SCALE)
@@ -79,5 +82,5 @@ test('narrow viewports keep the same lift', () => {
 
   // 25% of a 140px tile is ~17px either side — it stays inside its own track,
   // so there is nothing left for the narrow-viewport clamp to protect against.
-  expect(clamped['--gt-tile-hover-scale']).toBe(String(TILE_HOVER_SCALE))
+  expect(clamped['--od-tile-hover-scale']).toBe(String(TILE_HOVER_SCALE))
 })

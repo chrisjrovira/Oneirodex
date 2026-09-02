@@ -9,7 +9,7 @@ See [container-wont-start.md](../runbooks/container-wont-start.md) for SECRET_KE
 | App unhealthy | `curl -f http://localhost:5006/readyz` · `docker compose logs app` · DB healthy? Compose probes **`/readyz`** (not `/`) |
 | Liveness only | `curl -f http://localhost:5006/healthz` — process up; does not prove DB |
 | Sidecars / queues look wrong | **Admin → Ops** (or Dashboard) observability console — status + two-fold `issues.items` (**Action required** = path/DB/readyz; **Warning** = soft problem signals; **Info** = disk capacity even ≥95% — never Warning/Action) · silent ~15s poll + manual Refresh · load/RSS/db_ping/readyz · LiveKit · malware · library watch (`GT_LIBRARY_WATCH`, default off) · companions by kind · queues · game servers; then `/readyz` — field map: [ops-summary.md](ops-summary.md) |
-| Need server logs URL | **`/admin/server_logs`** (alias) or Admin → Server status/logs — [ops-summary.md](ops-summary.md) |
+| Need server logs URL | **Admin → Ops** → **Full log** (or `/admin/ops?open=full-log`; old `/admin/server_logs` redirects) — [ops-summary.md](ops-summary.md) |
 | Ops tiles show **n/a** for load / RSS / db_ping | Expected when OS denies load averages (Windows), psutil unavailable, or DB unreachable — not a broken UI |
 | Ops flags `DATA_FOLDER_GAMES` / `BASE_FOLDER_POSIX` / `BASE_FOLDER_WINDOWS` `not writable` | Expected on Unraid `:ro` games mount (and its base folder) only on **older** builds — current Ops treats games + base folder as read-OK; rebuild/restart app if still bad. `UPLOAD_FOLDER` / library must stay RW |
 | Scan progress looks stalled / want live counters | **Admin → Ops** **Scans** tile (polls `/admin/api/ops/summary` ~15s) shows processed (`success+failed`) / `total`, plus failed count, `current_processing`, status, elapsed/ETA when present (**ETA blank when stalled/unknown**) — [ops-summary.md](ops-summary.md#scans-key) · **Scan management** for status/library/path filters + Stop/detail |
@@ -18,7 +18,7 @@ See [container-wont-start.md](../runbooks/container-wont-start.md) for SECRET_KE
 
 ## Frontend dist missing
 
-Rebuild so `gametheca/static/dist/member-app` and `admin-app` exist:
+Rebuild so `oneirodex/static/dist/member-app` and `admin-app` exist:
 
 ```bash
 docker compose build --no-cache && docker compose up -d
@@ -56,9 +56,9 @@ sent and need no configuration. CSP **enforces** by default (`CSP_ENFORCE=true`)
 
 | Symptom | Check |
 |---|---|
-| Console full of “Content Security Policy … would block” | A leftover inline handler or `eval`. Classic pages use `data-gt-*` + `gt_dom_actions.js`. Set `CSP_ENFORCE=false` only to report without blocking |
+| Console full of “Content Security Policy … would block” | A leftover inline handler or `eval`. Classic pages use `data-gt-*` + `od_dom_actions.js`. Set `CSP_ENFORCE=false` only to report without blocking |
 | Set `CSP_ENFORCE=true` and browser play broke | Unexpected: WebRetro is `/static/*` with **no CSP**. Check that you did not put a CSP on the native static handler. Flask `script-src` is `'self'` only |
-| Classic button does nothing after upgrade | `onclick=` was removed. Confirm `gt_dom_actions.js` loads from `base.html` / `base_admin.html` |
+| Classic button does nothing after upgrade | `onclick=` was removed. Confirm `od_dom_actions.js` loads from `base.html` / `base_admin.html` |
 | Site pinned to HTTPS and now unreachable by IP | HSTS. It is only sent when `SESSION_COOKIE_SECURE=true`; set `HSTS_SECONDS=0` and clear the browser's HSTS entry |
 | Large firmware upload rejected with 413 | Global ceiling is `MAX_UPLOAD_MB` (default 128). Raise it *and* `EMULATOR_BIOS_MAX_BYTES` together — the per-route firmware limit is the tighter of the two |
 | Firmware folder scan says the path is outside allowed directories | The folder must be under a library root or the path in `BIOS_IMPORT_SOURCE`. Set that env to the dump pack (and its subfolders) then Scan collection again — [emulator-bios.md](../runbooks/emulator-bios.md) |
@@ -105,9 +105,10 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 
 | Symptom | Check |
 |---|---|
-| Admin rail / top bar / pages hidden — only the decade-room wallpaper shows | Decade-room atmosphere is `position: fixed; z-index: -1` with `isolation: isolate`. Admin `#admin-app-root` / `.gt-admin-shell` are `display: contents`, so a z-index on those wrappers never lifts chrome. Current `gt-era.css` stacks `.gt-rail` / `.gt-topbar` at z-index 2 and `.gt-admin-main` / `#admin-legacy-content` at z-index 1. Rebuild/restart (boot syncs default theme CSS). If a colour-cabinet preset still hides chrome, **Reset Default Themes**. Member Library backdrop is `position: absolute; z-index: -1` inside the content column. |
+| Admin Settings hub looks broken (four stacked glass cards, unstyled On/Off text, titles clipping) | Hub layout lives in `admin-app.css`, not theme volume CSS. Rebuild the image so `frontend/admin-app` dist refreshes. **Reset Themes does not restyle this page.** Server Settings overflow was the same bundle (`min-width: 800px` + nested cards). — [settings-modules.md](settings-modules.md) |
+| Admin rail / top bar / pages hidden — only the decade-room wallpaper shows | Decade-room atmosphere is `position: fixed; z-index: -1` with `isolation: isolate`. Admin `#admin-app-root` / `.od-admin-shell` are `display: contents`, so a z-index on those wrappers never lifts chrome. Current `od-era.css` stacks `.od-rail` / `.od-topbar` at z-index 2 and `.od-admin-main` / `#admin-legacy-content` at z-index 1. Rebuild/restart (boot syncs default theme CSS). If a colour-cabinet preset still hides chrome, **Reset Default Themes**. Member Library backdrop is `position: absolute; z-index: -1` inside the content column. |
 | Delete library Confirm/Cancel unclickable | Theme CSS under `static/library/themes/` can pin `.modal` under `.modal-backdrop`. Current Libraries page ships **inline** stacking CSS + moves the modal to `document.body` (works after **app rebuild/restart** without Reset Themes). Also run **Admin → Themes → Reset Themes** so library theme CSS/JS match the image. Hard-refresh Admin → Libraries. |
-| Any Bootstrap admin modal unclickable (Filters, Extensions, Scans Add Filter, Discovery Zones, Users, Downloads, SMTP help) | Same stacking trap: glass/`backdrop-filter` parents. Admin + member shells load `js/gt_modal_stack.js` which hoists every `.modal.fade` to `document.body` (also on `show.bs.modal`). Rebuild/restart app; hard-refresh; optional Reset Themes. |
+| Any Bootstrap admin modal unclickable (Filters, Extensions, Scans Add Filter, Discovery Zones, Users, Downloads, SMTP help) | Same stacking trap: glass/`backdrop-filter` parents. Admin + member shells load `js/od_modal_stack.js` which hoists every `.modal.fade` to `document.body` (also on `show.bs.modal`). Rebuild/restart app; hard-refresh; optional Reset Themes. |
 
 ## Scans / identify
 
@@ -118,7 +119,8 @@ Expected if `SUPPORT_GITHUB_TOKEN` unset (`github_sync=skipped`). Ticket + admin
 | Size shows `0.00 KB` briefly after scan | Expected until deferred size job finishes (large Unraid trees). |
 | Progress stuck at 1 while library keeps growing | Fixed: multithreaded counter races + Stop early-exit. Redeploy app; counters use atomic bumps and Stop drains in-flight work. |
 | Stop button looks empty / Cancelled shows `-` | Fixed: Stopping shows “Stopping…”; Cancelled shows `Stopped N/total`. Hard-refresh scan management after upgrade. |
-| Admin Libraries & scans hangs / freezes during a live scan (page + `/readyz` slow for tens of minutes) | Status poll ran `drain_scan_queue` (reclaim + promote) on **every** 3s Jinja / 4s SPA / 15s Ops tick, contending with the scan worker. **Fixed 2026-08-30:** drain on those polls only when idle; scheduler still drains ~60s. Classic JS skips hidden-tab and overlapping fetches. Rebuild/restart, then **Reset Themes** so `admin_manage_scanjobs.js` refreshes. |
+| Admin Libraries & scans hangs / freezes during a live scan (buttons and tab switches dead; `/readyz` may also be slow) | Two layers. **Server:** status poll used to run `drain_scan_queue` on every 3s tick — skip-drain-while-Running shipped 2026-08-30. **Client:** a live scan still rebuilt the jobs table (and the unmatched list, even on Libraries) every 3s because progress ticks changed the skip signature; the scan motif SVG remounted each poll. **Fixed 2026-08-31:** patch progress in place, fetch unmatched only on that pane, 3s poll only while Auto is visible and a job is running. Rebuild/restart, then **Reset Themes** (`GENERATOR_VERSION` **21**) so `admin_manage_scanjobs.js` and `scanJobsDom.js` refresh. |
+| Admin account menu is a horizontal strip of links, not a dropdown | Member dropdown layout lived only in `TopNav.css` (member SPA) and `od-chrome.css` (`.member-spa-content` only). **Fixed:** `od-shell.css` + admin `AdminTopNav.css`. Rebuild admin SPA **and** **Reset Themes** (`GENERATOR_VERSION` **21**). |
 | **Every scan says "queued" and never starts** | Fixed (2026-08-24). A scan orphaned by a restart or a crash stayed `Running` in the database, so `is_scan_busy()` reported busy and new scans queued behind a job no thread was working on — for up to **6 hours**, until the stale sweep aged it out. Scan jobs now record the process that owns them, and a job whose owner is gone is reclaimed on sight: at boot, on the **scan scheduler** (~60s) and before any new scan is accepted. Status/Ops polls no longer reclaim on every tick while a job is Running (that froze admin). If you are still on an older build, restarting the app clears it. |
 | **A scan says only "Failed" with no reason** | Fixed (2026-08-25). The scan jobs table translated two specific failure messages into friendly statuses and showed every other one as a bare "Failed" — including the message the ownership sweep writes when it reclaims an orphaned job. Any failed job now shows its reason under the status. Needs a restart or **Admin → Themes → Reset Themes**, since the table's JS/CSS ship from the theme volume. |
 | Scan progress changes the moment the page refreshes | Fixed (2026-08-25). First paint counted only successful folders; the poll counts successes + failures. A job with any failed folder showed one number on load and another two seconds later. Both now count processed the same way. |

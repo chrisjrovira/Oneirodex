@@ -5,9 +5,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca.models import Game, GameExtra, GameURL, Library
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.patch_catalog.attach import GUIDE_URL_TYPE, attach_patch_guide
+from oneirodex.models import Game, GameExtra, GameURL, Library
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.patch_catalog.attach import GUIDE_URL_TYPE, attach_patch_guide
 
 
 @pytest.fixture

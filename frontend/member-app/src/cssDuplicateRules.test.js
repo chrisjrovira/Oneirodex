@@ -6,7 +6,7 @@ import { expect, test } from 'vitest'
 /**
  * No component class may be defined in more than one stylesheet (GT-A4).
  *
- * `.gt-btn--ghost` was defined three times — HelpPage.css, NewsPage.css and
+ * `.od-btn--ghost` was defined three times — HelpPage.css, NewsPage.css and
  * NotificationsPage.css — as near-identical copy-paste. That is not only
  * duplication: with `cssCodeSplit: true` those land in separate route chunks,
  * so which definition applied depended on which pages the user had already
@@ -14,8 +14,8 @@ import { expect, test } from 'vitest'
  * history, and PcCheatsPanel used the class while defining it nowhere, so it
  * inherited whatever happened to be loaded.
  *
- * `.gt-btn`, `--primary` and `--secondary` had the same problem across
- * glass.css and admin-app's styles.css, which defined `.gt-btn` twice in a
+ * `.od-btn`, `--primary` and `--secondary` had the same problem across
+ * glass.css and admin-app's styles.css, which defined `.od-btn` twice in a
  * single file with different values.
  *
  * The guard is structural rather than visual because that is what actually
@@ -29,10 +29,10 @@ const REPO_ROOT = join(HERE, '../../..')
  * Scoped per tree, not repo-wide.
  *
  * Duplication *across* these trees is deliberate architecture and must not
- * fail: gt-bootstrap-bridge.css exists precisely to re-declare `.btn-*`, and
+ * fail: od-bootstrap-bridge.css exists precisely to re-declare `.btn-*`, and
  * several Jinja stylesheets intentionally mirror a React component's classes so
  * the server-rendered version of a modal looks right before the SPA mounts
- * (.gt-scan-conflict__*, .ops-*). A repo-wide rule flags 155 of those.
+ * (.od-scan-conflict__*, .ops-*). A repo-wide rule flags 155 of those.
  *
  * Within one tree there is no such excuse, and that is also where the damage
  * is: `cssCodeSplit` puts each page's CSS in its own chunk, so two definitions
@@ -53,15 +53,15 @@ const SCAN_ROOTS = [
  * system by a long way and is not something a single change can unwind. A count
  * that may only fall keeps it from getting worse while the migration proceeds.
  */
-const THEME_ROOT = 'gametheca/setup/default_theme/css'
+const THEME_ROOT = 'oneirodex/setup/default_theme/css'
 const THEME_DUPLICATE_BUDGET = 85
 
 /**
  * Files whose job *is* to redeclare selectors owned elsewhere.
  *
- * gt-bootstrap-bridge repoints Bootstrap's `.btn-*` at the GT scales, and
- * gt-density gives `.gt-btn` / `.card` / `.form-control` density-aware metrics
- * without either primitive file needing to know densities exist. gt-era loads
+ * od-bootstrap-bridge repoints Bootstrap's `.btn-*` at the GT scales, and
+ * od-density gives `.od-btn` / `.card` / `.form-control` density-aware metrics
+ * without either primitive file needing to know densities exist. od-era loads
  * after member-app.css (base_empty.html) so decade rooms can show through
  * opaque shell fills — and so a handful of grid/chrome rules can beat the SPA
  * bundle without a rebuild. Counting those files conflates a deliberate
@@ -74,10 +74,10 @@ const THEME_DUPLICATE_BUDGET = 85
  * should be as hard to justify as adding to ALLOWED above.
  */
 const OVERRIDE_LAYERS = [
-  'gt-bootstrap-bridge.css',
-  'gt-density.css',
-  'gt-shell.css',
-  'gt-era.css',
+  'od-bootstrap-bridge.css',
+  'od-density.css',
+  'od-shell.css',
+  'od-era.css',
 ]
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'vendor', '__pycache__', '.git'])
@@ -90,8 +90,8 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'vendor', '__pycache__', '.gi
  * failure — move the rule into one owning stylesheet instead.
  */
 const ALLOWED = new Map([
-  ['.gt-chat-layout', 'mobile-density.css owns the responsive override'],
-  ['.gt-help__sections', 'MorePage reuses the Help section grid'],
+  ['.od-chat-layout', 'mobile-density.css owns the responsive override'],
+  ['.od-help__sections', 'MorePage reuses the Help section grid'],
   ['.library-layout', 'systemBackdrop.css layers the backdrop onto the filter layout'],
 ])
 
@@ -115,7 +115,11 @@ function cssFiles(dir, out = []) {
 function definedClasses(css) {
   const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const names = new Set()
-  for (const m of withoutComments.matchAll(/^(\.[a-zA-Z][a-zA-Z0-9_-]*)(?=[\s,{:])/gm)) {
+  // A class is defined when it is a complete simple selector, not a descendant
+  // prefix (`.od-pop__panel--bare .menu`) or a :has() override.
+  for (const m of withoutComments.matchAll(
+    /^(\.[a-zA-Z][a-zA-Z0-9_-]*)\s*(?=,|\{)/gm,
+  )) {
     names.add(m[1])
   }
   return names

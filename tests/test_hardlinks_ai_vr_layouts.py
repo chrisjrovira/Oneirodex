@@ -8,11 +8,11 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import Game, Library, PlayerPerspective, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.detail_layouts import DEFAULT_SECTIONS, merge_with_defaults, validate_layout_payload
-from gametheca.utils.hardlinks import apply_hardlink, preview_hardlink
-from gametheca.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
+from oneirodex.models import Game, Library, PlayerPerspective, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.detail_layouts import DEFAULT_SECTIONS, merge_with_defaults, validate_layout_payload
+from oneirodex.utils.hardlinks import apply_hardlink, preview_hardlink
+from oneirodex.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
 
 
 @pytest.fixture
@@ -77,11 +77,11 @@ def test_triage_parses_suggestions(app, monkeypatch):
                 return {'message': {'content': '1. Celeste\n2. Celeste (2018)'}}
         return R()
 
-    monkeypatch.setattr('gametheca.utils.ai_assist.requests.post', fake_post)
+    monkeypatch.setattr('oneirodex.utils.ai_assist.requests.post', fake_post)
     monkeypatch.setitem(app.config, 'ENABLE_AI_ASSIST', True)
     monkeypatch.setitem(app.config, 'OLLAMA_BASE_URL', 'http://ollama.test')
     with app.app_context():
-        from gametheca.utils.ai_assist import triage_folder
+        from oneirodex.utils.ai_assist import triage_folder
         out = triage_folder('Celeste-FitGirl', 'PCWIN')
     assert out['suggestions'][0]['title'] == 'Celeste'
 
@@ -92,8 +92,8 @@ def test_ai_triage_disabled(client, app, admin):
     # `ai_enabled()` ORs the config flag with GlobalSettings.enable_ai_assist,
     # so config alone does not disable it once any test has left a row behind —
     # the check has to establish both halves to be deterministic.
-    from gametheca import db
-    from gametheca.models import GlobalSettings
+    from oneirodex import db
+    from oneirodex.models import GlobalSettings
 
     settings = db.session.execute(
         db.select(GlobalSettings).order_by(GlobalSettings.id).limit(1),
@@ -133,7 +133,7 @@ def test_hardlink_apply_api_requires_flags(client, app, admin, tmp_path, monkeyp
     monkeypatch.setitem(app.config, 'ALLOW_HARDLINK_APPLY', False)
     # Bypass path sandbox for unit test by pointing allowed bases via monkeypatch
     monkeypatch.setattr(
-        'gametheca.routes_apis.storage.get_allowed_base_directories',
+        'oneirodex.routes_apis.storage.get_allowed_base_directories',
         lambda _app: [str(tmp_path)],
     )
     resp = client.post(

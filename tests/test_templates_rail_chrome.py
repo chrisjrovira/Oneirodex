@@ -3,7 +3,7 @@
 Jinja pages carried their own left sidebar while the member SPA carried two top
 bars. That was the same split that let buttons and colours diverge, expressed as
 layout: three surfaces, three chromes, no shared source. partials/rail.html now
-emits the same markup and classes as the React SideRail, so gt-shell.css styles
+emits the same markup and classes as the React SideRail, so od-shell.css styles
 all three.
 
 These render real routes rather than parsing the template, because the parts
@@ -35,7 +35,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import User
+from oneirodex.models import User
 
 
 @pytest.fixture
@@ -65,8 +65,8 @@ class TestRailReplacesSidebar:
         _login(client, member)
         html = client.get('/playromtest').get_data(as_text=True)
 
-        assert 'class="gt-rail"' in html
-        assert 'gt-rail__link' in html
+        assert 'class="od-rail"' in html
+        assert 'od-rail__link' in html
 
     def test_retired_sidebar_markup_is_gone(self, client, member, configured_install):
         """The old chrome must not linger alongside the new one.
@@ -86,7 +86,7 @@ class TestRailReplacesSidebar:
         _login(client, member)
         html = client.get('/playromtest').get_data(as_text=True)
 
-        assert 'class="gt-shell"' in html
+        assert 'class="od-shell"' in html
         # #content is reused as the grid's main area rather than renamed, so no
         # page template had to change.
         assert '<div id="content"' in html
@@ -104,14 +104,14 @@ class TestRailReplacesSidebar:
         """Login deliberately has no navigation — and no empty grid column."""
         html = client.get('/login').get_data(as_text=True)
 
-        assert 'class="gt-rail"' not in html
-        assert 'class="gt-shell"' not in html
+        assert 'class="od-rail"' not in html
+        assert 'class="od-shell"' not in html
 
     def test_rail_toggle_is_present_and_wired(self, client, member, configured_install):
         _login(client, member)
         html = client.get('/playromtest').get_data(as_text=True)
 
-        assert 'id="gt-rail-toggle"' in html
-        assert 'id="gt-shell"' in html
+        assert 'id="od-rail-toggle"' in html
+        assert 'id="od-shell"' in html
         # The toggle drives data-rail; the old .collapsed class pair is retired.
         assert 'data-rail' in html

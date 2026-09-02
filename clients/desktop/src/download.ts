@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 
 import type { AuthStore } from './auth.js'
-import type { GamethecaClient } from './api.js'
+import type { OneirodexClient } from './api.js'
 import { isTauriRuntime } from './config-store.js'
 import {
   loadInstallsFromDisk,
@@ -31,14 +31,14 @@ interface InitiateDownloadResponse {
 
 async function getDownloadsDir(): Promise<string> {
   if (!isTauriRuntime()) {
-    return '/tmp/gametheca/downloads'
+    return '/tmp/oneirodex/downloads'
   }
   return invoke<string>('get_app_subdir', { subdir: 'downloads' })
 }
 
 export async function getInstallsDir(): Promise<string> {
   if (!isTauriRuntime()) {
-    return '/tmp/gametheca/installs'
+    return '/tmp/oneirodex/installs'
   }
   return invoke<string>('get_app_subdir', { subdir: 'installs' })
 }
@@ -52,7 +52,7 @@ export function resolveExtractPath(installsDir: string, gameUuid: string): strin
 }
 
 export async function initiateDownloadRequest(
-  api: GamethecaClient,
+  api: OneirodexClient,
   gameUuid: string,
   options: { kind?: 'base' | 'update' | 'extra'; versionUuid?: string } = {},
 ): Promise<InitiateDownloadResponse> {
@@ -201,7 +201,7 @@ export async function persistInstallRecord(
 }
 
 export async function downloadGameArchive(
-  api: GamethecaClient,
+  api: OneirodexClient,
   auth: AuthStore,
   gameUuid: string,
   options: {
@@ -237,7 +237,7 @@ export async function downloadGameArchive(
 }
 
 export async function kickoffDownload(
-  api: GamethecaClient,
+  api: OneirodexClient,
   auth: AuthStore,
   registry: LifecycleRegistry,
   gameUuid: string,
@@ -257,7 +257,7 @@ export async function kickoffDownload(
 }
 
 export async function pickDownloadVersion(
-  api: GamethecaClient,
+  api: OneirodexClient,
   gameUuid: string,
 ): Promise<{ kind: 'base' | 'update' | 'extra'; versionUuid?: string }> {
   try {

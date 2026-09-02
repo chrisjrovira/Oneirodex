@@ -2,7 +2,7 @@
 
 import os
 
-from gametheca.utils import login_rate_limit as lrl
+from oneirodex.utils import login_rate_limit as lrl
 
 
 _ENV = {

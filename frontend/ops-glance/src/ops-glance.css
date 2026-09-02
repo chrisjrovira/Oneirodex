@@ -1,23 +1,23 @@
 /* Ops glance styles — kept inside frontend/ops-glance so Docker Node builds
    do not need the Flask theme tree. Mirror of
-   gametheca/setup/default_theme/css/admin/admin_ops.css */
+   oneirodex/setup/default_theme/css/admin/admin_ops.css */
 
 /* Literal fallbacks so the board stays readable if theme vars are missing. */
 
 .container-settings-dashboard > h1 {
-    color: var(--text-white, var(--gt-text));
-    font-size: var(--gt-font-4xl);
+    color: var(--text-white, var(--od-text));
+    font-size: var(--od-font-4xl);
     font-weight: bold;
     margin-bottom: var(--spacing-lg, 1rem);
     text-shadow: 0 0 10px var(--primary-brand-50, rgba(100, 160, 255, 0.5));
 }
 
 .ops-glance {
-    color: var(--text-white, var(--gt-text));
+    color: var(--text-white, var(--od-text));
 }
 
 .ops-glance-fallback {
-    color: var(--text-white, var(--gt-text));
+    color: var(--text-white, var(--od-text));
     opacity: 0.85;
     padding: 1rem 0;
 }
@@ -35,7 +35,7 @@
 
 .ops-glance__title {
     margin: 0;
-    font-size: var(--gt-font-xl);
+    font-size: var(--od-font-xl);
     font-weight: 500;
     color: var(--text-white);
 }
@@ -80,7 +80,7 @@
 .ops-panel h2 {
     margin: 0 0 var(--spacing-md);
     padding-bottom: var(--spacing-sm);
-    font-size: var(--gt-font-lg);
+    font-size: var(--od-font-lg);
     font-weight: 500;
     color: var(--text-white);
     border-bottom: 1px solid var(--border-light);
@@ -119,7 +119,7 @@
     padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-light);
-    font-size: var(--gt-font-base);
+    font-size: var(--od-font-base);
 }
 
 .ops-status strong {
@@ -128,7 +128,7 @@
 
 .ops-status span {
     opacity: 0.85;
-    font-size: var(--gt-font-md);
+    font-size: var(--od-font-md);
 }
 
 .ops-status--good,
@@ -179,7 +179,7 @@
     background: var(--container-glass-secondary);
     color: var(--text-white);
     text-decoration: none;
-    font-size: var(--gt-font-md);
+    font-size: var(--od-font-md);
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
@@ -214,6 +214,6 @@
     }
 
     .container-settings-dashboard > h1 {
-        font-size: var(--gt-font-2xl);
+        font-size: var(--od-font-2xl);
     }
 }

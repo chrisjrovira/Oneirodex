@@ -1,5 +1,6 @@
 export {
   addedCountOf,
+  burstToastMessages,
   groupLibraryScanToasts,
   groupedToastMessage,
   isLibraryGamesAddedNotification,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""API envelope lint for GameTheca routes.
+"""API envelope lint for Oneirodex routes.
 
-``gametheca/utils/api_response.py`` exists so every JSON response has one shape.
+``oneirodex/utils/api_response.py`` exists so every JSON response has one shape.
 It landed with two route files migrated, and the register recorded the work as
 "incremental". Measured a fortnight later the problem had grown from ~699
 ``jsonify`` call sites across ~72 files to **1194 across 84** — new routes kept
@@ -79,12 +79,12 @@ BASELINE_PATH = REPO_ROOT / 'scripts' / 'api_envelope_lint.baseline.json'
 
 #: Route trees that should answer through the shared envelope.
 SCAN_ROOTS = [
-    'gametheca',
+    'oneirodex',
 ]
 
 #: Files that legitimately mention the legacy keys.
 EXEMPT = {
-    'gametheca/utils/api_response.py',  # defines the envelope, including compat keys
+    'oneirodex/utils/api_response.py',  # defines the envelope, including compat keys
 }
 
 LEGACY_KEYS = {'error', 'message', 'status', 'success', 'ok'}
@@ -403,7 +403,7 @@ def main() -> int:
             for line, why in details.get(file, []):
                 print(f'      {file}:{line}  {why}')
         print(
-            '\nUse api_ok()/api_error() from gametheca.utils.api_response.\n'
+            '\nUse api_ok()/api_error() from oneirodex.utils.api_response.\n'
             'The envelope keeps `error`, `message` and `success` alongside the new\n'
             'fields, so existing callers keep working — migration is additive.'
         )

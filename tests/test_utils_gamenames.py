@@ -7,9 +7,9 @@ from unittest.mock import patch, MagicMock, mock_open
 from uuid import uuid4
 from flask import Flask
 
-from gametheca import create_app, db
-from gametheca.models import Game
-from gametheca.utils.gamenames import (
+from oneirodex import create_app, db
+from oneirodex.models import Game
+from oneirodex.utils.gamenames import (
     get_game_names_from_folder,
     get_game_names_from_files,
     get_game_name_by_uuid,
@@ -17,13 +17,13 @@ from gametheca.utils.gamenames import (
     detect_goty_pattern,
     generate_goty_variants
 )
-from gametheca.utils.game_name_parse import parse_game_label
+from oneirodex.utils.game_name_parse import parse_game_label
 
 
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints.""" 
     from sqlalchemy import delete
-    from gametheca.models import Library, Image
+    from oneirodex.models import Library, Image
     
     try:
         # Clean up in order to respect foreign key constraints
@@ -48,8 +48,8 @@ def temp_directory():
 @pytest.fixture
 def sample_games(db_session):
     """Create sample games for testing."""
-    from gametheca.models import Library
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Library
+    from oneirodex.platform import LibraryPlatform
     
     # First create a library that games can reference
     library = Library(
@@ -112,7 +112,7 @@ class TestGetGameNamesFromFolder:
         assert 'Nethack' in names
         assert 'Adventure Game' in names
     
-    @patch('gametheca.utils.gamenames.flash')
+    @patch('oneirodex.utils.gamenames.flash')
     def test_non_existent_folder(self, mock_flash, capsys):
         """Test behavior when folder doesn't exist."""
         result = get_game_names_from_folder('/non/existent/path', [], [])
@@ -123,7 +123,7 @@ class TestGetGameNamesFromFolder:
         mock_flash.assert_called_once()
     
     @patch('os.access')
-    @patch('gametheca.utils.gamenames.flash')
+    @patch('oneirodex.utils.gamenames.flash')
     def test_folder_without_read_permissions(self, mock_flash, mock_access, temp_directory, capsys):
         """Test behavior when folder exists but is not readable."""
         mock_access.return_value = False
@@ -1010,7 +1010,7 @@ class TestRealFolderPipeline:
     def test_stage_b_steam_title_prepends_variant_zero(self):
         """Identify uses parse_game_label + Stage B steam title as variant #0 when resolved."""
         from unittest.mock import patch
-        import gametheca.utils.steam_lookup as steam_lookup
+        import oneirodex.utils.steam_lookup as steam_lookup
 
         parsed = parse_game_label("49 keys (87117)")
         assert parsed['steam_app_id'] == 87117

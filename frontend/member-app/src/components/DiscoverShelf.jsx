@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchDiscoverRow } from '../api/discover'
 import { GameCard } from './GameCard'
+import { hbarLayout, scrollLeftFromPointer } from './hbarLayout'
 import { NewsCard } from './NewsCard'
 import { isShelfItemFullyVisible } from './shelfItemVisibility'
 import { useRowScroll } from './useRowScroll'
@@ -60,12 +61,13 @@ export function DiscoverShelf({
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
   /** Custom bar metrics — native scrollbar is hidden so hover bleed can stay. */
-  const [hbar, setHbar] = useState({ max: 0, left: 0, thumbPct: 100 })
+  const [hbar, setHbar] = useState({ max: 0, thumbPx: 0, leftPx: 0, scrollLeft: 0 })
   const abortRef = useRef(null)
   const hbarDragRef = useRef(null)
-  // Arrows + bottom slider. Wheel on tiles/title scrolls the page; wheel on
-  // the slider pans the track. bindKey includes hbar presence so the slider
-  // wheel listener rebinds when the bar first appears.
+  // Arrows + bottom slider. Vertical wheel on tiles/title scrolls the page;
+  // horizontal / shift-wheel and wheel on the slider pan the track both ways.
+  // The lane always mounts so spacing matches every row, even when the track
+  // does not overflow.
   const {
     ref: trackRef,
     viewportRef,
@@ -75,18 +77,22 @@ export function DiscoverShelf({
     scrollByPage,
     startEdgeScroll,
     stopEdgeScroll,
-  } = useRowScroll({ bindKey: `${games.length}:${hbar.max > 1 ? 1 : 0}` })
+  } = useRowScroll({ bindKey: games.length })
 
   const syncHbar = useCallback(() => {
     const track = trackRef.current
+    const rail = hbarRef.current
     if (!track) return
-    const max = Math.max(0, track.scrollWidth - track.clientWidth)
-    const thumbPct =
-      track.scrollWidth > 0
-        ? Math.min(100, Math.max(8, (track.clientWidth / track.scrollWidth) * 100))
-        : 100
-    setHbar({ max, left: track.scrollLeft, thumbPct })
-  }, [trackRef])
+    setHbar({
+      ...hbarLayout({
+        scrollLeft: track.scrollLeft,
+        scrollWidth: track.scrollWidth,
+        clientWidth: track.clientWidth,
+        railWidth: rail?.clientWidth || 0,
+      }),
+      scrollLeft: track.scrollLeft,
+    })
+  }, [hbarRef, trackRef])
 
   // A fresh feed replaces the row wholesale rather than appending to whatever
   // the previous one had scrolled to.
@@ -97,18 +103,17 @@ export function DiscoverShelf({
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const track = trackRef.current
-    if (!track) {
-      syncHbar()
-      return undefined
-    }
+    const rail = hbarRef.current
     syncHbar()
-    if (typeof ResizeObserver === 'undefined') return undefined
+    if (!track || typeof ResizeObserver === 'undefined') return undefined
     const observer = new ResizeObserver(syncHbar)
     observer.observe(track)
+    if (rail) observer.observe(rail)
+    for (const child of track.children) observer.observe(child)
     return () => observer.disconnect()
-  }, [games.length, syncHbar, trackRef])
+  }, [games.length, loading, hbarRef, syncHbar, trackRef])
 
   const complete = games.length >= totalCount
 
@@ -131,7 +136,7 @@ export function DiscoverShelf({
       { root: track, threshold: [0, 0.5, 0.99, 1] },
     )
 
-    const items = track.querySelectorAll('.gt-shelf__item')
+    const items = track.querySelectorAll('.od-shelf__item')
     // Assume fully visible until the observer reports otherwise so News tiles
     // (which only cancel enlarge when the attribute is absent) can hover-scale
     // on the first paint the way game tiles do via theme CSS.
@@ -191,17 +196,45 @@ export function DiscoverShelf({
     (event) => {
       const track = trackRef.current
       const rail = event.currentTarget
-      if (!track || hbar.max <= 1) return
+      if (!track) return
+
+      const liveLayout = () =>
+        hbarLayout({
+          scrollLeft: track.scrollLeft,
+          scrollWidth: track.scrollWidth,
+          clientWidth: track.clientWidth,
+          railWidth: rail.getBoundingClientRect().width,
+        })
+
+      const start = liveLayout()
+      if (start.max <= 1) return
       event.preventDefault()
+      event.stopPropagation()
+      if (typeof rail.setPointerCapture === 'function' && event.pointerId != null) {
+        try {
+          rail.setPointerCapture(event.pointerId)
+        } catch {
+          // Pointer already released — window listeners below still finish the drag.
+        }
+      }
+
       const railBox = rail.getBoundingClientRect()
-      const thumbRatio = hbar.thumbPct / 100
-      const usable = railBox.width * (1 - thumbRatio)
+      let grab = event.clientX - railBox.left - start.leftPx
+      if (grab < 0 || grab > start.thumbPx) {
+        grab = start.thumbPx / 2
+      }
 
       const scrollFromClientX = (clientX) => {
-        if (usable <= 0) return
-        const x = clientX - railBox.left - (railBox.width * thumbRatio) / 2
-        const t = Math.min(1, Math.max(0, x / usable))
-        track.scrollLeft = t * hbar.max
+        const layout = liveLayout()
+        if (layout.max <= 1 || layout.usable <= 0) return
+        const box = rail.getBoundingClientRect()
+        track.scrollLeft = scrollLeftFromPointer({
+          clientX,
+          railLeft: box.left,
+          grab,
+          usable: layout.usable,
+          max: layout.max,
+        })
         measure()
         syncHbar()
       }
@@ -217,7 +250,7 @@ export function DiscoverShelf({
       window.addEventListener('pointermove', onMove)
       window.addEventListener('pointerup', onUp)
     },
-    [hbar.max, hbar.thumbPct, measure, syncHbar, trackRef],
+    [measure, syncHbar, trackRef],
   )
 
   if (!games.length) {
@@ -225,34 +258,37 @@ export function DiscoverShelf({
   }
 
   const layout = section.layout || 'shelf'
-  const showSeeAll = Boolean(section.has_more && section.more_href)
+  const moreHref =
+    itemKind === 'articles' ? section.more_href || '/news' : section.more_href
+  const showSeeAll =
+    Boolean(moreHref) && (itemKind === 'articles' || Boolean(section.has_more))
 
   return (
     <section
       data-discover-section={identifier}
       data-layout={layout}
-      className={`gt-shelf gt-shelf--${layout}`}
+      className={`od-shelf od-shelf--${layout}`}
     >
-      <div className="gt-shelf__head">
+      <div className="od-shelf__head">
         {/* Title mark + reason share a baseline row; the h2 keeps only the
             section name so screen readers still hear "News", not the lede. */}
-        <div className="gt-shelf__heading">
-          <h2 className="gt-shelf__title">
-            <span className="gt-shelf__title-text">{section.title}</span>
+        <div className="od-shelf__heading">
+          <h2 className="od-shelf__title">
+            <span className="od-shelf__title-text">{section.title}</span>
           </h2>
           {section.reason ? (
-            <span className="gt-shelf__reason">{section.reason}</span>
+            <span className="od-shelf__reason">{section.reason}</span>
           ) : null}
         </div>
         {section.is_event ? (
-          <span className="gt-shelf__event" title="Limited-time shelf">
+          <span className="od-shelf__event" title="Limited-time shelf">
             Event{formatEventEnds(section.ends_at)}
           </span>
         ) : null}
         {onTogglePin ? (
           <button
             type="button"
-            className="gt-shelf__pin"
+            className="od-shelf__pin"
             aria-pressed={pinned}
             // A member gets a fixed number of pins, so the control that would
             // exceed it is disabled rather than silently doing nothing.
@@ -272,7 +308,7 @@ export function DiscoverShelf({
         {onHide ? (
           <button
             type="button"
-            className="gt-shelf__hide"
+            className="od-shelf__hide"
             /* Hiding is reversible and the way back has to be visible from
                here, or a row put away is a row gone for good — the control
                says where it went. */
@@ -283,20 +319,20 @@ export function DiscoverShelf({
           </button>
         ) : null}
         {showSeeAll ? (
-          <Link className="gt-shelf__seeall" to={section.more_href}>
+          <Link className="od-shelf__seeall" to={moreHref}>
             See all
           </Link>
         ) : null}
       </div>
 
-      <div className="gt-shelf__scroller" ref={viewportRef}>
-        <div className="gt-shelf__viewport">
+      <div className="od-shelf__scroller" ref={viewportRef}>
+        <div className="od-shelf__viewport">
           {/* Rendered whether or not they are usable, and disabled when they are
               not: arrows that appear and disappear as a row fills itself in move
               the tiles under the pointer mid-reach. Hover holds a slow scroll. */}
           <button
             type="button"
-            className="gt-shelf__arrow gt-shelf__arrow--start"
+            className="od-shelf__arrow od-shelf__arrow--start"
             aria-label={`Scroll ${section.title} left`}
             disabled={!overflow.start}
             onClick={() => scrollByPage(-1)}
@@ -309,14 +345,14 @@ export function DiscoverShelf({
           </button>
 
           <div
-            className="gt-shelf__track"
+            className="od-shelf__track"
             ref={trackRef}
             onScroll={handleScroll}
             role="list"
             aria-label={section.title}
           >
             {games.map((item, index) => (
-              <div className="gt-shelf__item" role="listitem" key={itemKey(item, index)}>
+              <div className="od-shelf__item" role="listitem" key={itemKey(item, index)}>
                 {itemKind === 'articles' ? (
                   <NewsCard item={item} />
                 ) : (
@@ -332,26 +368,26 @@ export function DiscoverShelf({
             ))}
 
             {loading ? (
-              <div className="gt-shelf__item gt-shelf__pending" aria-hidden="true" />
+              <div className="od-shelf__item od-shelf__pending" aria-hidden="true" />
             ) : null}
 
-            {showSeeAll && complete ? (
+            {showSeeAll ? (
               <Link
-                className="gt-shelf__item gt-shelf__more"
-                to={section.more_href}
+                className="od-shelf__item od-shelf__more"
+                to={moreHref}
                 aria-label={`See all in ${section.title}`}
               >
-                <span className="gt-shelf__more-mark" aria-hidden="true">
+                <span className="od-shelf__more-mark" aria-hidden="true">
                   +
                 </span>
-                <span className="gt-shelf__more-label">See all</span>
+                <span className="od-shelf__more-label">See all</span>
               </Link>
             ) : null}
           </div>
 
           <button
             type="button"
-            className="gt-shelf__arrow gt-shelf__arrow--end"
+            className="od-shelf__arrow od-shelf__arrow--end"
             aria-label={`Scroll ${section.title} right`}
             disabled={!overflow.end}
             onClick={() => scrollByPage(1)}
@@ -364,30 +400,27 @@ export function DiscoverShelf({
           </button>
         </div>
 
-        {hbar.max > 1 ? (
+        <div
+          ref={hbarRef}
+          className="od-shelf__hbar"
+          data-idle={hbar.max <= 1 ? 'true' : undefined}
+          role="scrollbar"
+          aria-label={`Scroll ${section.title}`}
+          aria-orientation="horizontal"
+          aria-disabled={hbar.max <= 1}
+          aria-valuemin={0}
+          aria-valuemax={Math.round(Math.max(hbar.max, 0))}
+          aria-valuenow={Math.round(hbar.scrollLeft || 0)}
+          onPointerDown={onHbarPointerDown}
+        >
           <div
-            ref={hbarRef}
-            className="gt-shelf__hbar"
-            role="scrollbar"
-            aria-label={`Scroll ${section.title}`}
-            aria-orientation="horizontal"
-            aria-valuemin={0}
-            aria-valuemax={Math.round(hbar.max)}
-            aria-valuenow={Math.round(hbar.left)}
-            onPointerDown={onHbarPointerDown}
-          >
-            <div
-              className="gt-shelf__hbar-thumb"
-              style={{
-                width: `${hbar.thumbPct}%`,
-                left:
-                  hbar.max > 0
-                    ? `${(hbar.left / hbar.max) * (100 - hbar.thumbPct)}%`
-                    : '0%',
-              }}
-            />
-          </div>
-        ) : null}
+            className="od-shelf__hbar-thumb"
+            style={{
+              width: hbar.thumbPx > 0 ? `${hbar.thumbPx}px` : '100%',
+              left: `${hbar.leftPx}px`,
+            }}
+          />
+        </div>
       </div>
     </section>
   )

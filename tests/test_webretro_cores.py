@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from gametheca.utils.webretro_cores import (
+from oneirodex.utils.webretro_cores import (
     deferred_core_status,
     discover_webretro_cores,
     get_effective_installed_cores,
@@ -21,7 +21,7 @@ def test_discover_reads_wasm_filenames(tmp_path: Path):
 
 def test_effective_unions_shipped_and_disk(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(
-        'gametheca.platform.WEBRETR_INSTALLED_CORES',
+        'oneirodex.platform.WEBRETR_INSTALLED_CORES',
         frozenset({'nestopia'}),
     )
     (tmp_path / 'vice_x64_libretro.wasm').write_bytes(b'\0')

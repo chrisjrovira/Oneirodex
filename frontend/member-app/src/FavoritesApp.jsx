@@ -81,7 +81,7 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
       filterCount={filterCount}
       filters={({ close }) => (
         <form
-          className="gt-favorites__filters"
+          className="od-favorites__filters"
           onSubmit={(event) => {
             event.preventDefault()
             close()
@@ -102,10 +102,10 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
               }}
             />
           </label>
-          <div className="gt-cbtn-group gt-cbtn-group--fill">
+          <div className="od-cbtn-group od-cbtn-group--fill">
             <button
               type="button"
-              className="gt-cbtn"
+              className="od-cbtn"
               disabled={!name}
               onClick={() => {
                 setPage(1)
@@ -114,7 +114,7 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
             >
               Clear
             </button>
-            <button type="submit" className="gt-cbtn">
+            <button type="submit" className="od-cbtn">
               Done
             </button>
           </div>
@@ -147,18 +147,16 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
 
   // "Nothing matched" and "you have none" are different answers, and telling a
   // member they have no favourites while they are looking at a search box they
-  // just typed into is the wrong one.
+  // just typed into is the wrong one. Plain text like Downloads — no status box.
   if (games.length === 0) {
     return (
       <>
         {bar}
-        <PageStatus
-          emptyMessage={
-            name || itemKind
-              ? 'No favorites match that. Clear the filter to see them all.'
-              : "You haven't added any favorites yet!"
-          }
-        />
+        <p className="od-favorites-empty">
+          {name || itemKind
+            ? 'No favorites match that. Clear the filter to see them all.'
+            : "You haven't added any favorites yet!"}
+        </p>
       </>
     )
   }

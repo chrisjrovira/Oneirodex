@@ -8,8 +8,8 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import GlobalSettings, User
-from gametheca.utils.browser_player import (
+from oneirodex.models import GlobalSettings, User
+from oneirodex.utils.browser_player import (
     DEFAULTS,
     SHIPPED_ENGINES,
     browser_play_href,
@@ -18,7 +18,7 @@ from gametheca.utils.browser_player import (
     play_engine_fields,
     set_browser_player_settings,
 )
-from gametheca.utils.play_url import browse_play_fields
+from oneirodex.utils.play_url import browse_play_fields
 
 
 @pytest.fixture
@@ -97,7 +97,7 @@ def test_browse_play_fields_include_engine(monkeypatch):
     library = SimpleNamespace(platform=SimpleNamespace(name='NES'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
     )
     fields = browse_play_fields(game)
@@ -109,7 +109,7 @@ def test_browse_play_fields_include_engine(monkeypatch):
 
 def test_browser_play_href_nes_pilot(monkeypatch):
     monkeypatch.setattr(
-        'gametheca.utils.browser_player.nostalgist_nes_pilot_enabled',
+        'oneirodex.utils.browser_player.nostalgist_nes_pilot_enabled',
         lambda: True,
     )
     href = browser_play_href(
@@ -132,11 +132,11 @@ def test_browse_play_fields_nes_pilot_url(monkeypatch):
     library = SimpleNamespace(platform=SimpleNamespace(name='NES'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
     )
     monkeypatch.setattr(
-        'gametheca.utils.browser_player.nostalgist_nes_pilot_enabled',
+        'oneirodex.utils.browser_player.nostalgist_nes_pilot_enabled',
         lambda: True,
     )
     fields = browse_play_fields(game)

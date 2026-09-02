@@ -3,9 +3,9 @@ from unittest.mock import patch, Mock, MagicMock
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from gametheca import create_app, db
-from gametheca.models import User
-from gametheca.utils.event_logging import log_system_event
+from oneirodex import create_app, db
+from oneirodex.models import User
+from oneirodex.utils.event_logging import log_system_event
 
 
 
@@ -45,27 +45,27 @@ def regular_user(db_session):
 class TestContextProcessor:
     """Test the context processor functionality."""
 
-    @patch('gametheca.routes_info.get_global_settings')
+    @patch('oneirodex.routes_info.get_global_settings')
     def test_inject_settings_context_processor(self, mock_get_global_settings, app):
         """Test that the context processor injects global settings correctly."""
-        mock_settings = {'theme': 'default', 'site_name': 'GameTheca', 'maintenance_mode': False}
+        mock_settings = {'theme': 'default', 'site_name': 'Oneirodex', 'maintenance_mode': False}
         mock_get_global_settings.return_value = mock_settings
         
         with app.app_context():
-            from gametheca.routes_info import inject_settings
+            from oneirodex.routes_info import inject_settings
             result = inject_settings()
             
         assert result == mock_settings
         mock_get_global_settings.assert_called_once()
 
-    @patch('gametheca.routes_info.get_global_settings')
+    @patch('oneirodex.routes_info.get_global_settings')
     def test_inject_settings_cached(self, mock_get_global_settings, app):
         """Test that the context processor is cached."""
         mock_settings = {'theme': 'dark', 'site_name': 'Test Site'}
         mock_get_global_settings.return_value = mock_settings
         
         with app.app_context():
-            from gametheca.routes_info import inject_settings
+            from oneirodex.routes_info import inject_settings
             
             # Call multiple times
             result1 = inject_settings()
@@ -84,7 +84,7 @@ class TestAdminServerStatusRoute:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    @patch('oneirodex.utils.auth.current_user', new_callable=MagicMock)
     def test_admin_server_status_requires_admin_role(self, mock_current_user, client, regular_user):
         """Test that admin server status route requires admin role."""
         mock_current_user.is_authenticated = True
@@ -118,7 +118,7 @@ class TestRouteIntegration:
     def test_info_blueprint_context_processor(self, app):
         """Test that the info blueprint context processor is registered."""
         with app.app_context():
-            from gametheca.routes_info import info_bp
+            from oneirodex.routes_info import info_bp
             
             # Check that context processor is registered
             assert hasattr(info_bp, 'context_processor')
@@ -129,7 +129,7 @@ class TestUtilityFunctionIntegration:
 
     def test_format_bytes_integration(self, app):
         """Test format_bytes function integration."""
-        from gametheca.routes_info import format_bytes
+        from oneirodex.routes_info import format_bytes
         
         # Test various byte values
         assert format_bytes(1024) is not None
@@ -138,14 +138,14 @@ class TestUtilityFunctionIntegration:
 
     def test_app_version_import(self, app):
         """Test that app_version is imported correctly."""
-        from gametheca.routes_info import app_version
+        from oneirodex.routes_info import app_version
         
         assert app_version is not None
         assert isinstance(app_version, str)
 
     def test_app_start_time_import(self, app):
         """Test that app_start_time is imported correctly."""
-        from gametheca.routes_info import app_start_time
+        from oneirodex.routes_info import app_start_time
         
         assert app_start_time is not None
         assert isinstance(app_start_time, datetime)
@@ -177,7 +177,7 @@ class TestOpsLogsApi:
         assert response.status_code == 302
         assert '/login' in response.location
 
-    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    @patch('oneirodex.utils.auth.current_user', new_callable=MagicMock)
     def test_requires_admin_role(self, mock_current_user, client, regular_user):
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'user'
@@ -188,7 +188,7 @@ class TestOpsLogsApi:
 
             assert response.status_code in [302, 403]
 
-    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    @patch('oneirodex.utils.auth.current_user', new_callable=MagicMock)
     def test_returns_events_with_the_shape_the_console_renders(
         self, mock_current_user, client, admin_user
     ):
@@ -210,7 +210,7 @@ class TestOpsLogsApi:
                     'id', 'timestamp', 'level', 'type', 'text', 'user',
                 }
 
-    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    @patch('oneirodex.utils.auth.current_user', new_callable=MagicMock)
     def test_limit_is_clamped(self, mock_current_user, client, admin_user):
         """An unbounded limit would ask the console to render the whole table."""
         mock_current_user.is_authenticated = True
@@ -223,7 +223,7 @@ class TestOpsLogsApi:
             assert response.status_code == 200
             assert len(response.get_json()['events']) <= 200
 
-    @patch('gametheca.utils.auth.current_user', new_callable=MagicMock)
+    @patch('oneirodex.utils.auth.current_user', new_callable=MagicMock)
     def test_retired_server_info_page_is_gone(
         self, mock_current_user, client, admin_user
     ):

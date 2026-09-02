@@ -8,9 +8,9 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.arr_hardlink_pipeline import apply_proposals, propose_hardlinks
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.arr_hardlink_pipeline import apply_proposals, propose_hardlinks
 
 
 @pytest.fixture
@@ -103,11 +103,11 @@ def test_propose_hardlinks_from_file(app, tmp_path, monkeypatch):
     src.write_bytes(b'abc')
 
     monkeypatch.setattr(
-        'gametheca.utils.arr_hardlink_pipeline.get_allowed_base_directories',
+        'oneirodex.utils.arr_hardlink_pipeline.get_allowed_base_directories',
         lambda _app: [str(tmp_path)],
     )
     monkeypatch.setattr(
-        'gametheca.utils.arr_hardlink_pipeline.list_completed_torrents',
+        'oneirodex.utils.arr_hardlink_pipeline.list_completed_torrents',
         lambda limit=50: [{
             'hash': 'abc',
             'name': 'game',

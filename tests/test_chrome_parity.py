@@ -5,7 +5,7 @@ cannot import from each other. So the *stylesheet* is the shared artifact and
 both renderers emit the same class names against it.
 
 That arrangement only holds if the class names stay in step. Renaming
-`gt-seg__item` in one place and not the other would not break either build, it
+`od-seg__item` in one place and not the other would not break either build, it
 would just quietly make admin look different again — which is precisely the
 drift this refresh exists to end. These tests fail instead.
 """
@@ -18,18 +18,18 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-CSS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'gt-appbar.css'
-JINJA = ROOT / 'gametheca' / 'templates' / 'partials' / 'chrome.html'
+CSS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'od-appbar.css'
+JINJA = ROOT / 'oneirodex' / 'templates' / 'partials' / 'chrome.html'
 REACT = ROOT / 'frontend' / 'member-app' / 'src' / 'chrome' / 'ContextBar.jsx'
 
 # The contract: every class the context bar is built from.
 CONTEXT_BAR_CLASSES = (
-    'gt-contextbar',
-    'gt-contextbar__views',
-    'gt-contextbar__actions',
-    'gt-contextbar__count',
-    'gt-seg',
-    'gt-seg__item',
+    'od-contextbar',
+    'od-contextbar__views',
+    'od-contextbar__actions',
+    'od-contextbar__count',
+    'od-seg',
+    'od-seg__item',
 )
 
 
@@ -40,7 +40,7 @@ def _read(path: Path) -> str:
 @pytest.mark.parametrize('css_class', CONTEXT_BAR_CLASSES)
 def test_class_is_defined_in_the_shared_stylesheet(css_class):
     assert f'.{css_class}' in _read(CSS), (
-        f'{css_class} is used by a renderer but has no rule in gt-appbar.css'
+        f'{css_class} is used by a renderer but has no rule in od-appbar.css'
     )
 
 
@@ -57,52 +57,52 @@ def test_admin_react_pages_retire_their_titles_too():
     admin h1 stayed. "Library and admin should look the same" is the point of
     the refresh, and that was the most visible way to fail it."""
     css = _read(CSS)
-    assert ":root[data-chrome='v2'] .gt-admin-page > h1" in css
-    assert ":root[data-chrome='v2'] .gt-admin-page > .gt-admin-lede" in css
+    assert ":root[data-chrome='v2'] .od-admin-page > h1" in css
+    assert ":root[data-chrome='v2'] .od-admin-page > .od-admin-lede" in css
 
 
 def test_stylesheet_is_linked_by_every_shell():
     """A shell that forgets the link renders the bars unstyled."""
     for shell in ('base.html', 'base_empty.html', 'base_admin.html'):
-        markup = _read(ROOT / 'gametheca' / 'templates' / shell)
-        assert 'gt-appbar.css' in markup, f'{shell} does not link gt-appbar.css'
+        markup = _read(ROOT / 'oneirodex' / 'templates' / shell)
+        assert 'od-appbar.css' in markup, f'{shell} does not link od-appbar.css'
 
 
 def test_v2_marker_is_set_by_the_jinja_shells():
     """Page-header retirement keys off data-chrome; without it admin keeps its
     headings while the member SPA loses them — the exact mismatch to avoid."""
     for shell in ('base.html', 'base_admin.html'):
-        markup = _read(ROOT / 'gametheca' / 'templates' / shell)
+        markup = _read(ROOT / 'oneirodex' / 'templates' / shell)
         assert 'data-chrome="v2"' in markup, f'{shell} never sets the v2 marker'
         assert 'enable_new_chrome' in markup, f'{shell} sets the marker unconditionally'
 
 
 def test_the_chrome_stylesheet_stays_syncable_into_every_theme():
-    """Every theme must keep tracking edits to gt-appbar.css.
+    """Every theme must keep tracking edits to od-appbar.css.
 
     Two mechanisms carry it there: `theme_asset` falls back to `default` when a
     theme has no copy, and `sync_preset_themes` overwrites any copy whose
     content has drifted. Both work — *unless* the file is listed in
     PRESET_MANAGED_FILES, which is the opt-out for files a preset legitimately
-    owns (its colours). gt-appbar.css there would freeze all nine presets at
+    owns (its colours). od-appbar.css there would freeze all nine presets at
     whatever the CSS looked like the day they were installed.
 
     Note this deliberately does not inspect static/library/themes: that tree is
     generated at boot and every preset holding a synced copy is correct.
     """
-    from gametheca.utils.preset_themes import PRESET_MANAGED_FILES
+    from oneirodex.utils.preset_themes import PRESET_MANAGED_FILES
 
-    assert 'css/gt-appbar.css' not in PRESET_MANAGED_FILES, (
-        'gt-appbar.css is protected from theme sync — presets will not track '
+    assert 'css/od-appbar.css' not in PRESET_MANAGED_FILES, (
+        'od-appbar.css is protected from theme sync — presets will not track '
         'changes to the shared chrome'
     )
     # And the only tracked source of it is the default theme, so there is one
     # place to edit.
-    sources = sorted((ROOT / 'gametheca' / 'setup').glob('*/css/gt-appbar.css'))
+    sources = sorted((ROOT / 'oneirodex' / 'setup').glob('*/css/od-appbar.css'))
     assert [p.parent.parent.name for p in sources] == ['default_theme']
 
 
-SCANJOBS = ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_manage_scanjobs.html'
+SCANJOBS = ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_manage_scanjobs.html'
 
 
 def test_in_page_views_stay_in_page():
@@ -130,11 +130,11 @@ def test_in_page_views_satisfy_what_bootstrap_actually_binds_to():
     # which would leave the highlight welded to the first segment while the
     # panes changed underneath it. Confirmed in a browser, not assumed.
     assert "{{ ' active' if data_toggle else ' is-active' }}" in macro
-    assert '.gt-seg__item.active' in _read(CSS), (
+    assert '.od-seg__item.active' in _read(CSS), (
         'the stylesheet no longer styles the class bootstrap actually sets'
     )
 
-    bundle = ROOT / 'gametheca' / 'static' / 'vendor' / 'bootstrap' / '5.3.2' / 'js'
+    bundle = ROOT / 'oneirodex' / 'static' / 'vendor' / 'bootstrap' / '5.3.2' / 'js'
     bundle = bundle / 'bootstrap.bundle.min.js'
     if not bundle.is_file():
         pytest.skip('bootstrap bundle not vendored in this checkout')
@@ -145,9 +145,9 @@ def test_in_page_views_satisfy_what_bootstrap_actually_binds_to():
     assert 'Fs="active"' in source
 
 
-INTEGRATIONS = ROOT / 'gametheca' / 'templates' / 'admin' / 'integrations.html'
+INTEGRATIONS = ROOT / 'oneirodex' / 'templates' / 'admin' / 'integrations.html'
 INTEGRATIONS_JS = (
-    ROOT / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'integrations_tabs.js'
+    ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'js' / 'integrations_tabs.js'
 )
 
 
@@ -186,7 +186,7 @@ def test_lazy_loaded_panels_are_found_by_target_not_by_id():
     inline in the Jinja.
     """
     markup = _read(SCANJOBS)
-    js = _read(ROOT / 'gametheca' / 'static' / 'js' / 'gt_admin_scanjobs_inline.js')
+    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'gt_admin_scanjobs_inline.js')
     assert "getElementById('imageQueue-tab')" not in markup
     assert "getElementById('imageQueue-tab')" not in js
     assert '[data-bs-toggle="tab"][href="#imageQueue"]' in js
@@ -204,13 +204,13 @@ def test_jinja_views_are_links_not_buttons():
     """In Jinja a view switch is a navigation. Rendering it as a <button> would
     break middle-click, open-in-new-tab and copy-link for no benefit."""
     macro = _read(JINJA)
-    seg = macro[macro.index('gt-seg__item'):]
-    assert '<a class="gt-seg__item' in macro or 'a class="gt-seg__item' in seg
+    seg = macro[macro.index('od-seg__item'):]
+    assert '<a class="od-seg__item' in macro or 'a class="od-seg__item' in seg
     assert 'href=' in seg
 
 
-LIBRARIES = ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_manage_libraries.html'
-SCANJOBS_CSS = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin_manage_scanjobs.css'
+LIBRARIES = ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_manage_libraries.html'
+SCANJOBS_CSS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin_manage_scanjobs.css'
 
 
 def test_libraries_panel_is_not_a_card_inside_the_page_card():

@@ -7,8 +7,8 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import User
-from gametheca.utils.hardlinks import (
+from oneirodex.models import User
+from oneirodex.utils.hardlinks import (
     build_degrade_reason,
     build_storage_status,
     preview_hardlink,
@@ -51,7 +51,7 @@ def test_probe_games_path_ro(tmp_path, monkeypatch):
             return False
         return real_access(path, mode)
 
-    monkeypatch.setattr('gametheca.utils.hardlinks.os.access', fake_access)
+    monkeypatch.setattr('oneirodex.utils.hardlinks.os.access', fake_access)
     probe = probe_games_path(str(root))
     assert probe['games_exists'] is True
     assert probe['games_readable'] is True
@@ -100,7 +100,7 @@ def test_preview_not_writable_reason(tmp_path, monkeypatch):
             return False
         return real_access(path, mode)
 
-    monkeypatch.setattr('gametheca.utils.hardlinks.os.access', fake_access)
+    monkeypatch.setattr('oneirodex.utils.hardlinks.os.access', fake_access)
     result = preview_hardlink(str(src), str(dest))
     assert result['would_succeed'] is False
     assert any('not writable' in r.lower() for r in result['reasons'])
@@ -121,7 +121,7 @@ def test_storage_status_api_ro(client, app, admin, tmp_path, monkeypatch):
             return False
         return real_access(path, mode)
 
-    monkeypatch.setattr('gametheca.utils.hardlinks.os.access', fake_access)
+    monkeypatch.setattr('oneirodex.utils.hardlinks.os.access', fake_access)
     resp = client.get('/api/storage/status')
     assert resp.status_code == 200
     body = resp.get_json()
@@ -172,7 +172,7 @@ def test_apply_api_gated_when_apply_off(client, app, admin, tmp_path, monkeypatc
     monkeypatch.setitem(app.config, 'ENABLE_HARDLINK_HELPERS', True)
     monkeypatch.setitem(app.config, 'ALLOW_HARDLINK_APPLY', False)
     monkeypatch.setattr(
-        'gametheca.routes_apis.storage.get_allowed_base_directories',
+        'oneirodex.routes_apis.storage.get_allowed_base_directories',
         lambda _app: [str(tmp_path)],
     )
     resp = client.post(

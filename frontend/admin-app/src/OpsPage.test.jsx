@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { formatScanJobCounters, OpsPage } from './OpsPage'
 
@@ -180,7 +180,7 @@ test('OpsPage shows library health score and top factors when present', async ()
   expect(strip).toHaveTextContent(/Library health/)
   expect(strip).toHaveTextContent(/64 · fair/)
   expect(strip).toHaveTextContent(/Missing cover/)
-  expect(strip.querySelector('.gt-ops-metric--fair')).toBeTruthy()
+  expect(strip.querySelector('.od-ops-metric--fair')).toBeTruthy()
   const factors = screen.getByLabelText('Top health factors')
   expect(factors).toHaveTextContent(/Missing cover/)
   expect(factors).toHaveTextContent('9')
@@ -208,7 +208,7 @@ test('OpsPage library health is honest n/a when Backend field absent', async () 
   expect(strip).toHaveTextContent(/Library health/)
   expect(strip).toHaveTextContent(/n\/a/)
   expect(strip).toHaveTextContent(/not scored yet/)
-  expect(strip.querySelector('.gt-ops-metric--na')).toBeTruthy()
+  expect(strip.querySelector('.od-ops-metric--na')).toBeTruthy()
   expect(screen.getByText(/Library health not scored yet/i)).toBeInTheDocument()
 })
 
@@ -303,7 +303,7 @@ test('OpsPage shows library watch running with roots and pending', async () => {
   render(<OpsPage />)
 
   expect(await screen.findByRole('heading', { name: 'Services' })).toBeInTheDocument()
-  expect(screen.getByText(/3 roots · 2 pending · 3s debounce/)).toBeInTheDocument()
+  expect(await screen.findByText(/3 roots · 2 pending · 3s debounce/)).toBeInTheDocument()
   const strip = screen.getByLabelText('Key metrics')
   expect(strip).toHaveTextContent(/Library watch/)
   expect(strip).toHaveTextContent(/running/)
@@ -357,7 +357,7 @@ test('OpsPage splits action and warning folds; category maps to action', async (
                   severity: 'warn',
                   category: 'action',
                   message: 'Readyz probe failing',
-                  href: '/admin/system_logs',
+                  href: '/admin/ops?open=full-log',
                 },
                 {
                   id: 'disk_games_warn',
@@ -382,14 +382,14 @@ test('OpsPage splits action and warning folds; category maps to action', async (
   expect(screen.getByRole('heading', { name: 'Warning / Info' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Readyz probe failing/i })).toHaveAttribute(
     'href',
-    '/admin/system_logs',
+    '/admin/ops?open=full-log',
   )
   expect(screen.getByText('Games disk 88% used')).toBeInTheDocument()
   // Status strip strong label (banner head) — action items still win over overall=warn,
   // but the headline is a verdict, not a repeat of the fold title (GT-C1).
   const status = screen.getByLabelText('System status')
-  expect(status).toHaveClass('gt-ops-status--bad')
-  expect(status.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Needs attention')
+  expect(status).toHaveClass('od-ops-status--bad')
+  expect(status.querySelector('.od-ops-status__head strong')).toHaveTextContent('Needs attention')
   expect(screen.getAllByText('Action required')).toHaveLength(1)
 })
 
@@ -426,8 +426,8 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
   expect(screen.queryByRole('heading', { name: 'Action required' })).not.toBeInTheDocument()
   expect(screen.getByText('Games disk 96% used')).toBeInTheDocument()
   const status = screen.getByLabelText('System status')
-  expect(status).toHaveClass('gt-ops-status--warn')
-  expect(status.querySelector('.gt-ops-status__head strong')).toHaveTextContent('Degraded')
+  expect(status).toHaveClass('od-ops-status--warn')
+  expect(status.querySelector('.od-ops-status__head strong')).toHaveTextContent('Degraded')
   expect(screen.getAllByText('Warning / Info')).toHaveLength(1)
 })
 
@@ -478,7 +478,8 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
   expect(screen.queryByText(/Loading ops summary/i)).not.toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: /^Refresh$/i }))
-  expect(screen.getByRole('status')).toHaveTextContent(/Refreshing/i)
+  // Icon-only refresh: busy state is aria-label, not a separate status chip.
+  expect(screen.getByRole('button', { name: /Refreshing/i })).toBeDisabled()
   expect(screen.getByRole('heading', { name: 'Scans' })).toBeInTheDocument()
 
   resolveSecond()
@@ -488,13 +489,8 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
 })
 
 /**
- * Reordering the Ops detail panels (task #6).
- *
- * Buttons rather than drag handles, and the DOM is rewritten rather than the
- * panels being given a CSS `order`: visual order that disagrees with tab order
- * is a worse bug than the one being fixed. Asserting on heading *sequence* is
- * what catches that — a CSS-only reorder would leave this test passing while
- * the page lied to anyone tabbing through it.
+ * Ops is a Dashboard-style board now: drag/resize widgets, Reset in the centre
+ * page slot, refresh in the trail with Updated as a hover tooltip.
  */
 function mockOpsWithSystemDetail() {
   return vi.fn(async (url) => {
@@ -523,50 +519,48 @@ function mockOpsWithSystemDetail() {
   })
 }
 
-function clearStoredOrder() {
-  // localStorage is not provided in this vitest environment, which is itself
-  // worth knowing: useWidgetOrder has to degrade to the declared order rather
-  // than throwing, and these tests exercise exactly that path.
+test('OpsPage uses a dashboard-style board with reset and detail panels', async () => {
+  const pageSlot = document.createElement('div')
+  pageSlot.id = 'od-admin-topbar-slot'
+  const trail = document.createElement('div')
+  trail.id = 'od-admin-topbar-trail'
+  document.body.appendChild(pageSlot)
+  document.body.appendChild(trail)
   try {
-    window.localStorage?.removeItem('gt-widget-order:ops-detail')
-  } catch {
-    // nothing stored to clear
+    global.fetch = mockOpsWithSystemDetail()
+    render(<OpsPage />)
+
+    expect(await screen.findByRole('heading', { name: 'System', level: 2 })).toBeInTheDocument()
+    expect(document.querySelector('.od-dash__board')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Resize status' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Move System/ })).not.toBeInTheDocument()
+
+    const reset = screen.getByRole('button', { name: 'Reset layout' })
+    expect(pageSlot.contains(reset)).toBe(true)
+    expect(pageSlot.textContent).not.toMatch(/Updated /)
+    const refresh = screen.getByRole('button', { name: /^Refresh$/i })
+    expect(trail.contains(refresh)).toBe(true)
+    const wrap = refresh.closest('.od-ops-refresh-wrap')
+    expect(wrap).toBeTruthy()
+    expect(within(wrap).getByRole('tooltip').textContent).toMatch(/Updated /)
+  } finally {
+    pageSlot.remove()
+    trail.remove()
   }
-}
-
-function detailHeadings() {
-  return screen
-    .getAllByRole('heading', { level: 2 })
-    .map((h) => h.textContent)
-    .filter((text) => ['System', 'Database', 'Logs', 'Configuration'].includes(text))
-}
-
-test('OpsPage detail panels can be reordered from the keyboard', async () => {
-  const user = userEvent.setup()
-  clearStoredOrder()
-  global.fetch = mockOpsWithSystemDetail()
-
-  render(<OpsPage />)
-
-  expect(await screen.findByRole('heading', { name: 'System', level: 2 })).toBeInTheDocument()
-  expect(detailHeadings()).toEqual(['System', 'Database', 'Logs', 'Configuration'])
-
-  await user.click(screen.getByRole('button', { name: 'Move Database earlier' }))
-
-  expect(detailHeadings()).toEqual(['Database', 'System', 'Logs', 'Configuration'])
 })
 
-test('OpsPage disables the move that would fall off the end', async () => {
-  clearStoredOrder()
+test('OpsPage Full log opens a modal instead of navigating away', async () => {
+  const user = userEvent.setup()
   global.fetch = mockOpsWithSystemDetail()
-
   render(<OpsPage />)
 
-  await screen.findByRole('heading', { name: 'System', level: 2 })
+  expect(await screen.findByRole('heading', { name: 'Recent log', level: 2 })).toBeInTheDocument()
+  const fullLog = screen.getByRole('button', { name: /Full log/i })
+  expect(fullLog.tagName).toBe('BUTTON')
+  await user.click(fullLog)
 
-  // Disabled rather than hidden, so the control group keeps its width and the
-  // buttons stay where the hand expects them as a panel moves.
-  expect(screen.getByRole('button', { name: 'Move System earlier' })).toBeDisabled()
-  expect(screen.getByRole('button', { name: 'Move Configuration later' })).toBeDisabled()
-  expect(screen.getByRole('button', { name: 'Move System later' })).toBeEnabled()
+  expect(await screen.findByRole('dialog', { name: 'Full log' })).toBeInTheDocument()
+  expect(global.fetch.mock.calls.some(([url]) => String(url).includes('/admin/api/ops/logs?limit=200'))).toBe(
+    true,
+  )
 })

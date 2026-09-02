@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createGamethecaClient } from '@oneirodex/api-client'
+import { createOneirodexClient } from '@oneirodex/api-client'
 
 import { watchPlaySession } from './playtime-session.js'
 
@@ -27,7 +27,7 @@ describe('playtime session watcher', () => {
       return new Response('not found', { status: 404 })
     })
 
-    const api = createGamethecaClient({
+    const api = createOneirodexClient({
       baseUrl: 'https://example.com',
       getToken: () => 'gt_abcd_secret',
       fetchImpl,

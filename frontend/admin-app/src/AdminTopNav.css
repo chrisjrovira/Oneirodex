@@ -1,0 +1,186 @@
+/* Account menu — same vertical panel language as member TopNav.css.
+   Admin previously had the markup but not these rules, so links ran into one
+   horizontal strip and blocked the bar. */
+
+/* Shared od-shell.css uppercases section eyebrows for a short rail cue.
+   Admin names the product here (“Oneirodex Dashboard”), so keep title case. */
+body.od-shell-host header.od-topbar .od-topbar__section,
+.od-admin-shell .od-topbar__section,
+.od-topbar__section {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Sit the rail toggle nearer the rail edge — member chrome reads flush-left;
+   admin inherited the full content gutter and looked inset. */
+body.od-shell-host header.od-topbar {
+  padding-inline-start: var(--od-rail-inset, var(--od-space-2));
+}
+
+/* Keep flex: 1 1 0 from od-shell.css so start and actions stay equal width.
+   `flex: 0 1 auto` here pushed `#od-admin-topbar-slot` off the page midpoint
+   (Users Invites / Support / quotas sat under the rail instead of centre). */
+body.od-shell-host header.od-topbar .od-topbar__start {
+  display: flex;
+  align-items: center;
+  gap: var(--od-space-2);
+  min-width: 0;
+}
+
+body.od-shell-host header.od-topbar .od-topbar__actions {
+  flex: 1 1 0;
+  justify-content: flex-end;
+  /* Tight trail → account: refresh sits next to the username, not a gutter away. */
+  gap: var(--od-space-1);
+  min-width: 0;
+}
+
+body.od-shell-host header.od-topbar .od-topbar__title-slot:empty {
+  display: none;
+}
+
+body.od-shell-host header.od-topbar .od-topbar__title-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+/* Centre the Jinja view strip / Reset layout on the page midpoint (equal flex
+   start/actions already put `#od-admin-topbar-slot` on the content centre). */
+body.od-shell-host header.od-topbar .od-topbar__page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+body.od-shell-host header.od-topbar .od-topbar__page > .od-contextbar__views,
+body.od-shell-host header.od-topbar .od-topbar__page > .od-cbtn-group {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--od-space-2);
+  min-width: 0;
+}
+
+/* Summary / Updated / Reset beside account — one midline with the rail toggle
+   and username. Trail actions are not a fused button group. */
+body.od-shell-host header.od-topbar .od-topbar__trail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--od-space-2);
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+body.od-shell-host header.od-topbar .od-topbar__trail > .od-cbtn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--od-space-2);
+}
+
+body.od-shell-host header.od-topbar .od-topbar__trail > .od-cbtn-group > .od-cbtn,
+body.od-shell-host header.od-topbar .od-topbar__trail > .od-cbtn-group > .od-cbtn:first-child,
+body.od-shell-host header.od-topbar .od-topbar__trail > .od-cbtn-group > .od-cbtn:last-child {
+  margin-inline-start: 0;
+  border-radius: var(--od-radius-sm);
+}
+
+body.od-shell-host header.od-topbar .od-topbar__trail .od-contextbar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--od-space-2);
+}
+
+body.od-shell-host header.od-topbar .od-topbar__trail .od-contextbar__count {
+  white-space: nowrap;
+}
+
+body.od-shell-host header.od-topbar,
+body.od-shell-host header.od-topbar .od-topbar__actions,
+body.od-shell-host header.od-topbar .od-topbar__start {
+  align-items: center;
+}
+
+.od-topnav__dropdown {
+  position: relative;
+}
+
+.od-topnav__dropdown-panel {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  min-width: 12rem;
+  max-width: min(20rem, 90vw);
+  padding: 0.3rem;
+  background: var(--od-surface-2);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 26%, transparent);
+  border-radius: var(--od-radius-sm);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--od-bg) 75%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  z-index: 1001;
+  color: var(--od-text);
+}
+
+.od-topnav__dropdown-panel a,
+.od-topnav__dropdown-panel button[role='menuitem'] {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.6rem;
+  color: inherit;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--od-radius-xs);
+  background: transparent;
+  font: inherit;
+  font-size: var(--od-font-md);
+  text-align: left;
+  cursor: pointer;
+  white-space: normal;
+}
+
+.od-topnav__dropdown-panel a:hover,
+.od-topnav__dropdown-panel a:focus-visible,
+.od-topnav__dropdown-panel a.active,
+.od-topnav__dropdown-panel button[role='menuitem']:hover,
+.od-topnav__dropdown-panel button[role='menuitem']:focus-visible {
+  background: color-mix(in srgb, var(--od-accent) 16%, transparent);
+  color: var(--od-accent);
+  outline: none;
+}
+
+.od-topnav__username {
+  padding: 0.3rem 0.6rem 0.45rem;
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-text) 12%, transparent);
+  margin-bottom: 0.15rem;
+}
+
+.od-topnav__palette-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--od-space-3, 0.75rem);
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.od-topnav__palette-hint kbd {
+  padding: 0 var(--od-space-1, 0.25rem);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-xs);
+  font-family: inherit;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}

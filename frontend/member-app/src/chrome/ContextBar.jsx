@@ -10,17 +10,17 @@ import { createPortal } from 'react-dom'
  * (trail, beside the tile size control). A single slot put all three in a row
  * wherever the widest label happened to leave them.
  */
-export const TOPBAR_SLOT_ID = 'gt-topbar-slot'
-export const TOPBAR_LEAD_ID = 'gt-topbar-lead'
-export const TOPBAR_TRAIL_ID = 'gt-topbar-trail'
+export const TOPBAR_SLOT_ID = 'od-topbar-slot'
+export const TOPBAR_LEAD_ID = 'od-topbar-lead'
+export const TOPBAR_TRAIL_ID = 'od-topbar-trail'
 /* Four, now. The lead slot sits *inside* the toggle/Filters cluster, so
    anything portalled there is a sibling of the hamburger — correct for
    Filters, wrong for a page title. The title gets its own slot immediately
    after the cluster instead. */
-export const TOPBAR_TITLE_ID = 'gt-topbar-title'
+export const TOPBAR_TITLE_ID = 'od-topbar-title'
 
 /** Marks a host div as belonging to one ContextBar instance. */
-const HOST_ATTR = 'data-gt-contextbar-host'
+const HOST_ATTR = 'data-od-contextbar-host'
 
 /**
  * Bar two — everything the current page can do (UIR-1, Option B).
@@ -34,7 +34,7 @@ const HOST_ATTR = 'data-gt-contextbar-host'
  * what we are getting away from, so this component deliberately offers exactly
  * one of each.
  *
- * No CSS import: the styles live in the shared `gt-appbar.css` theme asset so
+ * No CSS import: the styles live in the shared `od-appbar.css` theme asset so
  * Jinja admin renders the identical bar (UIR-4) without duplicating anything.
  */
 
@@ -61,16 +61,17 @@ function useDismiss(open, onClose, refs) {
 }
 
 /**
- * One unified segmented bar. Optional `unfurl` adds a trailing trigger (default
- * label "View") that drops a vertical stack of same-width options attached
- * under that button — only while open. Used so Tile/Rows/Grid (or News
- * Card/Grid/RSS) do not sit as a second always-on bar beside the kind chips.
+ * One unified segmented bar. Optional `unfurl` adds a trailing trigger that
+ * drops a vertical stack of same-width options attached under that button —
+ * only while open. The trigger label is the **active** unfurl option (Tile /
+ * Rows / Grid, or News Card / Grid / RSS) so the bar shows which layout you
+ * are on; `triggerLabel` is the fallback and the menu's aria-label.
  *
  * @param {object} [props.unfurl]
  * @param {{ id: string, label: string }[]} props.unfurl.views
  * @param {string} props.unfurl.active
  * @param {(id: string) => void} props.unfurl.onSelect
- * @param {string} [props.unfurl.triggerLabel='View']
+ * @param {string} [props.unfurl.triggerLabel='View'] Fallback + menu name
  */
 export function SegmentedViews({
   views,
@@ -89,15 +90,19 @@ export function SegmentedViews({
     unfurl && Array.isArray(unfurl.views) && unfurl.views.length > 0
   if (!hasViews && !hasUnfurl) return null
 
-  const triggerLabel = unfurl?.triggerLabel || 'View'
+  const menuLabel = unfurl?.triggerLabel || 'View'
+  const activeUnfurlView = hasUnfurl
+    ? unfurl.views.find((view) => view.id === unfurl.active)
+    : null
+  const triggerLabel = activeUnfurlView?.label || menuLabel
 
   return (
     <div
-      className={`gt-contextbar__views${unfurlOpen ? ' is-unfurled' : ''}`}
+      className={`od-contextbar__views${unfurlOpen ? ' is-unfurled' : ''}`}
       ref={rootRef}
     >
       <div
-        className={`gt-seg${unfurlOpen ? ' is-unfurled' : ''}`}
+        className={`od-seg${unfurlOpen ? ' is-unfurled' : ''}`}
         role="group"
         aria-label={label}
       >
@@ -108,23 +113,23 @@ export function SegmentedViews({
                 <button
                   key={view.id}
                   type="button"
-                  className={`gt-seg__item${selected ? ' is-active' : ''}`}
+                  className={`od-seg__item${selected ? ' is-active' : ''}`}
                   aria-pressed={selected}
                   onClick={() => onSelect?.(view.id)}
                 >
                   {view.label}
                   {typeof view.count === 'number' ? (
-                    <span className="gt-seg__count"> {view.count}</span>
+                    <span className="od-seg__count"> {view.count}</span>
                   ) : null}
                 </button>
               )
             })
           : null}
         {hasUnfurl ? (
-          <span className="gt-seg__unfurl-anchor">
+          <span className="od-seg__unfurl-anchor">
             <button
               type="button"
-              className={`gt-seg__item${unfurlOpen ? ' is-active' : ''}`}
+              className={`od-seg__item${unfurlOpen ? ' is-active' : ''}`}
               aria-expanded={unfurlOpen}
               aria-haspopup="true"
               onClick={() => setUnfurlOpen((value) => !value)}
@@ -133,9 +138,9 @@ export function SegmentedViews({
             </button>
             {unfurlOpen ? (
               <div
-                className="gt-contextbar__views-unfurl"
+                className="od-contextbar__views-unfurl"
                 role="group"
-                aria-label={triggerLabel}
+                aria-label={menuLabel}
               >
                 {unfurl.views.map((view) => {
                   const selected = view.id === unfurl.active
@@ -143,7 +148,7 @@ export function SegmentedViews({
                     <button
                       key={view.id}
                       type="button"
-                      className={`gt-seg__item${selected ? ' is-active' : ''}`}
+                      className={`od-seg__item${selected ? ' is-active' : ''}`}
                       aria-pressed={selected}
                       onClick={() => {
                         unfurl.onSelect?.(view.id)
@@ -182,6 +187,8 @@ export function Popover({
   chromeless = false,
   /** Extra classes on the trigger — e.g. count readout that opens a panel. */
   triggerClassName = '',
+  disabled = false,
+  title = undefined,
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
@@ -193,7 +200,7 @@ export function Popover({
 
   const active = count > 0
   const triggerClass = [
-    'gt-cbtn',
+    'od-cbtn',
     active ? 'is-on' : '',
     triggerClassName,
   ]
@@ -201,7 +208,7 @@ export function Popover({
     .join(' ')
 
   return (
-    <div className="gt-pop" data-align={align}>
+    <div className="od-pop" data-align={align}>
       <button
         type="button"
         ref={triggerRef}
@@ -209,25 +216,27 @@ export function Popover({
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-controls={open ? panelId : undefined}
+        disabled={disabled}
+        title={title}
         onClick={() => setOpen((value) => !value)}
       >
         {icon}
         {label}
-        {active ? <span className="gt-cbtn__count">{count}</span> : null}
+        {active ? <span className="od-cbtn__count">{count}</span> : null}
       </button>
 
       {open ? (
         <div
           id={panelId}
           ref={panelRef}
-          className={`gt-pop__panel${chromeless ? ' gt-pop__panel--bare' : ''}`}
+          className={`od-pop__panel${chromeless ? ' od-pop__panel--bare' : ''}`}
           role="dialog"
           aria-label={label}
         >
           {chromeless ? null : (
-            <div className="gt-pop__head">
-              <span className="gt-pop__title">{label}</span>
-              <button type="button" className="gt-cbtn" onClick={close}>
+            <div className="od-pop__head">
+              <span className="od-pop__title">{label}</span>
+              <button type="button" className="od-cbtn" onClick={close}>
                 Done
               </button>
             </div>
@@ -256,7 +265,7 @@ export function ContextBar({
   summary = null,
   /**
    * Layout / density options that unfurl under a trailing "View" segment on
-   * the same bar — not a second always-visible `.gt-seg` beside the kinds.
+   * the same bar — not a second always-visible `.od-seg` beside the kinds.
    * Shape matches `SegmentedViews` `unfurl`.
    */
   viewUnfurl = null,
@@ -303,7 +312,7 @@ export function ContextBar({
       })
       const host = document.createElement('div')
       host.setAttribute(HOST_ATTR, instanceId)
-      host.className = 'gt-contextbar__host'
+      host.className = 'od-contextbar__host'
       target.appendChild(host)
       hosts[name] = host
     })
@@ -366,12 +375,12 @@ export function ContextBar({
       count={filterCount}
       chromeless={ownsDismiss}
       align="end"
-      triggerClassName="gt-contextbar__count"
+      triggerClassName="od-contextbar__count"
     >
       {filters}
     </Popover>
   ) : summary ? (
-    <span className="gt-contextbar__count">{summary}</span>
+    <span className="od-contextbar__count">{summary}</span>
   ) : null
 
   /* A name for a page the nav tables cannot name.
@@ -384,12 +393,12 @@ export function ContextBar({
    * component simply did not accept the prop, so the name was dropped on the
    * floor — the page opened with no indication of which row you had opened.
    *
-   * Rendered into the lead slot as the same `.gt-topbar__section` element the
+   * Rendered into the lead slot as the same `.od-topbar__section` element the
    * bar uses for its own titles, so a data-named page reads identically to a
-   * table-named one. gt-shell.css suppresses the bar's copy when this is
+   * table-named one. od-shell.css suppresses the bar's copy when this is
    * present, otherwise a collapsed rail showed both. */
   const titleControl = title ? (
-    <span className="gt-topbar__section">{title}</span>
+    <span className="od-topbar__section">{title}</span>
   ) : null
 
   // One bar, not two.
@@ -402,7 +411,7 @@ export function ContextBar({
   // Portalled rather than lifted into TopBar via props: every page already
   // feeds this component, so moving the render target moves all of them at
   // once, and each page keeps owning its own handlers. Same pattern the library
-  // filters already use with #gt-rail-slot.
+  // filters already use with #od-rail-slot.
   //
   // Three targets rather than one — see the slot ids above. Filters sits with
   // the rail toggle because narrowing is the first thing you do to a list; the
@@ -413,10 +422,10 @@ export function ContextBar({
   // pop-out chat host, and tests — rather than vanishing.
   if (!slots) {
     return (
-      <div className="gt-contextbar">
+      <div className="od-contextbar">
         {titleControl}
         {viewControl}
-        <div className="gt-contextbar__actions">
+        <div className="od-contextbar__actions">
           {countControl}
           {filterControl}
         </div>
@@ -425,7 +434,7 @@ export function ContextBar({
   }
 
   // No extra wrapper around `viewControl`: SegmentedViews already renders
-  // `.gt-contextbar__views`, so wrapping it produced that class nested inside
+  // `.od-contextbar__views`, so wrapping it produced that class nested inside
   // itself and two boxes' worth of layout for one strip.
   return (
     <>

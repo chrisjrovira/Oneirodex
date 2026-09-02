@@ -9,6 +9,7 @@ import {
   windowScroll,
 } from '@tanstack/react-virtual'
 import './GameGrid.css'
+import { CatalogGridSections } from './CatalogGridSections'
 import { GameCard } from './GameCard'
 import {
   chunkGamesIntoRows,
@@ -17,11 +18,7 @@ import {
   findScrollParent,
   readCssPx,
 } from './gameGridLayout'
-import {
-  CATALOG_ROW_HEIGHT,
-  denseCatalogTileMin,
-  normalizeCatalogLayout,
-} from '../utils/catalogLayout'
+import { catalogRowHeightPx, normalizeCatalogLayout } from '../utils/catalogLayout'
 
 const TILE_REMEASURE_DEBOUNCE_MS = 160
 
@@ -51,8 +48,8 @@ function measureGridMetrics(el, scrollEl) {
     return { width: 0, tileMin: 180, gap: 10, scrollMargin: 0 }
   }
   const width = el.clientWidth || 0
-  const tileMin = readCssPx(el, '--gt-tile-min', 180)
-  const gap = readCssPx(el, '--gt-tile-gap', 10)
+  const tileMin = readCssPx(el, '--od-tile-min', 180)
+  const gap = readCssPx(el, '--od-tile-gap', 10)
   return { width, tileMin, gap, scrollMargin: measureScrollMargin(el, scrollEl) }
 }
 
@@ -121,7 +118,7 @@ export function GameGrid({
     }
 
     /**
-     * Tile size slider writes --gt-tile-* on <html> every tick.
+     * Tile size slider writes --od-tile-* on <html> every tick.
      * Debounce remeasure so CSS var transitions can run without virtualizer thrash.
      */
     const updateTileVars = () => {
@@ -171,15 +168,12 @@ export function GameGrid({
   }, [])
 
   const width = metrics.width > 0 ? metrics.width : 960
-  const tileMin =
-    catalogLayout === 'grid'
-      ? denseCatalogTileMin(metrics.tileMin)
-      : metrics.tileMin
+  const tileMin = metrics.tileMin
   const columnCount =
     catalogLayout === 'rows' ? 1 : computeGridColumns(width, tileMin, metrics.gap)
   const rowHeight =
     catalogLayout === 'rows'
-      ? CATALOG_ROW_HEIGHT
+      ? catalogRowHeightPx(metrics.tileMin)
       : estimateGridRowHeight(width, columnCount, metrics.gap)
   const rows = useMemo(
     () => chunkGamesIntoRows(games, columnCount),
@@ -190,8 +184,8 @@ export function GameGrid({
    * Virtualise against whatever actually scrolls.
    *
    * This was `useWindowVirtualizer`, and in the member shell the window never
-   * scrolls: `.gt-shell` is `height: 100dvh; overflow: hidden` and
-   * `.gt-shell__main` is, by its own comment, "the only scroll container in the
+   * scrolls: `.od-shell` is `height: 100dvh; overflow: hidden` and
+   * `.od-shell__main` is, by its own comment, "the only scroll container in the
    * shell". `window.scrollY` therefore stayed 0 forever, the virtualizer never
    * advanced its range past the first screenful, and everything below the first
    * few rows was empty space inside a container still sized for the whole page.
@@ -218,7 +212,7 @@ export function GameGrid({
     estimateSize: () => rowHeight,
     overscan: 3,
     scrollMargin: metrics.scrollMargin,
-    gap: metrics.gap,
+    gap: catalogLayout === 'rows' ? 1 : metrics.gap,
   })
 
   useEffect(() => {
@@ -228,6 +222,7 @@ export function GameGrid({
   }, [
     rowHeight,
     columnCount,
+    catalogLayout,
     metrics.gap,
     metrics.scrollMargin,
     rows.length,
@@ -255,8 +250,28 @@ export function GameGrid({
         ref={listRef}
         className={`game-library-container${selecting ? ' is-selecting' : ''}`}
         data-library-grid
-        data-library-virtual
+        data-library-virtual={catalogLayout === 'grid' ? undefined : true}
         data-layout={catalogLayout}
+      />
+    )
+  }
+
+  // Grid is Steam-like genre shelves — not the denser wrap Tile grid.
+  if (catalogLayout === 'grid') {
+    return (
+      <CatalogGridSections
+        games={games}
+        showPlayStatus={showPlayStatus}
+        isAdmin={isAdmin}
+        enableDeleteOnDisk={enableDeleteOnDisk}
+        onToggleFavorite={onToggleFavorite}
+        hidePlatformChip={hidePlatformChip}
+        selectionEnabled={selectionEnabled}
+        selectedIds={selectedIds}
+        onSelectionToggle={onSelectionToggle}
+        activePlatform={activePlatform}
+        listRef={listRef}
+        selecting={selecting}
       />
     )
   }
@@ -274,9 +289,6 @@ export function GameGrid({
         height: `${virtualizer.getTotalSize()}px`,
         position: 'relative',
         width: '100%',
-        ...(catalogLayout === 'grid'
-          ? { '--gt-catalog-col-min': `${tileMin}px` }
-          : null),
       }}
     >
       {virtualRows.map((virtualRow) => {

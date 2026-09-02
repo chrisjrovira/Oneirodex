@@ -15,7 +15,7 @@ import './HelpPage.css'
  * is shorter, and a group jumps to the first section in it.
  *
  * `tone` is one of the five semantic colours the theme guarantees — accent,
- * info, success, warning, danger (see gt-tokens.css). It is not decoration for
+ * info, success, warning, danger (see od-tokens.css). It is not decoration for
  * its own sake: twelve identical grey panels give the eye nothing to navigate
  * by, so a section is found by re-reading every heading. Colour plus a glyph
  * makes "the one about downloads" findable at a glance, and taking both from
@@ -34,7 +34,7 @@ const FAQ_SECTIONS = [
     items: [
       'Top nav: Discover, Game Catalog, Systems, Downloads, Favorites.',
       'Ctrl+K / ⌘K (or Search) opens the command palette. Type two letters to search titles from any page. An empty box shows titles you played or opened, plus household favourites — not store trends.',
-      'Discover shelves can be pinned or hidden per account (Rows in the top bar). A shelf with nothing honest to show is hidden rather than padded. Genre See all opens a hub (unplayed / newly added / loved) — not a store genre page.',
+      'Discover shelves can be pinned or hidden per account (Rows in the top bar) — Pin and Hide take effect immediately. News See all opens the News page. Genre See all opens a hub (unplayed / newly added / loved) — not a store genre page.',
       'On long scrollable pages, Jump to top / Jump to bottom controls appear bottom-left (hide when the page does not scroll).',
       'More hubs Collections, Wishlist, Ownership, Big Picture, Ways to Play, and related tools.',
       'Ownership registers Steam / GOG / Epic / Amazon titles you already own. Live sync when a token is saved (GOG refresh token, Epic device-auth JSON, Amazon Nile/Heroic blob). Never a store download.',
@@ -61,10 +61,10 @@ const FAQ_SECTIONS = [
       'Signals chips: UPDATE · MISSING · NEW · LANG.',
       'MISSING tile badge (top-left) means files were removed from disk - tooltip explains. Filter with the MISSING Signals chip when available.',
       'Tile size: header or top-nav control. Preferences (sectioned: Library · Look · Language) → items per page (20–1000).',
-      'Game Catalog layout: open View on the kind bar for Tile (covers) · Rows (list lines) · Grid (denser covers). The choice is remembered in this browser. Favorites and News use the same View control.',
+      'Game Catalog layout: the kind bar ends with the active layout name (Tile · Rows · Grid) — open it to switch. Tile is the cover grid; Rows is a title list that scales with the slider; Grid is Steam-like genre shelves (same Discover row chrome, full tile-size slider). The choice is remembered in this browser. Favorites and News use the same control (News: Card · Grid · RSS).',
       'Trailers empty state is normal without metadata. Details use embeds; YouTube demo when no trailers.',
       'Extras & DLC lists on-server sidecars only - missing folders stay off-server. Discover may show Extras not on the vault for titles you play or favourite.',
-      'When watch/scan adds titles, a short toast may appear (Notifications inbox keeps the row).',
+      'When watch/scan adds titles, a short toast may appear (Notifications inbox keeps the row). More than five at once collapse to “N notifications”.',
     ],
   },
   {
@@ -239,7 +239,7 @@ const FAQ_SECTIONS = [
     items: [
       'Oneirodex (oh-NY-roh-dex) is free software under the GNU Affero General Public License v3.0. You may run, study, modify and share it.',
       'Running a modified copy as a network service? AGPL §13 means you owe your users that modified source. Admins set GT_SOURCE_URL to point here at their own fork.',
-      'The licence covers Oneirodex itself — not the games, ROMs, BIOS or artwork you point it at. The Python package, Docker image, and GitHub repo still use gametheca until the identifier wave.',
+      'The licence covers Oneirodex itself — not the games, ROMs, BIOS or artwork you point it at. The Python package, Docker image, and GitHub repo still use oneirodex until the identifier wave.',
       'Game metadata and artwork come from IGDB (an Amazon company), Giant Bomb, SteamGridDB and store pages, depending on what your admin configured.',
       'Browser play uses WebRetro with libretro emulator cores, provisioned by your admin rather than shipped with Oneirodex. An optional NES Nostalgist host uses those same household cores.',
     ],
@@ -277,7 +277,9 @@ export function HelpPage({ shellConfig = {} }) {
     FAQ_SECTIONS.find((section) => section.group === groupId)?.id || FAQ_SECTIONS[0].id
 
   const [openIds, setOpenIds] = useState(() => {
-    const initial = new Set(['getting-started'])
+    // All sections start collapsed. A deep-link hash is the only opener on
+    // load — otherwise the page is a map of closed topics, not a wall of text.
+    const initial = new Set()
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace(/^#/, '')
       if (hash && FAQ_SECTIONS.some((s) => s.id === hash)) {
@@ -358,53 +360,54 @@ export function HelpPage({ shellConfig = {} }) {
     <>
     {useNewChrome ? (
         <ContextBar
-          /* The topic list *is* the page's navigation, so it belongs in bar
-             two with every other page's views. It used to sit inside the
-             content, which meant scrolling the page to reach the control that
-             jumps around the page. Labels are the short forms — the full
-             heading is still on the section itself. */
-          views={FAQ_GROUPS.map((group) => ({
-            id: group.id,
-            label: group.label,
-          }))}
-          activeView={groupOf(activeSection)}
-          onSelectView={(groupId) => jumpToSection(firstSectionOfGroup(groupId))}
+          /* One fused `.od-seg` for topic groups *and* Expand/Collapse.
+             Putting groups in `views` and the fold controls in `actions` made
+             two chrome languages on one bar — green seg items next to boxed
+             `od-cbtn`s. They answer one question ("where am I on Help?"), so
+             they share one outline. Labels are the short forms; full headings
+             stay on the sections. */
           summary={`${openIds.size} of ${FAQ_SECTIONS.length} open`}
           actions={
-            /* Expand first, collapse second — opposite ends of one range.
-               W28 separated them with a "Report an issue" link, on the argument
-               that sitting them side by side makes a mis-click cost the whole
-               page's state. That link is gone: Report is a rail destination and
-               a second route to it belongs on a page about finding things even
-               less than the adjacency hurts. The adjacency is real and is
-               logged in the debt log rather than solved with an unrelated
-               control standing in as a spacer. */
-            <>
-              <button type="button" className="gt-cbtn" onClick={expandAll}>
+            <div className="od-seg" role="group" aria-label="Help">
+              {FAQ_GROUPS.map((group) => {
+                const selected = group.id === groupOf(activeSection)
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    className={`od-seg__item${selected ? ' is-active' : ''}`}
+                    aria-pressed={selected}
+                    onClick={() => jumpToSection(firstSectionOfGroup(group.id))}
+                  >
+                    {group.label}
+                  </button>
+                )
+              })}
+              <button type="button" className="od-seg__item" onClick={expandAll}>
                 Expand all
               </button>
-              <button type="button" className="gt-cbtn" onClick={collapseAll}>
+              <button type="button" className="od-seg__item" onClick={collapseAll}>
                 Collapse all
               </button>
-            </>
+            </div>
           }
         />
       ) : null}
-    <div className="gt-more-page gt-help">
-      {/* Not `gt-page-header`: that block is deliberately collapsed under the
+    <div className="od-more-page od-help">
+      {/* Not `od-page-header`: that block is deliberately collapsed under the
           v2 chrome because the bar already names the page. Help is the one page
           where the name is not the point — a member arrives here stuck, and the
           first thing on screen should say what this page can do for them and
           how it is organised. So it is its own banner, and it says something the
           bar does not. */}
       {useNewChrome ? (
-      <header className="gt-help__hero">
-        <span className="gt-help__hero-mark" aria-hidden="true">
+      <header className="od-help__hero">
+        <span className="od-help__hero-mark" aria-hidden="true">
           <RailIcon name="help" size={26} />
         </span>
-        <div className="gt-help__hero-copy">
-          <h1 className="gt-help__hero-title">How Oneirodex works</h1>
-          <p className="gt-help__hero-lede">
+        <div className="od-help__hero-copy">
+          <h1 className="od-help__hero-title">How Oneirodex works</h1>
+          <p className="od-help__hero-lede">
             Twelve short sections, colour-coded by topic. Open one for detail, or
             use Expand all in the bar above to read straight through.
           </p>
@@ -413,18 +416,18 @@ export function HelpPage({ shellConfig = {} }) {
       ) : null}
       {useNewChrome ? null : (
         <>
-          <div className="gt-page-header">
+          <div className="od-page-header">
             <h1>Help</h1>
           </div>
-          <p className="gt-more-page__lede">
+          <p className="od-more-page__lede">
             Short answers for the member library. Expand a section when you need detail.
           </p>
 
-          <div className="gt-help__toolbar">
-            <button type="button" className="gt-btn gt-btn--ghost" onClick={expandAll}>
+          <div className="od-help__toolbar">
+            <button type="button" className="od-btn od-btn--ghost" onClick={expandAll}>
               Expand all
             </button>
-            <button type="button" className="gt-btn gt-btn--ghost" onClick={collapseAll}>
+            <button type="button" className="od-btn od-btn--ghost" onClick={collapseAll}>
               Collapse all
             </button>
           </div>
@@ -437,20 +440,20 @@ export function HelpPage({ shellConfig = {} }) {
           in.
 
           One control, not a scatter of pills: these were separate bordered
-          chips that wrapped into two or three ragged rows. `gt-seg` is the
+          chips that wrapped into two or three ragged rows. `od-seg` is the
           shared segmented control the context bar and the admin tab strips
           already use. The tone and glyph come from the section itself, so a
           topic is findable at a glance rather than by re-reading headings. */}
       {useNewChrome ? null : (
-        <nav className="gt-seg gt-help__toc" aria-label="Help topics">
+        <nav className="od-seg od-help__toc" aria-label="Help topics">
           {FAQ_SECTIONS.map((section) => (
             <a
               key={section.id}
               href={`#${section.id}`}
-              className="gt-seg__item gt-help__toc-chip"
+              className="od-seg__item od-help__toc-chip"
               data-tone={section.tone}
             >
-              <span className="gt-help__toc-mark" aria-hidden="true">
+              <span className="od-help__toc-mark" aria-hidden="true">
                 <RailIcon name={section.icon} size={14} />
               </span>
               {section.title}
@@ -459,7 +462,7 @@ export function HelpPage({ shellConfig = {} }) {
         </nav>
       )}
 
-      <div className="gt-help__sections">
+      <div className="od-help__sections">
         {FAQ_SECTIONS.map((section) => {
           const open = openIds.has(section.id)
           return (
@@ -467,23 +470,23 @@ export function HelpPage({ shellConfig = {} }) {
               key={section.id}
               id={section.id}
               data-tone={section.tone}
-              className={`gt-help__section${open ? ' is-open' : ''}`}
+              className={`od-help__section${open ? ' is-open' : ''}`}
             >
               <h2>
                 <button
                   type="button"
-                  className="gt-help__section-toggle"
+                  className="od-help__section-toggle"
                   aria-expanded={open}
                   onClick={() => toggle(section.id)}
                 >
-                  <span className="gt-help__section-mark" aria-hidden="true">
+                  <span className="od-help__section-mark" aria-hidden="true">
                     <RailIcon name={section.icon} size={18} />
                   </span>
-                  <span className="gt-help__section-copy">
-                    <span className="gt-help__section-title">{section.title}</span>
-                    <span className="gt-help__section-summary">{section.summary}</span>
+                  <span className="od-help__section-copy">
+                    <span className="od-help__section-title">{section.title}</span>
+                    <span className="od-help__section-summary">{section.summary}</span>
                   </span>
-                  <span className="gt-help__chevron" aria-hidden="true">
+                  <span className="od-help__chevron" aria-hidden="true">
                     {open ? '−' : '+'}
                   </span>
                 </button>
@@ -496,7 +499,7 @@ export function HelpPage({ shellConfig = {} }) {
                     ))}
                   </ul>
                   {section.links ? (
-                    <p className="gt-help__links">
+                    <p className="od-help__links">
                       {section.links
                         // A link whose href comes from config is dropped when
                         // that config is empty rather than rendered dead — an
@@ -509,7 +512,7 @@ export function HelpPage({ shellConfig = {} }) {
                         .map((link) => (
                           <a
                             key={link.key}
-                            className="gt-help__link"
+                            className="od-help__link"
                             href={link.href}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -530,7 +533,7 @@ export function HelpPage({ shellConfig = {} }) {
           the About section — AGPL §13 wants it reachable, not hunted for. The
           URL is configuration: a modified deployment must point at its own. */}
       {shellConfig.sourceUrl ? (
-        <p className="gt-help__footer">
+        <p className="od-help__footer">
           Oneirodex{shellConfig.appVersion ? ` ${shellConfig.appVersion}` : ''} — free software under
           the{' '}
           <a

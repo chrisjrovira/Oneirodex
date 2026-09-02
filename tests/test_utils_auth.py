@@ -5,9 +5,9 @@ from flask import url_for, request
 from werkzeug.test import EnvironBuilder
 from werkzeug.wrappers import Request
 
-from gametheca import create_app, db
-from gametheca.models import User
-from gametheca.utils.auth import load_user, _authenticate_and_redirect, admin_required
+from oneirodex import create_app, db
+from oneirodex.models import User
+from oneirodex.utils.auth import load_user, _authenticate_and_redirect, admin_required
 
 
 def safe_cleanup_database(db_session):
@@ -84,10 +84,10 @@ class TestLoadUser:
 class TestAuthenticateAndRedirect:
     """Test the _authenticate_and_redirect function."""
     
-    @patch('gametheca.utils.auth.login_user')
-    @patch('gametheca.utils.auth.flash')
-    @patch('gametheca.utils.auth.redirect')
-    @patch('gametheca.utils.auth.url_for')
+    @patch('oneirodex.utils.auth.login_user')
+    @patch('oneirodex.utils.auth.flash')
+    @patch('oneirodex.utils.auth.redirect')
+    @patch('oneirodex.utils.auth.url_for')
     def test_successful_authentication(self, mock_url_for, mock_redirect, 
                                      mock_flash, mock_login_user, app, db_session, test_user):
         """Test successful authentication with valid credentials."""
@@ -118,9 +118,9 @@ class TestAuthenticateAndRedirect:
                 
                 assert result == 'redirect_response'
     
-    @patch('gametheca.utils.auth.flash')
-    @patch('gametheca.utils.auth.redirect')
-    @patch('gametheca.utils.auth.url_for')
+    @patch('oneirodex.utils.auth.flash')
+    @patch('oneirodex.utils.auth.redirect')
+    @patch('oneirodex.utils.auth.url_for')
     def test_invalid_username(self, mock_url_for, mock_redirect, mock_flash, app, db_session):
         """Test authentication with invalid username."""
         with app.app_context():
@@ -140,9 +140,9 @@ class TestAuthenticateAndRedirect:
             
             assert result == 'login_redirect'
     
-    @patch('gametheca.utils.auth.flash')
-    @patch('gametheca.utils.auth.redirect')
-    @patch('gametheca.utils.auth.url_for')
+    @patch('oneirodex.utils.auth.flash')
+    @patch('oneirodex.utils.auth.redirect')
+    @patch('oneirodex.utils.auth.url_for')
     def test_invalid_password(self, mock_url_for, mock_redirect, mock_flash, 
                             app, db_session, test_user):
         """Test authentication with valid username but invalid password."""
@@ -163,8 +163,8 @@ class TestAuthenticateAndRedirect:
             
             assert result == 'login_redirect'
     
-    @patch('gametheca.utils.auth.login_user')
-    @patch('gametheca.utils.auth.redirect')
+    @patch('oneirodex.utils.auth.login_user')
+    @patch('oneirodex.utils.auth.redirect')
     def test_redirect_to_next_page(self, mock_redirect, mock_login_user, 
                                  app, db_session, test_user):
         """Test redirect to 'next' page after successful authentication."""
@@ -180,9 +180,9 @@ class TestAuthenticateAndRedirect:
                 mock_redirect.assert_called_with('/admin/dashboard')
                 assert result == 'next_page_redirect'
     
-    @patch('gametheca.utils.auth.login_user')
-    @patch('gametheca.utils.auth.redirect')
-    @patch('gametheca.utils.auth.url_for')
+    @patch('oneirodex.utils.auth.login_user')
+    @patch('oneirodex.utils.auth.redirect')
+    @patch('oneirodex.utils.auth.url_for')
     def test_prevent_external_redirect(self, mock_url_for, mock_redirect, 
                                      mock_login_user, app, db_session, test_user):
         """Test that external redirects are prevented for security."""
@@ -200,9 +200,9 @@ class TestAuthenticateAndRedirect:
                 mock_redirect.assert_called_with('/discover')
                 assert result == 'safe_redirect'
     
-    @patch('gametheca.utils.auth.login_user')
-    @patch('gametheca.utils.auth.redirect')
-    @patch('gametheca.utils.auth.url_for')
+    @patch('oneirodex.utils.auth.login_user')
+    @patch('oneirodex.utils.auth.redirect')
+    @patch('oneirodex.utils.auth.url_for')
     def test_case_insensitive_username(self, mock_url_for, mock_redirect,
                                      mock_login_user, app, db_session, test_user):
         """Test that username matching is case-insensitive."""
@@ -234,12 +234,12 @@ class TestAdminRequired:
             return 'admin content'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
+            with patch('oneirodex.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = False
                 
-                with patch('gametheca.utils.auth.flash') as mock_flash:
-                    with patch('gametheca.utils.auth.redirect') as mock_redirect:
-                        with patch('gametheca.utils.auth.url_for') as mock_url_for:
+                with patch('oneirodex.utils.auth.flash') as mock_flash:
+                    with patch('oneirodex.utils.auth.redirect') as mock_redirect:
+                        with patch('oneirodex.utils.auth.url_for') as mock_url_for:
                             mock_url_for.return_value = '/login'
                             mock_redirect.return_value = 'login_redirect'
                             
@@ -261,13 +261,13 @@ class TestAdminRequired:
             return 'admin content'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
+            with patch('oneirodex.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.role = 'user'  # Not admin
                 
-                with patch('gametheca.utils.auth.flash') as mock_flash:
-                    with patch('gametheca.utils.auth.redirect') as mock_redirect:
-                        with patch('gametheca.utils.auth.url_for') as mock_url_for:
+                with patch('oneirodex.utils.auth.flash') as mock_flash:
+                    with patch('oneirodex.utils.auth.redirect') as mock_redirect:
+                        with patch('oneirodex.utils.auth.url_for') as mock_url_for:
                             mock_url_for.return_value = '/login'
                             mock_redirect.return_value = 'login_redirect'
                             
@@ -289,7 +289,7 @@ class TestAdminRequired:
             return 'admin content'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
+            with patch('oneirodex.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.role = 'admin'  # Admin role
                 
@@ -318,7 +318,7 @@ class TestAdminRequired:
             return f'admin content: {arg1}, {arg2}, {kwarg1}'
         
         with app.app_context():
-            with patch('gametheca.utils.auth.current_user', new_callable=MagicMock) as mock_user:
+            with patch('oneirodex.utils.auth.current_user', new_callable=MagicMock) as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.role = 'admin'
                 

@@ -1,42 +1,42 @@
-.gt-collections__form {
+.od-collections__form {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 12px;
   margin: 0 0 20px;
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 90%, transparent);
-  border-radius: var(--gt-radius-lg);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
-  color: var(--gt-text);
+  border: 1px solid color-mix(in srgb, var(--od-border) 90%, transparent);
+  border-radius: var(--od-radius-lg);
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
+  color: var(--od-text);
 }
 
-.gt-collections__field {
+.od-collections__field {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-collections__field input[type='text'] {
+.od-collections__field input[type='text'] {
   min-width: 220px;
   padding: 7px 10px;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-surface) 70%, transparent);
-  color: var(--gt-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-surface) 70%, transparent);
+  color: var(--od-text);
 }
 
-.gt-collections__check {
+.od-collections__check {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-collections__list {
+.od-collections__list {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -45,59 +45,59 @@
   list-style: none;
 }
 
-.gt-collections__row {
+.od-collections__row {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.gt-collections__card {
+.od-collections__card {
   display: flex;
   flex-direction: column;
   gap: 6px;
   height: 100%;
   padding: 14px 16px;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-lg);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
-  color: var(--gt-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-lg);
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
+  color: var(--od-text);
   text-decoration: none;
 }
 
-.gt-collections__card:hover,
-.gt-collections__card:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
-  color: var(--gt-accent);
+.od-collections__card:hover,
+.od-collections__card:focus-visible {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-collections__card-desc {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+.od-collections__card-desc {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
-.gt-collections__meta {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+.od-collections__meta {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.gt-collections__error {
-  color: var(--gt-accent);
-  font-size: var(--gt-font-sm);
+.od-collections__error {
+  color: var(--od-accent);
+  font-size: var(--od-font-sm);
 }
 
-.gt-collection__crumb a {
-  color: var(--gt-text-muted);
+.od-collection__crumb a {
+  color: var(--od-text-muted);
   text-decoration: none;
 }
 
-.gt-collection__crumb a:hover,
-.gt-collection__crumb a:focus-visible {
-  color: var(--gt-accent);
+.od-collection__crumb a:hover,
+.od-collection__crumb a:focus-visible {
+  color: var(--od-accent);
 }
 
-.gt-collection__items {
+.od-collection__items {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -105,7 +105,7 @@
   list-style: none;
 }
 
-.gt-collection__header {
+.od-collection__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -113,88 +113,88 @@
   gap: 12px;
 }
 
-.gt-collection__item {
+.od-collection__item {
   display: flex;
   align-items: stretch;
   gap: 8px;
 }
 
-.gt-collection__item-actions {
+.od-collection__item-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
 
-.gt-collections__reorder {
+.od-collections__reorder {
   padding: 6px 10px;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
   background: transparent;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-collections__reorder:hover:not(:disabled),
-.gt-collections__reorder:focus-visible:not(:disabled) {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
-  color: var(--gt-accent);
+.od-collections__reorder:hover:not(:disabled),
+.od-collections__reorder:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-collections__reorder:disabled {
+.od-collections__reorder:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.gt-collection__item a {
+.od-collection__item a {
   display: flex;
   flex: 1 1 auto;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
-  color: var(--gt-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
+  color: var(--od-text);
   text-decoration: none;
 }
 
-.gt-collection__item a:hover,
-.gt-collection__item a:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
-  color: var(--gt-accent);
+.od-collection__item a:hover,
+.od-collection__item a:focus-visible {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-collections__delete,
-.gt-collections__remove {
+.od-collections__delete,
+.od-collections__remove {
   padding: 6px 10px;
-  border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
-  border-radius: var(--gt-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-danger) 45%, transparent);
+  border-radius: var(--od-radius-sm);
   background: transparent;
-  color: var(--gt-danger);
-  font-size: var(--gt-font-sm);
+  color: var(--od-danger);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-collections__delete:disabled,
-.gt-collections__remove:disabled {
+.od-collections__delete:disabled,
+.od-collections__remove:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.gt-collection__add {
+.od-collection__add {
   margin: 20px 0 0;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
-.gt-collection__add summary {
+.od-collection__add summary {
   cursor: pointer;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-collection__picker {
+.od-collection__picker {
   display: grid;
   gap: 6px;
   margin: 10px 0 0;
@@ -202,27 +202,27 @@
   list-style: none;
 }
 
-.gt-collection__picker-item {
+.od-collection__picker-item {
   display: flex;
   width: 100%;
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
-  color: var(--gt-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
+  color: var(--od-text);
   text-align: left;
   cursor: pointer;
 }
 
-.gt-collection__picker-item:hover:not(:disabled),
-.gt-collection__picker-item:focus-visible:not(:disabled) {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
-  color: var(--gt-accent);
+.od-collection__picker-item:hover:not(:disabled),
+.od-collection__picker-item:focus-visible:not(:disabled) {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-collection__picker-item:disabled {
+.od-collection__picker-item:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

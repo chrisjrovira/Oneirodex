@@ -3,7 +3,7 @@
    "unreadable tiles". If you raise these numbers, check a light theme and a
    dense grid before keeping the change. */
 
-.gt-system-backdrop {
+.od-system-backdrop {
   position: absolute;
   inset: 0;
   /* Must sit behind in-flow tiles. position:fixed + z-index:0 painted after
@@ -14,56 +14,56 @@
   /* Fades out toward the bottom so long scrolls do not sit under artwork. */
   -webkit-mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 88%);
   mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 88%);
-  animation: gt-system-backdrop-in 420ms ease both;
+  animation: od-system-backdrop-in 420ms ease both;
 }
 
-@keyframes gt-system-backdrop-in {
+@keyframes od-system-backdrop-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 /* Era-room wallpaper wash — same setting language as play rooms, faint so tiles win. */
-.gt-system-backdrop__wall {
+.od-system-backdrop__wall {
   position: absolute;
   inset: 0;
-  background: var(--gt-room-wallpaper, none);
+  background: var(--od-room-wallpaper, none);
   opacity: 0.22;
 }
 
-.gt-system-backdrop[data-play-room='wood_den_80s'] {
-  --gt-room-wallpaper: repeating-linear-gradient(90deg, #3a2818 0 13px, #2a1c10 13px 26px);
+.od-system-backdrop[data-play-room='wood_den_80s'] {
+  --od-room-wallpaper: repeating-linear-gradient(90deg, #3a2818 0 13px, #2a1c10 13px 26px);
 }
-.gt-system-backdrop[data-play-room='teen_bedroom_90s'] {
-  --gt-room-wallpaper: repeating-linear-gradient(180deg, #3a2a48 0 18px, #322440 18px 20px, #2a1c38 20px 38px);
+.od-system-backdrop[data-play-room='teen_bedroom_90s'] {
+  --od-room-wallpaper: repeating-linear-gradient(180deg, #3a2a48 0 18px, #322440 18px 20px, #2a1c38 20px 38px);
 }
-.gt-system-backdrop[data-play-room='carpet_den_late_90s'] {
-  --gt-room-wallpaper: repeating-linear-gradient(90deg, rgba(90, 40, 50, 0.45) 0 22px, rgba(40, 20, 30, 0.25) 22px 44px);
+.od-system-backdrop[data-play-room='carpet_den_late_90s'] {
+  --od-room-wallpaper: repeating-linear-gradient(90deg, rgba(90, 40, 50, 0.45) 0 22px, rgba(40, 20, 30, 0.25) 22px 44px);
 }
-.gt-system-backdrop[data-play-room='media_center_00s'] {
-  --gt-room-wallpaper: linear-gradient(180deg, #141c2c, #0a1018);
+.od-system-backdrop[data-play-room='media_center_00s'] {
+  --od-room-wallpaper: linear-gradient(180deg, #141c2c, #0a1018);
 }
-.gt-system-backdrop[data-play-room='arcade_cabinet'] {
-  --gt-room-wallpaper: radial-gradient(80% 50% at 50% 0%, #3a1028, transparent 60%);
+.od-system-backdrop[data-play-room='arcade_cabinet'] {
+  --od-room-wallpaper: radial-gradient(80% 50% at 50% 0%, #3a1028, transparent 60%);
 }
-.gt-system-backdrop[data-play-room='desk'] {
-  --gt-room-wallpaper: repeating-linear-gradient(0deg, rgba(94, 240, 138, 0.08) 0 1px, transparent 1px 4px);
+.od-system-backdrop[data-play-room='desk'] {
+  --od-room-wallpaper: repeating-linear-gradient(0deg, rgba(94, 240, 138, 0.08) 0 1px, transparent 1px 4px);
 }
 
 /* Family-tinted wash, anchored top-right so the grid's top-left stays clean. */
-.gt-system-backdrop__wash {
+.od-system-backdrop__wash {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(
       70% 90% at 82% 8%,
-      var(--gt-backdrop-tint, rgba(47, 214, 123, 0.5)) 0%,
+      var(--od-backdrop-tint, rgba(47, 214, 123, 0.5)) 0%,
       transparent 68%
     );
   opacity: 0.16;
 }
 
 /* Faint scanline/grid texture — reads as "hardware" without being a picture. */
-.gt-system-backdrop__grid {
+.od-system-backdrop__grid {
   position: absolute;
   inset: 0;
   background-image: repeating-linear-gradient(
@@ -77,12 +77,12 @@
 }
 
 /* The system's own name is the artwork. */
-.gt-system-backdrop__name {
+.od-system-backdrop__name {
   position: absolute;
   right: 2.5vw;
   top: 4.5vh;
   max-width: 92vw;
-  font-size: clamp(var(--gt-font-6xl), 11vw, 13rem);
+  font-size: clamp(var(--od-font-6xl), 11vw, 13rem);
   font-weight: 800;
   line-height: 0.92;
   letter-spacing: -0.01em;
@@ -91,7 +91,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: clip;
-  color: var(--gt-backdrop-tint, var(--gt-accent));
+  color: var(--od-backdrop-tint, var(--od-accent));
   opacity: 0.085;
   /* Outlined rather than solid: a filled slab of type at this size reads as a
      watermark smear behind tiles, an outline stays legible but recedes. */
@@ -101,29 +101,29 @@
 
 /* Pixel faces have no small-size legibility at this scale and their metrics
    overflow badly, so give them room. */
-.gt-system-backdrop[data-backdrop-family='nintendo'] .gt-system-backdrop__name,
-.gt-system-backdrop[data-backdrop-family='atari'] .gt-system-backdrop__name {
-  font-size: clamp(var(--gt-font-3xl), 5.5vw, 6rem);
+.od-system-backdrop[data-backdrop-family='nintendo'] .od-system-backdrop__name,
+.od-system-backdrop[data-backdrop-family='atari'] .od-system-backdrop__name {
+  font-size: clamp(var(--od-font-3xl), 5.5vw, 6rem);
   letter-spacing: 0.02em;
   -webkit-text-stroke-width: 1px;
 }
 
 /* Family tints — the same accents the platform skin already uses. */
-.gt-system-backdrop[data-backdrop-family='nintendo'] { --gt-backdrop-tint: #e60012; }
-.gt-system-backdrop[data-backdrop-family='sony']     { --gt-backdrop-tint: #0070d1; }
-.gt-system-backdrop[data-backdrop-family='xbox']     { --gt-backdrop-tint: #2fd67b; }
-.gt-system-backdrop[data-backdrop-family='sega']     { --gt-backdrop-tint: #1c6ecb; }
-.gt-system-backdrop[data-backdrop-family='atari']    { --gt-backdrop-tint: #d97b2a; }
-.gt-system-backdrop[data-backdrop-family='pc']       { --gt-backdrop-tint: #8a7bd9; }
+.od-system-backdrop[data-backdrop-family='nintendo'] { --od-backdrop-tint: #e60012; }
+.od-system-backdrop[data-backdrop-family='sony']     { --od-backdrop-tint: #0070d1; }
+.od-system-backdrop[data-backdrop-family='xbox']     { --od-backdrop-tint: #2fd67b; }
+.od-system-backdrop[data-backdrop-family='sega']     { --od-backdrop-tint: #1c6ecb; }
+.od-system-backdrop[data-backdrop-family='atari']    { --od-backdrop-tint: #d97b2a; }
+.od-system-backdrop[data-backdrop-family='pc']       { --od-backdrop-tint: #8a7bd9; }
 
 /* Light themes: the same values look like smog on a pale surface. */
 @media (prefers-color-scheme: light) {
-  .gt-system-backdrop__name { opacity: 0.07; }
-  .gt-system-backdrop__grid { opacity: 0.25; }
+  .od-system-backdrop__name { opacity: 0.07; }
+  .od-system-backdrop__grid { opacity: 0.25; }
 }
 
-:root[data-theme='light'] .gt-system-backdrop__name { opacity: 0.07; }
-:root[data-theme='light'] .gt-system-backdrop__grid { opacity: 0.25; }
+:root[data-theme='light'] .od-system-backdrop__name { opacity: 0.07; }
+:root[data-theme='light'] .od-system-backdrop__grid { opacity: 0.25; }
 
 /* The grid and its chrome must always sit above the backdrop. */
 .library-layout {
@@ -133,15 +133,15 @@
 
 @media (max-width: 900px) {
   /* Small screens are all content; a full-bleed wordmark just costs contrast. */
-  .gt-system-backdrop__name {
-    font-size: clamp(var(--gt-font-4xl), 13vw, 4.5rem);
+  .od-system-backdrop__name {
+    font-size: clamp(var(--od-font-4xl), 13vw, 4.5rem);
     opacity: 0.06;
   }
-  .gt-system-backdrop {
+  .od-system-backdrop {
     inset: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-system-backdrop { animation: none; }
+  .od-system-backdrop { animation: none; }
 }

@@ -1,17 +1,19 @@
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText'
 
 /**
  * Shared loading / error / empty status for admin pages (GT-B33).
  *
  * The member SPA has had this since GT-A2; admin never did, so fifteen admin
  * files answered "this page is busy" or "this page failed" in at least eight
- * different shapes — `<p>Loading…</p>`, `.gt-admin-alert`,
- * `.gt-admin-lede[role=status]`, `.gt-error`, `.gt-adminpage-status`,
- * `.gt-admin-banner--warn`, bare `<p role="alert">`, and more. The visual
+ * different shapes — `<p>Loading…</p>`, `.od-admin-alert`,
+ * `.od-admin-lede[role=status]`, `.od-error`, `.od-adminpage-status`,
+ * `.od-admin-banner--warn`, bare `<p role="alert">`, and more. The visual
  * inconsistency was the obvious cost; the quieter one was accessibility, since
  * several of those shapes announced a failure politely or not at all.
  *
- * Deliberately the same component API and the same `.gt-page-status` classes as
+ * Deliberately the same component API and the same `.od-page-status` classes as
  * the member version, with the CSS now in the shared theme, so the two halves
  * cannot drift. Copying member's file wholesale was the other option and would
  * have produced a second implementation to keep in step — the thing the GT-A4
@@ -72,6 +74,38 @@ export function resolveErrorDetail(error) {
   return parts.length ? parts.join(' · ') : null
 }
 
+function AdminLoadingStatus({ inline, className, loadingMessage }) {
+  const base = loadingMessageBase(loadingMessage)
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    if (reduce) return undefined
+    const timer = window.setInterval(() => setTick((n) => n + 1), 420)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  return (
+    <div
+      className={`od-page-status od-page-status--loading${
+        inline ? '' : ' od-page-status--takeover'
+      }${className ? ` ${className}` : ''}`}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <p className="od-page-status__message">
+        <span className="od-page-status__message-base">{base}</span>
+        <span className="od-page-status__ellipsis" aria-hidden="true">
+          {loadingEllipsisFrame(tick)}
+        </span>
+      </p>
+    </div>
+  )
+}
+
 export function PageStatus({
   loading = false,
   error = null,
@@ -89,16 +123,16 @@ export function PageStatus({
     const detail = resolveErrorDetail(error)
     return (
       <div
-        className={`gt-page-status gt-page-status--error${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--error${className ? ` ${className}` : ''}`}
         // Assertive: a failure is an interruption the operator has to act on.
         role="alert"
       >
-        <div className="gt-page-status__body">
-          <p className="gt-page-status__message">{message}</p>
-          {detail ? <p className="gt-page-status__detail">{detail}</p> : null}
+        <div className="od-page-status__body">
+          <p className="od-page-status__message">{message}</p>
+          {detail ? <p className="od-page-status__detail">{detail}</p> : null}
         </div>
         {onRetry ? (
-          <button type="button" className="gt-btn gt-btn--sm" onClick={onRetry}>
+          <button type="button" className="od-btn od-btn--sm" onClick={onRetry}>
             {retryLabel}
           </button>
         ) : null}
@@ -108,16 +142,11 @@ export function PageStatus({
 
   if (loading) {
     const node = (
-      <div
-        className={`gt-page-status gt-page-status--loading${
-          inline ? '' : ' gt-page-status--takeover'
-        }${className ? ` ${className}` : ''}`}
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-      >
-        <p className="gt-page-status__message">{loadingMessage}</p>
-      </div>
+      <AdminLoadingStatus
+        inline={inline}
+        className={className}
+        loadingMessage={loadingMessage}
+      />
     )
     if (inline || typeof document === 'undefined') return node
     return createPortal(node, document.body)
@@ -126,10 +155,10 @@ export function PageStatus({
   if (emptyMessage) {
     return (
       <div
-        className={`gt-page-status gt-page-status--empty${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--empty${className ? ` ${className}` : ''}`}
         role="status"
       >
-        <p className="gt-page-status__message">{emptyMessage}</p>
+        <p className="od-page-status__message">{emptyMessage}</p>
         {children}
       </div>
     )

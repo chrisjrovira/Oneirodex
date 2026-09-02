@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from gametheca.utils.discover_feed import (
+from oneirodex.utils.discover_feed import (
     CAPPED_FAMILIES,
     FAMILY_CAP,
     FEED_ROW_CAP,

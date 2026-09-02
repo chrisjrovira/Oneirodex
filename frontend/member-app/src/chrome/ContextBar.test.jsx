@@ -33,7 +33,7 @@ describe('SegmentedViews', () => {
     expect(onSelect).toHaveBeenCalledWith('soft')
   })
 
-  it('keeps layout options behind View until the trigger opens', async () => {
+  it('names the trigger after the active layout and keeps options behind it', async () => {
     const onSelect = vi.fn()
     const user = userEvent.setup()
     render(
@@ -54,23 +54,18 @@ describe('SegmentedViews', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'View' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
+    const trigger = screen.getByRole('button', { name: 'Tile' })
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'View' }))
-    expect(screen.getByRole('button', { name: 'View' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    await user.click(trigger)
+    expect(screen.getByRole('button', { name: 'Tile', expanded: true })).toBeInTheDocument()
     const unfurl = screen.getByRole('group', { name: 'View' })
-    expect(unfurl.className).toBe('gt-contextbar__views-unfurl')
+    expect(unfurl.className).toBe('od-contextbar__views-unfurl')
     expect(unfurl.className).not.toMatch(/\bgt-seg\b/)
     await user.click(screen.getByRole('button', { name: 'Rows' }))
     expect(onSelect).toHaveBeenCalledWith('rows')
-    expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'View' })).not.toBeInTheDocument()
   })
 })
 
@@ -172,7 +167,7 @@ describe('ContextBar', () => {
     expect(screen.queryByRole('button', { name: /^Rows$/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Filters/ })).not.toBeInTheDocument()
     const trigger = screen.getByRole('button', { name: /2 rows/ })
-    expect(trigger).toHaveClass('gt-contextbar__count')
+    expect(trigger).toHaveClass('od-contextbar__count')
     await user.click(trigger)
     expect(screen.getByText('row settings')).toBeInTheDocument()
   })
@@ -213,7 +208,7 @@ describe('ContextBar portal ownership', () => {
    */
   function mountSlots() {
     const bar = document.createElement('div')
-    for (const id of ['gt-topbar-lead', 'gt-topbar-slot', 'gt-topbar-trail']) {
+    for (const id of ['od-topbar-lead', 'od-topbar-slot', 'od-topbar-trail']) {
       const slot = document.createElement('div')
       slot.id = id
       bar.appendChild(slot)
@@ -223,7 +218,7 @@ describe('ContextBar portal ownership', () => {
   }
 
   function centreText() {
-    return (document.getElementById('gt-topbar-slot').textContent || '').trim()
+    return (document.getElementById('od-topbar-slot').textContent || '').trim()
   }
 
   it('renders a page’s views into the top bar rather than inline', () => {
@@ -241,7 +236,7 @@ describe('ContextBar portal ownership', () => {
 
     unmount()
     expect(centreText()).toBe('')
-    expect(document.querySelectorAll('[data-gt-contextbar-host]')).toHaveLength(0)
+    expect(document.querySelectorAll('[data-od-contextbar-host]')).toHaveLength(0)
     bar.remove()
   })
 
@@ -251,9 +246,9 @@ describe('ContextBar portal ownership', () => {
     // Stand in for a portal whose cleanup never ran — the exact state the
     // browser was left in. A new page must clear it, not render beneath it.
     const stranded = document.createElement('div')
-    stranded.setAttribute('data-gt-contextbar-host', 'gone-page')
+    stranded.setAttribute('data-od-contextbar-host', 'gone-page')
     stranded.textContent = 'Everyone Friends only'
-    document.getElementById('gt-topbar-slot').appendChild(stranded)
+    document.getElementById('od-topbar-slot').appendChild(stranded)
 
     render(<ContextBar views={VIEWS} activeView="all" />)
 
@@ -265,6 +260,6 @@ describe('ContextBar portal ownership', () => {
   it('falls back to an inline bar when there is no top bar to portal into', () => {
     // Big Picture and the pop-out chat host render the route without chrome.
     const { container } = render(<ContextBar views={VIEWS} activeView="all" />)
-    expect(container.querySelector('.gt-contextbar')).not.toBeNull()
+    expect(container.querySelector('.od-contextbar')).not.toBeNull()
   })
 })

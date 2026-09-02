@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import StoreAccount, User
+from oneirodex.models import StoreAccount, User
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def member(db_session):
 
 
 def test_poll_interval_is_clamped(app):
-    from gametheca.utils.ownership_poller import _poll_seconds
+    from oneirodex.utils.ownership_poller import _poll_seconds
 
     app.config['OWNERSHIP_POLL_HOURS'] = 0.01
     assert _poll_seconds(app) == 3600, 'floor protects a third-party API'
@@ -46,7 +46,7 @@ def test_poll_interval_is_clamped(app):
 
 
 def test_disabled_by_config(app):
-    from gametheca.utils.ownership_poller import _is_enabled
+    from oneirodex.utils.ownership_poller import _is_enabled
 
     app.config['ENABLE_OWNERSHIP_POLL'] = False
     assert _is_enabled(app) is False
@@ -58,10 +58,10 @@ def test_respects_the_admin_kill_switch(app, monkeypatch):
     Otherwise the setting only governs the button a member can see, while the
     poller keeps talking to Steam behind it.
     """
-    from gametheca.utils import ownership_poller
+    from oneirodex.utils import ownership_poller
 
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.is_ownership_sync_enabled', lambda: False
+        'oneirodex.utils.store_ownership.is_ownership_sync_enabled', lambda: False
     )
 
     with app.app_context():
@@ -73,22 +73,22 @@ def test_respects_the_admin_kill_switch(app, monkeypatch):
 
 def test_skips_cleanly_without_an_api_key(app, monkeypatch):
     """No key means every call fails identically — say it once, not per member."""
-    from gametheca.utils import ownership_poller
+    from oneirodex.utils import ownership_poller
 
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.is_ownership_sync_enabled', lambda: True
+        'oneirodex.utils.store_ownership.is_ownership_sync_enabled', lambda: True
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.get_steam_web_api_key', lambda: None
+        'oneirodex.utils.store_ownership.get_steam_web_api_key', lambda: None
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.gog_live_ready', lambda: False
+        'oneirodex.utils.store_ownership.gog_live_ready', lambda: False
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.epic_live_ready', lambda: False
+        'oneirodex.utils.store_ownership.epic_live_ready', lambda: False
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.amazon_live_ready', lambda: False
+        'oneirodex.utils.store_ownership.amazon_live_ready', lambda: False
     )
 
     with app.app_context():
@@ -99,7 +99,7 @@ def test_skips_cleanly_without_an_api_key(app, monkeypatch):
 
 def test_one_broken_account_does_not_stop_the_rest(app, db_session, member, monkeypatch):
     """The usual way a batch job silently stops working for a whole install."""
-    from gametheca.utils import ownership_poller
+    from oneirodex.utils import ownership_poller
 
     other = User(
         user_id=str(uuid4()),
@@ -119,19 +119,19 @@ def test_one_broken_account_does_not_stop_the_rest(app, db_session, member, monk
     db_session.commit()
 
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.is_ownership_sync_enabled', lambda: True
+        'oneirodex.utils.store_ownership.is_ownership_sync_enabled', lambda: True
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.get_steam_web_api_key', lambda: 'key'
+        'oneirodex.utils.store_ownership.get_steam_web_api_key', lambda: 'key'
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.gog_live_ready', lambda: False
+        'oneirodex.utils.store_ownership.gog_live_ready', lambda: False
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.epic_live_ready', lambda: False
+        'oneirodex.utils.store_ownership.epic_live_ready', lambda: False
     )
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.amazon_live_ready', lambda: False
+        'oneirodex.utils.store_ownership.amazon_live_ready', lambda: False
     )
 
     calls = []
@@ -143,7 +143,7 @@ def test_one_broken_account_does_not_stop_the_rest(app, db_session, member, monk
         return {'added': 1}
 
     monkeypatch.setattr(
-        'gametheca.utils.store_ownership.sync_steam_owned_games', flaky
+        'oneirodex.utils.store_ownership.sync_steam_owned_games', flaky
     )
 
     with app.app_context():
@@ -164,7 +164,7 @@ def test_one_broken_account_does_not_stop_the_rest(app, db_session, member, monk
 
 def test_only_stores_with_a_live_api_are_polled():
     """Amazon is live register now; Steam / GOG / Epic / Amazon are enrolled."""
-    from gametheca.utils.ownership_poller import LIVE_SYNC_STORES
+    from oneirodex.utils.ownership_poller import LIVE_SYNC_STORES
 
     assert set(LIVE_SYNC_STORES) == {'steam', 'gog', 'epic', 'amazon'}
 
@@ -183,7 +183,7 @@ class TestSyncModeHonesty:
     """
 
     def test_steam_gog_and_epic_claim_live_sync(self):
-        from gametheca.utils.store_ownership import STORE_SYNC_MODE, store_sync_mode
+        from oneirodex.utils.store_ownership import STORE_SYNC_MODE, store_sync_mode
 
         live = [s for s in STORE_SYNC_MODE if store_sync_mode(s) == 'live']
         assert live == ['steam', 'gog', 'epic', 'amazon']
@@ -191,7 +191,7 @@ class TestSyncModeHonesty:
 
     def test_unknown_stores_default_to_snapshot(self):
         """The safe direction to be wrong in — claiming less, never more."""
-        from gametheca.utils.store_ownership import store_sync_mode
+        from oneirodex.utils.store_ownership import store_sync_mode
 
         assert store_sync_mode('some-new-store') == 'snapshot'
         assert store_sync_mode('') == 'snapshot'
@@ -201,7 +201,7 @@ class TestSyncModeHonesty:
         self, app, monkeypatch
     ):
         """The guard that stops the UI over-claiming again."""
-        from gametheca.utils import ownership_poller, store_ownership
+        from oneirodex.utils import ownership_poller, store_ownership
 
         monkeypatch.setitem(store_ownership.STORE_SYNC_MODE, 'playnite', 'live')
 
@@ -211,7 +211,7 @@ class TestSyncModeHonesty:
 
     def test_summary_reports_sync_mode_per_store(self, app, db_session, member):
         """The field the UI needs to tell a snapshot from a live register."""
-        from gametheca.utils.store_ownership import get_ownership_summary
+        from oneirodex.utils.store_ownership import get_ownership_summary
 
         with app.app_context():
             summary = get_ownership_summary(member.id)
@@ -235,7 +235,7 @@ class TestSyncModeHonesty:
         than raising keeps a developer error from taking a household's install
         down after an upgrade.
         """
-        from gametheca.utils import ownership_poller, store_ownership
+        from oneirodex.utils import ownership_poller, store_ownership
 
         monkeypatch.setattr(ownership_poller, '_scheduler_started', False)
         monkeypatch.setitem(store_ownership.STORE_SYNC_MODE, 'playnite', 'live')

@@ -1,0 +1,155 @@
+:root {
+  --od-bg: #0b0d10;
+  --od-surface: #141820;
+  --od-surface-2: #1c2230;
+  --od-text: #f2f4f8;
+  --od-text-muted: #c4ccd8;
+  --od-accent: #2fd67b;
+  --od-accent-contrast: #0b0d10;
+  --od-accent-2: #86efac;
+  /* Semantic status colours. Deliberately not part of preset_tokens(): a
+     failure must read as red in every theme. Each clears 4.5:1 against the
+     lightest surface any preset produces (#362824), so they are safe as body
+     text, not just as indicator dots. */
+  --od-success: #4ade80;
+  --od-danger: #ff6b6b;
+  --od-warning: #ffc94a;
+  --od-info: #5ac8fa;
+  /* Hardware-family marks (Systems tiles, Art Studio skins). Not themed —
+     these are the makers' colours, same on every preset. */
+  --od-family-nintendo: #e60012;
+  --od-family-sony: #0070d1;
+  --od-family-xbox: #2fd67b;
+  --od-family-sega: #1a66ff;
+  --od-family-atari: #f5a623;
+  --od-border: rgba(255, 255, 255, 0.12);
+  --od-focus-ring: color-mix(in srgb, var(--od-accent) 70%, white);
+  --od-tile-min: 180px;
+  --od-tile-gap: 10px;
+  --od-crt-opacity: 0.03;
+  /* Era room the chrome atmosphere keys on (play rooms + decade themes). */
+  --od-era: wood_den_80s;
+  /* Style B glass launcher chrome */
+  --od-glass-bg: rgba(20, 24, 32, 0.72);
+  --od-glass-border: rgba(255, 255, 255, 0.14);
+  --od-glass-blur: 12px;
+  /* Platform skin overrides these when browsing a single system */
+  --od-platform-accent: var(--od-accent);
+  --od-platform-motion: none;
+  --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "Arial Black", "Segoe UI", sans-serif;
+  /* Icon geometry — presets override; icon packs read these with pack fallbacks */
+  --od-icon-stroke: 2;
+  --od-icon-linecap: round;
+  --od-icon-linejoin: round;
+  --od-icon-fill: none;
+  --od-icon-fill-opacity: 1;
+
+  /* ----------------------------------------------------------------------
+     Shape scale (GT-A1)
+
+     Before this existed, every page invented its own geometry: 11 distinct
+     border-radius values across 36 stylesheets with no shared source. That is
+     why the product read as "inconsistent across pages" and why themes could
+     only ever tint — a preset had no shape surface to override.
+
+     Presets may override any of these via their `tokens` dict (see
+     preset_themes.preset_tokens), which is what turns a colour preset into a
+     visual language: sharp/CRT packs push these toward 0, soft packs upward.
+     ---------------------------------------------------------------------- */
+  /* Width of the content pane's scrollbar. Read by .od-shell__main's webkit
+     rule and reserved by .od-topbar, so the bar and the pane share a midpoint —
+     see the note there. One definition, or they drift. */
+  --od-scrollbar-w: 9px;
+
+  --od-radius-xs: 4px;
+  --od-radius-sm: 6px;
+  --od-radius-md: 8px;
+  --od-radius-lg: 10px;
+  --od-radius-xl: 12px;
+  --od-radius-2xl: 16px;
+  /* 3xl exists so the legacy --border-radius-xl (20px) has a home on this scale
+     rather than staying a parallel value. See the alias block in base.css. */
+  --od-radius-3xl: 20px;
+  --od-radius-pill: 999px;
+  --od-radius-circle: 50%;
+
+  /* ----------------------------------------------------------------------
+     Spacing scale — rem so it tracks user font size. Observed ad-hoc values
+     ranged 0.25–1rem in ~9 increments; these are the six that matter.
+     ---------------------------------------------------------------------- */
+  --od-space-1: 0.25rem;
+  --od-space-2: 0.4rem;
+  --od-space-3: 0.5rem;
+  --od-space-4: 0.75rem;
+  --od-space-5: 1rem;
+  --od-space-6: 1.5rem;
+
+  /* ----------------------------------------------------------------------
+     Type scale. `--od-font-base` is 1rem so the whole scale is themeable and
+     respects the browser/user root size — do not hardcode px in components.
+     ---------------------------------------------------------------------- */
+  --od-font-xs: 0.75rem;
+  --od-font-sm: 0.82rem;
+  --od-font-md: 0.88rem;
+  --od-font-base: 1rem;
+  --od-font-lg: 1.15rem;
+  /* Display sizes (GT-A2). The scale used to stop at 1.4rem, so anything
+     heading-sized had to reach for the older --font-size-* ladder — which is how
+     two type scales stayed alive next to each other.
+
+     --od-font-xl moved 1.4rem -> 1.25rem when these were added. That is safe
+     because xl, lg and base had zero call sites between them at the time, and it
+     buys an exact landing for every legacy step: see the alias block in
+     base.css, where only --font-size-md shifts at all. */
+  --od-font-xl: 1.25rem;
+  --od-font-2xl: 1.5rem;
+  --od-font-3xl: 1.8rem;
+  --od-font-4xl: 2rem;
+  --od-font-5xl: 2.5rem;
+  --od-font-6xl: 3rem;
+  --od-line-tight: 1.25;
+  --od-line-base: 1.45;
+  /* Uppercase micro-labels (section heads, status chips) share one treatment */
+  --od-label-size: var(--od-font-xs);
+  --od-label-weight: 700;
+  --od-label-tracking: 0.06em;
+
+  /* Elevation — kept subtle; glass chrome carries most of the depth */
+  --od-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --od-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.32);
+  --od-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.42);
+
+  /* Motion — components must reference these so motion-safe can zero them */
+  --od-motion-fast: 120ms;
+  --od-motion-base: 200ms;
+  --od-motion-slow: 320ms;
+  --od-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* P3b: --od-* is canonical. */
+}
+
+/* Single global motion-safe guard (GT-C3).
+
+   Previously only 9 of 36 member stylesheets carried their own
+   prefers-reduced-motion block, so honouring the OS setting depended on which
+   page you happened to be looking at. Zeroing the duration tokens here covers
+   every component that uses them; the explicit animation/transition overrides
+   catch components that have not migrated yet. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --od-motion-fast: 0ms;
+    --od-motion-base: 0ms;
+    --od-motion-slow: 0ms;
+    --od-platform-motion: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,58 @@
+/* Catalog Grid is a stack of genre shelves, not the wrap Tile grid.
+   Do not put data-library-grid on this root: od-shell pulls [data-library-grid]
+   left with a negative margin for Tile hover bleed, which clipped genre titles
+   and doubled the wasted air around every shelf. */
+.catalog-grid-sections.game-library-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  height: auto !important;
+  position: relative;
+  margin-inline: 0;
+  grid-template-columns: none;
+}
+
+.catalog-grid-sections[data-layout='grid'] {
+  --od-catalog-col-min: unset;
+}
+
+/* Discover shelves keep large hover bleed for a short feed. Catalog Grid can
+   have a dozen genre rows, so bleed stays enough for scale without empty bands
+   between every heading. */
+.catalog-grid-sections .od-shelf {
+  --od-shelf-bleed: calc(
+    var(--od-tile-h) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 * 0.45 + 4px
+  );
+  --od-shelf-bleed-x: calc(
+    var(--od-tile-w) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 * 0.45 + 4px
+  );
+  --od-shelf-scrollbar-gap: 0.3rem;
+  --od-shelf-scrollbar-lane: 0.3rem;
+  margin-block-end: var(--od-space-3, 0.75rem);
+  gap: 0.1rem;
+}
+
+.catalog-grid-sections .od-shelf__head {
+  /* Stay inside the content gutter — never rely on shell hover-pad pullback. */
+  padding-inline-start: var(--od-gutter, 1rem);
+  padding-inline-end: var(--od-gutter, 1rem);
+  min-height: 1.85rem;
+}
+
+.catalog-grid-sections .od-shelf__title {
+  font-size: var(--od-font-lg, 1.125rem);
+}
+
+.catalog-grid-sections .od-shelf__track {
+  padding-inline: var(--od-gutter, 1rem);
+  scroll-padding-inline: var(--od-gutter, 1rem);
+  padding-block-start: calc(0.35rem + var(--od-shelf-bleed, 0px));
+  padding-block-end: var(--od-shelf-bleed, 0px);
+  margin-block-start: calc(var(--od-shelf-bleed, 0px) * -1);
+}
+
+.catalog-grid-sections .od-shelf__hbar {
+  left: var(--od-gutter, 1rem);
+  right: var(--od-gutter, 1rem);
+}

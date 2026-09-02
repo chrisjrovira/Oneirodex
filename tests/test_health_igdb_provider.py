@@ -8,10 +8,10 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_health import score_game, summarize_library_health
-from gametheca.utils.providers import IgdbCoverProvider, get_provider, list_providers, reset_provider_cache
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_health import score_game, summarize_library_health
+from oneirodex.utils.providers import IgdbCoverProvider, get_provider, list_providers, reset_provider_cache
 
 
 @pytest.fixture(autouse=True)
@@ -55,7 +55,7 @@ def test_igdb_provider_registered(app):
 
 def test_igdb_search_requires_credentials(client, app, admin):
     _login(client, app, admin)
-    with patch('gametheca.utils.providers.igdb.igdb_credentials_configured', return_value=False):
+    with patch('oneirodex.utils.providers.igdb.igdb_credentials_configured', return_value=False):
         reset_provider_cache()
         resp = client.get('/api/providers/igdb/search?q=Celeste')
         assert resp.status_code == 503
@@ -71,7 +71,7 @@ def test_igdb_search_with_mock(client, app, admin):
             return True
 
         def search_covers(self, query, *, limit=20):
-            from gametheca.utils.providers.base import ImageSearchResult
+            from oneirodex.utils.providers.base import ImageSearchResult
             return [
                 ImageSearchResult(
                     id='abc',
@@ -82,7 +82,7 @@ def test_igdb_search_with_mock(client, app, admin):
                 )
             ]
 
-    with patch('gametheca.routes_apis.providers.get_provider', return_value=FakeProvider()):
+    with patch('oneirodex.routes_apis.providers.get_provider', return_value=FakeProvider()):
         resp = client.get('/api/providers/igdb/search?q=Celeste')
         assert resp.status_code == 200
         body = resp.get_json()

@@ -8,8 +8,8 @@ import pytest
 from flask import json
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Library, LibraryPlatform, UnmatchedFolder, User
+from oneirodex import db
+from oneirodex.models import Library, LibraryPlatform, UnmatchedFolder, User
 
 
 @pytest.fixture(scope='function', autouse=True)

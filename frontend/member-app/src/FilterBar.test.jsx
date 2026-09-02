@@ -67,11 +67,11 @@ test('read/writeFiltersVisible persist LHN collapse preference', () => {
  * The point of this test has not changed: the filter actions must use the
  * product's shared button classes and not Bootstrap's.
  *
- * Which shared class did change. `.gt-btn` and `.gt-cbtn` were two button
+ * Which shared class did change. `.od-btn` and `.od-cbtn` were two button
  * languages with two geometries, and this panel additionally re-styled whatever
  * it was given from scratch in `libraryFilters.css` — which is why the filter
  * buttons never matched the bar they open from. The two classes resolve to one
- * shape now and the local override is gone, so the panel carries `.gt-cbtn`,
+ * shape now and the local override is gone, so the panel carries `.od-cbtn`,
  * the same class the trigger beside it carries.
  */
 test('FilterBar uses the shared bar button classes', async () => {
@@ -83,14 +83,14 @@ test('FilterBar uses the shared bar button classes', async () => {
 
   const apply = await screen.findByRole('button', { name: 'Apply' })
   const clear = screen.getByRole('button', { name: 'Clear' })
-  expect(apply.className).toContain('gt-cbtn')
-  expect(apply.className).toContain('gt-cbtn--primary')
-  expect(clear.className).toContain('gt-cbtn')
+  expect(apply.className).toContain('od-cbtn')
+  expect(apply.className).toContain('od-cbtn--primary')
+  expect(clear.className).toContain('od-cbtn')
   expect(apply.className).not.toContain('btn-primary')
   expect(clear.className).not.toContain('btn-secondary')
 
   // One merged control, not three adjacent buttons.
-  expect(apply.parentElement?.className).toContain('gt-cbtn-group')
+  expect(apply.parentElement?.className).toContain('od-cbtn-group')
   expect(clear.parentElement).toBe(apply.parentElement)
 
   await user.click(apply)

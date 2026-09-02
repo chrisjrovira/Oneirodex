@@ -411,12 +411,12 @@ export function ArtStudioPage() {
     : undefined
 
   return (
-    <div className="gt-admin-page">
-      <header className="gt-art-studio-head">
+    <div className="od-admin-page">
+      <header className="od-art-studio-head">
         <div>
-          <p className="gt-art-studio-kicker">Admin · Cover atelier</p>
+          <p className="od-art-studio-kicker">Admin · Cover atelier</p>
           <h1>Art studio</h1>
-          <p className="gt-admin-lede gt-art-studio-lede">
+          <p className="od-admin-lede od-art-studio-lede">
             Type a title — watch an <strong>artistic</strong> cover form (motifs, bezels, initials).
             Local Pillow renderer, aurora tokens, no cloud AI. Use{' '}
             <strong>Pick &amp; queue</strong> for SteamGridDB / IGDB art.
@@ -424,23 +424,23 @@ export function ArtStudioPage() {
         </div>
         {skin ? (
           <span
-            className={`gt-art-studio-skin gt-art-studio-skin--${skin.family}`}
-            style={{ '--gt-art-skin': skin.accent }}
+            className={`od-art-studio-skin od-art-studio-skin--${skin.family}`}
+            style={{ '--od-art-skin': skin.accent }}
           >
             {skin.label}
             {systemText ? ` · ${systemText}` : ''}
           </span>
         ) : (
-          <span className="gt-art-studio-skin">Generic aurora</span>
+          <span className="od-art-studio-skin">Generic aurora</span>
         )}
       </header>
 
-      <div className="gt-art-tabs" role="tablist" aria-label="Art studio sections">
+      <div className="od-art-tabs" role="tablist" aria-label="Art studio sections">
         <button
           type="button"
           role="tab"
           aria-selected={tab === 'studio'}
-          className={`gt-art-tabs__btn${tab === 'studio' ? ' is-active' : ''}`}
+          className={`od-art-tabs__btn${tab === 'studio' ? ' is-active' : ''}`}
           onClick={() => selectTab('studio')}
         >
           Studio
@@ -449,7 +449,7 @@ export function ArtStudioPage() {
           type="button"
           role="tab"
           aria-selected={tab === 'stock'}
-          className={`gt-art-tabs__btn${tab === 'stock' ? ' is-active' : ''}`}
+          className={`od-art-tabs__btn${tab === 'stock' ? ' is-active' : ''}`}
           onClick={() => selectTab('stock')}
         >
           Backup &amp; stock
@@ -458,7 +458,7 @@ export function ArtStudioPage() {
           type="button"
           role="tab"
           aria-selected={tab === 'marks'}
-          className={`gt-art-tabs__btn${tab === 'marks' ? ' is-active' : ''}`}
+          className={`od-art-tabs__btn${tab === 'marks' ? ' is-active' : ''}`}
           onClick={() => selectTab('marks')}
         >
           System marks
@@ -467,7 +467,7 @@ export function ArtStudioPage() {
           type="button"
           role="tab"
           aria-selected={tab === 'images'}
-          className={`gt-art-tabs__btn${tab === 'images' ? ' is-active' : ''}`}
+          className={`od-art-tabs__btn${tab === 'images' ? ' is-active' : ''}`}
           onClick={() => selectTab('images')}
         >
           Pick &amp; queue
@@ -477,26 +477,26 @@ export function ArtStudioPage() {
       {tab === 'images' ? <ImagesPage embedded /> : null}
 
       {tab === 'marks' ? (
-        <div className="gt-art-stock-tab">
+        <div className="od-art-stock-tab">
           <SystemMarksPanel />
         </div>
       ) : null}
 
       {tab === 'stock' ? (
-        <div className="gt-art-stock-tab">
+        <div className="od-art-stock-tab">
           <StockPicker onApplied={onStockApplied} showLibraryUuid />
-          <section className="gt-admin-panel gt-art-studio-fallbacks" aria-label="Current library defaults">
-            <div className="gt-art-studio-fallbacks__head">
+          <section className="od-admin-panel od-art-studio-fallbacks" aria-label="Current library defaults">
+            <div className="od-art-studio-fallbacks__head">
               <div>
-                <h2 className="gt-admin-panel-title">Current library defaults</h2>
-                <p className="gt-admin-lede">
+                <h2 className="od-admin-panel-title">Current library defaults</h2>
+                <p className="od-admin-lede">
                   Live fallback assets after apply. Hard-refresh member browsers to see updates.
                 </p>
               </div>
             </div>
-            <div className="gt-art-studio-fallbacks__grid">
+            <div className="od-art-studio-fallbacks__grid">
               {FALLBACK_ASSETS.map((asset) => (
-                <figure key={asset.key} className="gt-art-studio-fallbacks__card">
+                <figure key={asset.key} className="od-art-studio-fallbacks__card">
                   <img
                     src={`${asset.path}?v=${fallbackBust}`}
                     alt={asset.label}
@@ -519,21 +519,21 @@ export function ArtStudioPage() {
         <>
           <PageStatus error={error} />
           {message ? (
-            <p className="gt-admin-lede" role="status">
+            <p className="od-admin-lede" role="status">
               {message}
             </p>
           ) : null}
 
-          <section className="gt-art-studio gt-art-studio--workspace" aria-label="Cover studio">
+          <section className="od-art-studio od-art-studio--workspace" aria-label="Cover studio">
             <div
-              className={`gt-art-studio__stage${skin ? ` gt-art-studio__stage--${skin.family}` : ''}`}
+              className={`od-art-studio__stage${skin ? ` od-art-studio__stage--${skin.family}` : ''}`}
               style={previewChromeStyle}
               aria-busy={previewBusy}
             >
               {heroSrc ? (
-                <figure className="gt-art-studio__hero">
+                <figure className="od-art-studio__hero">
                   {previewArtistic ? (
-                    <span className="gt-art-studio__mode-badge">Artistic</span>
+                    <span className="od-art-studio__mode-badge">Artistic</span>
                   ) : null}
                   <img
                     src={heroSrc}
@@ -549,19 +549,19 @@ export function ArtStudioPage() {
                   </figcaption>
                 </figure>
               ) : (
-                <div className="gt-art-studio__empty" data-testid="art-studio-empty">
-                  <div className="gt-art-studio__empty-glow" aria-hidden="true" />
-                  <p className="gt-art-studio__empty-title">
+                <div className="od-art-studio__empty" data-testid="art-studio-empty">
+                  <div className="od-art-studio__empty-glow" aria-hidden="true" />
+                  <p className="od-art-studio__empty-title">
                     {previewBusy ? 'Painting cover…' : 'Name a title to paint a cover'}
                   </p>
-                  <p className="gt-art-studio__empty-hint">
+                  <p className="od-art-studio__empty-hint">
                     Title-first atelier — Backend artistic compositions by default (motifs · bezels ·
                     watermark), not gray placeholders.
                   </p>
                 </div>
               )}
 
-              <div className="gt-art-studio__thumbs" aria-label="Other tile sizes">
+              <div className="od-art-studio__thumbs" aria-label="Other tile sizes">
                 {PREVIEW_VARIANTS.filter((v) => v.key !== activeVariant.key && v.kind === 'tile').map(
                   (size) => {
                     const src = previews[size.key]
@@ -569,7 +569,7 @@ export function ArtStudioPage() {
                       <button
                         key={size.key}
                         type="button"
-                        className="gt-art-studio__thumb"
+                        className="od-art-studio__thumb"
                         onClick={() => setVariantKey(size.key)}
                         title={`Show ${size.label}`}
                       >
@@ -585,9 +585,9 @@ export function ArtStudioPage() {
               </div>
             </div>
 
-            <div className="gt-art-studio__controls">
-              <label className="gt-art-studio__title-field">
-                <span className="gt-art-studio__label">Title</span>
+            <div className="od-art-studio__controls">
+              <label className="od-art-studio__title-field">
+                <span className="od-art-studio__label">Title</span>
                 <input
                   type="text"
                   value={title}
@@ -595,16 +595,16 @@ export function ArtStudioPage() {
                   placeholder="e.g. Chrono Trigger"
                   maxLength={120}
                   autoComplete="off"
-                  aria-describedby="gt-art-title-hint"
+                  aria-describedby="od-art-title-hint"
                 />
               </label>
-              <p id="gt-art-title-hint" className="gt-art-studio__hint">
+              <p id="od-art-title-hint" className="od-art-studio__hint">
                 Typing refreshes the live artistic preview. Generate writes the full size pack with
                 the same renderer.
               </p>
 
               <label>
-                <span className="gt-art-studio__label">System / platform</span>
+                <span className="od-art-studio__label">System / platform</span>
                 <select
                   value={system}
                   onChange={(e) => setSystem(e.target.value)}
@@ -622,11 +622,11 @@ export function ArtStudioPage() {
                   accepted these; there was simply no way to reach them, so the
                   only answer to "the text is too small" was to change a default
                   for every cover at once. */}
-              <fieldset className="gt-art-studio__text">
-                <legend className="gt-art-studio__label">Cover text</legend>
+              <fieldset className="od-art-studio__text">
+                <legend className="od-art-studio__label">Cover text</legend>
 
                 <label>
-                  <span className="gt-art-studio__label">Headline</span>
+                  <span className="od-art-studio__label">Headline</span>
                   <input
                     type="text"
                     value={headline}
@@ -638,7 +638,7 @@ export function ArtStudioPage() {
                 </label>
 
                 <label>
-                  <span className="gt-art-studio__label">Subtitle</span>
+                  <span className="od-art-studio__label">Subtitle</span>
                   <input
                     type="text"
                     value={subtitle}
@@ -650,7 +650,7 @@ export function ArtStudioPage() {
                 </label>
 
                 <label>
-                  <span className="gt-art-studio__label">
+                  <span className="od-art-studio__label">
                     Title size — {titleScale.toFixed(2)}×
                   </span>
                   <input
@@ -660,10 +660,10 @@ export function ArtStudioPage() {
                     step="0.05"
                     value={titleScale}
                     onChange={(e) => setTitleScale(Number(e.target.value))}
-                    aria-describedby="gt-art-scale-hint"
+                    aria-describedby="od-art-scale-hint"
                   />
                 </label>
-                <p id="gt-art-scale-hint" className="gt-art-studio__hint">
+                <p id="od-art-scale-hint" className="od-art-studio__hint">
                   Clamped {TITLE_SCALE_MIN}×–{TITLE_SCALE_MAX}× by the renderer, which also refuses to overflow the
                   canvas — the slider asks for a size, it does not override the fit.
                   Leave the fields empty to keep the text derived from the title; an
@@ -671,28 +671,28 @@ export function ArtStudioPage() {
                 </p>
               </fieldset>
 
-              <fieldset className="gt-art-studio__variants">
-                <legend className="gt-art-studio__label">Preview size</legend>
-                <div className="gt-art-studio__variant-row" role="group" aria-label="Preview size">
+              <fieldset className="od-art-studio__variants">
+                <legend className="od-art-studio__label">Preview size</legend>
+                <div className="od-art-studio__variant-row" role="group" aria-label="Preview size">
                   {PREVIEW_VARIANTS.map((v) => (
                     <button
                       key={v.key}
                       type="button"
-                      className={`gt-art-studio__variant${variantKey === v.key ? ' is-active' : ''}`}
+                      className={`od-art-studio__variant${variantKey === v.key ? ' is-active' : ''}`}
                       aria-pressed={variantKey === v.key}
                       onClick={() => setVariantKey(v.key)}
                     >
                       {v.label}
-                      <span className="gt-art-studio__variant-kind">{v.kind}</span>
+                      <span className="od-art-studio__variant-kind">{v.kind}</span>
                     </button>
                   ))}
                 </div>
               </fieldset>
 
-              <div className="gt-admin-actions-row gt-art-studio__primary-actions">
+              <div className="od-admin-actions-row od-art-studio__primary-actions">
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={!hasTitle || previewBusy}
                   onClick={runPreview}
                 >
@@ -700,7 +700,7 @@ export function ArtStudioPage() {
                 </button>
                 <button
                   type="button"
-                  className="gt-btn gt-btn--primary"
+                  className="od-btn od-btn--primary"
                   disabled={!hasTitle || busy === 'generate'}
                   onClick={runGenerate}
                 >
@@ -708,19 +708,19 @@ export function ArtStudioPage() {
                 </button>
               </div>
 
-              <div className="gt-art-studio__pack-actions">
+              <div className="od-art-studio__pack-actions">
                 {downloadZip ? (
-                  <a className="gt-btn" href={downloadZip}>
+                  <a className="od-btn" href={downloadZip}>
                     Download ZIP
                   </a>
                 ) : (
-                  <button type="button" className="gt-btn" disabled>
+                  <button type="button" className="od-btn" disabled>
                     Download ZIP
                   </button>
                 )}
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={!packId || busy === 'apply-fallback'}
                   onClick={applyFallback}
                 >
@@ -728,8 +728,8 @@ export function ArtStudioPage() {
                 </button>
               </div>
 
-              <label className="gt-art-studio__uuid-field">
-                <span className="gt-art-studio__label">Apply to game UUID</span>
+              <label className="od-art-studio__uuid-field">
+                <span className="od-art-studio__label">Apply to game UUID</span>
                 <input
                   type="text"
                   value={gameUuid}
@@ -740,7 +740,7 @@ export function ArtStudioPage() {
               </label>
               <button
                 type="button"
-                className="gt-btn gt-btn--primary"
+                className="od-btn od-btn--primary"
                 disabled={!packId || !gameUuid.trim() || busy === 'apply-game'}
                 onClick={applyToGame}
               >
@@ -748,22 +748,22 @@ export function ArtStudioPage() {
               </button>
 
               {packId ? (
-                <p className="gt-art-studio__pack-meta">
-                  Pack <code className="gt-mono">{packId}</code> · tiles, wides, squares, hero under{' '}
+                <p className="od-art-studio__pack-meta">
+                  Pack <code className="od-mono">{packId}</code> · tiles, wides, squares, hero under{' '}
                   <code>static/library/generated/</code>
                 </p>
               ) : null}
             </div>
           </section>
 
-          <section className="gt-admin-panel gt-art-studio-fallbacks" aria-label="Library default covers">
-            <div className="gt-art-studio-fallbacks__head">
+          <section className="od-admin-panel od-art-studio-fallbacks" aria-label="Library default covers">
+            <div className="od-art-studio-fallbacks__head">
               <div>
-                <h2 className="gt-admin-panel-title">Library default covers</h2>
-                <p className="gt-admin-lede">
+                <h2 className="od-admin-panel-title">Library default covers</h2>
+                <p className="od-admin-lede">
                   Site-wide fallbacks when a title has no downloaded art. Generate a pack above, then
                   set as fallback — or open{' '}
-                  <button type="button" className="gt-art-inline-link" onClick={() => selectTab('stock')}>
+                  <button type="button" className="od-art-inline-link" onClick={() => selectTab('stock')}>
                     Backup &amp; stock
                   </button>{' '}
                   for platform packs and stock motifs.
@@ -771,16 +771,16 @@ export function ArtStudioPage() {
               </div>
               <button
                 type="button"
-                className="gt-btn gt-btn--primary"
+                className="od-btn od-btn--primary"
                 disabled={busy === 'regen-fallback'}
                 onClick={regenerateDefaults}
               >
                 {busy === 'regen-fallback' ? 'Regenerating…' : 'Regenerate defaults'}
               </button>
             </div>
-            <div className="gt-art-studio-fallbacks__grid">
+            <div className="od-art-studio-fallbacks__grid">
               {FALLBACK_ASSETS.map((asset) => (
-                <figure key={asset.key} className="gt-art-studio-fallbacks__card">
+                <figure key={asset.key} className="od-art-studio-fallbacks__card">
                   <img
                     src={`${asset.path}?v=${fallbackBust}`}
                     alt={asset.label}
@@ -797,28 +797,28 @@ export function ArtStudioPage() {
             </div>
           </section>
 
-          <section className="gt-admin-panel gt-art-studio-batch">
+          <section className="od-admin-panel od-art-studio-batch">
             <button
               type="button"
-              className="gt-art-studio-batch__toggle"
+              className="od-art-studio-batch__toggle"
               aria-expanded={batchOpen}
               onClick={() => setBatchOpen((o) => !o)}
             >
-              <h2 className="gt-admin-panel-title">Batch placeholders for no-cover titles</h2>
+              <h2 className="od-admin-panel-title">Batch placeholders for no-cover titles</h2>
               <span aria-hidden="true">{batchOpen ? '▾' : '▸'}</span>
             </button>
             {batchOpen ? (
               <>
-                <p className="gt-admin-lede">
+                <p className="od-admin-lede">
                   Loads the library health sample, then applies procedural covers for checked titles
                   via <code>POST /admin/api/art-studio/batch-generate</code>, falling back to{' '}
                   <code>covers/batch/apply</code> (<code>policy=generate_only</code>) then per-title
                   generate/apply.
                 </p>
-                <div className="gt-admin-actions-row">
+                <div className="od-admin-actions-row">
                   <button
                     type="button"
-                    className="gt-btn"
+                    className="od-btn"
                     disabled={busy === 'missing'}
                     onClick={loadMissing}
                   >
@@ -826,7 +826,7 @@ export function ArtStudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="gt-btn gt-btn--primary"
+                    className="od-btn od-btn--primary"
                     disabled={busy === 'batch' || !batchSelected.size}
                     onClick={batchApplyPlaceholders}
                   >
@@ -834,7 +834,7 @@ export function ArtStudioPage() {
                   </button>
                 </div>
                 {missingCovers.length ? (
-                  <ul className="gt-art-studio__batch-list">
+                  <ul className="od-art-studio__batch-list">
                     {missingCovers.map((g) => (
                       <li key={g.uuid}>
                         <label>
@@ -843,14 +843,14 @@ export function ArtStudioPage() {
                             checked={batchSelected.has(g.uuid)}
                             onChange={() => toggleBatch(g.uuid)}
                           />
-                          {g.name} <code className="gt-mono">{g.uuid}</code>
+                          {g.name} <code className="od-mono">{g.uuid}</code>
                         </label>
                       </li>
                     ))}
                   </ul>
                 ) : null}
                 {batchLog ? (
-                  <pre className="gt-art-studio__batch-log" aria-live="polite">
+                  <pre className="od-art-studio__batch-log" aria-live="polite">
                     {batchLog}
                   </pre>
                 ) : null}

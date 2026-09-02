@@ -12,8 +12,8 @@ import pytest
 from flask import json
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Game, GameRelatedMedia, Library, LibraryPlatform, User
+from oneirodex import db
+from oneirodex.models import Game, GameRelatedMedia, Library, LibraryPlatform, User
 
 
 @pytest.fixture(scope='function', autouse=True)

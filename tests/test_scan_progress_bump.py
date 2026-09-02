@@ -1,8 +1,8 @@
 """Atomic scan progress bumps must not lose counts under concurrent updates."""
 from datetime import datetime, timezone
 
-from gametheca.models import ScanJob
-from gametheca.utils.scanning import bump_scan_job_progress
+from oneirodex.models import ScanJob
+from oneirodex.utils.scanning import bump_scan_job_progress
 
 
 def test_bump_scan_job_progress_increments_without_clobber(app, db_session):

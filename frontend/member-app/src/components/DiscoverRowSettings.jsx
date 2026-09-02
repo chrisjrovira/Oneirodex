@@ -40,29 +40,29 @@ export function DiscoverRowSettings({
   const canPin = pins.length < maxPins
 
   return (
-    <div className="gt-rowsettings">
+    <div className="od-rowsettings">
       {maxPins > 0 ? (
-        <section className="gt-rowsettings__group">
-          <h3 className="gt-rowsettings__heading">
+        <section className="od-rowsettings__group">
+          <h3 className="od-rowsettings__heading">
             Pinned to the top
-            <span className="gt-rowsettings__budget">
+            <span className="od-rowsettings__budget">
               {pins.length} of {maxPins}
             </span>
           </h3>
 
           {pinned.length === 0 ? (
-            <p className="gt-rowsettings__empty">
+            <p className="od-rowsettings__empty">
               Nothing pinned yet. Pin a row below to keep it at the top of your feed.
             </p>
           ) : (
-            <ol className="gt-rowsettings__list">
+            <ol className="od-rowsettings__list">
               {pinned.map((row, index) => (
-                <li className="gt-rowsettings__row" key={row.identifier}>
-                  <span className="gt-rowsettings__title">{row.title}</span>
-                  <div className="gt-cbtn-group">
+                <li className="od-rowsettings__row" key={row.identifier}>
+                  <span className="od-rowsettings__title">{row.title}</span>
+                  <div className="od-cbtn-group">
                     <button
                       type="button"
-                      className="gt-cbtn gt-btn--sm"
+                      className="od-cbtn od-btn--sm"
                       aria-label={`Move ${row.title} up`}
                       disabled={index === 0}
                       onClick={() => onMovePin?.(row.identifier, -1)}
@@ -71,7 +71,7 @@ export function DiscoverRowSettings({
                     </button>
                     <button
                       type="button"
-                      className="gt-cbtn gt-btn--sm"
+                      className="od-cbtn od-btn--sm"
                       aria-label={`Move ${row.title} down`}
                       disabled={index === pinned.length - 1}
                       onClick={() => onMovePin?.(row.identifier, 1)}
@@ -80,7 +80,7 @@ export function DiscoverRowSettings({
                     </button>
                     <button
                       type="button"
-                      className="gt-cbtn gt-btn--sm"
+                      className="od-cbtn od-btn--sm"
                       onClick={() => onTogglePin?.(row.identifier)}
                     >
                       Unpin
@@ -93,25 +93,25 @@ export function DiscoverRowSettings({
         </section>
       ) : null}
 
-      <section className="gt-rowsettings__group">
-        <h3 className="gt-rowsettings__heading">All rows</h3>
-        <ul className="gt-rowsettings__list">
+      <section className="od-rowsettings__group">
+        <h3 className="od-rowsettings__heading">All rows</h3>
+        <ul className="od-rowsettings__list">
           {rest.map((row) => {
             const isHidden = hiddenSet.has(row.identifier)
             return (
               <li
-                className="gt-rowsettings__row"
+                className="od-rowsettings__row"
                 key={row.identifier}
                 data-hidden={isHidden ? 'true' : undefined}
               >
-                <span className="gt-rowsettings__title">{row.title}</span>
-                <div className="gt-cbtn-group">
+                <span className="od-rowsettings__title">{row.title}</span>
+                <div className="od-cbtn-group">
                   {/* Pinning a hidden row would be a contradiction the feed
                       cannot render, so the pin is unavailable until it is
                       shown again — and says why. */}
                   <button
                     type="button"
-                    className="gt-cbtn gt-btn--sm"
+                    className="od-cbtn od-btn--sm"
                     disabled={isHidden || !canPin}
                     title={
                       isHidden
@@ -126,7 +126,7 @@ export function DiscoverRowSettings({
                   </button>
                   <button
                     type="button"
-                    className={`gt-cbtn gt-btn--sm${isHidden ? ' is-on' : ''}`}
+                    className={`od-cbtn od-btn--sm${isHidden ? ' is-on' : ''}`}
                     aria-pressed={isHidden}
                     onClick={() => onToggleHidden?.(row.identifier)}
                   >
@@ -139,7 +139,7 @@ export function DiscoverRowSettings({
         </ul>
 
         {rest.length === 0 ? (
-          <p className="gt-rowsettings__empty">Every row is pinned.</p>
+          <p className="od-rowsettings__empty">Every row is pinned.</p>
         ) : null}
       </section>
     </div>

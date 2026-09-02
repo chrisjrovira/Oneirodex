@@ -2,7 +2,7 @@
 
 Swatch chips are hardcoded in CSS because they must render on pages whose view
 functions we do not control, so this module pins every one of them to the
-Python definitions in gametheca.utils.preset_themes — the source of truth for
+Python definitions in oneirodex.utils.preset_themes — the source of truth for
 what accent a theme actually ships with.  These tests are file-only: no app,
 no database.
 """
@@ -12,13 +12,13 @@ from pathlib import Path
 
 import pytest
 
-from gametheca.utils.preset_themes import PRESET_SLUGS, PRESET_THEMES, preset_tokens
+from oneirodex.utils.preset_themes import PRESET_SLUGS, PRESET_THEMES, preset_tokens
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-THEME_SOURCE = REPO_ROOT / 'gametheca' / 'setup' / 'default_theme'
+THEME_SOURCE = REPO_ROOT / 'oneirodex' / 'setup' / 'default_theme'
 FORM_COMPONENTS_CSS = THEME_SOURCE / 'css' / 'form-components.css'
-GT_TOKENS_CSS = THEME_SOURCE / 'css' / 'gt-tokens.css'
-TEMPLATES = REPO_ROOT / 'gametheca' / 'templates'
+GT_TOKENS_CSS = THEME_SOURCE / 'css' / 'od-tokens.css'
+TEMPLATES = REPO_ROOT / 'oneirodex' / 'templates'
 
 
 def read(path: Path) -> str:
@@ -28,7 +28,7 @@ def read(path: Path) -> str:
 def swatch_colours() -> dict:
     """Every `.theme-swatch-<slug>` fill colour in the CSS.
 
-    Chip rules define `--gt-swatch-fill` (a token) and paint `background` from
+    Chip rules define `--od-swatch-fill` (a token) and paint `background` from
     it, so css-token-lint treats the hex as a definition rather than a use.
     """
     colours = {}
@@ -37,28 +37,31 @@ def swatch_colours() -> dict:
         read(FORM_COMPONENTS_CSS),
     ):
         slug, body = match.group(1), match.group(2)
-        fill = re.search(r'--gt-swatch-fill:\s*(#[0-9a-fA-F]{3,8})', body)
+        fill = re.search(r'--od-swatch-fill:\s*(#[0-9a-fA-F]{3,8})', body)
         if fill:
             colours[slug] = fill.group(1).strip().lower()
     return colours
 
 
 def default_accent() -> str:
-    match = re.search(r'--gt-accent:\s*([^;]+);', read(GT_TOKENS_CSS))
-    assert match, '--gt-accent missing from gt-tokens.css'
+    match = re.search(r'--od-accent:\s*([^;]+);', read(GT_TOKENS_CSS))
+    assert match, '--od-accent missing from od-tokens.css'
     return match.group(1).strip().lower()
 
 
-def test_od_token_aliases_core_tokens():
+def test_od_core_tokens_are_canonical_values():
+    """P3b: --od-* is the source of truth (hex), not a circular var() alias."""
     css = read(GT_TOKENS_CSS)
-    assert '--od-accent: var(--gt-accent)' in css
-    assert '--od-bg: var(--gt-bg)' in css
+    accent = re.search(r'--od-accent:\s*([^;]+);', css)
+    bg = re.search(r'--od-bg:\s*([^;]+);', css)
+    assert accent and accent.group(1).strip().startswith('#'), css[:400]
+    assert bg and bg.group(1).strip().startswith('#'), css[:400]
 
 
 @pytest.mark.parametrize('preset', PRESET_THEMES, ids=[p['slug'] for p in PRESET_THEMES])
 def test_preset_swatch_matches_the_generated_accent(preset):
     """A swatch must be painted the accent its theme is generated with."""
-    expected = preset_tokens(preset)['gt-accent'].lower()
+    expected = preset_tokens(preset)['od-accent'].lower()
 
     assert swatch_colours().get(preset['slug']) == expected
 
@@ -97,6 +100,21 @@ def test_preferences_modal_renders_selectable_swatches():
     # Selection is server-rendered too, so the picker reads correctly even
     # before any JavaScript touches it.
     assert "form.theme.data == item.slug" in html
+
+
+def test_preferences_look_offers_admin_reset_themes():
+    """Operators hit Reset Themes from Preferences → Look, not only Admin → Themes."""
+    html = read(TEMPLATES / 'settings' / 'modal_preferences.html')
+    js = read(
+        REPO_ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'js' / 'preferences_modal.js'
+    )
+
+    assert "current_user.role == 'admin'" in html
+    assert 'id="odPrefsResetThemes"' in html
+    assert 'admin2.reset_default_themes' in html
+    assert 'odPrefsResetThemes' in js
+    assert "/admin/themes/reset" in js or 'data-reset-url' in html
+    assert 'Reset all default themes?' in js
 
 
 def test_admin_manage_themes_sends_you_to_preferences_to_choose():

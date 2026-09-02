@@ -33,7 +33,7 @@
 
 **Log signature:**
 ```text
-FATAL: no pg_hba.conf entry for host "172.x.x.x", user "postgres", database "gametheca", no encryption
+FATAL: no pg_hba.conf entry for host "172.x.x.x", user "postgres", database "oneirodex", no encryption
 ```
 
 Postgres is reachable; it is **refusing non-SSL TCP** from the app container IP (common after a hardened / stale volume `pg_hba.conf`).
@@ -45,7 +45,7 @@ docker compose up -d --force-recreate db
 docker compose up -d app
 ```
 
-Confirm active HBA: `docker compose exec db psql -U postgres -d gametheca -c "SHOW hba_file;"` → `/etc/gametheca/pg_hba.conf`.
+Confirm active HBA: `docker compose exec db psql -U postgres -d oneirodex -c "SHOW hba_file;"` → `/etc/oneirodex/pg_hba.conf`.
 
 **Fix (legacy stacks without `hba_file=`):** only when `SHOW hba_file` still points at `$PGDATA/pg_hba.conf`:
 
@@ -54,7 +54,7 @@ docker compose exec db bash -c 'printf "\nhost all all 0.0.0.0/0 scram-sha-256\n
 docker compose exec db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT pg_reload_conf();"
 ```
 
-With current Compose, **do not** append to `$PGDATA/pg_hba.conf` — Postgres ignores it when `hba_file=/etc/gametheca/pg_hba.conf` is set. Edit the host file `docker/postgres/pg_hba.conf` and `force-recreate db` instead.
+With current Compose, **do not** append to `$PGDATA/pg_hba.conf` — Postgres ignores it when `hba_file=/etc/oneirodex/pg_hba.conf` is set. Edit the host file `docker/postgres/pg_hba.conf` and `force-recreate db` instead.
 
 Then restart the app container. Do **not** wipe `db_data` unless you intend to lose the library DB. Intentional clean slate (still logging in after a partial wipe): [unraid-deploy.md — Factory wipe](unraid-deploy.md#factory-wipe-still-logging-in-after-wiped-volumes).
 
@@ -68,7 +68,7 @@ Default host port `5006`. Change the published port mapping if occupied.
 
 ### 6. Read-only rootfs / missing library volume
 
-If `/app/gametheca/static/library` is not writable, theme install and image downloads fail (may still boot). Mount a writable appdata path.
+If `/app/oneirodex/static/library` is not writable, theme install and image downloads fail (may still boot). Mount a writable appdata path.
 
 ### 7. `nvml error: driver not loaded` (GPU reservation on a host with no GPU)
 

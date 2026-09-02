@@ -56,10 +56,17 @@ clients/
 **/src-tauri/target/
 
 # Host-built SPA bundles (image builds them in frontend-build stage)
-gametheca/static/dist/
+oneirodex/static/dist/
 
 # Private vault (never ship)
 docs/_private/
+
+# Operator BIOS staging from scripts/import_bios.py (never bake dumps into the image)
+.bios-install-out/
+bios/
+**/bios/*.bin
+**/bios/*.rom
+oneirodex/static/library/bios/
 
 # IDE
 .vscode/
@@ -79,8 +86,8 @@ htmlcov/
 .eggs/
 
 # Static uploads (these should be mounted as volumes)
-gametheca/static/library/images/
-gametheca/static/library/zips/
+oneirodex/static/library/images/
+oneirodex/static/library/zips/
 
 # OS
 .DS_Store

@@ -10,7 +10,7 @@ import { railIconPaths } from './railIcons'
  * No theme may render a glyph invisible.
  *
  * The icon system lets a colour preset own the icon *silhouette* through
- * `--gt-icon-fill` / `--gt-icon-fill-opacity`, and five of the nine presets use
+ * `--od-icon-fill` / `--od-icon-fill-opacity`, and five of the nine presets use
  * that to get outline packs by setting fill-opacity to `0`. Those tokens are set
  * on the `<svg>` and inherit into every sub-path.
  *
@@ -23,7 +23,7 @@ import { railIconPaths } from './railIcons'
  *
  * Two halves, and both have to hold:
  *
- *   1. `gt-primitives.css` re-asserts fill and fill-opacity on any sub-path that
+ *   1. `od-primitives.css` re-asserts fill and fill-opacity on any sub-path that
  *      explicitly opts into `fill="currentColor"`. That is the actual fix.
  *   2. Every glyph is drawn with *something* the fix or the stroke can show —
  *      i.e. no glyph consists solely of sub-paths that are neither stroked nor
@@ -36,7 +36,7 @@ import { railIconPaths } from './railIcons'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const PRIMITIVES = join(
   HERE,
-  '../../../../gametheca/setup/default_theme/css/gt-primitives.css',
+  '../../../../oneirodex/setup/default_theme/css/od-primitives.css',
 )
 
 test('the stylesheet re-asserts fill on explicitly solid sub-paths', () => {
@@ -45,10 +45,10 @@ test('the stylesheet re-asserts fill on explicitly solid sub-paths', () => {
   // The selector has to target the sub-path, not the svg: a declaration on the
   // element is what outranks a value inherited from its parent.
   const rule = css.match(
-    /\.gt-icon\s*\[fill=['"]currentColor['"]\]\s*\{([^}]*)\}/,
+    /\.od-icon\s*\[fill=['"]currentColor['"]\]\s*\{([^}]*)\}/,
   )
 
-  expect(rule, 'gt-primitives.css must keep the solid-sub-path rule').toBeTruthy()
+  expect(rule, 'od-primitives.css must keep the solid-sub-path rule').toBeTruthy()
   expect(rule[1]).toMatch(/fill:\s*currentColor/)
   // fill-opacity is the half that actually broke; fill alone does not fix it.
   expect(rule[1]).toMatch(/fill-opacity:\s*1/)
@@ -90,8 +90,8 @@ test('Favorites is solid, which is exactly the case that regressed', () => {
 
 test('resting rail glyphs take the theme accent (W27-E4 code half)', () => {
   const css = readFileSync(
-    join(HERE, '../../../../gametheca/setup/default_theme/css/gt-shell.css'),
+    join(HERE, '../../../../oneirodex/setup/default_theme/css/od-shell.css'),
     'utf8',
   )
-  expect(css).toMatch(/\.gt-rail__icon\s*\{[^}]*color:\s*var\(--gt-accent\)/s)
+  expect(css).toMatch(/\.od-rail__icon\s*\{[^}]*color:\s*var\(--od-accent\)/s)
 })

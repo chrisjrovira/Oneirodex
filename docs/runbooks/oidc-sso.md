@@ -20,10 +20,10 @@ Copy from `.env.example`:
 | Variable | Description |
 |----------|-------------|
 | `OIDC_ENABLED` | Master env switch (`true` / `false`) |
-| `OIDC_ISSUER_URL` | IdP issuer base URL (e.g. `https://auth.example.com/application/o/gametheca/`) |
+| `OIDC_ISSUER_URL` | IdP issuer base URL (e.g. `https://auth.example.com/application/o/oneirodex/`) |
 | `OIDC_CLIENT_ID` | OAuth client ID |
 | `OIDC_CLIENT_SECRET` | Client secret (optional for public PKCE clients) |
-| `OIDC_REDIRECT_URI` | Must match IdP registration exactly, e.g. `https://gametheca.example.com/login/oidc/callback` |
+| `OIDC_REDIRECT_URI` | Must match IdP registration exactly, e.g. `https://oneirodex.example.com/login/oidc/callback` |
 | `OIDC_SCOPES` | Default: `openid email profile` |
 | `OIDC_ROLE_CLAIM` | Claim used for role mapping (default: `groups`) |
 | `OIDC_ROLE_MAP` | JSON object mapping IdP claim values → Oneirodex roles |
@@ -46,7 +46,7 @@ Use this sequence when wiring Oneirodex to a live Authentik instance. No secrets
 4. **Client type:** **Confidential** if you set `OIDC_CLIENT_SECRET`; **Public** if using PKCE-only (Oneirodex sends PKCE either way).
 5. **Redirect URIs/Origins (regex):** add exactly:
    ```
-   https://<gametheca-public-host>/login/oidc/callback
+   https://<oneirodex-public-host>/login/oidc/callback
    ```
    Must match `OIDC_REDIRECT_URI` character-for-character (scheme, host, path, no trailing slash unless registered).
 6. **Signing key:** use Authentik default or your org key.
@@ -65,10 +65,10 @@ In `.env` (or deployment secrets):
 
 ```env
 OIDC_ENABLED=true
-OIDC_ISSUER_URL=https://auth.example.com/application/o/gametheca/
+OIDC_ISSUER_URL=https://auth.example.com/application/o/oneirodex/
 OIDC_CLIENT_ID=<from Authentik provider>
 OIDC_CLIENT_SECRET=<from Authentik provider, or empty for public client>
-OIDC_REDIRECT_URI=https://gametheca.example.com/login/oidc/callback
+OIDC_REDIRECT_URI=https://oneirodex.example.com/login/oidc/callback
 OIDC_SCOPES=openid email profile
 OIDC_ROLE_CLAIM=groups
 TRUSTED_PROXIES=1
@@ -83,13 +83,13 @@ Restart Oneirodex after env changes.
 1. Log in as a local admin.
 2. **Admin → Integrations → OIDC / SSO**.
 3. Enable **Enable OIDC SSO** and confirm issuer, client ID, redirect URI, scopes, and role claim match Authentik.
-4. Set **Site URL** (`site_url`) to the public HTTPS base URL, e.g. `https://gametheca.example.com`.
+4. Set **Site URL** (`site_url`) to the public HTTPS base URL, e.g. `https://oneirodex.example.com`.
 
 Both `OIDC_ENABLED=true` **and** the admin toggle must be on before the SSO button appears.
 
 ### 5. Groups → Oneirodex roles
 
-1. In Authentik, create groups that match your role map keys, e.g. `gametheca-admin`, `gametheca-librarian`, `gametheca-child`.
+1. In Authentik, create groups that match your role map keys, e.g. `oneirodex-admin` / `oneirodex-admin`, `oneirodex-librarian` / `oneirodex-librarian`, `oneirodex-child` / `oneirodex-child`.
 2. Assign users to groups.
 3. Ensure the **groups** claim (or your chosen `OIDC_ROLE_CLAIM`) is included in the ID token / userinfo. With Authentik, this usually requires a **Property Mapping** or scope that exposes group membership to the OAuth app.
 4. Configure `OIDC_ROLE_MAP` (env or admin UI), default shape:
@@ -97,11 +97,14 @@ Both `OIDC_ENABLED=true` **and** the admin toggle must be on before the SSO butt
 ```json
 {
   "admin": "admin",
-  "gametheca-admin": "admin",
+  "oneirodex-admin": "admin",
+  "oneirodex-admin": "admin",
   "librarian": "librarian",
-  "gametheca-librarian": "librarian",
+  "oneirodex-librarian": "librarian",
+  "oneirodex-librarian": "librarian",
   "child": "child",
-  "gametheca-child": "child"
+  "oneirodex-child": "child",
+  "oneirodex-child": "child"
 }
 ```
 
@@ -139,7 +142,7 @@ Manual smoke checklist after deploy:
 - [ ] Click SSO → browser redirects to Authentik (HTTPS URL, correct client).
 - [ ] After login → redirect to `https://<host>/login/oidc/callback` (not `http://127.0.0.1:5006/...`).
 - [ ] User lands on Discover; session persists on refresh.
-- [ ] User in `gametheca-admin` group receives `admin` role in Oneirodex.
+- [ ] User in `oneirodex-admin` or `oneirodex-admin` group receives `admin` role in Oneirodex.
 - [ ] Wrong redirect URI → flash mentions redirect URI mismatch (check admin + Authentik provider).
 - [ ] Set `OIDC_ENABLED=false` or disable admin toggle → SSO button hidden; local login still works.
 
@@ -150,7 +153,7 @@ Same general requirements as Authentik:
 1. Create an OAuth2/OIDC **confidential** or **public** client.
 2. Grant type: **Authorization Code**.
 3. Enable **PKCE (S256)**.
-4. Redirect URI: `https://<gametheca-host>/login/oidc/callback`
+4. Redirect URI: `https://<oneirodex-host>/login/oidc/callback`
 5. Scopes: `openid`, `email`, `profile`, plus any claim scope needed for groups/roles.
 6. Ensure the IdP returns `email` and `preferred_username` (or `sub`).
 
@@ -161,11 +164,14 @@ Default JSON role map (also configurable in admin):
 ```json
 {
   "admin": "admin",
-  "gametheca-admin": "admin",
+  "oneirodex-admin": "admin",
+  "oneirodex-admin": "admin",
   "librarian": "librarian",
-  "gametheca-librarian": "librarian",
+  "oneirodex-librarian": "librarian",
+  "oneirodex-librarian": "librarian",
   "child": "child",
-  "gametheca-child": "child"
+  "oneirodex-child": "child",
+  "oneirodex-child": "child"
 }
 ```
 

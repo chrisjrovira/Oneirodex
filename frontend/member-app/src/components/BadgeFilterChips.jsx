@@ -64,14 +64,14 @@ export function BadgeFilterChips({
   t = (key) => key,
 }) {
   return (
-    <div className="gt-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
+    <div className="od-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
       {BADGE_FILTER_CHIPS.map((chip) => {
         const active = filters[chip.param] === '1'
         return (
           <button
             key={chip.param}
             type="button"
-            className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+            className={`od-badge-filter-chip${active ? ' is-active' : ''}`}
             aria-pressed={active}
             title={t(chip.title)}
             onClick={() => toggleBadgeFilter(filters, chip.param, onApply, cleanFilters)}

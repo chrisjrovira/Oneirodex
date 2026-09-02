@@ -1,53 +1,53 @@
 /* Platform-reactive chrome — accents + motion keyed by data-platform-family. */
 
 :root {
-  --gt-platform-accent: var(--gt-accent);
+  --od-platform-accent: var(--od-accent);
 }
 
-/* Tint the shared .gt-btn toward the platform accent while browsing one system.
+/* Tint the shared .od-btn toward the platform accent while browsing one system.
  *
- * This used to hand `.gt-btn` a `--gt-btn-accent` custom property that only
+ * This used to hand `.od-btn` a `--od-btn-accent` custom property that only
  * glass.css read. That indirection was the bug: the variable was set *only*
  * here, so on every non-system page it was undefined and glass.css's border /
  * background declarations were invalid at computed-value time. Applying the
- * tint directly means the button is fully styled by gt-primitives.css
+ * tint directly means the button is fully styled by od-primitives.css
  * everywhere, and this is a genuine override rather than a required input. */
-[data-platform-family] .gt-btn:not(.gt-btn--primary):not(.gt-btn--danger) {
-  border-color: color-mix(in srgb, var(--gt-platform-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-platform-accent) 18%, var(--gt-glass-bg));
+[data-platform-family] .od-btn:not(.od-btn--primary):not(.od-btn--danger) {
+  border-color: color-mix(in srgb, var(--od-platform-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--od-platform-accent) 18%, var(--od-glass-bg));
 }
 
-[data-platform-family] .gt-btn:not(.gt-btn--primary):not(.gt-btn--danger):hover,
-[data-platform-family] .gt-btn:not(.gt-btn--primary):not(.gt-btn--danger):focus-visible {
-  border-color: var(--gt-platform-accent);
-  background: color-mix(in srgb, var(--gt-platform-accent) 28%, var(--gt-glass-bg));
+[data-platform-family] .od-btn:not(.od-btn--primary):not(.od-btn--danger):hover,
+[data-platform-family] .od-btn:not(.od-btn--primary):not(.od-btn--danger):focus-visible {
+  border-color: var(--od-platform-accent);
+  background: color-mix(in srgb, var(--od-platform-accent) 28%, var(--od-glass-bg));
 }
 
-[data-platform-family] .gt-topnav__link.is-active,
-[data-platform-family] .gt-systems-tile {
-  --gt-btn-accent: var(--gt-platform-accent);
+[data-platform-family] .od-topnav__link.is-active,
+[data-platform-family] .od-systems-tile {
+  --od-btn-accent: var(--od-platform-accent);
 }
 
-[data-platform-family] .gt-topnav {
-  border-bottom-color: color-mix(in srgb, var(--gt-platform-accent) 40%, transparent);
+[data-platform-family] .od-topnav {
+  border-bottom-color: color-mix(in srgb, var(--od-platform-accent) 40%, transparent);
 }
 
-[data-platform-family] .gt-topnav .gt-icon {
-  color: var(--gt-platform-accent);
+[data-platform-family] .od-topnav .od-icon {
+  color: var(--od-platform-accent);
 }
 
 /* Motion variants (disabled when reduced-motion). */
 @media (prefers-reduced-motion: no-preference) {
-  [data-platform-motion='pixel'] .gt-btn:hover,
-  [data-platform-motion='pixel'] .gt-systems-tile:hover {
+  [data-platform-motion='pixel'] .od-btn:hover,
+  [data-platform-motion='pixel'] .od-systems-tile:hover {
     box-shadow:
-      0 0 0 1px var(--gt-platform-accent),
-      2px 2px 0 color-mix(in srgb, var(--gt-platform-accent) 55%, transparent);
+      0 0 0 1px var(--od-platform-accent),
+      2px 2px 0 color-mix(in srgb, var(--od-platform-accent) 55%, transparent);
     transform: translate(-1px, -1px);
   }
 
-  [data-platform-motion='sheen'] .gt-btn,
-  [data-platform-motion='sheen'] .gt-systems-tile {
+  [data-platform-motion='sheen'] .od-btn,
+  [data-platform-motion='sheen'] .od-systems-tile {
     background-image: linear-gradient(
       120deg,
       transparent 30%,
@@ -58,31 +58,31 @@
     background-position: 100% 0;
   }
 
-  [data-platform-motion='sheen'] .gt-btn:hover,
-  [data-platform-motion='sheen'] .gt-systems-tile:hover {
+  [data-platform-motion='sheen'] .od-btn:hover,
+  [data-platform-motion='sheen'] .od-systems-tile:hover {
     background-position: 0 0;
     transition: background-position 0.45s ease;
   }
 
-  [data-platform-motion='pulse'] .gt-btn:hover,
-  [data-platform-motion='pulse'] .gt-systems-tile:hover {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gt-platform-accent) 35%, transparent);
+  [data-platform-motion='pulse'] .od-btn:hover,
+  [data-platform-motion='pulse'] .od-systems-tile:hover {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-platform-accent) 35%, transparent);
   }
 
-  [data-platform-motion='bounce'] .gt-btn:hover,
-  [data-platform-motion='bounce'] .gt-systems-tile:hover {
+  [data-platform-motion='bounce'] .od-btn:hover,
+  [data-platform-motion='bounce'] .od-systems-tile:hover {
     transform: translateY(-2px);
   }
 
-  [data-platform-motion='crt'] .gt-btn:hover,
-  [data-platform-motion='crt'] .gt-systems-tile:hover {
+  [data-platform-motion='crt'] .od-btn:hover,
+  [data-platform-motion='crt'] .od-systems-tile:hover {
     filter: contrast(1.05) brightness(1.05);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-platform-motion] .gt-btn,
-  [data-platform-motion] .gt-systems-tile {
+  [data-platform-motion] .od-btn,
+  [data-platform-motion] .od-systems-tile {
     transition: none !important;
     transform: none !important;
     filter: none !important;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import './DataTable.css'
 
 /**
@@ -18,6 +18,10 @@ import './DataTable.css'
  * filter box above three rows of companion kinds is more chrome than content,
  * and without this the only way to avoid it was to hand-roll the table — which
  * is how these panels came to disagree with every other table in the first place.
+ *
+ * `columnFilters` puts a typeahead search beside each filterable column title
+ * (AND across columns). Use with `toolbar={false}` when the global box would
+ * be redundant.
  */
 export function DataTable({
   columns,
@@ -28,9 +32,13 @@ export function DataTable({
   dense = false,
   caption,
   toolbar = true,
+  columnFilters = false,
+  showCount,
 }) {
   const [sort, setSort] = useState(initialSort) // { key, dir: 'asc' | 'desc' }
   const [query, setQuery] = useState('')
+  const [columnQuery, setColumnQuery] = useState({})
+  const listId = useId()
 
   const cellValue = (column, row) => {
     if (typeof column.value === 'function') {
@@ -40,20 +48,58 @@ export function DataTable({
   }
 
   const filterable = columns.filter((c) => c.filterable !== false)
+  const countVisible = showCount ?? Boolean(toolbar || columnFilters)
+
+  const suggestionsByKey = useMemo(() => {
+    if (!columnFilters) return {}
+    const out = {}
+    for (const column of filterable) {
+      const seen = new Set()
+      const values = []
+      for (const row of rows) {
+        const raw = cellValue(column, row)
+        if (raw == null || raw === '') continue
+        const text = String(raw)
+        const key = text.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        values.push(text)
+        if (values.length >= 80) break
+      }
+      out[column.key] = values
+    }
+    return out
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, columnFilters, columns])
 
   const filtered = useMemo(() => {
+    let next = rows
+
+    if (columnFilters) {
+      next = next.filter((row) =>
+        filterable.every((column) => {
+          const needle = String(columnQuery[column.key] || '')
+            .trim()
+            .toLowerCase()
+          if (!needle) return true
+          const raw = cellValue(column, row)
+          return raw != null && String(raw).toLowerCase().includes(needle)
+        }),
+      )
+    }
+
     const needle = query.trim().toLowerCase()
     if (!needle) {
-      return rows
+      return next
     }
-    return rows.filter((row) =>
+    return next.filter((row) =>
       filterable.some((column) => {
         const raw = cellValue(column, row)
         return raw != null && String(raw).toLowerCase().includes(needle)
       }),
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, query, columns])
+  }, [rows, query, columnQuery, columnFilters, columns])
 
   const sorted = useMemo(() => {
     if (!sort?.key) {
@@ -95,12 +141,50 @@ export function DataTable({
     })
   }
 
+  const hasActiveColumnFilter = filterable.some((column) =>
+    String(columnQuery[column.key] || '').trim(),
+  )
+  const filterActive = Boolean(query.trim()) || hasActiveColumnFilter
+
+  const renderFilter = (column) => {
+    if (!columnFilters || column.filterable === false) return null
+    const label = typeof column.label === 'string' ? column.label : column.key
+    const options = suggestionsByKey[column.key] || []
+    const datalistId = `${listId}-${column.key}`
+    return (
+      <>
+        <input
+          type="search"
+          className="od-table__col-filter"
+          value={columnQuery[column.key] || ''}
+          list={options.length ? datalistId : undefined}
+          autoComplete="off"
+          onChange={(event) =>
+            setColumnQuery((prev) => ({
+              ...prev,
+              [column.key]: event.target.value,
+            }))
+          }
+          placeholder="Filter…"
+          aria-label={`Filter ${label}`}
+        />
+        {options.length ? (
+          <datalist id={datalistId}>
+            {options.map((value) => (
+              <option key={value} value={value} />
+            ))}
+          </datalist>
+        ) : null}
+      </>
+    )
+  }
+
   return (
-    <div className={`gt-table-wrap${dense ? ' gt-table-wrap--dense' : ''}`}>
+    <div className={`od-table-wrap${dense ? ' od-table-wrap--dense' : ''}`}>
       {toolbar ? (
-        <div className="gt-table-toolbar">
-          <label className="gt-table-filter">
-            <span className="gt-table-filter__label">Filter</span>
+        <div className="od-table-toolbar">
+          <label className="od-table-filter">
+            <span className="od-table-filter__label">Filter</span>
             <input
               type="search"
               value={query}
@@ -109,22 +193,25 @@ export function DataTable({
               aria-label="Filter table rows"
             />
           </label>
-          <span className="gt-table-count" aria-live="polite">
-            {query.trim() && filtered.length !== rows.length
-              ? `${filtered.length} of ${rows.length}`
-              : `${rows.length} row${rows.length === 1 ? '' : 's'}`}
-          </span>
+          {countVisible ? (
+            <span className="od-table-count" aria-live="polite">
+              {filterActive && filtered.length !== rows.length
+                ? `${filtered.length} of ${rows.length}`
+                : `${rows.length} row${rows.length === 1 ? '' : 's'}`}
+            </span>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="gt-table-scroll">
-        <table className="gt-table">
-          {caption ? <caption className="gt-table__caption">{caption}</caption> : null}
+      <div className="od-table-scroll">
+        <table className="od-table">
+          {caption ? <caption className="od-table__caption">{caption}</caption> : null}
           <thead>
             <tr>
               {columns.map((column) => {
                 const active = sort?.key === column.key
                 const ariaSort = !active ? 'none' : sort.dir === 'asc' ? 'ascending' : 'descending'
+                const canFilter = columnFilters && column.filterable !== false
                 return (
                   <th
                     key={column.key}
@@ -132,20 +219,23 @@ export function DataTable({
                     aria-sort={column.sortable === false ? undefined : ariaSort}
                     className={column.align ? `is-${column.align}` : undefined}
                   >
-                    {column.sortable === false ? (
-                      column.label
-                    ) : (
-                      <button
-                        type="button"
-                        className={`gt-table__sort${active ? ' is-active' : ''}`}
-                        onClick={() => toggleSort(column.key)}
-                      >
-                        {column.label}
-                        <span className="gt-table__sort-mark" aria-hidden="true">
-                          {active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'}
-                        </span>
-                      </button>
-                    )}
+                    <div className={`od-table__head${canFilter ? ' has-filter' : ''}`}>
+                      {column.sortable === false ? (
+                        <span className="od-table__title">{column.label}</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`od-table__sort${active ? ' is-active' : ''}`}
+                          onClick={() => toggleSort(column.key)}
+                        >
+                          {column.label}
+                          <span className="od-table__sort-mark" aria-hidden="true">
+                            {active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'}
+                          </span>
+                        </button>
+                      )}
+                      {renderFilter(column)}
+                    </div>
                   </th>
                 )
               })}
@@ -154,8 +244,10 @@ export function DataTable({
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="gt-table__empty">
-                  {query.trim() ? `No rows match “${query.trim()}”.` : emptyMessage}
+                <td colSpan={columns.length} className="od-table__empty">
+                  {filterActive
+                    ? `No rows match “${query.trim() || 'filters'}”.`
+                    : emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -175,6 +267,13 @@ export function DataTable({
           </tbody>
         </table>
       </div>
+      {!toolbar && countVisible ? (
+        <span className="od-table-count" aria-live="polite">
+          {filterActive && filtered.length !== rows.length
+            ? `${filtered.length} of ${rows.length}`
+            : `${rows.length} row${rows.length === 1 ? '' : 's'}`}
+        </span>
+      ) : null}
     </div>
   )
 }

@@ -29,7 +29,7 @@ faces chosen to *evoke* each era:
 | `orbitron` | Orbitron | 32-bit / disc era | SIL OFL 1.1 |
 
 > ✅ **All five ship with Oneirodex — you do not install them.** The `.ttf`
-> files are vendored in `gametheca/setup/fonts/` (with `OFL.txt`) and copied
+> files are vendored in `oneirodex/setup/fonts/` (with `OFL.txt`) and copied
 > into the runtime fonts folder on **every** startup, so a fresh volume
 > repopulates itself. No network, no admin step, works air-gapped.
 >
@@ -46,10 +46,10 @@ faces chosen to *evoke* each era:
 | Face not in the bundle | Falls back to a background download from google/fonts; `FETCH_FONTS_ON_BOOT=false` disables that half only |
 | Copy fails | Logged, boot continues — a missing face degrades to the next family in its CSS stack |
 
-Runtime location is `gametheca/static/library/fonts/` (override with
+Runtime location is `oneirodex/static/library/fonts/` (override with
 `FONT_PATH`). Under Compose that lives inside the volume mounted at
 `LIBRARY_HOST_PATH`. That path is gitignored, which is exactly why the bundled
-copy exists: the tracked source of truth is `gametheca/setup/fonts/`.
+copy exists: the tracked source of truth is `oneirodex/setup/fonts/`.
 
 Filenames are load-bearing — `missing_builtin_fonts()` matches the `file` field
 in `BUILT_IN_FONTS`:
@@ -62,7 +62,7 @@ ShareTechMono-Regular.ttf
 Orbitron-Variable.ttf
 ```
 
-> **Adding a face to the registry?** Put the file in `gametheca/setup/fonts/`
+> **Adding a face to the registry?** Put the file in `oneirodex/setup/fonts/`
 > in the same commit. `tests/test_font_bundle.py` fails on a registered face
 > with no bundled file, because that combination is what put "not installed" in
 > front of members in the first place.
@@ -134,7 +134,7 @@ Systems with no opinion fall back to `system-ui`.
 | `DELETE` | `/admin/api/theme/fonts/<filename>` | admin — remove an uploaded face |
 
 `fonts.css` is the route that makes the feature visible: it emits the
-`@font-face` blocks for every installed face and sets `--gt-font-family` from
+`@font-face` blocks for every installed face and sets `--od-font-family` from
 the caller's preference (`?font=<id>` overrides it; unknown ids fall back to
 `system-ui`). Installing the files and listing them in the picker does nothing
 on its own — without this stylesheet no page ever declares the families.

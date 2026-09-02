@@ -7,12 +7,12 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import select
-from gametheca import db
-from gametheca.models import (
+from oneirodex import db
+from oneirodex.models import (
     DownloadRequest, Game, User, GlobalSettings, Library, 
     GameUpdate, GameExtra
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -148,7 +148,7 @@ def global_settings(db_session):
     carries a single-row index, so adding one here failed outright whenever a
     row already existed.
     """
-    from gametheca.utils.global_settings import global_settings_row_or_create
+    from oneirodex.utils.global_settings import global_settings_row_or_create
 
     settings = global_settings_row_or_create()
     settings.update_folder_name = 'Updates'
@@ -343,7 +343,7 @@ class TestSecurityValidation:
             # Should not return 200 - either 400 (validation error) or 302/404 (handled)
             assert response.status_code != 200
     
-    @patch('gametheca.routes_downloads_ext.initiate.log_system_event')
+    @patch('oneirodex.routes_downloads_ext.initiate.log_system_event')
     def test_security_logging(self, mock_log, client, authenticated_user):
         """Test that security violations are properly logged."""
         authenticate_user(client, authenticated_user)

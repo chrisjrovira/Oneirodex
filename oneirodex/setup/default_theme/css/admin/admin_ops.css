@@ -1,0 +1,217 @@
+/* Ops glance — admin dashboard density, glass panels */
+/* Literal fallbacks so the board stays readable if theme vars are missing. */
+/* Keep in sync with frontend/ops-glance/src/ops-glance.css (Docker build source of truth). */
+
+.container-settings-dashboard > h1 {
+    color: var(--text-white, var(--od-text));
+    font-size: var(--od-font-4xl);
+    font-weight: bold;
+    margin-bottom: var(--spacing-lg, 1rem);
+    text-shadow: 0 0 10px var(--primary-brand-50, rgba(100, 160, 255, 0.5));
+}
+
+.ops-glance {
+    color: var(--text-white, var(--od-text));
+}
+
+.ops-glance-fallback {
+    color: var(--text-white, var(--od-text));
+    opacity: 0.85;
+    padding: 1rem 0;
+}
+
+.ops-glance__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.ops-glance__title {
+    margin: 0;
+    font-size: var(--od-font-xl);
+    font-weight: 500;
+    color: var(--text-white);
+}
+
+.ops-glance__header button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--primary-brand-30);
+    background: var(--primary-brand-20);
+    color: var(--text-white);
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ops-glance__header button:hover:not(:disabled) {
+    background: var(--primary-brand-40);
+    box-shadow: 0 0 12px var(--primary-brand-30);
+}
+
+.ops-glance__header button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ops-glance__grid,
+.ops-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.ops-panel {
+    background: var(--container-glass-primary);
+    backdrop-filter: var(--backdrop-blur);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-glass);
+}
+
+.ops-panel h2 {
+    margin: 0 0 var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    font-size: var(--od-font-lg);
+    font-weight: 500;
+    color: var(--text-white);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.ops-panel ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.ops-panel li {
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.45;
+}
+
+.ops-panel p {
+    margin: 0 0 var(--spacing-sm);
+}
+
+.ops-panel a {
+    color: var(--btn-primary);
+    text-decoration: none;
+}
+
+.ops-panel a:hover {
+    text-decoration: underline;
+}
+
+.ops-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-light);
+    font-size: var(--od-font-base);
+}
+
+.ops-status strong {
+    font-weight: 600;
+}
+
+.ops-status span {
+    opacity: 0.85;
+    font-size: var(--od-font-md);
+}
+
+.ops-status--good,
+.ops-status-good {
+    background: var(--alert-success-bg);
+    border-color: var(--status-running);
+    color: var(--status-running);
+}
+
+.ops-status--warn,
+.ops-status-warn {
+    background: var(--alert-warning-bg);
+    border-color: var(--status-pending);
+    color: var(--status-pending);
+}
+
+.ops-status--bad,
+.ops-status-bad {
+    background: var(--alert-danger-bg);
+    border-color: var(--status-stopped);
+    color: var(--status-stopped);
+}
+
+.ops-issue--good {
+    color: var(--status-running);
+}
+
+.ops-issue--warn {
+    color: var(--status-pending);
+}
+
+.ops-issue--bad {
+    color: var(--status-stopped);
+}
+
+.ops-deep-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.ops-deep-links a {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-light);
+    background: var(--container-glass-secondary);
+    color: var(--text-white);
+    text-decoration: none;
+    font-size: var(--od-font-md);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.ops-deep-links a:hover {
+    background: var(--primary-brand-20);
+    border-color: var(--primary-brand-30);
+}
+
+.ops-glance [role="alert"] {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    background: var(--alert-danger-bg);
+    border: 1px solid var(--status-stopped);
+    color: var(--text-white);
+}
+
+.ops-glance [role="alert"] button {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--status-stopped);
+    background: transparent;
+    color: var(--text-white);
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .ops-glance__grid,
+    .ops-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .container-settings-dashboard > h1 {
+        font-size: var(--od-font-2xl);
+    }
+}

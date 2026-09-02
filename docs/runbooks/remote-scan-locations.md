@@ -119,9 +119,9 @@ sudo mkdir -p /mnt/nas/roms
 Keep credentials out of `/etc/fstab` — put them in a root-only file:
 
 ```bash
-sudo install -m 600 /dev/null /etc/gametheca-nas.cred
-sudo tee /etc/gametheca-nas.cred >/dev/null <<'EOF'
-username=gametheca
+sudo install -m 600 /dev/null /etc/oneirodex-nas.cred
+sudo tee /etc/oneirodex-nas.cred >/dev/null <<'EOF'
+username=oneirodex
 password=REPLACE_ME
 EOF
 ```
@@ -129,7 +129,7 @@ EOF
 `/etc/fstab`:
 
 ```
-//nas.lan/roms  /mnt/nas/roms  cifs  credentials=/etc/gametheca-nas.cred,uid=gametheca,gid=gametheca,ro,vers=3.0,_netdev,nofail,x-systemd.automount  0  0
+//nas.lan/roms  /mnt/nas/roms  cifs  credentials=/etc/oneirodex-nas.cred,uid=oneirodex,gid=oneirodex,ro,vers=3.0,_netdev,nofail,x-systemd.automount  0  0
 ```
 
 - `uid=`/`gid=` — SMB has no shared user database, so ownership is assigned at
@@ -166,7 +166,7 @@ blocks the scan thread indefinitely instead of failing.
 GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|NAS Games=/mnt/nas/games
 ```
 
-Restart Oneirodex (`./startweb.sh`, or `systemctl restart gametheca`).
+Restart Oneirodex (`./startweb.sh`, or `systemctl restart oneirodex`).
 
 ---
 
@@ -188,19 +188,19 @@ One-off:
 
 ```bash
 mkdir -p ~/mnt/roms
-mount_smbfs //gametheca@nas.lan/roms ~/mnt/roms
+mount_smbfs //oneirodex@nas.lan/roms ~/mnt/roms
 ```
 
 Persistent, via `/etc/auto_master` + an autofs map:
 
 ```bash
-# /etc/auto_gametheca
+# /etc/auto_oneirodex
 /-  auto_smb  -nosuid,ro
 ```
 
 ```bash
 # append to /etc/auto_master
-/-   auto_gametheca
+/-   auto_oneirodex
 ```
 
 ```bash
@@ -234,7 +234,7 @@ never mounted. `install-windows.ps1` warns when it spots a mapped drive in
 If the share needs credentials, give the service account persistent access:
 
 ```
-cmdkey /add:nas /user:nas\gametheca /pass
+cmdkey /add:nas /user:nas\oneirodex /pass
 ```
 
 Run that **as the account Oneirodex runs under** — credentials stored this way

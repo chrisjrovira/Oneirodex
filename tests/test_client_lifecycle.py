@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from gametheca.utils import client_lifecycle as cl
+from oneirodex.utils import client_lifecycle as cl
 
 
 def test_save_lifecycle_records_merges_partial_snapshot(tmp_path, monkeypatch):

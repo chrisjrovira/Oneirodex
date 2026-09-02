@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   addedCountOf,
+  burstToastMessages,
   groupLibraryScanToasts,
   groupedToastMessage,
   libraryKeyOf,
@@ -93,5 +94,35 @@ describe('groupLibraryScanToasts', () => {
     // The hook marks group.rows — if grouping dropped rows, the unmarked ones
     // would toast again on the next poll.
     expect(groups[0].rows.map((r) => r.id)).toEqual([1, 2])
+  })
+})
+
+describe('burstToastMessages', () => {
+  it('keeps five libraries as named toasts', () => {
+    const groups = groupLibraryScanToasts(
+      ['A', 'B', 'C', 'D', 'E'].map((library, i) => ({
+        id: i + 1,
+        library,
+        count: 1,
+      })),
+    )
+    const burst = burstToastMessages(groups)
+    expect(burst).toHaveLength(5)
+    expect(burst.every((item) => item.count === 1)).toBe(true)
+  })
+
+  it('collapses six libraries into one count', () => {
+    const groups = groupLibraryScanToasts(
+      ['A', 'B', 'C', 'D', 'E', 'F'].map((library, i) => ({
+        id: i + 1,
+        library,
+        count: 2,
+      })),
+    )
+    const burst = burstToastMessages(groups)
+    expect(burst).toHaveLength(1)
+    expect(burst[0].message).toBe('6 notifications')
+    expect(burst[0].count).toBe(6)
+    expect(burst[0].rows).toHaveLength(6)
   })
 })

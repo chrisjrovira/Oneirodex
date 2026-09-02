@@ -7,13 +7,13 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Library, UnmatchedFolder
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.match_proposal import (
+from oneirodex.models import Library, UnmatchedFolder
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.match_proposal import (
     MATCH_REASON_CATALOG_DISAGREEMENT,
     format_why_unmatched,
 )
-from gametheca.utils.software_identify import (
+from oneirodex.utils.software_identify import (
     apply_catalog_identity_to_game,
     corroborate_igdb_with_catalogs,
     titles_identify_agree,
@@ -45,7 +45,7 @@ def test_format_why_unmatched_catalog_disagreement():
     assert 'MobyGames' in text
 
 
-@patch('gametheca.utils.software_identify.gather_catalog_identify_signals')
+@patch('oneirodex.utils.software_identify.gather_catalog_identify_signals')
 def test_corroborate_disagree_when_folder_exact_is_other_product(mock_gather):
     mock_gather.return_value = {
         'rows': [{
@@ -66,7 +66,7 @@ def test_corroborate_disagree_when_folder_exact_is_other_product(mock_gather):
     assert result['disagreed'][0]['name'] == 'Doom'
 
 
-@patch('gametheca.utils.software_identify.gather_catalog_identify_signals')
+@patch('oneirodex.utils.software_identify.gather_catalog_identify_signals')
 def test_corroborate_agree_when_titles_match(mock_gather):
     mock_gather.return_value = {
         'rows': [{
@@ -88,7 +88,7 @@ def test_corroborate_agree_when_titles_match(mock_gather):
     assert result['agreed'][0]['steam_app_id'] == 504230
 
 
-@patch('gametheca.utils.software_identify.gather_catalog_identify_signals')
+@patch('oneirodex.utils.software_identify.gather_catalog_identify_signals')
 def test_corroborate_remaster_subtitle_is_noise_not_veto(mock_gather):
     mock_gather.return_value = {
         'rows': [{
@@ -109,7 +109,7 @@ def test_corroborate_remaster_subtitle_is_noise_not_veto(mock_gather):
     assert result['disagreed'] == []
 
 
-@patch('gametheca.utils.software_identify.db.session')
+@patch('oneirodex.utils.software_identify.db.session')
 def test_apply_catalog_identity_stamps_steam_and_moby(mock_session):
     game = MagicMock()
     game.uuid = 'game-uuid'
@@ -135,16 +135,16 @@ def test_apply_catalog_identity_stamps_steam_and_moby(mock_session):
     assert added.url_type == 'mobygames'
 
 
-@patch('gametheca.utils.game_core.select_best_match')
+@patch('oneirodex.utils.game_core.select_best_match')
 @patch(
-    'gametheca.utils.game_core.corroborate_igdb_with_catalogs',
+    'oneirodex.utils.game_core.corroborate_igdb_with_catalogs',
 )
-@patch('gametheca.utils.game_core.notify_admins_new_game')
-@patch('gametheca.utils.game_core.smart_process_images_for_game')
-@patch('gametheca.utils.game_core.get_folder_size_in_bytes_updates', return_value=0)
-@patch('gametheca.utils.game_core.read_first_nfo_content', return_value=None)
-@patch('gametheca.utils.game_core.make_igdb_api_request')
-@patch('gametheca.utils.game_core.create_game_instance')
+@patch('oneirodex.utils.game_core.notify_admins_new_game')
+@patch('oneirodex.utils.game_core.smart_process_images_for_game')
+@patch('oneirodex.utils.game_core.get_folder_size_in_bytes_updates', return_value=0)
+@patch('oneirodex.utils.game_core.read_first_nfo_content', return_value=None)
+@patch('oneirodex.utils.game_core.make_igdb_api_request')
+@patch('oneirodex.utils.game_core.create_game_instance')
 def test_retrieve_catalog_disagreement_goes_to_review(
     mock_create,
     mock_api,
@@ -159,7 +159,7 @@ def test_retrieve_catalog_disagreement_goes_to_review(
     sample_library,
     tmp_path,
 ):
-    from gametheca.utils.game_core import retrieve_and_save_game
+    from oneirodex.utils.game_core import retrieve_and_save_game
 
     folder = tmp_path / 'Test Game'
     folder.mkdir()
@@ -188,7 +188,7 @@ def test_retrieve_catalog_disagreement_goes_to_review(
                 'use_local_metadata': False,
                 'write_local_metadata': False,
                 'use_local_images': False,
-                'local_metadata_filename': 'gametheca.json',
+                'local_metadata_filename': 'oneirodex.json',
                 'propose_only_scan': False,
             },
         )
@@ -200,7 +200,7 @@ def test_retrieve_catalog_disagreement_goes_to_review(
     ).one_or_none()
     assert row is not None
     assert row.match_reason == MATCH_REASON_CATALOG_DISAGREEMENT
-    sidecar = folder / 'gametheca.proposal.json'
+    sidecar = folder / 'oneirodex.proposal.json'
     assert sidecar.is_file()
     body = sidecar.read_text(encoding='utf-8')
     assert 'catalog_disagreement' in body

@@ -114,35 +114,35 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
   }
 
   return (
-    <section className="gt-pccheats" aria-labelledby="gt-pccheats-heading">
-      <h2 id="gt-pccheats-heading">Cheats &amp; tweaks</h2>
+    <section className="od-pccheats" aria-labelledby="od-pccheats-heading">
+      <h2 id="od-pccheats-heading">Cheats &amp; tweaks</h2>
 
-      {stance ? <p className="gt-pccheats__stance">{stance}</p> : null}
+      {stance ? <p className="od-pccheats__stance">{stance}</p> : null}
 
       <PageStatus
         loading={loading}
         error={error}
         loadingMessage="Loading cheats…"
-        className="gt-pccheats__status"
+        className="od-pccheats__status"
       />
 
       {!loading && !error && cheats.length === 0 ? (
-        <p className="gt-pccheats__muted">
+        <p className="od-pccheats__muted">
           No cheats recorded for this title yet.
           {canEdit ? ' Add one below.' : ''}
         </p>
       ) : null}
 
       {cheats.length > 0 ? (
-        <ul className="gt-pccheats__list">
+        <ul className="od-pccheats__list">
           {cheats.map((cheat) => (
-            <li key={cheat.id} className="gt-pccheats__item">
-              <div className="gt-pccheats__head">
-                <strong className="gt-pccheats__label">{cheat.label}</strong>
-                <span className="gt-pccheats__method">{methodLabel(cheat.method)}</span>
+            <li key={cheat.id} className="od-pccheats__item">
+              <div className="od-pccheats__head">
+                <strong className="od-pccheats__label">{cheat.label}</strong>
+                <span className="od-pccheats__method">{methodLabel(cheat.method)}</span>
                 {cheat.single_player_only ? (
                   <span
-                    className="gt-pccheats__flag"
+                    className="od-pccheats__flag"
                     title="Recorded for single-player use"
                   >
                     single-player
@@ -151,12 +151,12 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
               </div>
 
               {cheat.payload ? (
-                <div className="gt-pccheats__payload">
+                <div className="od-pccheats__payload">
                   {/* Verbatim and monospaced — it gets typed or pasted exactly. */}
                   <code>{cheat.payload}</code>
                   <button
                     type="button"
-                    className="gt-btn gt-btn--ghost gt-pccheats__copy"
+                    className="od-btn od-btn--ghost od-pccheats__copy"
                     onClick={() => void copyPayload(cheat)}
                   >
                     {copied === cheat.id ? 'Copied' : 'Copy'}
@@ -164,12 +164,12 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
                 </div>
               ) : null}
 
-              {cheat.notes ? <p className="gt-pccheats__notes">{cheat.notes}</p> : null}
+              {cheat.notes ? <p className="od-pccheats__notes">{cheat.notes}</p> : null}
 
               {canEdit ? (
                 <button
                   type="button"
-                  className="gt-btn gt-btn--ghost gt-pccheats__remove"
+                  className="od-btn od-btn--ghost od-pccheats__remove"
                   onClick={() => void removeCheat(cheat.id)}
                 >
                   Remove
@@ -181,8 +181,8 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
       ) : null}
 
       {canEdit ? (
-        <form className="gt-pccheats__form" onSubmit={addCheat}>
-          <h3 className="gt-pccheats__form-title">Add a cheat note</h3>
+        <form className="od-pccheats__form" onSubmit={addCheat}>
+          <h3 className="od-pccheats__form-title">Add a cheat note</h3>
 
           <label>
             What it does
@@ -234,7 +234,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
 
           <button
             type="submit"
-            className="gt-btn gt-btn--primary"
+            className="od-btn od-btn--primary"
             disabled={saving || !draft.label.trim()}
           >
             {saving ? 'Saving…' : 'Add cheat'}

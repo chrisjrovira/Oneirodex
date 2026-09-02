@@ -2,13 +2,13 @@
 
 from types import SimpleNamespace
 
-from gametheca.utils.rom_language import (
+from oneirodex.utils.rom_language import (
     apply_rom_language_fields,
     classify_patch_file,
     parse_rom_language_tags,
     preferred_locale_matches,
 )
-from gametheca.utils.rom_name_peel import parse_console_rom_label
+from oneirodex.utils.rom_name_peel import parse_console_rom_label
 
 
 def test_parse_japan_region_implies_ja():

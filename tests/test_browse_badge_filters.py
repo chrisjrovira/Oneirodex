@@ -6,14 +6,14 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca.models import Game, GameUpdate, Library, PlayerPerspective, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.browse_filters import (
+from oneirodex.models import Game, GameUpdate, Library, PlayerPerspective, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.browse_filters import (
     NEW_IMPORT_WINDOW_DAYS,
     RELEASE_WINDOW_DAYS,
     apply_badge_filters,
 )
-from gametheca.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
+from oneirodex.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
 
 
 @pytest.fixture
@@ -221,7 +221,7 @@ def test_apply_badge_filters_helper_noop(db_session, badge_game):
 def test_browse_games_needs_translation_filter(
     client, db_session, badge_user, badge_game, badge_library,
 ):
-    from gametheca.models import UserPreference
+    from oneirodex.models import UserPreference
 
     _login(client, badge_user)
     prefs = UserPreference(user_id=badge_user.id, preferred_game_locale='en-US')
@@ -273,7 +273,7 @@ def test_browse_games_needs_translation_filter(
 def test_browse_games_includes_patch_flag(
     client, db_session, badge_user, badge_library,
 ):
-    from gametheca.models import GameExtra
+    from oneirodex.models import GameExtra
 
     _login(client, badge_user)
     patched = Game(

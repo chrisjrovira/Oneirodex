@@ -1,6 +1,6 @@
 """Steam requirement HTML and language-string parsing — no store prices."""
 
-from gametheca.utils.steam_store_specs import (
+from oneirodex.utils.steam_store_specs import (
     merge_store_specs,
     parse_supported_languages,
     public_store_specs,

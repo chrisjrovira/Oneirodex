@@ -7,15 +7,15 @@
 
 A full clone can balloon past **1 GB** from regenerable caches while the **shipped** surface stays small: Python app + vendored WebRetro cores (~72 MB) + SPA built inside Docker. Local `node_modules` and Tauri `target/` are **dev-only**.
 
-**Unraid host disk is separate:** if the array/cache is ~99% full, free space on the **NAS** before `git pull` / `docker compose build` — wiping workspace caches here does not free array capacity. See [unraid-deploy.md § Deploy gates](unraid-deploy.md#deploy-gates-operator-checklist). The live stack is `/mnt/user/infernal-data-streams/_projects/Oneirodex` (`Z:\_projects\Oneirodex` on Windows). Games are `/mnt/user/infernal-data-streams/_software/_games`, not the repo. `/mnt/user/isos/gametheca/` is retired.
+**Unraid host disk is separate:** if the array/cache is ~99% full, free space on the **NAS** before `git pull` / `docker compose build` — wiping workspace caches here does not free array capacity. See [unraid-deploy.md § Deploy gates](unraid-deploy.md#deploy-gates-operator-checklist). The live stack is `/mnt/user/infernal-data-streams/_projects/Oneirodex` (`Z:\_projects\Oneirodex` on Windows). Games are `/mnt/user/infernal-data-streams/_software/_games`, not the repo. `/mnt/user/isos/oneirodex/` is retired.
 
 ## KEEP (never delete)
 
 | Path | Why |
 |---|---|
 | `.git/` | History; optional `git gc` only (see below) |
-| `gametheca/static/vendor/webretro/` | Honesty matrix + browser play; image expects these cores |
-| Source trees (`gametheca/`, `frontend/`, `clients/desktop/src*`, `tests/`, `docs/`) | Product |
+| `oneirodex/static/vendor/webretro/` | Honesty matrix + browser play; image expects these cores |
+| Source trees (`oneirodex/`, `frontend/`, `clients/desktop/src*`, `tests/`, `docs/`) | Product |
 | `requirements.txt` / lockfiles / `.env*.example` | Reproducible installs |
 | Tracked DAT/docs policy files | Operator guides — not regenerable caches |
 
@@ -26,7 +26,7 @@ A full clone can balloon past **1 GB** from regenerable caches while the **shipp
 | `clients/desktop/src-tauri/target/` | ~0.5–1 GB | `cd clients/desktop && npm ci && npm run tauri:dev` (or `tauri:build`) |
 | `**/node_modules/` | hundreds of MB | `npm ci` in `frontend/member-app`, `admin-app`, `ops-glance`, `clients/desktop` |
 | `**/__pycache__/`, `*.py[cod]`, `.pytest_cache/`, `.ruff_cache/`, `.mypy_cache/` | small | next pytest / import |
-| Host `gametheca/static/dist/` | if present | Docker build or local `npm run build` in each frontend app |
+| Host `oneirodex/static/dist/` | if present | Docker build or local `npm run build` in each frontend app |
 | Vitest/Vite caches under `node_modules/.vite/` | tiny | next `npm test` / `vite` |
 | A literal `%TEMP%/` directory at the repo root | varies | nothing — it is scratch, see below |
 
@@ -57,7 +57,7 @@ Get-ChildItem -Recurse -Directory -Filter __pycache__ -ErrorAction SilentlyConti
 | Concern | Fact |
 |---|---|
 | Build context | `.dockerignore` must exclude `node_modules/`, `clients/`, `**/src-tauri/target/`, host `static/dist/`, `.git/` |
-| Image contents | Multi-stage `npm ci` + `pip install`; WebRetro cores **copied in** from `gametheca/static/vendor/webretro/` |
+| Image contents | Multi-stage `npm ci` + `pip install`; WebRetro cores **copied in** from `oneirodex/static/vendor/webretro/` |
 | Unraid after local wipe | **No effect** on running container. Rebuild image from clean context: `docker compose build --no-cache` (or Hub pull). Do **not** bind-mount an empty cores dir over image cores — see [webretro-cores.md](webretro-cores.md) |
 
 ## OPTIONAL shrink (caveats)

@@ -1,6 +1,6 @@
 """Select best IGDB candidate using confidence scoring (no DB)."""
 
-from gametheca.utils.match_scoring import select_best_match
+from oneirodex.utils.match_scoring import select_best_match
 
 
 def test_select_best_high_confidence():

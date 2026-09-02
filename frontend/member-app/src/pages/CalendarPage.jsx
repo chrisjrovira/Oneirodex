@@ -21,8 +21,6 @@ const VIEWS = [
   { id: 'month', label: 'Month' },
 ]
 
-/** How long each cover holds before a busy day shows the next one. */
-const DAY_ROTATE_MS = 10_000
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export function readCalendarView() {
@@ -127,7 +125,7 @@ function ReleaseTitle({ item }) {
   const href = igdbHref(item)
   if (href) {
     return (
-      <a className="gt-calendar__title-link" href={href} target="_blank" rel="noreferrer">
+      <a className="od-calendar__title-link" href={href} target="_blank" rel="noreferrer">
         <strong>{item.name || 'Untitled'}</strong>
       </a>
     )
@@ -155,23 +153,23 @@ export function calendarEmptyMessage(reason) {
 
 function ReleaseMeta({ item }) {
   if (!item.window) return null
-  return <span className="gt-calendar__meta">{item.window}</span>
+  return <span className="od-calendar__meta">{item.window}</span>
 }
 
 function ListView({ releases, emptyReason }) {
   if (releases.length === 0) {
-    return <p className="gt-calendar__empty">{calendarEmptyMessage(emptyReason)}</p>
+    return <p className="od-calendar__empty">{calendarEmptyMessage(emptyReason)}</p>
   }
   return (
-    <ul className="gt-calendar__list">
+    <ul className="od-calendar__list">
       {releases.map((item, index) => {
         const dateLabel = formatLocaleDate(item.first_release_date, { fallback: '' })
         return (
-          <li key={releaseKey(item, index)} className="gt-calendar__row">
+          <li key={releaseKey(item, index)} className="od-calendar__row">
             <time dateTime={item.first_release_date || undefined}>
               {dateLabel || 'Date TBA'}
             </time>
-            <div className="gt-calendar__body">
+            <div className="od-calendar__body">
               <ReleaseTitle item={item} />
               <ReleaseMeta item={item} />
             </div>
@@ -185,43 +183,41 @@ function ListView({ releases, emptyReason }) {
 /**
  * The artwork for one day's cell (W28).
  *
- * The month grid drew up to three dots per day, so every busy day looked
- * identical to every other busy day and the grid carried no information beyond
- * "something happens here" — the whole point of a month view is to be readable
- * at a glance, and dots are not readable, they are a legend you have to click.
- *
- * A day with several releases cycles through them. The index comes from the
- * caller, not from a timer here: thirty cells each running their own interval
- * is thirty timers for one effect, and cells rotating at slightly different
- * moments reads as flicker rather than as a rotation.
+ * Busy days used to auto-rotate a single cover. That made the art too small to
+ * read and hid every title but one. The cell now stacks every cover in a
+ * scrollable column so you can scrub the day's games in place; the side panel
+ * still lists the full titles for the selected day.
  */
-function DayArt({ releases, rotation }) {
-  const count = releases.length
-  const item = releases[rotation % count]
-  const cover = item?.cover_url
-
+function DayArt({ releases }) {
   return (
-    <span className="gt-calendar__day-art" title={item?.name || undefined}>
-      {cover ? (
-        <img
-          className="gt-calendar__day-cover"
-          // Keyed on the URL so swapping covers restarts the fade rather than
-          // cross-dissolving into a half-loaded image.
-          key={cover}
-          src={cover}
-          alt=""
-          loading="lazy"
-        />
-      ) : (
-        <span className="gt-calendar__day-cover gt-calendar__day-cover--blank" aria-hidden="true">
-          {(item?.name || '?').slice(0, 1).toUpperCase()}
-        </span>
-      )}
-      {count > 1 ? (
-        <span className="gt-calendar__day-more" aria-hidden="true">
-          +{count - 1}
-        </span>
-      ) : null}
+    <span className="od-calendar__day-stack">
+      {releases.map((item, index) => {
+        const cover = item?.cover_url
+        const key = `${item?.igdb_id || item?.slug || item?.name || 'release'}-${index}`
+        return (
+          <span
+            key={key}
+            className="od-calendar__day-art"
+            title={item?.name || undefined}
+          >
+            {cover ? (
+              <img
+                className="od-calendar__day-cover"
+                src={cover}
+                alt=""
+                loading="lazy"
+              />
+            ) : (
+              <span
+                className="od-calendar__day-cover od-calendar__day-cover--blank"
+                aria-hidden="true"
+              >
+                {(item?.name || '?').slice(0, 1).toUpperCase()}
+              </span>
+            )}
+          </span>
+        )
+      })}
     </span>
   )
 }
@@ -233,31 +229,6 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
     [focusYear, focusMonth, byDate],
   )
   const [selectedKey, setSelectedKey] = useState(null)
-  const [rotation, setRotation] = useState(0)
-
-  // One timer for the whole grid — see DayArt. Only started when some day
-  // actually has more than one release, so a quiet month runs no timer at all.
-  const rotates = useMemo(
-    () => cells.some((cell) => cell.inMonth && cell.releases.length > 1),
-    [cells],
-  )
-
-  useEffect(() => {
-    if (!rotates) return undefined
-    if (
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      // Auto-advancing artwork is motion nobody asked for; the day panel below
-      // still lists every title, so nothing is lost by holding on the first.
-      return undefined
-    }
-    const timer = window.setInterval(
-      () => setRotation((value) => value + 1),
-      DAY_ROTATE_MS,
-    )
-    return () => window.clearInterval(timer)
-  }, [rotates])
 
   // Today, hoisted out of the effect below.
   // It was computed there and thrown away, so the one date every calendar marks
@@ -275,11 +246,11 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
   const selectedReleases = selected?.releases || []
 
   return (
-    <div className="gt-calendar__month">
-      <div className="gt-calendar__month-nav">
+    <div className="od-calendar__month">
+      <div className="od-calendar__month-nav">
         <button
           type="button"
-          className="gt-calendar__nav-btn"
+          className="od-calendar__nav-btn"
           aria-label="Previous month"
           onClick={() => {
             const prev = new Date(focusYear, focusMonth - 1, 1, 12)
@@ -288,10 +259,10 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
         >
           ‹
         </button>
-        <h3 className="gt-calendar__month-label">{monthLabel(focusYear, focusMonth)}</h3>
+        <h3 className="od-calendar__month-label">{monthLabel(focusYear, focusMonth)}</h3>
         <button
           type="button"
-          className="gt-calendar__nav-btn"
+          className="od-calendar__nav-btn"
           aria-label="Next month"
           onClick={() => {
             const next = new Date(focusYear, focusMonth + 1, 1, 12)
@@ -302,15 +273,15 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
         </button>
       </div>
 
-      <div className="gt-calendar__grid" role="grid" aria-label="Release month">
-        <div className="gt-calendar__weekday-row" role="row">
+      <div className="od-calendar__grid" role="grid" aria-label="Release month">
+        <div className="od-calendar__weekday-row" role="row">
           {WEEKDAY_LABELS.map((label) => (
-            <div key={label} className="gt-calendar__weekday" role="columnheader">
+            <div key={label} className="od-calendar__weekday" role="columnheader">
               {label}
             </div>
           ))}
         </div>
-        <div className="gt-calendar__day-grid" role="rowgroup">
+        <div className="od-calendar__day-grid" role="rowgroup">
           {cells.map((cell) => {
             const count = cell.releases.length
             const isSelected = cell.inMonth && cell.dateKey === selectedKey
@@ -321,7 +292,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
                 type="button"
                 role="gridcell"
                 className={[
-                  'gt-calendar__day',
+                  'od-calendar__day',
                   cell.inMonth ? '' : 'is-out',
                   count ? 'has-releases' : '',
                   isSelected ? 'is-selected' : '',
@@ -342,16 +313,14 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
                   if (cell.inMonth) setSelectedKey(cell.dateKey)
                 }}
               >
-                <span className="gt-calendar__day-num">{cell.day}</span>
-                {count > 0 ? (
-                  <DayArt releases={cell.releases} rotation={rotation} />
-                ) : null}
+                <span className="od-calendar__day-num">{cell.day}</span>
+                {count > 0 ? <DayArt releases={cell.releases} /> : null}
                 {/* How busy the day is, stated. The artwork alone says "there
                     is something here"; a day with nine releases and a day with
                     one looked identical until you clicked it. From two up only
                     — a "1" on every single-release day is noise. */}
                 {count > 1 ? (
-                  <span className="gt-calendar__day-count" aria-hidden="true">
+                  <span className="od-calendar__day-count" aria-hidden="true">
                     {count}
                   </span>
                 ) : null}
@@ -361,18 +330,18 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
         </div>
       </div>
 
-      <div className="gt-calendar__day-panel" aria-live="polite">
+      <div className="od-calendar__day-panel" aria-live="polite">
         {selected ? (
           <>
-            <h4 className="gt-calendar__day-panel-title">
+            <h4 className="od-calendar__day-panel-title">
               {formatLocaleDate(selected.dateKey, { fallback: selected.dateKey })}
             </h4>
             {selectedReleases.length === 0 ? (
-              <p className="gt-calendar__empty">No releases on this day.</p>
+              <p className="od-calendar__empty">No releases on this day.</p>
             ) : (
-              <ul className="gt-calendar__day-list">
+              <ul className="od-calendar__day-list">
                 {selectedReleases.map((item, index) => (
-                  <li key={releaseKey(item, index)} className="gt-calendar__day-item">
+                  <li key={releaseKey(item, index)} className="od-calendar__day-item">
                     <ReleaseTitle item={item} />
                     <ReleaseMeta item={item} />
                   </li>
@@ -381,7 +350,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
             )}
           </>
         ) : (
-          <p className="gt-calendar__empty">
+          <p className="od-calendar__empty">
             {releases.length === 0
               ? calendarEmptyMessage(emptyReason)
               : 'Select a day with a marker to see titles.'}
@@ -452,7 +421,7 @@ export function CalendarPage({ shellConfig = {} }) {
           onSelectView={selectView}
           summary={`${daysBehind} back / ${daysAhead} ahead`}
           filters={
-            <div className="gt-calendar__window" role="group" aria-label="Calendar window">
+            <div className="od-calendar__window" role="group" aria-label="Calendar window">
               <label>
                 Ahead
                 <select
@@ -486,17 +455,20 @@ export function CalendarPage({ shellConfig = {} }) {
           filterCount={windowIsDefault ? 0 : 1}
         />
       ) : null}
-    <div className="gt-more-page gt-calendar">
+    <div
+      className="od-more-page od-calendar od-calendar--fill"
+      data-view={view}
+    >
       {useNewChrome ? null : (
-        <div className="gt-page-header gt-calendar__header">
+        <div className="od-page-header od-calendar__header">
           <div>
             <h1>Release calendar</h1>
-            <p className="gt-more-page__lede">
+            <p className="od-more-page__lede">
               Upcoming and recent releases from IGDB (metadata only).
             </p>
           </div>
-          <div className="gt-calendar__controls">
-            <div className="gt-calendar__views" role="group" aria-label="Calendar view">
+          <div className="od-calendar__controls">
+            <div className="od-calendar__views" role="group" aria-label="Calendar view">
               {VIEWS.map(({ id, label }) => (
                 <button
                   key={id}
@@ -509,7 +481,7 @@ export function CalendarPage({ shellConfig = {} }) {
                 </button>
               ))}
             </div>
-            <div className="gt-calendar__window" role="group" aria-label="Calendar window">
+            <div className="od-calendar__window" role="group" aria-label="Calendar window">
               <label>
                 Ahead
                 <select
@@ -552,10 +524,10 @@ export function CalendarPage({ shellConfig = {} }) {
       />
 
       {!error && payload ? (
-        <section className="gt-calendar__section" aria-labelledby="calendar-releases-heading">
-          <div className="gt-calendar__section-head">
+        <section className="od-calendar__section" aria-labelledby="calendar-releases-heading">
+          <div className="od-calendar__section-head">
             <h2 id="calendar-releases-heading">Releases</h2>
-            <span className="gt-calendar__count">{payload.count ?? releases.length}</span>
+            <span className="od-calendar__count">{payload.count ?? releases.length}</span>
           </div>
           {view === 'list' ? (
             <ListView releases={releases} emptyReason={payload?.empty_reason} />

@@ -9,8 +9,8 @@ import pytest
 from flask import json
 from sqlalchemy import text
 
-from gametheca.models import Game, Image, Library, LibraryPlatform, User
-from gametheca.utils.image_kinds import (
+from oneirodex.models import Game, Image, Library, LibraryPlatform, User
+from oneirodex.utils.image_kinds import (
     IMAGE_KIND_ORDER,
     IMAGE_KINDS,
     normalize_image_kind,
@@ -163,7 +163,7 @@ class TestGameImagesKindFilter:
 
 
 class TestArtworkApplyKinds:
-    @patch('gametheca.utils.artwork_apply.get_provider')
+    @patch('oneirodex.utils.artwork_apply.get_provider')
     def test_persist_box_kind(self, mock_get_provider, app, db_session, sample_game, tmp_path):
         provider = MagicMock()
         provider.is_enabled.return_value = True
@@ -174,7 +174,7 @@ class TestArtworkApplyKinds:
 
         with app.test_request_context('/'):
             app.config['IMAGE_SAVE_PATH'] = str(tmp_path)
-            from gametheca.utils.artwork_apply import apply_cover_from_url
+            from oneirodex.utils.artwork_apply import apply_cover_from_url
             from sqlalchemy import select as sa_select
 
             result = apply_cover_from_url(
@@ -191,7 +191,7 @@ class TestArtworkApplyKinds:
             assert row is not None
             assert row.is_downloaded is True
 
-    @patch('gametheca.utils.artwork_apply.get_provider')
+    @patch('oneirodex.utils.artwork_apply.get_provider')
     def test_reject_unknown_kind(self, mock_get_provider, app, sample_game, tmp_path):
         provider = MagicMock()
         provider.is_enabled.return_value = True
@@ -199,7 +199,7 @@ class TestArtworkApplyKinds:
 
         with app.test_request_context('/'):
             app.config['IMAGE_SAVE_PATH'] = str(tmp_path)
-            from gametheca.utils.artwork_apply import apply_cover_from_url
+            from oneirodex.utils.artwork_apply import apply_cover_from_url
 
             with pytest.raises(ValueError, match='image_type must be one of'):
                 apply_cover_from_url(
@@ -208,7 +208,7 @@ class TestArtworkApplyKinds:
                     image_type='banner',
                 )
 
-    @patch('gametheca.utils.artwork_apply.get_provider')
+    @patch('oneirodex.utils.artwork_apply.get_provider')
     def test_coerce_cart_label_alias(self, mock_get_provider, app, db_session, sample_game, tmp_path):
         provider = MagicMock()
         provider.is_enabled.return_value = True
@@ -219,7 +219,7 @@ class TestArtworkApplyKinds:
 
         with app.test_request_context('/'):
             app.config['IMAGE_SAVE_PATH'] = str(tmp_path)
-            from gametheca.utils.artwork_apply import apply_cover_from_url
+            from oneirodex.utils.artwork_apply import apply_cover_from_url
 
             result = apply_cover_from_url(
                 game_uuid,

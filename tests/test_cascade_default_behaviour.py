@@ -17,7 +17,7 @@ import inspect
 
 
 def test_cascade_covers_pc_and_console_paths():
-    from gametheca.utils.metadata_cascade import CONSOLE_ORDER, PC_ORDER
+    from oneirodex.utils.metadata_cascade import CONSOLE_ORDER, PC_ORDER
 
     pc = [s.id for s in PC_ORDER]
     console = [s.id for s in CONSOLE_ORDER]
@@ -35,7 +35,7 @@ def test_enrichment_is_not_gated_behind_a_flag():
     Asserted against the source: a settings check added later would silently
     return the product to IGDB-only for anyone who had not opted in.
     """
-    from gametheca.utils import game_core
+    from oneirodex.utils import game_core
 
     src = inspect.getsource(game_core.enrich_game_all_sources)
 
@@ -46,7 +46,7 @@ def test_enrichment_is_not_gated_behind_a_flag():
 
 def test_steam_writes_the_same_columns_igdb_does():
     """Steam must comply with our field shape, not carry a parallel one."""
-    from gametheca.utils import steam_metadata
+    from oneirodex.utils import steam_metadata
 
     src = inspect.getsource(steam_metadata)
 
@@ -62,7 +62,7 @@ def test_steam_fills_without_clobbering():
     The module documents fill-don't-clobber; this pins it, because the failure
     mode is silent — a good summary quietly replaced by a worse one.
     """
-    from gametheca.utils import steam_metadata
+    from oneirodex.utils import steam_metadata
 
     src = inspect.getsource(steam_metadata)
 
@@ -73,7 +73,7 @@ def test_steam_fills_without_clobbering():
 
 def test_console_platforms_still_get_a_source():
     """The original gap: console rows landed blank because only Steam was asked."""
-    from gametheca.utils.metadata_cascade import source_order
+    from oneirodex.utils.metadata_cascade import source_order
 
     for platform in ('NES', 'SNES', 'SEGA_MD', 'PSX'):
         order = source_order(platform)

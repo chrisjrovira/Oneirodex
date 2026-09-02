@@ -7,9 +7,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select, text
 
-from gametheca.models import Library, ScanJob, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.scan_queue import (
+from oneirodex.models import Library, ScanJob, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.scan_queue import (
     count_queued_jobs,
     create_scan_job_row,
     drain_scan_queue,
@@ -134,7 +134,7 @@ class TestStartOrQueueScan:
         self, app, db_session, sample_library, running_job
     ):
         with app.app_context():
-            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+            with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 result = start_or_queue_scan(
                     folder_path='/games/pc2',
@@ -184,7 +184,7 @@ class TestStartOrQueueScan:
             db_session.commit()
             db_session.expire_all()
 
-            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+            with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 promoted = promote_next_queued_scan(app)
 
@@ -203,7 +203,7 @@ class TestStartOrQueueScan:
                 library_uuid=sample_library.uuid,
                 status='Queued',
             )
-            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+            with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 promoted = drain_scan_queue(app)
             assert promoted is not None
@@ -219,7 +219,7 @@ class TestStartOrQueueScan:
                 library_uuid=sample_library.uuid,
                 status='Queued',
             )
-            with patch('gametheca.utils.scan_queue.drain_scan_queue') as drain:
+            with patch('oneirodex.utils.scan_queue.drain_scan_queue') as drain:
                 result = maybe_drain_scan_queue(app)
             drain.assert_not_called()
             assert result is None
@@ -235,7 +235,7 @@ class TestStartOrQueueScan:
                 library_uuid=sample_library.uuid,
                 status='Queued',
             )
-            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+            with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 promoted = maybe_drain_scan_queue(app)
             assert promoted is not None
@@ -277,7 +277,7 @@ class TestStartOrQueueScan:
         self, app, db_session, sample_library
     ):
         """The sweep must never reclaim a scan this process is still running."""
-        from gametheca.utils.scan_queue import PROCESS_TOKEN
+        from oneirodex.utils.scan_queue import PROCESS_TOKEN
 
         with app.app_context():
             now = datetime.now(timezone.utc)
@@ -345,7 +345,7 @@ class TestStartOrQueueScan:
             db_session.add(orphan)
             db_session.commit()
 
-            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+            with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 result = start_or_queue_scan(
                     folder_path='/games/next',
@@ -380,7 +380,7 @@ class TestStartOrQueueScan:
             n = reclaim_stale_busy_jobs(stopping_after_seconds=60)
             assert n == 1
             assert db_session.get(ScanJob, stale.id).status == 'Failed'
-            with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+            with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
                 mock_thread.return_value.start = lambda: None
                 promoted = promote_next_queued_scan(app)
             assert promoted is not None
@@ -446,7 +446,7 @@ class TestLibraryScanApi:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        with patch('gametheca.utils.scan_queue.Thread') as mock_thread:
+        with patch('oneirodex.utils.scan_queue.Thread') as mock_thread:
             mock_thread.return_value.start = lambda: None
             resp = client.post(
                 '/api/admin/libraries/scan',
@@ -482,7 +482,7 @@ class TestManualScanQueuesWhenBusy:
     def test_manual_while_busy_queues(self, app, db_session, sample_library, running_job):
         from unittest.mock import Mock, patch
 
-        from gametheca.utilities import handle_manual_scan
+        from oneirodex.utilities import handle_manual_scan
 
         mock_form = Mock()
         mock_form.validate_on_submit.return_value = True
@@ -498,34 +498,34 @@ class TestManualScanQueuesWhenBusy:
         with app.app_context():
             with app.test_request_context():
                 mock_session = {}
-                with patch('gametheca.utilities.session', mock_session):
-                    with patch('gametheca.utilities.flash') as mock_flash:
+                with patch('oneirodex.utilities.session', mock_session):
+                    with patch('oneirodex.utilities.flash') as mock_flash:
                         with patch(
-                            'gametheca.utilities.redirect',
+                            'oneirodex.utilities.redirect',
                             return_value='ok',
                         ):
                             with patch(
-                                'gametheca.utilities.url_for',
+                                'oneirodex.utilities.url_for',
                                 return_value='/scan',
                             ):
                                 with patch(
-                                    'gametheca.utilities.get_allowed_base_directories',
+                                    'oneirodex.utilities.get_allowed_base_directories',
                                     return_value=['/base'],
                                 ):
                                     with patch(
-                                        'gametheca.utilities.is_safe_path',
+                                        'oneirodex.utilities.is_safe_path',
                                         return_value=(True, None),
                                     ):
                                         with patch(
-                                            'gametheca.utilities.os.path.exists',
+                                            'oneirodex.utilities.os.path.exists',
                                             return_value=True,
                                         ):
                                             with patch(
-                                                'gametheca.utilities.os.access',
+                                                'oneirodex.utilities.os.access',
                                                 return_value=True,
                                             ):
                                                 with patch.dict(
-                                                    'gametheca.utilities.current_app.config',
+                                                    'oneirodex.utilities.current_app.config',
                                                     {
                                                         'BASE_FOLDER_POSIX': '/base',
                                                         'BASE_FOLDER_WINDOWS': '/base',

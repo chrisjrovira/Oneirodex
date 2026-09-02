@@ -13,26 +13,27 @@ COPY frontend/member-app/package*.json frontend/member-app/
 WORKDIR /build/frontend/member-app
 RUN npm ci
 COPY frontend/member-app/ .
-RUN mkdir -p ../../gametheca/static/dist/member-app && npm run build
+RUN mkdir -p ../../oneirodex/static/dist/member-app && npm run build
 
 WORKDIR /build
 COPY frontend/admin-app/package*.json frontend/admin-app/
 WORKDIR /build/frontend/admin-app
 RUN npm ci
 COPY frontend/admin-app/ .
-# admin-app re-exports theme SoT (../../../gametheca/... from src/); stage needs those files before vite build
+# admin-app re-exports theme SoT (../../../oneirodex/... from src/); stage needs those files before vite build
 WORKDIR /build
-COPY gametheca/setup/default_theme/js/stageECandidates.js gametheca/setup/default_theme/js/
-COPY gametheca/setup/default_theme/js/unmatchedTriage.js gametheca/setup/default_theme/js/
+COPY oneirodex/setup/default_theme/js/stageECandidates.js oneirodex/setup/default_theme/js/
+COPY oneirodex/setup/default_theme/js/unmatchedTriage.js oneirodex/setup/default_theme/js/
+COPY oneirodex/setup/default_theme/js/scanJobsDom.js oneirodex/setup/default_theme/js/
 WORKDIR /build/frontend/admin-app
-RUN mkdir -p ../../gametheca/static/dist/admin-app && npm run build
+RUN mkdir -p ../../oneirodex/static/dist/admin-app && npm run build
 
 WORKDIR /build
 COPY frontend/ops-glance/package*.json frontend/ops-glance/
 WORKDIR /build/frontend/ops-glance
 RUN npm ci
 COPY frontend/ops-glance/ .
-RUN mkdir -p ../../gametheca/static/dist/ops-glance && npm run build
+RUN mkdir -p ../../oneirodex/static/dist/ops-glance && npm run build
 
 FROM python:3.12-slim
 
@@ -54,9 +55,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . .
-COPY --from=frontend-build /build/gametheca/static/dist/member-app /app/gametheca/static/dist/member-app
-COPY --from=frontend-build /build/gametheca/static/dist/admin-app /app/gametheca/static/dist/admin-app
-COPY --from=frontend-build /build/gametheca/static/dist/ops-glance /app/gametheca/static/dist/ops-glance
+COPY --from=frontend-build /build/oneirodex/static/dist/member-app /app/oneirodex/static/dist/member-app
+COPY --from=frontend-build /build/oneirodex/static/dist/admin-app /app/oneirodex/static/dist/admin-app
+COPY --from=frontend-build /build/oneirodex/static/dist/ops-glance /app/oneirodex/static/dist/ops-glance
 
 RUN pip install -r requirements.txt
 RUN sed -i 's/\r$//' /app/entrypoint.sh

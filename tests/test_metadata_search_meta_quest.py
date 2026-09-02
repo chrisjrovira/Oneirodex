@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gametheca.utils.providers import reset_provider_cache
-from gametheca.utils.providers.meta_quest import (
+from oneirodex.utils.providers import reset_provider_cache
+from oneirodex.utils.providers.meta_quest import (
     META_QUEST_PLATFORM_IDS,
     MetaQuestProvider,
     get_meta_quest_api_mode,
     search_meta_quest_games,
 )
-from gametheca.utils.secondary_scrapers import (
+from oneirodex.utils.secondary_scrapers import (
     search_epic_games,
     search_giantbomb_games,
     search_itch_games,
@@ -29,8 +29,8 @@ def _reset_providers():
     reset_provider_cache()
 
 
-@patch('gametheca.utils.providers.meta_quest.make_igdb_api_request')
-@patch('gametheca.utils.providers.meta_quest.igdb_credentials_configured', return_value=True)
+@patch('oneirodex.utils.providers.meta_quest.make_igdb_api_request')
+@patch('oneirodex.utils.providers.meta_quest.igdb_credentials_configured', return_value=True)
 def test_search_meta_quest_games_filters_platforms(mock_creds, mock_igdb):
     mock_igdb.return_value = [
         {
@@ -57,7 +57,7 @@ def test_search_meta_quest_games_filters_platforms(mock_creds, mock_igdb):
         assert str(pid) in query
 
 
-@patch('gametheca.utils.providers.meta_quest.igdb_credentials_configured', return_value=False)
+@patch('oneirodex.utils.providers.meta_quest.igdb_credentials_configured', return_value=False)
 def test_search_meta_quest_without_igdb_returns_empty(mock_creds):
     assert search_meta_quest_games('Anything') == []
 
@@ -74,8 +74,8 @@ def test_unofficial_graphql_off_by_default_returns_empty():
     assert search_meta_quest_games('Beat Saber') == []
 
 
-@patch('gametheca.utils.providers.meta_quest.make_igdb_api_request')
-@patch('gametheca.utils.providers.meta_quest.igdb_credentials_configured', return_value=True)
+@patch('oneirodex.utils.providers.meta_quest.make_igdb_api_request')
+@patch('oneirodex.utils.providers.meta_quest.igdb_credentials_configured', return_value=True)
 def test_meta_quest_provider_search_covers(mock_creds, mock_igdb):
     mock_igdb.return_value = [
         {
@@ -93,7 +93,7 @@ def test_meta_quest_provider_search_covers(mock_creds, mock_igdb):
     assert covers[0].url.endswith('img1.jpg')
 
 
-@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+@patch('oneirodex.utils.secondary_scrapers.request_with_backoff')
 def test_search_epic_games_mocked(mock_req):
     resp = MagicMock()
     resp.content = b'{}'
@@ -114,7 +114,7 @@ def test_search_epic_games_mocked(mock_req):
     assert results[0]['ownership_only'] is True
 
 
-@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+@patch('oneirodex.utils.secondary_scrapers.request_with_backoff')
 def test_search_itch_games_mocked(mock_req):
     resp = MagicMock()
     resp.content = b'{}'
@@ -135,8 +135,8 @@ def test_search_itch_games_mocked(mock_req):
     assert results[0]['id'] == 42
 
 
-@patch('gametheca.utils.providers.giantbomb.get_giantbomb_api_key', return_value='gb-key')
-@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+@patch('oneirodex.utils.providers.giantbomb.get_giantbomb_api_key', return_value='gb-key')
+@patch('oneirodex.utils.secondary_scrapers.request_with_backoff')
 def test_search_giantbomb_games_mocked(mock_req, mock_key):
     resp = MagicMock()
     resp.content = b'{}'
@@ -157,14 +157,14 @@ def test_search_giantbomb_games_mocked(mock_req, mock_key):
     assert results[0]['source'] == 'giantbomb'
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value=None)
 def test_search_mobygames_without_key_returns_empty(mock_key):
     assert search_mobygames_games('Doom') == []
     mock_key.assert_called()
 
 
-@patch('gametheca.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
-@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+@patch('oneirodex.utils.providers.mobygames.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.utils.secondary_scrapers.request_with_backoff')
 def test_search_mobygames_games_mocked(mock_req, mock_key):
     resp = MagicMock()
     resp.content = b'{}'
@@ -204,14 +204,14 @@ def test_search_mobygames_games_mocked(mock_req, mock_key):
     assert mock_req.call_args.kwargs['params']['api_key'] == 'moby-key'
 
 
-@patch('gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value=None)
+@patch('oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value=None)
 def test_search_thegamesdb_without_key_returns_empty(mock_key):
     assert search_thegamesdb_games('Sonic') == []
     mock_key.assert_called()
 
 
-@patch('gametheca.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value='tgdb-key')
-@patch('gametheca.utils.secondary_scrapers.request_with_backoff')
+@patch('oneirodex.utils.providers.thegamesdb.get_thegamesdb_api_key', return_value='tgdb-key')
+@patch('oneirodex.utils.secondary_scrapers.request_with_backoff')
 def test_search_thegamesdb_games_mocked(mock_req, mock_key):
     resp = MagicMock()
     resp.content = b'{}'
@@ -306,7 +306,7 @@ def test_metadata_search_sources_endpoint(client, db_session, admin_user_for_met
 def admin_user_for_meta(db_session):
     from uuid import uuid4
 
-    from gametheca.models import User
+    from oneirodex.models import User
 
     uid = str(uuid4())
     user = User(
@@ -322,7 +322,7 @@ def admin_user_for_meta(db_session):
     return user
 
 
-@patch('gametheca.routes_apis.metadata_search.search_meta_quest_games')
+@patch('oneirodex.routes_apis.metadata_search.search_meta_quest_games')
 def test_search_metadata_meta_alias(mock_search, client, db_session, admin_user_for_meta):
     mock_search.return_value = [
         {'source': 'meta_quest', 'id': 1, 'name': 'Quest Game', 'ownership_only': True, 'is_vr': True}
@@ -338,7 +338,7 @@ def test_search_metadata_meta_alias(mock_search, client, db_session, admin_user_
     assert 'api_mode' in data
 
 
-@patch('gametheca.routes_apis.metadata_search.search_meta_quest_games')
+@patch('oneirodex.routes_apis.metadata_search.search_meta_quest_games')
 def test_search_metadata_meta_quest_route(mock_search, client, db_session, admin_user_for_meta):
     mock_search.return_value = [
         {'source': 'meta_quest', 'id': 1, 'name': 'Quest Game', 'ownership_only': True}
@@ -354,8 +354,8 @@ def test_search_metadata_meta_quest_route(mock_search, client, db_session, admin
     assert len(data['results']) == 1
 
 
-@patch('gametheca.routes_apis.metadata_search.get_mobygames_api_key', return_value=None)
-@patch('gametheca.routes_apis.metadata_search.search_mobygames_games', return_value=[])
+@patch('oneirodex.routes_apis.metadata_search.get_mobygames_api_key', return_value=None)
+@patch('oneirodex.routes_apis.metadata_search.search_mobygames_games', return_value=[])
 def test_search_metadata_mobygames_honest_without_key(
     mock_search, mock_key, client, db_session, admin_user_for_meta,
 ):
@@ -372,8 +372,8 @@ def test_search_metadata_mobygames_honest_without_key(
     assert 'MOBYGAMES_API_KEY' in data['note']
 
 
-@patch('gametheca.routes_apis.metadata_search.get_mobygames_api_key', return_value='moby-key')
-@patch('gametheca.routes_apis.metadata_search.search_mobygames_games')
+@patch('oneirodex.routes_apis.metadata_search.get_mobygames_api_key', return_value='moby-key')
+@patch('oneirodex.routes_apis.metadata_search.search_mobygames_games')
 def test_search_metadata_moby_alias(mock_search, mock_key, client, db_session, admin_user_for_meta):
     mock_search.return_value = [
         {
@@ -398,8 +398,8 @@ def test_search_metadata_moby_alias(mock_search, mock_key, client, db_session, a
     mock_search.assert_called_once()
 
 
-@patch('gametheca.routes_apis.metadata_search.get_thegamesdb_api_key', return_value=None)
-@patch('gametheca.routes_apis.metadata_search.search_thegamesdb_games', return_value=[])
+@patch('oneirodex.routes_apis.metadata_search.get_thegamesdb_api_key', return_value=None)
+@patch('oneirodex.routes_apis.metadata_search.search_thegamesdb_games', return_value=[])
 def test_search_metadata_thegamesdb_honest_without_key(
     mock_search, mock_key, client, db_session, admin_user_for_meta,
 ):
@@ -416,8 +416,8 @@ def test_search_metadata_thegamesdb_honest_without_key(
     assert 'THEGAMESDB_API_KEY' in data['note']
 
 
-@patch('gametheca.routes_apis.metadata_search.get_thegamesdb_api_key', return_value='tgdb-key')
-@patch('gametheca.routes_apis.metadata_search.search_thegamesdb_games')
+@patch('oneirodex.routes_apis.metadata_search.get_thegamesdb_api_key', return_value='tgdb-key')
+@patch('oneirodex.routes_apis.metadata_search.search_thegamesdb_games')
 def test_search_metadata_tgdb_alias(mock_search, mock_key, client, db_session, admin_user_for_meta):
     mock_search.return_value = [
         {

@@ -9,10 +9,10 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import ClientDevice, Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.client_presence import CLIENT_HEARTBEAT_TTL_SECONDS, user_client_connected
-from gametheca.utils.lifecycle import web_lifecycle_fields
+from oneirodex.models import ClientDevice, Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.client_presence import CLIENT_HEARTBEAT_TTL_SECONDS, user_client_connected
+from oneirodex.utils.lifecycle import web_lifecycle_fields
 
 
 @pytest.fixture
@@ -160,7 +160,7 @@ def test_browse_games_sets_client_connected_with_recent_heartbeat(client, app, d
     )
     db_session.commit()
 
-    with patch('gametheca.routes.get_matched_owned_game_uuids', return_value=set()):
+    with patch('oneirodex.routes.get_matched_owned_game_uuids', return_value=set()):
         response = client.get(f'/browse_games?page=1&per_page=10&library_uuid={lib.uuid}')
 
     assert response.status_code == 200

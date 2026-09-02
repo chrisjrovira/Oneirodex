@@ -1,0 +1,1339 @@
+/* === LOGIN COMPONENTS === */
+
+.container-buttons-login {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    font-size: var(--font-size-20px);
+    gap: var(--spacing-lg);
+}
+
+/* Game Card Component */
+.game-card-container {
+    position: relative;
+    transition: transform var(--transition-normal);
+}
+
+.game-card {
+    cursor: pointer;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    position: relative;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: var(--od-radius-md, 8px);
+    /* Every tile is its own stacking context.
+     *
+     * `position: relative` with `z-index: auto` is *not* one, so a resting
+     * card's overlays escaped it: the badge layers (12), the VR stack (13) and
+     * the control stack (15) all resolved against the row instead. A hovered
+     * card only lifts to 40, so the neighbours' badges kept painting over the
+     * enlarged tile — the reported "badges from nearby tiles still overlap the
+     * tile you hover on". Raising the hover value would have been an arms race
+     * against every overlay z-index in the file.
+     *
+     * With `isolation`, card-to-card order is decided by the card's own
+     * z-index alone (hover 40, overlay-open 50) and everything inside stays
+     * inside. */
+    isolation: isolate;
+    outline: none;
+}
+
+/* The clip belongs to the artwork, not to the tile.
+ *
+ * `overflow: hidden` used to sit on `.game-card` as "last line of defence for
+ * a bad cover", on the reasoning that the corner controls are positioned
+ * within the card so it cost them nothing. The tile menu is not: it is
+ * deliberately wider (12rem) and taller than a tile, and it is a child of the
+ * card — so the card clipped its own menu to the cover. That is the reported
+ * "menu is too large, you cannot see anything"; what you saw was a sliver of a
+ * full-size menu, not an oversized one.
+ *
+ * The guarantee survives because it never depended on this rule: .game-cover
+ * is pinned to 3:4 with `object-fit: cover` at `width: 100%`, so the image
+ * cannot exceed its box. Clipping the link that holds it keeps the rounded
+ * corner and the containment, and lets the menu paint over the grid again. */
+.game-card__cover-link {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--od-radius-md, 8px);
+}
+
+/* Tile hover: scale only — no accent glow, no hard ring.
+ *
+ * The enlarge itself marks the hovered tile. An accent bloom around the cover
+ * read as a glow on every enlarge and fought bright art; it is gone. A soft
+ * dark drop shadow stays so the grown tile still lifts off the grid without
+ * colouring the edge.
+ *
+ * `--od-tile-hover-scale` is a flat 1.25 from tileSize.js. `transform: scale`
+ * does not reflow, so the grid keeps its flow while the tile grows over its
+ * neighbours. Growth is centred on the resting box (see GameGrid.css). The
+ * fallback covers classic Jinja pages, which never run the SPA's tile-size
+ * code. */
+/* `:has(:focus-visible)` rather than `:focus-within`.
+ *
+ * `:focus-within` matches focus from any source, and clicking a tile — or any
+ * control inside it — leaves focus there. The tile therefore stayed enlarged
+ * after the pointer left and only shrank once something else took focus, which
+ * is the reported "you have to click off the screen to make it go back down".
+ *
+ * `:focus-visible` is the browser's own answer to "did this focus arrive by
+ * keyboard": a mouse click on a button does not match it, a Tab does. So the
+ * keyboard affordance survives and the mouse no longer leaves tiles stuck open.
+ * The card itself is checked as well as its descendants because the cover link
+ * is the card's own focus target on some pages. */
+.game-card:hover,
+.game-card:focus-visible,
+.game-card:has(:focus-visible) {
+    transform: scale(var(--od-tile-hover-scale, 1.25));
+    transform-origin: center center;
+    z-index: 40;
+    /* Outline only while hovered / keyboard-focused — never a resting ring on
+       every tile, and never a sticky selection outline after the pointer leaves.
+       Offset 0 hugs the cover; a positive offset was the reported gap around
+       the enlarged tile. */
+    outline: 2px solid color-mix(in srgb, var(--od-accent) 80%, transparent);
+    outline-offset: 0;
+    box-shadow: 0 14px 28px var(--shadow-dark-strong);
+    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, outline-color 0.16s ease-out;
+}
+
+/* Lift the wrapper too: a later sibling container would otherwise paint over
+   the grown tile even when the card itself is at 40. Overlay-open stays above. */
+.game-card-container:has(.game-card:hover),
+.game-card-container:has(.game-card:focus-visible),
+.game-card-container:has(.game-card :focus-visible) {
+    z-index: 25;
+}
+
+.game-card-container:has(.game-card[data-overlay-open='true']) {
+    z-index: 30;
+}
+
+/* Quiet cover edge at rest — no hairline ring. Accent outline is hover-only. */
+.game-card .game-cover,
+.game-card .od-cover-fallback {
+    border-color: transparent;
+    border-width: 0;
+    transition: border-color 0.16s ease-out;
+}
+
+.game-card:hover .game-cover,
+.game-card:has(:focus-visible) .game-cover,
+.game-card:hover .od-cover-fallback,
+.game-card:has(:focus-visible) .od-cover-fallback {
+    border-color: transparent;
+}
+
+/* Menu open beats hover: the pointer has to leave the tile to reach the menu,
+   and losing the raise at that moment is what let the next tile paint over it.
+   Higher than the hover value so a hovered neighbour cannot cover an open
+   menu either. */
+.game-card[data-overlay-open='true'] {
+    z-index: 50;
+}
+
+/* Overlays undo the tile's scale rather than the tile undoing it for them.
+ *
+ * The menu is a child of the card, so `scale(1.25)` scaled the menu too: a
+ * 12rem panel rendered at 15rem with every row a quarter larger — the reported
+ * "the buttons are huge and should fit within the menu". They were the right
+ * size for a tile pretending to be 25% bigger.
+ *
+ * The first fix cancelled the card's transform while an overlay was open. That
+ * traded one bug for another: opening the play-status dropdown made the tile
+ * you were still hovering *shrink* under the pointer. The tile is not the thing
+ * that is wrong — its scale is the hover affordance and the pointer has not
+ * left it.
+ *
+ * So the overlays divide it back out. Origin is the corner each one is anchored
+ * to, so the anchor point does not move as the counter-scale applies. Scoped to
+ * :hover / keyboard focus because those are exactly the states in which the card
+ * is scaled: with neither, the card is at 1 and dividing would shrink the
+ * panel. */
+.game-card:hover > .popup-menu,
+.game-card:has(:focus-visible) > .popup-menu {
+    transform: scale(calc(1 / var(--od-tile-hover-scale, 1.25)));
+    transform-origin: top right;
+}
+
+.game-card:hover > .popup-menu--play,
+.game-card:has(:focus-visible) > .popup-menu--play {
+    transform-origin: top left;
+}
+
+.game-card:hover .status-dropdown,
+.game-card:has(:focus-visible) .status-dropdown {
+    transform: scale(calc(1 / var(--od-tile-hover-scale, 1.25)));
+    transform-origin: top right;
+}
+
+/* Reduced motion removes the *animation*, not the affordance.
+ *
+ * Both reduced-motion blocks in this file used to set `transform: none`, so on
+ * a machine with the OS setting on, a hovered tile did not change at all —
+ * reported as "the tile does not enlarge, did we build that?". It was built and
+ * measured at 1.25; this rule was cancelling it. The scale is what marks which
+ * tile the pointer is on, and a size change is not vestibular motion; the
+ * animated travel between the two states is. So keep the scale, drop the
+ * translate and the transition, and it lands instantly instead of gliding. */
+@media (prefers-reduced-motion: reduce) {
+    .game-card:hover,
+    .game-card:focus-visible,
+    .game-card:has(:focus-visible) {
+        transition: none;
+    }
+}
+
+/* The tile decides the box; the image only decides what fills it.
+ *
+ * A cover is whatever the scraper downloaded, and that is not always a cover:
+ * a 4000px banner, a 16:9 screenshot, an HTML error page saved as .jpg. With
+ * the box driven by the image, one bad download stretched its tile and shoved
+ * the rest of the row out of line — reported as art "expanding out of the
+ * bounds".
+ *
+ * `aspect-ratio` plus `object-fit: cover` pins every tile to 3:4 and crops the
+ * overflow instead of growing; `max-width/height: 100%` and `overflow: hidden`
+ * on the card stop anything escaping even if a stylesheet elsewhere unsets the
+ * ratio. Cropping a wide image is a visible compromise, but a predictable grid
+ * is worth more than showing the edges of one bad file. */
+.game-cover {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 3 / 4;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    box-shadow: 0 4px 12px var(--shadow-dark-strong);
+    border: 1px solid var(--game-border-gray);
+    border-radius: var(--border-radius-xs);
+    max-width: none;
+    /* Themed ground behind the image, not the old default_cover.jpg.
+       The raster carried a baked-in logo and baked-in text that was unreadable
+       at any tile size below about 220px, and it stayed green whatever theme
+       was selected. A gradient in theme tokens shows through for the moment
+       before a cover paints and never contradicts the rest of the page; the
+       real fallback, with the title as live text, is .od-cover-fallback. */
+    background-color: var(--od-surface);
+    background-image: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--od-surface-2) 92%, transparent) 0%,
+        color-mix(in srgb, var(--od-bg) 96%, transparent) 100%
+    );
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* --- Cover fallback --------------------------------------------------------
+ *
+ * Drawn, never fetched. This replaces default_cover.jpg on the tile path
+ * entirely: one raster with the logo and the words baked in could not be
+ * themed, and its text was set for a size the tiles have not been since the
+ * size slider became continuous (120px … 400px). Here the mark is a mask filled
+ * with the theme accent and the title is real text, so both stay legible and
+ * both follow the theme.
+ *
+ * Same box as .game-cover — it stands in for the image, so it has to occupy
+ * exactly the space the image would have.
+ */
+.od-cover-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    padding: 12% 10%;
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-radius-xs);
+    background:
+        radial-gradient(
+            circle at 50% 32%,
+            color-mix(in srgb, var(--od-accent) 16%, transparent) 0%,
+            transparent 62%
+        ),
+        linear-gradient(
+            160deg,
+            color-mix(in srgb, var(--od-surface-2) 95%, transparent) 0%,
+            var(--od-bg) 100%
+        );
+    box-shadow: 0 4px 12px var(--shadow-dark-strong);
+    text-align: center;
+    overflow: hidden;
+}
+
+.od-cover-fallback__mark {
+    width: 34%;
+    /* Square, and tied to the width so it scales with the tile rather than
+       needing a breakpoint per size. */
+    aspect-ratio: 1;
+    opacity: 0.9;
+}
+
+/* Real text, clamped to the tile — the whole reason the raster was replaced.
+   The floor keeps it readable on a 120px tile; the ceiling stops a 400px tile
+   turning the title into a headline. */
+.od-cover-fallback__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.68rem, calc(var(--od-tile-min, 180px) * 0.075), 1.1rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--od-text);
+    overflow-wrap: anywhere;
+}
+
+.od-cover-fallback__note {
+    margin: 0;
+    font-size: clamp(0.55rem, calc(var(--od-tile-min, 180px) * 0.048), 0.75rem);
+    letter-spacing: var(--od-label-tracking, 0.06em);
+    text-transform: uppercase;
+    color: var(--od-text-muted);
+}
+
+/* Shimmer Effect */
+.game-cover::before {
+    z-index: 12;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    visibility: hidden;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.game-card:hover .game-cover::before {
+    animation: shimmerAnimation 1s linear forwards;
+    visibility: visible;
+}
+
+@keyframes shimmerAnimation {
+    0% {
+        background-position: -1000px 0;
+        opacity: 1;
+    }
+    100% {
+        background-position: 1000px 0;
+        opacity: 0;
+    }
+}
+
+/* Tile chrome geometry — one scale for every control and badge on a tile.
+   Order top to bottom in the top-right stack: favourite · play status · menu.
+   Favourite leads because it is the one control that also has a *resting*
+   state — a favourited tile shows its heart with the pointer elsewhere — so it
+   must not sit under two buttons that are invisible at the time.
+   (Selection moved to the bottom-right corner; see LibrarySelectionBar.css.)
+   Every control derives its offset from these vars so the stack cannot drift
+   out of alignment when a button is added or hidden.
+
+   Everything here is derived from --od-tile-min rather than pinned to px.
+   The controls used to be a flat 32px at every slider position, so at the
+   smallest tile size four 32px buttons covered most of the cover art and at
+   the largest they were lost against it — the tile scaled and its chrome did
+   not. --od-tile-min is what tileSize.js drives (120px … 400px) and it is a
+   registered @property, so these interpolate with the tiles instead of
+   stepping. The clamps keep a small tile's controls big enough to hit and stop
+   a 400px tile growing a 47px hamburger; at the default 50% (260px) the button
+   lands on ~32px, which is where it has always been. */
+.game-card {
+    --od-tile-btn: clamp(24px, calc(var(--od-tile-min, 180px) * 0.155), 40px);
+    /* Named --od-tile-btn-gap, not --od-tile-gap: the grid uses that name for
+       the space *between tiles* and sets it from tileSize.js. Reusing it here
+       shadowed the grid's value inside every card — harmless only because the
+       grid reads it on the row rather than the card, which is a coincidence
+       rather than a design. */
+    --od-tile-btn-gap: clamp(3px, calc(var(--od-tile-min, 180px) * 0.022), 6px);
+    /* One inset for every corner occupant — controls, chips and badges — so
+       nothing sits a few px out of line with its neighbour across the tile. */
+    --od-tile-edge: clamp(5px, calc(var(--od-tile-min, 180px) * 0.042), 11px);
+    --od-tile-stack-top: var(--od-tile-edge);
+    --od-tile-stride: calc(var(--od-tile-btn) + var(--od-tile-btn-gap));
+    --od-tile-btn-icon: calc(var(--od-tile-btn) * 0.5);
+
+    /* Badges share the same scale (see .od-badge). They were a fixed 10px on a
+       1.35rem box, which is unreadable on a 300px tile and oversized on a
+       120px one, and several modifiers redefined the size so badges of
+       different kinds did not even match each other. */
+    --od-badge-h: clamp(15px, calc(var(--od-tile-min, 180px) * 0.105), 24px);
+    --od-badge-fs: clamp(8px, calc(var(--od-tile-min, 180px) * 0.052), 12px);
+    --od-badge-pad-x: clamp(4px, calc(var(--od-tile-min, 180px) * 0.03), 8px);
+
+    /* Themed, not hardcoded. These were rgba(0,0,0,.7) on a rgba(255,255,255,.2)
+       hairline — flat values that ignored the theme entirely and left a
+       near-invisible control over light cover art. Same fix as the auto-scan
+       cards (W27-D5): point the variables at the theme so every pack gets a
+       control it can actually see, rather than tuning one value per complaint.
+
+       Near-opaque rather than 88%: these sit on arbitrary cover art, and a
+       translucent surface over a bright box-art highlight is the other half of
+       "hard to view". The shadow does the separating so the fill can stay flat
+       and themed. */
+    --od-tile-btn-bg: color-mix(in srgb, var(--od-surface) 96%, transparent);
+    --od-tile-btn-bg-hover: var(--od-surface);
+    --od-tile-btn-border: 1px solid var(--od-border);
+    --od-tile-btn-fg: var(--od-text);
+    --od-tile-btn-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+    /* Hidden at rest, revealed on hover.
+       They were briefly always-on, to answer "the buttons are hard to see" —
+       but three permanent squares on every tile is chrome competing with the
+       art, and the real complaint was contrast, which the near-opaque themed
+       fill above fixes. The one exception is a favourited tile: its heart stays
+       visible with the pointer elsewhere, because that is state rather than an
+       action, and a member scanning the grid should be able to see what they
+       have favourited without touring it with the mouse. */
+    --od-tile-btn-rest-opacity: 0;
+}
+
+/* One shared shape for the two controls *this file owns*.
+ *
+ * `.game-status-btn` and `.od-tile-select` deliberately are not listed here
+ * even though they take the identical shape. Their base rules live in
+ * games/game_status.css and the member app's LibrarySelectionBar.css, and
+ * naming them here would make each of those classes defined in two
+ * stylesheets — which is precisely what cssDuplicateRules.test.js budgets
+ * against, and for a good reason: with cssCodeSplit, two definitions resolve by
+ * load order, i.e. by the reader's navigation history.
+ *
+ * The values are not duplicated even though the property list is: every one is
+ * a var declared on `.game-card` above, so there is still exactly one place to
+ * change the size of a tile control. */
+.button-glass-hamburger,
+.favorite-btn {
+    width: var(--od-tile-btn);
+    height: var(--od-tile-btn);
+    right: var(--od-tile-edge);
+    left: auto;
+    border-radius: var(--od-radius-sm, 6px);
+    font-size: var(--od-tile-btn-icon);
+    line-height: 1;
+    box-shadow: var(--od-tile-btn-shadow);
+}
+
+/* Popup Menu Button — last in the top-right stack (see the order note above) */
+.button-glass-hamburger {
+    position: absolute;
+    top: calc(var(--od-tile-stack-top) + 2 * var(--od-tile-stride));
+    z-index: 15;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--od-tile-btn-bg);
+    backdrop-filter: blur(5px);
+    padding: 0;
+    border: var(--od-tile-btn-border);
+    cursor: pointer;
+    color: var(--od-tile-btn-fg);
+    opacity: var(--od-tile-btn-rest-opacity);
+    transition: opacity 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.button-glass-hamburger:hover {
+    background-color: var(--od-tile-btn-bg-hover);
+    border-color: var(--od-accent);
+}
+
+/* The React tiles render a <span> glyph, not an <i>. Colouring only the <i>
+   left the icon on whatever it inherited — one of the reasons these read as
+   washed out over cover art. */
+.button-glass-hamburger i,
+.button-glass-hamburger > span {
+    color: var(--od-tile-btn-fg);
+}
+
+.game-card:hover .button-glass-hamburger,
+.button-glass-hamburger:focus-visible,
+.button-glass-hamburger[aria-expanded='true'] {
+    opacity: 1;
+}
+
+/* Favorite Button — first in the top-right stack (see the order note above) */
+.favorite-btn {
+    position: absolute;
+    top: var(--od-tile-stack-top);
+    bottom: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--od-tile-btn-bg);
+    backdrop-filter: blur(5px);
+    border: var(--od-tile-btn-border);
+    cursor: pointer;
+    color: var(--od-tile-btn-fg);
+    opacity: var(--od-tile-btn-rest-opacity);
+    transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease,
+        border-color 0.18s ease;
+    z-index: 15;
+}
+
+.favorite-btn i,
+.favorite-btn > span {
+    color: inherit;
+    transition: color 0.18s ease;
+}
+
+.favorite-btn:hover {
+    background-color: var(--od-tile-btn-bg-hover);
+    border-color: var(--od-accent);
+}
+
+.game-card:hover .favorite-btn,
+.favorite-btn:focus-visible,
+.favorite-btn.favorited {
+    opacity: 1;
+}
+
+/* Colour the button, not an <i> the React tiles never render — the heart used
+   to stay grey however many times it was favourited. */
+/* Themed, not a fixed pink.
+ *
+ * This was `--color-pink-favorite` (#ff69b4) — one hard-coded hue that ignored
+ * the theme entirely, so on every preset but the pink-adjacent ones the one
+ * control with a resting state was also the one control that did not belong to
+ * the palette. The token stays declared in base.css for the legacy Jinja
+ * pages; the tile follows the accent like the rest of the tile chrome. */
+.favorite-btn.favorited {
+    color: var(--od-favorite, var(--od-accent));
+}
+
+.favorite-btn.processing {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* No play-status control on this card — the menu closes the gap rather than
+   leaving a hole where the second slot would have been. */
+.game-card:not(:has(.game-status-btn)) .button-glass-hamburger {
+    top: calc(var(--od-tile-stack-top) + var(--od-tile-stride));
+}
+
+/* Anchors under the hamburger + favourite pair. Derived from the stack vars
+   rather than a magic 82px, so hiding or adding a control moves the menu with
+   it — the same rule the comment on the stack already claimed. */
+.game-card > .popup-menu {
+    top: calc(var(--od-tile-stack-top) + (2 * var(--od-tile-stride)));
+    right: var(--od-tile-edge);
+    left: auto;
+    /* Above the badge layers (12) and the VR stack (13), and above the control
+       stack itself (15/16).
+       .popup-menu's own z-index is 12 in base.css, the same as .od-badge-layers
+       — and BadgeStack renders *after* the menu in the card, so on a tie the
+       badges won on source order and painted over the menu items. That is the
+       reported "badges overlay the menu, hard to see and click": UPDATE/NEW sat
+       on top of Edit Details and ate the click, because an interactive badge
+       stack re-enables pointer-events. */
+    z-index: 40;
+}
+
+/* The Play explainer anchors to the Play chip, which is top-left, rather than
+   to the hamburger stack on the right. Same panel treatment as the actions
+   menu — it is the same kind of object — but it opens under the control that
+   raised the question. */
+.game-card > .popup-menu--play {
+    top: calc(var(--od-tile-stack-top) + var(--od-badge-h) + var(--od-tile-btn-gap));
+    left: var(--od-tile-edge);
+    right: auto;
+    min-width: 14rem;
+    max-width: 18rem;
+}
+
+/* The reason itself: prose, not a menu row. It is the only thing in this panel
+   that is not actionable, so it must not look pressable. */
+.popup-menu__note {
+    margin: 0 0 var(--od-space-2, 0.4rem);
+    padding: 0 var(--od-space-3, 0.5rem);
+    color: var(--od-text-muted);
+    font-size: var(--od-font-sm, 0.82rem);
+    line-height: 1.4;
+    white-space: normal;
+}
+
+/* Belt and braces for the same report: while a menu or status dropdown is
+   open, the badge overlays stop competing for the pointer entirely. Raising
+   the menu fixes what you can see; this fixes what you can click, including
+   the interactive badge stacks that set pointer-events back to auto. */
+.game-card[data-overlay-open='true'] .od-badge-layers {
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+/* Legacy single badges (kept for non-React pages) */
+.local-metadata-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 123, 255, 0.9);
+    color: white;
+    font-size: var(--od-font-xs);
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: var(--od-radius-xs);
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-family: monospace;
+}
+
+.freshness-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    color: white;
+    font-size: var(--od-font-xs);
+    font-weight: bold;
+    padding: 4px 7px;
+    border-radius: var(--od-radius-xs);
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-family: monospace;
+    letter-spacing: 0.02em;
+}
+
+.freshness-badge--behind {
+    background: rgba(220, 53, 69, 0.92);
+}
+
+.freshness-badge--heuristic {
+    background: rgba(255, 193, 7, 0.92);
+    color: var(--od-accent-contrast);
+}
+
+/* Badge layers: occupied corners only — no empty reserved slots */
+.od-badge-layers {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    pointer-events: none;
+}
+
+/* Oneirodex BadgeStack — corner occupants (content-sized, no fixed height reserve) */
+.od-badge-stack {
+    position: absolute;
+    z-index: 12;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    max-width: min(72%, 11rem);
+    width: max-content;
+    height: auto;
+    overflow: visible;
+    pointer-events: none;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.od-badge-stack--interactive {
+    pointer-events: auto;
+}
+
+.od-badge-stack--bottom-left {
+    bottom: var(--od-tile-edge, 8px);
+    left: var(--od-tile-edge, 8px);
+    right: auto;
+    top: auto;
+}
+
+/* True bottom-right, level with bottom-left. This used to be lifted 44px to
+   clear a play-status button that now lives in the top-right stack, which left
+   UPDATE and friends floating one row above the corner on every tile. */
+.od-badge-stack--bottom-right {
+    bottom: var(--od-tile-edge, 8px);
+    right: var(--od-tile-edge, 8px);
+    left: auto;
+    top: auto;
+}
+
+/* Only the details cover still has a button down here — lift badges there. */
+.game-card-coverimage:has(.game-status-btn-cover) .od-badge-stack--bottom-right {
+    bottom: 52px;
+}
+
+/* Badges win true top-left (UPDATE/NEW/VR/MISSING); PLAY is nudged in glass.css when present */
+.od-badge-stack--top-left {
+    top: var(--od-tile-edge, 8px);
+    left: var(--od-tile-edge, 8px);
+    right: auto;
+    bottom: auto;
+}
+
+/* Clear the two always-present controls (menu, favourite). The status/select
+   variants add their own offsets in game_status.css so the stack stays honest
+   about how many buttons are actually above it. */
+.od-badge-stack--top-right {
+    top: calc(var(--od-tile-stack-top) + 2 * var(--od-tile-stride) + 2px);
+    right: var(--od-tile-edge, 8px);
+    left: auto;
+    bottom: auto;
+}
+
+/* VR rides in the top-left transitional stack only (never overlaps system/platform chip) */
+.od-badge-stack--vr {
+    z-index: 13;
+    max-width: min(78%, 13rem);
+}
+
+.od-badge-stack--vr.od-badge-stack--top-left {
+    top: var(--od-tile-edge, 8px);
+    left: var(--od-tile-edge, 8px);
+    right: auto;
+    bottom: auto;
+}
+
+@keyframes od-spin {
+    to { transform: rotate(360deg); }
+}
+
+.od-spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-top-color: currentColor;
+    border-radius: var(--od-radius-circle);
+    vertical-align: -0.125em;
+    animation: od-spin 0.7s linear infinite;
+}
+
+.od-spinner--sm {
+    width: 0.85em;
+    height: 0.85em;
+    border-width: 1.5px;
+}
+
+.od-spinner--lg {
+    width: 1.5em;
+    height: 1.5em;
+    border-width: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .od-spinner {
+        animation: none;
+        border-top-color: color-mix(in srgb, currentColor 55%, transparent);
+        opacity: 0.85;
+    }
+}
+
+/* Full-page / folder-browse loading chrome (replaces legacy pirate GIFs) */
+.od-loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    color: var(--od-accent);
+}
+
+/* Blocking variant (W27-D6).
+ *
+ * Browse used to spin a small icon beside the button, which reads as a stuck
+ * button rather than as work in progress — and it shifted the row it sat in.
+ * The blocking overlay darkens the page instead, so the motif is the only
+ * thing to look at and the layout underneath cannot move.
+ *
+ * `inset: 0` with position:fixed rather than width/height:100% — the latter
+ * measures the containing block, which is wrong the moment an ancestor is
+ * itself positioned. */
+.od-loading-overlay--blocking {
+    position: fixed;
+    inset: 0;
+    z-index: 1080; /* above Bootstrap modals (1055) — this blocks everything */
+    flex-direction: column;
+    background: color-mix(in srgb, var(--od-bg) 72%, transparent);
+    backdrop-filter: blur(3px);
+}
+
+.od-loading-overlay--blocking .od-loading-overlay__label {
+    color: var(--od-text);
+    font-size: var(--od-font-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .od-loading-overlay--blocking {
+        backdrop-filter: none;
+    }
+}
+
+.spinner-overlay .spinner-container {
+    background: var(--od-surface);
+    color: var(--od-text);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-radius-xl);
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--od-bg) 55%, transparent);
+}
+
+.spinner-overlay .od-spinner,
+.loading-spinner .od-spinner,
+.od-loading-overlay .od-spinner,
+.spinner-overlay .od-loading-motif,
+.loading-spinner .od-loading-motif,
+.od-loading-overlay .od-loading-motif {
+    color: var(--od-accent);
+}
+
+.loading-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.spinner-overlay .progress-text {
+    color: var(--od-text-muted);
+    margin-top: 0.75rem;
+}
+
+.od-status-dot {
+    display: inline-block;
+    width: 0.7em;
+    height: 0.7em;
+    border-radius: var(--od-radius-circle);
+    vertical-align: middle;
+}
+
+/* One badge geometry, everywhere.
+ *
+ * Every dimension lives on this rule and every modifier below sets colour and
+ * nothing else. Before, the base was a fixed 10px on a 1.35rem box while
+ * --missing added its own letter-spacing and weight and --clear/--restore
+ * their own font-size, so two badges on the same tile did not match each other
+ * — which is the "badges should share one set of dimensions" report. The
+ * geometry now also tracks --od-tile-min (see .game-card), so badges scale with
+ * the tiles they sit on rather than staying 10px on a 300px cover.
+ *
+ * The rule for adding a badge tone: background, and `color` only where the
+ * background is too light for white text. Nothing else belongs in a modifier. */
+.od-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    position: relative;
+    box-sizing: border-box;
+    min-width: var(--od-badge-h, 1.35rem);
+    min-height: var(--od-badge-h, 1.35rem);
+    padding: 0 var(--od-badge-pad-x, 6px);
+    border: 0;
+    border-radius: var(--od-radius-sm, 6px);
+    font-size: var(--od-badge-fs, 10px);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    color: var(--od-text);
+    text-transform: uppercase;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* The dismiss affordance is a control *inside* a badge, so it takes its size
+   from the badge rather than setting one. --clear / --restore are badges in
+   their own right and now differ from the rest only in being clickable. */
+.od-badge__dismiss,
+.od-badge--clear,
+.od-badge--restore {
+    pointer-events: auto;
+    cursor: pointer;
+    border: 0;
+    background: rgba(0, 0, 0, 0.45);
+    color: inherit;
+    font: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+}
+
+.od-badge__dismiss {
+    min-width: 0;
+    min-height: 0;
+    padding: 0 3px;
+    margin-left: 2px;
+    line-height: 1;
+    border-radius: var(--od-radius-xs, 4px);
+    box-shadow: none;
+    opacity: 0.85;
+}
+
+.od-badge--danger { background: rgba(196, 48, 43, 0.95); }
+.od-badge--warn { background: rgba(196, 120, 20, 0.95); }
+.od-badge--accent { background: rgba(24, 120, 180, 0.95); }
+.od-badge--info { background: rgba(70, 90, 160, 0.95); }
+.od-badge--owned { background: rgba(40, 130, 90, 0.95); }
+.od-badge--muted { background: rgba(70, 70, 80, 0.95); }
+.od-badge--missing {
+    background: rgba(55, 58, 66, 0.92);
+    color: rgba(232, 228, 220, 0.95);
+}
+.od-badge--meta { background: rgba(0, 110, 200, 0.95); }
+.od-badge--kind { background: rgba(90, 110, 140, 0.95); }
+.od-badge--overflow { background: rgba(30, 30, 30, 0.9); }
+
+/* Toast host — mirrored from the member SPA's glass.css so classic Jinja pages
+   report the same way. Deliberate cross-tree duplication (the rule the
+   duplicate-class guard scopes per tree): the image-refresh flash is raised by
+   a classic form POST and rendered by theme JS, which never loads member-app.css.
+   Without this, moving that banner into a toast would have made it invisible on
+   exactly the pages that raise it. */
+.od-toast-host {
+    position: fixed;
+    z-index: 2400;
+    top: 1rem;
+    right: 1rem;
+    bottom: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: min(22rem, calc(100vw - 2rem));
+    pointer-events: none;
+}
+
+.od-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.7rem 0.6rem 0.7rem 0.95rem;
+    border-radius: var(--od-radius-lg, 10px);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface);
+    color: var(--od-text);
+    box-shadow: var(--od-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.35));
+    font-size: var(--od-font-md, 0.92rem);
+    line-height: 1.35;
+}
+
+.od-toast__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.od-toast__close {
+    flex: 0 0 auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--od-radius-sm, 6px);
+    background: transparent;
+    color: var(--od-text-muted);
+    font-size: var(--od-font-base, 1.05rem);
+    line-height: 1;
+    cursor: pointer;
+}
+
+.od-toast__close:hover,
+.od-toast__close:focus-visible {
+    background: color-mix(in srgb, var(--od-text) 14%, transparent);
+    color: var(--od-text);
+}
+
+.od-toast--success { border-color: color-mix(in srgb, var(--od-accent) 55%, transparent); }
+.od-toast--error { border-color: color-mix(in srgb, var(--od-danger) 60%, transparent); }
+.od-toast--warn { border-color: color-mix(in srgb, var(--od-warning) 60%, transparent); }
+
+/* The refresh spinner rides inside the toast now rather than in a page banner. */
+.od-toast .image-refresh-spinner {
+    flex: 0 0 auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.1rem;
+}
+
+.od-toast .image-refresh-spinner svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.od-toast .spinner-circle-bg {
+    fill: none;
+    stroke: var(--od-border);
+    stroke-width: 2;
+}
+
+.od-toast .spinner-circle-progress {
+    fill: none;
+    stroke: var(--od-accent);
+    stroke-width: 2;
+    stroke-dasharray: 62.83;
+    stroke-dashoffset: 62.83;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+/* Oneirodex GameActionBar */
+.od-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Two columns, four actions — Download/Update on the left, Install/Uninstall on
+   the right. Row-major flow over the existing DOM order (Download, Install,
+   Update, Uninstall) lands each pair in its own column with no markup change,
+   so the lifecycle reads down each side: get it, then update it; put it on the
+   device, then take it off. Stacked one per row, these four were most of the
+   menu's height. */
+.od-action-bar--compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    align-items: stretch;
+}
+
+/* A single action must not stretch across both columns and read as a banner. */
+.od-action-bar--compact > :only-child {
+    grid-column: 1 / -1;
+}
+
+.od-action-bar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    border-radius: var(--od-radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    font-size: var(--od-font-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.od-action-bar__btn--primary {
+    background: var(--od-accent);
+    border-color: transparent;
+    color: var(--od-accent-contrast);
+}
+
+.od-action-bar__btn--danger {
+    border-color: rgba(200, 60, 60, 0.4);
+}
+
+.od-action-bar__btn:disabled,
+.od-action-bar__btn.is-disabled,
+.od-action-bar__btn[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: pointer;
+}
+
+.od-action-bar__presence {
+    font-size: var(--od-font-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--od-text-muted);
+    padding: 0.2rem 0.45rem;
+    border-radius: var(--od-radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.od-action-bar__presence.is-online {
+    color: var(--od-accent);
+    border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+}
+
+.od-action-bar__status {
+    flex: 1 1 100%;
+    font-size: var(--od-font-sm);
+    opacity: 0.9;
+}
+
+.menu-item--action-bar {
+    padding: 6px 8px;
+}
+
+.menu-item--action-bar .od-action-bar__btn {
+    width: 100%;
+}
+
+/* Playtime panel (game details) */
+.od-playtime {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.od-playtime__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.od-playtime__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.od-playtime__live {
+    background: rgba(40, 130, 90, 0.35);
+}
+
+/* Game Info Popup */
+.popup-game-details {
+    position: absolute;
+    top: 0%;
+    z-index: 5;
+    background: var(--pagination-bg);
+    padding: var(--spacing-md);
+    animation: fadein 0.5s;
+    display: none;
+    border-radius: var(--od-radius-xs);
+    box-sizing: content-box;
+}
+
+.popup-game-details img {
+    border: 1px solid var(--color-black-pure);
+    width: 300px;
+}
+
+.popup-game-details:not(.hidden) {
+    display: block;
+}
+
+.game-info-box {
+    background: var(--pagination-bg);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    animation: fadein 0.5s;
+    height: 95%;
+}
+
+.game-name {
+    font-size: var(--od-font-lg);
+    color: var(--text-white);
+}
+
+.game-name, .game-size, .game-genres {
+    margin-bottom: 5px;
+    margin-left: 0px;
+}
+
+.chip,
+.od-chip,
+a.chip,
+a.od-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 1.55rem;
+    padding: 0.2rem 0.65rem;
+    margin: 2px;
+    font-size: var(--od-font-xs);
+    font-weight: 650;
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+    border-radius: var(--od-radius-pill);
+    border: 1px solid color-mix(in srgb, var(--od-border) 85%, transparent);
+    background-color: var(--chip-bg-dark, color-mix(in srgb, var(--od-surface-2) 88%, transparent));
+    color: var(--text-white, var(--od-text-muted));
+    white-space: nowrap;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+a.chip:link,
+a.chip:visited,
+a.chip:hover,
+a.chip:active,
+a.chip:focus,
+a.od-chip:link,
+a.od-chip:visited,
+a.od-chip:hover,
+a.od-chip:active,
+a.od-chip:focus {
+    text-decoration: none;
+    color: var(--text-white, var(--od-text-muted));
+}
+
+.file-size-chip {
+    background-color: var(--chip-bg-blue);
+    max-width: 50%;
+    margin-bottom: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
+.submenu-libraries {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background-color: var(--submenu-bg);
+    box-shadow: 0px 8px 16px 0px var(--bg-dark-tertiary);
+    padding: 8px;
+    z-index: 13;
+    min-width: 150px;
+}
+
+.loading-libraries {
+    padding: 8px;
+    color: var(--color-gray-ddd);
+}
+
+.library-item {
+    padding: 8px;
+    cursor: pointer;
+    color: var(--color-gray-ddd);
+}
+
+.library-item:hover {
+    background-color: var(--submenu-hover);
+}
+
+.move-library-container {
+    position: relative;
+}
+
+/* === IMAGE REFRESH PROGRESS SPINNER === */
+.image-refresh-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+    position: relative;
+}
+
+.image-refresh-spinner svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.spinner-circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 3;
+}
+
+.spinner-circle-progress {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 62.83;
+    stroke-dashoffset: 62.83;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.alert-image-refresh {
+    background-color: var(--od-info);
+    color: white;
+    border-color: var(--od-info);
+}
+
+.od-details-react {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.od-details-react__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.od-details-react__badges .od-badge-stack {
+  position: static;
+}
+
+/* --- Tile hover preview (UX-B3) ------------------------------------------- */
+
+/* The lift and glow that used to live here are merged into the single
+   `.game-card:hover` rule near the top of this file. Two rules for one state,
+   the second silently overriding the first, is how the tile-size hover curve
+   ended up dead and how the accent ring ended up on screen unowned. */
+
+/* Dead centre, not a corner.
+ *
+ * This sat bottom-centre, which is only clear on a large tile: at 120–150px the
+ * platform chip (bottom-left) and the badge stack (bottom-right) close in from
+ * both sides and the pill lands on top of them. The centre is the one region no
+ * badge stack, chip or control stack ever claims, so it cannot re-collide at
+ * any tile size.
+ *
+ * It stays small and text-only on purpose. The cover behind it is a link to the
+ * full details page, and that is the tile's primary target — the preview is the
+ * secondary one and should not swallow the middle of the tile. */
+.od-tile-preview-hint {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 6px));
+    z-index: 17;
+    padding: 0.24rem 0.75rem;
+    border-radius: var(--od-radius-pill, 999px);
+    border: 1px solid color-mix(in srgb, var(--od-accent) 55%, transparent);
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(5px);
+    color: var(--text-white, var(--od-text));
+    font: inherit;
+    font-size: clamp(0.6rem, calc(var(--od-tile-min, 180px) * 0.055), 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.game-card:hover .od-tile-preview-hint,
+.od-tile-preview-hint:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* See the reduced-motion note beside the hover rule near the top of this
+       file: the scale stays, the travel and the easing go. This block used to
+       repeat `transform: none` and was the one that actually won, being later
+       in the file. */
+    .game-card:hover,
+    .game-card:focus-visible,
+    .game-card:has(:focus-visible) {
+        transform: scale(var(--od-tile-hover-scale, 1.25));
+        transition: none;
+    }
+
+    .od-tile-preview-hint {
+        transition: none;
+    }
+}

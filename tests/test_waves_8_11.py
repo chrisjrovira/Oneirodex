@@ -1,12 +1,12 @@
 """Waves 8–11 unit tests (no DB)."""
 
-from gametheca.utils.acquire_scoring import rank_acquire_hits, score_acquire_hit, title_looks_like_newer_repack
-from gametheca.utils.frontend_export import (
+from oneirodex.utils.acquire_scoring import rank_acquire_hits, score_acquire_hit, title_looks_like_newer_repack
+from oneirodex.utils.frontend_export import (
     build_es_de_gamelist,
     build_pegasus_metadata,
     portable_export_path,
 )
-from gametheca.utils.plugins import get_plugin, list_plugins
+from oneirodex.utils.plugins import get_plugin, list_plugins
 
 
 def test_acquire_scoring_ranks_seeders_and_gog():
@@ -93,7 +93,7 @@ def test_plugin_registry():
 def test_ruffle_play_url_requires_player_file(tmp_path, monkeypatch):
     from flask import Flask
 
-    from gametheca.utils import ruffle_play as rp
+    from oneirodex.utils import ruffle_play as rp
 
     app = Flask(__name__, root_path=str(tmp_path))
     app.config['ENABLE_RUFFLE'] = True

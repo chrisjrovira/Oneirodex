@@ -32,8 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--limit', type=int, default=None, help='Stop after N new generations')
     parser.add_argument(
         '--package-root',
-        default=str(ROOT / 'gametheca'),
-        help='Package root containing static/ (default: gametheca/)',
+        default=str(ROOT / 'oneirodex'),
+        help='Package root containing static/ (default: oneirodex/)',
     )
     parser.add_argument('--json', action='store_true', help='Print machine-readable summary')
     args = parser.parse_args(argv)
@@ -50,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
             value = value.strip().strip('"').strip("'")
             os.environ.setdefault(key, value)
 
-    from gametheca.utils.system_marks import generate_system_marks, theme_slugs
+    from oneirodex.utils.system_marks import generate_system_marks, theme_slugs
 
     themes = args.themes
     if args.all:

@@ -118,13 +118,14 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const canBatchRefreshImages = Boolean(
     shellConfig.isLibrarian || shellConfig.isAdmin || initialConfig.isAdmin,
   )
+  const useNewChrome = usesNewChrome(shellConfig)
   const filtersPanelId = useId()
   // The rail is rendered by the shell, not by this tree, so the slot only
   // exists after mount. Resolving it in state (rather than a ref read during
   // render) makes the first paint correct instead of one frame late.
   const [railSlot, setRailSlot] = useState(null)
   useEffect(() => {
-    setRailSlot(document.getElementById('gt-rail-slot'))
+    setRailSlot(document.getElementById('od-rail-slot'))
   }, [])
   const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(1)
@@ -147,6 +148,8 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
+  /** UUIDs known to have a pending wishlist request (session + batch skips). */
+  const [wishlistPendingIds, setWishlistPendingIds] = useState(() => new Set())
   const [selectionBusy, setSelectionBusy] = useState(false)
   const [wishlistAvailable, setWishlistAvailable] = useState(true)
   const [playStatusAvailable, setPlayStatusAvailable] = useState(true)
@@ -452,16 +455,34 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     }
   }
 
-  const runBatchWishlist = async () => {
+  const runBatchWishlist = async (remove = false) => {
     const uuids = Array.from(selectedIds)
     if (uuids.length === 0 || selectionBusy || !wishlistAvailable) {
       return
     }
     setSelectionBusy(true)
     try {
-      const outcome = await batchAddToWishlist(uuids)
+      const outcome = await batchAddToWishlist(uuids, {
+        action: remove ? 'remove' : 'add',
+      })
+      const touched = new Set([
+        ...batchItemUuids(outcome.updated),
+        ...(outcome.skipped || [])
+          .filter((row) => row?.reason === 'already_pending' && row.uuid)
+          .map((row) => row.uuid),
+      ])
+      if (touched.size) {
+        setWishlistPendingIds((prev) => {
+          const next = new Set(prev)
+          touched.forEach((uuid) => {
+            if (remove) next.delete(uuid)
+            else next.add(uuid)
+          })
+          return next
+        })
+      }
       const summary = summarizeBatchOutcome(outcome, {
-        actionLabel: t('Wishlist'),
+        actionLabel: remove ? t('Remove from wishlist') : t('Wishlist'),
         t,
       })
       showToast(summary.message, summary.tone)
@@ -534,6 +555,21 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   const showRefreshing = loading && Boolean(result)
   const hidePlatformChip = Boolean(filters.library_platform)
 
+  const selectedFavoriteMode = useMemo(() => {
+    if (!selectedIds.size) return 'add'
+    for (const uuid of selectedIds) {
+      if (!favoriteByUuid[uuid]) return 'add'
+    }
+    return 'remove'
+  }, [favoriteByUuid, selectedIds])
+  const selectedWishlistMode = useMemo(() => {
+    if (!selectedIds.size) return 'add'
+    for (const uuid of selectedIds) {
+      if (!wishlistPendingIds.has(uuid)) return 'add'
+    }
+    return 'remove'
+  }, [selectedIds, wishlistPendingIds])
+
   const gridProps = {
     games,
     showPlayStatus: initialConfig.showPlayStatus,
@@ -591,24 +627,30 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
             retryLabel={t('Retry')}
           />
         )}
-        <LibrarySelectionBar
-          count={selectedIds.size}
-          busy={selectionBusy}
-          wishlistAvailable={wishlistAvailable}
-          playStatusAvailable={playStatusAvailable}
-          refreshImagesAvailable={refreshImagesAvailable}
-          onFavorite={() => void runBatchFavorite(true)}
-          onUnfavorite={() => void runBatchFavorite(false)}
-          onRefreshFreshness={() => void runBatchFreshness()}
-          onRefreshImages={
-            canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined
-          }
-          onWishlist={() => void runBatchWishlist()}
-          onPlayStatus={(status) => void runBatchPlayStatus(status)}
-          onSelectPage={selectPage}
-          onClear={clearSelection}
-          t={t}
-        />
+        {/* New chrome mounts selection in the top bar (replaces All/Games/View). */}
+        {useNewChrome ? null : (
+          <LibrarySelectionBar
+            count={selectedIds.size}
+            busy={selectionBusy}
+            wishlistAvailable={wishlistAvailable}
+            playStatusAvailable={playStatusAvailable}
+            refreshImagesAvailable={refreshImagesAvailable}
+            favoriteMode={selectedFavoriteMode}
+            wishlistMode={selectedWishlistMode}
+            onFavorite={() => void runBatchFavorite(true)}
+            onUnfavorite={() => void runBatchFavorite(false)}
+            onRefreshFreshness={() => void runBatchFreshness()}
+            onRefreshImages={
+              canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined
+            }
+            onWishlist={() => void runBatchWishlist(false)}
+            onWishlistRemove={() => void runBatchWishlist(true)}
+            onPlayStatus={(status) => void runBatchPlayStatus(status)}
+            onSelectPage={selectPage}
+            onClear={clearSelection}
+            t={t}
+          />
+        )}
         <div className={showRefreshing ? 'library-grid-loading' : undefined}>
           {games.length === 0 ? (
             <>
@@ -645,8 +687,6 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       (game) => game.library_platform === filters.library_platform,
     )?.library_platform_label || filters.library_platform || ''
 
-  const useNewChrome = usesNewChrome(shellConfig)
-
   // Kind becomes the segmented control. A URL may still carry several kinds —
   // that keeps working, it just lights no segment, which is honest: the
   // segmented control cannot represent "two of these at once".
@@ -672,6 +712,32 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     ([key]) => !NOT_A_FILTER.has(key),
   ).length
 
+  const selecting = selectedIds.size > 0
+  const selectionBar = (
+    <LibrarySelectionBar
+      count={selectedIds.size}
+      busy={selectionBusy}
+      wishlistAvailable={wishlistAvailable}
+      playStatusAvailable={playStatusAvailable}
+      refreshImagesAvailable={refreshImagesAvailable}
+      favoriteMode={selectedFavoriteMode}
+      wishlistMode={selectedWishlistMode}
+      onFavorite={() => void runBatchFavorite(true)}
+      onUnfavorite={() => void runBatchFavorite(false)}
+      onRefreshFreshness={() => void runBatchFreshness()}
+      onRefreshImages={
+        canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined
+      }
+      onWishlist={() => void runBatchWishlist(false)}
+      onWishlistRemove={() => void runBatchWishlist(true)}
+      onPlayStatus={(status) => void runBatchPlayStatus(status)}
+      onSelectPage={selectPage}
+      onClear={clearSelection}
+      t={t}
+      inTopBar={useNewChrome}
+    />
+  )
+
   const filterBar = (
     <div className="library-filters-stack">
       <FilterBar
@@ -692,9 +758,11 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
           label={selectedSystemLabel}
         />
         <ContextBar
-          views={kindViews}
-          activeView={activeView}
-          onSelectView={selectKindView}
+          /* While selecting, the kind / View strip is unused — put the fused
+             selection actions in the centre instead (Filters stay). */
+          views={selecting ? undefined : kindViews}
+          activeView={selecting ? undefined : activeView}
+          onSelectView={selecting ? undefined : selectKindView}
           filterCount={activeFilterCount}
           filters={() => (
             <div className="library-filters-stack">
@@ -709,20 +777,27 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
             </div>
           )}
           summary={
-            typeof result?.total === 'number'
-              ? `${result.total.toLocaleString()} ${t('titles')}`
-              : null
+            selecting
+              ? null
+              : typeof result?.total === 'number'
+                ? `${result.total.toLocaleString()} ${t('titles')}`
+                : null
           }
           t={t}
-          viewUnfurl={{
-            views: CATALOG_LAYOUTS.map((view) => ({
-              ...view,
-              label: t(view.label),
-            })),
-            active: layout,
-            onSelect: setLayout,
-            triggerLabel: t('View'),
-          }}
+          viewUnfurl={
+            selecting
+              ? null
+              : {
+                  views: CATALOG_LAYOUTS.map((view) => ({
+                    ...view,
+                    label: t(view.label),
+                  })),
+                  active: layout,
+                  onSelect: setLayout,
+                  triggerLabel: t('View'),
+                }
+          }
+          actions={selecting ? selectionBar : null}
         />
         {/* No aside, no collapse rail, no page header — the grid gets the
             whole width, which is the visible payoff of the refresh. */}
@@ -740,7 +815,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       label={selectedSystemLabel}
     />
     <div className="library-layout">
-      {/* Filters render into the rail (GT-B4) — see #gt-rail-slot in SideRail.
+      {/* Filters render into the rail (GT-B4) — see #od-rail-slot in SideRail.
           They used to be a 17.5rem sticky aside sitting immediately right of
           the rail: two left-hand panels, which is what read as broken, plus a
           collapse tab that clipped itself against the top of the column.

@@ -9,8 +9,8 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import User
-from gametheca.utils.game_details_payload import (
+from oneirodex.models import User
+from oneirodex.utils.game_details_payload import (
     _parse_video_urls,
     build_game_details_payload,
 )
@@ -140,20 +140,20 @@ def test_build_game_details_payload_exposes_trailers_from_csv():
     game.images.all.return_value = []
     user = SimpleNamespace(id=7, role='user', preferences=None)
 
-    with patch('gametheca.utils.game_details_payload.db') as mock_db, patch(
-        'gametheca.utils.game_details_payload.load_lifecycle_map',
+    with patch('oneirodex.utils.game_details_payload.db') as mock_db, patch(
+        'oneirodex.utils.game_details_payload.load_lifecycle_map',
         return_value={},
     ), patch(
-        'gametheca.utils.game_details_payload.resolve_game_cover_url',
+        'oneirodex.utils.game_details_payload.resolve_game_cover_url',
         return_value='/static/newstyle/default_cover.jpg',
     ), patch(
-        'gametheca.utils.game_details_payload.browse_play_fields',
+        'oneirodex.utils.game_details_payload.browse_play_fields',
         return_value={'play_url': None, 'can_play_in_browser': False},
     ), patch(
-        'gametheca.utils.game_details_payload.game_card_flags',
+        'oneirodex.utils.game_details_payload.game_card_flags',
         return_value={},
     ), patch(
-        'gametheca.utils.game_details_payload.web_lifecycle_fields',
+        'oneirodex.utils.game_details_payload.web_lifecycle_fields',
         return_value={
             'lifecycle_state': 'not_downloaded',
             'client_connected': False,
@@ -235,20 +235,20 @@ def test_build_game_details_payload_admin_gets_paths():
     game.images.all.return_value = []
     admin = SimpleNamespace(id=1, role='admin', preferences=None)
 
-    with patch('gametheca.utils.game_details_payload.db') as mock_db, patch(
-        'gametheca.utils.game_details_payload.load_lifecycle_map',
+    with patch('oneirodex.utils.game_details_payload.db') as mock_db, patch(
+        'oneirodex.utils.game_details_payload.load_lifecycle_map',
         return_value={},
     ), patch(
-        'gametheca.utils.game_details_payload.resolve_game_cover_url',
+        'oneirodex.utils.game_details_payload.resolve_game_cover_url',
         return_value='/static/newstyle/default_cover.jpg',
     ), patch(
-        'gametheca.utils.game_details_payload.browse_play_fields',
+        'oneirodex.utils.game_details_payload.browse_play_fields',
         return_value={},
     ), patch(
-        'gametheca.utils.game_details_payload.game_card_flags',
+        'oneirodex.utils.game_details_payload.game_card_flags',
         return_value={},
     ), patch(
-        'gametheca.utils.game_details_payload.web_lifecycle_fields',
+        'oneirodex.utils.game_details_payload.web_lifecycle_fields',
         return_value={},
     ):
         mock_db.session.execute.return_value.scalars.return_value.all.return_value = []

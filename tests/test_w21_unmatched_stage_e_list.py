@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Library, ScanJob, UnmatchedFolder, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.match_proposal import (
+from oneirodex.models import Library, ScanJob, UnmatchedFolder, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.match_proposal import (
     build_match_proposal,
     hint_fields_from_proposal,
     sync_unmatched_kind_hint,

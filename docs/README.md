@@ -2,7 +2,7 @@
 
 **Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
-Hub for product, ops, and developer docs. Public name **Oneirodex** (phase 1 landed; phase 2 ops dual names; GitHub `chrisjrovira/oneirodex`; phase 3a `ONEIRODEX_*` / `--od-*`). Package `gametheca/`, Compose defaults `gametheca-*`, preferred Hub image `chrisjrovira/oneirodex` once published. [ADR 0003](adr/0003-product-name-oneirodex.md).
+Hub for product, ops, and developer docs. Public name **Oneirodex** (phase 1 landed; phase 2 ops dual names; GitHub `chrisjrovira/oneirodex`; phase 3a `ONEIRODEX_*` / `--od-*`). Package `oneirodex/`, Compose defaults `oneirodex-*`, preferred Hub image `chrisjrovira/oneirodex` once published. [ADR 0003](adr/0003-product-name-oneirodex.md).
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
@@ -54,10 +54,10 @@ docs/
 | Surface | Value |
 |---|---|
 | Product (shipped today) | Oneirodex (public string) |
-| Ops / code identifiers | P3b: Compose defaults `oneirodex-*`; npm `@oneirodex/api-client`. Package / `.gt-*` still `gametheca` — [ADR 0003](adr/0003-product-name-oneirodex.md) |
+| Ops / code identifiers | P3b: Compose defaults `oneirodex-*`; npm `@oneirodex/api-client`. Package / `.gt-*` still `oneirodex` — [ADR 0003](adr/0003-product-name-oneirodex.md) |
 | Version | 1.0.0-beta |
 | GitHub | chrisjrovira/oneirodex |
 | App / DB containers | oneirodex-app · oneirodex-db |
-| Optional voice | gametheca-livekit (`--profile livekit`) |
-| Python package | gametheca |
+| Optional voice | oneirodex-livekit (`--profile livekit`) |
+| Python package | oneirodex |
 | Default accent | `#2fd67b` (Style B+C glass) |

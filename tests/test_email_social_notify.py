@@ -7,10 +7,10 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca import db
-from gametheca.models import User, UserPreference
-from gametheca.utils.notifications import maybe_email_social_notify, notify_user
-from gametheca.utils.smtp import is_smtp_config_valid, send_email_quiet
+from oneirodex import db
+from oneirodex.models import User, UserPreference
+from oneirodex.utils.notifications import maybe_email_social_notify, notify_user
+from oneirodex.utils.smtp import is_smtp_config_valid, send_email_quiet
 
 
 @pytest.fixture
@@ -33,14 +33,14 @@ def member(db_session):
 
 
 def test_is_smtp_config_valid_when_disabled_returns_false():
-    with patch('gametheca.utils.smtp.get_smtp_settings', return_value=None):
+    with patch('oneirodex.utils.smtp.get_smtp_settings', return_value=None):
         ok, message = is_smtp_config_valid()
     assert ok is False
     assert 'not enabled' in message.lower()
 
 
 def test_send_email_quiet_skips_when_smtp_off():
-    with patch('gametheca.utils.smtp.get_smtp_settings', return_value=None):
+    with patch('oneirodex.utils.smtp.get_smtp_settings', return_value=None):
         assert send_email_quiet('a@b.c', 'Hi', '<p>x</p>') is False
 
 
@@ -49,7 +49,7 @@ def test_maybe_email_skips_when_pref_off(app, db_session, member):
         prefs = UserPreference(user_id=member.id, email_notify_social=False)
         db_session.add(prefs)
         db_session.commit()
-        with patch('gametheca.utils.notifications.send_email_quiet') as send:
+        with patch('oneirodex.utils.notifications.send_email_quiet') as send:
             assert maybe_email_social_notify(
                 member.id,
                 kind='mention',
@@ -65,7 +65,7 @@ def test_maybe_email_sends_when_pref_on(app, db_session, member):
         prefs = UserPreference(user_id=member.id, email_notify_social=True)
         db_session.add(prefs)
         db_session.commit()
-        with patch('gametheca.utils.notifications.send_email_quiet', return_value=True) as send:
+        with patch('oneirodex.utils.notifications.send_email_quiet', return_value=True) as send:
             assert maybe_email_social_notify(
                 member.id,
                 kind='dm',
@@ -88,7 +88,7 @@ def test_maybe_email_skips_unverified(app, db_session, member):
         prefs = UserPreference(user_id=user.id, email_notify_social=True)
         db.session.add(prefs)
         db.session.commit()
-        with patch('gametheca.utils.notifications.send_email_quiet') as send:
+        with patch('oneirodex.utils.notifications.send_email_quiet') as send:
             assert maybe_email_social_notify(
                 user.id,
                 kind='mention',
@@ -108,7 +108,7 @@ def test_notify_user_triggers_email_for_mention(app, db_session, member):
         )
         db_session.add(prefs)
         db_session.commit()
-        with patch('gametheca.utils.notifications.send_email_quiet', return_value=True) as send:
+        with patch('oneirodex.utils.notifications.send_email_quiet', return_value=True) as send:
             row = notify_user(
                 member.id,
                 kind='mention',
@@ -126,7 +126,7 @@ def test_notify_user_skips_email_for_friend_request(app, db_session, member):
         prefs = UserPreference(user_id=member.id, email_notify_social=True)
         db_session.add(prefs)
         db_session.commit()
-        with patch('gametheca.utils.notifications.send_email_quiet') as send:
+        with patch('oneirodex.utils.notifications.send_email_quiet') as send:
             row = notify_user(
                 member.id,
                 kind='friend_request',

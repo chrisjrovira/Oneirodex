@@ -1,0 +1,8 @@
+/* Outline — default Oneirodex stroke icons; theme --od-icon-* may refine. */
+html[data-icon-pack="outline"] .od-icon {
+  stroke-width: var(--od-icon-stroke, 2);
+  stroke-linecap: var(--od-icon-linecap, round);
+  stroke-linejoin: var(--od-icon-linejoin, round);
+  fill: var(--od-icon-fill, none);
+  fill-opacity: var(--od-icon-fill-opacity, 1);
+}

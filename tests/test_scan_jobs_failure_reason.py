@@ -14,8 +14,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Library, ScanJob, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Library, ScanJob, User
+from oneirodex.platform import LibraryPlatform
 
 RECLAIM_MESSAGE = (
     'Scan owner process is no longer running; reclaimed so queued scans can start.'
@@ -116,7 +116,7 @@ def test_ops_summary_carries_the_failure_reason(app, db_session, failed_job):
     explains a job that stopped. The Ops console could therefore report a
     failure and never its reason, including the ownership sweep's.
     """
-    from gametheca.utils.ops_summary import _scan_snapshot
+    from oneirodex.utils.ops_summary import _scan_snapshot
 
     with app.app_context():
         snapshot = _scan_snapshot()
@@ -135,7 +135,7 @@ def test_ops_summary_reports_no_reason_as_none_not_empty_string(
     `''` and `None` render differently once a UI starts branching on the field,
     and ScanJob defaults error_message to an empty string on create.
     """
-    from gametheca.utils.ops_summary import _scan_snapshot
+    from oneirodex.utils.ops_summary import _scan_snapshot
 
     library = Library(name=f'OkLib_{uuid4().hex[:6]}', platform=LibraryPlatform.PCWIN)
     db_session.add(library)
@@ -182,7 +182,7 @@ def test_library_tools_page_redirects_to_the_scan_tab(admin_client):
 def test_unmatched_compare_offers_a_pop_out():
     src = (
         Path(__file__).resolve().parents[1]
-        / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'admin_manage_scanjobs.js'
+        / 'oneirodex' / 'setup' / 'default_theme' / 'js' / 'admin_manage_scanjobs.js'
     ).read_text(encoding='utf-8')
     assert 'showDupeComparePopout' in src
     assert 'unmatched-dupe-compare__pop' in src

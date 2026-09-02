@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach } from 'vitest'
 import { App, resolveRenderMode } from './App'
@@ -164,11 +164,16 @@ test('renders admin brand and primary nav', () => {
   expect(screen.getByText('Oneirodex Admin')).toBeInTheDocument()
   const nav = screen.getByRole('navigation', { name: 'Admin' })
   expect(nav.querySelector('a[href="/admin/dashboard"]')).toHaveTextContent('Dashboard')
-  expect(nav.querySelector('a[href="/admin/settings"]')).toHaveTextContent('Settings')
+  // Foldable sections are member-style group toggles; Server settings is the dest.
+  expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('od-rail__group-toggle')
 
   // UX-C2: libraries and scans are one tabbed page, so they share one nav item.
-  const libraries = nav.querySelector('a[href="/scan_management?active_tab=libraries"]')
-  expect(libraries).toHaveTextContent('Libraries & scans')
+  const librariesToggle = screen.getByRole('button', { name: 'Libraries & scans' })
+  expect(librariesToggle).toHaveClass('od-rail__group-toggle')
+  fireEvent.click(librariesToggle)
+  expect(nav.querySelector('a[href="/scan_management?active_tab=libraries"]')).toHaveTextContent(
+    'Libraries',
+  )
   expect(nav.querySelector('a[href="/libraries"]')).toBeNull()
 })
 

@@ -12,7 +12,7 @@ Do **not** buy an EV (or any) code-signing cert for this product. Operators shou
 
 | Flavor | Command | Output (same Cargo binary name) | Copy for distribution |
 |---|---|---|---|
-| **Full companion** | `npm run tauri:build` | `src-tauri/target/release/gametheca-desktop.exe` | Keep as `Oneirodex-full.exe` |
+| **Full companion** | `npm run tauri:build` | `src-tauri/target/release/oneirodex-desktop.exe` | Keep as `Oneirodex-full.exe` |
 | **Thin client** | `npm run tauri:build:thin` | Same path (overwrites) — uses `tauri.thin.conf.json` + `VITE_CLIENT_MODE=thin` via `--mode thin` / `.env.thin` | Copy to `Oneirodex-thin.exe` **before** rebuilding the other flavor |
 
 Thin build uses capabilities `thin-main` / `thin-library` / `social` (no install/FS lifecycle ACL). Full uses `default` + `social`.
@@ -23,7 +23,7 @@ No env vars required for unsigned build. Do not enable bundling or certificate t
 
 ## GitHub Actions
 
-Workflow [`.github/workflows/desktop-build.yml`](../../.github/workflows/desktop-build.yml) builds and uploads an **unsigned** `gametheca-desktop.exe`. There is no signing step.
+Workflow [`.github/workflows/desktop-build.yml`](../../.github/workflows/desktop-build.yml) builds and uploads an **unsigned** `oneirodex-desktop.exe`. There is no signing step.
 
 ## Historical note
 

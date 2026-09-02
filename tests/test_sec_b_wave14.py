@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from gametheca.utils.security import validate_outbound_http_url
+from oneirodex.utils.security import validate_outbound_http_url
 
 
 def test_private_lan_blocked_by_default(monkeypatch):
@@ -35,7 +35,7 @@ def test_metadata_blocked_even_with_lan_flag():
 
 
 def test_presence_helpers_importable():
-    from gametheca.utils.presence import AWAY_AFTER_SECONDS, presence_for_user
+    from oneirodex.utils.presence import AWAY_AFTER_SECONDS, presence_for_user
 
     assert AWAY_AFTER_SECONDS > 0
     assert callable(presence_for_user)

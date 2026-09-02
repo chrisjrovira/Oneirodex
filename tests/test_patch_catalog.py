@@ -4,17 +4,17 @@ from pathlib import Path
 
 import pytest
 
-from gametheca.utils.patch_catalog.local_yaml import (
+from oneirodex.utils.patch_catalog.local_yaml import (
     load_catalog_file,
     normalize_title,
     score_entry,
 )
-from gametheca.utils.patch_catalog.registry import (
+from oneirodex.utils.patch_catalog.registry import (
     get_patch_provider,
     reset_patch_catalog_cache,
     search_all_patch_providers,
 )
-from gametheca.utils.patch_catalog.stub import StubRemotePatchCatalogProvider
+from oneirodex.utils.patch_catalog.stub import StubRemotePatchCatalogProvider
 
 FIXTURE = Path(__file__).parent / 'fixtures' / 'patch_catalog.json'
 

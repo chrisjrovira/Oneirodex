@@ -1,32 +1,32 @@
 /* Report issue — primary fields first; logs/context collapsed */
 
-.gt-report__result {
+.od-report__result {
   margin: 0 0 1rem;
   padding: 0.65rem 0.8rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
-  font-size: var(--gt-font-md);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 10%, transparent);
+  font-size: var(--od-font-md);
   line-height: 1.4;
 }
 
-.gt-report__result a {
-  color: var(--gt-accent);
+.od-report__result a {
+  color: var(--od-accent);
 }
 
-.gt-report {
+.od-report {
   min-width: 0;
   width: 100%;
   max-width: min(100%, 72rem);
   box-sizing: border-box;
 }
 
-.gt-report .gt-more-page__lede {
+.od-report .od-more-page__lede {
   max-width: min(100%, 56rem);
   overflow-wrap: break-word;
 }
 
-.gt-report__form {
+.od-report__form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -35,110 +35,110 @@
   min-width: 0;
 }
 
-.gt-report__primary {
+.od-report__primary {
   padding: 0 0 0.35rem;
 }
 
-.gt-report__section-title {
+.od-report__section-title {
   margin: 0 0 0.65rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-report__row {
+.od-report__row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 0.65rem;
 }
 
-.gt-report__field {
+.od-report__field {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   margin-bottom: 0.65rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   min-width: 0;
 }
 
-.gt-report__field span {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+.od-report__field span {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
   font-weight: 600;
 }
 
-.gt-report__field input,
-.gt-report__field select,
-.gt-report__field textarea {
+.od-report__field input,
+.od-report__field select,
+.od-report__field textarea {
   font: inherit;
   padding: 0.45rem 0.6rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 90%, transparent);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 90%, transparent);
+  color: var(--od-text);
 }
 
-.gt-report__field input:focus,
-.gt-report__field select:focus,
-.gt-report__field textarea:focus {
+.od-report__field input:focus,
+.od-report__field select:focus,
+.od-report__field textarea:focus {
   outline: none;
-  border-color: var(--gt-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-accent) 28%, transparent);
+  border-color: var(--od-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--od-accent) 28%, transparent);
 }
 
-.gt-report__field textarea {
+.od-report__field textarea {
   resize: vertical;
   min-height: 4.5rem;
 }
 
-.gt-report__fold {
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: var(--gt-radius-sm);
+.od-report__fold {
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  border-radius: var(--od-radius-sm);
   background: transparent;
 }
 
-.gt-report__fold summary {
+.od-report__fold summary {
   cursor: pointer;
   padding: 0.55rem 0.75rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   font-weight: 600;
-  color: var(--gt-text);
+  color: var(--od-text);
   list-style: none;
 }
 
-.gt-report__fold summary::-webkit-details-marker {
+.od-report__fold summary::-webkit-details-marker {
   display: none;
 }
 
-.gt-report__fold summary::after {
+.od-report__fold summary::after {
   content: '+';
   float: right;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font-weight: 400;
 }
 
-.gt-report__fold[open] summary::after {
+.od-report__fold[open] summary::after {
   content: '−';
 }
 
-.gt-report__fold summary:hover,
-.gt-report__fold summary:focus-visible {
-  color: var(--gt-accent);
+.od-report__fold summary:hover,
+.od-report__fold summary:focus-visible {
+  color: var(--od-accent);
   outline: none;
 }
 
-.gt-report__fold-body {
+.od-report__fold-body {
   padding: 0 0.75rem 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 60%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--od-border) 60%, transparent);
 }
 
-.gt-report__fold-body .gt-report__field:last-child {
+.od-report__fold-body .od-report__field:last-child {
   margin-bottom: 0;
 }
 
-.gt-report__actions {
+.od-report__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -146,42 +146,42 @@
   margin-top: 0.25rem;
 }
 
-.gt-report__help-link {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+.od-report__help-link {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   text-decoration: none;
 }
 
-.gt-report__help-link:hover,
-.gt-report__help-link:focus-visible {
-  color: var(--gt-accent);
+.od-report__help-link:hover,
+.od-report__help-link:focus-visible {
+  color: var(--od-accent);
   outline: none;
 }
 
 /* What kind of report — asked first, because it changes what everything below
    it means. Two large targets rather than a select: there are exactly two
    answers and the difference between them matters more than the width saved. */
-.gt-report__kind {
+.od-report__kind {
   margin: 0 0 1rem;
   padding: 0;
   border: 0;
 }
 
-.gt-report__kind-legend {
+.od-report__kind-legend {
   padding: 0;
   margin-bottom: 0.4rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 650;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-report__kind-options {
+.od-report__kind-options {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.gt-report__kind-option {
+.od-report__kind-option {
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-areas:
@@ -191,34 +191,34 @@
   gap: 0.15rem 0.5rem;
   flex: 1 1 12rem;
   padding: 0.55rem 0.7rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-bg) 40%, transparent);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-bg) 40%, transparent);
   cursor: pointer;
 }
 
-.gt-report__kind-option:hover {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+.od-report__kind-option:hover {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
 }
 
-.gt-report__kind-option[data-selected='true'] {
-  border-color: var(--gt-accent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+.od-report__kind-option[data-selected='true'] {
+  border-color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
 }
 
-.gt-report__kind-option input {
+.od-report__kind-option input {
   grid-area: radio;
   margin: 0;
-  accent-color: var(--gt-accent);
+  accent-color: var(--od-accent);
 }
 
-.gt-report__kind-label {
+.od-report__kind-label {
   grid-area: label;
   font-weight: 650;
 }
 
-.gt-report__kind-hint {
+.od-report__kind-hint {
   grid-area: hint;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }

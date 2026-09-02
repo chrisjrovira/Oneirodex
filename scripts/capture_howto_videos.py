@@ -20,7 +20,7 @@ Design notes
 * Deliberate dwells: a video that snaps between screens faster than a reader
   can follow teaches nothing. `BEAT` is the base rhythm.
 
-Requires a running GameTheca and Playwright Chromium:
+Requires a running Oneirodex and Playwright Chromium:
     pip install playwright && playwright install chromium
 
 Usage:
@@ -141,12 +141,12 @@ def sec_library(page) -> None:
 
     # Filters: the thing most people reach for first.
     click_first(page, [
-        'button:has-text("Filters")', '[aria-label*="ilter"]', '.gt-filterbar button',
+        'button:has-text("Filters")', '[aria-label*="ilter"]', '.od-filterbar button',
     ], "filters", required=True)
     beat(page, 1.4)
 
     # Tile size — visibly changes the grid, so it reads well on video.
-    for sel in ['input[type="range"]', '.gt-tile-slider input']:
+    for sel in ['input[type="range"]', '.od-tile-slider input']:
         try:
             slider = page.locator(sel).first
             if slider.count() and slider.is_visible():
@@ -159,7 +159,7 @@ def sec_library(page) -> None:
             continue
 
     # Open the first real title.
-    # `.gt-game-card` never existed — the class is `game-card`. It matched
+    # `.od-game-card` never existed — the class is `game-card`. It matched
     # nothing for as long as it has been here; the href selector is what has
     # actually been doing the work.
     click_first(page, [
@@ -180,14 +180,14 @@ def sec_game_details(page) -> None:
         beat(page, 0.85)
 
     # Related media popup, when this title has any (most will not).
-    if click_first(page, ['.gt-relmedia__card'], "related media card"):
+    if click_first(page, ['.od-relmedia__card'], "related media card"):
         beat(page, 2.0)
         page.keyboard.press("Escape")
         beat(page, 0.8)
 
     # Screenshot lightbox.
     if click_first(page, [
-        '.gt-shots img', '[data-testid="screenshot"]', '.gt-screenshots img',
+        '.od-shots img', '[data-testid="screenshot"]', '.od-screenshots img',
     ], "screenshot"):
         beat(page, 1.8)
         page.keyboard.press("Escape")
@@ -248,7 +248,7 @@ def sec_preferences(page) -> None:
 
     opened = False
     if click_first(page, [
-        'button[aria-label="Account menu"]', '.gt-topnav__menu-trigger',
+        'button[aria-label="Account menu"]', '.od-topnav__menu-trigger',
     ], "account menu"):
         beat(page, 0.9)
         opened = click_first(page, [

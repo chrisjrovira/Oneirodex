@@ -1,4 +1,4 @@
-# GameTheca Docker Compose — Unraid / NAS
+# Oneirodex Docker Compose — Unraid / NAS
 # App always connects to the Compose service named "db".
 #
 # ---------------------------------------------------------------------------
@@ -12,13 +12,13 @@
 #
 #   LIBRARY / UPLOADS (covers, themes, user uploads)
 #     Host:    LIBRARY_HOST_PATH
-#     Mount:   → /app/gametheca/static/library  (RW)
-#     App env: UPLOAD_FOLDER=/app/gametheca/static/library  (hard-set below)
+#     Mount:   → /app/oneirodex/static/library  (RW)
+#     App env: UPLOAD_FOLDER=/app/oneirodex/static/library  (hard-set below)
 #
 #   BIOS / FIRMWARE (optional — household Unraid only; never ship binaries in git/image)
 #     Host:    EMULATOR_BIOS_HOST_PATH  (appdata, NOT the games share)
-#     Mount:   → /app/gametheca/static/library/bios  (RW; nested under library mount)
-#     App env: EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios
+#     Mount:   → /app/oneirodex/static/library/bios  (RW; nested under library mount)
+#     App env: EMULATOR_BIOS_PATH=/app/oneirodex/static/library/bios
 #     Public/GitHub stance: Admin upload only — do not bake firmware into layers.
 #     Uncomment the bind below when the host folder has legally obtained files.
 #
@@ -27,14 +27,14 @@
 # Observability: commented stub only — see docs/runbooks/observability-profile.md
 #
 # P3b (ADR 0003): new installs default to oneirodex-* names. Live Unraid stacks
-# that still run gametheca-app / gametheca-db should pin those names in .env
+# that still run oneirodex-app / oneirodex-db should pin those names in .env
 # until the scan FIFO is idle, then drop the pins so Compose recreates:
 #   APP_IMAGE=oneirodex:1.0.0-beta
 #   APP_CONTAINER_NAME=oneirodex-app
 #   DB_CONTAINER_NAME=oneirodex-db
 # Preferred Hub image once published: chrisjrovira/oneirodex:1.0.0-beta
-# (chrisjrovira/gametheca remains accepted). Postgres *database* name stays
-# POSTGRES_DB (default gametheca) so existing volumes keep their catalog.
+# (chrisjrovira/oneirodex remains accepted). Postgres *database* name stays
+# POSTGRES_DB (default oneirodex) so existing volumes keep their catalog.
 # Sidecar profile container names (livekit / clamav / …) are unchanged.
 # ---------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ services:
     ports:
       - "5006:5006"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-gametheca}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-oneirodex}
       - DATABASE_HOST=db
       - DATABASE_PORT=5432
       # Container paths (always); host paths live on the volume mounts below
@@ -61,12 +61,12 @@ services:
       #   GT_LIBRARY_ROOTS=… still accepted; blank ONEIRODEX_ falls through.
       - ONEIRODEX_LIBRARY_ROOTS=${ONEIRODEX_LIBRARY_ROOTS:-}
       - GT_LIBRARY_ROOTS=${GT_LIBRARY_ROOTS:-}
-      - UPLOAD_FOLDER=/app/gametheca/static/library
+      - UPLOAD_FOLDER=/app/oneirodex/static/library
       - SECRET_KEY=${SECRET_KEY}
       - DEV_MODE=${DEV_MODE:-false}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-gametheca}
+      - POSTGRES_DB=${POSTGRES_DB:-oneirodex}
       - ENABLE_ARR_MODULE=${ENABLE_ARR_MODULE:-true}
       - ENABLE_ARR_HARDLINK_PIPELINE=${ENABLE_ARR_HARDLINK_PIPELINE:-true}
       - ALLOW_PRIVATE_LAN_URLS=${ALLOW_PRIVATE_LAN_URLS:-true}
@@ -89,6 +89,18 @@ services:
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
       - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-}
+      - OIDC_SCOPES=${OIDC_SCOPES:-openid email profile}
+      - OIDC_ROLE_CLAIM=${OIDC_ROLE_CLAIM:-groups}
+      - OIDC_ROLE_MAP=${OIDC_ROLE_MAP:-}
+      - OIDC_DISPLAY_NAME=${OIDC_DISPLAY_NAME:-Sign in with SSO}
+      - ENABLE_MOD_TRACKING=${ENABLE_MOD_TRACKING:-true}
+      - ENABLE_ACTIVITY_FEED=${ENABLE_ACTIVITY_FEED:-true}
+      - ENABLE_FREE_GAMES=${ENABLE_FREE_GAMES:-true}
+      - ENABLE_DISCOVER_ML=${ENABLE_DISCOVER_ML:-true}
+      - ENABLE_EMAIL_DIGEST=${ENABLE_EMAIL_DIGEST:-true}
+      - ENABLE_LOGIN_RATE_LIMIT=${ENABLE_LOGIN_RATE_LIMIT:-true}
+      - ENABLE_REMOTE_PLAY=${ENABLE_REMOTE_PLAY:-false}
+      - ENABLE_AMBIENT_LIGHTING=${ENABLE_AMBIENT_LIGHTING:-false}
       - PROWLARR_URL=${PROWLARR_URL:-}
       - PROWLARR_API_KEY=${PROWLARR_API_KEY:-}
       - JACKETT_URL=${JACKETT_URL:-}
@@ -128,7 +140,7 @@ services:
       # Optional private BIOS mount (container path). Default matches static library bios
       # so WebRetro / Admin see the same folder. Requires config.EMULATOR_BIOS_PATH
       # from env (Backend) when overriding away from the default path.
-      - EMULATOR_BIOS_PATH=${EMULATOR_BIOS_PATH:-/app/gametheca/static/library/bios}
+      - EMULATOR_BIOS_PATH=${EMULATOR_BIOS_PATH:-/app/oneirodex/static/library/bios}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # ----- UNRAID VOLUMES (see header) -----
@@ -136,7 +148,7 @@ services:
       # Games: host DATA_FOLDER_GAMES → scan root only (RO). Never put uploads here.
       - "${DATA_FOLDER_GAMES}:/storage:ro"
       # Library/uploads: host LIBRARY_HOST_PATH → covers, themes, uploads (RW)
-      - "${LIBRARY_HOST_PATH:-./data/library}:/app/gametheca/static/library"
+      - "${LIBRARY_HOST_PATH:-./data/library}:/app/oneirodex/static/library"
       # Extra scan locations (second disk, NAS share, another appdata share).
       # Uncomment one line per location, mount it RO like /storage, and list the
       # container path in ONEIRODEX_LIBRARY_ROOTS / GT_LIBRARY_ROOTS above. The host side is mounted by
@@ -148,13 +160,13 @@ services:
       # Optional WebRetro cores bind-mount (PCE/VICE/DOS). Host dir must include
       # the shipped 24 cores OR run scripts/fetch-webretro-cores.sh --defaults first —
       # an empty mount hides image cores. See docs/runbooks/webretro-cores.md
-      # - "${WEBRETRO_CORES_HOST_PATH}:/app/gametheca/static/vendor/webretro/cores"
+      - "${WEBRETRO_CORES_HOST_PATH:-/mnt/cache/appdata/oneirodex/webretro-cores}:/app/oneirodex/static/vendor/webretro/cores"
       # Optional private BIOS / firmware (RW appdata — NOT /storage:ro games).
-      # Host example: /mnt/user/appdata/gametheca/bios
+      # Host example: /mnt/user/appdata/oneirodex/bios
       # Nested bind overrides LIBRARY_HOST_PATH/bios so dumps stay out of the
       # games share. Empty host dir is fine (Admin upload still works into it).
       # Never commit BIOS binaries; never bake them into the public image.
-      # - "${EMULATOR_BIOS_HOST_PATH:-/mnt/user/appdata/gametheca/bios}:/app/gametheca/static/library/bios"
+      # - "${EMULATOR_BIOS_HOST_PATH:-/mnt/user/appdata/oneirodex/bios}:/app/oneirodex/static/library/bios"
     depends_on:
       db:
         condition: service_healthy
@@ -174,7 +186,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-gametheca}
+      - POSTGRES_DB=${POSTGRES_DB:-oneirodex}
       - PGDATA=/var/lib/postgresql/data/pgdata
     # Force a Compose-friendly HBA so Docker-bridge IPs can connect without SSL.
     # (Stale volume pg_hba with only hostssl → "no encryption" / no pg_hba entry.)
@@ -183,10 +195,10 @@ services:
       - -c
       - listen_addresses=*
       - -c
-      - hba_file=/etc/gametheca/pg_hba.conf
+      - hba_file=/etc/oneirodex/pg_hba.conf
     volumes:
       - db_data:/var/lib/postgresql/data/pgdata
-      - ./docker/postgres/pg_hba.conf:/etc/gametheca/pg_hba.conf:ro
+      - ./docker/postgres/pg_hba.conf:/etc/oneirodex/pg_hba.conf:ro
     ports:
       # Host access for local pytest / native app against Compose Postgres
       - "${POSTGRES_HOST_PORT:-5432}:5432"
@@ -201,7 +213,7 @@ services:
   livekit:
     profiles: ['livekit']
     image: livekit/livekit-server:v1.8.4
-    container_name: gametheca-livekit
+    container_name: oneirodex-livekit
     restart: unless-stopped
     command: --dev --bind 0.0.0.0 --port 7880
     ports:
@@ -215,7 +227,7 @@ services:
   clamav:
     profiles: ['clamav']
     image: clamav/clamav:1.4
-    container_name: gametheca-clamav
+    container_name: oneirodex-clamav
     restart: unless-stopped
     volumes:
       - clamav_db:/var/lib/clamav
@@ -233,7 +245,7 @@ services:
   challenge-redis:
     profiles: ['challenge']
     image: redis:8.8-alpine
-    container_name: gametheca-challenge-redis
+    container_name: oneirodex-challenge-redis
     restart: unless-stopped
     volumes:
       - challenge_redis_data:/data
@@ -241,7 +253,7 @@ services:
   trawl:
     profiles: ['challenge']
     image: ${TRAWL_IMAGE:-ghcr.io/germondai/trawl:latest}
-    container_name: gametheca-trawl
+    container_name: oneirodex-trawl
     restart: unless-stopped
     shm_size: 1gb
     environment:
@@ -290,7 +302,7 @@ services:
   sdnext:
     profiles: ['artwork']
     image: ${SDNEXT_IMAGE:-saladtechnologies/sdnext:latest}
-    container_name: gametheca-sdnext
+    container_name: oneirodex-sdnext
     restart: unless-stopped
     environment:
       - SD_NOHASHING=true
@@ -341,7 +353,7 @@ services:
   # prometheus:
   #   profiles: ['observability']
   #   image: prom/prometheus:v2.54.1
-  #   container_name: gametheca-prometheus
+  #   container_name: oneirodex-prometheus
   #   restart: unless-stopped
   #   volumes:
   #     - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -351,7 +363,7 @@ services:
   # grafana:
   #   profiles: ['observability']
   #   image: grafana/grafana:11.2.0
-  #   container_name: gametheca-grafana
+  #   container_name: oneirodex-grafana
   #   restart: unless-stopped
   #   depends_on: [prometheus]
   #   ports:

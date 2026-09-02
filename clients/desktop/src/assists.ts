@@ -56,7 +56,7 @@ export function renderAssistOverlay(
   onToggle: (id: string, enabled: boolean) => void,
 ): HTMLElement {
   const root = document.createElement('div')
-  root.className = 'gt-assist-overlay'
+  root.className = 'od-assist-overlay'
   // Escaped, like every other innerHTML site in this client: `pack` is server
   // data, and this runs inside a Tauri webview with IPC reach.
   root.innerHTML =

@@ -4,7 +4,9 @@ export const ADMIN_NAV = [
   // Libraries and scans are one tabbed page (UX-C2) — two top-nav buttons
   // pointing into the same page was the leftover from before they merged.
   { id: 'libraries', path: '/scan_management?active_tab=libraries', label: 'Libraries & scans' },
-  { id: 'settings', path: '/admin/settings', label: 'Settings' },
+  // Landing is Server settings (the first row), not the index hub — operators
+  // almost always want a form, and the hub stays reachable as a rail sub-link.
+  { id: 'settings', path: '/admin/new_server_settings', label: 'Settings' },
   { id: 'content', path: '/admin/discovery_sections', label: 'Content' },
   { id: 'users', path: '/admin/users', label: 'Users' },
   { id: 'integrations', path: '/admin/integrations', label: 'Integrations' },
@@ -52,7 +54,7 @@ export const SETTINGS_GROUPS = [
     id: 'presentation',
     title: 'Presentation',
     items: [
-      { to: '/admin/themes', title: 'Themes', blurb: 'Apply presets; Reset Default Themes.' },
+      { to: '/admin/themes', title: 'Themes', blurb: 'Reset default CSS after deploy. Pick a look in Preferences.' },
       { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
       { to: '/admin/detail_layout', title: 'Detail layout', blurb: 'Game details field layout.' },
       { to: '/admin/attract_mode_settings', title: 'Attract mode', blurb: 'Idle trailer slideshow and filters.' },
@@ -268,11 +270,20 @@ export const HUB_LINKS = {
     // inline version existed and nothing routed to it.
     { href: '/scan_management?active_tab=image_queue', label: 'Image queue' },
   ],
+  // Every settings row from the hub sheet, plus the index itself. Built from
+  // SETTINGS_GROUPS so a new card cannot forget to register in the rail.
+  settings: [
+    { href: '/admin/settings', label: 'All settings' },
+    ...SETTINGS_GROUPS.flatMap((group) =>
+      group.items.map((item) => ({ href: item.to, label: item.title })),
+    ),
+  ],
   users: [
     { href: '/admin/users', label: 'Users' },
     { href: '/admin/invites', label: 'Invites' },
     { href: '/admin/whitelist', label: 'Whitelist' },
     { href: '/admin/support', label: 'Support inbox' },
+    { href: '/admin/manage_invites', label: 'Invite quotas' },
   ],
   integrations: [
     { href: '/admin/integrations', label: 'Integrations hub' },
@@ -299,10 +310,12 @@ export const HUB_LINKS = {
     // "Server info" retired (W27-D1) — Ops is the one pane. It showed the same
     // host facts from a second template, and its System / Database / Logs /
     // Configuration panels all render on Ops now.
+    // Server logs retired into Ops Full-log popup (UID-034) — deep links
+    // /admin/server_logs and /admin/system_logs redirect to /admin/ops?open=full-log.
     { href: '/admin/ops', label: 'Ops glance' },
-    { href: '/admin/server_logs', label: 'Server logs' },
     { href: '/admin/statistics', label: 'Statistics' },
     { href: '/admin/manage-downloads', label: 'Downloads admin' },
+    { href: '/admin/system/danger', label: 'Danger zone' },
     { href: '/admin/help', label: 'Admin help' },
   ],
   content: [

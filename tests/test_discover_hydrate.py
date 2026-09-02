@@ -1,6 +1,6 @@
 """Discover hydration stays flat as shelves get deeper.
 
-The point of `gametheca.utils.discover_hydrate` is that the cost of building the
+The point of `oneirodex.utils.discover_hydrate` is that the cost of building the
 feed tracks the number of *shelves*, not the number of *tiles*. That property is
 invisible in the payload — a feed built with one query per tile returns exactly
 the same JSON as one built in a single batch — so nothing but a query count will
@@ -16,9 +16,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import event, select
 
-from gametheca import db
-from gametheca.models import DiscoverySection, Game, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex import db
+from oneirodex.models import DiscoverySection, Game, Library, User
+from oneirodex.platform import LibraryPlatform
 
 SEED_SHELVES = ('latest_games', 'most_downloaded', 'highest_rated')
 
@@ -113,8 +113,8 @@ class TestHydrationDoesNotScaleWithTiles:
         shelf, so seeding more changes nothing. Patching the limit varies
         exactly the dimension under test and holds the shelf count still.
         """
-        import gametheca.routes_discover as routes_discover
-        from gametheca.routes_discover import build_discover_sections
+        import oneirodex.routes_discover as routes_discover
+        from oneirodex.routes_discover import build_discover_sections
 
         def build_at_depth(limit):
             # routes_discover imports the window by value, so the patch has to
@@ -156,8 +156,8 @@ class TestHydrationDoesNotScaleWithTiles:
     def test_feed_ships_a_window_not_the_whole_row(
         self, app, db_session, hydrate_user, hydrate_library, seed_shelves
     ):
-        from gametheca.routes_discover import build_discover_sections
-        from gametheca.utils.discover_providers import ROW_MAX, ROW_WINDOW
+        from oneirodex.routes_discover import build_discover_sections
+        from oneirodex.utils.discover_providers import ROW_MAX, ROW_WINDOW
 
         _add_games(db_session, hydrate_library, ROW_MAX * 2)
 
@@ -184,7 +184,7 @@ class TestHydrationBatch:
         Windowed rows depend on this: loading tiles 13-40 primes against the
         same instance, and would otherwise re-fetch the whole feed each page.
         """
-        from gametheca.utils.discover_hydrate import DiscoverHydration
+        from oneirodex.utils.discover_hydrate import DiscoverHydration
 
         _add_games(db_session, hydrate_library, 4)
 
@@ -213,7 +213,7 @@ class TestHydrationBatch:
         It used to be asked per tile, which was a full ClientDevice query for
         every card on the page and always the same answer.
         """
-        from gametheca.utils.discover_hydrate import DiscoverHydration
+        from oneirodex.utils.discover_hydrate import DiscoverHydration
 
         _add_games(db_session, hydrate_library, 3)
 

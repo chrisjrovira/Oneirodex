@@ -3,7 +3,9 @@ import { Navigate, useParams } from 'react-router-dom'
 import { fetchDiscoverRow } from '../api/discover'
 import { ContextBar } from '../chrome/ContextBar'
 import { GameGrid } from '../components/GameGrid'
+import { NewsCard } from '../components/NewsCard'
 import { PageStatus } from '../components/PageStatus'
+import '../components/DiscoverShelf.css'
 
 /** Games per request. A page, not a shelf window — this view is the whole row. */
 const PAGE_SIZE = 60
@@ -63,8 +65,14 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
     })
       .then((page) => {
         setGames((current) => {
-          const seen = new Set(current.map((game) => game.uuid))
-          return current.concat(page.items.filter((game) => !seen.has(game.uuid)))
+          const keyOf = (item) => item.uuid || item.id
+          const seen = new Set(current.map(keyOf).filter(Boolean))
+          return current.concat(
+            page.items.filter((item) => {
+              const key = keyOf(item)
+              return key ? !seen.has(key) : true
+            }),
+          )
         })
         setRow((current) => ({ ...current, hasMore: page.hasMore }))
         setLoadingMore(false)
@@ -113,19 +121,40 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
     )
   }
 
+  const isArticles = row?.itemKind === 'articles'
+
   return (
     <>
       {bar}
-      <GameGrid
-        games={games}
-        isAdmin={isAdmin}
-        showPlayStatus={Boolean(shellConfig.showPlayStatus)}
-        enableDeleteOnDisk={Boolean(shellConfig.enableDeleteOnDisk)}
-      />
+      {isArticles ? (
+        <div
+          className="od-shelf__track"
+          role="list"
+          aria-label={row?.title || 'Discover'}
+          style={{ flexWrap: 'wrap', overflowX: 'visible' }}
+        >
+          {games.map((item, index) => (
+            <div
+              className="od-shelf__item"
+              role="listitem"
+              key={item.id || item.uuid || `item-${index}`}
+            >
+              <NewsCard item={item} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <GameGrid
+          games={games}
+          isAdmin={isAdmin}
+          showPlayStatus={Boolean(shellConfig.showPlayStatus)}
+          enableDeleteOnDisk={Boolean(shellConfig.enableDeleteOnDisk)}
+        />
+      )}
       {row?.hasMore ? (
         <button
           type="button"
-          className="gt-cbtn"
+          className="od-cbtn"
           onClick={loadMore}
           disabled={loadingMore}
         >

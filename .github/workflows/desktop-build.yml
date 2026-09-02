@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: gametheca-desktop-windows
+          name: oneirodex-desktop-windows
           path: |
-            clients/desktop/src-tauri/target/release/gametheca-desktop.exe
+            clients/desktop/src-tauri/target/release/oneirodex-desktop.exe
           if-no-files-found: error

@@ -55,24 +55,24 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
   const identity = libraryPlatform ? `${libraryPlatform} · licensed catalog` : 'Licensed catalog'
   const libraryLinks = libraryPlatform ? (
     <>
-      <Link className={useNewChrome ? 'gt-cbtn' : 'gt-btn'} to="/systems">
+      <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
         Systems
       </Link>
       <Link
-        className={useNewChrome ? 'gt-cbtn' : 'gt-btn'}
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
         to={`/library?library_platform=${encodeURIComponent(libraryPlatform)}`}
       >
         Browse library
       </Link>
       <Link
-        className={useNewChrome ? 'gt-cbtn' : 'gt-btn'}
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
         to={`/systems/completion?library_platform=${encodeURIComponent(libraryPlatform)}`}
       >
         Set completeness
       </Link>
     </>
   ) : (
-    <Link className={useNewChrome ? 'gt-cbtn' : 'gt-btn'} to="/systems">
+    <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
       Back to Systems
     </Link>
   )
@@ -95,13 +95,13 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
     return (
       <>
         {chrome}
-        <div className="gt-more-page gt-set-completion-page">
+        <div className="od-more-page od-set-completion-page">
           {useNewChrome ? null : (
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>Licensed catalog</h1>
             </div>
           )}
-          <p className="gt-more-page__lede">
+          <p className="od-more-page__lede">
             Open this page from a Systems tile. It shows IGDB regional release
             counts for that console or computer — not Wikipedia, and not a DAT.
           </p>
@@ -115,9 +115,9 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
     return (
       <>
         {chrome}
-        <div className="gt-more-page gt-set-completion-page">
+        <div className="od-more-page od-set-completion-page">
           {useNewChrome ? null : (
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>{libraryPlatform} · licensed catalog</h1>
             </div>
           )}
@@ -135,9 +135,9 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
     return (
       <>
         {chrome}
-        <div className="gt-more-page gt-set-completion-page">
+        <div className="od-more-page od-set-completion-page">
           {useNewChrome ? null : (
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>{libraryPlatform} · licensed catalog</h1>
             </div>
           )}
@@ -152,20 +152,20 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
   return (
     <>
       {chrome}
-      <div className="gt-more-page gt-set-completion-page">
+      <div className="od-more-page od-set-completion-page">
         {useNewChrome ? null : (
           <>
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>{libraryPlatform} · licensed catalog</h1>
             </div>
-            <div className="gt-set-completion-toolbar">{libraryLinks}</div>
+            <div className="od-set-completion-toolbar">{libraryLinks}</div>
           </>
         )}
-        <p className="gt-more-page__lede">{report.note}</p>
+        <p className="od-more-page__lede">{report.note}</p>
         {report.fetched_at ? (
-          <p className="gt-set-completion-msg">Last refresh {report.fetched_at}</p>
+          <p className="od-set-completion-msg">Last refresh {report.fetched_at}</p>
         ) : null}
-        <table className="gt-licensed-catalog-table">
+        <table className="od-licensed-catalog-table">
           <thead>
             <tr>
               <th scope="col">Region</th>

@@ -10,7 +10,7 @@ vi.mock('./config-store.js', () => ({
 
 vi.mock('./install-store.js', () => ({
   loadInstallsFromDisk: vi.fn(async () => ({
-    'game-42': { extractPath: 'C:\\GameTheca\\installs\\game-42', archivePath: 'x.zip' },
+    'game-42': { extractPath: 'C:\\Oneirodex\\installs\\game-42', archivePath: 'x.zip' },
   })),
 }))
 
@@ -49,9 +49,9 @@ describe('apply_mods helpers', () => {
   })
 
   it('resolves apply paths only under install root', () => {
-    const root = 'C:\\GameTheca\\installs\\game-42'
+    const root = 'C:\\Oneirodex\\installs\\game-42'
     expect(resolveModApplyPath(root, 'mods/foo.dll')).toBe(
-      'C:\\GameTheca\\installs\\game-42\\mods\\foo.dll',
+      'C:\\Oneirodex\\installs\\game-42\\mods\\foo.dll',
     )
     expect(resolveModApplyPath(root, '..\\..\\windows\\system32')).toBeNull()
   })
@@ -196,7 +196,7 @@ describe('apply_mods helpers', () => {
     expect(result).toEqual({ ok: true, appliedMods: 1, filesApplied: 3 })
     expect(invoke).toHaveBeenCalledWith('apply_staged_mod', {
       sourcePath: '/appdata/mods/game-42/m1/one.zip',
-      installRoot: 'C:\\GameTheca\\installs\\game-42',
+      installRoot: 'C:\\Oneirodex\\installs\\game-42',
     })
   })
 

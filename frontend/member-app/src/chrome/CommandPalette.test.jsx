@@ -190,7 +190,7 @@ test('selecting a nav command navigates via useNavigate', async () => {
 test('friends command opens dock event instead of navigating', async () => {
   const user = userEvent.setup()
   const onOpen = vi.fn()
-  window.addEventListener('gt-open-social-companion', onOpen)
+  window.addEventListener('od-open-social-companion', onOpen)
   try {
     const friends = buildPaletteCommands({}).find((c) => c.id === 'friends')
     expect(friends.action).toBe('open-friends')
@@ -201,14 +201,14 @@ test('friends command opens dock event instead of navigating', async () => {
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(navigateMock).not.toHaveBeenCalled()
   } finally {
-    window.removeEventListener('gt-open-social-companion', onOpen)
+    window.removeEventListener('od-open-social-companion', onOpen)
   }
 })
 
 test('chat command opens slide-out event instead of navigating', async () => {
   const user = userEvent.setup()
   const onOpen = vi.fn()
-  window.addEventListener('gt-open-chat-panel', onOpen)
+  window.addEventListener('od-open-chat-panel', onOpen)
   try {
     const chat = buildPaletteCommands({}).find((c) => c.id === 'chat')
     expect(chat.action).toBe('open-chat')
@@ -219,7 +219,7 @@ test('chat command opens slide-out event instead of navigating', async () => {
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(navigateMock).not.toHaveBeenCalled()
   } finally {
-    window.removeEventListener('gt-open-chat-panel', onOpen)
+    window.removeEventListener('od-open-chat-panel', onOpen)
   }
 })
 

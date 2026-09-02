@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from flask import Flask
 
-from gametheca.utils.security_headers import (
+from oneirodex.utils.security_headers import (
     BASELINE_HEADERS,
     PERMISSIONS_POLICY,
     apply_security_headers,
@@ -174,12 +174,12 @@ def test_max_content_length_is_configured():
 def test_global_cap_clears_the_largest_per_route_limit():
     """Firmware at 64MB is the biggest legitimate upload."""
     from config import Config
-    from gametheca.utils.emulator_bios import DEFAULT_BIOS_MAX_BYTES
+    from oneirodex.utils.emulator_bios import DEFAULT_BIOS_MAX_BYTES
 
     assert Config.MAX_CONTENT_LENGTH > DEFAULT_BIOS_MAX_BYTES
 
 
 def test_payload_too_large_has_an_error_code():
-    from gametheca.utils.api_response import ERROR_CODES
+    from oneirodex.utils.api_response import ERROR_CODES
 
     assert ERROR_CODES['payload_too_large'] == 413

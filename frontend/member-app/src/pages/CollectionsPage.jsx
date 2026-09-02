@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ContextBar, Popover } from '../chrome/ContextBar'
-import { RailIcon } from '../chrome/railIcons'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import { PageStatus } from '../components/PageStatus'
 import './Collections.css'
@@ -110,13 +109,11 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
                a button labelled "New collection" was the only place the word
                changed — which is why there appeared to be "no way to make
                shelves". A Collection *is* a shelf; see models.Collection. */
-            <Popover
-              label="New shelf"
-              icon={<RailIcon name="collections" size={16} />}
-              triggerClassName="gt-cbtn--primary"
-            >
-          <form className="gt-collections__form" onSubmit={handleCreate}>
-            <label className="gt-collections__field">
+            /* Quiet bar chrome: no primary fill, no icon. Wash only while the
+               popover is open (aria-expanded) — see od-appbar contextbar rules. */
+            <Popover label="New shelf">
+          <form className="od-collections__form" onSubmit={handleCreate}>
+            <label className="od-collections__field">
               Name
               <input
                 type="text"
@@ -127,7 +124,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
                 onChange={(event) => setName(event.target.value)}
               />
             </label>
-            <label className="gt-collections__field">
+            <label className="od-collections__field">
               Description
               <input
                 type="text"
@@ -137,7 +134,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
                 onChange={(event) => setDescription(event.target.value)}
               />
             </label>
-            <label className="gt-collections__check">
+            <label className="od-collections__check">
               <input
                 type="checkbox"
                 checked={isPublic}
@@ -145,14 +142,14 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
               />
               Public
             </label>
-            <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={creating}>
+            <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
               {creating ? 'Creating…' : 'Create shelf'}
             </button>
             {createError ? (
               <PageStatus
                 error={createError}
                 errorMessage={createError.message || 'Unable to create collection.'}
-                className="gt-collections__error"
+                className="od-collections__error"
               />
             ) : null}
           </form>
@@ -160,18 +157,18 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="gt-more-page gt-collections">
+    <div className="od-more-page od-collections">
       {useNewChrome ? null : (
         <>
-        <div className="gt-page-header">
+        <div className="od-page-header">
           <h1>Collections</h1>
         </div>
-        <p className="gt-more-page__lede">
+        <p className="od-more-page__lede">
           Curated shelves you and others share across the library.
         </p>
 
-        <form className="gt-collections__form" onSubmit={handleCreate}>
-          <label className="gt-collections__field">
+        <form className="od-collections__form" onSubmit={handleCreate}>
+          <label className="od-collections__field">
             Name
             <input
               type="text"
@@ -182,7 +179,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
               onChange={(event) => setName(event.target.value)}
             />
           </label>
-          <label className="gt-collections__field">
+          <label className="od-collections__field">
             Description
             <input
               type="text"
@@ -192,7 +189,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
               onChange={(event) => setDescription(event.target.value)}
             />
           </label>
-          <label className="gt-collections__check">
+          <label className="od-collections__check">
             <input
               type="checkbox"
               checked={isPublic}
@@ -200,14 +197,14 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
             />
             Public
           </label>
-          <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={creating}>
+          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
             {creating ? 'Creating…' : 'Create shelf'}
           </button>
           {createError ? (
             <PageStatus
               error={createError}
               errorMessage={createError.message || 'Unable to create collection.'}
-              className="gt-collections__error"
+              className="od-collections__error"
             />
           ) : null}
         </form>
@@ -231,20 +228,20 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {!error && collections && collections.length > 0 ? (
-        <ul className="gt-collections__list">
+        <ul className="od-collections__list">
           {collections.map((collection) => {
             const countLabel = itemCountLabel(collection)
             return (
-              <li key={collection.uuid} className="gt-collections__row">
+              <li key={collection.uuid} className="od-collections__row">
                 <Link
-                  className="gt-collections__card"
+                  className="od-collections__card"
                   to={`/collections/${collection.uuid}`}
                 >
                   <strong>{collection.name}</strong>
-                  <span className="gt-collections__card-desc">
+                  <span className="od-collections__card-desc">
                     {collection.description || 'No description'}
                   </span>
-                  <span className="gt-collections__meta">
+                  <span className="od-collections__meta">
                     {collection.is_public ? 'Public' : 'Private'}
                     {collection.is_system ? ' · System' : ''}
                     {countLabel ? ` · ${countLabel}` : ''}
@@ -253,7 +250,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
                 {collection.can_edit && !collection.is_system ? (
                   <button
                     type="button"
-                    className="gt-collections__delete"
+                    className="od-collections__delete"
                     disabled={deletingUuid === collection.uuid}
                     onClick={() => handleDelete(collection)}
                   >

@@ -1,34 +1,34 @@
 /* PC cheat notes (FEAT-D2) — notes to follow, not a trainer to run. */
 
-.gt-pccheats {
+.od-pccheats {
   margin: 0 0 1.25rem;
 }
 
-.gt-pccheats h2 {
+.od-pccheats h2 {
   margin: 0 0 0.35rem;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-pccheats__stance {
+.od-pccheats__stance {
   margin: 0 0 0.7rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.45;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-pccheats__muted {
+.od-pccheats__muted {
   margin: 0;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-pccheats__error {
+.od-pccheats__error {
   margin: 0;
-  font-size: var(--gt-font-md);
-  color: var(--gt-danger);
+  font-size: var(--od-font-md);
+  color: var(--od-danger);
 }
 
-.gt-pccheats__list {
+.od-pccheats__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -37,112 +37,112 @@
   gap: 0.55rem;
 }
 
-.gt-pccheats__item {
+.od-pccheats__item {
   padding: 0.6rem 0.75rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface) 90%, transparent);
 }
 
-.gt-pccheats__head {
+.od-pccheats__head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem 0.55rem;
 }
 
-.gt-pccheats__label {
-  font-size: var(--gt-font-md);
+.od-pccheats__label {
+  font-size: var(--od-font-md);
 }
 
-.gt-pccheats__method {
+.od-pccheats__method {
   padding: 0.05rem 0.4rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid var(--gt-border);
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid var(--od-border);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-pccheats__flag {
+.od-pccheats__flag {
   padding: 0.05rem 0.4rem;
-  border-radius: var(--gt-radius-pill);
-  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-accent) 18%, transparent);
+  font-size: var(--od-font-xs);
   letter-spacing: 0.02em;
 }
 
-.gt-pccheats__payload {
+.od-pccheats__payload {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.45rem;
 }
 
-.gt-pccheats__payload code {
+.od-pccheats__payload code {
   flex: 1 1 auto;
   min-width: 0;
   padding: 0.35rem 0.5rem;
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-surface-2) 85%, transparent);
   font-family: "Consolas", "Courier New", monospace;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   overflow-x: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.gt-pccheats__copy {
+.od-pccheats__copy {
   flex: 0 0 auto;
 }
 
-.gt-pccheats__notes {
+.od-pccheats__notes {
   margin: 0.4rem 0 0;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.45;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-pccheats__remove {
+.od-pccheats__remove {
   align-self: flex-start;
   margin-top: 0.45rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
 }
 
-.gt-pccheats__form {
+.od-pccheats__form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-top: 0.85rem;
   padding: 0.75rem 0.85rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px dashed var(--gt-border);
+  border-radius: var(--od-radius-lg);
+  border: 1px dashed var(--od-border);
 }
 
-.gt-pccheats__form-title {
+.od-pccheats__form-title {
   margin: 0;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   font-weight: 650;
 }
 
-.gt-pccheats__form label {
+.od-pccheats__form label {
   display: flex;
   flex-direction: column;
   gap: 0.22rem;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-pccheats__form input,
-.gt-pccheats__form select {
+.od-pccheats__form input,
+.od-pccheats__form select {
   font: inherit;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   padding: 0.35rem 0.45rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
 }
 
-.gt-pccheats__form button {
+.od-pccheats__form button {
   align-self: flex-start;
 }

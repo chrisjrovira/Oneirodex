@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import patch, MagicMock, mock_open
 from flask import json
-from gametheca.models import Image, Game, Library, LibraryPlatform, User
+from oneirodex.models import Image, Game, Library, LibraryPlatform, User
 from uuid import uuid4
 import os
 
@@ -364,9 +364,9 @@ class TestDownloadImagesAPI:
         db_session.add(pending_image)
         db_session.flush()
 
-        with patch('gametheca.utils.functions.download_image') as mock_download, \
+        with patch('oneirodex.utils.functions.download_image') as mock_download, \
              patch('os.path.join') as mock_join, \
-             patch('gametheca.routes_admin_ext.images.current_app') as mock_app:
+             patch('oneirodex.routes_admin_ext.images.current_app') as mock_app:
             
             mock_app.config = {'IMAGE_SAVE_PATH': '/test/path'}
             mock_join.return_value = '/test/path/cover.jpg'
@@ -424,7 +424,7 @@ class TestDownloadImagesAPI:
         assert data['success'] is True
         assert data['downloaded'] == 0
 
-    @patch('gametheca.utils.game_core.download_pending_images')
+    @patch('oneirodex.utils.game_core.download_pending_images')
     def test_batch_download_success(self, mock_batch_download, client, admin_user):
         """Test batch downloading images."""
         with client.session_transaction() as sess:
@@ -474,7 +474,7 @@ class TestDownloadImagesAPI:
         db_session.add(pending_image)
         db_session.flush()
 
-        with patch('gametheca.utils.functions.download_image') as mock_download:
+        with patch('oneirodex.utils.functions.download_image') as mock_download:
             mock_download.side_effect = Exception("Download failed")
             
             response = client.post('/admin/api/download_images', 
@@ -567,7 +567,7 @@ class TestDeleteImageAPI:
 
         with patch('os.path.exists') as mock_exists, \
              patch('os.remove') as mock_remove, \
-             patch('gametheca.routes_admin_ext.images.current_app') as mock_app:
+             patch('oneirodex.routes_admin_ext.images.current_app') as mock_app:
             
             mock_app.config = {'IMAGE_SAVE_PATH': '/test/path'}
             mock_exists.return_value = True
@@ -600,7 +600,7 @@ class TestDeleteImageAPI:
         db_session.flush()
         image_id = test_image.id
 
-        with patch('gametheca.db.session.delete') as mock_delete:
+        with patch('oneirodex.db.session.delete') as mock_delete:
             mock_delete.side_effect = Exception("Database error")
             
             response = client.delete(f'/admin/api/delete_image/{image_id}')

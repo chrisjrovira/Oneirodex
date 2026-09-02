@@ -6,9 +6,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import GlobalSettings, User
-from gametheca.utils.global_settings import global_settings_row_or_create
-from gametheca.utils.loading_icons import (
+from oneirodex.models import GlobalSettings, User
+from oneirodex.utils.global_settings import global_settings_row_or_create
+from oneirodex.utils.loading_icons import (
     BUILTIN_LOADING_ICONS,
     DEFAULT_LOADING_ICON_MODE,
     catalogue_ids,
@@ -168,7 +168,7 @@ def test_retired_motif_ids_resolve_instead_of_raising():
     catalogue changed under members who had already picked one. Their stored
     value is not theirs to fix, so retired ids map forward rather than erroring.
     """
-    from gametheca.utils.loading_icons import normalize_icon_id
+    from oneirodex.utils.loading_icons import normalize_icon_id
 
     assert normalize_icon_id('ring') == 'disc'
     assert normalize_icon_id('orbit') == 'disc'
@@ -188,7 +188,7 @@ def test_unknown_motif_id_still_raises():
     """The alias map must not turn validation into a silent accept-anything."""
     import pytest as _pytest
 
-    from gametheca.utils.loading_icons import normalize_icon_id
+    from oneirodex.utils.loading_icons import normalize_icon_id
 
     with _pytest.raises(ValueError):
         normalize_icon_id('not-a-motif')

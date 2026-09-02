@@ -80,7 +80,7 @@ function messageOf(error, fallback) {
 function Note({ tone, children }) {
   if (!children) return null
   return (
-    <p className={`gt-acct__note gt-acct__note--${tone}`} role={tone === 'error' ? 'alert' : 'status'}>
+    <p className={`od-acct__note od-acct__note--${tone}`} role={tone === 'error' ? 'alert' : 'status'}>
       {children}
     </p>
   )
@@ -97,21 +97,21 @@ function Note({ tone, children }) {
  * what the Invites panel opens with.
  */
 function ProfilePanel({ summary }) {
-  if (!summary) return <PageStatus loading inline className="gt-acct__empty" />
+  if (!summary) return <PageStatus loading inline className="od-acct__empty" />
 
   return (
-    <div className="gt-acct__avatar-row">
+    <div className="od-acct__avatar-row">
       <img
-        className="gt-acct__avatar"
+        className="od-acct__avatar"
         src={avatarSrc(summary, summary.avatar_path)}
         alt=""
       />
-      <div className="gt-acct__avatar-meta">
-        <p className="gt-acct__row-title">{summary.username}</p>
-        <p className="gt-acct__row-sub">{summary.role}</p>
+      <div className="od-acct__avatar-meta">
+        <p className="od-acct__row-title">{summary.username}</p>
+        <p className="od-acct__row-sub">{summary.role}</p>
         {/* An emailless household account shows what it is rather than a
             placeholder address nobody can write to. */}
-        <p className="gt-acct__row-sub">{summary.email || 'No email on this account'}</p>
+        <p className="od-acct__row-sub">{summary.email || 'No email on this account'}</p>
       </div>
     </div>
   )
@@ -182,12 +182,12 @@ function AvatarPanel({ summary, onUpdated }) {
       <Note tone="error">{error}</Note>
       <Note tone="good">{done}</Note>
 
-      <div className="gt-acct__avatar-row">
-        <img className="gt-acct__avatar" src={shown} alt="" />
-        <div className="gt-acct__avatar-meta">
+      <div className="od-acct__avatar-row">
+        <img className="od-acct__avatar" src={shown} alt="" />
+        <div className="od-acct__avatar-meta">
           <input
-            id="gt-acct-avatar-file"
-            className="gt-acct__file"
+            id="od-acct-avatar-file"
+            className="od-acct__file"
             type="file"
             accept="image/png,image/jpeg,image/gif,image/webp"
             onChange={(event) => {
@@ -196,23 +196,23 @@ function AvatarPanel({ summary, onUpdated }) {
               setError('')
             }}
           />
-          <label className="gt-cbtn gt-acct__file-label" htmlFor="gt-acct-avatar-file">
+          <label className="od-cbtn od-acct__file-label" htmlFor="od-acct-avatar-file">
             Choose image
           </label>
-          <p className="gt-acct__hint">
+          <p className="od-acct__hint">
             PNG, JPEG, GIF or WebP, up to 5MB. Square crops best — anything else
             is centred and cropped for you.
           </p>
-          {file ? <p className="gt-acct__hint">{file.name}</p> : null}
+          {file ? <p className="od-acct__hint">{file.name}</p> : null}
         </div>
       </div>
 
-      <div className="gt-acct__actions">
-        <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={!file || busy}>
+      <div className="od-acct__actions">
+        <button type="submit" className="od-cbtn od-cbtn--primary" disabled={!file || busy}>
           {busy ? 'Uploading…' : 'Save avatar'}
         </button>
         {file ? (
-          <button type="button" className="gt-cbtn" onClick={() => setFile(null)} disabled={busy}>
+          <button type="button" className="od-cbtn" onClick={() => setFile(null)} disabled={busy}>
             Cancel
           </button>
         ) : null}
@@ -223,17 +223,17 @@ function AvatarPanel({ summary, onUpdated }) {
           review — the tile you clicked is exactly what you get. */}
       {stock.length > 0 ? (
         <>
-          <p className="gt-acct__label gt-acct__label--follow">
+          <p className="od-acct__label od-acct__label--follow">
             Or pick one
           </p>
-          <ul className="gt-acct__stock">
+          <ul className="od-acct__stock">
             {stock.map((entry) => {
               const selected = summary?.avatar_path === entry.path
               return (
                 <li key={entry.id}>
                   <button
                     type="button"
-                    className="gt-acct__stock-btn"
+                    className="od-acct__stock-btn"
                     aria-pressed={selected}
                     aria-label={entry.label}
                     title={entry.label}
@@ -294,10 +294,10 @@ function PasswordPanel() {
       <Note tone="error">{error}</Note>
       <Note tone="good">{done}</Note>
 
-      <label className="gt-acct__field">
-        <span className="gt-acct__label">Current password</span>
+      <label className="od-acct__field">
+        <span className="od-acct__label">Current password</span>
         <input
-          className="gt-acct__input"
+          className="od-acct__input"
           type="password"
           autoComplete="current-password"
           value={values.current}
@@ -306,10 +306,10 @@ function PasswordPanel() {
         />
       </label>
 
-      <label className="gt-acct__field">
-        <span className="gt-acct__label">New password</span>
+      <label className="od-acct__field">
+        <span className="od-acct__label">New password</span>
         <input
-          className="gt-acct__input"
+          className="od-acct__input"
           type="password"
           autoComplete="new-password"
           minLength={8}
@@ -319,10 +319,10 @@ function PasswordPanel() {
         />
       </label>
 
-      <label className="gt-acct__field">
-        <span className="gt-acct__label">Confirm new password</span>
+      <label className="od-acct__field">
+        <span className="od-acct__label">Confirm new password</span>
         <input
-          className="gt-acct__input"
+          className="od-acct__input"
           type="password"
           autoComplete="new-password"
           value={values.confirm}
@@ -331,8 +331,8 @@ function PasswordPanel() {
         />
       </label>
 
-      <div className="gt-acct__actions">
-        <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy}>
+      <div className="od-acct__actions">
+        <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
           {busy ? 'Saving…' : 'Change password'}
         </button>
       </div>
@@ -401,7 +401,7 @@ function InvitesPanel() {
     return (
       <>
         <Note tone="error">{error}</Note>
-        {error ? null : <PageStatus loading inline className="gt-acct__empty" />}
+        {error ? null : <PageStatus loading inline className="od-acct__empty" />}
       </>
     )
   }
@@ -412,17 +412,17 @@ function InvitesPanel() {
       <Note tone="good">{done}</Note>
 
       <form onSubmit={handleCreate}>
-        <label className="gt-acct__field">
-          <span className="gt-acct__label">Email address (optional)</span>
+        <label className="od-acct__field">
+          <span className="od-acct__label">Email address (optional)</span>
           <input
-            className="gt-acct__input"
+            className="od-acct__input"
             type="email"
             placeholder="someone@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
         </label>
-        <p className="gt-acct__hint">
+        <p className="od-acct__hint">
           {/* The honest version of "invites need SMTP". They never did — the
               link works pasted into a chat window, and only the delivery of it
               needed a mail server. */}
@@ -430,46 +430,47 @@ function InvitesPanel() {
             ? 'Leave this blank to create a link you can pass on yourself instead of sending mail.'
             : 'Email is not configured on this server, so invites are created as links for you to pass on.'}
           {state.site_url_configured
-            ? ''
-            : ' Set the site URL in admin settings, or the link will point at 127.0.0.1.'}
+            ? ' Recipients open the link and create their own account.'
+            : ' Links use the address you are browsing from until a public site URL is set in admin settings. Recipients open the link and create their own account.'}
         </p>
 
-        <div className="gt-acct__actions">
+        <div className="od-acct__actions">
           <button
             type="submit"
-            className="gt-cbtn gt-cbtn--primary"
-            disabled={busy || state.remaining <= 0}
+            className="od-cbtn od-cbtn--primary"
+            disabled={busy || (!state.unlimited && (state.remaining ?? 0) <= 0)}
           >
             {busy ? 'Creating…' : email.trim() ? 'Send invite' : 'Create invite link'}
           </button>
-          <span className="gt-acct__hint">
-            {state.remaining} of {state.quota} invites left · links last{' '}
-            {state.ttl_hours} hours
+          <span className="od-acct__hint">
+            {state.unlimited
+              ? `Unlimited invites · links last ${state.ttl_hours} hours`
+              : `${state.remaining} of ${state.quota} invites left · links last ${state.ttl_hours} hours`}
           </span>
         </div>
       </form>
 
-      <ul className="gt-acct__list gt-acct__list--follow">
+      <ul className="od-acct__list od-acct__list--follow">
         {state.invites.length === 0 ? (
-          <p className="gt-acct__empty">No open invites.</p>
+          <p className="od-acct__empty">No open invites.</p>
         ) : (
           state.invites.map((invite) => (
-            <li key={invite.token} className="gt-acct__row">
-              <div className="gt-acct__row-main">
-                <p className="gt-acct__row-title">{invite.email || 'Link invite'}</p>
+            <li key={invite.token} className="od-acct__row">
+              <div className="od-acct__row-main">
+                <p className="od-acct__row-title">{invite.email || 'Link invite'}</p>
                 <p
-                  className={`gt-acct__row-sub${invite.expired ? ' gt-acct__row-sub--warn' : ''}`}
+                  className={`od-acct__row-sub${invite.expired ? ' od-acct__row-sub--warn' : ''}`}
                 >
                   {invite.expired
                     ? `Expired ${formatWhen(invite.expires_at)}`
                     : `Expires ${formatWhen(invite.expires_at)}`}
                 </p>
-                <code className="gt-acct__link">{invite.url}</code>
+                <code className="od-acct__link">{invite.url}</code>
               </div>
-              <button type="button" className="gt-cbtn" onClick={() => copyText(invite.url)}>
+              <button type="button" className="od-cbtn" onClick={() => copyText(invite.url)}>
                 Copy link
               </button>
-              <button type="button" className="gt-cbtn" onClick={() => handleRevoke(invite.token)}>
+              <button type="button" className="od-cbtn" onClick={() => handleRevoke(invite.token)}>
                 Revoke
               </button>
             </li>
@@ -538,14 +539,14 @@ function TokensPanel() {
       <Note tone="error">{error}</Note>
 
       {secret ? (
-        <div className="gt-acct__note gt-acct__note--good" role="status">
+        <div className="od-acct__note od-acct__note--good" role="status">
           <p style={{ margin: 0 }}>Copy this now — it is not shown again.</p>
-          <code className="gt-acct__link">{secret}</code>
-          <div className="gt-acct__actions">
-            <button type="button" className="gt-cbtn" onClick={() => copyText(secret)}>
+          <code className="od-acct__link">{secret}</code>
+          <div className="od-acct__actions">
+            <button type="button" className="od-cbtn" onClick={() => copyText(secret)}>
               Copy token
             </button>
-            <button type="button" className="gt-cbtn" onClick={() => setSecret('')}>
+            <button type="button" className="od-cbtn" onClick={() => setSecret('')}>
               Done
             </button>
           </div>
@@ -553,10 +554,10 @@ function TokensPanel() {
       ) : null}
 
       <form onSubmit={handleCreate}>
-        <label className="gt-acct__field">
-          <span className="gt-acct__label">Token name</span>
+        <label className="od-acct__field">
+          <span className="od-acct__label">Token name</span>
           <input
-            className="gt-acct__input"
+            className="od-acct__input"
             value={name}
             placeholder="Living room companion"
             onChange={(event) => setName(event.target.value)}
@@ -564,10 +565,10 @@ function TokensPanel() {
           />
         </label>
 
-        <label className="gt-acct__field">
-          <span className="gt-acct__label">Scope preset</span>
+        <label className="od-acct__field">
+          <span className="od-acct__label">Scope preset</span>
           <select
-            className="gt-acct__input"
+            className="od-acct__input"
             value={preset}
             onChange={(event) => setPreset(event.target.value)}
           >
@@ -576,27 +577,27 @@ function TokensPanel() {
           </select>
         </label>
 
-        <div className="gt-acct__actions">
-          <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy || !name.trim()}>
+        <div className="od-acct__actions">
+          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy || !name.trim()}>
             {busy ? 'Creating…' : 'Create token'}
           </button>
         </div>
       </form>
 
-      <ul className="gt-acct__list gt-acct__list--follow">
+      <ul className="od-acct__list od-acct__list--follow">
         {tokens.length === 0 ? (
-          <p className="gt-acct__empty">No tokens yet.</p>
+          <p className="od-acct__empty">No tokens yet.</p>
         ) : (
           tokens.map((token) => (
-            <li key={token.id} className="gt-acct__row">
-              <div className="gt-acct__row-main">
-                <p className="gt-acct__row-title">{token.name}</p>
-                <p className="gt-acct__row-sub">
+            <li key={token.id} className="od-acct__row">
+              <div className="od-acct__row-main">
+                <p className="od-acct__row-title">{token.name}</p>
+                <p className="od-acct__row-sub">
                   {token.token_prefix ? `${token.token_prefix}… · ` : ''}
                   created {formatWhen(token.created_at)}
                 </p>
               </div>
-              <button type="button" className="gt-cbtn" onClick={() => handleRevoke(token.id)}>
+              <button type="button" className="od-cbtn" onClick={() => handleRevoke(token.id)}>
                 Revoke
               </button>
             </li>
@@ -654,7 +655,7 @@ export function AccountModal({ panel, onClose, onAvatarChange }) {
 
   const body = (
     <div
-      className="gt-acct__scrim"
+      className="od-acct__scrim"
       role="presentation"
       onMouseDown={(event) => {
         // Only a press that both starts and ends on the scrim dismisses:
@@ -664,41 +665,41 @@ export function AccountModal({ panel, onClose, onAvatarChange }) {
       }}
     >
       <div
-        className="gt-acct"
+        className="od-acct"
         data-panel={active}
         role="dialog"
         aria-modal="true"
         aria-label={panelTitle(active)}
         ref={panelRef}
       >
-        <button type="button" className="gt-acct__close" aria-label="Close" onClick={onClose}>
+        <button type="button" className="od-acct__close" aria-label="Close" onClick={onClose}>
           ×
         </button>
 
-        <header className="gt-acct__head">
-          <p className="gt-acct__eyebrow">Account</p>
-          <h2 className="gt-acct__title">{panelTitle(active)}</h2>
+        <header className="od-acct__head">
+          <p className="od-acct__eyebrow">Account</p>
+          <h2 className="od-acct__title">{panelTitle(active)}</h2>
           {summary ? (
-            <p className="gt-acct__lede">
+            <p className="od-acct__lede">
               {summary.username}
               {summary.role ? ` · ${summary.role}` : ''}
             </p>
           ) : null}
         </header>
 
-        {/* Separate `.gt-cbtn` buttons, not one joined `.gt-seg` pill.
+        {/* Separate `.od-cbtn` buttons, not one joined `.od-seg` pill.
             A segmented control says "these are mutually exclusive views of one
             thing" and draws a single outline around the set, which read as a box
             wrapped around a box inside the panel. These are five destinations,
             the same kind of thing the top bar's buttons are, so they wear the
             same clothes — and they pack left, because a modal reads top-left to
             bottom-right and there is nothing to centre them against. */}
-        <div className="gt-acct__tabs" role="group" aria-label="Account sections">
+        <div className="od-acct__tabs" role="group" aria-label="Account sections">
           {ACCOUNT_PANELS.map((entry) => (
             <button
               key={entry.id}
               type="button"
-              className={`gt-cbtn${entry.id === active ? ' is-on' : ''}`}
+              className={`od-cbtn${entry.id === active ? ' is-on' : ''}`}
               aria-pressed={entry.id === active}
               onClick={() => setActive(entry.id)}
             >
@@ -707,7 +708,7 @@ export function AccountModal({ panel, onClose, onAvatarChange }) {
           ))}
         </div>
 
-        <div className="gt-acct__body">
+        <div className="od-acct__body">
           {active === 'profile' ? <ProfilePanel summary={summary} /> : null}
           {active === 'avatar' ? (
             <AvatarPanel summary={summary} onUpdated={handleAvatarUpdated} />

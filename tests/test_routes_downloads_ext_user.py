@@ -7,9 +7,9 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy import select
-from gametheca import db
-from gametheca.models import DownloadRequest, Game, User, GlobalSettings, Library, SystemEvents
-from gametheca.platform import LibraryPlatform
+from oneirodex import db
+from oneirodex.models import DownloadRequest, Game, User, GlobalSettings, Library, SystemEvents
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture

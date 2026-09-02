@@ -31,7 +31,7 @@ describe('openChatPopoutWindow', () => {
     expect(url).toContain('/chat')
     expect(url).toContain('popout=1')
     // Named, so a second pop-out reuses the window rather than stacking copies.
-    expect(name).toBe('gt-chat-popout')
+    expect(name).toBe('od-chat-popout')
   })
 
   test('carries the active channel through', () => {

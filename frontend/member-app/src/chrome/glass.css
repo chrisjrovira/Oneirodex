@@ -1,64 +1,64 @@
 /* Style B glass launcher primitives */
 
-/* .gt-btn and its --primary / --secondary variants used to be redefined here
-   (GT-A4). They now live in the theme's gt-primitives.css, which base_empty.html
+/* .od-btn and its --primary / --secondary variants used to be redefined here
+   (GT-A4). They now live in the theme's od-primitives.css, which base_empty.html
    loads before this bundle, so every surface — Jinja, member SPA, admin SPA —
    gets one button.
 
    Removing the copy also fixed a latent bug. The base rule here built its border
-   and background out of `var(--gt-btn-accent)`, which platformSkins.css only
+   and background out of `var(--od-btn-accent)`, which platformSkins.css only
    defines under `[data-platform-family]`. Anywhere else — Library, Downloads,
    Collections — that var was undefined, so both declarations were invalid at
    computed-value time and the button silently lost its border and fill. It only
    looked correct on system-skinned pages. */
 
-.gt-glass-panel {
-  background: var(--gt-glass-bg);
-  border: 1px solid var(--gt-glass-border);
-  border-radius: var(--gt-radius-lg);
-  backdrop-filter: blur(var(--gt-glass-blur));
+.od-glass-panel {
+  background: var(--od-glass-bg);
+  border: 1px solid var(--od-glass-border);
+  border-radius: var(--od-radius-lg);
+  backdrop-filter: blur(var(--od-glass-blur));
 }
 
-.gt-page-header {
+.od-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   margin: 0.5rem 1rem 0.75rem;
   padding: 0.55rem 0.85rem;
-  background: var(--gt-glass-bg);
-  border: 1px solid var(--gt-glass-border);
-  border-radius: var(--gt-radius-lg);
-  backdrop-filter: blur(var(--gt-glass-blur));
+  background: var(--od-glass-bg);
+  border: 1px solid var(--od-glass-border);
+  border-radius: var(--od-radius-lg);
+  backdrop-filter: blur(var(--od-glass-blur));
 }
 
-.gt-page-header h1 {
+.od-page-header h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--gt-font-xl);
-  color: var(--gt-text);
+  font-size: var(--od-font-xl);
+  color: var(--od-text);
 }
 
-.game-card .gt-platform-chip {
+.game-card .od-platform-chip {
   position: absolute;
-  left: var(--gt-tile-edge, 0.35rem);
-  bottom: var(--gt-tile-edge, 0.35rem);
+  left: var(--od-tile-edge, 0.35rem);
+  bottom: var(--od-tile-edge, 0.35rem);
   z-index: 2;
-  max-width: calc(100% - 2 * var(--gt-tile-edge, 0.35rem));
-  padding: 0.18rem var(--gt-badge-pad-x, 0.4rem);
-  min-height: var(--gt-badge-h, 1.35rem);
+  max-width: calc(100% - 2 * var(--od-tile-edge, 0.35rem));
+  padding: 0.18rem var(--od-badge-pad-x, 0.4rem);
+  min-height: var(--od-badge-h, 1.35rem);
   display: inline-flex;
   align-items: center;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
   /* Same scale as the badges — the chip is a corner occupant like they are,
      and a fixed 0.65rem beside a scaled badge is the mismatch this pass is
      about. */
-  font-size: var(--gt-badge-fs, 0.65rem);
+  font-size: var(--od-badge-fs, 0.65rem);
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--gt-accent-contrast);
-  background: color-mix(in srgb, var(--gt-accent) 88%, black);
+  color: var(--od-accent-contrast);
+  background: color-mix(in srgb, var(--od-accent) 88%, black);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -66,19 +66,19 @@
 }
 
 /* Occupied-corner badge layers (member SPA mirror of theme components.css) */
-.gt-badge-layers {
+.od-badge-layers {
   position: absolute;
   inset: 0;
   z-index: 12;
   pointer-events: none;
 }
 
-.gt-badge-layers .gt-badge-stack--interactive {
+.od-badge-layers .od-badge-stack--interactive {
   pointer-events: auto;
 }
 
-/* Geometry lives on .gt-badge in the theme's components.css and is derived
-   there from --gt-tile-min so badges scale with the tiles. This copy used to
+/* Geometry lives on .od-badge in the theme's components.css and is derived
+   there from --od-tile-min so badges scale with the tiles. This copy used to
    re-pin min-width/min-height/padding in rem, and member-app.css loads after
    the theme, so it silently won and froze badge size at one scale. Only the
    member SPA's own tone override stays below. */
@@ -87,56 +87,58 @@
 /* "+2" rides inside the chip rather than beside it: it qualifies the system
    name, and a second free-floating pill in the corner would read as another
    badge. Slightly dimmer so the system stays the thing you read first. */
-.gt-platform-chip__more {
+.od-platform-chip__more {
   margin-inline-start: 0.25em;
   opacity: 0.75;
   font-variant-numeric: tabular-nums;
 }
 
-.game-card:has(.gt-badge-stack--bottom-left) .gt-platform-chip {
-  bottom: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
+.game-card:has(.od-badge-stack--bottom-left) .od-platform-chip {
+  bottom: calc(var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) + var(--od-tile-btn-gap, 4px));
 }
 
 /* PLAY is a small bar control under badges — badges win true top-left */
-.game-card .gt-tile-play {
+.game-card .od-tile-play {
   position: absolute;
   z-index: 14;
-  top: var(--gt-tile-edge, 0.4rem);
-  left: var(--gt-tile-edge, 0.4rem);
+  top: var(--od-tile-edge, 0.4rem);
+  left: var(--od-tile-edge, 0.4rem);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.5rem;
-  min-height: var(--gt-badge-h, 1.35rem);
-  padding: 0.25rem var(--gt-badge-pad-x, 0.5rem);
-  border-radius: var(--gt-radius-sm);
-  font-size: var(--gt-badge-fs, 0.7rem);
+  box-sizing: border-box;
+  min-width: var(--od-tile-btn, 32px);
+  height: var(--od-tile-btn, 32px);
+  min-height: var(--od-tile-btn, 32px);
+  padding: 0 var(--od-badge-pad-x, 0.5rem);
+  border-radius: var(--od-radius-sm);
+  font-size: var(--od-badge-fs, 0.7rem);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--gt-accent-contrast);
-  background: var(--gt-accent);
+  color: var(--od-accent-contrast);
+  background: var(--od-accent);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* Transitional badges (UPDATE/NEW/VR/MISSING) keep top-left; nudge PLAY below */
-.game-card:has(.gt-badge-stack--top-left) .gt-tile-play {
-  top: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
+.game-card:has(.od-badge-stack--top-left) .od-tile-play {
+  top: calc(var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) + var(--od-tile-btn-gap, 4px));
 }
 
-.game-card .gt-tile-play:hover,
-.game-card .gt-tile-play:focus-visible {
+.game-card .od-tile-play:hover,
+.game-card .od-tile-play:focus-visible {
   filter: brightness(1.08);
   outline: none;
 }
 
 /* The blocked variant is a <button> now (it opens the why-not panel), so it
    has to shed the UA button defaults the <a> never had. */
-.game-card .gt-tile-play--disabled {
+.game-card .od-tile-play--disabled {
   border: 0;
   font: inherit;
-  font-size: var(--gt-badge-fs, 0.7rem);
+  font-size: var(--od-badge-fs, 0.7rem);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -144,12 +146,12 @@
   opacity: 0.55;
   filter: grayscale(0.35);
   pointer-events: auto;
-  background: color-mix(in srgb, var(--gt-accent) 35%, var(--gt-surface-2));
-  color: color-mix(in srgb, var(--gt-accent-contrast) 70%, var(--gt-text));
+  background: color-mix(in srgb, var(--od-accent) 35%, var(--od-surface-2));
+  color: color-mix(in srgb, var(--od-accent-contrast) 70%, var(--od-text));
 }
 
-.game-card .gt-tile-play--disabled:hover,
-.game-card .gt-tile-play--disabled:focus-visible {
+.game-card .od-tile-play--disabled:hover,
+.game-card .od-tile-play--disabled:focus-visible {
   filter: grayscale(0.35);
 }
 
@@ -157,12 +159,12 @@
   position: relative;
 }
 
-[data-platform] .game-card .gt-platform-chip {
+[data-platform] .game-card .od-platform-chip {
   display: none;
 }
 
 /* Quiet MISSING path badge (member SPA — also in default_theme components.css) */
-.gt-badge--missing {
+.od-badge--missing {
   background: rgba(55, 58, 66, 0.92);
   color: rgba(232, 228, 220, 0.95);
   letter-spacing: 0.05em;
@@ -170,7 +172,7 @@
 }
 
 /* Aurora toast host (member SPA — replaces $.notify) — top-right, auto-dismiss */
-.gt-toast-host {
+.od-toast-host {
   position: fixed;
   z-index: 2400;
   top: 1rem;
@@ -183,67 +185,67 @@
   pointer-events: none;
 }
 
-.gt-toast {
+.od-toast {
   pointer-events: auto;
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.7rem 0.6rem 0.7rem 0.95rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
+  color: var(--od-text);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.35;
-  animation: gt-toast-in 0.18s ease-out;
+  animation: od-toast-in 0.18s ease-out;
 }
 
-.gt-toast__text {
+.od-toast__text {
   flex: 1 1 auto;
   min-width: 0;
 }
 
 /* Dismissible — an error toast should not hold the reader hostage for 3s. */
-.gt-toast__close {
+.od-toast__close {
   flex: 0 0 auto;
   width: 1.4rem;
   height: 1.4rem;
   padding: 0;
   border: 0;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
   background: transparent;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-lg);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-lg);
   line-height: 1;
   cursor: pointer;
 }
 
-.gt-toast__close:hover,
-.gt-toast__close:focus-visible {
-  background: color-mix(in srgb, var(--gt-text) 14%, transparent);
-  color: var(--gt-text);
+.od-toast__close:hover,
+.od-toast__close:focus-visible {
+  background: color-mix(in srgb, var(--od-text) 14%, transparent);
+  color: var(--od-text);
 }
 
-.gt-toast--success {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+.od-toast--success {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
 }
 
-.gt-toast--error {
-  border-color: color-mix(in srgb, var(--gt-danger) 65%, transparent);
+.od-toast--error {
+  border-color: color-mix(in srgb, var(--od-danger) 65%, transparent);
 }
 
-.gt-toast--warn {
-  border-color: color-mix(in srgb, var(--gt-warning) 65%, transparent);
+.od-toast--warn {
+  border-color: color-mix(in srgb, var(--od-warning) 65%, transparent);
 }
 
-.gt-toast--out {
+.od-toast--out {
   opacity: 0;
   transform: translateY(-0.35rem);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-@keyframes gt-toast-in {
+@keyframes od-toast-in {
   from {
     opacity: 0;
     transform: translateY(-0.4rem);
@@ -255,8 +257,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-toast,
-  .gt-toast--out {
+  .od-toast,
+  .od-toast--out {
     animation: none;
     transition: none;
   }
@@ -264,9 +266,9 @@
 
 /* Shared tag / meta chips (Library + Details + Discover islands) */
 .chip,
-.gt-chip,
+.od-chip,
 a.chip,
-a.gt-chip {
+a.od-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -275,12 +277,12 @@ a.gt-chip {
   min-height: 1.55rem;
   padding: 0.2rem 0.65rem;
   margin: 0;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
-  background: color-mix(in srgb, var(--gt-surface-2) 88%, transparent);
-  color: var(--gt-text-muted);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-border) 85%, transparent);
+  background: color-mix(in srgb, var(--od-surface-2) 88%, transparent);
+  color: var(--od-text-muted);
   font: inherit;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 650;
   letter-spacing: 0.03em;
   line-height: 1.2;
@@ -294,20 +296,20 @@ a.chip:visited,
 a.chip:hover,
 a.chip:active,
 a.chip:focus,
-a.gt-chip:link,
-a.gt-chip:visited,
-a.gt-chip:hover,
-a.gt-chip:active,
-a.gt-chip:focus {
+a.od-chip:link,
+a.od-chip:visited,
+a.od-chip:hover,
+a.od-chip:active,
+a.od-chip:focus {
   text-decoration: none;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 a.chip:hover,
 a.chip:focus-visible,
-a.gt-chip:hover,
-a.gt-chip:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  color: var(--gt-text);
+a.od-chip:hover,
+a.od-chip:focus-visible {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  color: var(--od-text);
   text-decoration: none;
 }

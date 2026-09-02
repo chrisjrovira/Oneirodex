@@ -117,18 +117,18 @@ export function WishlistPage({ shellConfig = {} } = {}) {
     <>
     {useNewChrome ? (
         <ContextBar
-          /* Views + Request a title share one fused gt-cbtn-group (Library
+          /* Views + Request a title share one fused od-cbtn-group (Library
              Apply/Clear shape). SegmentedViews would leave Request as a peer
              pill with a star; librarians need My requests | Everyone’s |
              Request a title as one outlined control. Members only get Request. */
           summary={requests ? `${requests.length} requests` : null}
           actions={
-            <div className="gt-cbtn-group" role="group" aria-label="Wishlist">
+            <div className="od-cbtn-group" role="group" aria-label="Wishlist">
               {isLibrarian ? (
                 <>
                   <button
                     type="button"
-                    className={`gt-cbtn${!showAll ? ' is-on' : ''}`}
+                    className={`od-cbtn${!showAll ? ' is-on' : ''}`}
                     aria-pressed={!showAll}
                     onClick={() => setShowAll(false)}
                   >
@@ -136,7 +136,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                   </button>
                   <button
                     type="button"
-                    className={`gt-cbtn${showAll ? ' is-on' : ''}`}
+                    className={`od-cbtn${showAll ? ' is-on' : ''}`}
                     aria-pressed={showAll}
                     onClick={() => setShowAll(true)}
                   >
@@ -144,18 +144,16 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                   </button>
                 </>
               ) : null}
-              <Popover
-                label="Request a title"
-                triggerClassName="gt-cbtn--primary"
-              >
+              {/* Quiet like Library bar peers: wash only while open. */}
+              <Popover label="Request a title">
                 {({ close }) => (
                   <form
-                    className="gt-wishlist__form"
+                    className="od-wishlist__form"
                     onSubmit={(event) => handleCreate(event, close)}
                   >
-                    <label htmlFor="gt-wishlist-title">Title</label>
+                    <label htmlFor="od-wishlist-title">Title</label>
                     <input
-                      id="gt-wishlist-title"
+                      id="od-wishlist-title"
                       type="text"
                       maxLength={255}
                       required
@@ -163,9 +161,9 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                       value={title}
                       onChange={(event) => setTitle(event.target.value)}
                     />
-                    <label htmlFor="gt-wishlist-notes">Notes</label>
+                    <label htmlFor="od-wishlist-notes">Notes</label>
                     <input
-                      id="gt-wishlist-notes"
+                      id="od-wishlist-notes"
                       type="text"
                       maxLength={400}
                       placeholder="Optional details"
@@ -175,12 +173,12 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                     {createError ? (
                       <PageStatus
                         error={createError}
-                        className="gt-wishlist__action-error"
+                        className="od-wishlist__action-error"
                       />
                     ) : null}
                     <button
                       type="submit"
-                      className="gt-cbtn gt-cbtn--primary"
+                      className="od-cbtn od-cbtn--primary"
                       disabled={submitting}
                     >
                       {submitting ? 'Requesting…' : 'Request'}
@@ -192,20 +190,20 @@ export function WishlistPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="gt-more-page gt-wishlist">
+    <div className="od-more-page od-wishlist">
       {useNewChrome ? null : (
         <>
-        <div className="gt-page-header gt-wishlist__header">
+        <div className="od-page-header od-wishlist__header">
           <div>
             <h1>Wishlist</h1>
-            <p className="gt-more-page__lede">Request titles you’d like added to the library.</p>
+            <p className="od-more-page__lede">Request titles you’d like added to the library.</p>
           </div>
         </div>
 
-        <form className="gt-wishlist__form" onSubmit={handleCreate}>
-          <label htmlFor="gt-wishlist-title">Title</label>
+        <form className="od-wishlist__form" onSubmit={handleCreate}>
+          <label htmlFor="od-wishlist-title">Title</label>
           <input
-            id="gt-wishlist-title"
+            id="od-wishlist-title"
             type="text"
             maxLength={255}
             required
@@ -213,22 +211,22 @@ export function WishlistPage({ shellConfig = {} } = {}) {
             value={title}
             onChange={(event) => setTitle(event.target.value)}
           />
-          <label htmlFor="gt-wishlist-notes">Notes</label>
+          <label htmlFor="od-wishlist-notes">Notes</label>
           <input
-            id="gt-wishlist-notes"
+            id="od-wishlist-notes"
             type="text"
             maxLength={400}
             placeholder="Optional details"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
           />
-          <button type="submit" className="gt-btn" disabled={submitting}>
+          <button type="submit" className="od-btn" disabled={submitting}>
             {submitting ? 'Requesting…' : 'Request'}
           </button>
           {createError ? (
             <PageStatus
               error={createError}
-              className="gt-wishlist__action-error"
+              className="od-wishlist__action-error"
             />
           ) : null}
         </form>
@@ -236,7 +234,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
       )}
 
       {isLibrarian && !useNewChrome ? (
-        <label className="gt-wishlist__toggle">
+        <label className="od-wishlist__toggle">
           <input
             type="checkbox"
             checked={showAll}
@@ -247,7 +245,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {actionError ? (
-        <PageStatus error={actionError} className="gt-wishlist__action-error" />
+        <PageStatus error={actionError} className="od-wishlist__action-error" />
       ) : null}
 
       <PageStatus
@@ -259,7 +257,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
       />
 
       {!error && requests && requests.length === 0 ? (
-        <p className="gt-wishlist__empty">
+        <p className="od-wishlist__empty">
           {useNewChrome
             ? 'No requests yet. Use Request a title above and your librarians will take a look.'
             : 'No requests yet. Add a title above and your librarians will take a look.'}
@@ -268,34 +266,34 @@ export function WishlistPage({ shellConfig = {} } = {}) {
 
       {!error && requests && requests.length > 0 ? (
         <section aria-labelledby="wishlist-requests-heading">
-          <div className="gt-wishlist__section-head">
+          <div className="od-wishlist__section-head">
             <h2 id="wishlist-requests-heading">Requests</h2>
-            <span className="gt-wishlist__count">{requests.length}</span>
+            <span className="od-wishlist__count">{requests.length}</span>
           </div>
-          <ul className="gt-wishlist__list">
+          <ul className="od-wishlist__list">
             {requests.map((item) => (
-              <li key={item.id} className="gt-wishlist__row" data-request-id={item.id}>
+              <li key={item.id} className="od-wishlist__row" data-request-id={item.id}>
                 <article>
-                  <div className="gt-wishlist__row-head">
+                  <div className="od-wishlist__row-head">
                     <strong>{item.title}</strong>
-                    <span className="gt-wishlist__status" data-status={item.status}>
+                    <span className="od-wishlist__status" data-status={item.status}>
                       {item.status}
                     </span>
                     {item.created_at ? (
                       <time dateTime={item.created_at}>{formatLocaleDate(item.created_at)}</time>
                     ) : null}
                   </div>
-                  {item.notes ? <p className="gt-wishlist__notes">{item.notes}</p> : null}
+                  {item.notes ? <p className="od-wishlist__notes">{item.notes}</p> : null}
                   {item.linked_game_uuid ? (
                     <a href={`/game_details/${item.linked_game_uuid}`}>Open game</a>
                   ) : null}
-                  <div className="gt-wishlist__actions">
+                  <div className="od-wishlist__actions">
                     {isLibrarian
                       ? RESOLVE_ACTIONS.map((action) => (
                           <button
                             key={action.status}
                             type="button"
-                            className="gt-cbtn"
+                            className="od-cbtn"
                             disabled={busyId === item.id}
                             onClick={() => handleResolve(item.id, action.status)}
                           >
@@ -306,7 +304,7 @@ export function WishlistPage({ shellConfig = {} } = {}) {
                     {isLibrarian || item.status === 'pending' ? (
                       <button
                         type="button"
-                        className="gt-cbtn gt-cbtn--danger"
+                        className="od-cbtn od-cbtn--danger"
                         disabled={busyId === item.id}
                         onClick={() => handleCancel(item.id)}
                       >

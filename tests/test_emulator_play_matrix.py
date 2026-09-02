@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 
-from gametheca.platform import (
+from oneirodex.platform import (
     CATALOG_ONLY_PLATFORMS,
     COMPANION_PREFERRED_PLATFORMS,
     LibraryPlatform,
@@ -19,10 +19,10 @@ from gametheca.platform import (
     mapped_core_ids,
     play_mode_for_platform,
 )
-from gametheca.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
+from oneirodex.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
 
 ROOT = Path(__file__).resolve().parents[1]
-WEBRETRO = ROOT / 'gametheca' / 'static' / 'vendor' / 'webretro'
+WEBRETRO = ROOT / 'oneirodex' / 'static' / 'vendor' / 'webretro'
 FREE_ROMS = ROOT / 'samples' / 'free-roms' / 'manifest.yaml'
 
 PLAY_MODES = frozenset({'browser', 'companion', 'catalog', 'none'})
@@ -57,11 +57,11 @@ def _stub_profiles(monkeypatch) -> None:
         }
 
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         resolve,
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_bios.list_bios_files',
+        'oneirodex.utils.emulator_bios.list_bios_files',
         lambda: [],
     )
 
@@ -175,7 +175,7 @@ def test_every_platform_has_a_play_skin_label_and_css():
 
 
 def test_heavy_rewind_cores_are_disabled_in_the_bridge():
-    bridge = (WEBRETRO / 'gt-bridge.js').read_text(encoding='utf-8')
+    bridge = (WEBRETRO / 'od-bridge.js').read_text(encoding='utf-8')
     assert 'rewindOkForCore' in bridge
     assert 'HEAVY_REWIND_CORES' in bridge
     for core in HEAVY_REWIND_CORES:

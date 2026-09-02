@@ -29,7 +29,7 @@ export function DetailsMoreFrom({ gameUuid }) {
   }
 
   return (
-    <div className="gt-details-page__more-from">
+    <div className="od-details-page__more-from">
       {sections.map((section) => (
         <DiscoverShelf
           key={section.identifier}

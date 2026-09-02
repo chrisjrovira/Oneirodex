@@ -16,8 +16,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import User
-from gametheca.utils.detail_layouts import (
+from oneirodex.models import User
+from oneirodex.utils.detail_layouts import (
     DEFAULT_SECTIONS,
     clear_user_detail_layout,
     delete_layout_preset,

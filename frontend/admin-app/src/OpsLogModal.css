@@ -1,0 +1,29 @@
+.od-ops-log-modal__panel {
+  width: min(90vw, 72rem);
+  max-height: min(90vh, 52rem);
+  overflow: hidden;
+}
+
+.od-ops-log-modal__lede {
+  margin: 0;
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
+}
+
+.od-ops-log-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.od-ops-log-modal__error {
+  font-size: var(--od-font-md);
+  color: var(--od-danger);
+}
+
+.od-ops-log-modal__table {
+  min-height: 12rem;
+  max-height: min(68vh, 40rem);
+  overflow: auto;
+}

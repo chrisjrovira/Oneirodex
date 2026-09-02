@@ -56,8 +56,8 @@ The server image is separate from the desktop companion. For the Unraid
 template's icon field, point at the running server:
 
 ```
-http://<unraid-ip>:5006/static/icons/gametheca-256.png
+http://<unraid-ip>:5006/static/icons/oneirodex-256.png
 ```
 
-`gametheca-512.png` sits alongside it. Both ship inside the image under
-`/app/gametheca/static/icons/`.
+`oneirodex-512.png` sits alongside it. Both ship inside the image under
+`/app/oneirodex/static/icons/`.

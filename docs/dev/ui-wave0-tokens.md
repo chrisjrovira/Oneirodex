@@ -1,39 +1,39 @@
-# UI Wave 0 — design tokens (GameTheca)
+# UI Wave 0 — design tokens (Oneirodex)
 
 These CSS variables are the shared foundation for web + future desktop client.
-Tracked source: `gametheca/setup/default_theme/css/gt-tokens.css` (presets regenerated at **`GENERATOR_VERSION` 10**).
+Tracked source: `oneirodex/setup/default_theme/css/od-tokens.css` (presets regenerated at **`GENERATOR_VERSION` 10**).
 
 Import after theme base.css or use as a reference when migrating React islands / admin SPA.
 
 ```css
 :root {
-  --gt-bg: #0b0d10;
-  --gt-surface: #141820;
-  --gt-surface-2: #1c2230;
-  --gt-text: #f2f4f8;
-  --gt-text-muted: #c4ccd8;
-  --gt-accent: #2fd67b;
-  --gt-accent-contrast: #0b0d10;
-  --gt-success: #4ade80;
-  --gt-danger: #ff6b6b;
-  --gt-warning: #ffc94a;
-  --gt-info: #5ac8fa;
-  --gt-family-nintendo: #e60012;
-  --gt-family-sony: #0070d1;
-  --gt-family-xbox: #2fd67b;
-  --gt-family-sega: #1a66ff;
-  --gt-family-atari: #f5a623;
-  --gt-border: rgba(255, 255, 255, 0.12);
-  --gt-focus-ring: color-mix(in srgb, var(--gt-accent) 70%, white);
-  --gt-tile-min: 180px;
-  --gt-tile-gap: 10px;
-  --gt-crt-opacity: 0.03;
+  --od-bg: #0b0d10;
+  --od-surface: #141820;
+  --od-surface-2: #1c2230;
+  --od-text: #f2f4f8;
+  --od-text-muted: #c4ccd8;
+  --od-accent: #2fd67b;
+  --od-accent-contrast: #0b0d10;
+  --od-success: #4ade80;
+  --od-danger: #ff6b6b;
+  --od-warning: #ffc94a;
+  --od-info: #5ac8fa;
+  --od-family-nintendo: #e60012;
+  --od-family-sony: #0070d1;
+  --od-family-xbox: #2fd67b;
+  --od-family-sega: #1a66ff;
+  --od-family-atari: #f5a623;
+  --od-border: rgba(255, 255, 255, 0.12);
+  --od-focus-ring: color-mix(in srgb, var(--od-accent) 70%, white);
+  --od-tile-min: 180px;
+  --od-tile-gap: 10px;
+  --od-crt-opacity: 0.03;
   /* Style B glass launcher chrome */
-  --gt-glass-bg: rgba(20, 24, 32, 0.72);
-  --gt-glass-border: rgba(255, 255, 255, 0.14);
-  --gt-glass-blur: 12px;
-  --gt-platform-accent: var(--gt-accent);
-  --gt-platform-motion: none;
+  --od-glass-bg: rgba(20, 24, 32, 0.72);
+  --od-glass-border: rgba(255, 255, 255, 0.14);
+  --od-glass-blur: 12px;
+  --od-platform-accent: var(--od-accent);
+  --od-platform-motion: none;
   --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
   --font-display: "Arial Black", "Segoe UI", sans-serif;
 }
