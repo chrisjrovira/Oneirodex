@@ -73,7 +73,7 @@
 
 ### Task 6: Full deploy
 
-- `python scripts/_unraid_rebuild_and_reset.py` (or project equivalent) + Reset Themes.
+- `python scripts/ops/unraid_rebuild_and_reset.py` (or project equivalent) + Reset Themes.
 - Hard-refresh admin Libraries pane; verify unfurls, table, images, actions.
 
 ---

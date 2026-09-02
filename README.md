@@ -385,11 +385,14 @@ Still stuck? **More → Report issue** (members) or open a GitHub issue with dep
 ## 🧑‍💻 Development
 
 ```bash
-pip install -r requirements.txt
+# requirements-dev.txt pulls in requirements.txt and adds the pinned test runner.
+# Runtime installs (Docker, installers) use requirements.txt alone.
+pip install -r requirements-dev.txt
 
 # Frontends
 cd frontend/member-app && npm ci && npm test && npm run build
 cd ../admin-app && npm ci && npm test && npm run build
+cd ../api-client && npm ci && npm run build && npm test
 
 # Backend smoke
 pytest tests/test_security_suite.py tests/test_set_completion.py tests/test_login_rate_limit.py -q

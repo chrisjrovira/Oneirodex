@@ -6,6 +6,15 @@ Native Windows, with Docker Desktop running.
 `POSTGRES_DB=oneirodextest` and runs a *core* pytest subset only. The full suite
 stays local/release — see release-checklist.md.
 
+## Install the test dependencies
+
+`requirements.txt` is the **runtime** set — it has no test runner in it. Use
+`requirements-dev.txt`, which includes it and pins pytest:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
 ## Start the database
 
 The container that serves the test database is **`oneirodex-review-db`**
