@@ -107,6 +107,21 @@ class Config(object):
     # so X-Forwarded-Proto/Host are honored for OIDC redirects and external URLs.
     TRUSTED_PROXIES = int(os.getenv('TRUSTED_PROXIES', '0') or '0')
 
+    # Hosts allowed to become the origin of an emailed link (password reset,
+    # invite). Empty = trust private/LAN hosts only, which is what a household
+    # install reached by IP needs. Set it when Oneirodex is published on a public
+    # hostname. Comma separated, port optional: "games.example.com,10.0.0.5:5006".
+    #
+    # Deliberately NOT named TRUSTED_HOSTS: Werkzeug (pinned werkzeug==3.1.8 in
+    # requirements.txt) reads that key itself and rejects any unlisted Host with a
+    # 400 before a route runs. It also expects a list — handing it this comma
+    # string would iterate per character and lock the install out entirely.
+    # tests/test_trusted_host.py caught exactly that. If you bump Werkzeug, re-read
+    # its TRUSTED_HOSTS handling before assuming this separation still holds.
+    # Operators who want that stricter app-wide enforcement set Flask's
+    # TRUSTED_HOSTS to a real list; this key only governs email links.
+    TRUSTED_LINK_HOSTS = os.getenv('TRUSTED_LINK_HOSTS', '')
+
     # Product modules default ON — disable via env, setup wizard, or Admin → Features.
     # Auth (OIDC) stays off by default elsewhere. Destructive auto-apply stays gated.
     ENABLE_ARR_MODULE = os.getenv('ENABLE_ARR_MODULE', 'true').lower() == 'true'

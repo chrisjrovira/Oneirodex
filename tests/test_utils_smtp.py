@@ -673,30 +673,28 @@ class TestSendPasswordResetEmail:
     """Test send_password_reset_email function."""
     
     @patch('oneirodex.utils.smtp.send_email')
-    @patch('oneirodex.utils.smtp.url_for')
-    def test_send_password_reset_email(self, mock_url_for, mock_send_email):
-        """Test sending password reset email."""
-        # Setup mocks
-        mock_url_for.return_value = 'https://example.com/reset/abc123'
+    def test_send_password_reset_email(self, mock_send_email, app):
+        """Test sending password reset email.
+
+        This used to patch ``url_for`` and assert it was called with
+        ``'main.reset_password'`` — which pinned the bug rather than catching
+        it. There is no ``main.reset_password`` endpoint (the rule lives on the
+        ``login`` blueprint), so the real call raised ``BuildError`` and no
+        reset mail was ever sent; the mock hid that. Build the URL for real.
+        """
         mock_send_email.return_value = True
-        
-        # Test
-        send_password_reset_email('user@example.com', 'abc123')
-        
-        # Verify URL generation
-        mock_url_for.assert_called_once_with('main.reset_password', token='abc123', _external=True)
-        
-        # Verify send_email was called
+
+        with app.test_request_context('/', base_url='http://192.168.50.116:5006'):
+            send_password_reset_email('user@example.com', 'abc123')
+
         mock_send_email.assert_called_once()
         args, kwargs = mock_send_email.call_args
-        
-        # Check arguments
+
         assert args[0] == 'user@example.com'
         assert args[1] == "Ye Password Reset Request Arrr!"
-        
-        # Check that HTML content contains the reset URL
+
         html_content = args[2]
-        assert 'https://example.com/reset/abc123' in html_content
+        assert 'http://192.168.50.116:5006/reset_password/abc123' in html_content
         assert 'Password Reset Link' in html_content
         assert 'Captain Blackbeard' in html_content
 

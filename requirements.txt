@@ -1,3 +1,13 @@
+# Core framework and ORM. These arrive transitively through the Flask
+# extensions below, but a self-hosted product is rebuilt on user hardware on
+# the user's schedule -- unpinned, two builds a fortnight apart can resolve
+# different Werkzeug/SQLAlchemy minors and fail on a machine we cannot debug.
+# Pin them explicitly so an image build is reproducible.
+flask==3.1.3
+sqlalchemy==2.0.52
+werkzeug==3.1.8
+jinja2==3.1.6
+
 flask_wtf==1.3.0
 flask_sqlalchemy==3.1.1
 flask_login==0.6.3

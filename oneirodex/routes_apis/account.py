@@ -159,7 +159,7 @@ def account_avatar():
     except Exception as exc:
         db.session.rollback()
         current_app.logger.warning('avatar commit failed: %s', exc)
-        return api_error('Could not save your new avatar.', code='internal')
+        return api_error("Couldn't save that avatar. Try a different image.", code='internal')
 
     # Cache-busted so the rail and the modal both show the new image
     # immediately; the filename is a fresh uuid, so this is belt and braces for
@@ -189,7 +189,7 @@ def account_stock_avatar():
     except Exception as exc:
         db.session.rollback()
         current_app.logger.warning('stock avatar commit failed: %s', exc)
-        return api_error('Could not save that avatar.', code='internal')
+        return api_error("Couldn't save that avatar. Try a different image.", code='internal')
 
     return api_ok({
         'avatar_path': path,
@@ -221,9 +221,9 @@ def account_password():
             code='unprocessable',
         )
     if new_password != confirm:
-        return api_error('The two new passwords do not match.', code='unprocessable')
+        return api_error("Those two passwords don't match.", code='unprocessable')
     if new_password == current:
-        return api_error('New password must differ from the current one.', code='unprocessable')
+        return api_error("Pick a password you're not already using.", code='unprocessable')
 
     try:
         user.set_password(new_password)
@@ -270,7 +270,7 @@ def create_account_invite():
 
     unused = _unused_invite_count(current_user)
     if not _invites_unlimited(current_user) and (current_user.invite_quota or 0) <= unused:
-        return api_error('You have reached your invite limit.', code='forbidden')
+        return api_error("You're out of invites. An admin can raise your limit.", code='forbidden')
 
     token = str(uuid.uuid4())
     invite = InviteToken(

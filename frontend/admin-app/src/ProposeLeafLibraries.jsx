@@ -96,7 +96,7 @@ export function ProposeLeafLibraries({
   async function onConfirm() {
     if (!selectedRows.length || confirming) return
     const ok = window.confirm(
-      `Create ${selectedRows.length} librar${selectedRows.length === 1 ? 'y' : 'ies'} and queue a first scan for each selected leaf?\n\nNothing was created by Propose — only this confirm writes libraries.`,
+      `Create ${selectedRows.length} librar${selectedRows.length === 1 ? 'y' : 'ies'} and queue a first scan for each? Nothing has been written yet — this is the step that does it.`,
     )
     if (!ok) return
 

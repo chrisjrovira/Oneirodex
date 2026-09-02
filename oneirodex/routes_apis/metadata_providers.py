@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from flask import jsonify, request
+from flask import request
 from flask_login import login_required
 
-from oneirodex.utils.api_response import api_error
+from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.metadata_providers import (
     get_metadata_providers_config,
@@ -24,7 +24,7 @@ def metadata_providers_config():
     PUT: partial update (flat or nested under ``providers``); echoes full config.
     """
     if request.method == 'GET':
-        return jsonify(get_metadata_providers_config())
+        return api_ok(get_metadata_providers_config())
 
     data = request.get_json(silent=True) or {}
     if not data:
@@ -33,4 +33,4 @@ def metadata_providers_config():
         saved = save_metadata_providers(data)
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
-    return jsonify(saved)
+    return api_ok(saved)

@@ -189,5 +189,11 @@ class TestDecompressionBomb:
         response = _upload(client, admin_user, sample_game, _png(10, 10))
 
         assert response.status_code == 400
-        assert b'dimensions' in response.data.lower()
+        body = response.get_json()
+        assert body['error_code'] == 'bad_request'
+        # Assert the substance, not the sentence. This used to look for the word
+        # "dimensions", which the UID-041 copy pass replaced with "That image is
+        # too big. The limit is 60 megapixels." — the bound is what matters, and
+        # it is derived from MAX_IMAGE_PIXELS rather than typed here.
+        assert 'megapixels' in body['error'].lower()
         assert list(image_dir.iterdir()) == []

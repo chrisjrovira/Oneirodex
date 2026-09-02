@@ -14,6 +14,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from oneirodex import cache, db
 from oneirodex.models import GlobalSettings
+from oneirodex.utils.event_logging import log_system_event
 
 STORAGE_KEY = 'metadata_providers'
 PROVIDER_IDS = ('steam', 'gog', 'epic')
@@ -69,7 +70,17 @@ def resolve_metadata_providers(settings: Any = None) -> dict[str, bool]:
         for key in PROVIDER_IDS:
             if key in blob and key not in fragment:
                 fragment[key] = blob[key]
-    except Exception:
+    except Exception as exc:
+        # Falling back to DEFAULTS means every provider turns *on*, so a DB
+        # hiccup or a corrupt settings blob would quietly re-enable sources the
+        # operator switched off. Keep the permissive fallback — it matches
+        # pre-toggle behaviour and must not break a scan — but say so, instead
+        # of swallowing the reason.
+        log_system_event(
+            f'Metadata provider flags unreadable, defaulting to all enabled: {exc}',
+            event_type='settings',
+            event_level='warning',
+        )
         fragment = {}
 
     out: dict[str, bool] = {}
@@ -115,6 +126,16 @@ def save_metadata_providers(data: dict) -> dict:
     incoming = data.get('providers') if isinstance(data.get('providers'), dict) else data
     if not isinstance(incoming, dict) or not incoming:
         raise ValueError('No provider fields to update')
+
+    # A body of only unknown keys used to match nothing, change nothing, and
+    # still answer 200 with the full config — so a typo ("steamm") read as a
+    # successful save. Name what was not recognised instead.
+    unknown = [key for key in incoming if key not in PROVIDER_IDS]
+    if len(unknown) == len(incoming):
+        raise ValueError(
+            f"No known provider in {', '.join(sorted(unknown))} — expected one of "
+            f"{', '.join(PROVIDER_IDS)}"
+        )
 
     row = _ensure_settings_row()
     current = resolve_metadata_providers(row)

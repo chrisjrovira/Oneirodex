@@ -242,7 +242,9 @@ export function ImagesPage({ embedded = false }) {
   }
 
   const removeOne = async (imageId) => {
-    if (!window.confirm('Delete this image row from the queue?')) return
+    if (!window.confirm(
+      'Remove this image from the queue? The file on disk stays where it is.',
+    )) return
     setQueueBusy(`del-${imageId}`)
     try {
       await deleteJson(`/admin/api/delete_image/${imageId}`)

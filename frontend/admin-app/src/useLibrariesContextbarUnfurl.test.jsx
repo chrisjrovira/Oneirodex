@@ -56,3 +56,34 @@ test('collapses Libraries / Auto / Manual into Libraries and Scan unfurls', () =
   )
   expect(Array.from(librariesMenu).map((el) => el.textContent)).toEqual(['Add library'])
 })
+
+test('restores the Jinja segment on unmount so a remount rebuilds it', () => {
+  mountChrome()
+  const seg = document.querySelector(`#${ADMIN_TOPBAR_SLOT_ID} .od-seg`)
+  const before = seg.innerHTML
+
+  const first = render(
+    <MemoryRouter>
+      <Harness enabled />
+    </MemoryRouter>,
+  )
+  expect(seg.dataset.odUnfurlReady).toBe('1')
+
+  first.unmount()
+
+  // Cleanup used to drop only the document listeners, leaving the injected
+  // triggers and the ready flag behind — so the second mount returned early and
+  // Escape / click-outside quietly stopped closing the menus.
+  expect(seg.dataset.odUnfurlReady).toBeUndefined()
+  expect(seg.querySelector('.od-seg__unfurl-anchor')).toBeNull()
+  expect(seg.innerHTML).toBe(before)
+
+  render(
+    <MemoryRouter>
+      <Harness enabled />
+    </MemoryRouter>,
+  )
+  expect(seg.dataset.odUnfurlReady).toBe('1')
+  const triggers = Array.from(seg.querySelectorAll(':scope > .od-seg__unfurl-anchor > .od-seg__item'))
+  expect(triggers.map((el) => el.textContent)).toEqual(['Libraries', 'Scan'])
+})

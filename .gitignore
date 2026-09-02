@@ -173,3 +173,6 @@ oneirodex/static/vendor/webretro/cores/*_libretro.wasm
 # about *this* machine — a GPU device reservation, a local bind mount. Shipping
 # one would hand every deployment hardware it may not have.
 docker-compose.override.yml
+
+# Agent run-skill screenshots (.cursor/skills/run-oneirodex/shot.py)
+.artifacts/

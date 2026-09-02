@@ -36,7 +36,7 @@ def game_edit(game_uuid):
         # own findings). Image upload/delete and game delete already refuse for
         # this reason; game_edit is the mutation that was left unguarded.
         if is_scan_job_running():
-            flash('Cannot edit the game while a scan job is running. Please try again later.', 'error')
+            flash('A scan is running. Editing games is available again as soon as it finishes.', 'error')
             return render_template('admin/admin_game_identify.html', form=form, library_name=library_name, game_uuid=game_uuid, action="edit")
 
         # Validate full_disk_path security

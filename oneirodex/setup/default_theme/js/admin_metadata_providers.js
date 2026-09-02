@@ -8,11 +8,6 @@
   const ENDPOINT = '/api/admin/integrations/metadata-providers';
   const PROVIDERS = ['steam', 'gog', 'epic'];
 
-  function csrfToken() {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '';
-  }
-
   function checkbox(id) {
     return document.getElementById('mp_' + id);
   }
@@ -63,10 +58,10 @@
     fetch(ENDPOINT, {
       method: 'PUT',
       credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken(),
-      },
+      // csrf-utils.js owns the token lookup — a local copy here would be the
+      // twelfth spelling of it, and it silently sent an empty header when the
+      // meta tag moved.
+      headers: CSRFUtils.getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ providers: readFlags() }),
     })
       .then(function (res) {

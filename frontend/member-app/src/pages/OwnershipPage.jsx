@@ -32,7 +32,8 @@ const STORES = [
     connect: connectSteam,
     sync: syncSteam,
     disconnect: disconnectSteam,
-    disconnectPrompt: 'Remove Steam link and clear synced Steam ownership?',
+    disconnectPrompt:
+      'Disconnect Steam? Your synced ownership is cleared — your games stay put.',
     csvLabel: 'Or import app IDs (CSV, one per line)',
     csvPlaceholder: 'appid\n570\n730',
     csvNoun: 'app IDs',
@@ -52,7 +53,8 @@ const STORES = [
     connect: (id, extras) => connectGog(id, extras),
     sync: syncGog,
     disconnect: disconnectGog,
-    disconnectPrompt: 'Remove GOG link and clear imported GOG ownership?',
+    disconnectPrompt:
+      'Disconnect GOG? Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned titles (CSV: product ID or id,name per line)',
     csvPlaceholder: 'product_id,name\n1207658924,The Witcher 3',
     csvNoun: 'GOG titles',
@@ -72,7 +74,8 @@ const STORES = [
     connect: (id, extras) => connectEpic(id, extras),
     sync: syncEpic,
     disconnect: disconnectEpic,
-    disconnectPrompt: 'Remove Epic link and clear imported Epic ownership?',
+    disconnectPrompt:
+      'Disconnect Epic? Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned titles (CSV: catalog item ID or id,name per line)',
     csvPlaceholder: 'catalog_item_id,name\nfn,Fortnite',
     csvNoun: 'Epic titles',
@@ -93,7 +96,8 @@ const STORES = [
     connect: (id, extras) => connectAmazon(id, extras),
     sync: syncAmazon,
     disconnect: disconnectAmazon,
-    disconnectPrompt: 'Remove Amazon link and clear imported Amazon ownership?',
+    disconnectPrompt:
+      'Disconnect Amazon? Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned Amazon titles (CSV: product ID or id,name per line)',
     csvNoun: 'Amazon titles',
     canSync: true,

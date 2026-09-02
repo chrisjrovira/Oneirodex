@@ -236,7 +236,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
       return
     }
     const confirmed = window.confirm(
-      `Delete collection “${collection.name}”? This cannot be undone.`,
+      `Delete “${collection.name}”? The games stay in your catalog — only the collection goes.`,
     )
     if (!confirmed) {
       return

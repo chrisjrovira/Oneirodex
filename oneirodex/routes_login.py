@@ -74,7 +74,6 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('discover.discover'))
 
-    print("Route: /login")
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
         username = form.username.data
@@ -103,7 +102,6 @@ def login():
             if not user.state:
                 flash('Your account has been banned.', 'error')
                 log_system_event(f"User {username} attempted to log in with a banned account.", event_type='login', event_level='warning')
-                print(f"Error: Attempted login to disabled account - User: {username}")
                 record_failure(rate_key)
                 return redirect(url_for('login.login'))
 
@@ -246,9 +244,6 @@ def oidc_callback():
 def register():
     # Attempt to get the invite token from the query parameters
     invite_token_from_url = request.args.get('token')
-    # An invite token is a credential — logging it verbatim would let anyone
-    # with log access redeem the invite. Presence only.
-    print(f"Invite token present: {bool(invite_token_from_url)}")
 
     if current_user.is_authenticated:
         # A shared/admin browser session must not swallow an invite link — the
@@ -257,12 +252,10 @@ def register():
             logout_user()
         else:
             return redirect(url_for('login.login'))
-    print("Route: /register")
 
     invite = None
     if invite_token_from_url:
         invite = db.session.execute(select(InviteToken).filter_by(token=invite_token_from_url, used=False)).scalar_one_or_none()
-        print(f"Invite found: {invite}")
         if invite:
             # Handle timezone comparison safely
             current_time = datetime.now(timezone.utc)
@@ -291,7 +284,6 @@ def register():
             email_address = form.email.data.lower()
             existing_user_email = db.session.execute(select(User).filter(func.lower(User.email) == email_address)).scalar_one_or_none()
             if existing_user_email:
-                print(f"/register: Email already in use - {email_address}")
                 flash('This email is already in use. Please use a different email or log in.')
                 return redirect(url_for('login.register'))
                     # Proceed with the whitelist check only if no valid invite token is provided
@@ -303,14 +295,12 @@ def register():
 
             existing_user = db.session.execute(select(User).filter_by(name=form.username.data)).scalar_one_or_none()
             if existing_user is not None:
-                print(f"/register: User already exists - {form.username.data}")
                 flash('User already exists. Please Log in.')
                 return redirect(url_for('login.register'))
 
             user_uuid = str(uuid4())
             existing_uuid = db.session.execute(select(User).filter_by(user_id=user_uuid)).scalar_one_or_none()
             if existing_uuid is not None:
-                print("/register: UUID collision detected.")
                 flash('An error occurred while registering. Please try again.')
                 return redirect(url_for('login.register'))
 
@@ -347,7 +337,8 @@ def register():
             return redirect(url_for('site.index'))
         except IntegrityError as e:
             db.session.rollback()
-            print(f"IntegrityError occurred: {e}")
+            log_system_event(f'Registration failed with a database integrity error: {e}',
+                             event_type='registration', event_level='error')
             flash('error while registering. Please try again.')
 
     return render_template('login/registration.html', title='Register', form=form)
@@ -376,7 +367,6 @@ def confirm_email(token):
 def reset_password_request():
     if current_user.is_authenticated:
         return redirect(url_for('login.login'))
-    print('pwr Reset Password Request')
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
         ip = client_ip_from_request(request)
@@ -384,9 +374,7 @@ def reset_password_request():
         if is_rate_limited(reset_key):
             flash('Too many password reset requests. Please wait and try again.', 'error')
             return redirect(url_for('login.reset_password_request'))
-        print(f'pwr form data: {form.data}')
         user = db.session.execute(select(User).filter_by(email=form.email.data.lower())).scalar_one_or_none()
-        print(f'pwr user: {user}')
         # Always record attempt (even unknown email) to slow enumeration
         record_failure(reset_key)
         if user:
@@ -400,7 +388,6 @@ def reset_password_request():
             db.session.commit()
 
             # Send reset email
-            print('Calling send password reset email function...')
             send_password_reset_email(user.email, token)
         # Same response whether or not the email exists (anti-enumeration)
         flash('If that email is registered, password reset instructions were sent.')
@@ -495,5 +482,6 @@ def delete_invite(token):
         )
     except Exception as e:
         db.session.rollback()
-        print(f"Error deleting invite: {str(e)}")
+        log_system_event(f'Invite delete failed: {e}',
+                         event_type='invite', event_level='error')
         return api_error('An error occurred while deleting the invite.', code='internal')

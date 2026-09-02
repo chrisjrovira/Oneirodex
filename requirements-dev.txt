@@ -1,0 +1,9 @@
+# Test and CI dependencies. Not installed in the runtime image -- the Dockerfile
+# installs requirements.txt only.
+#
+# pytest was previously installed unpinned in ci-tests.yml, which made the test
+# runner itself a moving target: a pytest major could turn a green branch red
+# with no repo change behind it.
+-r requirements.txt
+
+pytest==9.1.1

@@ -300,7 +300,7 @@ export function ExtensionsPage() {
         <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
           {items.length
             ? `${items.length} allowed · changes apply immediately to the next scan`
-            : 'No extensions yet — add at least one before scanning'}
+            : 'No extensions yet — add at least one so the scanner knows what counts as a game'}
         </p>
       </form>
 
