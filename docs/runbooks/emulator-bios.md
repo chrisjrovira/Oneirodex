@@ -14,7 +14,7 @@ still own them. The application only ever:
 Filling the gaps is the operator's job, from a source you are entitled to use —
 a dump of hardware you own, or a firmware set you already hold. The public image
 stays upload-only, and `.gitignore` blocks `bios/`, `**/bios/*.bin`,
-`**/bios/*.rom` and `gametheca/static/library/bios/` so firmware cannot reach the
+`**/bios/*.rom` and `oneirodex/static/library/bios/` so firmware cannot reach the
 public repository even by accident.
 
 ## Where files go
@@ -22,7 +22,7 @@ public repository even by accident.
 | Deployment | Location |
 |---|---|
 | Docker / Unraid | the volume mounted at `EMULATOR_BIOS_PATH` |
-| Bare metal (default) | `gametheca/static/library/bios/` |
+| Bare metal (default) | `oneirodex/static/library/bios/` |
 
 Drop files in flat — no per-system subfolders. Names are matched
 case-insensitively, so `SCPH5501.BIN` and `scph5501.bin` both count.
@@ -119,7 +119,7 @@ belongs to only one of them. `genesis_plus_gx` runs Mega Drive, Master System,
 Game Gear, SG-1000, 32X **and** Sega CD — but only the Sega CD needs a BIOS.
 
 Requirements are therefore scoped per *platform*, not per core
-(`PLATFORM_BIOS_OVERRIDES` in `gametheca/utils/emulator_bios.py`). A system that
+(`PLATFORM_BIOS_OVERRIDES` in `oneirodex/utils/emulator_bios.py`). A system that
 needs no firmware drops out of the panel rather than appearing with a
 requirement that makes no sense for it:
 

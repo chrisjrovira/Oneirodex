@@ -4,8 +4,8 @@ import json
 import os
 from types import SimpleNamespace
 
-from gametheca.utils import oidc
-from gametheca.utils.proxy import apply_proxy_fix, parse_trusted_proxy_count
+from oneirodex.utils import oidc
+from oneirodex.utils.proxy import apply_proxy_fix, parse_trusted_proxy_count
 
 
 class _Settings:
@@ -34,6 +34,16 @@ def test_map_claims_to_role_defaults_to_user():
     assert oidc.map_claims_to_role(claims) == 'user'
 
 
+def test_map_claims_to_role_oneirodex_admin_group():
+    claims = {'groups': ['oneirodex-admin']}
+    assert oidc.map_claims_to_role(claims) == 'admin'
+
+
+def test_map_claims_to_role_oneirodex_admin_group():
+    claims = {'groups': ['oneirodex-admin']}
+    assert oidc.map_claims_to_role(claims) == 'admin'
+
+
 def test_map_claims_to_role_single_value():
     claims = {'groups': 'admin'}
     assert oidc.map_claims_to_role(claims, role_claim='groups') == 'admin'
@@ -50,8 +60,8 @@ def test_map_claims_to_role_picks_highest_privilege():
 
 
 def test_map_claims_to_role_custom_claim_and_map():
-    claims = {'roles': ['gametheca-admin']}
-    role_map = {'gametheca-admin': 'admin'}
+    claims = {'roles': ['oneirodex-admin']}
+    role_map = {'oneirodex-admin': 'admin'}
     assert oidc.map_claims_to_role(claims, role_claim='roles', role_map=role_map) == 'admin'
 
 
@@ -72,10 +82,10 @@ def test_build_oidc_config_requires_issuer_client_redirect(monkeypatch):
     monkeypatch.setenv('OIDC_ENABLED', 'true')
     settings = SimpleNamespace(
         oidc_enabled=True,
-        oidc_issuer_url='https://idp.example.com/realms/gametheca',
-        oidc_client_id='gametheca',
+        oidc_issuer_url='https://idp.example.com/realms/oneirodex',
+        oidc_client_id='oneirodex',
         oidc_client_secret='secret',
-        oidc_redirect_uri='https://gametheca.example.com/login/oidc/callback',
+        oidc_redirect_uri='https://oneirodex.example.com/login/oidc/callback',
         oidc_scopes='openid email profile',
         oidc_role_claim='groups',
         oidc_role_map=None,
@@ -83,8 +93,8 @@ def test_build_oidc_config_requires_issuer_client_redirect(monkeypatch):
     )
     config = oidc.build_oidc_config(settings)
     assert config is not None
-    assert config.issuer_url.endswith('/realms/gametheca')
-    assert config.client_id == 'gametheca'
+    assert config.issuer_url.endswith('/realms/oneirodex')
+    assert config.client_id == 'oneirodex'
 
 
 def test_generate_pkce_pair_returns_verifier_and_challenge():

@@ -27,8 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_every_builtin_font_file_has_a_source(app):
     """A face registered without a download URL would report missing forever
     and never explain why."""
-    from gametheca.utils.font_install import FONT_SOURCES
-    from gametheca.utils.theme_fonts import BUILT_IN_FONTS
+    from oneirodex.utils.font_install import FONT_SOURCES
+    from oneirodex.utils.theme_fonts import BUILT_IN_FONTS
 
     registered = {e['file'] for e in BUILT_IN_FONTS.values() if e.get('file')}
     assert registered, 'no built-in faces ship files any more'
@@ -38,8 +38,8 @@ def test_every_builtin_font_file_has_a_source(app):
 
 
 def test_missing_builtin_fonts_reports_only_absent_files(tmp_path, app):
-    from gametheca.utils.font_install import missing_builtin_fonts
-    from gametheca.utils.theme_fonts import BUILT_IN_FONTS
+    from oneirodex.utils.font_install import missing_builtin_fonts
+    from oneirodex.utils.theme_fonts import BUILT_IN_FONTS
 
     names = [e['file'] for e in BUILT_IN_FONTS.values() if e.get('file')]
     assert missing_builtin_fonts(str(tmp_path)) == names
@@ -53,7 +53,7 @@ def without_the_bundle(tmp_path, monkeypatch):
     """Neutralise the bundled faces so the **network fallback** is what runs.
 
     ``install_builtin_fonts`` is bundle-first: ``seed_builtin_fonts`` satisfies
-    all five faces from ``gametheca/setup/fonts``, ``remaining`` comes back
+    all five faces from ``oneirodex/setup/fonts``, ``remaining`` comes back
     empty, and the download beneath it never executes. The two tests below were
     written when the network was the only path, so as written neither reached
     the code it names — one failed on the five bundled copies it did not expect,
@@ -64,7 +64,7 @@ def without_the_bundle(tmp_path, monkeypatch):
     restores what these tests were for. The bundle path itself is covered by
     ``tests/test_font_bundle.py``.
     """
-    import gametheca.utils.font_install as font_install
+    import oneirodex.utils.font_install as font_install
 
     monkeypatch.setattr(
         font_install, 'BUNDLED_FONTS_DIR', str(tmp_path / 'deliberately-absent')
@@ -137,7 +137,7 @@ def test_bundle_short_circuits_the_download(tmp_path, app, monkeypatch):
     touched — which is exactly why the two tests above have to remove the bundle
     to reach it.
     """
-    import gametheca.utils.font_install as font_install
+    import oneirodex.utils.font_install as font_install
 
     def _no_network():
         raise AssertionError('install_builtin_fonts reached the network')
@@ -155,7 +155,7 @@ def test_bundle_short_circuits_the_download(tmp_path, app, monkeypatch):
 def test_scan_finds_firmware_in_subdirectories(app, tmp_path):
     """Collections arrive organised per system. A flat listing missing them is
     the same bug the serving-side discovery fix addressed."""
-    from gametheca.utils.bios_install import scan_for_firmware, wanted_firmware_names
+    from oneirodex.utils.bios_install import scan_for_firmware, wanted_firmware_names
 
     name = next(iter(wanted_firmware_names().values()))
     nested = tmp_path / 'psx' / 'variants'
@@ -169,7 +169,7 @@ def test_scan_finds_firmware_in_subdirectories(app, tmp_path):
 def test_import_copies_missing_and_never_overwrites(app, tmp_path):
     """Safe to run on every boot: tops up gaps, leaves installed files alone —
     including firmware an operator deliberately swapped."""
-    from gametheca.utils.bios_install import import_bios_from, wanted_firmware_names
+    from oneirodex.utils.bios_install import import_bios_from, wanted_firmware_names
 
     names = list(wanted_firmware_names().values())[:2]
     source = tmp_path / 'src'
@@ -190,7 +190,7 @@ def test_import_copies_missing_and_never_overwrites(app, tmp_path):
 
 
 def test_import_is_idempotent(app, tmp_path):
-    from gametheca.utils.bios_install import import_bios_from, wanted_firmware_names
+    from oneirodex.utils.bios_install import import_bios_from, wanted_firmware_names
 
     name = next(iter(wanted_firmware_names().values()))
     source = tmp_path / 'src'
@@ -209,7 +209,7 @@ def test_import_is_idempotent(app, tmp_path):
 def test_boot_calls_both_installers():
     """Source guard: the whole point is that these stopped being scripts nobody
     ran. Importable helpers that boot never calls would be the same bug."""
-    source = (ROOT / 'gametheca' / 'init_data.py').read_text(encoding='utf-8')
+    source = (ROOT / 'oneirodex' / 'init_data.py').read_text(encoding='utf-8')
     assert 'initialize_theme_fonts()' in source
     assert 'initialize_emulator_bios()' in source
 
@@ -217,7 +217,7 @@ def test_boot_calls_both_installers():
 def test_font_install_is_configurable_and_off_the_boot_path():
     """It downloads over the network. A slow or firewalled host must not become
     a slow or failed startup."""
-    source = (ROOT / 'gametheca' / 'init_data.py').read_text(encoding='utf-8')
+    source = (ROOT / 'oneirodex' / 'init_data.py').read_text(encoding='utf-8')
     assert 'FETCH_FONTS_ON_BOOT' in source
     assert 'run_in_background' in source
 

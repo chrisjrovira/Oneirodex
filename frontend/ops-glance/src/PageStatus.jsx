@@ -1,8 +1,8 @@
 /**
  * Shared loading / error / empty status for the Ops glance island (GT-B33).
  *
- * Same API and `.gt-page-status` classes as admin-app `PageStatus`. CSS lives
- * on the Jinja Ops shell (`gt-primitives.css`), not in this bundle — Docker
+ * Same API and `.od-page-status` classes as admin-app `PageStatus`. CSS lives
+ * on the Jinja Ops shell (`od-primitives.css`), not in this bundle — Docker
  * Node builds this app without the Flask theme tree, so we must not import
  * admin-app. Copied rather than a second visual language.
  *
@@ -55,15 +55,15 @@ export function PageStatus({
     const detail = resolveErrorDetail(error)
     return (
       <div
-        className={`gt-page-status gt-page-status--error${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--error${className ? ` ${className}` : ''}`}
         role="alert"
       >
-        <div className="gt-page-status__body">
-          <p className="gt-page-status__message">{message}</p>
-          {detail ? <p className="gt-page-status__detail">{detail}</p> : null}
+        <div className="od-page-status__body">
+          <p className="od-page-status__message">{message}</p>
+          {detail ? <p className="od-page-status__detail">{detail}</p> : null}
         </div>
         {onRetry ? (
-          <button type="button" className="gt-btn gt-btn--sm" onClick={onRetry}>
+          <button type="button" className="od-btn od-btn--sm" onClick={onRetry}>
             {retryLabel}
           </button>
         ) : null}
@@ -74,12 +74,12 @@ export function PageStatus({
   if (loading) {
     return (
       <div
-        className={`gt-page-status gt-page-status--loading${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--loading${className ? ` ${className}` : ''}`}
         role="status"
         aria-busy="true"
         aria-live="polite"
       >
-        <p className="gt-page-status__message">{loadingMessage}</p>
+        <p className="od-page-status__message">{loadingMessage}</p>
       </div>
     )
   }
@@ -87,10 +87,10 @@ export function PageStatus({
   if (emptyMessage) {
     return (
       <div
-        className={`gt-page-status gt-page-status--empty${className ? ` ${className}` : ''}`}
+        className={`od-page-status od-page-status--empty${className ? ` ${className}` : ''}`}
         role="status"
       >
-        <p className="gt-page-status__message">{emptyMessage}</p>
+        <p className="od-page-status__message">{emptyMessage}</p>
         {children}
       </div>
     )

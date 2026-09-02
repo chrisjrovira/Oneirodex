@@ -25,7 +25,7 @@ const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 // Overridable so the harness can be pointed at an older revision of the file
 // to confirm it really does catch the bug it is guarding against.
 const SCRIPT = process.env.PREFERENCES_MODAL_JS || path.resolve(
-    HERE, '..', '..', 'gametheca', 'setup', 'default_theme', 'js', 'preferences_modal.js'
+    HERE, '..', '..', 'oneirodex', 'setup', 'default_theme', 'js', 'preferences_modal.js'
 );
 
 // Stand-in for the .theme-swatch-<slug> rules in css/form-components.css.
@@ -266,7 +266,7 @@ assert.equal(select.value, 'ember', 'clicking a swatch must drive the native sel
 assert.ok(ember.classList.contains('is-selected'), 'clicked swatch should become selected');
 assert.ok(!swatchFor('default').classList.contains('is-selected'), 'previous swatch should clear');
 assert.equal(
-    documentElement.style.getPropertyValue('--gt-accent'),
+    documentElement.style.getPropertyValue('--od-accent'),
     CHIP_COLOURS['theme-swatch-ember'],
     'live preview should repaint the accent token'
 );
@@ -281,14 +281,14 @@ select.value = 'default';
 select.dispatchEvent(new DomEvent('change', { bubbles: true }));
 assert.ok(swatchFor('default').classList.contains('is-selected'), 'select change should sync swatches');
 assert.equal(
-    documentElement.style.getPropertyValue('--gt-accent'),
+    documentElement.style.getPropertyValue('--od-accent'),
     CHIP_COLOURS['theme-swatch-default']
 );
 
 // 6. Dismissing without saving must not leave the preview behind.
 modal.dispatchEvent(new DomEvent('hidden.bs.modal', { bubbles: true }));
 assert.equal(
-    documentElement.style.getPropertyValue('--gt-accent'),
+    documentElement.style.getPropertyValue('--od-accent'),
     '',
     'closing the modal should revert an unsaved preview'
 );

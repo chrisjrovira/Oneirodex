@@ -2,9 +2,9 @@
 
 import threading
 
-from gametheca.utils.event_bus import EventBus, encode_sse
-from gametheca.utils.api_tokens import VALID_SCOPES, TOKEN_PREFIX, _hash_secret
-from gametheca.utils.playtime import compute_duration_seconds
+from oneirodex.utils.event_bus import EventBus, encode_sse
+from oneirodex.utils.api_tokens import VALID_SCOPES, TOKEN_PREFIX, _hash_secret
+from oneirodex.utils.playtime import compute_duration_seconds
 from datetime import datetime, timezone, timedelta
 
 

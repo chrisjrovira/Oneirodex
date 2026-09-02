@@ -200,14 +200,16 @@ export async function batchSetPlayStatus(uuids, status) {
  * Missing/disabled route throws with `unavailable` so the sticky bar can disable.
  *
  * @param {string[]} uuids
+ * @param {{ action?: 'add' | 'remove' }} [opts]
  */
-export async function batchAddToWishlist(uuids) {
+export async function batchAddToWishlist(uuids, opts = {}) {
   const list = Array.from(new Set((uuids || []).filter(Boolean)))
   if (list.length === 0) {
     return { ok: true, updated: [], skipped: [], errors: [], mode: 'noop' }
   }
 
-  const { response, data } = await postJson(BATCH_WISHLIST_URL, { uuids: list })
+  const action = opts.action === 'remove' ? 'remove' : 'add'
+  const { response, data } = await postJson(BATCH_WISHLIST_URL, { uuids: list, action })
 
   if (response.ok) {
     return {

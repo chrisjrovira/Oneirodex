@@ -1,6 +1,6 @@
 ﻿# Headset / VR clients (MVP)
 
-GameTheca’s headset path is **browser-based** — not a Meta Store or SteamVR store app.
+Oneirodex’s headset path is **browser-based** — not a Meta Store or SteamVR store app.
 
 **Important:** This is **not Quest-only**. PC VR (e.g. **PSVR2 via SteamVR**, Index, Vive) uses a desktop browser on the gaming PC. Quest is the common *standalone friend* seat.
 
@@ -10,13 +10,13 @@ GameTheca’s headset path is **browser-based** — not a Meta Store or SteamVR 
 ENABLE_VR_BROWSE=true
 ```
 
-Restart GameTheca, sign in, open `https://<host>/vr` (or LAN HTTP for lab).
+Restart Oneirodex, sign in, open `https://<host>/vr` (or LAN HTTP for lab).
 
 ## PC VR / SteamVR / PSVR2
 
 1. Put on the headset; keep a desktop browser window visible (monitor, theater view, or SteamVR dashboard/overlay browser).
 2. Open Library, **Big Picture**, or `/vr` on that PC.
-3. Use an **Xbox / DualSense / Deck** controls for Big Picture — Sense controllers are for SteamVR titles, not the GameTheca site.
+3. Use an **Xbox / DualSense / Deck** controls for Big Picture — Sense controllers are for SteamVR titles, not the Oneirodex site.
 4. Play SteamVR games natively on this PC; use the desktop companion for DRM-free flatscreen installs.
 
 See [controllers-and-vr.md](../../docs/user/controllers-and-vr.md).

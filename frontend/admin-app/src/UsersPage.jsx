@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { getJson, putJson } from './adminApi'
 import { AdminPageActions } from './AdminPageActions'
+import { CreateUserForm } from './CreateUserForm'
 import { DataTable } from './DataTable'
 import { PageStatus } from './PageStatus'
 import { MetricStrip } from './opsWidgets'
@@ -41,7 +42,7 @@ function UserEditor({ user, onClose, onSaved }) {
   }
 
   return (
-    <form className="gt-admin-panel" onSubmit={handleSubmit}>
+    <form className="od-admin-panel" onSubmit={handleSubmit}>
       <h2>Edit {user.name}</h2>
       {error ? <PageStatus error={error} /> : null}
       <label>
@@ -54,11 +55,11 @@ function UserEditor({ user, onClose, onSaved }) {
           ))}
         </select>
       </label>
-      <div className="gt-admin-actions-row">
-        <button type="submit" className="gt-btn" disabled={busy}>
+      <div className="od-admin-actions-row">
+        <button type="submit" className="od-btn" disabled={busy}>
           Save
         </button>
-        <button type="button" className="gt-btn" onClick={onClose} disabled={busy}>
+        <button type="button" className="od-btn" onClick={onClose} disabled={busy}>
           Cancel
         </button>
       </div>
@@ -90,23 +91,25 @@ export function UsersPage() {
   const counts = summarizeUsers(users)
 
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>Users &amp; access</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Household accounts from <code>/admin/api/users</code>. Change a member&apos;s role here.
       </p>
 
       <AdminPageActions label="User actions">
-        <a className="gt-btn" href="/admin/invites">
+        <a className="od-btn" href="/admin/invites">
           Invites
         </a>
-        <a className="gt-btn" href="/admin/manage_invites">
-          Invite quotas
-        </a>
-        <a className="gt-btn" href="/admin/support">
+        <a className="od-btn" href="/admin/support">
           Support inbox
         </a>
+        <a className="od-btn" href="/admin/manage_invites">
+          Invite quotas
+        </a>
       </AdminPageActions>
+
+      <CreateUserForm onCreated={load} title="Create user" />
 
       <PageStatus error={error} errorMessage="Unable to load users." onRetry={load} />
 
@@ -145,7 +148,7 @@ export function UsersPage() {
       ) : null}
 
       {!loading && !error && users.length === 0 ? (
-        <p className="gt-empty">No accounts yet. Invite someone to get started.</p>
+        <p className="od-empty">No accounts yet. Create a user above, or send an invite.</p>
       ) : null}
 
       {users.length > 0 ? (
@@ -167,7 +170,7 @@ export function UsersPage() {
               sortable: false,
               filterable: false,
               render: (u) => (
-                <button type="button" className="gt-btn" onClick={() => setEditing(u)}>
+                <button type="button" className="od-btn" onClick={() => setEditing(u)}>
                   Edit
                 </button>
               ),
@@ -175,6 +178,10 @@ export function UsersPage() {
           ]}
           rows={users}
           getRowKey={(u) => u.id}
+          toolbar={false}
+          columnFilters
+          showCount={false}
+          dense
           emptyMessage="No accounts yet."
         />
       ) : null}

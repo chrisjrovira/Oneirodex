@@ -4,8 +4,8 @@ import os
 
 import pytest
 
-from gametheca.init_manager import PACKAGE_ROOT, InitializationManager
-from gametheca.utils.preset_themes import PRESET_SLUGS, install_preset_themes
+from oneirodex.init_manager import PACKAGE_ROOT, InitializationManager
+from oneirodex.utils.preset_themes import PRESET_SLUGS, install_preset_themes
 
 
 def write(path, text):
@@ -43,7 +43,7 @@ class TestSourcePathResolution:
         source = manager.default_theme_source()
 
         assert os.path.isfile(os.path.join(source, 'theme.json'))
-        assert os.path.isfile(os.path.join(source, 'css', 'gt-tokens.css'))
+        assert os.path.isfile(os.path.join(source, 'css', 'od-tokens.css'))
 
 
 class TestThemeFileSync:
@@ -80,19 +80,19 @@ class TestSetupDefaultTheme:
 
         manager._setup_default_theme(str(themes_path), dev_mode=False)
 
-        assert (themes_path / 'default' / 'css' / 'gt-tokens.css').is_file()
+        assert (themes_path / 'default' / 'css' / 'od-tokens.css').is_file()
         for slug in PRESET_SLUGS:
-            assert (themes_path / slug / 'css' / 'gt-tokens.css').is_file()
+            assert (themes_path / slug / 'css' / 'od-tokens.css').is_file()
 
     def test_second_boot_refreshes_a_changed_default_file(self, manager, tmp_path):
         themes_path = tmp_path / 'themes'
         manager._setup_default_theme(str(themes_path), dev_mode=False)
-        tampered = themes_path / 'default' / 'css' / 'gt-tokens.css'
+        tampered = themes_path / 'default' / 'css' / 'od-tokens.css'
         write(str(tampered), '/* wiped */\n')
 
         manager._setup_default_theme(str(themes_path), dev_mode=False)
 
-        assert '--gt-accent' in read(str(tampered))
+        assert '--od-accent' in read(str(tampered))
 
     def test_preset_accents_are_distinct_from_the_default(self, manager, tmp_path):
         themes_path = tmp_path / 'themes'
@@ -100,14 +100,14 @@ class TestSetupDefaultTheme:
 
         accents = set()
         for slug in PRESET_SLUGS:
-            tokens = read(str(themes_path / slug / 'css' / 'gt-tokens.css'))
+            tokens = read(str(themes_path / slug / 'css' / 'od-tokens.css'))
             accents.add(next(
                 line.strip() for line in tokens.splitlines()
-                if line.strip().startswith('--gt-accent:')
+                if line.strip().startswith('--od-accent:')
             ))
 
         assert len(accents) == len(PRESET_SLUGS)
-        assert '--gt-accent: #ff5a36;' not in accents
+        assert '--od-accent: #ff5a36;' not in accents
 
     def test_missing_source_does_not_raise(self, manager, tmp_path, monkeypatch):
         monkeypatch.setattr(
@@ -130,4 +130,4 @@ def test_install_preset_themes_uses_the_shipped_source(tmp_path):
 
     assert rebuilt == len(PRESET_SLUGS)
     for slug in PRESET_SLUGS:
-        assert (themes_path / slug / 'css' / 'gt-tokens.css').is_file()
+        assert (themes_path / slug / 'css' / 'od-tokens.css').is_file()

@@ -8,9 +8,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import DiscoverySection, Game, Genre, Library, LibraryPlatform, User
-from gametheca.utils.storefront import build_curated_for_you, build_upcoming
+from oneirodex import db
+from oneirodex.models import DiscoverySection, Game, Genre, Library, LibraryPlatform, User
+from oneirodex.utils.storefront import build_curated_for_you, build_upcoming
 
 
 @pytest.fixture(scope='function', autouse=True)

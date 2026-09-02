@@ -47,10 +47,10 @@ describe('SettingsPage module badges', () => {
     // Badge beside the title, not inside it — the title column used to clip
     // both the label and the pill.
     const storageBadge = badges.find((b) => b.textContent.includes('Apply off'))
-    expect(storageBadge.closest('.gt-settings-row__title')).toBeNull()
-    expect(storageBadge.closest('.gt-settings-row')).not.toBeNull()
-    expect(document.querySelectorAll('.gt-settings-group.gt-admin-panel')).toHaveLength(0)
-    expect(document.querySelectorAll('.gt-admin-panel.gt-settings')).toHaveLength(1)
+    expect(storageBadge.closest('.od-settings-row__title')).toBeNull()
+    expect(storageBadge.closest('.od-settings-row')).not.toBeNull()
+    expect(document.querySelectorAll('.od-settings-group.od-admin-panel')).toHaveLength(0)
+    expect(document.querySelectorAll('.od-admin-panel.od-settings')).toHaveLength(1)
   })
 
   test('a failed status fetch leaves the hub links intact', async () => {

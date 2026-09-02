@@ -145,42 +145,42 @@ export function ImportLeafLibraries({
   }
 
   return (
-    <section className="gt-propose-leaf gt-import-leaf" aria-labelledby="gt-import-leaf-title">
-      <div className="gt-propose-leaf__header">
-        <h2 id="gt-import-leaf-title" className="gt-admin-panel-title">
+    <section className="od-propose-leaf od-import-leaf" aria-labelledby="od-import-leaf-title">
+      <div className="od-propose-leaf__header">
+        <h2 id="od-import-leaf-title" className="od-admin-panel-title">
           {heading}
         </h2>
-        <p className="gt-admin-lede">{lede}</p>
+        <p className="od-admin-lede">{lede}</p>
       </div>
 
-      <form className="gt-propose-leaf__form" onSubmit={onPreview}>
-        <fieldset className="gt-import-leaf__modes" disabled={loading || confirming}>
-          <legend className="gt-propose-leaf__label">Input</legend>
-          <div className="gt-propose-leaf__row" role="radiogroup" aria-label="Import input mode">
-            <label className="gt-propose-leaf__check">
+      <form className="od-propose-leaf__form" onSubmit={onPreview}>
+        <fieldset className="od-import-leaf__modes" disabled={loading || confirming}>
+          <legend className="od-propose-leaf__label">Input</legend>
+          <div className="od-propose-leaf__row" role="radiogroup" aria-label="Import input mode">
+            <label className="od-propose-leaf__check">
               <input
                 type="radio"
-                name="gt-import-mode"
+                name="od-import-mode"
                 value="json"
                 checked={inputMode === 'json'}
                 onChange={() => setInputMode('json')}
               />
               Paste JSON
             </label>
-            <label className="gt-propose-leaf__check">
+            <label className="od-propose-leaf__check">
               <input
                 type="radio"
-                name="gt-import-mode"
+                name="od-import-mode"
                 value="csv"
                 checked={inputMode === 'csv'}
                 onChange={() => setInputMode('csv')}
               />
               Paste CSV
             </label>
-            <label className="gt-propose-leaf__check">
+            <label className="od-propose-leaf__check">
               <input
                 type="radio"
-                name="gt-import-mode"
+                name="od-import-mode"
                 value="file"
                 checked={inputMode === 'file'}
                 onChange={() => setInputMode('file')}
@@ -191,13 +191,13 @@ export function ImportLeafLibraries({
         </fieldset>
 
         {inputMode === 'file' ? (
-          <div className="gt-propose-leaf__row">
-            <label className="gt-propose-leaf__label" htmlFor="gt-import-leaf-file">
+          <div className="od-propose-leaf__row">
+            <label className="od-propose-leaf__label" htmlFor="od-import-leaf-file">
               File (.json / .csv)
             </label>
             <input
-              id="gt-import-leaf-file"
-              className="gt-propose-leaf__input"
+              id="od-import-leaf-file"
+              className="od-propose-leaf__input"
               type="file"
               accept=".json,.csv,application/json,text/csv,text/plain"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -205,7 +205,7 @@ export function ImportLeafLibraries({
             />
             <button
               type="submit"
-              className="gt-btn gt-btn--accent"
+              className="od-btn od-btn--accent"
               disabled={loading || confirming || !canPreview}
             >
               {loading ? 'Previewing…' : 'Preview'}
@@ -213,12 +213,12 @@ export function ImportLeafLibraries({
           </div>
         ) : (
           <>
-            <label className="gt-propose-leaf__label" htmlFor="gt-import-leaf-paste">
+            <label className="od-propose-leaf__label" htmlFor="od-import-leaf-paste">
               {inputMode === 'csv' ? 'CSV text' : 'JSON text'}
             </label>
             <textarea
-              id="gt-import-leaf-paste"
-              className="gt-propose-leaf__input gt-import-leaf__paste"
+              id="od-import-leaf-paste"
+              className="od-propose-leaf__input od-import-leaf__paste"
               rows={8}
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
@@ -230,10 +230,10 @@ export function ImportLeafLibraries({
               spellCheck={false}
               disabled={loading || confirming}
             />
-            <div className="gt-propose-leaf__row">
+            <div className="od-propose-leaf__row">
               <button
                 type="submit"
-                className="gt-btn gt-btn--accent"
+                className="od-btn od-btn--accent"
                 disabled={loading || confirming || !canPreview}
               >
                 {loading ? 'Previewing…' : 'Preview'}
@@ -242,14 +242,14 @@ export function ImportLeafLibraries({
           </>
         )}
 
-        <p className="gt-propose-leaf__hint">
+        <p className="od-propose-leaf__hint">
           Preview validates paths and platforms only — create happens on Confirm. Family mega-lib
           parents (NINTENDO / Sega / Sony / …) are rejected into errors.
         </p>
       </form>
 
       {unavailable ? (
-        <div className="gt-propose-leaf__banner gt-propose-leaf__banner--soft" role="status">
+        <div className="od-propose-leaf__banner od-propose-leaf__banner--soft" role="status">
           {error}
         </div>
       ) : null}
@@ -260,22 +260,22 @@ export function ImportLeafLibraries({
       {!unavailable ? <PageStatus error={error} /> : null}
 
       {status ? (
-        <p className="gt-propose-leaf__status" role="status" aria-live="polite">
+        <p className="od-propose-leaf__status" role="status" aria-live="polite">
           {status}
         </p>
       ) : null}
 
       {createHint && candidates.length > 0 ? (
-        <p className="gt-propose-leaf__muted">{createHint}</p>
+        <p className="od-propose-leaf__muted">{createHint}</p>
       ) : null}
 
       {rowErrors.length > 0 ? (
         <div
-          className="gt-admin-panel gt-propose-leaf__panel gt-import-leaf__errors"
+          className="od-admin-panel od-propose-leaf__panel od-import-leaf__errors"
           role="region"
-          aria-labelledby="gt-import-leaf-errors-title"
+          aria-labelledby="od-import-leaf-errors-title"
         >
-          <h3 id="gt-import-leaf-errors-title" className="gt-admin-panel-title">
+          <h3 id="od-import-leaf-errors-title" className="od-admin-panel-title">
             Row errors ({rowErrors.length})
           </h3>
           {/* Grouping errors by code is how you tell "one malformed column" from
@@ -305,7 +305,7 @@ export function ImportLeafLibraries({
                 label: 'Path',
                 render: (row) =>
                   row.path ? (
-                    <code className="gt-propose-leaf__path">{row.path}</code>
+                    <code className="od-propose-leaf__path">{row.path}</code>
                   ) : (
                     '—'
                   ),
@@ -317,9 +317,9 @@ export function ImportLeafLibraries({
       ) : null}
 
       {candidates.length > 0 ? (
-        <div className="gt-admin-panel gt-propose-leaf__panel">
-          <div className="gt-propose-leaf__toolbar">
-            <label className="gt-propose-leaf__check">
+        <div className="od-admin-panel od-propose-leaf__panel">
+          <div className="od-propose-leaf__toolbar">
+            <label className="od-propose-leaf__check">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -330,7 +330,7 @@ export function ImportLeafLibraries({
             </label>
             <button
               type="button"
-              className="gt-btn gt-btn--accent"
+              className="od-btn od-btn--accent"
               onClick={() => void onConfirm()}
               disabled={confirming || selectedCount === 0}
             >
@@ -376,7 +376,7 @@ export function ImportLeafLibraries({
                 key: 'path',
                 label: 'Path',
                 render: (row) => (
-                  <code className="gt-propose-leaf__path">{row.path}</code>
+                  <code className="od-propose-leaf__path">{row.path}</code>
                 ),
               },
               {
@@ -390,8 +390,8 @@ export function ImportLeafLibraries({
       ) : null}
 
       {confirmLog.length > 0 ? (
-        <div className="gt-propose-leaf__log" aria-live="polite">
-          <h3 className="gt-admin-panel-title">Confirm results</h3>
+        <div className="od-propose-leaf__log" aria-live="polite">
+          <h3 className="od-admin-panel-title">Confirm results</h3>
           <ul>
             {confirmLog.map((row) => (
               <li key={`${row.path}-${row.stage}-${row.ok}`}>
@@ -399,10 +399,10 @@ export function ImportLeafLibraries({
                 {row.ok ? (
                   <span> — {row.note || 'OK'}</span>
                 ) : (
-                  <span className="gt-propose-leaf__fail"> — {row.error || 'Failed'}</span>
+                  <span className="od-propose-leaf__fail"> — {row.error || 'Failed'}</span>
                 )}
                 <br />
-                <code className="gt-propose-leaf__path">{row.path}</code>
+                <code className="od-propose-leaf__path">{row.path}</code>
               </li>
             ))}
           </ul>

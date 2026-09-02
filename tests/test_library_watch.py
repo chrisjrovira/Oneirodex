@@ -10,10 +10,10 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select, text
 
-from gametheca.models import Game, Library, ScanJob
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_health import PATH_STATUS_MISSING, PATH_STATUS_OK
-from gametheca.utils.library_watch import (
+from oneirodex.models import Game, Library, ScanJob
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_health import PATH_STATUS_MISSING, PATH_STATUS_OK
+from oneirodex.utils.library_watch import (
     LibraryWatchController,
     _reset_library_watch_for_tests,
     classify_watch_path,
@@ -360,7 +360,7 @@ class TestOpsPulse:
     def test_services_includes_library_watch(self, app, monkeypatch):
         monkeypatch.setenv('GT_LIBRARY_WATCH', '0')
         with app.app_context():
-            from gametheca.utils.ops_summary import _library_watch_pulse
+            from oneirodex.utils.ops_summary import _library_watch_pulse
 
             pulse = _library_watch_pulse()
             assert pulse['enabled'] is False

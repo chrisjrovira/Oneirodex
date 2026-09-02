@@ -1,6 +1,6 @@
 /* News — hero strip + magazine densify; aurora; no card dump */
 
-.gt-news__header {
+.od-news__header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -9,175 +9,175 @@
   margin-bottom: 0.85rem;
 }
 
-.gt-news__header .gt-more-page__lede {
+.od-news__header .od-more-page__lede {
   margin-bottom: 0;
 }
 
-.gt-news__tabs {
+.od-news__tabs {
   display: inline-flex;
   flex-wrap: wrap;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: var(--gt-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  border-radius: var(--od-radius-sm);
   overflow: hidden;
 }
 
-.gt-news__tabs button {
+.od-news__tabs button {
   padding: 0.35rem 0.7rem;
   border: none;
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-news__tabs button + button {
-  border-left: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+.od-news__tabs button + button {
+  border-left: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
 }
 
-.gt-news__tabs button.is-active,
-.gt-news__tabs button:hover,
-.gt-news__tabs button:focus-visible {
-  color: var(--gt-accent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+.od-news__tabs button.is-active,
+.od-news__tabs button:hover,
+.od-news__tabs button:focus-visible {
+  color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
   outline: none;
 }
 
 /* Featured strip — one composition lead */
 
-.gt-news__hero {
+.od-news__hero {
   position: relative;
   margin: 0 0 1.35rem;
   padding: 1.15rem 1.2rem 1.25rem;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   overflow: hidden;
   background:
     linear-gradient(
       125deg,
-      color-mix(in srgb, var(--gt-accent) 16%, transparent) 0%,
+      color-mix(in srgb, var(--od-accent) 16%, transparent) 0%,
       transparent 42%
     ),
     linear-gradient(
       200deg,
-      color-mix(in srgb, var(--gt-surface-2) 92%, var(--gt-bg)) 0%,
-      color-mix(in srgb, var(--gt-surface) 96%, transparent) 100%
+      color-mix(in srgb, var(--od-surface-2) 92%, var(--od-bg)) 0%,
+      color-mix(in srgb, var(--od-surface) 96%, transparent) 100%
     );
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 22%, transparent);
 }
 
-.gt-news__hero::after {
+.od-news__hero::after {
   content: '';
   position: absolute;
   inset: auto -10% -40% 40%;
   height: 70%;
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, var(--gt-accent) 18%, transparent),
+    color-mix(in srgb, var(--od-accent) 18%, transparent),
     transparent 70%
   );
   pointer-events: none;
 }
 
-.gt-news__hero-kicker {
+.od-news__hero-kicker {
   position: relative;
   z-index: 1;
   margin: 0 0 0.35rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gt-accent);
+  color: var(--od-accent);
 }
 
-.gt-news__hero-title {
+.od-news__hero-title {
   position: relative;
   z-index: 1;
   margin: 0 0 0.45rem;
-  font-size: clamp(var(--gt-font-xl), 2.4vw, var(--gt-font-2xl));
+  font-size: clamp(var(--od-font-xl), 2.4vw, var(--od-font-2xl));
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--gt-text);
+  color: var(--od-text);
   max-width: 36rem;
 }
 
-.gt-news__hero-link {
+.od-news__hero-link {
   color: inherit;
   text-decoration: none;
 }
 
-.gt-news__hero-link:hover .gt-news__hero-title,
-.gt-news__hero-link:focus-visible .gt-news__hero-title {
-  color: var(--gt-accent);
+.od-news__hero-link:hover .od-news__hero-title,
+.od-news__hero-link:focus-visible .od-news__hero-title {
+  color: var(--od-accent);
   outline: none;
 }
 
-.gt-news__hero-body {
+.od-news__hero-body {
   position: relative;
   z-index: 1;
   margin: 0 0 0.65rem;
   max-width: 40rem;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   line-height: 1.45;
-  color: color-mix(in srgb, var(--gt-text) 82%, var(--gt-text-muted));
+  color: color-mix(in srgb, var(--od-text) 82%, var(--od-text-muted));
 }
 
-.gt-news__hero-meta {
+.od-news__hero-meta {
   position: relative;
   z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem 0.85rem;
   margin: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-news__section {
+.od-news__section {
   margin: 0 0 1.35rem;
 }
 
-.gt-news__section-head {
+.od-news__section-head {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   margin: 0 0 0.55rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 75%, transparent);
 }
 
-.gt-news__section-head h2 {
+.od-news__section-head h2 {
   margin: 0;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-news__count {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-news__count {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
   opacity: 0.85;
 }
 
-.gt-news__hint {
+.od-news__hint {
   max-width: 40rem;
   margin: 0 0 0.75rem;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   line-height: 1.4;
 }
 
-.gt-news__empty {
+.od-news__empty {
   margin: 0;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
 /* Admin rail — hairline densify, accent edge */
 
-.gt-news__rail {
+.od-news__rail {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -186,43 +186,43 @@
   padding: 0;
 }
 
-.gt-news__rail-item {
+.od-news__rail-item {
   padding: 0.65rem 0.15rem 0.65rem 0.75rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 60%, transparent);
-  border-left: 3px solid color-mix(in srgb, var(--gt-accent) 50%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 60%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--od-accent) 50%, transparent);
   background: transparent;
 }
 
-.gt-news__rail-item article {
+.od-news__rail-item article {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
 }
 
-.gt-news__rail-head {
+.od-news__rail-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem 0.75rem;
 }
 
-.gt-news__rail-head time,
-.gt-news__rail-item p {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+.od-news__rail-head time,
+.od-news__rail-item p {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   line-height: 1.4;
   margin: 0;
 }
 
-.gt-news__rail-head time {
+.od-news__rail-head time {
   margin-left: auto;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
 }
 
 /* Free strip */
 
-.gt-news__free-strip {
+.od-news__free-strip {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   gap: 0.65rem;
@@ -231,91 +231,91 @@
   padding: 0;
 }
 
-.gt-news__free-tile {
+.od-news__free-tile {
   padding: 0.7rem 0.8rem;
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: var(--gt-radius-sm);
-  color: var(--gt-text);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  border-radius: var(--od-radius-sm);
+  color: var(--od-text);
 }
 
-.gt-news__free-tile article {
+.od-news__free-tile article {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
 }
 
-.gt-news__free-tile p {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+.od-news__free-tile p {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   line-height: 1.4;
   margin: 0;
 }
 
-.gt-news__free-row {
+.od-news__free-row {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
 }
 
-.gt-news__free-thumb {
+.od-news__free-thumb {
   width: 88px;
   height: 50px;
   object-fit: cover;
   flex-shrink: 0;
-  border-radius: var(--gt-radius-xs);
-  background: color-mix(in srgb, var(--gt-surface-2) 90%, transparent);
+  border-radius: var(--od-radius-xs);
+  background: color-mix(in srgb, var(--od-surface-2) 90%, transparent);
 }
 
-.gt-news__free-thumb--empty {
-  border: 1px dashed color-mix(in srgb, var(--gt-border) 80%, transparent);
+.od-news__free-thumb--empty {
+  border: 1px dashed color-mix(in srgb, var(--od-border) 80%, transparent);
 }
 
-.gt-news__free-body {
+.od-news__free-body {
   min-width: 0;
   flex: 1;
 }
 
-.gt-news__store {
+.od-news__store {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-accent);
+  font-size: var(--od-font-xs);
+  color: var(--od-accent);
 }
 
-.gt-news__linked {
-  color: var(--gt-accent);
+.od-news__linked {
+  color: var(--od-accent);
 }
 
-.gt-news__meta {
+.od-news__meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
   margin: 0 0 0.25rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-news__actions {
+.od-news__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
   margin: 0.5rem 0 0;
 }
 
-/* .gt-btn--ghost moved to gt-primitives.css (GT-A4). */
+/* .od-btn--ghost moved to od-primitives.css (GT-A4). */
 
-.gt-news__assist-msg {
+.od-news__assist-msg {
   margin: 0.35rem 0 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
 /* Magazine headlines */
 
-.gt-news__magazine {
+.od-news__magazine {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -324,43 +324,43 @@
   gap: 0;
 }
 
-.gt-news__mag-row {
+.od-news__mag-row {
   padding: 0.7rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 65%, transparent);
   background: transparent;
 }
 
-.gt-news__mag-row article {
+.od-news__mag-row article {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   min-width: 0;
 }
 
-.gt-news__mag-row p {
+.od-news__mag-row p {
   margin: 0;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   line-height: 1.4;
 }
 
-.gt-news__mag-link {
+.od-news__mag-link {
   color: inherit;
   text-decoration: none;
 }
 
-.gt-news__mag-link:hover strong,
-.gt-news__mag-link:focus-visible strong {
-  color: var(--gt-accent);
+.od-news__mag-link:hover strong,
+.od-news__mag-link:focus-visible strong {
+  color: var(--od-accent);
   outline: none;
 }
 
 @media (max-width: 640px) {
-  .gt-news__free-strip {
+  .od-news__free-strip {
     grid-template-columns: 1fr;
   }
 
-  .gt-news__hero {
+  .od-news__hero {
     padding: 0.95rem 0.9rem 1.05rem;
   }
 }
@@ -369,7 +369,7 @@
 /* Steam/Epic lead with artwork; the old rows were text-only, which is why the
    page read like a changelog rather than a games outlet. */
 
-.gt-news__cards {
+.od-news__cards {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -381,7 +381,7 @@
   gap: 0.75rem;
 }
 
-.gt-news .gt-news__card {
+.od-news .od-news__card {
   min-width: 0;
   /* One height for every card, whatever the copy says.
    *
@@ -391,7 +391,7 @@
    * the title and summary below cap what the text can ask for, and this floor
    * stops a headline with no summary and no artwork from asking for less.
    *
-   * Chrome reset beats MorePage.css `.gt-news__card`, which still styles leftover
+   * Chrome reset beats MorePage.css `.od-news__card`, which still styles leftover
    * list cards from when News lived on More. The link owns the surface. */
   min-height: 23rem;
   display: flex;
@@ -403,40 +403,40 @@
   color: inherit;
 }
 
-.gt-news__card-link {
+.od-news__card-link {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: var(--gt-radius-xl);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
+  border-radius: var(--od-radius-xl);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
   color: inherit;
   text-decoration: none;
   transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.gt-news__card-link:hover,
-.gt-news__card-link:focus-visible {
+.od-news__card-link:hover,
+.od-news__card-link:focus-visible {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
+  border-color: color-mix(in srgb, var(--od-accent) 50%, transparent);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
 }
 
 /* Art fills the tile; source sits bottom-left and the date bottom-right on
    the image. The title (and optional standfirst) caption under it, matching
    Discover's NewsCard. */
-.gt-news__card-art-wrap {
+.od-news__card-art-wrap {
   position: relative;
   flex: 1 1 auto;
   min-height: 12rem;
   width: 100%;
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+  background: color-mix(in srgb, var(--od-surface-2) 85%, transparent);
 }
 
-.gt-news__card-art {
+.od-news__card-art {
   display: block;
   position: absolute;
   inset: 0;
@@ -451,34 +451,34 @@
  * it visibly shorter than every neighbour — the same uneven-cards complaint,
  * arriving by a different route. `alt=""` means nothing is announced and no
  * browser draws a broken-image glyph, so the frame simply reads as artless. */
-.gt-news__card-art.is-broken {
+.od-news__card-art.is-broken {
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--gt-accent) 14%, transparent),
+      color-mix(in srgb, var(--od-accent) 14%, transparent),
       transparent 60%),
-    color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+    color-mix(in srgb, var(--od-surface-2) 85%, transparent);
 }
 
-.gt-news__card-art--empty {
+.od-news__card-art--empty {
   background:
     linear-gradient(135deg,
-      color-mix(in srgb, var(--gt-accent) 14%, transparent),
+      color-mix(in srgb, var(--od-accent) 14%, transparent),
       transparent 60%),
-    color-mix(in srgb, var(--gt-surface-2) 85%, transparent);
+    color-mix(in srgb, var(--od-surface-2) 85%, transparent);
 }
 
-.gt-news__card-art-wrap .gt-news__card-badge,
-.gt-news__card-art-wrap .gt-news__card-when {
+.od-news__card-art-wrap .od-news__card-badge,
+.od-news__card-art-wrap .od-news__card-when {
   position: absolute;
   bottom: 0.4rem;
   z-index: 1;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 650;
   line-height: 1.2;
   padding: 0.15rem 0.4rem;
-  border-radius: var(--gt-radius-sm);
-  color: var(--gt-text);
-  background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
+  border-radius: var(--od-radius-sm);
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-bg) 72%, transparent);
   backdrop-filter: blur(4px);
   max-width: calc(50% - 0.5rem);
   overflow: hidden;
@@ -486,19 +486,19 @@
   white-space: nowrap;
 }
 
-.gt-news__card-art-wrap .gt-news__card-badge {
+.od-news__card-art-wrap .od-news__card-badge {
   left: 0.4rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.gt-news__card-art-wrap .gt-news__card-when {
+.od-news__card-art-wrap .od-news__card-when {
   right: 0.4rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--gt-text) 92%, transparent);
+  color: color-mix(in srgb, var(--od-text) 92%, transparent);
 }
 
-.gt-news__card-body {
+.od-news__card-body {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -509,8 +509,8 @@
 /* Both clamps use the -webkit- prefixed box properties on purpose: the
    unprefixed `line-clamp` shorthand is still not what any shipping engine
    implements, and every engine we target honours these. */
-.gt-news__card-title {
-  font-size: var(--gt-font-base);
+.od-news__card-title {
+  font-size: var(--od-font-base);
   line-height: 1.3;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -521,48 +521,48 @@
   overflow: hidden;
 }
 
-.gt-news__card-summary {
-  font-size: var(--gt-font-sm);
+.od-news__card-summary {
+  font-size: var(--od-font-sm);
   line-height: 1.45;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   overflow: hidden;
 }
 
-.gt-news__source {
+.od-news__source {
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--gt-accent) 85%, var(--gt-text));
+  color: color-mix(in srgb, var(--od-accent) 85%, var(--od-text));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-news__card-link {
+  .od-news__card-link {
     transition: none;
   }
-  .gt-news__card-link:hover,
-  .gt-news__card-link:focus-visible {
+  .od-news__card-link:hover,
+  .od-news__card-link:focus-visible {
     transform: none;
   }
 }
 
 /* FEAT-D6: the "why isn't this seamless" line, stated once and quietly. */
-.gt-news__connect-hint {
+.od-news__connect-hint {
   align-self: center;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.gt-news__connect-hint:hover,
-.gt-news__connect-hint:focus-visible {
-  color: var(--gt-accent);
+.od-news__connect-hint:hover,
+.od-news__connect-hint:focus-visible {
+  color: var(--od-accent);
 }
 
 /* Source filter — one chip per configured site, pressed when it is showing. */
-.gt-news__sources {
+.od-news__sources {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -571,7 +571,7 @@
 
 /* Muted reads as off rather than as merely unselected: this is a list where
    most chips are usually on, so the exception has to be the loud one. */
-.gt-news__source[aria-pressed='false'] {
+.od-news__source[aria-pressed='false'] {
   opacity: 0.5;
   text-decoration: line-through;
 }
@@ -584,9 +584,9 @@
  * of the page reachable without a long scroll, and puts the growth inside the
  * section that owns it. */
 /* Classic (non-fill) pages still cap the two feeds so News cannot grow past
-   the rest of the page. Fill mode lets `.gt-news__panel-body` own the scroll. */
-.gt-news:not(.gt-news--fill) .gt-news__cards,
-.gt-news:not(.gt-news--fill) .gt-news__free-strip {
+   the rest of the page. Fill mode lets `.od-news__panel-body` own the scroll. */
+.od-news:not(.od-news--fill) .od-news__cards,
+.od-news:not(.od-news--fill) .od-news__free-strip {
   max-height: min(58vh, 32rem);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -594,8 +594,8 @@
 }
 
 @media (max-width: 900px) {
-  .gt-news:not(.gt-news--fill) .gt-news__cards,
-  .gt-news:not(.gt-news--fill) .gt-news__free-strip {
+  .od-news:not(.od-news--fill) .od-news__cards,
+  .od-news:not(.od-news--fill) .od-news__free-strip {
     max-height: none;
     overflow-y: visible;
   }
@@ -603,7 +603,7 @@
 
 /* --- Fill pane + Card / Grid / RSS -------------------------------------- */
 
-.gt-more-page.gt-news--fill {
+.od-more-page.od-news--fill {
   max-width: none;
   flex: 1;
   min-height: 0;
@@ -613,12 +613,12 @@
   padding-bottom: 0.5rem;
 }
 
-.gt-news--fill .gt-news__hero,
-.gt-news--fill .gt-news__header {
+.od-news--fill .od-news__hero,
+.od-news--fill .od-news__header {
   flex: 0 0 auto;
 }
 
-.gt-news__stage {
+.od-news__stage {
   flex: 1;
   min-height: 0;
   display: grid;
@@ -628,7 +628,7 @@
   overflow: hidden;
 }
 
-.gt-news__stage .gt-news__section {
+.od-news__stage .od-news__section {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -637,7 +637,7 @@
   overflow: hidden;
 }
 
-.gt-news__panel-body {
+.od-news__panel-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -646,67 +646,67 @@
 }
 
 @media (min-width: 1120px) {
-  .gt-news--fill[data-tab='all'] .gt-news__stage {
+  .od-news--fill[data-tab='all'] .od-news__stage {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto minmax(0, 1fr);
   }
 
-  .gt-news--fill[data-tab='all'] .gt-news__admins {
+  .od-news--fill[data-tab='all'] .od-news__admins {
     grid-column: 1 / -1;
     grid-row: 1;
     max-height: 10.5rem;
   }
 
-  .gt-news--fill[data-tab='all'] .gt-news__free {
+  .od-news--fill[data-tab='all'] .od-news__free {
     grid-row: 2;
     grid-column: 1;
   }
 
-  .gt-news--fill[data-tab='all'] .gt-news__headlines {
+  .od-news--fill[data-tab='all'] .od-news__headlines {
     grid-row: 2;
     grid-column: 2;
   }
 
-  .gt-news--fill[data-tab='all'] .gt-news__headlines .gt-news__cards {
+  .od-news--fill[data-tab='all'] .od-news__headlines .od-news__cards {
     grid-template-columns: 1fr;
   }
 
-  .gt-news--fill[data-tab='all'] .gt-news__free .gt-news__free-strip {
+  .od-news--fill[data-tab='all'] .od-news__free .od-news__free-strip {
     grid-template-columns: 1fr;
   }
 }
 
 /* Grid: denser auto-fill, shorter cards. */
-.gt-news--fill[data-layout='grid'] .gt-news__cards {
+.od-news--fill[data-layout='grid'] .od-news__cards {
   grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
   gap: 0.55rem;
 }
 
-.gt-news--fill[data-layout='grid'] .gt-news__card {
+.od-news--fill[data-layout='grid'] .od-news__card {
   min-height: 16rem;
 }
 
-.gt-news--fill[data-layout='grid'] .gt-news__card-title {
+.od-news--fill[data-layout='grid'] .od-news__card-title {
   min-height: calc(2 * 1.25em);
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-news--fill[data-layout='grid'] .gt-news__card-summary {
+.od-news--fill[data-layout='grid'] .od-news__card-summary {
   -webkit-line-clamp: 2;
 }
 
-.gt-news--fill[data-layout='grid'] .gt-news__free-strip {
+.od-news--fill[data-layout='grid'] .od-news__free-strip {
   grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
   gap: 0.5rem;
 }
 
-.gt-news--fill[data-layout='grid'] .gt-news__free-tile {
+.od-news--fill[data-layout='grid'] .od-news__free-tile {
   padding: 0.5rem 0.6rem;
 }
 
 @media (min-width: 1120px) {
-  .gt-news--fill[data-tab='all'][data-layout='grid'] .gt-news__headlines .gt-news__cards,
-  .gt-news--fill[data-tab='all'][data-layout='grid'] .gt-news__free .gt-news__free-strip {
+  .od-news--fill[data-tab='all'][data-layout='grid'] .od-news__headlines .od-news__cards,
+  .od-news--fill[data-tab='all'][data-layout='grid'] .od-news__free .od-news__free-strip {
     grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
   }
 }

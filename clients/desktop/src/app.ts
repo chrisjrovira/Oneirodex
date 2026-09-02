@@ -1,9 +1,9 @@
 import {
   createAuthStore,
   describeTokenPaste,
-  isGamethecaToken,
+  isOneirodexToken,
   normalizeBaseUrl,
-  normalizeGamethecaToken,
+  normalizeOneirodexToken,
 } from './auth.js'
 import { createDesktopApi } from './api.js'
 import { escapeHtml } from './html.js'
@@ -247,21 +247,21 @@ async function hydrateFromDisk(): Promise<void> {
   }
   els.baseUrl.value = auth.getBaseUrl()
   const token = auth.getToken()
-  els.token.value = token ? normalizeGamethecaToken(token) : ''
+  els.token.value = token ? normalizeOneirodexToken(token) : ''
   renderAuthSummary()
 }
 async function handleConnect(): Promise<void> {
   const baseUrl = normalizeBaseUrl(els.baseUrl.value)
   const rawToken = els.token.value
   logCompanion('connect', describeTokenPaste(rawToken))
-  const token = normalizeGamethecaToken(rawToken)
+  const token = normalizeOneirodexToken(rawToken)
   els.baseUrl.value = baseUrl
   els.token.value = token
   if (!baseUrl) {
     setStatus('Enter a server base URL.', 'error')
     return
   }
-  if (!token || !isGamethecaToken(token)) {
+  if (!token || !isOneirodexToken(token)) {
     const shape = shapeInvalidConnectionResult()
     setStatus(shape.message, 'error')
     return
@@ -679,7 +679,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
   root.innerHTML = `
     <main class="shell">
       <header>
-        <h1>GameTheca Desktop</h1>
+        <h1>Oneirodex Desktop</h1>
         <p class="muted">Connect to your server, preview library, and track local install state.</p>
       </header>
       <section class="panel">
@@ -688,7 +688,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
         <form id="connect-form" class="connect-form">
           <label>
             Server URL
-            <input id="base-url" name="baseUrl" type="url" placeholder="https://gametheca.example.com" autocomplete="url" />
+            <input id="base-url" name="baseUrl" type="url" placeholder="https://oneirodex.example.com" autocomplete="url" />
           </label>
           <label>
             API token

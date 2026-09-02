@@ -5,8 +5,8 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import DownloadRequest, Game, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import DownloadRequest, Game, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture

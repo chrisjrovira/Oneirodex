@@ -1,6 +1,6 @@
 /* Standalone defaults only — the theme must win (GT-A3).
  *
- * base_admin.html loads the active theme's gt-tokens.css and *then* this
+ * base_admin.html loads the active theme's od-tokens.css and *then* this
  * bundle. As a plain `:root` block these had equal specificity and came later,
  * so they overrode the theme: every admin page rendered in the default green
  * regardless of the preset the user picked, while the member app followed the
@@ -12,24 +12,24 @@
  * a full token set to render with. Do not turn this back into a bare `:root`.
  */
 :where(:root) {
-  --gt-bg: #0b0d10;
-  --gt-surface: #141820;
-  --gt-surface-2: #1c2230;
-  --gt-text: #f2f4f8;
-  --gt-text-muted: #c4ccd8;
-  --gt-accent: #2fd67b;
-  --gt-accent-contrast: #0b0d10;
-  --gt-danger: #ff6b6b;
-  --gt-success: #4ade80;
-  --gt-family-nintendo: #e60012;
-  --gt-family-sony: #0070d1;
-  --gt-family-xbox: #2fd67b;
-  --gt-family-sega: #1a66ff;
-  --gt-family-atari: #f5a623;
-  --gt-border: rgba(255, 255, 255, 0.12);
-  --gt-glass-bg: rgba(20, 24, 32, 0.72);
-  --gt-glass-border: rgba(255, 255, 255, 0.14);
-  --gt-glass-blur: 12px;
+  --od-bg: #0b0d10;
+  --od-surface: #141820;
+  --od-surface-2: #1c2230;
+  --od-text: #f2f4f8;
+  --od-text-muted: #c4ccd8;
+  --od-accent: #2fd67b;
+  --od-accent-contrast: #0b0d10;
+  --od-danger: #ff6b6b;
+  --od-success: #4ade80;
+  --od-family-nintendo: #e60012;
+  --od-family-sony: #0070d1;
+  --od-family-xbox: #2fd67b;
+  --od-family-sega: #1a66ff;
+  --od-family-atari: #f5a623;
+  --od-border: rgba(255, 255, 255, 0.12);
+  --od-glass-bg: rgba(20, 24, 32, 0.72);
+  --od-glass-border: rgba(255, 255, 255, 0.14);
+  --od-glass-blur: 12px;
   --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
   --font-display: "Arial Black", "Segoe UI", sans-serif;
 }
@@ -44,20 +44,20 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-ui);
-  color: var(--gt-text);
-  background: var(--gt-bg);
+  color: var(--od-text);
+  background: var(--od-bg);
 }
 
 a {
-  color: var(--gt-accent);
+  color: var(--od-accent);
 }
 
-.gt-admin-shell {
+.od-admin-shell {
   display: flex;
   flex-direction: column;
 }
 
-.gt-admin-shell:has(.gt-admin-main) {
+.od-admin-shell:has(.od-admin-main) {
   min-height: 100vh;
 }
 
@@ -77,7 +77,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   z-index: 1060;
 }
 
-.gt-admin-topbar {
+.od-admin-topbar {
   position: sticky;
   top: 0;
   z-index: 50;
@@ -86,53 +86,53 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.55rem;
   min-height: 2.5rem;
   padding: 0.35rem 0.75rem;
-  background: color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg));
-  border-bottom: 1px solid var(--gt-border);
-  backdrop-filter: blur(var(--gt-glass-blur));
+  background: color-mix(in srgb, var(--od-surface) 88%, var(--od-bg));
+  border-bottom: 1px solid var(--od-border);
+  backdrop-filter: blur(var(--od-glass-blur));
 }
 
-.gt-admin-brand {
+.od-admin-brand {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
-  color: var(--gt-text);
+  color: var(--od-text);
   text-decoration: none;
 }
 
-.gt-admin-brand img {
+.od-admin-brand img {
   width: 1.4rem;
   height: 1.4rem;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
 }
 
-.gt-admin-brand-text {
+.od-admin-brand-text {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35rem;
   line-height: 1.1;
 }
 
-.gt-admin-brand-name {
+.od-admin-brand-name {
   font-family: var(--font-display);
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   letter-spacing: 0.01em;
 }
 
-.gt-admin-brand-role {
-  font-size: var(--gt-font-xs);
+.od-admin-brand-role {
+  font-size: var(--od-font-xs);
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-brand:hover .gt-admin-brand-name,
-.gt-admin-brand:focus-visible .gt-admin-brand-name {
-  color: var(--gt-accent);
+.od-admin-brand:hover .od-admin-brand-name,
+.od-admin-brand:focus-visible .od-admin-brand-name {
+  color: var(--od-accent);
 }
 
-.gt-admin-nav {
+.od-admin-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 0.1rem;
@@ -140,30 +140,30 @@ body.admin-shell.modal-open > .modal-backdrop {
   min-width: 0;
 }
 
-.gt-admin-nav a {
-  color: var(--gt-text-muted);
+.od-admin-nav a {
+  color: var(--od-text-muted);
   text-decoration: none;
   padding: 0.28rem 0.5rem;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
   border: 1px solid transparent;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 550;
   line-height: 1.2;
   white-space: nowrap;
 }
 
-.gt-admin-nav a:hover {
-  color: var(--gt-text);
-  background: color-mix(in srgb, var(--gt-text) 7%, transparent);
+.od-admin-nav a:hover {
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-text) 7%, transparent);
 }
 
-.gt-admin-nav a.active {
-  color: var(--gt-text);
-  border-color: color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+.od-admin-nav a.active {
+  color: var(--od-text);
+  border-color: color-mix(in srgb, var(--od-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 14%, transparent);
 }
 
-.gt-admin-actions {
+.od-admin-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.2rem;
@@ -171,71 +171,156 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex-shrink: 0;
 }
 
-.gt-admin-actions .gt-btn,
-.gt-admin-actions .gt-btn--quiet {
+.od-admin-actions .od-btn,
+.od-admin-actions .od-btn--quiet {
   padding: 0.28rem 0.5rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 550;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
   border: 1px solid transparent;
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   text-decoration: none;
   white-space: nowrap;
 }
 
-.gt-admin-actions .gt-btn:hover,
-.gt-admin-actions .gt-btn--quiet:hover {
-  color: var(--gt-text);
-  border-color: var(--gt-border);
-  background: color-mix(in srgb, var(--gt-text) 6%, transparent);
+.od-admin-actions .od-btn:hover,
+.od-admin-actions .od-btn--quiet:hover {
+  color: var(--od-text);
+  border-color: var(--od-border);
+  background: color-mix(in srgb, var(--od-text) 6%, transparent);
 }
 
-/* .gt-btn came from gt-primitives.css all along; this file defined it twice
+/* .od-btn came from od-primitives.css all along; this file defined it twice
    (GT-A4) — here, and again further down with a different fill and weight. The
    later block silently won, so this one was dead code that still read as
    authoritative. Both are gone; base_admin.html loads the primitive. */
 
-.gt-admin-metric {
+.od-admin-metric {
   margin: 0.15rem 0;
-  font-size: var(--gt-font-2xl);
+  font-size: var(--od-font-2xl);
   font-weight: 700;
-  color: var(--gt-accent);
+  color: var(--od-accent);
   line-height: 1.1;
 }
 
-.gt-admin-legacy {
+.od-admin-legacy {
   max-width: 1600px;
   margin: 0 auto;
   padding: 0.65rem 1.25rem 1.5rem;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-admin-legacy .card,
-.gt-admin-legacy .container-settings,
-.gt-admin-legacy .gt-adminpage,
-.gt-admin-legacy .glass-panel {
-  background: var(--gt-surface);
-  color: var(--gt-text);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-xl);
+.od-admin-legacy .card,
+.od-admin-legacy .container-settings,
+.od-admin-legacy .od-adminpage,
+.od-admin-legacy .glass-panel {
+  background: var(--od-surface);
+  color: var(--od-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-xl);
+}
+
+/* Libraries & scans: page shell + tab-content are layout only (no nested card). */
+.od-admin-legacy .admin_manage_scanjobs-nav-panel > .container-settings.od-adminpage,
+.od-admin-legacy .admin_manage_libraries-library-container > .container-settings.od-adminpage,
+.od-admin-legacy .admin_manage_scanjobs-tab-content {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.admin_manage_scanjobs-nav-panel),
+body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.admin_manage_libraries-library-container),
+body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-discovery-sections),
+body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  /* Shorthand padding on `.od-admin-legacy` used to reset this to 0.65rem and
+     tuck the table under the overlay top bar. Keep the sides/bottom ordinary
+     and pin the top with !important so a later shorthand cannot win. */
+  padding-right: var(--od-gutter, 1rem);
+  padding-bottom: 0.65rem;
+  padding-left: var(--od-gutter, 1rem);
+  padding-top: calc(var(--od-topbar-h, 3.25rem) + 0.35rem) !important;
+}
+
+.od-admin-legacy:has(#librariesPanel.active),
+.od-admin-legacy:has(.admin_manage_libraries-library-container),
+.od-admin-legacy:has(.od-discovery-sections),
+.od-admin-legacy:has(.od-admin-fill) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.od-admin-legacy:has(.od-discovery-sections) > .od-discovery-sections,
+.od-admin-legacy:has(.od-discovery-sections) .container-settings.od-discovery-sections,
+.od-admin-legacy:has(.od-admin-fill) > .od-admin-fill,
+.od-admin-legacy:has(.od-admin-fill) .container-settings.od-admin-fill {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.od-admin-legacy:has(#librariesPanel.active) .admin_manage_scanjobs-nav-panel,
+.od-admin-legacy:has(#librariesPanel.active) .admin_manage_scanjobs-nav-panel > .container-settings.od-adminpage,
+.od-admin-legacy:has(#librariesPanel.active) .admin_manage_scanjobs-tab-content,
+.od-admin-legacy:has(#librariesPanel.active) #librariesPanel.active,
+.od-admin-legacy:has(#librariesPanel.active) #odLibrariesPanel,
+.od-admin-legacy:has(#librariesPanel.active) #odLibrariesReactRoot,
+.od-admin-legacy:has(.admin_manage_libraries-library-container) .admin_manage_libraries-library-container,
+.od-admin-legacy:has(.admin_manage_libraries-library-container) .admin_manage_libraries-library-container > .container-settings.od-adminpage,
+.od-admin-legacy:has(.admin_manage_libraries-library-container) #odLibrariesPanel,
+.od-admin-legacy:has(.admin_manage_libraries-library-container) #odLibrariesReactRoot {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.od-admin-legacy .admin_manage_scanjobs-nav-panel > .container-settings.od-adminpage,
+.od-admin-legacy .admin_manage_libraries-library-container > .container-settings.od-adminpage {
+  margin: 0;
+  margin-inline: 0;
+  padding: 0;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Server Settings (and other Jinja settings shells) sat in a second glass
    panel inside `.container-settings`, then filled each Bootstrap column with
    `.settings-section`. Theme CSS also pinned `.container-settings` at
    min-width: 800px, which overflowed the admin column beside the rail. */
-.gt-admin-legacy .container-settings {
+.od-admin-legacy .container-settings {
   min-width: 0;
   max-width: 100%;
   width: 100%;
 }
 
-.gt-admin-legacy .gt-adminpage--spaced {
+/* Integrations (and other fill panes): use the whole main column. Nested SMTP
+   / IGDB cards used to pin ~800px and centre themselves in a short column. */
+.od-admin-legacy:has(.od-admin-fill) .smtp-settings-container,
+.od-admin-legacy:has(.od-admin-fill) .integrations-tab-content,
+.od-admin-legacy:has(.od-admin-fill) .tab-content-wrapper,
+.od-admin-legacy .od-admin-fill .smtp-settings-container {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+}
+
+.od-admin-legacy .od-adminpage--spaced {
   margin-block: 0;
 }
 
-.gt-admin-legacy .container-settings.gt-adminpage .gt-adminpage-panel {
+.od-admin-legacy .container-settings.od-adminpage .od-adminpage-panel {
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -243,53 +328,53 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin: 0;
 }
 
-.gt-admin-legacy .gt-adminpage .settings-section {
+.od-admin-legacy .od-adminpage .settings-section {
   background: transparent;
   box-shadow: none;
   height: auto;
 }
 
-.gt-admin-legacy .table,
-.gt-admin-legacy .table-dark {
+.od-admin-legacy .table,
+.od-admin-legacy .table-dark {
   --bs-table-bg: transparent;
-  --bs-table-color: var(--gt-text);
-  color: var(--gt-text);
+  --bs-table-color: var(--od-text);
+  color: var(--od-text);
 }
 
-.gt-admin-legacy .nav-tabs {
-  border-bottom-color: var(--gt-border);
+.od-admin-legacy .nav-tabs {
+  border-bottom-color: var(--od-border);
 }
 
-.gt-admin-legacy .nav-link {
-  color: var(--gt-text-muted);
+.od-admin-legacy .nav-link {
+  color: var(--od-text-muted);
 }
 
-.gt-admin-legacy .nav-link.active {
-  color: var(--gt-accent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
-  border-color: var(--gt-border);
+.od-admin-legacy .nav-link.active {
+  color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
+  border-color: var(--od-border);
 }
 
-.gt-admin-legacy .btn-primary,
-.gt-admin-legacy .btn-secondary,
-.gt-admin-legacy .btn-info {
-  border-radius: var(--gt-radius-md);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
-  color: var(--gt-text);
+.od-admin-legacy .btn-primary,
+.od-admin-legacy .btn-secondary,
+.od-admin-legacy .btn-info {
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 16%, transparent);
+  color: var(--od-text);
 }
 
-.gt-admin-legacy .settings-shell-header .btn,
-.gt-admin-legacy a.btn[href*="dashboard"] {
+.od-admin-legacy .settings-shell-header .btn,
+.od-admin-legacy a.btn[href*="dashboard"] {
   /* Prefer top-nav Dashboard; shrink leftover page widgets */
   display: none !important;
 }
 
-.gt-admin-legacy .settings-shell-header {
+.od-admin-legacy .settings-shell-header {
   margin-bottom: 0.75rem;
 }
 
-.gt-admin-main {
+.od-admin-main {
   flex: 1;
   padding: 0.75rem 1.25rem 1.5rem;
   max-width: 1600px;
@@ -301,27 +386,27 @@ body.admin-shell.modal-open > .modal-backdrop {
    optional "<Section> home" button), so the in-page title is a redundant
    giant heading — keep it for a11y landmark purposes but shrink it to a
    compact eyebrow label instead of a second hero heading. */
-.gt-admin-page h1 {
+.od-admin-page h1 {
   margin: 0 0 0.25rem;
   font-family: var(--font-display);
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-lede {
+.od-admin-lede {
   margin: 0 0 0.75rem;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   max-width: 42rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
 /* auto-fit, not auto-fill: auto-fill keeps empty columns alive, so a row with
    two cards left them narrow with dead space beside them. auto-fit collapses
    the empty tracks and lets the real cards take the width. */
-.gt-admin-card-grid {
+.od-admin-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
   gap: 0.5rem;
@@ -329,56 +414,56 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 /* Flex column + stretch so a card fills its grid cell instead of leaving a gap
    under the shorter card in a row, and its body can push actions to the base. */
-.gt-admin-card {
+.od-admin-card {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   height: 100%;
   padding: 0.7rem 0.8rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
   color: inherit;
   text-decoration: none;
 }
 
-.gt-admin-card:hover {
-  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
+.od-admin-card:hover {
+  border-color: color-mix(in srgb, var(--od-accent) 50%, transparent);
 }
 
-.gt-admin-card h2 {
+.od-admin-card h2 {
   margin: 0 0 0.35rem;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-admin-card p {
+.od-admin-card p {
   margin: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-card--hub {
+.od-admin-card--hub {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
 }
 
-.gt-admin-card--hub h2 {
+.od-admin-card--hub h2 {
   margin: 0;
 }
 
-.gt-admin-card--hub h2 a {
-  color: var(--gt-accent);
+.od-admin-card--hub h2 a {
+  color: var(--od-accent);
   text-decoration: none;
 }
 
-.gt-admin-card--hub h2 a:hover,
-.gt-admin-card--hub h2 a:focus-visible {
+.od-admin-card--hub h2 a:hover,
+.od-admin-card--hub h2 a:focus-visible {
   text-decoration: underline;
   outline: none;
 }
 
-.gt-admin-card__links {
+.od-admin-card__links {
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0;
@@ -387,37 +472,37 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.25rem;
 }
 
-.gt-admin-card__links a {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text);
+.od-admin-card__links a {
+  font-size: var(--od-font-sm);
+  color: var(--od-text);
   text-decoration: none;
   border-bottom: 1px solid transparent;
 }
 
-.gt-admin-card__links a:hover,
-.gt-admin-card__links a:focus-visible {
-  color: var(--gt-accent);
-  border-bottom-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
+.od-admin-card__links a:hover,
+.od-admin-card__links a:focus-visible {
+  color: var(--od-accent);
+  border-bottom-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
 }
 
-.gt-admin-card-grid--integrations {
+.od-admin-card-grid--integrations {
   grid-template-columns: repeat(auto-fit, minmax(14.5rem, 1fr));
 }
 
-.gt-admin-inventory__group + .gt-admin-inventory__group {
+.od-admin-inventory__group + .od-admin-inventory__group {
   margin-top: 0.85rem;
 }
 
-.gt-admin-inventory__category {
+.od-admin-inventory__category {
   margin: 0 0 0.35rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-inventory__list {
+.od-admin-inventory__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -426,74 +511,68 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.3rem;
 }
 
-.gt-admin-inventory__list a {
-  font-size: var(--gt-font-md);
-  color: var(--gt-accent);
+.od-admin-inventory__list a {
+  font-size: var(--od-font-md);
+  color: var(--od-accent);
   text-decoration: none;
 }
 
-.gt-admin-inventory__list a:hover,
-.gt-admin-inventory__list a:focus-visible {
+.od-admin-inventory__list a:hover,
+.od-admin-inventory__list a:focus-visible {
   text-decoration: underline;
   outline: none;
 }
 
-.gt-admin-inventory__status {
-  font-size: var(--gt-font-sm);
+.od-admin-inventory__status {
+  font-size: var(--od-font-sm);
 }
 
-.gt-admin-inventory__notes {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+.od-admin-inventory__notes {
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
 /* Base table rules moved to DataTable.css (W27-C1). This copy had drifted to
  * 0.92rem — noticeably larger than every other table in the admin — with its
  * own padding and no header treatment at all. */
 
-.gt-admin-panel {
+.od-admin-panel {
   padding: 1rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-glass-border);
-  background: var(--gt-glass-bg);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-glass-border);
+  background: var(--od-glass-bg);
 }
 
-.gt-admin-actions-row {
+.od-admin-actions-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 1rem 0;
 }
 
-.gt-admin-legacy {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0.65rem 1.25rem 1.5rem;
-}
-
-.gt-admin-legacy .settings-shell-header .btn,
-.gt-admin-legacy a.btn[href*="dashboard"] {
+.od-admin-legacy .settings-shell-header .btn,
+.od-admin-legacy a.btn[href*="dashboard"] {
   /* Prefer top-nav Dashboard; shrink leftover page widgets */
   display: none !important;
 }
 
-.gt-admin-legacy .settings-shell-header {
+.od-admin-legacy .settings-shell-header {
   margin-bottom: 0.75rem;
 }
 
-.gt-admin-input {
+.od-admin-input {
   display: block;
   width: 100%;
   margin: 0.35rem 0 0.85rem;
   padding: 0.45rem 0.65rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
   font: inherit;
 }
 
-.gt-admin-list {
+.od-admin-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -501,24 +580,24 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.75rem;
 }
 
-.gt-admin-panel label {
+.od-admin-panel label {
   display: block;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-field {
+.od-admin-field {
   display: block;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
   margin-bottom: 0.65rem;
 }
 
-.gt-admin-field .gt-admin-input {
+.od-admin-field .od-admin-input {
   margin-bottom: 0;
 }
 
-.gt-art-studio-head {
+.od-art-studio-head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -527,62 +606,62 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin-bottom: 0.35rem;
 }
 
-.gt-art-studio-kicker {
+.od-art-studio-kicker {
   margin: 0 0 0.2rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--gt-accent) 75%, var(--gt-text-muted));
+  color: color-mix(in srgb, var(--od-accent) 75%, var(--od-text-muted));
 }
 
-.gt-art-studio-lede {
+.od-art-studio-lede {
   max-width: 36rem;
 }
 
-.gt-art-studio-skin {
+.od-art-studio-skin {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.35rem;
   padding: 0.35rem 0.7rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 80%, transparent);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
   white-space: nowrap;
 }
 
-.gt-art-studio-skin--nintendo,
-.gt-art-studio-skin--sony,
-.gt-art-studio-skin--xbox,
-.gt-art-studio-skin--sega,
-.gt-art-studio-skin--atari,
-.gt-art-studio-skin--pc {
-  border-color: color-mix(in srgb, var(--gt-art-skin, var(--gt-accent)) 55%, transparent);
-  color: var(--gt-text);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gt-art-skin, var(--gt-accent)) 25%, transparent);
+.od-art-studio-skin--nintendo,
+.od-art-studio-skin--sony,
+.od-art-studio-skin--xbox,
+.od-art-studio-skin--sega,
+.od-art-studio-skin--atari,
+.od-art-studio-skin--pc {
+  border-color: color-mix(in srgb, var(--od-art-skin, var(--od-accent)) 55%, transparent);
+  color: var(--od-text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--od-art-skin, var(--od-accent)) 25%, transparent);
 }
 
-.gt-art-studio {
+.od-art-studio {
   display: grid;
   gap: 1.25rem;
   grid-template-columns: minmax(240px, 1fr) minmax(280px, 1fr);
   align-items: start;
 }
 
-.gt-art-studio--workspace {
+.od-art-studio--workspace {
   margin: 0 0 1rem;
   padding: 1rem;
-  border-radius: var(--gt-radius-xl);
-  border: 1px solid var(--gt-glass-border);
+  border-radius: var(--od-radius-xl);
+  border: 1px solid var(--od-glass-border);
   background:
-    radial-gradient(120% 80% at 12% 0%, color-mix(in srgb, var(--gt-accent) 14%, transparent), transparent 55%),
-    linear-gradient(165deg, color-mix(in srgb, var(--gt-surface) 92%, var(--gt-surface-2)), var(--gt-surface));
+    radial-gradient(120% 80% at 12% 0%, color-mix(in srgb, var(--od-accent) 14%, transparent), transparent 55%),
+    linear-gradient(165deg, color-mix(in srgb, var(--od-surface) 92%, var(--od-surface-2)), var(--od-surface));
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
-.gt-art-studio__stage {
+.od-art-studio__stage {
   position: relative;
   min-height: 360px;
   display: flex;
@@ -591,55 +670,55 @@ body.admin-shell.modal-open > .modal-backdrop {
   justify-content: center;
   gap: 0.85rem;
   padding: 1rem;
-  border-radius: var(--gt-radius-xl);
-  border: 2px solid var(--gt-border);
+  border-radius: var(--od-radius-xl);
+  border: 2px solid var(--od-border);
   background:
-    radial-gradient(ellipse 70% 50% at 50% 20%, color-mix(in srgb, var(--gt-accent) 10%, transparent), transparent),
-    var(--gt-bg);
+    radial-gradient(ellipse 70% 50% at 50% 20%, color-mix(in srgb, var(--od-accent) 10%, transparent), transparent),
+    var(--od-bg);
   overflow: hidden;
 }
 
-.gt-art-studio__hero {
+.od-art-studio__hero {
   position: relative;
   margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  animation: gt-art-hero-in 0.28s ease-out;
+  animation: od-art-hero-in 0.28s ease-out;
 }
 
-.gt-art-studio__mode-badge {
+.od-art-studio__mode-badge {
   position: absolute;
   top: 0.35rem;
   left: 0.35rem;
   z-index: 1;
   padding: 0.2rem 0.45rem;
-  border-radius: var(--gt-radius-sm);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-sm);
+  font-size: var(--od-font-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gt-accent-contrast);
-  background: color-mix(in srgb, var(--gt-accent) 88%, var(--gt-bg));
+  color: var(--od-accent-contrast);
+  background: color-mix(in srgb, var(--od-accent) 88%, var(--od-bg));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
-.gt-art-studio__hero img {
+.od-art-studio__hero img {
   display: block;
   max-width: min(100%, 400px);
   height: auto;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
-.gt-art-studio__hero figcaption {
-  font-size: var(--gt-font-xs);
+.od-art-studio__hero figcaption {
+  font-size: var(--od-font-xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-art-studio__empty {
+.od-art-studio__empty {
   position: relative;
   z-index: 1;
   text-align: center;
@@ -647,241 +726,241 @@ body.admin-shell.modal-open > .modal-backdrop {
   max-width: 22rem;
 }
 
-.gt-art-studio__empty-glow {
+.od-art-studio__empty-glow {
   position: absolute;
   inset: -20% -10% auto;
   height: 140%;
   background:
-    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--gt-accent) 22%, transparent), transparent 45%),
-    radial-gradient(circle at 70% 55%, color-mix(in srgb, var(--gt-info) 18%, transparent), transparent 42%);
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--od-accent) 22%, transparent), transparent 45%),
+    radial-gradient(circle at 70% 55%, color-mix(in srgb, var(--od-info) 18%, transparent), transparent 42%);
   filter: blur(18px);
   opacity: 0.85;
   pointer-events: none;
-  animation: gt-art-glow 6s ease-in-out infinite alternate;
+  animation: od-art-glow 6s ease-in-out infinite alternate;
 }
 
-.gt-art-studio__empty-title {
+.od-art-studio__empty-title {
   position: relative;
   margin: 0 0 0.45rem;
   font-family: var(--font-display);
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
   letter-spacing: 0.02em;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-art-studio__empty-hint {
+.od-art-studio__empty-hint {
   position: relative;
   margin: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   line-height: 1.45;
 }
 
-.gt-art-studio__thumbs {
+.od-art-studio__thumbs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: center;
 }
 
-.gt-art-studio__thumb {
+.od-art-studio__thumb {
   appearance: none;
   margin: 0;
   padding: 0.25rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text-muted);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   min-width: 72px;
   min-height: 56px;
   display: grid;
   place-items: center;
 }
 
-.gt-art-studio__thumb img {
+.od-art-studio__thumb img {
   display: block;
   max-height: 72px;
   width: auto;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
 }
 
-.gt-art-studio__thumb:hover {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, var(--gt-border));
+.od-art-studio__thumb:hover {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, var(--od-border));
 }
 
-.gt-art-studio__controls {
+.od-art-studio__controls {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
 }
 
-.gt-art-studio__label {
+.od-art-studio__label {
   display: block;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   margin-bottom: 0.3rem;
 }
 
-.gt-art-studio__title-field input {
-  font-size: var(--gt-font-lg);
+.od-art-studio__title-field input {
+  font-size: var(--od-font-lg);
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0.65rem 0.8rem;
-  border-color: color-mix(in srgb, var(--gt-accent) 35%, var(--gt-border));
-  background: color-mix(in srgb, var(--gt-surface-2) 70%, var(--gt-bg));
+  border-color: color-mix(in srgb, var(--od-accent) 35%, var(--od-border));
+  background: color-mix(in srgb, var(--od-surface-2) 70%, var(--od-bg));
 }
 
-.gt-art-studio__hint {
+.od-art-studio__hint {
   margin: -0.15rem 0 0.55rem;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-art-studio__controls input,
-.gt-art-studio__controls select,
-.gt-art-studio__form input,
-.gt-art-studio__form select,
-.gt-artwork-picker__controls input,
-.gt-artwork-picker__controls select,
-.gt-images-filters select,
-.gt-images-filters input,
-.gt-images-game-search input {
+.od-art-studio__controls input,
+.od-art-studio__controls select,
+.od-art-studio__form input,
+.od-art-studio__form select,
+.od-artwork-picker__controls input,
+.od-artwork-picker__controls select,
+.od-images-filters select,
+.od-images-filters input,
+.od-images-game-search input {
   display: block;
   width: 100%;
   margin: 0.15rem 0 0.65rem;
   padding: 0.45rem 0.65rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
   font: inherit;
 }
 
-.gt-art-studio__variants {
+.od-art-studio__variants {
   margin: 0 0 0.5rem;
   padding: 0;
   border: 0;
 }
 
-.gt-art-studio__variant-row {
+.od-art-studio__variant-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
 
-.gt-art-studio__variant {
+.od-art-studio__variant {
   appearance: none;
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.1rem;
   padding: 0.4rem 0.65rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-art-studio__variant-kind {
-  font-size: var(--gt-font-xs);
+.od-art-studio__variant-kind {
+  font-size: var(--od-font-xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   opacity: 0.75;
 }
 
-.gt-art-studio__variant.is-active {
-  color: var(--gt-text);
-  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
+.od-art-studio__variant.is-active {
+  color: var(--od-text);
+  border-color: color-mix(in srgb, var(--od-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 14%, transparent);
 }
 
-.gt-art-studio__primary-actions {
+.od-art-studio__primary-actions {
   margin: 0.25rem 0 0.5rem;
 }
 
-.gt-art-studio__pack-actions {
+.od-art-studio__pack-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.65rem;
 }
 
-.gt-art-studio__pack-meta {
+.od-art-studio__pack-meta {
   margin: 0.5rem 0 0;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-art-studio__preview {
+.od-art-studio__preview {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 320px;
-  border-radius: var(--gt-radius-xl);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface);
+  border-radius: var(--od-radius-xl);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
   padding: 0.75rem;
 }
 
-.gt-art-studio__preview img {
+.od-art-studio__preview img {
   max-width: 100%;
   height: auto;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.gt-art-studio__preview-stack {
+.od-art-studio__preview-stack {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: flex-end;
 }
 
-.gt-art-studio__tile {
+.od-art-studio__tile {
   margin: 0;
   padding: 0.5rem;
-  border-radius: var(--gt-radius-xl);
-  border: 2px solid var(--gt-border);
-  background: var(--gt-surface);
+  border-radius: var(--od-radius-xl);
+  border: 2px solid var(--od-border);
+  background: var(--od-surface);
 }
 
-.gt-art-studio__tile figcaption {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-art-studio__tile figcaption {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
   margin-bottom: 0.4rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.gt-art-studio__tile img {
+.od-art-studio__tile img {
   display: block;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
   image-rendering: auto;
 }
 
-.gt-art-studio__tile-placeholder {
+.od-art-studio__tile-placeholder {
   display: grid;
   place-items: center;
-  border-radius: var(--gt-radius-sm);
-  border: 1px dashed var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+  border-radius: var(--od-radius-sm);
+  border: 1px dashed var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 80%, transparent);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
 }
 
-.gt-art-studio-fallbacks {
+.od-art-studio-fallbacks {
   margin-top: 0;
 }
 
-.gt-art-studio-fallbacks__head {
+.od-art-studio-fallbacks__head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -890,49 +969,49 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin-bottom: 0.85rem;
 }
 
-.gt-art-studio-fallbacks__head .gt-admin-lede {
+.od-art-studio-fallbacks__head .od-admin-lede {
   margin-bottom: 0;
 }
 
-.gt-art-studio-fallbacks__grid {
+.od-art-studio-fallbacks__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.85rem;
 }
 
-.gt-art-studio-fallbacks__card {
+.od-art-studio-fallbacks__card {
   margin: 0;
   padding: 0.55rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
 }
 
-.gt-art-studio-fallbacks__card img {
+.od-art-studio-fallbacks__card img {
   display: block;
   width: 100%;
   height: auto;
   max-height: 180px;
   object-fit: cover;
-  border-radius: var(--gt-radius-sm);
-  background: var(--gt-bg);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-bg);
 }
 
-.gt-art-studio-fallbacks__card figcaption {
+.od-art-studio-fallbacks__card figcaption {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   margin-top: 0.45rem;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-art-studio-fallbacks__card strong {
-  color: var(--gt-text);
+.od-art-studio-fallbacks__card strong {
+  color: var(--od-text);
   font-weight: 600;
 }
 
-.gt-art-studio-batch__toggle {
+.od-art-studio-batch__toggle {
   appearance: none;
   display: flex;
   width: 100%;
@@ -948,11 +1027,11 @@ body.admin-shell.modal-open > .modal-backdrop {
   text-align: left;
 }
 
-.gt-art-studio-batch__toggle .gt-admin-panel-title {
+.od-art-studio-batch__toggle .od-admin-panel-title {
   margin: 0;
 }
 
-@keyframes gt-art-hero-in {
+@keyframes od-art-hero-in {
   from {
     opacity: 0;
     transform: translateY(6px) scale(0.98);
@@ -963,7 +1042,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   }
 }
 
-@keyframes gt-art-glow {
+@keyframes od-art-glow {
   from {
     transform: translateY(0) scale(1);
     opacity: 0.7;
@@ -974,7 +1053,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   }
 }
 
-.gt-art-studio__batch-list {
+.od-art-studio__batch-list {
   list-style: none;
   margin: 0.75rem 0 0;
   padding: 0;
@@ -984,79 +1063,79 @@ body.admin-shell.modal-open > .modal-backdrop {
   overflow: auto;
 }
 
-.gt-art-studio__batch-list label {
+.od-art-studio__batch-list label {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-art-studio__batch-log {
+.od-art-studio__batch-log {
   margin-top: 0.75rem;
   padding: 0.75rem;
-  border-radius: var(--gt-radius-md);
-  background: var(--gt-surface-2);
-  border: 1px solid var(--gt-border);
-  font-size: var(--gt-font-sm);
+  border-radius: var(--od-radius-md);
+  background: var(--od-surface-2);
+  border: 1px solid var(--od-border);
+  font-size: var(--od-font-sm);
   white-space: pre-wrap;
   max-height: 200px;
   overflow: auto;
 }
 
-.gt-art-tabs {
+.od-art-tabs {
   display: flex;
   gap: 0.35rem;
   margin: 0 0 1rem;
   padding: 0.25rem;
-  border-radius: var(--gt-radius-lg);
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
+  border-radius: var(--od-radius-lg);
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
   width: fit-content;
   max-width: 100%;
 }
 
-.gt-art-tabs__btn {
+.od-art-tabs__btn {
   appearance: none;
   border: 0;
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font: inherit;
   padding: 0.45rem 0.9rem;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   cursor: pointer;
 }
 
-.gt-art-tabs__btn.is-active {
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
-  box-shadow: inset 0 0 0 1px var(--gt-accent);
+.od-art-tabs__btn.is-active {
+  background: var(--od-surface-2);
+  color: var(--od-text);
+  box-shadow: inset 0 0 0 1px var(--od-accent);
 }
 
-.gt-art-inline-link {
+.od-art-inline-link {
   appearance: none;
   border: 0;
   padding: 0;
   margin: 0;
   background: transparent;
-  color: var(--gt-accent);
+  color: var(--od-accent);
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
 }
 
-.gt-art-stock-tab {
+.od-art-stock-tab {
   display: grid;
   gap: 1rem;
 }
 
-.gt-stock-picker {
+.od-stock-picker {
   padding: 1rem 1.1rem;
-  border-radius: var(--gt-radius-xl);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface);
+  border-radius: var(--od-radius-xl);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
 }
 
-.gt-stock-picker__head {
+.od-stock-picker__head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -1065,230 +1144,230 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin-bottom: 0.75rem;
 }
 
-.gt-stock-picker__head .gt-admin-lede {
+.od-stock-picker__head .od-admin-lede {
   margin-bottom: 0;
 }
 
-.gt-stock-picker__filters {
+.od-stock-picker__filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 0.85rem;
 }
 
-.gt-stock-picker__filter {
+.od-stock-picker__filter {
   appearance: none;
-  border: 1px solid var(--gt-border);
+  border: 1px solid var(--od-border);
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   padding: 0.35rem 0.7rem;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   cursor: pointer;
 }
 
-.gt-stock-picker__filter.is-active {
-  color: var(--gt-text);
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, var(--gt-border));
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+.od-stock-picker__filter.is-active {
+  color: var(--od-text);
+  border-color: color-mix(in srgb, var(--od-accent) 45%, var(--od-border));
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
 }
 
-.gt-stock-picker__grid {
+.od-stock-picker__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: 0.65rem;
 }
 
-.gt-stock-picker__card {
+.od-stock-picker__card {
   appearance: none;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   margin: 0;
   padding: 0.45rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
   color: inherit;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.gt-stock-picker__card:hover {
-  border-color: color-mix(in srgb, var(--gt-accent) 40%, var(--gt-border));
+.od-stock-picker__card:hover {
+  border-color: color-mix(in srgb, var(--od-accent) 40%, var(--od-border));
 }
 
-.gt-stock-picker__card.is-selected {
-  border-color: var(--gt-accent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-accent) 55%, transparent);
+.od-stock-picker__card.is-selected {
+  border-color: var(--od-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--od-accent) 55%, transparent);
   transform: translateY(-1px);
 }
 
-.gt-stock-picker__card.is-pending .gt-stock-picker__thumb {
+.od-stock-picker__card.is-pending .od-stock-picker__thumb {
   background: repeating-linear-gradient(
     -45deg,
-    color-mix(in srgb, var(--gt-surface-2) 90%, transparent),
-    color-mix(in srgb, var(--gt-surface-2) 90%, transparent) 6px,
-    color-mix(in srgb, var(--gt-bg) 70%, transparent) 6px,
-    color-mix(in srgb, var(--gt-bg) 70%, transparent) 12px
+    color-mix(in srgb, var(--od-surface-2) 90%, transparent),
+    color-mix(in srgb, var(--od-surface-2) 90%, transparent) 6px,
+    color-mix(in srgb, var(--od-bg) 70%, transparent) 6px,
+    color-mix(in srgb, var(--od-bg) 70%, transparent) 12px
   );
 }
 
-.gt-stock-picker__thumb {
+.od-stock-picker__thumb {
   display: block;
   aspect-ratio: 2 / 3;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-bg) 80%, var(--gt-surface));
+  background: color-mix(in srgb, var(--od-bg) 80%, var(--od-surface));
 }
 
-.gt-stock-picker__thumb img {
+.od-stock-picker__thumb img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.gt-stock-picker__thumb-ph {
+.od-stock-picker__thumb-ph {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
   min-height: 96px;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xl);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xl);
   letter-spacing: 0.04em;
 }
 
-.gt-stock-picker__thumb-ph--lg {
+.od-stock-picker__thumb-ph--lg {
   min-height: 220px;
-  border-radius: var(--gt-radius-md);
-  border: 1px dashed var(--gt-border);
-  background: var(--gt-surface-2);
-  font-size: var(--gt-font-base);
+  border-radius: var(--od-radius-md);
+  border: 1px dashed var(--od-border);
+  background: var(--od-surface-2);
+  font-size: var(--od-font-base);
   padding: 1rem;
   text-align: center;
 }
 
-.gt-stock-picker__meta {
+.od-stock-picker__meta {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   min-width: 0;
 }
 
-.gt-stock-picker__meta strong {
-  font-size: var(--gt-font-sm);
+.od-stock-picker__meta strong {
+  font-size: var(--od-font-sm);
   font-weight: 600;
-  color: var(--gt-text);
+  color: var(--od-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.gt-stock-picker__kind {
-  font-size: var(--gt-font-xs);
+.od-stock-picker__kind {
+  font-size: var(--od-font-xs);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-stock-picker__empty {
+.od-stock-picker__empty {
   margin: 0.5rem 0 0;
   padding: 1.1rem 1rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px dashed var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  border-radius: var(--od-radius-lg);
+  border: 1px dashed var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 70%, transparent);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
-.gt-stock-picker__empty-title {
+.od-stock-picker__empty-title {
   margin: 0 0 0.35rem;
-  color: var(--gt-text);
+  color: var(--od-text);
   font-weight: 600;
 }
 
-.gt-stock-picker__preview {
+.od-stock-picker__preview {
   display: grid;
   grid-template-columns: minmax(160px, 240px) 1fr;
   gap: 1rem;
   align-items: start;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--gt-border);
+  border-top: 1px solid var(--od-border);
 }
 
-.gt-stock-picker__preview figure {
+.od-stock-picker__preview figure {
   margin: 0;
 }
 
-.gt-stock-picker__preview img {
+.od-stock-picker__preview img {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-bg);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-bg);
 }
 
-.gt-stock-picker__preview figcaption {
+.od-stock-picker__preview figcaption {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   margin-top: 0.45rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-stock-picker__preview figcaption strong {
-  color: var(--gt-text);
+.od-stock-picker__preview figcaption strong {
+  color: var(--od-text);
 }
 
-.gt-stock-picker__actions {
+.od-stock-picker__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: flex-end;
 }
 
-.gt-stock-picker__uuid {
+.od-stock-picker__uuid {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   min-width: 220px;
   flex: 1 1 220px;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-stock-picker__uuid input {
+.od-stock-picker__uuid input {
   display: block;
   width: 100%;
   padding: 0.45rem 0.65rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
   font: inherit;
 }
 
 @media (max-width: 720px) {
-  .gt-stock-picker__preview {
+  .od-stock-picker__preview {
     grid-template-columns: 1fr;
   }
 }
 
 /* Systems hub AI marks — theme progress list in Art Studio. */
-.gt-system-marks {
+.od-system-marks {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-.gt-system-marks__list {
+.od-system-marks__list {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1297,7 +1376,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   padding: 0.15rem;
 }
 
-.gt-system-marks__row {
+.od-system-marks__row {
   appearance: none;
   display: grid;
   grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
@@ -1308,254 +1387,254 @@ body.admin-shell.modal-open > .modal-backdrop {
   width: 100%;
   margin: 0;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-  color: var(--gt-text);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
+  color: var(--od-text);
   font: inherit;
   text-align: start;
   cursor: pointer;
 }
 
-.gt-system-marks__row:hover {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, var(--gt-border));
+.od-system-marks__row:hover {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, var(--od-border));
 }
 
-.gt-system-marks__row.is-selected {
-  border-color: var(--gt-accent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gt-accent) 35%, transparent);
+.od-system-marks__row.is-selected {
+  border-color: var(--od-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--od-accent) 35%, transparent);
 }
 
-.gt-system-marks__row.is-complete .gt-system-marks__theme {
-  color: var(--gt-accent);
+.od-system-marks__row.is-complete .od-system-marks__theme {
+  color: var(--od-accent);
 }
 
-.gt-system-marks__theme {
+.od-system-marks__theme {
   font-weight: 650;
-  font-family: var(--gt-font-mono, ui-monospace, monospace);
-  font-size: var(--gt-font-sm);
+  font-family: var(--od-font-mono, ui-monospace, monospace);
+  font-size: var(--od-font-sm);
 }
 
-.gt-system-marks__meta {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-system-marks__meta {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-system-marks__bar {
+.od-system-marks__bar {
   grid-column: 1 / -1;
   display: block;
   height: 0.28rem;
-  border-radius: var(--gt-radius-pill);
-  background: color-mix(in srgb, var(--gt-border) 70%, transparent);
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-border) 70%, transparent);
   position: relative;
   overflow: hidden;
 }
 
-.gt-system-marks__bar::after {
+.od-system-marks__bar::after {
   content: '';
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--gt-marks-pct, 0%);
-  background: var(--gt-accent);
+  width: var(--od-marks-pct, 0%);
+  background: var(--od-accent);
   border-radius: inherit;
 }
 
-.gt-system-marks__actions {
+.od-system-marks__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
 
-.gt-system-marks-lab {
+.od-system-marks-lab {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
   padding: 0.85rem 0.9rem;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: color-mix(in srgb, var(--od-surface) 80%, transparent);
 }
 
-.gt-system-marks-lab__grid {
+.od-system-marks-lab__grid {
   display: grid;
   grid-template-columns: minmax(10rem, 14rem) minmax(8rem, 10rem) minmax(0, 1fr);
   gap: 0.75rem;
   align-items: start;
 }
 
-.gt-system-marks-lab__field,
-.gt-system-marks-lab__prompt {
+.od-system-marks-lab__field,
+.od-system-marks-lab__prompt {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-system-marks-lab__prompt textarea {
+.od-system-marks-lab__prompt textarea {
   width: 100%;
   min-height: 8rem;
   resize: vertical;
   font: inherit;
-  font-family: var(--gt-font-mono, ui-monospace, monospace);
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text);
-  background: var(--gt-bg);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
+  font-family: var(--od-font-mono, ui-monospace, monospace);
+  font-size: var(--od-font-xs);
+  color: var(--od-text);
+  background: var(--od-bg);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
   padding: 0.45rem 0.55rem;
 }
 
-.gt-system-marks-lab__preview {
+.od-system-marks-lab__preview {
   width: 8rem;
   height: 8rem;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-surface-2, var(--gt-surface)) 90%, transparent);
+  background: color-mix(in srgb, var(--od-surface-2, var(--od-surface)) 90%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.35rem;
 }
 
-.gt-system-marks-lab__preview img {
+.od-system-marks-lab__preview img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-.gt-system-marks-lab__log {
+.od-system-marks-lab__log {
   margin: 0;
   padding-inline-start: 1.2rem;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
 @media (max-width: 900px) {
-  .gt-system-marks-lab__grid {
+  .od-system-marks-lab__grid {
     grid-template-columns: 1fr;
   }
 }
 
-.gt-art-studio__tile--nintendo {
-  border-color: var(--gt-family-nintendo);
+.od-art-studio__tile--nintendo {
+  border-color: var(--od-family-nintendo);
 }
 
-.gt-art-studio__tile--sony {
-  border-color: var(--gt-family-sony);
+.od-art-studio__tile--sony {
+  border-color: var(--od-family-sony);
 }
 
-.gt-art-studio__tile--xbox {
-  border-color: var(--gt-family-xbox);
+.od-art-studio__tile--xbox {
+  border-color: var(--od-family-xbox);
 }
 
-.gt-art-studio__tile--sega {
-  border-color: var(--gt-family-sega);
+.od-art-studio__tile--sega {
+  border-color: var(--od-family-sega);
 }
 
-.gt-art-studio__tile--atari {
-  border-color: var(--gt-family-atari);
+.od-art-studio__tile--atari {
+  border-color: var(--od-family-atari);
 }
 
-.gt-art-studio__tile--pc {
-  border-color: color-mix(in srgb, var(--gt-accent) 80%, var(--gt-family-xbox));
+.od-art-studio__tile--pc {
+  border-color: color-mix(in srgb, var(--od-accent) 80%, var(--od-family-xbox));
 }
 
-/* .gt-btn--ghost moved to gt-primitives.css (GT-A4). */
+/* .od-btn--ghost moved to od-primitives.css (GT-A4). */
 
-.gt-mono {
+.od-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-badge {
+.od-badge {
   display: inline-block;
   margin-left: 0.35rem;
   padding: 0.1rem 0.4rem;
-  border-radius: var(--gt-radius-pill);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  font-size: var(--od-font-xs);
   vertical-align: middle;
 }
 
-.gt-badge--danger {
-  background: color-mix(in srgb, var(--gt-danger) 25%, transparent);
-  color: var(--gt-danger);
+.od-badge--danger {
+  background: color-mix(in srgb, var(--od-danger) 25%, transparent);
+  color: var(--od-danger);
 }
 
-.gt-badge--warn {
-  background: color-mix(in srgb, var(--gt-warning) 25%, transparent);
-  color: var(--gt-warning);
+.od-badge--warn {
+  background: color-mix(in srgb, var(--od-warning) 25%, transparent);
+  color: var(--od-warning);
 }
 
-.gt-admin-panel-title {
+.od-admin-panel-title {
   margin: 0 0 0.5rem;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-admin-lede--warn {
-  color: var(--gt-warning);
+.od-admin-lede--warn {
+  color: var(--od-warning);
 }
 
-.gt-admin-banner {
+.od-admin-banner {
   margin-bottom: 0.75rem;
   padding: 0.65rem 0.85rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
-  font-size: var(--gt-font-md);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
+  font-size: var(--od-font-md);
 }
 
-.gt-admin-banner--warn {
-  border-color: color-mix(in srgb, var(--gt-warning) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-warning) 12%, transparent);
-  color: color-mix(in srgb, var(--gt-warning) 70%, var(--gt-text));
+.od-admin-banner--warn {
+  border-color: color-mix(in srgb, var(--od-warning) 45%, transparent);
+  background: color-mix(in srgb, var(--od-warning) 12%, transparent);
+  color: color-mix(in srgb, var(--od-warning) 70%, var(--od-text));
 }
 
-.gt-admin-banner--info {
-  border-color: color-mix(in srgb, var(--gt-text-muted) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-text-muted) 10%, transparent);
-  color: var(--gt-text-muted);
+.od-admin-banner--info {
+  border-color: color-mix(in srgb, var(--od-text-muted) 45%, transparent);
+  background: color-mix(in srgb, var(--od-text-muted) 10%, transparent);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-banner--ok {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
-  color: var(--gt-text);
+.od-admin-banner--ok {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
+  color: var(--od-text);
 }
 
-.gt-storage-result-list {
+.od-storage-result-list {
   margin: 0 0 0.75rem;
   padding-left: 1.15rem;
-  color: var(--gt-text);
-  font-size: var(--gt-font-md);
+  color: var(--od-text);
+  font-size: var(--od-font-md);
 }
 
-.gt-storage-result-list li {
+.od-storage-result-list li {
   margin: 0.25rem 0;
 }
 
-.gt-storage-raw {
+.od-storage-raw {
   margin-top: 0.5rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-storage-raw pre,
-.gt-admin-output {
+.od-storage-raw pre,
+.od-admin-output {
   margin: 0.5rem 0 0;
   padding: 0.65rem 0.75rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
   overflow: auto;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   max-height: 18rem;
 }
 
-.gt-artwork-picker__controls {
+.od-artwork-picker__controls {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -1563,7 +1642,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin-bottom: 0.75rem;
 }
 
-.gt-artwork-picker__chips {
+.od-artwork-picker__chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -1571,97 +1650,97 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin: 0.5rem 0 0.75rem;
 }
 
-.gt-artwork-picker__chips-label {
-  font-size: var(--gt-font-sm);
+.od-artwork-picker__chips-label {
+  font-size: var(--od-font-sm);
   opacity: 0.75;
   margin-right: 0.25rem;
 }
 
-.gt-chip {
+.od-chip {
   appearance: none;
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
   color: inherit;
-  border-radius: var(--gt-radius-pill);
+  border-radius: var(--od-radius-pill);
   padding: 0.2rem 0.7rem;
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-chip.is-active {
-  border-color: var(--gt-accent);
-  background: color-mix(in srgb, var(--gt-accent) 22%, transparent);
+.od-chip.is-active {
+  border-color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 22%, transparent);
 }
 
-.gt-chip:focus-visible {
-  outline: 2px solid var(--gt-accent);
+.od-chip:focus-visible {
+  outline: 2px solid var(--od-accent);
   outline-offset: 2px;
 }
 
-.gt-artwork-picker__controls label {
+.od-artwork-picker__controls label {
   min-width: 7rem;
 }
 
-.gt-artwork-picker__query {
+.od-artwork-picker__query {
   flex: 1 1 12rem;
 }
 
-.gt-artwork-picker__grid {
+.od-artwork-picker__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 0.65rem;
 }
 
-.gt-artwork-picker__card {
+.od-artwork-picker__card {
   appearance: none;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.35rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface-2);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
   cursor: pointer;
   text-align: left;
 }
 
-.gt-artwork-picker__card:disabled {
+.od-artwork-picker__card:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.gt-artwork-picker__card:not(:disabled):hover {
-  border-color: var(--gt-accent);
+.od-artwork-picker__card:not(:disabled):hover {
+  border-color: var(--od-accent);
 }
 
-.gt-artwork-picker__thumb {
+.od-artwork-picker__thumb {
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: var(--gt-radius-sm);
-  background: var(--gt-bg);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-bg);
 }
 
-.gt-artwork-picker__thumb--empty {
+.od-artwork-picker__thumb--empty {
   display: block;
   min-height: 8rem;
 }
 
-.gt-artwork-picker__thumb--hero {
+.od-artwork-picker__thumb--hero {
   aspect-ratio: 16 / 9;
 }
 
-.gt-artwork-picker__caption {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-artwork-picker__caption {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.gt-images-game-search {
+.od-images-game-search {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
@@ -1669,11 +1748,11 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin-bottom: 0.75rem;
 }
 
-.gt-images-game-search__field {
+.od-images-game-search__field {
   flex: 1 1 14rem;
 }
 
-.gt-images-game-hits {
+.od-images-game-hits {
   list-style: none;
   margin: 0 0 0.75rem;
   padding: 0;
@@ -1682,7 +1761,7 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.35rem;
 }
 
-.gt-images-filters {
+.od-images-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -1690,98 +1769,98 @@ body.admin-shell.modal-open > .modal-backdrop {
   margin-bottom: 0.75rem;
 }
 
-.gt-images-filters label {
+.od-images-filters label {
   min-width: 8rem;
 }
 
-.gt-images-filters__check {
+.od-images-filters__check {
   display: flex !important;
   align-items: center;
   gap: 0.4rem;
   min-width: auto;
   margin-bottom: 0.85rem;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-images-filters__check input {
+.od-images-filters__check input {
   width: auto;
   margin: 0;
 }
 
-.gt-images-groups {
+.od-images-groups {
   display: grid;
   gap: 0.85rem;
 }
 
-.gt-images-group {
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-lg);
-  background: var(--gt-surface);
+.od-images-group {
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-lg);
+  background: var(--od-surface);
   overflow: hidden;
 }
 
-.gt-images-group__head {
+.od-images-group__head {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.5rem;
   align-items: center;
   padding: 0.55rem 0.75rem;
-  background: var(--gt-surface-2);
-  border-bottom: 1px solid var(--gt-border);
+  background: var(--od-surface-2);
+  border-bottom: 1px solid var(--od-border);
 }
 
-.gt-images-group__list {
+.od-images-group__list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.gt-images-row {
+.od-images-row {
   display: grid;
   grid-template-columns: 48px 1fr auto;
   gap: 0.65rem;
   align-items: center;
   padding: 0.45rem 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
 }
 
-.gt-images-row__thumb {
+.od-images-row__thumb {
   width: 48px;
   height: 64px;
   object-fit: cover;
-  border-radius: var(--gt-radius-xs);
-  background: var(--gt-bg);
+  border-radius: var(--od-radius-xs);
+  background: var(--od-bg);
 }
 
-.gt-images-row__thumb--empty {
+.od-images-row__thumb--empty {
   display: block;
   background: repeating-linear-gradient(
     -45deg,
-    var(--gt-surface-2),
-    var(--gt-surface-2) 6px,
-    var(--gt-bg) 6px,
-    var(--gt-bg) 12px
+    var(--od-surface-2),
+    var(--od-surface-2) 6px,
+    var(--od-bg) 6px,
+    var(--od-bg) 12px
   );
 }
 
-.gt-images-row__meta {
+.od-images-row__meta {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-images-row__error {
-  color: var(--gt-danger);
+.od-images-row__error {
+  color: var(--od-danger);
 }
 
-.gt-images-row__actions {
+.od-images-row__actions {
   display: flex;
   gap: 0.35rem;
 }
 
-.gt-images-missing {
+.od-images-missing {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1789,61 +1868,61 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.35rem;
 }
 
-.gt-images-missing li {
+.od-images-missing li {
   display: flex;
   gap: 0.75rem;
   align-items: center;
 }
 
 @media (max-width: 900px) {
-  .gt-art-studio,
-  .gt-art-studio--workspace {
+  .od-art-studio,
+  .od-art-studio--workspace {
     grid-template-columns: 1fr;
   }
 
-  .gt-art-studio__stage {
+  .od-art-studio__stage {
     min-height: 280px;
   }
 }
 
 @media (max-width: 720px) {
-  .gt-art-studio {
+  .od-art-studio {
     grid-template-columns: 1fr;
   }
 
-  .gt-images-row {
+  .od-images-row {
     grid-template-columns: 40px 1fr;
   }
 
-  .gt-images-row__actions {
+  .od-images-row__actions {
     grid-column: 1 / -1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-art-studio__hero,
-  .gt-art-studio__empty-glow {
+  .od-art-studio__hero,
+  .od-art-studio__empty-glow {
     animation: none;
   }
 }
 
 @media (max-width: 1100px) {
-  .gt-admin-topbar {
+  .od-admin-topbar {
     flex-wrap: wrap;
     row-gap: 0.35rem;
   }
 
-  .gt-admin-nav {
+  .od-admin-nav {
     order: 3;
     flex: 1 1 100%;
     padding-top: 0.15rem;
-    border-top: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
     overflow-x: auto;
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
   }
 
-  .gt-admin-actions {
+  .od-admin-actions {
     margin-left: auto;
     flex-wrap: wrap;
     gap: 0.25rem;
@@ -1851,122 +1930,122 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 @media (max-width: 900px) {
-  .gt-admin-topbar {
+  .od-admin-topbar {
     flex-wrap: wrap;
     row-gap: 0.35rem;
   }
 
-  .gt-admin-nav {
+  .od-admin-nav {
     order: 3;
     flex: 1 1 100%;
     padding-top: 0.15rem;
-    border-top: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
   }
 
-  .gt-admin-actions {
+  .od-admin-actions {
     margin-left: auto;
   }
 
-  .gt-admin-brand-role {
+  .od-admin-brand-role {
     display: none;
   }
 }
 
 /* Aurora toast — top-right, auto-dismiss (mirrors member-app) */
 /* File Extensions admin page */
-.gt-ext-page .gt-ext-add,
-.gt-ext-page .gt-ext-group,
-.gt-ext-page .gt-ext-suggestions,
-.gt-ext-page .gt-ext-empty {
+.od-ext-page .od-ext-add,
+.od-ext-page .od-ext-group,
+.od-ext-page .od-ext-suggestions,
+.od-ext-page .od-ext-empty {
   margin-top: 0.75rem;
 }
 
-.gt-ext-group__head {
+.od-ext-group__head {
   margin-bottom: 0.65rem;
 }
 
-.gt-ext-group__head .gt-admin-panel-title {
+.od-ext-group__head .od-admin-panel-title {
   margin-bottom: 0.2rem;
 }
 
-.gt-ext-chip-row {
+.od-ext-chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
   align-items: center;
 }
 
-.gt-ext-chip {
+.od-ext-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.35rem 0.2rem 0.55rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 28%, var(--gt-border));
-  background: color-mix(in srgb, var(--gt-surface) 82%, transparent);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 28%, var(--od-border));
+  background: color-mix(in srgb, var(--od-surface) 82%, transparent);
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   line-height: 1.2;
   color: inherit;
 }
 
-.gt-ext-chip--suggest {
+.od-ext-chip--suggest {
   cursor: pointer;
   appearance: none;
   font: inherit;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   border-style: dashed;
   opacity: 0.85;
 }
 
-.gt-ext-chip--suggest:hover:not(:disabled),
-.gt-ext-chip--suggest:focus-visible {
+.od-ext-chip--suggest:hover:not(:disabled),
+.od-ext-chip--suggest:focus-visible {
   opacity: 1;
-  border-color: var(--gt-accent);
+  border-color: var(--od-accent);
   outline: none;
 }
 
-.gt-ext-chip--suggest:disabled,
-.gt-ext-chip__remove:disabled {
+.od-ext-chip--suggest:disabled,
+.od-ext-chip__remove:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.gt-ext-chip__label {
+.od-ext-chip__label {
   letter-spacing: 0.02em;
 }
 
-.gt-ext-chip__action {
+.od-ext-chip__action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 1.1rem;
-  color: var(--gt-accent);
+  color: var(--od-accent);
   font-weight: 700;
 }
 
-.gt-ext-chip__remove {
+.od-ext-chip__remove {
   appearance: none;
   border: 0;
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   cursor: pointer;
   font: inherit;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   line-height: 1;
   padding: 0.1rem 0.3rem;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
 }
 
-.gt-ext-chip__remove:hover:not(:disabled),
-.gt-ext-chip__remove:focus-visible {
-  color: var(--gt-text);
-  background: color-mix(in srgb, var(--gt-danger) 22%, transparent);
+.od-ext-chip__remove:hover:not(:disabled),
+.od-ext-chip__remove:focus-visible {
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-danger) 22%, transparent);
   outline: none;
 }
 
-.gt-toast-host {
+.od-toast-host {
   position: fixed;
   z-index: 2400;
   top: 1rem;
@@ -1978,66 +2057,66 @@ body.admin-shell.modal-open > .modal-backdrop {
   pointer-events: none;
 }
 
-.gt-toast {
+.od-toast {
   pointer-events: auto;
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.7rem 0.6rem 0.7rem 0.95rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: var(--gt-surface);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
+  color: var(--od-text);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.35;
-  animation: gt-toast-in 0.18s ease-out;
+  animation: od-toast-in 0.18s ease-out;
 }
 
-.gt-toast__text {
+.od-toast__text {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.gt-toast__close {
+.od-toast__close {
   flex: 0 0 auto;
   width: 1.4rem;
   height: 1.4rem;
   padding: 0;
   border: 0;
-  border-radius: var(--gt-radius-sm, 6px);
+  border-radius: var(--od-radius-sm, 6px);
   background: transparent;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   line-height: 1;
   cursor: pointer;
 }
 
-.gt-toast__close:hover,
-.gt-toast__close:focus-visible {
-  background: color-mix(in srgb, var(--gt-text) 14%, transparent);
-  color: var(--gt-text);
+.od-toast__close:hover,
+.od-toast__close:focus-visible {
+  background: color-mix(in srgb, var(--od-text) 14%, transparent);
+  color: var(--od-text);
 }
 
-.gt-toast--success {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+.od-toast--success {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
 }
 
-.gt-toast--error {
-  border-color: color-mix(in srgb, var(--gt-danger) 65%, transparent);
+.od-toast--error {
+  border-color: color-mix(in srgb, var(--od-danger) 65%, transparent);
 }
 
-.gt-toast--warn {
-  border-color: color-mix(in srgb, var(--gt-warning) 65%, transparent);
+.od-toast--warn {
+  border-color: color-mix(in srgb, var(--od-warning) 65%, transparent);
 }
 
-.gt-toast--out {
+.od-toast--out {
   opacity: 0;
   transform: translateY(-0.35rem);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-@keyframes gt-toast-in {
+@keyframes od-toast-in {
   from {
     opacity: 0;
     transform: translateY(-0.4rem);
@@ -2049,8 +2128,8 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-toast,
-  .gt-toast--out {
+  .od-toast,
+  .od-toast--out {
     animation: none;
     transition: none;
   }
@@ -2061,22 +2140,22 @@ body.admin-shell.modal-open > .modal-backdrop {
    a lot of empty space. Rows read like the scans page instead. One outer
    panel; group titles are eyebrows, not a second glass stack. */
 
-.gt-settings-group + .gt-settings-group {
+.od-settings-group + .od-settings-group {
   margin-top: 0.85rem;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--gt-border);
+  border-top: 1px solid var(--od-border);
 }
 
-.gt-settings-group__title {
+.od-settings-group__title {
   margin: 0;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-settings-list {
+.od-settings-list {
   list-style: none;
   margin: 0.35rem 0 0;
   padding: 0;
@@ -2084,27 +2163,27 @@ body.admin-shell.modal-open > .modal-backdrop {
   flex-direction: column;
 }
 
-.gt-settings-list li + li {
-  border-top: 1px solid var(--gt-border);
+.od-settings-list li + li {
+  border-top: 1px solid var(--od-border);
 }
 
-.gt-settings-row {
+.od-settings-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 0.75rem;
   padding: 0.55rem 0.35rem;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
   color: inherit;
   text-decoration: none;
 }
 
-.gt-settings-row:hover,
-.gt-settings-row:focus-visible {
-  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
+.od-settings-row:hover,
+.od-settings-row:focus-visible {
+  background: color-mix(in srgb, var(--od-accent) 10%, transparent);
 }
 
-.gt-settings-row__title {
+.od-settings-row__title {
   flex: 0 1 16rem;
   min-width: 8rem;
   font-weight: 650;
@@ -2112,13 +2191,13 @@ body.admin-shell.modal-open > .modal-backdrop {
 
 /* Badge styles used to live only in unused admin_settings_shell.css, so the
    SPA hub rendered On/Off as raw text jammed into the title column. */
-.gt-settings-badge,
+.od-settings-badge,
 .settings-shell-badge {
   flex: 0 0 auto;
   display: inline-block;
   padding: 0.15rem 0.55rem;
-  border-radius: var(--gt-radius-sm);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-sm);
+  font-size: var(--od-font-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1.4;
@@ -2126,26 +2205,26 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 .settings-shell-badge--on {
-  color: var(--gt-success);
-  background: color-mix(in srgb, var(--gt-success) 16%, transparent);
-  border-color: color-mix(in srgb, var(--gt-success) 40%, transparent);
+  color: var(--od-success);
+  background: color-mix(in srgb, var(--od-success) 16%, transparent);
+  border-color: color-mix(in srgb, var(--od-success) 40%, transparent);
 }
 
 .settings-shell-badge--off {
-  color: var(--gt-text-muted);
-  background: color-mix(in srgb, var(--gt-text-muted) 12%, transparent);
-  border-color: color-mix(in srgb, var(--gt-text-muted) 28%, transparent);
+  color: var(--od-text-muted);
+  background: color-mix(in srgb, var(--od-text-muted) 12%, transparent);
+  border-color: color-mix(in srgb, var(--od-text-muted) 28%, transparent);
 }
 
-.gt-settings-row__blurb {
+.od-settings-row__blurb {
   flex: 1 1 14rem;
   min-width: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
 @media (max-width: 720px) {
-  .gt-settings-row__title {
+  .od-settings-row__title {
     flex-basis: 100%;
   }
 }
@@ -2154,12 +2233,12 @@ body.admin-shell.modal-open > .modal-backdrop {
 /* Providers carry very different link counts; an even card grid left tall gaps
    beside the short ones. Rows close that up and match Settings / Libraries. */
 
-.gt-provider-list {
+.od-provider-list {
   display: flex;
   flex-direction: column;
 }
 
-.gt-provider-row {
+.od-provider-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -2167,11 +2246,11 @@ body.admin-shell.modal-open > .modal-backdrop {
   padding: 0.55rem 0.4rem;
 }
 
-.gt-provider-row + .gt-provider-row {
-  border-top: 1px solid var(--gt-border);
+.od-provider-row + .od-provider-row {
+  border-top: 1px solid var(--od-border);
 }
 
-.gt-provider-row__head {
+.od-provider-row__head {
   flex: 1 1 20rem;
   min-width: 0;
   display: flex;
@@ -2180,22 +2259,22 @@ body.admin-shell.modal-open > .modal-backdrop {
   gap: 0.2rem 0.6rem;
 }
 
-.gt-provider-row__title {
+.od-provider-row__title {
   margin: 0;
   flex: 0 0 auto;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   font-weight: 650;
 }
 
-.gt-provider-row__blurb {
+.od-provider-row__blurb {
   margin: 0;
   flex: 1 1 14rem;
   min-width: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-provider-row__links {
+.od-provider-row__links {
   flex: 0 1 auto;
   display: flex;
   flex-wrap: wrap;
@@ -2203,17 +2282,17 @@ body.admin-shell.modal-open > .modal-backdrop {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-provider-row__links li + li::before {
+.od-provider-row__links li + li::before {
   content: '·';
   margin-right: 0.5rem;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 @media (max-width: 860px) {
-  .gt-provider-row__links {
+  .od-provider-row__links {
     flex-basis: 100%;
   }
 }

@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Library, ScanJob, UnmatchedFolder, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.match_proposal import (
+from oneirodex.models import Library, ScanJob, UnmatchedFolder, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.match_proposal import (
     build_match_proposal,
     hint_fields_from_proposal,
     sync_unmatched_kind_hint,
@@ -227,7 +227,7 @@ def test_sync_unmatched_kind_hint_from_proposal(db_session, sample_library, samp
 
 
 def test_format_why_unmatched_deterministic():
-    from gametheca.utils.match_proposal import format_why_unmatched
+    from oneirodex.utils.match_proposal import format_why_unmatched
 
     text = format_why_unmatched(
         status='Unmatched',
@@ -286,7 +286,7 @@ def test_unmatched_list_exposes_why_unmatched(
 def test_backfill_suggested_kind_from_sidecar(
     client, admin_user, db_session, sample_library, sample_scan_job, tmp_path,
 ):
-    from gametheca.utils.match_proposal import (
+    from oneirodex.utils.match_proposal import (
         PROPOSAL_FILENAME,
         backfill_unmatched_suggested_kind,
         write_match_proposal,

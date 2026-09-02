@@ -1,7 +1,7 @@
 """Remote path mapping for the arr → hardlink pipeline.
 
 The bug this closes: qBittorrent normally runs in its own container and reports
-paths from *its* mounts. GameTheca stats those paths directly, finds nothing,
+paths from *its* mounts. Oneirodex stats those paths directly, finds nothing,
 and reports "no source file found" — technically true, thoroughly unhelpful,
 and it makes the hardlink pipeline look broken when the file is right there.
 """
@@ -12,7 +12,7 @@ import os
 
 import pytest
 
-from gametheca.utils.arr_hardlink_pipeline import map_remote_path, parse_remote_path_map
+from oneirodex.utils.arr_hardlink_pipeline import map_remote_path, parse_remote_path_map
 
 
 class TestParsing:

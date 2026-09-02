@@ -154,7 +154,7 @@ test('a blocked Play explains itself on press: unsupported archive', async () =>
   )
   const play = screen.getByLabelText(/browser play unavailable — unsupported archive/i)
   expect(play.tagName).toBe('BUTTON')
-  expect(play).toHaveClass('gt-tile-play--disabled')
+  expect(play).toHaveClass('od-tile-play--disabled')
   expect(play).toHaveAttribute('aria-expanded', 'false')
 
   await user.click(play)
@@ -187,7 +187,7 @@ test('a blocked Play explains itself on press: missing firmware', async () => {
   )
   const play = screen.getByLabelText(/browser play unavailable — firmware missing/i)
   expect(play.tagName).toBe('BUTTON')
-  expect(play).toHaveClass('gt-tile-play--disabled')
+  expect(play).toHaveClass('od-tile-play--disabled')
   // The blocker outranks a play_url that is present but unusable: no live link.
   expect(screen.queryByRole('link', { name: /^play/i })).toBeNull()
 
@@ -282,7 +282,7 @@ test('a missing trailer URL keeps the cover only', () => {
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)
   })
-  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  expect(container.querySelector('.od-tile-hover-trailer')).toBeNull()
   expect(container.querySelector('img.game-cover')).not.toBeNull()
   vi.useRealTimers()
 })
@@ -298,18 +298,18 @@ test('hover with a trailer URL mounts a muted iframe over the cover', () => {
     />,
   )
   fireEvent.pointerEnter(container.querySelector('.game-card-container'))
-  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  expect(container.querySelector('.od-tile-hover-trailer')).toBeNull()
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS)
   })
-  const iframe = container.querySelector('iframe.gt-tile-hover-trailer')
+  const iframe = container.querySelector('iframe.od-tile-hover-trailer')
   expect(iframe).not.toBeNull()
   expect(iframe.getAttribute('src')).toContain('mute=1')
   expect(iframe.getAttribute('src')).toContain('autoplay=1')
   expect(iframe).toHaveAttribute('aria-hidden', 'true')
   expect(container.querySelector('img.game-cover')).not.toBeNull()
   fireEvent.pointerLeave(container.querySelector('.game-card-container'))
-  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  expect(container.querySelector('.od-tile-hover-trailer')).toBeNull()
   vi.useRealTimers()
 })
 
@@ -327,7 +327,7 @@ test('reduced-motion does not autoplay a hover trailer', () => {
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)
   })
-  expect(container.querySelector('.gt-tile-hover-trailer')).toBeNull()
+  expect(container.querySelector('.od-tile-hover-trailer')).toBeNull()
   expect(container.querySelector('img.game-cover')).not.toBeNull()
   vi.useRealTimers()
 })

@@ -9,8 +9,8 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import Game, Library, UnmatchedFolder, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Game, Library, UnmatchedFolder, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture

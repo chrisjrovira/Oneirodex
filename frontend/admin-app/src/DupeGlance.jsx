@@ -144,21 +144,21 @@ function TransformTrail({ transforms }) {
   const steps = Array.isArray(transforms) ? transforms : []
   if (!steps.length) return null
   return (
-    <details className="gt-dupe-glance__transforms">
-      <summary className="gt-dupe-glance__transforms-summary">
+    <details className="od-dupe-glance__transforms">
+      <summary className="od-dupe-glance__transforms-summary">
         Name transform trail ({steps.length})
       </summary>
-      <ol className="gt-dupe-glance__transform-list">
+      <ol className="od-dupe-glance__transform-list">
         {steps.map((step, index) => (
-          <li key={`${step.stage}-${index}`} className="gt-dupe-glance__transform-step">
-            <span className="gt-dupe-glance__transform-stage">{step.stage || '—'}</span>
-            <span className="gt-dupe-glance__transform-pair">
+          <li key={`${step.stage}-${index}`} className="od-dupe-glance__transform-step">
+            <span className="od-dupe-glance__transform-stage">{step.stage || '—'}</span>
+            <span className="od-dupe-glance__transform-pair">
               <code>{step.before}</code>
               <span aria-hidden="true"> → </span>
               <code>{step.after}</code>
             </span>
             {step.reason ? (
-              <span className="gt-dupe-glance__transform-reason">{step.reason}</span>
+              <span className="od-dupe-glance__transform-reason">{step.reason}</span>
             ) : null}
           </li>
         ))}
@@ -180,19 +180,19 @@ function StageECandidates({ row }) {
   const title =
     'Propose-only catalog hints after Stage D miss — not auto-matched. Use Fix search / Identify to apply.'
   return (
-    <div className="gt-dupe-glance__stage-e">
-      <span className="gt-dupe-glance__stage-e-chip" title={title}>
+    <div className="od-dupe-glance__stage-e">
+      <span className="od-dupe-glance__stage-e-chip" title={title}>
         Stage E · propose only · {chipDetail}
       </span>
       {candidates.length > 0 ? (
-        <details className="gt-dupe-glance__stage-e-details">
-          <summary className="gt-dupe-glance__stage-e-summary">
+        <details className="od-dupe-glance__stage-e-details">
+          <summary className="od-dupe-glance__stage-e-summary">
             Stage E candidates ({candidates.length})
           </summary>
-          <p className="gt-dupe-glance__stage-e-note">
+          <p className="od-dupe-glance__stage-e-note">
             Catalog hints only — Identify to apply. Not auto-matched.
           </p>
-          <ul className="gt-dupe-glance__stage-e-list">
+          <ul className="od-dupe-glance__stage-e-list">
             {candidates.map((hit, index) => {
               const source = stageESourceLabel(hit.source)
               const mode = stageEMatchModeLabel(hit.match_mode)
@@ -200,12 +200,12 @@ function StageECandidates({ row }) {
               return (
                 <li
                   key={`${hit.source}-${hit.id || hit.name}-${index}`}
-                  className="gt-dupe-glance__stage-e-hit"
+                  className="od-dupe-glance__stage-e-hit"
                 >
-                  <span className="gt-dupe-glance__stage-e-source">{source}</span>
+                  <span className="od-dupe-glance__stage-e-source">{source}</span>
                   {hit.url ? (
                     <a
-                      className="gt-dupe-glance__stage-e-name"
+                      className="od-dupe-glance__stage-e-name"
                       href={hit.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -213,10 +213,10 @@ function StageECandidates({ row }) {
                       {label}
                     </a>
                   ) : (
-                    <span className="gt-dupe-glance__stage-e-name">{label}</span>
+                    <span className="od-dupe-glance__stage-e-name">{label}</span>
                   )}
                   {mode ? (
-                    <span className="gt-dupe-glance__stage-e-mode">{mode}</span>
+                    <span className="od-dupe-glance__stage-e-mode">{mode}</span>
                   ) : null}
                 </li>
               )
@@ -224,7 +224,7 @@ function StageECandidates({ row }) {
           </ul>
         </details>
       ) : meta ? (
-        <p className="gt-dupe-glance__stage-e-meta" title={title}>
+        <p className="od-dupe-glance__stage-e-meta" title={title}>
           {meta.match_reason || 'Stage E propose-only'} — Identify to apply.
         </p>
       ) : null}
@@ -245,7 +245,7 @@ const EMPTY_FIELD_TITLE = 'Not provided by API yet'
 function CompareField({ label, value, emptyTitle = EMPTY_FIELD_TITLE, children }) {
   const hasValue = value != null && String(value).trim() !== ''
   return (
-    <div className="gt-dupe-glance__compare-field">
+    <div className="od-dupe-glance__compare-field">
       <dt>{label}</dt>
       <dd>
         {children != null ? (
@@ -253,7 +253,7 @@ function CompareField({ label, value, emptyTitle = EMPTY_FIELD_TITLE, children }
         ) : hasValue ? (
           <span>{value}</span>
         ) : (
-          <span className="gt-dupe-glance__compare-empty" title={emptyTitle}>
+          <span className="od-dupe-glance__compare-empty" title={emptyTitle}>
             {EMPTY_FIELD}
           </span>
         )}
@@ -265,8 +265,8 @@ function CompareField({ label, value, emptyTitle = EMPTY_FIELD_TITLE, children }
 function CompareSide({ side, why, onOpenPath, pathLabel }) {
   if (!side) {
     return (
-      <div className="gt-dupe-glance__compare-side gt-dupe-glance__compare-side--empty">
-        <p className="gt-dupe-glance__compare-missing">No library hit yet</p>
+      <div className="od-dupe-glance__compare-side od-dupe-glance__compare-side--empty">
+        <p className="od-dupe-glance__compare-missing">No library hit yet</p>
       </div>
     )
   }
@@ -274,11 +274,11 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
   const dateLabel = formatDiskDate(side.mtime)
   const score = formatMatchScore(side.match_score)
   return (
-    <div className={`gt-dupe-glance__compare-side gt-dupe-glance__compare-side--${side.role}`}>
-      <div className="gt-dupe-glance__compare-head">
+    <div className={`od-dupe-glance__compare-side od-dupe-glance__compare-side--${side.role}`}>
+      <div className="od-dupe-glance__compare-head">
         {side.cover_url ? (
           <img
-            className="gt-dupe-glance__dupe-thumb"
+            className="od-dupe-glance__dupe-thumb"
             src={side.cover_url}
             alt=""
             width={28}
@@ -286,35 +286,35 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
           />
         ) : side.role === 'library' ? (
           <span
-            className="gt-dupe-glance__dupe-thumb gt-dupe-glance__dupe-thumb--empty"
+            className="od-dupe-glance__dupe-thumb od-dupe-glance__dupe-thumb--empty"
             aria-hidden="true"
           />
         ) : null}
-        <div className="gt-dupe-glance__compare-head-text">
-          <span className="gt-dupe-glance__compare-role">{side.label}</span>
+        <div className="od-dupe-glance__compare-head-text">
+          <span className="od-dupe-glance__compare-role">{side.label}</span>
           {side.uuid ? (
             <a
-              className="gt-dupe-glance__dupe-title"
+              className="od-dupe-glance__dupe-title"
               href={`/game_details/${encodeURIComponent(side.uuid)}`}
             >
               {side.name}
             </a>
           ) : (
-            <span className="gt-dupe-glance__dupe-title">{side.name}</span>
+            <span className="od-dupe-glance__dupe-title">{side.name}</span>
           )}
           {score ? (
-            <span className="gt-dupe-glance__match-score" title="Match confidence score">
+            <span className="od-dupe-glance__match-score" title="Match confidence score">
               {score}
             </span>
           ) : null}
         </div>
       </div>
-      <dl className="gt-dupe-glance__compare-fields">
+      <dl className="od-dupe-glance__compare-fields">
         <CompareField label="Path">
           {side.path ? (
             <button
               type="button"
-              className="gt-dupe-glance__dupe-path"
+              className="od-dupe-glance__dupe-path"
               onClick={() =>
                 onOpenPath?.({
                   path: side.path,
@@ -326,7 +326,7 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
               {side.path}
             </button>
           ) : (
-            <span className="gt-dupe-glance__compare-empty" title={EMPTY_FIELD_TITLE}>
+            <span className="od-dupe-glance__compare-empty" title={EMPTY_FIELD_TITLE}>
               {EMPTY_FIELD}
             </span>
           )}
@@ -335,7 +335,7 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
         <CompareField label="Date" value={dateLabel} />
         {side.uuid ? (
           <CompareField label="UUID">
-            <code className="gt-dupe-glance__dupe-uuid">{side.uuid}</code>
+            <code className="od-dupe-glance__dupe-uuid">{side.uuid}</code>
           </CompareField>
         ) : null}
       </dl>
@@ -353,17 +353,17 @@ function DupeCompare({ row, onOpenPath }) {
   const why = formatWhyUnmatched(row)
   return (
     <div
-      className="gt-dupe-glance__compare"
+      className="od-dupe-glance__compare"
       role="group"
       aria-label="Duplicate side-by-side comparison"
     >
-      <div className="gt-dupe-glance__compare-banner">
-        <span className="gt-dupe-glance__dupe-label">Compare</span>
-        <span className="gt-dupe-glance__compare-banner-text">
+      <div className="od-dupe-glance__compare-banner">
+        <span className="od-dupe-glance__dupe-label">Compare</span>
+        <span className="od-dupe-glance__compare-banner-text">
           Folder vs library game — path, size, and date when the API provides them
         </span>
       </div>
-      <div className="gt-dupe-glance__compare-grid">
+      <div className="od-dupe-glance__compare-grid">
         <CompareSide
           side={compare.folder}
           why={why}
@@ -633,18 +633,18 @@ export function DupeGlance({ onOpenPath }) {
   }
 
   return (
-    <section className="gt-dupe-glance" aria-labelledby="gt-dupe-glance-title">
-      <div className="gt-dupe-glance__header">
+    <section className="od-dupe-glance" aria-labelledby="od-dupe-glance-title">
+      <div className="od-dupe-glance__header">
         <div>
-          <h2 id="gt-dupe-glance-title">Dupe glance</h2>
-          <p className="gt-dupe-glance__lede">
+          <h2 id="od-dupe-glance-title">Dupe glance</h2>
+          <p className="od-dupe-glance__lede">
             Compare unmatched / duplicate folders without leaving this page. Open path opens a popup
             (clipboard / companion) — it does not jump to Auto Scan. Mark as Soft title / Emulator /
             Utility catalogs gaming software without a fake IGDB game match. Duplicate rows show a
             side-by-side folder vs library compare (same fields as Scan management).
           </p>
         </div>
-        <div className="gt-dupe-glance__toolbar">
+        <div className="od-dupe-glance__toolbar">
           <label>
             Status{' '}
             <select
@@ -657,8 +657,8 @@ export function DupeGlance({ onOpenPath }) {
               <option value="all">All</option>
             </select>
           </label>
-          <div className="gt-dupe-glance__sort" role="group" aria-label="Sort rows">
-            <span className="gt-dupe-glance__sort-label">Sort</span>
+          <div className="od-dupe-glance__sort" role="group" aria-label="Sort rows">
+            <span className="od-dupe-glance__sort-label">Sort</span>
             {[
               ['folder', 'Folder'],
               ['status', 'Status'],
@@ -668,7 +668,7 @@ export function DupeGlance({ onOpenPath }) {
               <button
                 key={key}
                 type="button"
-                className={`gt-btn gt-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
+                className={`od-btn od-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
                 aria-pressed={sortKey === key}
                 onClick={() => toggleSort(key)}
               >
@@ -677,12 +677,12 @@ export function DupeGlance({ onOpenPath }) {
               </button>
             ))}
           </div>
-          <button type="button" className="gt-btn" onClick={() => void load()} disabled={loading}>
+          <button type="button" className="od-btn" onClick={() => void load()} disabled={loading}>
             Refresh
           </button>
           <button
             type="button"
-            className="gt-btn gt-btn--primary"
+            className="od-btn od-btn--primary"
             disabled={busy}
             onClick={() => void handleReclassify()}
             title="Downgrade false Duplicate rows when folder titles differ"
@@ -691,7 +691,7 @@ export function DupeGlance({ onOpenPath }) {
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={busy}
             onClick={() => void handleBackfillKindHints()}
             title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)"
@@ -703,7 +703,7 @@ export function DupeGlance({ onOpenPath }) {
 
       {fixLog ? (
         <p
-          className={`gt-dupe-glance__log${fixLog.ok ? ' is-ok' : ' is-error'}`}
+          className={`od-dupe-glance__log${fixLog.ok ? ' is-ok' : ' is-error'}`}
           role="status"
         >
           {fixLog.message}
@@ -718,13 +718,13 @@ export function DupeGlance({ onOpenPath }) {
       />
 
       {!loading && !error && visible.length === 0 ? (
-        <p className="gt-dupe-glance__empty">No folders for this filter.</p>
+        <p className="od-dupe-glance__empty">No folders for this filter.</p>
       ) : null}
 
       {grouped.map(([groupKey, items]) => (
-        <div key={groupKey} className="gt-dupe-glance__group">
+        <div key={groupKey} className="od-dupe-glance__group">
           <h3>{groupKey.replace('::', ' · ')}</h3>
-          <ul className="gt-dupe-glance__list">
+          <ul className="od-dupe-glance__list">
             {items.map((row) => {
               const why = formatWhyUnmatched(row)
               const matchScore = formatMatchScore(row.match_score)
@@ -743,11 +743,11 @@ export function DupeGlance({ onOpenPath }) {
                 transforms.length > 0 ||
                 showStageE
               return (
-                <li key={row.id} className="gt-dupe-glance__row">
-                  <div className="gt-dupe-glance__actions" role="toolbar" aria-label="Row actions">
+                <li key={row.id} className="od-dupe-glance__row">
+                  <div className="od-dupe-glance__actions" role="toolbar" aria-label="Row actions">
                     <button
                       type="button"
-                      className="gt-btn"
+                      className="od-btn"
                       onClick={() =>
                         onOpenPath?.({
                           path: row.folder_path,
@@ -759,7 +759,7 @@ export function DupeGlance({ onOpenPath }) {
                       Open path
                     </button>
                     <a
-                      className="gt-btn"
+                      className="od-btn"
                       href={`/add_game_manual?full_disk_path=${encodeURIComponent(row.folder_path || '')}&library_uuid=${encodeURIComponent(row.library_uuid || '')}&platform_name=${encodeURIComponent(row.platform_name || '')}&platform_id=${encodeURIComponent(row.platform_id || '')}&from_unmatched=true`}
                       title="Fix search — opens manual add / IGDB search (uses Search name when set)"
                     >
@@ -770,7 +770,7 @@ export function DupeGlance({ onOpenPath }) {
                           <button
                             key={kind}
                             type="button"
-                            className={`gt-btn${suggestedKind === kind ? ' gt-btn--primary is-suggested' : ''}`}
+                            className={`od-btn${suggestedKind === kind ? ' od-btn--primary is-suggested' : ''}`}
                             disabled={busy}
                             title={
                               suggestedKind === kind
@@ -787,7 +787,7 @@ export function DupeGlance({ onOpenPath }) {
                       <>
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={busy}
                           title="Keep library game; clear this duplicate row"
                           onClick={() => void handleFix(row, 'merge')}
@@ -796,7 +796,7 @@ export function DupeGlance({ onOpenPath }) {
                         </button>
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={busy}
                           title="Reclassify as Unmatched"
                           onClick={() => void handleFix(row, 'keep')}
@@ -805,7 +805,7 @@ export function DupeGlance({ onOpenPath }) {
                         </button>
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={busy}
                           title="Ignore this duplicate"
                           onClick={() => void handleFix(row, 'ignore')}
@@ -815,10 +815,10 @@ export function DupeGlance({ onOpenPath }) {
                       </>
                     ) : null}
                     {badMatchReasons.length ? (
-                      <label className="gt-dupe-glance__badmatch">
-                        <span className="gt-dupe-glance__badmatch-label">Bad match</span>
+                      <label className="od-dupe-glance__badmatch">
+                        <span className="od-dupe-glance__badmatch-label">Bad match</span>
                         <select
-                          className="gt-select"
+                          className="od-select"
                           aria-label={`Flag bad match for ${row.folder_path || row.id}`}
                           value={row.bad_match_reason || ''}
                           disabled={busy}
@@ -834,10 +834,10 @@ export function DupeGlance({ onOpenPath }) {
                       </label>
                     ) : null}
                     {noteFor === row.id ? (
-                      <span className="gt-dupe-glance__badmatch-note">
+                      <span className="od-dupe-glance__badmatch-note">
                         <input
                           type="text"
-                          className="gt-input"
+                          className="od-input"
                           aria-label="Bad match note"
                           placeholder="What is wrong with this match?"
                           value={noteText}
@@ -846,7 +846,7 @@ export function DupeGlance({ onOpenPath }) {
                         />
                         <button
                           type="button"
-                          className="gt-btn gt-btn--primary"
+                          className="od-btn od-btn--primary"
                           disabled={busy || !noteText.trim()}
                           onClick={() => void submitBadMatch(row, 'other', noteText.trim())}
                         >
@@ -854,7 +854,7 @@ export function DupeGlance({ onOpenPath }) {
                         </button>
                         <button
                           type="button"
-                          className="gt-btn"
+                          className="od-btn"
                           disabled={busy}
                           onClick={() => {
                             setNoteFor(null)
@@ -866,14 +866,14 @@ export function DupeGlance({ onOpenPath }) {
                       </span>
                     ) : null}
                   </div>
-                  <div className="gt-dupe-glance__meta">
-                    <div className="gt-dupe-glance__chips">
-                      <span className={`gt-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}>
+                  <div className="od-dupe-glance__meta">
+                    <div className="od-dupe-glance__chips">
+                      <span className={`od-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}>
                         {row.status === 'Duplicate' ? 'Duplicate (same title)' : row.status}
                       </span>
                       {suggestedKind ? (
                         <span
-                          className="gt-dupe-glance__suggested"
+                          className="od-dupe-glance__suggested"
                           title="Suggested kind from scan proposal (software path)"
                         >
                           Suggested {SUGGESTED_KIND_LABELS[suggestedKind]}
@@ -881,7 +881,7 @@ export function DupeGlance({ onOpenPath }) {
                       ) : null}
                       {row.bad_match_reason ? (
                         <span
-                          className="gt-dupe-glance__badmatch-chip"
+                          className="od-dupe-glance__badmatch-chip"
                           title={row.bad_match_note || 'Flagged as a bad match'}
                         >
                           Bad match:{' '}
@@ -891,27 +891,27 @@ export function DupeGlance({ onOpenPath }) {
                       ) : null}
                     </div>
                     {searchName && searchName !== diskName ? (
-                      <p className="gt-dupe-glance__amend">
-                        <span className="gt-dupe-glance__amend-label">Search name</span> {searchName}
-                        <span className="gt-dupe-glance__ondisk"> · On disk: {diskName}</span>
+                      <p className="od-dupe-glance__amend">
+                        <span className="od-dupe-glance__amend-label">Search name</span> {searchName}
+                        <span className="od-dupe-glance__ondisk"> · On disk: {diskName}</span>
                       </p>
                     ) : diskName ? (
-                      <p className="gt-dupe-glance__ondisk">On disk: {diskName}</p>
+                      <p className="od-dupe-glance__ondisk">On disk: {diskName}</p>
                     ) : null}
                     {buildDupeCompare(row) ? null : (
                       <code title={row.folder_path}>{row.folder_path}</code>
                     )}
                     <DupeCompare row={row} onOpenPath={onOpenPath} />
                     {showWhyBlock ? (
-                      <div className="gt-dupe-glance__why">
+                      <div className="od-dupe-glance__why">
                         {why || (matchScore && row.status !== 'Duplicate') ? (
-                          <p className="gt-dupe-glance__reason">
+                          <p className="od-dupe-glance__reason">
                             {showWhyUnmatchedLabel ? (
-                              <span className="gt-dupe-glance__why-label">Why unmatched? </span>
+                              <span className="od-dupe-glance__why-label">Why unmatched? </span>
                             ) : null}
                             {matchScore && row.status !== 'Duplicate' ? (
                               <span
-                                className="gt-dupe-glance__match-score"
+                                className="od-dupe-glance__match-score"
                                 title="Match confidence score"
                               >
                                 {matchScore}
@@ -925,8 +925,8 @@ export function DupeGlance({ onOpenPath }) {
                             ) : null}
                           </p>
                         ) : showWhyUnmatchedLabel ? (
-                          <p className="gt-dupe-glance__reason">
-                            <span className="gt-dupe-glance__why-label">Why unmatched? </span>
+                          <p className="od-dupe-glance__reason">
+                            <span className="od-dupe-glance__why-label">Why unmatched? </span>
                           </p>
                         ) : null}
                         <TransformTrail transforms={transforms} />

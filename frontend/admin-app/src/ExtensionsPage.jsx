@@ -204,7 +204,7 @@ export function ExtensionsPage() {
 
   if (loading) {
     return (
-      <div className="gt-admin-page">
+      <div className="od-admin-page">
         <h1>File Extensions</h1>
         <PageStatus loading loadingMessage="Loading allowed extensions…" />
       </div>
@@ -213,10 +213,10 @@ export function ExtensionsPage() {
 
   if (error && items.length === 0) {
     return (
-      <div className="gt-admin-page">
+      <div className="od-admin-page">
         <h1>File Extensions</h1>
         <PageStatus error={error} />
-        <a className="gt-btn" href="/libraries">
+        <a className="od-btn" href="/libraries">
           Back to libraries
         </a>
       </div>
@@ -234,9 +234,9 @@ export function ExtensionsPage() {
   ]
 
   return (
-    <div className="gt-admin-page gt-ext-page">
+    <div className="od-admin-page od-ext-page">
       <h1>File Extensions</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Extensions used during library scan recognition. Only files matching these suffixes are treated
         as games when scanning folders — add archives, disc images, or cartridge dumps your libraries
         actually contain.
@@ -265,12 +265,12 @@ export function ExtensionsPage() {
           is an error and now says so assertively rather than politely. */}
       <PageStatus error={error} />
 
-      <form className="gt-admin-panel gt-ext-add" onSubmit={onAddSubmit}>
-        <div className="gt-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
-          <label className="gt-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
+      <form className="od-admin-panel od-ext-add" onSubmit={onAddSubmit}>
+        <div className="od-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
+          <label className="od-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
             Add extension
             <input
-              className="gt-admin-input"
+              className="od-admin-input"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder="zip"
@@ -281,13 +281,13 @@ export function ExtensionsPage() {
               spellCheck={false}
             />
           </label>
-          <button type="submit" className="gt-btn" disabled={busy || !normalizeExt(draft)}>
+          <button type="submit" className="od-btn" disabled={busy || !normalizeExt(draft)}>
             Add
           </button>
-          <label className="gt-admin-field" style={{ flex: '1 1 10rem', margin: 0 }}>
+          <label className="od-admin-field" style={{ flex: '1 1 10rem', margin: 0 }}>
             Filter
             <input
-              className="gt-admin-input"
+              className="od-admin-input"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Search…"
@@ -297,7 +297,7 @@ export function ExtensionsPage() {
             />
           </label>
         </div>
-        <p className="gt-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
+        <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
           {items.length
             ? `${items.length} allowed · changes apply immediately to the next scan`
             : 'No extensions yet — add at least one before scanning'}
@@ -306,30 +306,30 @@ export function ExtensionsPage() {
 
       {items.length === 0 ? (
         <PageStatus
-          className="gt-ext-empty"
+          className="od-ext-empty"
           emptyMessage="Empty list — library scans will not recognize any files until you add extensions."
         />
       ) : null}
 
       {suggestions.length && items.length > 0 ? (
-        <div className="gt-admin-panel gt-ext-suggestions">
-          <h2 className="gt-admin-panel-title">Quick add</h2>
-          <p className="gt-admin-lede">
+        <div className="od-admin-panel od-ext-suggestions">
+          <h2 className="od-admin-panel-title">Quick add</h2>
+          <p className="od-admin-lede">
             Common scan suffixes not yet in your list (capability hints only).
           </p>
-          <div className="gt-ext-chip-row" role="list">
+          <div className="od-ext-chip-row" role="list">
             {suggestions.map((s) => (
               <button
                 key={s.value}
                 type="button"
-                className="gt-ext-chip gt-ext-chip--suggest"
+                className="od-ext-chip od-ext-chip--suggest"
                 role="listitem"
                 disabled={busy}
                 onClick={() => addExtension(s.value)}
                 title={`Add .${s.value} (${s.groupLabel})`}
               >
                 .{s.value}
-                <span className="gt-ext-chip__action" aria-hidden="true">
+                <span className="od-ext-chip__action" aria-hidden="true">
                   +
                 </span>
               </button>
@@ -343,20 +343,20 @@ export function ExtensionsPage() {
         if (!section.rows.length && filter) return null
         if (!section.rows.length) return null
         return (
-          <section key={section.id} className="gt-admin-panel gt-ext-group">
-            <header className="gt-ext-group__head">
-              <h2 className="gt-admin-panel-title">{section.label}</h2>
-              <p className="gt-admin-lede" style={{ marginBottom: 0 }}>
+          <section key={section.id} className="od-admin-panel od-ext-group">
+            <header className="od-ext-group__head">
+              <h2 className="od-admin-panel-title">{section.label}</h2>
+              <p className="od-admin-lede" style={{ marginBottom: 0 }}>
                 {section.hint}
               </p>
             </header>
-            <div className="gt-ext-chip-row" role="list">
+            <div className="od-ext-chip-row" role="list">
               {section.rows.map((item) => (
-                <span key={item.id} className="gt-ext-chip" role="listitem">
-                  <span className="gt-ext-chip__label">.{item.value}</span>
+                <span key={item.id} className="od-ext-chip" role="listitem">
+                  <span className="od-ext-chip__label">.{item.value}</span>
                   <button
                     type="button"
-                    className="gt-ext-chip__remove"
+                    className="od-ext-chip__remove"
                     aria-label={`Remove .${item.value}`}
                     disabled={busy}
                     onClick={() => removeExtension(item)}
@@ -374,11 +374,11 @@ export function ExtensionsPage() {
         <PageStatus emptyMessage={`No extensions match “${filter}”.`} />
       ) : null}
 
-      <div className="gt-admin-actions-row">
-        <a className="gt-btn" href="/libraries">
+      <div className="od-admin-actions-row">
+        <a className="od-btn" href="/libraries">
           Libraries
         </a>
-        <a className="gt-btn gt-btn--ghost" href="/scan_management">
+        <a className="od-btn od-btn--ghost" href="/scan_management">
           Scan jobs
         </a>
       </div>

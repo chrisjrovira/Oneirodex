@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.gamenames import generate_goty_variants
-from gametheca.utils.rom_language import parse_rom_language_tags
-from gametheca.utils.rom_name_peel import (
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.gamenames import generate_goty_variants
+from oneirodex.utils.rom_language import parse_rom_language_tags
+from oneirodex.utils.rom_name_peel import (
     ARCADE_PROPOSE_FIRST_CHILD_THRESHOLD,
     arcade_library_is_large,
     looks_like_arcade_set_basename,
@@ -17,8 +17,8 @@ from gametheca.utils.rom_name_peel import (
     should_arcade_propose_first,
     should_use_console_rom_peel,
 )
-from gametheca.utils.set_completion import normalize_set_title
-from gametheca.utils.software_identify import (
+from oneirodex.utils.set_completion import normalize_set_title
+from oneirodex.utils.software_identify import (
     filter_tgdb_hits_for_platform,
     tgdb_platform_matches,
 )
@@ -524,6 +524,9 @@ def test_be_det3_rom_ext_strips_new_forms():
         ('Title (World) (En,Ja).ngc', 'Title'),
         ('Title (Japan, Europe) (En,Ja).ngp', 'Title'),
         ('Title (USA).adf', 'Title'),
+        ('Title (USA).ssd', 'Title'),
+        ('Title (World).mgw', 'Title'),
+        ('Title (USA).vb', 'Title'),
     ]
     for raw, expected in cases:
         assert parse_console_rom_label(raw)['cleaned_name'] == expected

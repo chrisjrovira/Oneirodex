@@ -1,5 +1,5 @@
-import type { GamethecaClient, SearchResultItem } from '@oneirodex/api-client'
-import { GamethecaApiError } from '@oneirodex/api-client'
+import type { OneirodexClient, SearchResultItem } from '@oneirodex/api-client'
+import { OneirodexApiError } from '@oneirodex/api-client'
 
 import type { LifecycleRegistry } from './lifecycle.js'
 
@@ -30,9 +30,9 @@ const TOKEN_401_HINT =
 /** Companion console logger (safe for secrets — callers must not pass the token). */
 export function logCompanion(scope: string, message: string, detail?: unknown): void {
   if (detail !== undefined) {
-    console.warn(`[GameTheca:${scope}] ${message}`, detail)
+    console.warn(`[Oneirodex:${scope}] ${message}`, detail)
   } else {
-    console.warn(`[GameTheca:${scope}] ${message}`)
+    console.warn(`[Oneirodex:${scope}] ${message}`)
   }
 }
 
@@ -64,7 +64,7 @@ export function formatKeychainError(error: unknown): string {
 
 /** Maps API / runtime failures to short companion status copy. */
 export function formatDesktopApiError(error: unknown): string {
-  if (error instanceof GamethecaApiError) {
+  if (error instanceof OneirodexApiError) {
     switch (error.status) {
       case 401:
         return TOKEN_401_HINT
@@ -99,7 +99,7 @@ export function formatDesktopApiError(error: unknown): string {
 }
 
 function classifyConnectionError(error: unknown): ConnectionFailure['cause'] {
-  if (error instanceof GamethecaApiError) {
+  if (error instanceof OneirodexApiError) {
     if (error.status === 401) return 'unauthorized'
     if (error.status === 403) return 'forbidden'
     if (error.status === 404) return 'not_found'
@@ -115,7 +115,7 @@ function classifyConnectionError(error: unknown): ConnectionFailure['cause'] {
 }
 
 /** Validates credentials by listing collections (lightweight authenticated call). */
-export async function validateConnection(api: GamethecaClient): Promise<ConnectionResult> {
+export async function validateConnection(api: OneirodexClient): Promise<ConnectionResult> {
   try {
     const collections = await api.browse.listCollections()
     return { ok: true, collectionCount: collections.length }
@@ -130,7 +130,7 @@ export async function validateConnection(api: GamethecaClient): Promise<Connecti
 /** Client-side token shape reject before any network call. */
 export function shapeInvalidConnectionResult(): ConnectionFailure {
   const message =
-    'Enter a valid GameTheca API token (gt_<prefix>_<urlsafe-secret>). Remove labels/HTML after paste; do not cut the secret at a hyphen — "-" inside the secret is normal.'
+    'Enter a valid Oneirodex API token (gt_<prefix>_<urlsafe-secret>). Remove labels/HTML after paste; do not cut the secret at a hyphen — "-" inside the secret is normal.'
   logCompanion('connect', `validate skipped: shape_invalid`)
   return { ok: false, message, cause: 'shape_invalid' }
 }
@@ -144,7 +144,7 @@ function extractSearchResults(response: {
 
 /** Fetches a small slice of the library via search (fallback queries if empty). */
 export async function fetchLibraryPreview(
-  api: GamethecaClient,
+  api: OneirodexClient,
   limit = 12,
 ): Promise<SearchResultItem[]> {
   const queries = ['', '*', 'a']

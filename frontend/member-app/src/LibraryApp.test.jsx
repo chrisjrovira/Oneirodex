@@ -106,11 +106,11 @@ test('filters fall back in place when no rail slot exists', async () => {
 
 test('filters render into the rail slot when the shell provides one', async () => {
   // The second left-hand panel is gone (GT-B4): filters portal into
-  // #gt-rail-slot under the Library destination. The old behaviour under test
+  // #od-rail-slot under the Library destination. The old behaviour under test
   // here — a collapse tab toggling .is-filters-collapsed and persisting
   // gt.library.filtersVisible — belonged to that panel and went with it.
   const slot = document.createElement('div')
-  slot.id = 'gt-rail-slot'
+  slot.id = 'od-rail-slot'
   document.body.appendChild(slot)
 
   const fetchMock = vi.fn((url) => {
@@ -391,7 +391,7 @@ test('kind is a segmented control, not duplicated in the panel', async () => {
   await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
 
   // One "All" segment in the bar…
-  const seg = document.querySelector('.gt-seg')
+  const seg = document.querySelector('.od-seg')
   expect(seg).not.toBeNull()
   expect(seg.textContent).toMatch(/All/)
 
@@ -426,17 +426,18 @@ test('sort defaults do not inflate the filter badge', async () => {
   expect(trigger.textContent).not.toMatch(/\d/)
 })
 
-test('new chrome unfurls Tile Rows Grid under View on the kind bar', async () => {
+test('new chrome unfurls Tile Rows Grid under the active layout name on the kind bar', async () => {
   const user = userEvent.setup()
   window.localStorage.removeItem('gt.library.layout')
   const { container } = renderNewChrome()
   await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
 
-  expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'Tile' })).not.toBeInTheDocument()
+  const trigger = screen.getByRole('button', { name: 'Tile' })
+  expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
 
-  await user.click(screen.getByRole('button', { name: 'View' }))
-  expect(screen.getByRole('button', { name: 'Tile' })).toBeInTheDocument()
+  await user.click(trigger)
+  expect(screen.getByRole('group', { name: 'View' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Rows' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument()
 
@@ -446,7 +447,10 @@ test('new chrome unfurls Tile Rows Grid under View on the kind bar', async () =>
     'rows',
   )
   expect(window.localStorage.getItem('gt.library.layout')).toBe('rows')
-  expect(screen.queryByRole('button', { name: 'Rows' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Rows' })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  )
 })
 
 test('failed first browse uses PageStatus with Retry', async () => {

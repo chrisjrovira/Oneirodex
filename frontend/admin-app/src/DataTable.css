@@ -1,12 +1,12 @@
 /* Shared sortable/filterable admin table (UX-C8). */
 
-.gt-table-wrap {
+.od-table-wrap {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.gt-table-toolbar {
+.od-table-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -14,42 +14,67 @@
   gap: 0.5rem;
 }
 
-.gt-table-filter {
+.od-table-filter {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   min-width: 0;
 }
 
-.gt-table-filter__label {
-  font-size: var(--gt-font-xs);
+.od-table-filter__label {
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-table-filter input {
+.od-table-filter input {
+  appearance: none;
+  box-sizing: border-box;
   min-width: 12rem;
   max-width: 100%;
+  height: 1.7rem;
+  min-height: 1.7rem;
+  padding: 0 0.45rem;
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
+  color: var(--od-text);
+  font-size: var(--od-font-sm);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.2;
 }
 
-.gt-table-count {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+.od-table-filter input::placeholder {
+  color: var(--od-text-muted);
+  opacity: 0.85;
+}
+
+.od-table-filter input:focus {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
+  outline-offset: 1px;
+  border-color: var(--od-accent);
+}
+
+.od-table-count {
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
 /* Wide tables scroll inside their own box rather than pushing the page sideways. */
-.gt-table-scroll {
+.od-table-scroll {
   width: 100%;
   overflow-x: auto;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid var(--gt-border);
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
 }
 
 /* One table look for the whole admin, not three (W27-C1).
  *
- * `.gt-ops-table` and `.gt-admin-table` were near-copies of these rules that
+ * `.od-ops-table` and `.od-admin-table` were near-copies of these rules that
  * had each drifted: three different font sizes (0.86 / 0.85 / 0.92rem), three
  * paddings, two header weights, and only this one had a sticky header or a row
  * hover. That is why tables looked subtly different from page to page.
@@ -61,77 +86,78 @@
  * aliases remain for the two tables that stay hand-rolled on purpose — the
  * key/value `DetailPanel`, which has no header row, and the Services checklist,
  * whose row order is meaningful. Layout modifiers like
- * `.gt-ops-table--services` still live next to their own page. */
-.gt-table,
-.gt-ops-table,
-.gt-admin-table {
+ * `.od-ops-table--services` still live next to their own page. */
+.od-table,
+.od-ops-table,
+.od-admin-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-table__caption {
+.od-table__caption {
   padding: 0.4rem 0.6rem;
   text-align: left;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-table th,
-.gt-table td,
-.gt-ops-table th,
-.gt-ops-table td,
-.gt-admin-table th,
-.gt-admin-table td {
+.od-table th,
+.od-table td,
+.od-ops-table th,
+.od-ops-table td,
+.od-admin-table th,
+.od-admin-table td {
   padding: 0.5rem 0.65rem;
   text-align: left;
   vertical-align: top;
-  border-bottom: 1px solid var(--gt-border);
+  border-bottom: 1px solid var(--od-border);
 }
 
-.gt-table-wrap--dense .gt-table th,
-.gt-table-wrap--dense .gt-table td {
+.od-table-wrap--dense .od-table th,
+.od-table-wrap--dense .od-table td {
   padding: 0.32rem 0.5rem;
 }
 
-.gt-table thead th,
-.gt-ops-table thead th,
-.gt-admin-table thead th {
+.od-table thead th,
+.od-ops-table thead th,
+.od-admin-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--gt-surface-2);
-  font-size: var(--gt-font-xs);
+  background: var(--od-surface-2);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   white-space: nowrap;
+  vertical-align: middle;
 }
 
-.gt-table tbody tr:last-child td,
-.gt-ops-table tbody tr:last-child td,
-.gt-admin-table tbody tr:last-child td {
+.od-table tbody tr:last-child td,
+.od-ops-table tbody tr:last-child td,
+.od-admin-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.gt-table tbody tr:hover,
-.gt-ops-table tbody tr:hover,
-.gt-admin-table tbody tr:hover {
-  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
+.od-table tbody tr:hover,
+.od-ops-table tbody tr:hover,
+.od-admin-table tbody tr:hover {
+  background: color-mix(in srgb, var(--od-accent) 8%, transparent);
 }
 
-.gt-table td.is-right,
-.gt-table th.is-right {
+.od-table td.is-right,
+.od-table th.is-right {
   text-align: right;
 }
 
-.gt-table td.is-center,
-.gt-table th.is-center {
+.od-table td.is-center,
+.od-table th.is-center {
   text-align: center;
 }
 
-.gt-table__sort {
+.od-table__sort {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -142,26 +168,77 @@
   font: inherit;
   letter-spacing: inherit;
   text-transform: inherit;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.gt-table__sort:hover,
-.gt-table__sort:focus-visible {
-  color: var(--gt-text);
+.od-table__sort:hover,
+.od-table__sort:focus-visible {
+  color: var(--od-text);
+  text-decoration: none;
 }
 
-.gt-table__sort-mark {
+.od-table__sort-mark {
   opacity: 0.55;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
 }
 
-.gt-table__sort.is-active .gt-table__sort-mark {
+.od-table__sort.is-active .od-table__sort-mark {
   opacity: 1;
-  color: var(--gt-accent);
+  color: var(--od-accent);
 }
 
-.gt-table__empty {
+.od-table__empty {
   padding: 1rem 0.65rem;
   text-align: center;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
+}
+
+.od-table__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.7rem;
+}
+
+.od-table th.is-right .od-table__head {
+  justify-content: flex-end;
+}
+
+.od-table__title {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+}
+
+.od-table__col-filter {
+  appearance: none;
+  box-sizing: border-box;
+  width: 7.5rem;
+  flex: 0 1 8.5rem;
+  min-width: 5.5rem;
+  max-width: 12rem;
+  height: 1.7rem;
+  min-height: 1.7rem;
+  padding: 0 0.45rem;
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface);
+  color: var(--od-text);
+  font-size: var(--od-font-sm);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.2;
+}
+
+.od-table__col-filter::placeholder {
+  color: var(--od-text-muted);
+  opacity: 0.85;
+}
+
+.od-table__col-filter:focus {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
+  outline-offset: 1px;
+  border-color: var(--od-accent);
 }

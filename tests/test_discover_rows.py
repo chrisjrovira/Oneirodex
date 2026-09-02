@@ -6,9 +6,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import DiscoverySection, Game, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex import db
+from oneirodex.models import DiscoverySection, Game, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def row_library(db_session):
 
 @pytest.fixture
 def many_games(db_session, row_library):
-    from gametheca.utils.discover_providers import ROW_MAX
+    from oneirodex.utils.discover_providers import ROW_MAX
 
     # Released, and staggered. `latest_games` orders by `first_release_date`
     # and skips rows without one, so undated fixtures make that row empty and
@@ -84,7 +84,7 @@ def latest_shelf(db_session):
 
 class TestRowRegistry:
     def test_seed_shelves_resolve_to_a_provider(self, app, latest_shelf):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             row = resolve_identifier('latest_games')
@@ -101,7 +101,7 @@ class TestRowRegistry:
         The admin screen presents that switch as authoritative; a row reachable
         by direct URL while hidden would quietly make it advisory.
         """
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         latest_shelf.is_visible = False
         db_session.commit()
@@ -110,14 +110,14 @@ class TestRowRegistry:
             assert resolve_identifier('latest_games') is None
 
     def test_unknown_identifier_resolves_to_nothing(self, app):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             assert resolve_identifier('no_such_row') is None
 
     def test_libraries_shelf_is_not_a_game_row(self, app, db_session):
         """It carries no games, so it is not a row this feed builds."""
-        from gametheca.utils.discover_providers import resolve_section
+        from oneirodex.utils.discover_providers import resolve_section
 
         section = DiscoverySection(
             identifier='libraries', name='Libraries', is_visible=True
@@ -130,7 +130,7 @@ class TestSeeAllTarget:
     def test_news_row_points_at_the_news_page(self):
         from types import SimpleNamespace
 
-        from gametheca.routes_discover import _more_href, _section_has_more
+        from oneirodex.routes_discover import _more_href, _section_has_more
 
         row = SimpleNamespace(
             identifier='news',
@@ -142,8 +142,8 @@ class TestSeeAllTarget:
         assert _section_has_more(row, 0) is False
 
     def test_chart_row_points_at_its_own_page(self, app, latest_shelf):
-        from gametheca.routes_discover import _more_href
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.routes_discover import _more_href
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             row = resolve_identifier('latest_games')
@@ -154,8 +154,8 @@ class TestSeeAllTarget:
 
         The catalog is still the full list from the hub's Browse catalog link.
         """
-        from gametheca.routes_discover import _more_href
-        from gametheca.utils.discover_providers import resolve_section
+        from oneirodex.routes_discover import _more_href
+        from oneirodex.utils.discover_providers import resolve_section
 
         section = DiscoverySection(
             identifier=f'zone_{uuid4().hex[:6]}',
@@ -174,8 +174,8 @@ class TestSeeAllTarget:
         Linking one there would silently show the whole library, so a library
         zone keeps its own page instead.
         """
-        from gametheca.routes_discover import _more_href
-        from gametheca.utils.discover_providers import resolve_section
+        from oneirodex.routes_discover import _more_href
+        from oneirodex.utils.discover_providers import resolve_section
 
         identifier = f'zone_{uuid4().hex[:6]}'
         section = DiscoverySection(
@@ -192,7 +192,7 @@ class TestSeeAllTarget:
 
 class TestBuildDiscoverRow:
     def test_window_pages_forward(self, app, row_user, many_games, latest_shelf):
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         with app.app_context(), app.test_request_context('/'):
             first = build_discover_row(row_user, 'latest_games', offset=0, limit=6)
@@ -208,7 +208,7 @@ class TestBuildDiscoverRow:
 
     def test_limit_is_clamped(self, app, row_user, many_games, latest_shelf):
         """A caller asking for everything should not get to name the page size."""
-        from gametheca.routes_discover import MAX_ROW_LIMIT, build_discover_row
+        from oneirodex.routes_discover import MAX_ROW_LIMIT, build_discover_row
 
         with app.app_context(), app.test_request_context('/'):
             payload = build_discover_row(row_user, 'latest_games', limit=100_000)
@@ -219,7 +219,7 @@ class TestBuildDiscoverRow:
     def test_negative_offset_is_clamped_to_the_start(
         self, app, row_user, many_games, latest_shelf
     ):
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         with app.app_context(), app.test_request_context('/'):
             payload = build_discover_row(row_user, 'latest_games', offset=-50)
@@ -227,7 +227,7 @@ class TestBuildDiscoverRow:
         assert payload['offset'] == 0
 
     def test_unknown_row_returns_nothing(self, app, row_user):
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         with app.app_context(), app.test_request_context('/'):
             assert build_discover_row(row_user, 'no_such_row') is None
@@ -237,8 +237,8 @@ class TestFeedWindowContract:
     def test_row_reports_more_beyond_its_ceiling(
         self, app, row_user, many_games, latest_shelf
     ):
-        from gametheca.routes_discover import build_discover_sections
-        from gametheca.utils.discover_providers import ROW_MAX
+        from oneirodex.routes_discover import build_discover_sections
+        from oneirodex.utils.discover_providers import ROW_MAX
 
         with app.app_context(), app.test_request_context('/'):
             sections = build_discover_sections(row_user)
@@ -253,7 +253,7 @@ class TestFeedWindowContract:
 
     def test_short_row_offers_no_see_all(self, app, db_session, row_user, row_library):
         """A row that shows everything it has must not claim there is more."""
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         db_session.add(
             Game(name='Only One', summary='s', library_uuid=row_library.uuid)
@@ -324,7 +324,7 @@ class TestFeedTokenCarriesDedupe:
     """
 
     def test_the_feed_hands_back_a_token(self, app, row_user, many_games, latest_shelf):
-        from gametheca.routes_discover import build_discover_feed
+        from oneirodex.routes_discover import build_discover_feed
 
         with app.app_context(), app.test_request_context('/'):
             feed = build_discover_feed(row_user)
@@ -336,9 +336,9 @@ class TestFeedTokenCarriesDedupe:
     def test_paging_with_the_token_skips_what_other_rows_showed(
         self, app, row_user, many_games, latest_shelf
     ):
-        from gametheca.routes_discover import build_discover_feed, build_discover_row
-        from gametheca.utils.discover_feed import excluded_for
-        from gametheca.routes_discover import _load_manifest
+        from oneirodex.routes_discover import build_discover_feed, build_discover_row
+        from oneirodex.utils.discover_feed import excluded_for
+        from oneirodex.routes_discover import _load_manifest
 
         with app.app_context(), app.test_request_context('/'):
             feed = build_discover_feed(row_user)
@@ -359,7 +359,7 @@ class TestFeedTokenCarriesDedupe:
         self, app, row_user, many_games, latest_shelf
     ):
         """An old client, or a cacheless install, still gets its tiles."""
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         with app.app_context(), app.test_request_context('/'):
             paged = build_discover_row(row_user, 'latest_games', offset=0, limit=10)
@@ -370,7 +370,7 @@ class TestFeedTokenCarriesDedupe:
         self, app, row_user, many_games, latest_shelf
     ):
         """Tokens expire. A stale one must degrade, not 500."""
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         with app.app_context(), app.test_request_context('/'):
             paged = build_discover_row(
@@ -398,8 +398,8 @@ class TestFeedRowCap:
     def test_the_page_never_exceeds_the_row_cap(
         self, app, row_user, many_games, latest_shelf
     ):
-        from gametheca.routes_discover import build_discover_sections
-        from gametheca.utils.discover_feed import FEED_ROW_CAP
+        from oneirodex.routes_discover import build_discover_sections
+        from oneirodex.utils.discover_feed import FEED_ROW_CAP
 
         with app.app_context(), app.test_request_context('/'):
             sections = build_discover_sections(row_user)
@@ -416,8 +416,8 @@ class TestDedupeDoesNotHideTheWayOut:
         Reading it from the deduped list would make a row that lost titles to
         its neighbours quietly drop a link that genuinely goes somewhere.
         """
-        from gametheca.routes_discover import build_discover_sections
-        from gametheca.utils.discover_providers import ROW_MAX
+        from oneirodex.routes_discover import build_discover_sections
+        from oneirodex.utils.discover_providers import ROW_MAX
 
         with app.app_context(), app.test_request_context('/'):
             sections = build_discover_sections(row_user)

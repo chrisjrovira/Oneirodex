@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 
-from gametheca.utils import client_commands as cc
+from oneirodex.utils import client_commands as cc
 
 
 def test_enqueue_and_claim_pending_commands(tmp_path, monkeypatch):

@@ -1,17 +1,17 @@
-.gt-trailers {
-  color: var(--gt-text);
+.od-trailers {
+  color: var(--od-text);
 }
 
-.gt-trailers__title-link {
+.od-trailers__title-link {
   color: inherit;
   text-decoration: none;
 }
 
-.gt-trailers__title-link:hover {
-  color: var(--gt-accent);
+.od-trailers__title-link:hover {
+  color: var(--od-accent);
 }
 
-.gt-trailers__actions {
+.od-trailers__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -21,13 +21,13 @@
  *
  * These four selectors redrew every button on the page — a 4px radius, a
  * hairline border, transparent fill — and because they are element-plus-class
- * they outranked `.gt-btn` and `.gt-cbtn`. So a page that *did* carry the
+ * they outranked `.od-btn` and `.od-cbtn`. So a page that *did* carry the
  * shared classes still rendered a button nobody else in the product has, which
  * is exactly the "trailers buttons don't match" report. The markup uses the
  * shared primitives now and this stylesheet no longer has an opinion about how
  * a button looks. */
 
-.gt-trailers__filters {
+.od-trailers__filters {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -35,65 +35,63 @@
   margin-bottom: 1rem;
 }
 
-.gt-trailers__badges {
+.od-trailers__badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
 }
 
-.gt-trailers__badge {
+.od-trailers__badge {
   padding: 0.15rem 0.5rem;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-pill);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-pill);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
 }
 
-.gt-trailers__filter-grid {
-  flex: 1 0 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
-}
-
-.gt-trailers__filter-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.gt-trailers__filter-item select,
-.gt-trailers__filter-item input,
-.gt-trailers__modal input[type='number'] {
-  padding: 0.4rem 0.6rem;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-xs);
-  color: inherit;
+/* Trailers Filters reuse Library's `.library-filters` form (Apply/Clear at
+   top, single-column body). Number inputs need the same control chrome as
+   the selects — libraryFilters.css only wires `.form-control` / `select`. */
+.od-trailers-filters input[type='number'].form-control {
+  width: 100%;
+  min-height: 2.25rem;
+  border-radius: var(--od-radius-md);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
   font: inherit;
+  font-size: var(--od-font-sm);
+  padding: 0.35rem 0.55rem;
+  box-sizing: border-box;
 }
 
-.gt-trailers__filter-item small,
-.gt-trailers__modal small {
-  color: var(--gt-text-muted);
+.od-trailers-filters small,
+.od-trailers__modal small {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
 }
 
-.gt-trailers__filter-error {
-  grid-column: 1 / -1;
-  color: var(--gt-accent);
+.od-trailers__filter-error {
+  margin: 0;
+  color: var(--od-accent);
+  font-size: var(--od-font-sm);
 }
 
-.gt-trailers__filter-actions,
-.gt-trailers__modal-actions {
+.od-trailers__modal-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.4rem;
+}
+
+.od-trailers__modal input[type='number'] {
+  padding: 0.4rem 0.6rem;
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-xs);
+  color: inherit;
+  font: inherit;
 }
 
 /* The card holds the frame *and* its caption (W27-F1), so the 16:9 ratio moved
@@ -101,61 +99,61 @@
    a fixed-height box or ate into the picture. */
 /* An analog set, drawn from theme tokens.
  *
- * Every colour here is a `--gt-*` mix, so the cabinet follows the chosen preset
+ * Every colour here is a `--od-*` mix, so the cabinet follows the chosen preset
  * rather than pinning the page to one palette — that is the difference between
  * a themed set and a picture of a television. No image is loaded: it is a
  * rounded box, two gradients and three small shapes.
  */
-.gt-trailers__set {
+.od-trailers__set {
   /* The set's own tokens. Declaring them here is the one place a literal is
      allowed, and it keeps the cabinet's geometry and its two non-theme darks in
      a single readable block instead of scattered through the rules below. */
-  --gt-crt-tube: #05070a;
-  --gt-crt-shadow: rgba(0, 0, 0, 0.45);
-  --gt-crt-inner-shadow: rgba(0, 0, 0, 0.9);
-  --gt-crt-scanline: rgba(0, 0, 0, 0.16);
-  --gt-crt-cabinet-radius: 18px;
-  --gt-crt-foot-radius: 10px;
-  --gt-crt-tube-radius-x: 14px;
-  --gt-crt-tube-radius-y: 22px;
+  --od-crt-tube: #05070a;
+  --od-crt-shadow: rgba(0, 0, 0, 0.45);
+  --od-crt-inner-shadow: rgba(0, 0, 0, 0.9);
+  --od-crt-scanline: rgba(0, 0, 0, 0.16);
+  --od-crt-cabinet-radius: 18px;
+  --od-crt-foot-radius: 10px;
+  --od-crt-tube-radius-x: 14px;
+  --od-crt-tube-radius-y: 22px;
 
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 0.9rem 0.9rem 0;
-  border-radius: var(--gt-crt-cabinet-radius) var(--gt-crt-cabinet-radius)
-    var(--gt-crt-foot-radius) var(--gt-crt-foot-radius);
+  border-radius: var(--od-crt-cabinet-radius) var(--od-crt-cabinet-radius)
+    var(--od-crt-foot-radius) var(--od-crt-foot-radius);
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--gt-surface) 88%, var(--gt-bg)) 0%,
-      color-mix(in srgb, var(--gt-bg) 82%, var(--gt-surface)) 100%
+      color-mix(in srgb, var(--od-surface) 88%, var(--od-bg)) 0%,
+      color-mix(in srgb, var(--od-bg) 82%, var(--od-surface)) 100%
     );
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 26%, var(--gt-border));
+  border: 1px solid color-mix(in srgb, var(--od-accent) 26%, var(--od-border));
   box-shadow:
-    0 18px 40px var(--gt-crt-shadow),
-    inset 0 1px 0 color-mix(in srgb, var(--gt-text) 10%, transparent);
+    0 18px 40px var(--od-crt-shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--od-text) 10%, transparent);
 }
 
 /* The tube. Slightly inset and darker than the cabinet, with the corner radius
    a CRT actually had — square corners are what make a "TV frame" read as a
    border rather than as a screen. */
-.gt-trailers__video {
+.od-trailers__video {
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--gt-crt-tube);
-  border: 1px solid color-mix(in srgb, var(--gt-bg) 70%, var(--gt-crt-tube));
-  border-radius: var(--gt-crt-tube-radius-x) / var(--gt-crt-tube-radius-y);
+  background: var(--od-crt-tube);
+  border: 1px solid color-mix(in srgb, var(--od-bg) 70%, var(--od-crt-tube));
+  border-radius: var(--od-crt-tube-radius-x) / var(--od-crt-tube-radius-y);
   overflow: hidden;
   box-shadow:
-    inset 0 0 30px var(--gt-crt-inner-shadow),
-    inset 0 0 0 2px color-mix(in srgb, var(--gt-bg) 60%, var(--gt-crt-tube));
+    inset 0 0 30px var(--od-crt-inner-shadow),
+    inset 0 0 0 2px color-mix(in srgb, var(--od-bg) 60%, var(--od-crt-tube));
 }
 
-.gt-trailers__video iframe {
+.od-trailers__video iframe {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -165,19 +163,19 @@
 
 /* Scanlines and glare sit *over* the picture, so they must not eat the click
    that plays it. Both are pointer-events: none and aria-hidden. */
-.gt-trailers__scanlines,
-.gt-trailers__glare {
+.od-trailers__scanlines,
+.od-trailers__glare {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
 }
 
-.gt-trailers__scanlines {
+.od-trailers__scanlines {
   background: repeating-linear-gradient(
     180deg,
-    var(--gt-crt-scanline) 0,
-    var(--gt-crt-scanline) 1px,
+    var(--od-crt-scanline) 0,
+    var(--od-crt-scanline) 1px,
     transparent 1px,
     transparent 3px
   );
@@ -186,18 +184,18 @@
   mix-blend-mode: multiply;
 }
 
-.gt-trailers__glare {
+.od-trailers__glare {
   background: radial-gradient(
     120% 80% at 22% 8%,
-    color-mix(in srgb, var(--gt-text) 12%, transparent) 0%,
+    color-mix(in srgb, var(--od-text) 12%, transparent) 0%,
     transparent 55%
   );
 }
 
 /* The cabinet below the tube. The wordmark that used to sit on the left is
-   gone (`.gt-trailers__brand` with it), so the controls take the end slot on
+   gone (`.od-trailers__brand` with it), so the controls take the end slot on
    their own rather than being pushed there by a label. */
-.gt-trailers__bezel {
+.od-trailers__bezel {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -205,84 +203,84 @@
   padding: 0.55rem 0.35rem 0.7rem;
 }
 
-.gt-trailers__knobs {
+.od-trailers__knobs {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
 }
 
-.gt-trailers__knob {
+.od-trailers__knob {
   width: 0.7rem;
   height: 0.7rem;
-  border-radius: var(--gt-radius-circle);
+  border-radius: var(--od-radius-circle);
   background: linear-gradient(
     145deg,
-    color-mix(in srgb, var(--gt-text) 22%, transparent),
-    color-mix(in srgb, var(--gt-bg) 70%, transparent)
+    color-mix(in srgb, var(--od-text) 22%, transparent),
+    color-mix(in srgb, var(--od-bg) 70%, transparent)
   );
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gt-border) 80%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--od-border) 80%, transparent);
 }
 
 /* The power light is the one accent-coloured part, which is what ties the set
    to the theme at a glance. */
-.gt-trailers__led {
+.od-trailers__led {
   width: 0.4rem;
   height: 0.4rem;
-  border-radius: var(--gt-radius-circle);
-  background: var(--gt-accent);
-  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--gt-accent) 60%, transparent);
+  border-radius: var(--od-radius-circle);
+  background: var(--od-accent);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--od-accent) 60%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   /* Nothing animates here, but the overlays are pure decoration — drop them
      for anyone who has asked for less visual noise. */
-  .gt-trailers__scanlines,
-  .gt-trailers__glare {
+  .od-trailers__scanlines,
+  .od-trailers__glare {
     display: none;
   }
 }
 
 @media (max-width: 640px) {
   /* At phone width the cabinet is mostly bezel; keep the picture. */
-  .gt-trailers__set {
+  .od-trailers__set {
     padding: 0.4rem 0.4rem 0;
-    border-radius: var(--gt-crt-foot-radius);
+    border-radius: var(--od-crt-foot-radius);
   }
 
-  .gt-trailers__bezel {
+  .od-trailers__bezel {
     display: none;
   }
 }
 
 /* The title now leads the set, so its rule is on the *bottom* — it separates
    the caption from the picture below it rather than from the bezel above. */
-.gt-trailers__caption {
+.od-trailers__caption {
   margin: 0;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--gt-border);
-  font-size: var(--gt-font-base);
+  border-bottom: 1px solid var(--od-border);
+  font-size: var(--od-font-base);
   font-weight: 600;
 }
 
-.gt-trailers__caption a {
-  color: var(--gt-text);
+.od-trailers__caption a {
+  color: var(--od-text);
   text-decoration: none;
 }
 
-.gt-trailers__caption a:hover,
-.gt-trailers__caption a:focus-visible {
-  color: var(--gt-accent);
+.od-trailers__caption a:hover,
+.od-trailers__caption a:focus-visible {
+  color: var(--od-accent);
   text-decoration: underline;
 }
 
 /* Wishlist/Collections-style empty: muted sentence, no CTA button. */
-.gt-trailers__empty {
+.od-trailers__empty {
   margin: 0;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
-.gt-trailers__modal-overlay {
+.od-trailers__modal-overlay {
   position: fixed;
   inset: 0;
   display: flex;
@@ -292,23 +290,23 @@
   z-index: 50;
 }
 
-.gt-trailers__modal {
+.od-trailers__modal {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   width: min(28rem, 90vw);
   padding: 1.25rem;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  color: var(--gt-text);
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  color: var(--od-text);
 }
 
-.gt-trailers__modal h2 {
+.od-trailers__modal h2 {
   margin: 0;
 }
 
-.gt-trailers__toggle {
+.od-trailers__toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -317,7 +315,7 @@
 /* Overflow menu rows. `.menu-button` already carries the row treatment shared
    with the tile menu; this only stacks them, so the two menus cannot drift
    apart the way the page's old inline toolbar did. */
-.gt-trailers__overflow {
+.od-trailers__overflow {
   display: flex;
   flex-direction: column;
   gap: 2px;

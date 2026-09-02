@@ -3,8 +3,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 /**
  * Horizontal scrolling for a shelf.
  *
- * Wheel over the tiles or the row title scrolls the page (not the track).
- * Wheel over the bottom slider pans the track. Hover arrows still page/hold.
+ * Vertical wheel over the tiles or the row title scrolls the page.
+ * Horizontal wheel, shift-wheel, and wheel over the bottom slider pan the
+ * track in both directions. Hover arrows still page/hold.
  *
  * @param {object} [options]
  * @param {number} [options.step] Fraction of the visible width one arrow press
@@ -52,9 +53,12 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
     for (const child of node.children) observer?.observe(child)
 
     window.addEventListener('resize', measure)
+    const onScroll = () => measure()
+    node.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       observer?.disconnect()
       window.removeEventListener('resize', measure)
+      node.removeEventListener('scroll', onScroll)
     }
   }, [measure, bindKey])
 
@@ -116,8 +120,9 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
         left: direction * node.clientWidth * step,
         behavior: reduced ? 'auto' : 'smooth',
       })
+      measure()
     },
-    [step, stopEdgeScroll],
+    [measure, step, stopEdgeScroll],
   )
 
   const wheelDeltaPx = useCallback(
@@ -172,8 +177,9 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
   }, [])
 
   /**
-   * Wheel over the slider pans the row. Wheel over tiles / title scrolls the
-   * page. Capture on the scroller so the track padding cannot steal the bar.
+   * Vertical wheel over tiles / title scrolls the page. Horizontal wheel,
+   * shift-wheel, and wheel on the slider pan the track both ways. Capture on
+   * the scroller so the track padding cannot steal the bar.
    */
   const onWheel = useCallback((event) => {
     const node = ref.current
@@ -186,11 +192,14 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
 
     if (node.scrollWidth <= node.clientWidth + 1) return
 
+    const vertical = !event.shiftKey && Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+    if (!vertical) {
+      panTrackByWheel(event)
+      return
+    }
+
     event.preventDefault()
     event.stopPropagation()
-
-    const vertical = !event.shiftKey && Math.abs(event.deltaY) >= Math.abs(event.deltaX)
-    if (!vertical) return
 
     const delta = wheelDeltaPx(
       event,

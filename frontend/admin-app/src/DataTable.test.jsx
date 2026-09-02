@@ -155,3 +155,37 @@ test('toolbar={false} still reports an empty table', () => {
   )
   expect(screen.getByText('No companions registered.')).toBeTruthy()
 })
+
+test('columnFilters AND across columns', () => {
+  renderTable({
+    toolbar: false,
+    columnFilters: true,
+    columns: [
+      { key: 'name', label: 'Name' },
+      { key: 'note', label: 'Note', sortable: false },
+      { key: 'actions', label: 'Actions', sortable: false, filterable: false },
+    ],
+  })
+  fireEvent.change(screen.getByLabelText('Filter Name'), { target: { value: 'mar' } })
+  fireEvent.change(screen.getByLabelText('Filter Note'), { target: { value: 'cart' } })
+  expect(bodyNames()).toEqual(['Mario'])
+  expect(screen.getByText('1 of 3')).toBeInTheDocument()
+})
+
+test('column filters sit beside titles, not on a second header row', () => {
+  const { container } = renderTable({ toolbar: false, columnFilters: true })
+  expect(container.querySelector('.od-table__filter-row')).toBeNull()
+  const nameHeader = screen.getByRole('columnheader', { name: /Name/ })
+  expect(within(nameHeader).getByLabelText('Filter Name')).toBeTruthy()
+})
+
+test('column filters offer typeahead values from the rows', () => {
+  renderTable({ toolbar: false, columnFilters: true })
+  const input = screen.getByLabelText('Filter Name')
+  const listId = input.getAttribute('list')
+  expect(listId).toBeTruthy()
+  const options = [...document.getElementById(listId).querySelectorAll('option')].map(
+    (node) => node.getAttribute('value'),
+  )
+  expect(options).toEqual(['Zelda', 'Astro', 'Mario'])
+})

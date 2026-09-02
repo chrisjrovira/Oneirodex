@@ -2,8 +2,8 @@
 
 ``ONEIRODEX_<SUFFIX>`` wins when set; ``GT_<SUFFIX>`` still works so existing
 ``.env`` files and Unraid stacks keep booting. Lives at the repo root so
-``config.py`` can import it without touching the ``gametheca`` package (that
-import would be circular — ``gametheca/__init__.py`` loads Config first).
+``config.py`` can import it without touching the ``oneirodex`` package (that
+import would be circular — ``oneirodex/__init__.py`` loads Config first).
 """
 
 from __future__ import annotations

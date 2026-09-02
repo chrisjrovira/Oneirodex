@@ -12,9 +12,9 @@ from xml.etree import ElementTree
 import pytest
 from jinja2 import Environment, FileSystemLoader
 
-from gametheca.routes_admin_ext.settings import SETTINGS_SHELL_SECTIONS
+from oneirodex.routes_admin_ext.settings import SETTINGS_SHELL_SECTIONS
 
-TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'gametheca' / 'templates'
+TEMPLATE_ROOT = Path(__file__).resolve().parents[1] / 'oneirodex' / 'templates'
 
 # Templates converted to the SVG macro set. Every template here must contain
 # zero literal Font Awesome class strings (see test_no_font_awesome_left_in_converted_templates).
@@ -62,7 +62,7 @@ CONVERTED_TEMPLATES = [
 ]
 
 # Templates that intentionally still contain a handful of literal Font Awesome
-# classes after the SVG conversion. Empty after O11 (local .gt-spinner).
+# classes after the SVG conversion. Empty after O11 (local .od-spinner).
 DOCUMENTED_FA_LEFTOVERS = {}
 
 # Matches any literal Font Awesome class pairing, e.g. "fas fa-trash",
@@ -95,7 +95,7 @@ class TestIconMacro:
         assert 'stroke-width="2"' in svg
         assert 'viewBox="0 0 24 24"' in svg
         assert 'fill="none"' in svg
-        assert 'class="gt-icon"' in svg
+        assert 'class="od-icon"' in svg
 
     def test_pins_no_colour_of_its_own(self, icon):
         """Every glyph must inherit the theme via currentColor."""
@@ -116,7 +116,7 @@ class TestIconMacro:
         assert 'width="28"' in icon('cogs', size=28)
 
     def test_extra_class_is_appended_not_replaced(self, icon):
-        assert 'class="gt-icon collapse-icon"' in icon('chevron-up', extra_class='collapse-icon')
+        assert 'class="od-icon collapse-icon"' in icon('chevron-up', extra_class='collapse-icon')
 
     def test_unknown_name_degrades_to_a_dot(self, icon):
         svg = icon('definitely-not-an-icon')
@@ -188,21 +188,21 @@ class TestConvertedTemplates:
         """This replaces a check for the #sidebar-era ids.
 
         GT-B2 retired the left sidebar: the shell grid reads `data-rail` off
-        `#gt-shell` and the toggle moved into the topbar partial, so the old
+        `#od-shell` and the toggle moved into the topbar partial, so the old
         assertion pinned markup that is *gone on purpose*. The contract worth
         keeping is that base.html's inline JS still finds what it queries — and
         those hooks now span two files.
         """
         base = read_template('base.html')
-        for required in ('id="gt-shell"', 'id="content"', 'id="preferencesModalContainer"'):
+        for required in ('id="od-shell"', 'id="content"', 'id="preferencesModalContainer"'):
             assert required in base, f"base.html lost {required}, which its inline JS queries"
 
-        assert 'id="gt-rail-toggle"' in read_template('partials/topbar.html'), (
+        assert 'id="od-rail-toggle"' in read_template('partials/topbar.html'), (
             "the rail toggle lost its id, which base.html's inline JS queries"
         )
 
     def test_no_js_left_behind_for_the_retired_account_menu(self):
-        """The account menu is a <details> in the rail (see gt-shell.css).
+        """The account menu is a <details> in the rail (see od-shell.css).
 
         Open/close and click-outside are the browser's now, so a *lookup* of any
         of these means dead code came back: they resolve to null against
@@ -219,15 +219,15 @@ class TestConvertedTemplates:
             assert not lookup.search(base), (
                 f"base.html queries {retired}, retired with the sidebar in GT-B2"
             )
-        assert '<details class="gt-rail__account">' in read_template('partials/rail.html')
+        assert '<details class="od-rail__account">' in read_template('partials/rail.html')
 
     def test_shell_rail_js_has_no_dead_sidebar_handlers(self):
         """GT-B2 leftover: submenu / filter-visibility lookups matched nothing."""
         src = (
             Path(__file__).resolve().parents[1]
-            / 'gametheca' / 'static' / 'js' / 'gt_shell_rail.js'
+            / 'oneirodex' / 'static' / 'js' / 'gt_shell_rail.js'
         ).read_text(encoding='utf-8')
-        assert 'gt-rail-toggle' in src
+        assert 'od-rail-toggle' in src
         assert 'closeAllSubmenus' not in src
         assert 'has-submenu' not in src
         assert 'container-filtersandsort' not in src
@@ -239,7 +239,7 @@ class TestConvertedTemplates:
         assert 'settings-shell-layout' not in shell
 
     def test_the_dashboard_is_a_react_shell_and_keeps_no_body(self):
-        """This replaces a check for `gt-health-*` ids in this template.
+        """This replaces a check for `od-health-*` ids in this template.
 
         Those ids were real once. Wave 7 moved the dashboard body — library
         health widget included — into admin-app's React `DashboardPage`/

@@ -4,9 +4,9 @@ from unittest.mock import patch, Mock
 from uuid import uuid4
 from flask import url_for
 
-from gametheca import db
-from gametheca.models import User, Library
-from gametheca.platform import LibraryPlatform
+from oneirodex import db
+from oneirodex.models import User, Library
+from oneirodex.platform import LibraryPlatform
 
 
 def safe_cleanup_database(db_session):
@@ -27,7 +27,8 @@ def safe_cleanup_database(db_session):
         # Delete all main table data
         for table in ['game_updates', 'game_extras', 'images', 'game_urls', 'unmatched_folders', 
                      'scan_jobs', 'download_requests', 'newsletters', 'system_events', 
-                     'invite_tokens', 'games', 'users', 'libraries']:
+                     'invite_tokens', 'games', 'users', 'libraries',
+                     'reference_set_entries', 'reference_sets', 'igdb_platform_releases']:
             try:
                 db_session.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE"))
             except Exception:
@@ -218,9 +219,46 @@ class TestGetLibraries:
         # Verify JSON structure
         data = response.get_json()
         library = data[0]
-        required_fields = ['uuid', 'name', 'image_url']
+        required_fields = ['uuid', 'name', 'image_url', 'platform', 'game_count']
         for field in required_fields:
             assert field in library
+        assert isinstance(library['game_count'], int)
+        assert 'group_name' in library
+        assert 'platform_total' in library
+        assert 'unmatched_count' in library
+
+    def test_get_libraries_platform_total_from_dat(
+        self, client, regular_user, db_session
+    ):
+        from oneirodex.models import ReferenceSet
+
+        unique_id = str(uuid4())[:8]
+        library = Library(
+            name=f'NES_{unique_id}',
+            image_url='test_library.jpg',
+            platform=LibraryPlatform.NES,
+        )
+        db_session.add(library)
+        db_session.add(
+            ReferenceSet(
+                library_platform='NES',
+                region='USA',
+                source='nointro',
+                name='Nintendo - Nintendo Entertainment System',
+                entry_count=700,
+            )
+        )
+        db_session.commit()
+
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(regular_user.id)
+            sess['_fresh'] = True
+
+        response = client.get('/api/get_libraries')
+        assert response.status_code == 200
+        row = next(item for item in response.get_json() if item['uuid'] == library.uuid)
+        assert row['platform_total'] == 700
+        assert row['group_name'] is None
 
 
 class TestReorderLibraries:
@@ -348,7 +386,7 @@ class TestReorderLibraries:
                              content_type='application/json')
         assert response.status_code == 500  # Flask returns 500 for invalid JSON
     
-    @patch('gametheca.routes_apis.library.db.session.commit')
+    @patch('oneirodex.routes_apis.library.db.session.commit')
     def test_reorder_libraries_database_error(self, mock_commit, client, admin_user, multiple_libraries):
         """Test reordering with database error."""
         mock_commit.side_effect = Exception("Database error")

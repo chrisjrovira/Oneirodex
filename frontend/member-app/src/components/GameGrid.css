@@ -1,18 +1,18 @@
 /* Smooth tile-size CSS var transitions (registered properties). */
-@property --gt-tile-min {
+@property --od-tile-min {
   syntax: '<length>';
   inherits: true;
   initial-value: 180px;
 }
 
-@property --gt-tile-gap {
+@property --od-tile-gap {
   syntax: '<length>';
   inherits: true;
   initial-value: 10px;
 }
 
 html {
-  transition: --gt-tile-min 0.22s ease, --gt-tile-gap 0.22s ease;
+  transition: --od-tile-min 0.22s ease, --od-tile-gap 0.22s ease;
 }
 
 /* Set by TileSizeControl while the slider is moving (W27-B2). During a drag the
@@ -21,6 +21,7 @@ html {
    The gap transition on the grids themselves is suppressed for the same reason. */
 html.is-tile-resizing,
 html.is-tile-resizing .game-library-container[data-library-grid]:not([data-library-virtual]),
+html.is-tile-resizing .catalog-grid-sections,
 html.is-tile-resizing .game-library-row {
   transition: none;
 }
@@ -45,13 +46,13 @@ html.is-tile-resizing .game-library-row {
  * auto-fill keeps the empty tracks so a lone tile stays tile-sized. If the grid
  * genuinely fails to fill the viewport, look at the container's width (rail
  * offset, gutters, max-width) rather than at the track-repeat mode. */
-.game-library-container[data-library-grid]:not([data-library-virtual]) {
+.game-library-container[data-library-grid]:not([data-library-virtual]):not(.catalog-grid-sections) {
   display: grid;
   grid-template-columns: repeat(
     auto-fill,
-    minmax(var(--gt-catalog-col-min, var(--gt-tile-min)), 1fr)
+    minmax(var(--od-catalog-col-min, var(--od-tile-min)), 1fr)
   );
-  gap: var(--gt-tile-gap);
+  gap: var(--od-tile-gap);
   align-items: start;
   transition: gap 0.22s ease;
 }
@@ -78,9 +79,9 @@ html.is-tile-resizing .game-library-row {
   display: grid;
   grid-template-columns: repeat(
     auto-fill,
-    minmax(var(--gt-catalog-col-min, var(--gt-tile-min)), 1fr)
+    minmax(var(--od-catalog-col-min, var(--od-tile-min)), 1fr)
   );
-  gap: var(--gt-tile-gap);
+  gap: var(--od-tile-gap);
   align-items: start;
   box-sizing: border-box;
   transition: gap 0.22s ease;
@@ -124,11 +125,12 @@ html.is-tile-resizing .game-library-row {
 /* Hovered tiles grow equally around the resting box — not down, not inward.
  *
  * Edge-pinned origins made the enlarge look like the tile slid toward empty
- * space. Room to grow without clipping the top bar is on `.gt-shell__main`
- * (padding uses the existing stack, bumped only if the 12.5% per-side growth
- * needs more than `--gt-stack`). Do not pad this container: virtual rows are
- * absolutely positioned against its padding edge, so padding here would not
- * move the first row and would throw off getTotalSize().
+ * space. Vertical room (first row vs the thin top bar) is padding on
+ * `.od-shell__main`. Left/right the scale overlaps the gutter — clip-margin
+ * on the shell / library layout, not extra inline pad and not inward origin.
+ * Do not pad this container: virtual rows are absolutely positioned against
+ * its padding edge, so padding here would not move the first row and would
+ * throw off getTotalSize().
  */
 .game-library-row .game-card:hover,
 .game-library-row .game-card:has(:focus-visible),
@@ -144,14 +146,13 @@ html.is-tile-resizing .game-library-row {
   }
 }
 
-/* Grid: denser columns. The live virtual grid also writes --gt-catalog-col-min
-   in pixels so JS column math and CSS auto-fill stay on the same number. */
-.game-library-container[data-layout='grid'] {
-  --gt-catalog-col-min: max(6.75rem, calc(var(--gt-tile-min) * 0.58));
+/* Rows: Steam-like title list. Cover and row height follow --od-tile-min so
+   the top-bar slider changes this view the same way it changes Tile / Grid. */
+.game-library-container[data-layout='rows'] {
+  --od-row-h: clamp(56px, calc(var(--od-tile-min, 180px) * 0.42), 144px);
+  --od-row-cover-w: calc(var(--od-row-h) * 3 / 4);
 }
 
-/* Rows: one title per line. Cover is a thumb; the name sits beside it.
-   Hover scale is a tile affordance and would shove the list. */
 .game-library-container[data-layout='rows'] .game-library-row {
   display: block;
 }
@@ -159,31 +160,32 @@ html.is-tile-resizing .game-library-row {
 .game-library-container[data-library-grid][data-layout='rows']:not([data-library-virtual]) {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-2, 0.5rem);
+  gap: 1px;
 }
 
 .game-library-container[data-layout='rows'] .game-card-skeleton {
   display: flex;
-  height: 4.75rem;
+  height: var(--od-row-h);
 }
 
 .game-library-container[data-layout='rows'] .game-card-skeleton__cover {
-  width: 3.55rem;
-  height: 4.75rem;
+  width: var(--od-row-cover-w);
+  height: var(--od-row-h);
   aspect-ratio: auto;
-  flex: 0 0 3.55rem;
+  flex: 0 0 var(--od-row-cover-w);
 }
 
 .game-library-container[data-layout='rows'] .game-card {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  height: 4.75rem;
-  min-height: 4.75rem;
+  height: var(--od-row-h);
+  min-height: var(--od-row-h);
   overflow: hidden;
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+  background: transparent;
 }
 
 .game-library-container[data-layout='rows'] .game-card:hover,
@@ -191,20 +193,22 @@ html.is-tile-resizing .game-library-row {
 .game-library-container[data-layout='rows'] .game-card:has(:focus-visible) {
   transform: none;
   box-shadow: none;
-  border-color: color-mix(in srgb, var(--gt-accent) 50%, transparent);
+  outline: none;
+  background: color-mix(in srgb, var(--od-accent) 14%, var(--od-surface));
+  border-bottom-color: transparent;
 }
 
 .game-library-container[data-layout='rows'] .game-card__cover-link {
-  flex: 0 0 3.55rem;
-  width: 3.55rem;
-  height: 4.75rem;
+  flex: 0 0 var(--od-row-cover-w);
+  width: var(--od-row-cover-w);
+  height: var(--od-row-h);
   border-radius: 0;
 }
 
 .game-library-container[data-layout='rows'] .game-cover,
-.game-library-container[data-layout='rows'] .gt-cover-fallback {
-  width: 3.55rem;
-  height: 4.75rem;
+.game-library-container[data-layout='rows'] .od-cover-fallback {
+  width: var(--od-row-cover-w);
+  height: var(--od-row-h);
   object-fit: cover;
 }
 
@@ -214,14 +218,14 @@ html.is-tile-resizing .game-library-row {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.35rem 6.5rem 0.35rem 0.7rem;
+  gap: 0.2rem;
+  padding: 0.4rem 6.5rem 0.4rem 0.85rem;
   color: inherit;
   text-decoration: none;
 }
 
 .game-library-container[data-layout='rows'] .game-card__row-title {
-  font-size: var(--gt-font-base);
+  font-size: clamp(0.9rem, calc(var(--od-row-h) * 0.2), 1.2rem);
   font-weight: 650;
   line-height: 1.25;
   overflow: hidden;
@@ -230,17 +234,17 @@ html.is-tile-resizing .game-library-row {
 }
 
 .game-library-container[data-layout='rows'] .game-card__row-detail {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: clamp(0.7rem, calc(var(--od-row-h) * 0.14), 0.9rem);
+  color: var(--od-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.game-library-container[data-layout='rows'] .gt-platform-chip,
-.game-library-container[data-layout='rows'] .gt-badge-stack,
-.game-library-container[data-layout='rows'] .gt-tile-preview-hint,
-.game-library-container[data-layout='rows'] .gt-tile-play {
+.game-library-container[data-layout='rows'] .od-platform-chip,
+.game-library-container[data-layout='rows'] .od-badge-stack,
+.game-library-container[data-layout='rows'] .od-tile-preview-hint,
+.game-library-container[data-layout='rows'] .od-tile-play {
   display: none;
 }
 

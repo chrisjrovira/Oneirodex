@@ -3,13 +3,13 @@
 import os
 from pathlib import Path
 
-from gametheca.utils.import_leaf_libraries import (
+from oneirodex.utils.import_leaf_libraries import (
     preview_from_csv,
     preview_from_json,
     preview_import_rows,
     validate_import_row,
 )
-from gametheca.utils.propose_leaf_libraries import is_family_parent_name
+from oneirodex.utils.propose_leaf_libraries import is_family_parent_name
 
 
 def test_good_switch_json_row(tmp_path):
@@ -38,7 +38,7 @@ def test_good_switch_json_row(tmp_path):
     assert c['suggested_name'] == 'Nintendo Switch'
     assert os.path.normcase(c['path']) == os.path.normcase(os.path.normpath(path))
     # Module must never expose Library create
-    import gametheca.utils.import_leaf_libraries as mod
+    import oneirodex.utils.import_leaf_libraries as mod
     assert not hasattr(mod, 'Library')
 
 
@@ -136,12 +136,12 @@ def test_csv_switch_and_family_mixed(tmp_path):
 
 
 def test_empty_shelf_import_csv_preview_only():
-    csv_path = Path(__file__).resolve().parents[1] / 'docs' / 'strategy' / 'empty-shelf-import.csv'
+    csv_path = Path(__file__).resolve().parents[1] / 'docs' / 'admin' / 'empty-shelf-import.csv'
     text = csv_path.read_text(encoding='utf-8')
     result = preview_from_csv(text, allowed_bases=None)
     assert result['auto_create'] is False
     assert result['error_count'] == 0
-    assert result['count'] == 27
+    assert result['count'] == 29
     platforms = {row['platform'] for row in result['candidates']}
     assert platforms == {
         'VB', 'WII', 'N3DS', 'PSVITA',
@@ -149,7 +149,7 @@ def test_empty_shelf_import_csv_preview_only():
         'VICE_X64SC', 'VICE_X128', 'VICE_XVIC', 'VICE_XPLUS4', 'VICE_XPET',
         'WII_U', 'POKE_MINI', 'CD_I', 'SEGA_PICO', 'JAGUAR_CD', 'AMIGA_CD32',
         'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
-        'ATARI_8BIT', 'X68000', 'PC_98',
+        'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO', 'GAME_WATCH',
     }
     assert all(row['path'].replace('\\', '/').startswith('/storage/_console-gaming/') for row in result['candidates'])
     wii = next(row for row in result['candidates'] if row['platform'] == 'WII')

@@ -202,15 +202,15 @@ export function StockPicker({
   }, [selected, loadCatalog])
 
   return (
-    <section className="gt-stock-picker" aria-label={heading} data-testid="stock-picker">
-      <div className="gt-stock-picker__head">
+    <section className="od-stock-picker" aria-label={heading} data-testid="stock-picker">
+      <div className="od-stock-picker__head">
         <div>
-          <h2 className="gt-admin-panel-title">{heading}</h2>
-          <p className="gt-admin-lede">{lede}</p>
+          <h2 className="od-admin-panel-title">{heading}</h2>
+          <p className="od-admin-lede">{lede}</p>
         </div>
         <button
           type="button"
-          className="gt-btn"
+          className="od-btn"
           disabled={loading || Boolean(busy)}
           onClick={loadCatalog}
         >
@@ -222,12 +222,12 @@ export function StockPicker({
           state, so it stays as it is. */}
       <PageStatus error={error} />
       {status ? (
-        <p className="gt-admin-lede" role="status">
+        <p className="od-admin-lede" role="status">
           {status}
         </p>
       ) : null}
 
-      <div className="gt-stock-picker__filters" role="group" aria-label="Catalog filter">
+      <div className="od-stock-picker__filters" role="group" aria-label="Catalog filter">
         {[
           { id: 'all', label: 'All' },
           { id: 'era', label: 'Decade rooms' },
@@ -237,7 +237,7 @@ export function StockPicker({
           <button
             key={f.id}
             type="button"
-            className={`gt-stock-picker__filter${filter === f.id ? ' is-active' : ''}`}
+            className={`od-stock-picker__filter${filter === f.id ? ' is-active' : ''}`}
             aria-pressed={filter === f.id}
             onClick={() => setFilter(f.id)}
           >
@@ -250,37 +250,37 @@ export function StockPicker({
         <PageStatus
           loading
           loadingMessage="Loading catalog…"
-          className="gt-stock-picker__empty"
+          className="od-stock-picker__empty"
         />
       ) : unavailable ? (
-        <div className="gt-stock-picker__empty" data-testid="stock-picker-unavailable">
-          <p className="gt-stock-picker__empty-title">Stock catalog coming online</p>
+        <div className="od-stock-picker__empty" data-testid="stock-picker-unavailable">
+          <p className="od-stock-picker__empty-title">Stock catalog coming online</p>
           <p>
             <code>GET {STOCK_CATALOG_URL}</code> is not available yet. Use Studio generate + Set as
             fallback until the pack list ships.
           </p>
         </div>
       ) : visible.length === 0 ? (
-        <div className="gt-stock-picker__empty" data-testid="stock-picker-empty">
-          <p className="gt-stock-picker__empty-title">No packs in this filter</p>
+        <div className="od-stock-picker__empty" data-testid="stock-picker-empty">
+          <p className="od-stock-picker__empty-title">No packs in this filter</p>
           <p>Try All, or regenerate stock packs on the server.</p>
         </div>
       ) : (
-        <div className="gt-stock-picker__grid" data-testid="stock-picker-grid">
+        <div className="od-stock-picker__grid" data-testid="stock-picker-grid">
           {visible.map((item) => {
             const selectedNow = item.id === selectedId
             return (
               <button
                 key={item.id}
                 type="button"
-                className={`gt-stock-picker__card${selectedNow ? ' is-selected' : ''}${
+                className={`od-stock-picker__card${selectedNow ? ' is-selected' : ''}${
                   item.generated ? '' : ' is-pending'
                 }`}
                 aria-label={item.label}
                 aria-pressed={selectedNow}
                 onClick={() => setSelectedId(item.id)}
               >
-                <span className="gt-stock-picker__thumb">
+                <span className="od-stock-picker__thumb">
                   {item.thumb ? (
                     <img
                       src={item.thumb}
@@ -291,14 +291,14 @@ export function StockPicker({
                       }}
                     />
                   ) : (
-                    <span className="gt-stock-picker__thumb-ph" aria-hidden="true">
+                    <span className="od-stock-picker__thumb-ph" aria-hidden="true">
                       {item.kind === 'platform' ? '◆' : item.kind === 'era' ? '▣' : '◇'}
                     </span>
                   )}
                 </span>
-                <span className="gt-stock-picker__meta">
+                <span className="od-stock-picker__meta">
                   <strong>{item.label}</strong>
-                  <span className="gt-stock-picker__kind">
+                  <span className="od-stock-picker__kind">
                     {item.kind === 'platform'
                       ? item.platform
                         ? `Platform · ${item.platform}`
@@ -316,12 +316,12 @@ export function StockPicker({
       )}
 
       {selected ? (
-        <div className="gt-stock-picker__preview" data-testid="stock-picker-preview">
+        <div className="od-stock-picker__preview" data-testid="stock-picker-preview">
           <figure>
             {selected.preview ? (
               <img src={selected.preview} alt={`Preview of ${selected.label}`} />
             ) : (
-              <div className="gt-stock-picker__thumb-ph gt-stock-picker__thumb-ph--lg">
+              <div className="od-stock-picker__thumb-ph od-stock-picker__thumb-ph--lg">
                 {selected.generated
                   ? selected.label
                   : `${selected.label} — generate to paint files`}
@@ -336,11 +336,11 @@ export function StockPicker({
               {selected.hint ? <span>{selected.hint}</span> : null}
             </figcaption>
           </figure>
-          <div className="gt-stock-picker__actions">
+          <div className="od-stock-picker__actions">
             {!selected.generated ? (
               <button
                 type="button"
-                className="gt-btn"
+                className="od-btn"
                 disabled={Boolean(busy)}
                 onClick={generateSelected}
               >
@@ -349,7 +349,7 @@ export function StockPicker({
             ) : null}
             <button
               type="button"
-              className="gt-btn gt-btn--primary"
+              className="od-btn od-btn--primary"
               disabled={Boolean(busy)}
               onClick={() => applySelected('fallback')}
             >
@@ -357,7 +357,7 @@ export function StockPicker({
             </button>
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               disabled={Boolean(busy)}
               onClick={() => applySelected('fallback')}
             >
@@ -365,7 +365,7 @@ export function StockPicker({
             </button>
             {showLibraryUuid ? (
               <>
-                <label className="gt-stock-picker__uuid">
+                <label className="od-stock-picker__uuid">
                   <span>Library UUID</span>
                   <input
                     type="text"
@@ -377,7 +377,7 @@ export function StockPicker({
                 </label>
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={Boolean(busy) || !libraryUuid.trim()}
                   onClick={() => applySelected('library')}
                 >

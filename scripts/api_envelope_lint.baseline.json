@@ -1,8 +1,8 @@
 {
-  "gametheca/routes_apis/ai_assist.py": 1,
-  "gametheca/routes_apis/game.py": 6,
-  "gametheca/routes_apis/library.py": 1,
-  "gametheca/routes_apis/oidc_status.py": 1,
-  "gametheca/routes_apis/storage.py": 1,
-  "gametheca/routes_info.py": 1
+  "oneirodex/routes_apis/ai_assist.py": 1,
+  "oneirodex/routes_apis/game.py": 6,
+  "oneirodex/routes_apis/library.py": 1,
+  "oneirodex/routes_apis/oidc_status.py": 1,
+  "oneirodex/routes_apis/storage.py": 1,
+  "oneirodex/routes_info.py": 1
 }

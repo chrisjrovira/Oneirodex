@@ -9,9 +9,9 @@ import pytest
 from PIL import Image
 from werkzeug.datastructures import FileStorage
 
-from gametheca.models import User
-from gametheca.utils.chat import ALLOWED_REACTIONS, is_allowed_reaction
-from gametheca.utils.custom_emoji import (
+from oneirodex.models import User
+from oneirodex.utils.chat import ALLOWED_REACTIONS, is_allowed_reaction
+from oneirodex.utils.custom_emoji import (
     MAX_CUSTOM_EMOJI,
     delete_custom_emoji,
     list_custom_emoji,

@@ -1,0 +1,972 @@
+/* Shared page shell for the simple admin pages that have no stylesheet of
+   their own. Everything is scoped under .od-adminpage so this sheet can be
+   loaded alongside the global component sheets without leaking into pages
+   that have not opted in. Colours come from the --od-* tokens only. */
+
+.od-adminpage {
+    --od-adminpage-max: 1400px;
+    --od-adminpage-radius: 14px;
+    --od-adminpage-radius-sm: 8px;
+    --od-adminpage-pad: clamp(1rem, 2.2vw, 1.75rem);
+    --od-adminpage-gap: 1.25rem;
+    --od-adminpage-raise: color-mix(in srgb, var(--od-text) 6%, var(--od-surface));
+
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--od-adminpage-max);
+    margin-inline: auto;
+    color: var(--od-text);
+    font-family: var(--font-ui);
+    line-height: 1.55;
+}
+
+/* Horizontal gutter comes from Bootstrap's .container (or from the legacy
+   .container-settings padding) so this shell never fights an existing one. */
+.od-adminpage--spaced {
+    margin-block: 2rem;
+}
+
+.od-adminpage *,
+.od-adminpage *::before,
+.od-adminpage *::after {
+    box-sizing: border-box;
+}
+
+.od-adminpage--sm {
+    --od-adminpage-max: 640px;
+}
+
+.od-adminpage--md {
+    --od-adminpage-max: 760px;
+}
+
+.od-adminpage--lg {
+    --od-adminpage-max: 960px;
+}
+
+.od-adminpage--xl {
+    --od-adminpage-max: 1600px;
+}
+
+/* The page shell owns the width, not Bootstrap (W27-D7).
+ *
+ * Several tab panes still carry Bootstrap's `.container`, which applies its own
+ * stepped max-widths — 1320px at xxl. Inside a `--xl` page that is 1600px wide,
+ * those panes rendered visibly narrower than their siblings: on Libraries &
+ * scans, four of the seven tabs were inset while the other three were not, so
+ * the card appeared to change width as you moved between tabs.
+ *
+ * Neutralised here rather than by editing each template's class list: the shell
+ * is the thing that should decide page width, and a new pane copied from an
+ * existing one would otherwise reintroduce it. Bootstrap's gutter padding is
+ * left alone — only the cap is wrong, not the spacing. */
+.od-adminpage .container {
+    max-width: none;
+    width: 100%;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.od-adminpage-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--od-adminpage-gap);
+    margin-bottom: var(--od-adminpage-gap);
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--od-border);
+}
+
+.od-adminpage-header > div {
+    flex: 1 1 20rem;
+    min-width: 0;
+}
+
+.od-adminpage-header > .od-adminpage-header-actions {
+    flex: 0 0 auto;
+}
+
+/* Demoted: the admin top nav already names the active section (active link
+   + "<Section> home" button), so this in-page title is redundant next to
+   it. Kept as a real heading for a11y/landmarks, styled as a compact
+   eyebrow label instead of a second hero-sized title. */
+.od-adminpage-header h1,
+.od-adminpage-header h2,
+.od-adminpage-title {
+    margin: 0 0 0.35rem;
+    color: var(--od-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--od-font-sm);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.od-adminpage-header h1 i,
+.od-adminpage-header h2 i,
+.od-adminpage-title i {
+    margin-right: 0.4rem;
+    color: var(--od-accent);
+    font-size: var(--od-font-base);
+}
+
+/* A few legacy pages (Integrations) put their page title in a plain
+   `.card` at the top of `.od-adminpage` instead of the `.od-adminpage-title`
+   shell — demote that first heading too so it doesn't duplicate the active
+   top-nav section label. Scoped tightly (direct child + first-child) so it
+   never touches headings inside nested/secondary cards. */
+.od-adminpage > .card > h1:first-child,
+.od-adminpage > .card > h2:first-child {
+    margin: 0 0 0.35rem;
+    color: var(--od-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--od-font-sm);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.od-adminpage-lede,
+.od-adminpage-header p {
+    margin: 0;
+    max-width: 68ch;
+    color: var(--od-text-muted);
+    font-size: var(--od-font-base);
+}
+
+.od-adminpage-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+/* ------------------------------------------------------ panels / surfaces */
+
+.od-adminpage-panel {
+    background: var(--od-surface);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius);
+    padding: var(--od-adminpage-pad);
+    margin-bottom: var(--od-adminpage-gap);
+    color: var(--od-text);
+}
+
+.od-adminpage-panel:last-child {
+    margin-bottom: 0;
+}
+
+.od-adminpage-panel > :first-child {
+    margin-top: 0;
+}
+
+.od-adminpage-panel > :last-child {
+    margin-bottom: 0;
+}
+
+.od-adminpage-panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--od-border);
+}
+
+.od-adminpage-panel-header > h2,
+.od-adminpage-panel-header > h3,
+.od-adminpage-panel-header > h4 {
+    margin: 0;
+}
+
+.od-adminpage-panel h2,
+.od-adminpage-panel h3,
+.od-adminpage-panel h4,
+.od-adminpage-panel h5 {
+    color: var(--od-text);
+    font-weight: 600;
+}
+
+.od-adminpage-panel h2 {
+    font-size: var(--od-font-xl);
+}
+
+.od-adminpage-panel h3 {
+    font-size: var(--od-font-lg);
+}
+
+.od-adminpage-panel h4,
+.od-adminpage-panel h5 {
+    font-size: var(--od-font-base);
+}
+
+/* Sub-blocks inside a panel — used by the settings-style pages. */
+.od-adminpage .settings-section,
+.od-adminpage-section {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    height: 100%;
+}
+
+.od-adminpage .section-header,
+.od-adminpage-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--od-border);
+    color: var(--od-text);
+    font-size: var(--od-font-base);
+    font-weight: 600;
+}
+
+.od-adminpage .section-header i,
+.od-adminpage-section-header i {
+    color: var(--od-accent);
+}
+
+.od-adminpage .info-panel {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-left: 3px solid var(--od-accent);
+    border-radius: var(--od-adminpage-radius-sm);
+    padding: 1rem;
+    color: var(--od-text-muted);
+}
+
+.od-adminpage .info-panel h4 {
+    margin-top: 0;
+    color: var(--od-text);
+}
+
+.od-adminpage .info-panel hr {
+    border-color: var(--od-border);
+    opacity: 1;
+}
+
+.od-adminpage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--od-adminpage-gap);
+}
+
+/* ---------------------------------------------------------- typography */
+
+.od-adminpage p {
+    color: var(--od-text);
+}
+
+.od-adminpage a {
+    color: var(--od-accent);
+    text-decoration: none;
+}
+
+.od-adminpage a:hover,
+.od-adminpage a:focus-visible {
+    color: color-mix(in srgb, var(--od-accent) 75%, var(--od-text));
+    text-decoration: underline;
+}
+
+/* Controls that happen to be <a> must not pick up the prose underline. */
+.od-adminpage a.od-cbtn,
+.od-adminpage a.od-cbtn:hover,
+.od-adminpage a.od-cbtn:focus-visible,
+.od-adminpage a.od-seg__item,
+.od-adminpage a.od-seg__item:hover,
+.od-adminpage a.od-seg__item:focus-visible {
+    text-decoration: none;
+}
+
+.od-adminpage a.od-cbtn {
+    color: var(--od-text-muted);
+}
+
+.od-adminpage a.od-cbtn:hover,
+.od-adminpage a.od-cbtn:focus-visible {
+    color: var(--od-text);
+}
+
+.od-adminpage :focus-visible {
+    outline: 2px solid var(--od-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--od-radius-xs);
+}
+
+.od-adminpage code,
+.od-adminpage kbd {
+    padding: 0.1em 0.4em;
+    border-radius: var(--od-radius-xs);
+    background: color-mix(in srgb, var(--od-accent) 14%, var(--od-surface-2));
+    color: var(--od-accent);
+    font-size: var(--od-font-md);
+}
+
+.od-adminpage hr {
+    border: 0;
+    border-top: 1px solid var(--od-border);
+    opacity: 1;
+    margin: var(--od-adminpage-gap) 0;
+}
+
+.od-adminpage small,
+.od-adminpage .small {
+    color: var(--od-text-muted);
+}
+
+/* Bootstrap's .text-muted resolves to a grey that fails contrast on the dark
+   surfaces, and it ships with !important — match that to win. */
+.od-adminpage .text-muted {
+    color: var(--od-text-muted) !important;
+}
+
+.od-adminpage-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 1.6rem;
+    color: var(--od-text-muted);
+    font-size: var(--od-font-md);
+}
+
+.od-adminpage-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+    border: 1px dashed var(--od-border);
+    border-radius: var(--od-adminpage-radius);
+    background: var(--od-surface-2);
+    color: var(--od-text-muted);
+    text-align: center;
+}
+
+.od-adminpage-empty i {
+    font-size: var(--od-font-3xl);
+    color: color-mix(in srgb, var(--od-accent) 70%, var(--od-text-muted));
+}
+
+/* Preformatted API/JSON output blocks. */
+.od-adminpage-output,
+.od-adminpage pre {
+    min-height: 6rem;
+    max-height: 30rem;
+    margin: 0 0 var(--od-adminpage-gap);
+    padding: 1rem;
+    overflow: auto;
+    background: var(--od-bg);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+    color: var(--od-text);
+    font-size: var(--od-font-sm);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.od-adminpage-output:empty::before {
+    content: "No output yet.";
+    color: var(--od-text-muted);
+}
+
+/* --------------------------------------------------------------- forms */
+
+.od-adminpage .form-label,
+.od-adminpage label {
+    color: var(--od-text);
+    font-size: var(--od-font-md);
+    font-weight: 500;
+}
+
+.od-adminpage .form-text,
+.od-adminpage .form-check-label {
+    color: var(--od-text-muted);
+}
+
+.od-adminpage .form-check-label {
+    font-weight: 400;
+}
+
+.od-adminpage .form-control,
+.od-adminpage .form-select,
+.od-adminpage textarea {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+    color: var(--od-text);
+}
+
+.od-adminpage .form-control:focus,
+.od-adminpage .form-select:focus,
+.od-adminpage textarea:focus {
+    background: var(--od-surface-2);
+    border-color: var(--od-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 30%, transparent);
+    color: var(--od-text);
+    outline: none;
+}
+
+.od-adminpage .form-control::placeholder,
+.od-adminpage textarea::placeholder {
+    color: color-mix(in srgb, var(--od-text-muted) 75%, var(--od-surface));
+    opacity: 1;
+}
+
+.od-adminpage .form-select option {
+    background: var(--od-surface-2);
+    color: var(--od-text);
+}
+
+.od-adminpage .form-check-input {
+    background-color: var(--od-surface-2);
+    border: 1px solid color-mix(in srgb, var(--od-text-muted) 60%, transparent);
+}
+
+.od-adminpage .form-check-input:checked {
+    background-color: var(--od-accent);
+    border-color: var(--od-accent);
+}
+
+.od-adminpage .form-check-input:focus {
+    border-color: var(--od-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--od-accent) 30%, transparent);
+}
+
+.od-adminpage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: var(--od-adminpage-gap);
+}
+
+/* ------------------------------------------------------------- buttons */
+
+.od-adminpage .btn {
+    border-radius: var(--od-adminpage-radius-sm);
+    font-weight: 600;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.od-adminpage .btn-primary {
+    background: var(--od-accent);
+    border-color: var(--od-accent);
+    color: var(--od-accent-contrast);
+}
+
+.od-adminpage .btn-primary:hover,
+.od-adminpage .btn-primary:focus-visible {
+    background: color-mix(in srgb, var(--od-accent) 82%, var(--od-text));
+    border-color: color-mix(in srgb, var(--od-accent) 82%, var(--od-text));
+    color: var(--od-accent-contrast);
+}
+
+.od-adminpage .btn-secondary,
+.od-adminpage .btn-outline-secondary,
+.od-adminpage .btn-outline-primary {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    color: var(--od-text);
+}
+
+.od-adminpage .btn-secondary:hover,
+.od-adminpage .btn-outline-secondary:hover,
+.od-adminpage .btn-outline-primary:hover,
+.od-adminpage .btn-secondary:focus-visible,
+.od-adminpage .btn-outline-secondary:focus-visible,
+.od-adminpage .btn-outline-primary:focus-visible {
+    background: var(--od-adminpage-raise);
+    border-color: var(--od-accent);
+    color: var(--od-text);
+}
+
+.od-adminpage .btn-outline-primary {
+    border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+    color: var(--od-accent);
+}
+
+.od-adminpage .btn:disabled,
+.od-adminpage .btn.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.od-adminpage-backlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: var(--od-adminpage-gap);
+    color: var(--od-text-muted);
+    font-size: var(--od-font-md);
+}
+
+.od-adminpage-backlink:hover {
+    color: var(--od-accent);
+}
+
+/* -------------------------------------------------------------- tables */
+
+.od-adminpage .table,
+.od-adminpage-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: var(--od-text);
+    vertical-align: middle;
+}
+
+.od-adminpage .table > :not(caption) > * > *,
+.od-adminpage-table > :not(caption) > * > * {
+    background: transparent;
+    border-bottom: 1px solid var(--od-border);
+    box-shadow: none;
+    color: var(--od-text);
+    padding: 0.7rem 0.85rem;
+}
+
+.od-adminpage .table thead th,
+.od-adminpage-table thead th {
+    background: var(--od-surface-2);
+    border-bottom: 1px solid var(--od-border);
+    color: var(--od-text-muted);
+    font-size: var(--od-font-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.od-adminpage .table tbody tr:hover > *,
+.od-adminpage-table tbody tr:hover > * {
+    background: var(--od-adminpage-raise);
+}
+
+.od-adminpage .table tbody tr:last-child > * {
+    border-bottom: 0;
+}
+
+.od-adminpage .table-responsive {
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius);
+    overflow-x: auto;
+    background: var(--od-surface);
+}
+
+/* DataTables draws its own chrome around the table with unthemed native
+   controls; pull those onto the token palette too. */
+.od-adminpage .dataTables_wrapper .dataTables_length,
+.od-adminpage .dataTables_wrapper .dataTables_filter,
+.od-adminpage .dataTables_wrapper .dataTables_info,
+.od-adminpage .dataTables_wrapper .dataTables_paginate {
+    color: var(--od-text-muted);
+}
+
+.od-adminpage .dataTables_wrapper select,
+.od-adminpage .dataTables_wrapper input[type="search"] {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+    color: var(--od-text);
+    padding: 0.25rem 0.5rem;
+}
+
+.od-adminpage .dataTables_wrapper .paginate_button {
+    color: var(--od-text) !important;
+}
+
+.od-adminpage .dataTables_wrapper .paginate_button.current {
+    background: var(--od-accent) !important;
+    border-color: var(--od-accent) !important;
+    color: var(--od-accent-contrast) !important;
+}
+
+.od-adminpage .dataTables_wrapper .paginate_button.disabled {
+    color: var(--od-text-muted) !important;
+}
+
+/* --------------------------------------------------------- list groups */
+
+.od-adminpage .list-group {
+    border-radius: var(--od-adminpage-radius-sm);
+}
+
+.od-adminpage .list-group-item {
+    background: var(--od-surface-2);
+    border-color: var(--od-border);
+    color: var(--od-text);
+}
+
+.od-adminpage .list-group-item:hover {
+    background: var(--od-adminpage-raise);
+}
+
+/* ---------------------------------------------------------------- tabs */
+
+.od-adminpage .nav-tabs {
+    border-bottom: 1px solid var(--od-border);
+    gap: 0.25rem;
+}
+
+.od-adminpage .nav-tabs .nav-link {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--od-adminpage-radius-sm) var(--od-adminpage-radius-sm) 0 0;
+    color: var(--od-text-muted);
+    font-weight: 600;
+}
+
+.od-adminpage .nav-tabs .nav-link:hover {
+    border-color: var(--od-border);
+    color: var(--od-text);
+}
+
+.od-adminpage .nav-tabs .nav-link.active {
+    background: var(--od-surface);
+    border-color: var(--od-border) var(--od-border) var(--od-surface);
+    color: var(--od-text);
+}
+
+.od-adminpage .tab-content {
+    background: var(--od-surface);
+    border: 1px solid var(--od-border);
+    border-top: 0;
+    border-radius: 0 0 var(--od-adminpage-radius) var(--od-adminpage-radius);
+    padding: var(--od-adminpage-pad);
+    color: var(--od-text);
+}
+
+/* ---------------------------------------------------------- pagination */
+
+.od-adminpage .page-link {
+    background: var(--od-surface-2);
+    border-color: var(--od-border);
+    color: var(--od-text);
+}
+
+.od-adminpage .page-link:hover {
+    background: var(--od-adminpage-raise);
+    border-color: var(--od-accent);
+    color: var(--od-text);
+}
+
+.od-adminpage .page-item.active .page-link {
+    background: var(--od-accent);
+    border-color: var(--od-accent);
+    color: var(--od-accent-contrast);
+}
+
+.od-adminpage .page-item.disabled .page-link {
+    background: var(--od-surface);
+    border-color: var(--od-border);
+    color: var(--od-text-muted);
+}
+
+/* -------------------------------------------------------------- alerts */
+
+.od-adminpage .alert {
+    border-radius: var(--od-adminpage-radius-sm);
+}
+
+.od-adminpage .alert-secondary {
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    color: var(--od-text);
+}
+
+/* -------------------------------------------------------- misc content */
+
+.od-adminpage .newsletter-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem 1.5rem;
+    padding: 1rem;
+    margin-bottom: var(--od-adminpage-gap);
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+    color: var(--od-text-muted);
+}
+
+.od-adminpage .newsletter-meta p {
+    margin: 0;
+    color: var(--od-text-muted);
+}
+
+.od-adminpage .newsletter-content {
+    color: var(--od-text);
+}
+
+.od-adminpage .setup-steps ol,
+.od-adminpage .setup-steps ul {
+    color: var(--od-text);
+    padding-left: 1.35rem;
+}
+
+.od-adminpage .setup-steps li {
+    margin-bottom: 0.35rem;
+}
+
+.od-adminpage .setup-steps h4 {
+    margin-top: 1.5rem;
+    color: var(--od-accent);
+}
+
+/* Chart.js canvases need a bounded box or they grow unbounded and dual-axis
+   scroll the page (W27-D3). Grid, not Bootstrap columns, so leftover horizontal
+   space is empty cells rather than a second scrollbar. */
+.od-adminpage-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+    gap: var(--od-adminpage-gap);
+    overflow-x: hidden;
+}
+
+.od-adminpage-chart {
+    position: relative;
+    height: 17.5rem;
+    min-height: 17.5rem;
+    max-height: 17.5rem;
+    max-width: 100%;
+    overflow: hidden;
+    margin-bottom: 0;
+    padding: 1rem;
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+}
+
+.od-adminpage-chart canvas {
+    display: block;
+    max-width: 100%;
+}
+
+/* Emulator profile rows are built by inline JS; style the generated classes. */
+.od-adminpage .od-emu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.od-adminpage .od-emu-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+}
+
+/* Aurora meters (prefer over Bootstrap .progress on densified pages) */
+.od-meter {
+    position: relative;
+    width: 100%;
+    height: 1.5rem;
+    background: color-mix(in srgb, var(--od-bg) 55%, var(--od-surface));
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-adminpage-radius-sm);
+    overflow: hidden;
+}
+
+.od-meter__fill {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--od-accent) 45%, var(--od-bg)),
+        color-mix(in srgb, var(--od-accent) 65%, var(--od-bg))
+    );
+    transition: width 0.35s ease;
+    border-radius: inherit;
+}
+
+.od-meter__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--od-font-xs);
+    font-weight: 600;
+    color: var(--od-text);
+    text-shadow: 0 0 3px var(--od-bg);
+    pointer-events: none;
+}
+
+/* --------------------------------------------------------- responsive */
+
+@media (max-width: 768px) {
+    .od-adminpage {
+        --od-adminpage-pad: 1rem;
+    }
+
+    .od-adminpage--spaced {
+        margin-block: 1rem;
+    }
+
+    .od-adminpage-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .od-adminpage-header-actions {
+        margin-left: 0;
+    }
+
+    .od-adminpage .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+}
+
+/* --- Statistics headline strip + table (UX-C13) ---------------------------- */
+
+.od-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+}
+
+.od-stat-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--od-radius-lg);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface);
+}
+
+.od-stat-tile__label {
+    font-size: var(--od-font-xs);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--od-text-muted);
+}
+
+.od-stat-tile__value {
+    font-size: var(--od-font-2xl);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--od-accent);
+}
+
+.od-stat-table {
+    font-size: var(--od-font-md);
+}
+
+.od-stat-table .text-end {
+    text-align: right;
+}
+
+.od-adminpage-subtitle {
+    margin: 0 0 0.6rem;
+    font-size: var(--od-font-base);
+    font-weight: 650;
+}
+
+/* Full-pane System pages (Statistics, Download requests): edge-to-edge under
+   the thin top bar, charts/tiles react to viewport width. */
+.od-admin-fill {
+    --od-adminpage-max: none;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.od-admin-fill .od-adminpage-header {
+    flex: 0 0 auto;
+    margin-bottom: 0.65rem;
+}
+
+.od-admin-fill .od-stat-strip {
+    flex: 0 0 auto;
+}
+
+.od-admin-fill__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--od-adminpage-gap);
+    overflow: auto;
+}
+
+.od-admin-fill .od-adminpage-panel {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+
+.od-admin-fill .od-adminpage-charts {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 0.75rem;
+}
+
+.od-admin-fill .od-adminpage-chart {
+    height: clamp(14rem, 28vh, 22rem);
+    min-height: 14rem;
+    max-height: none;
+}
+
+.od-admin-fill--downloads .od-admin-fill__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.od-admin-fill--downloads .od-admin-fill__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+/* DataTables wraps the table in a sibling tree that can break flex height;
+   keep the wrapper filling the scroll host so only the table region scrolls. */
+.od-admin-fill--downloads .od-admin-fill__scroll .dataTables_wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.od-admin-fill--downloads .od-admin-fill__scroll .dataTables_scroll,
+.od-admin-fill--downloads .od-admin-fill__scroll .dataTables_scrollBody {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.od-admin-fill--downloads .od-adminpage-empty {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px dashed color-mix(in srgb, var(--od-accent) 35%, var(--od-border));
+    border-radius: var(--od-adminpage-radius);
+    background: color-mix(in srgb, var(--od-surface-2) 70%, transparent);
+    color: var(--od-text-muted);
+}

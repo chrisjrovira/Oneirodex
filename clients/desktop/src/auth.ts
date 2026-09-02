@@ -89,11 +89,11 @@ export function normalizeBaseUrl(baseUrl: string): string {
 const INVISIBLE_CHARS = /[\u200B-\u200D\uFEFF\u00AD]/g
 
 /**
- * GameTheca API token shape from server `generate_api_token` /
+ * Oneirodex API token shape from server `generate_api_token` /
  * `secrets.token_urlsafe`: `gt_<hexprefix>_<urlsafe-secret>`.
  * Secret may include `-` and `_` — never truncate at the last hyphen.
  */
-export const GAMETHECA_TOKEN_RE = /gt_[a-zA-Z0-9]+_[A-Za-z0-9_-]+/
+export const ONEIRODEX_TOKEN_RE = /gt_[a-zA-Z0-9]+_[A-Za-z0-9_-]+/
 
 /**
  * UI chrome sometimes glues onto the secret without a space (`…Copy`).
@@ -113,7 +113,7 @@ function stripWrappingQuotes(value: string): string {
   return next
 }
 
-function looksLikeGamethecaToken(value: string): boolean {
+function looksLikeOneirodexToken(value: string): boolean {
   if (!value.startsWith('gt_')) {
     return false
   }
@@ -141,7 +141,7 @@ function refineExtractedToken(candidate: string): string {
   let next = candidate
   // Peel glued Copy/Copied only when the remainder is still a valid token.
   const withoutUi = next.replace(GLUED_UI_SUFFIX_RE, '')
-  if (withoutUi !== next && looksLikeGamethecaToken(withoutUi)) {
+  if (withoutUi !== next && looksLikeOneirodexToken(withoutUi)) {
     next = withoutUi
   }
   return next
@@ -173,29 +173,29 @@ function isSafeExtractionSuffix(after: string): boolean {
 }
 
 /**
- * Trim paste noise before validating or storing a GameTheca API token.
+ * Trim paste noise before validating or storing a Oneirodex API token.
  * Strips BOM/zero-width, surrounding whitespace/newlines, wrapping quotes,
  * and extracts the first `gt_…` match when the paste includes labels/HTML/junk.
  * Does **not** truncate at the last `-` inside the urlsafe secret.
  */
-export function normalizeGamethecaToken(raw: string): string {
+export function normalizeOneirodexToken(raw: string): string {
   let value = raw.replace(INVISIBLE_CHARS, '')
   // Collapse clipboard newlines / tabs to spaces, then trim ends.
   value = value.replace(/[\r\n\t]+/g, ' ').trim()
   value = stripWrappingQuotes(value)
 
-  if (looksLikeGamethecaToken(value)) {
+  if (looksLikeOneirodexToken(value)) {
     return value
   }
 
   // Paste may be "API token: gt_…", HTML, or label + secret + junk.
   // Take the first well-shaped match — never split the secret on `-`.
-  const match = GAMETHECA_TOKEN_RE.exec(value)
+  const match = ONEIRODEX_TOKEN_RE.exec(value)
   if (match?.[0] != null && match.index != null) {
     const after = value.slice(match.index + match[0].length)
     if (isSafeExtractionSuffix(after)) {
       const extracted = refineExtractedToken(match[0])
-      if (looksLikeGamethecaToken(extracted)) {
+      if (looksLikeOneirodexToken(extracted)) {
         return extracted
       }
     }
@@ -209,16 +209,16 @@ export function normalizeGamethecaToken(raw: string): string {
  * `verify_bearer_token`: `gt_` + prefix + `_` + urlsafe secret.
  * Secret may contain `_` and `-` (`secrets.token_urlsafe`).
  */
-export function isGamethecaToken(token: string): boolean {
-  return looksLikeGamethecaToken(normalizeGamethecaToken(token))
+export function isOneirodexToken(token: string): boolean {
+  return looksLikeOneirodexToken(normalizeOneirodexToken(token))
 }
 
 /** Short diagnostic for companion console (never logs the secret). */
 export function describeTokenPaste(raw: string): string {
-  const normalized = normalizeGamethecaToken(raw)
+  const normalized = normalizeOneirodexToken(raw)
   const rawLen = raw.length
   const normLen = normalized.length
-  const shapeOk = looksLikeGamethecaToken(normalized)
+  const shapeOk = looksLikeOneirodexToken(normalized)
   const prefixMatch = normalized.match(/^gt_([a-zA-Z0-9]+)_/)
   const prefix = prefixMatch?.[1] ?? '(none)'
   const endsWithHyphen = normalized.endsWith('-')

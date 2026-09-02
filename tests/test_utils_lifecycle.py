@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from gametheca.utils.lifecycle import (
+from oneirodex.utils.lifecycle import (
     FRESHNESS_BEHIND_STATUSES,
     game_has_updates_available,
     web_client_connected,
@@ -61,7 +61,7 @@ def test_updates_count_zero_does_not_trigger_without_freshness():
 
 
 def test_serialize_discover_game_includes_lifecycle_fields(app):
-    from gametheca.routes_discover import serialize_discover_game
+    from oneirodex.routes_discover import serialize_discover_game
 
     game = SimpleNamespace(
         id=1,
@@ -82,7 +82,7 @@ def test_serialize_discover_game_includes_lifecycle_fields(app):
     # the game-aware wrapper, and patching the name it does not hold raises
     # AttributeError before the assertions below ever run.
     with app.app_context(), patch(
-        'gametheca.routes_discover.resolve_game_cover_url',
+        'oneirodex.routes_discover.resolve_game_cover_url',
         return_value='/static/newstyle/default_cover.jpg',
     ):
         result = serialize_discover_game(

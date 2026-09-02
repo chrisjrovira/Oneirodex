@@ -22,7 +22,7 @@ Related: [browser-play.md](../user/browser-play.md) · [browser-play-engines.md]
 ## Storage path
 
 ```
-gametheca/static/vendor/webretro/cores/
+oneirodex/static/vendor/webretro/cores/
   {core_id}_libretro.js
   {core_id}_libretro.wasm
 ```
@@ -32,7 +32,7 @@ where the first-boot fetch writes them, provided the volume is writable:
 
 ```yaml
 # docker-compose.yml (uncomment when ready)
-# - "${WEBRETRO_CORES_HOST_PATH}:/app/gametheca/static/vendor/webretro/cores"
+# - "${WEBRETRO_CORES_HOST_PATH}:/app/oneirodex/static/vendor/webretro/cores"
 ```
 
 ## One-command fetch

@@ -4,12 +4,12 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from sqlalchemy import select, func
 
-from gametheca import create_app, db
-from gametheca.models import (
+from oneirodex import create_app, db
+from oneirodex.models import (
     User, Game, Library, Genre, GameMode, Theme, Platform, 
     PlayerPerspective, Image, UserPreference
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 
 
 
@@ -115,13 +115,13 @@ class TestLibraryBlueprint:
 
     """Test cases for the library blueprint."""
 
-    @patch('gametheca.routes_library.get_global_settings')
+    @patch('oneirodex.routes_library.get_global_settings')
     def test_inject_settings_context_processor(self, mock_get_global_settings, app, db_session):
         """Test the inject_settings context processor."""
         mock_get_global_settings.return_value = {'test_setting': 'test_value'}
         
         with app.app_context():
-            from gametheca.routes_library import inject_settings
+            from oneirodex.routes_library import inject_settings
             result = inject_settings()
             
         assert result == {'test_setting': 'test_value'}
@@ -147,7 +147,7 @@ class TestLibraryBlueprint:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_library.render_template') as mock_render:
+        with patch('oneirodex.routes_library.render_template') as mock_render:
             mock_render.return_value = 'rendered template'
             response = client.get('/libraries')
             
@@ -173,9 +173,9 @@ class TestLibraryBlueprint:
         # Ensure user has no preferences initially
         assert test_user.preferences is None
         
-        with patch('gametheca.routes_library.get_games') as mock_get_games:
+        with patch('oneirodex.routes_library.get_games') as mock_get_games:
             mock_get_games.return_value = ([], 0, 0, 1)
-            with patch('gametheca.routes_library.render_template') as mock_render:
+            with patch('oneirodex.routes_library.render_template') as mock_render:
                 mock_render.return_value = 'rendered template'
                 response = client.get('/library')
         
@@ -261,11 +261,11 @@ class TestGetGamesFunction:
     def test_get_games_basic(self, app, db_session, test_game, test_library):
         """Test basic get_games functionality."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games()
                 
         assert isinstance(games, list)
@@ -276,11 +276,11 @@ class TestGetGamesFunction:
     def test_get_games_with_library_filter(self, app, db_session, test_game, test_library):
         """Test get_games with library filter."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(library_uuid=test_library.uuid)
                 
         assert isinstance(games, list)
@@ -288,11 +288,11 @@ class TestGetGamesFunction:
     def test_get_games_with_library_name_filter(self, app, db_session, test_game, test_library):
         """Test get_games with library_name filter."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(library_name=test_library.name)
                 
         assert isinstance(games, list)
@@ -300,11 +300,11 @@ class TestGetGamesFunction:
     def test_get_games_with_invalid_library_name(self, app, db_session):
         """Test get_games with invalid library_name returns empty result."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(library_name='NonExistentLibrary')
                 
         assert games == []
@@ -319,11 +319,11 @@ class TestGetGamesFunction:
         db_session.commit()
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(genre='Action')
                 
         assert isinstance(games, list)
@@ -331,11 +331,11 @@ class TestGetGamesFunction:
     def test_get_games_with_rating_filter(self, app, db_session, test_game):
         """Test get_games with rating filter."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(rating=80)
                 
         assert isinstance(games, list)
@@ -343,11 +343,11 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_name(self, app, db_session, test_game):
         """Test get_games sorting by name."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(sort_by='name', sort_order='asc')
                 
         assert isinstance(games, list)
@@ -355,11 +355,11 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_rating(self, app, db_session, test_game):
         """Test get_games sorting by rating."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(sort_by='rating', sort_order='desc')
                 
         assert isinstance(games, list)
@@ -367,11 +367,11 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_date(self, app, db_session, test_game):
         """Test get_games sorting by first_release_date."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(sort_by='first_release_date', sort_order='asc')
                 
         assert isinstance(games, list)
@@ -379,11 +379,11 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_size(self, app, db_session, test_game):
         """Test get_games sorting by size."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(sort_by='size', sort_order='asc')
                 
         assert isinstance(games, list)
@@ -391,11 +391,11 @@ class TestGetGamesFunction:
     def test_get_games_sorting_by_date_identified(self, app, db_session, test_game):
         """Test get_games sorting by date_identified."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(sort_by='date_identified', sort_order='desc')
                 
         assert isinstance(games, list)
@@ -403,11 +403,11 @@ class TestGetGamesFunction:
     def test_get_games_pagination(self, app, db_session, test_game):
         """Test get_games pagination."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games(page=1, per_page=5)
                 
         assert isinstance(games, list)
@@ -425,28 +425,28 @@ class TestGetGamesFunction:
         db_session.commit()
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games()
                 
         assert isinstance(games, list)
         if games:
             assert 'cover_url' in games[0]
 
-    @patch('gametheca.routes_library.format_size')
+    @patch('oneirodex.routes_library.format_size')
     def test_get_games_formats_size(self, mock_format_size, app, db_session, test_game):
         """Test get_games formats game size."""
         mock_format_size.return_value = "1.0 MB"
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games()
                 
         if games:
@@ -455,11 +455,11 @@ class TestGetGamesFunction:
     def test_get_games_unauthenticated_user(self, app, db_session, test_game):
         """Test get_games with unauthenticated user."""
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = False
                 mock_current_user.id = None
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games()
                 
         assert isinstance(games, list)
@@ -471,11 +471,11 @@ class TestGetGamesFunction:
         db_session.commit()
         
         with app.app_context():
-            with patch('gametheca.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
+            with patch('oneirodex.routes_library.current_user', new_callable=MagicMock) as mock_current_user:
                 mock_current_user.is_authenticated = True
                 mock_current_user.id = 1
                 
-                from gametheca.routes_library import get_games
+                from oneirodex.routes_library import get_games
                 games, total, pages, current_page = get_games()
                 
         if games:

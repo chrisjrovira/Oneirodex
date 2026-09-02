@@ -88,7 +88,7 @@ test('failed save uses PageStatus', async () => {
 
 test('Invites and Support sit in the top bar when the slot exists (W33-9)', async () => {
   const slot = document.createElement('div')
-  slot.id = 'gt-admin-topbar-slot'
+  slot.id = 'od-admin-topbar-slot'
   document.body.appendChild(slot)
   mockFetch()
   try {
@@ -98,8 +98,13 @@ test('Invites and Support sit in the top bar when the slot exists (W33-9)', asyn
       'href',
       '/admin/invites',
     )
-    expect(within(slot).getByRole('link', { name: 'Support inbox' })).toBeInTheDocument()
-    expect(document.querySelector('.gt-admin-actions-row')).toBeNull()
+    const links = within(slot)
+      .getAllByRole('link')
+      .map((link) => link.textContent.trim())
+    expect(links).toEqual(['Invites', 'Support inbox', 'Invite quotas'])
+    // Topbar actions are portaled; Create user stays on the page (not a topbar row).
+    expect(within(slot).queryByRole('button', { name: 'Create user' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Create user' })).toBeInTheDocument()
   } finally {
     slot.remove()
   }

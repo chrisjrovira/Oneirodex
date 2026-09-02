@@ -258,7 +258,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
   return (
     <>
     {/* The heading here is the collection's *name*, not the page's. The v2
-          retirement rule matches `.gt-page-header > h1`, so under the new
+          retirement rule matches `.od-page-header > h1`, so under the new
           chrome this page was rendering with nothing at all to say which
           collection you were looking at. It moves to bar two's summary. */}
       {useNewChrome ? (
@@ -268,7 +268,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
             canEditMeta ? (
               <button
                 type="button"
-                className="gt-cbtn"
+                className="od-cbtn"
                 disabled={deleting}
                 onClick={handleDeleteCollection}
               >
@@ -278,18 +278,18 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="gt-more-page gt-collection">
-      <p className="gt-collection__crumb">
+    <div className="od-more-page od-collection">
+      <p className="od-collection__crumb">
         <Link to="/collections">← Collections</Link>
       </p>
       {useNewChrome ? null : (
         <>
-        <div className="gt-page-header gt-collection__header">
+        <div className="od-page-header od-collection__header">
           <h1>{collection?.name || 'Collection'}</h1>
           {canEditMeta ? (
             <button
               type="button"
-              className="gt-collections__delete"
+              className="od-collections__delete"
               disabled={deleting}
               onClick={handleDeleteCollection}
             >
@@ -300,12 +300,12 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
         </>
       )}
       {collection?.description && !canEditMeta ? (
-        <p className="gt-more-page__lede">{collection.description}</p>
+        <p className="od-more-page__lede">{collection.description}</p>
       ) : null}
 
       {canEditMeta ? (
-        <form className="gt-collections__form" onSubmit={handleSave}>
-          <label className="gt-collections__field">
+        <form className="od-collections__form" onSubmit={handleSave}>
+          <label className="od-collections__field">
             Name
             <input
               type="text"
@@ -315,7 +315,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
               onChange={(event) => setEditName(event.target.value)}
             />
           </label>
-          <label className="gt-collections__field">
+          <label className="od-collections__field">
             Description
             <input
               type="text"
@@ -324,7 +324,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
               onChange={(event) => setEditDescription(event.target.value)}
             />
           </label>
-          <label className="gt-collections__check">
+          <label className="od-collections__check">
             <input
               type="checkbox"
               checked={editIsPublic}
@@ -332,14 +332,14 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
             />
             Public
           </label>
-          <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={saving}>
+          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={saving}>
             {saving ? 'Saving…' : 'Save changes'}
           </button>
           {saveError ? (
             <PageStatus
               error={saveError}
               errorMessage={saveError.message || 'Unable to save changes.'}
-              className="gt-collections__error"
+              className="od-collections__error"
             />
           ) : null}
         </form>
@@ -358,18 +358,18 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {!error && items.length > 0 ? (
-        <ul className="gt-collection__items">
+        <ul className="od-collection__items">
           {items.map((item, index) => (
-            <li key={item.id} className="gt-collection__item">
+            <li key={item.id} className="od-collection__item">
               <a href={`/game_details/${item.game_uuid}`}>
                 <strong>{item.game_name || item.game_uuid}</strong>
-                <span className="gt-collections__meta">Open game</span>
+                <span className="od-collections__meta">Open game</span>
               </a>
               {collection.can_edit ? (
-                <div className="gt-collection__item-actions">
+                <div className="od-collection__item-actions">
                   <button
                     type="button"
-                    className="gt-collections__reorder"
+                    className="od-collections__reorder"
                     disabled={reordering || index === 0}
                     onClick={() => handleMove(index, -1)}
                     aria-label={`Move ${item.game_name || item.game_uuid} up`}
@@ -378,7 +378,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
                   </button>
                   <button
                     type="button"
-                    className="gt-collections__reorder"
+                    className="od-collections__reorder"
                     disabled={reordering || index === items.length - 1}
                     onClick={() => handleMove(index, 1)}
                     aria-label={`Move ${item.game_name || item.game_uuid} down`}
@@ -387,7 +387,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
                   </button>
                   <button
                     type="button"
-                    className="gt-collections__remove"
+                    className="od-collections__remove"
                     disabled={removingUuid === item.game_uuid}
                     onClick={() => handleRemove(item.game_uuid)}
                   >
@@ -401,10 +401,10 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {!error && collection?.can_edit ? (
-        <details className="gt-collection__add" open>
+        <details className="od-collection__add" open>
           <summary>Add a game</summary>
           <p>Search the library by title, then pick a result to add.</p>
-          <label className="gt-collections__field">
+          <label className="od-collections__field">
             Search games
             <input
               type="search"
@@ -416,19 +416,19 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
               }}
             />
           </label>
-          {searching ? <p className="gt-collections__meta">Searching…</p> : null}
+          {searching ? <p className="od-collections__meta">Searching…</p> : null}
           {!searching && query.trim().length >= 2 && results.length === 0 ? (
-            <p className="gt-collections__meta">No matching games.</p>
+            <p className="od-collections__meta">No matching games.</p>
           ) : null}
           {results.length > 0 ? (
-            <ul className="gt-collection__picker">
+            <ul className="od-collection__picker">
               {results.map((game) => {
                 const already = existingUuids.has(game.uuid)
                 return (
                   <li key={game.uuid}>
                     <button
                       type="button"
-                      className="gt-collection__picker-item"
+                      className="od-collection__picker-item"
                       disabled={already || addingUuid === game.uuid}
                       onClick={() => handleAdd(game)}
                     >
@@ -450,7 +450,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
             <PageStatus
               error={addError}
               errorMessage={addError.message || 'Unable to add that game.'}
-              className="gt-collections__error"
+              className="od-collections__error"
             />
           ) : null}
         </details>

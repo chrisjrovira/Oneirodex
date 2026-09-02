@@ -6,8 +6,8 @@
 
 ## Context
 
-GameTheca applies schema via `db.create_all()` plus incremental raw SQL in
-`gametheca/updateschema.py` (`ADD COLUMN IF NOT EXISTS`, etc.) during
+Oneirodex applies schema via `db.create_all()` plus incremental raw SQL in
+`oneirodex/updateschema.py` (`ADD COLUMN IF NOT EXISTS`, etc.) during
 `init_manager` Phase 2. There is no Alembic revision table or rollback path.
 
 Official **1.0.0** needs a clear upgrade story for Unraid operators without a
@@ -42,4 +42,4 @@ For 1.0:
 ## Related
 
 - Local strategy notes (v1 readiness)
-- `gametheca/updateschema.py`, `gametheca/init_manager.py`
+- `oneirodex/updateschema.py`, `oneirodex/init_manager.py`

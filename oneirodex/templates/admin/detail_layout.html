@@ -1,0 +1,23 @@
+{% extends "base_admin.html" %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<div class="container od-adminpage od-adminpage--md od-adminpage--spaced">
+    <div class="od-adminpage-header">
+        <div>
+            <h1 class="od-adminpage-title">{{ icons.icon('list', size=26) }} Detail layout</h1>
+            <p class="od-adminpage-lede">Reorder and show/hide sections on the game details page.</p>
+        </div>
+    </div>
+    <div class="od-adminpage-panel">
+        <div id="dl-status" class="od-adminpage-status text-muted mb-3">Loading…</div>
+        <ul id="dl-list" class="list-group mb-3"></ul>
+        <div class="od-adminpage-actions">
+            <button id="dl-save" class="btn btn-primary">Save</button>
+            <button id="dl-reset" class="btn btn-outline-secondary">Reset defaults</button>
+        </div>
+    </div>
+    <p><a class="od-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}">{{ icons.icon('arrow-left') }} Back to admin</a></p>
+</div>
+<script src="{{ url_for('static', filename='js/od_admin_detail_layout.js') }}"></script>
+{% endblock %}

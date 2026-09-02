@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from gametheca.models import User
+from oneirodex.models import User
 
 
 @pytest.fixture
@@ -39,10 +39,10 @@ def _login(client, user):
 class TestMemberBlueprintSettings:
     def test_inject_settings_context_processor(self, app):
         with app.app_context():
-            from gametheca.routes_member import inject_settings
+            from oneirodex.routes_member import inject_settings
 
             with patch(
-                'gametheca.routes_member.get_global_settings',
+                'oneirodex.routes_member.get_global_settings',
                 return_value={'show_trailers': True},
             ) as mocked:
                 assert inject_settings() == {'show_trailers': True}

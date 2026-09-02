@@ -5,8 +5,15 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   base: '/static/dist/admin-app/',
+  resolve: {
+    alias: {
+      // Account / Preferences modals share the member implementations so admin
+      // does not navigate to bare Jinja pages outside the shell.
+      '@member': path.resolve(__dirname, '../member-app/src'),
+    },
+  },
   build: {
-    outDir: path.resolve(__dirname, '../../gametheca/static/dist/admin-app'),
+    outDir: path.resolve(__dirname, '../../oneirodex/static/dist/admin-app'),
     emptyOutDir: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),

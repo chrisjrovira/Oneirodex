@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import SupportTicket, User
+from oneirodex.models import SupportTicket, User
 
 
 @pytest.fixture

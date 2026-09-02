@@ -1,14 +1,62 @@
-.gt-systems-page .gt-systems-group {
+.od-systems-page .od-systems-group {
   margin-bottom: 1.5rem;
 }
 
-.gt-systems-group__title {
+.od-systems-group__title {
   margin: 0 0 0.65rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
+}
+
+/* Family heading is the fold control — same disclosure language as the LHN. */
+.od-systems-group__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.15rem 0.2rem 0.15rem 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--od-radius-sm, 4px);
+}
+
+.od-systems-group__toggle:hover {
+  color: var(--od-text);
+}
+
+.od-systems-group__toggle:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
+  outline-offset: 2px;
+}
+
+.od-systems-group__caret {
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--od-motion-fast, 120ms) var(--od-motion-ease, ease);
+}
+
+.od-systems-group__toggle[aria-expanded='false'] .od-systems-group__caret {
+  transform: rotate(-45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .od-systems-group__caret {
+    transition: none;
+  }
 }
 
 /* Systems browser (GT-B20).
@@ -22,48 +70,48 @@
  * Sizes come from the density tokens, so admin/compact surfaces still get a
  * tight version of the same card rather than a second design.
  */
-.gt-systems-grid {
+.od-systems-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(clamp(13rem, 18vw, 19rem), 1fr));
-  gap: var(--gt-tile-gap);
+  gap: var(--od-tile-gap);
 }
 
-.gt-systems-tile {
+.od-systems-tile {
   /* Column, not row: the mark gets to be big, which is the whole point of the
      reference. A horizontal row caps the mark at the line height. */
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
   min-height: 9.5rem;
-  padding: var(--gt-card-pad);
+  padding: var(--od-card-pad);
   text-decoration: none;
-  color: var(--gt-text);
-  background: var(--gt-card-bg);
-  border: 1px solid var(--gt-card-border);
-  border-radius: var(--gt-tile-radius);
+  color: var(--od-text);
+  background: var(--od-card-bg);
+  border: 1px solid var(--od-card-border);
+  border-radius: var(--od-tile-radius);
   /* No backdrop blur: these sit on the page, not over content, and blurring
      nothing costs a compositing layer per card. */
   transition:
-    border-color var(--gt-motion-fast) var(--gt-motion-ease),
-    background-color var(--gt-motion-fast) var(--gt-motion-ease);
+    border-color var(--od-motion-fast) var(--od-motion-ease),
+    background-color var(--od-motion-fast) var(--od-motion-ease);
 }
 
-.gt-systems-tile:hover,
-.gt-systems-tile:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-platform-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--gt-platform-accent) 8%, var(--gt-card-bg));
+.od-systems-tile:hover,
+.od-systems-tile:focus-visible {
+  border-color: color-mix(in srgb, var(--od-platform-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--od-platform-accent) 8%, var(--od-card-bg));
 }
 
 /* Centred (W28): the glyph is the card's subject, so it sits in the middle of
    it with the name underneath, rather than tucked into a corner beside a stack
    of left-aligned counts. */
-.gt-systems-tile__main {
+.od-systems-tile__main {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
@@ -76,19 +124,19 @@
  * loudest thing on the card and it carried no information the group heading was
  * not already giving. The drawing alone, larger, in the platform accent, is the
  * card's subject; the tile's own surface is its background. */
-.gt-systems-tile__mark {
+.od-systems-tile__mark {
   flex-shrink: 0;
   display: grid;
   place-items: center;
   width: 5.5rem;
   height: 5.5rem;
-  color: var(--gt-platform-accent);
+  color: var(--od-platform-accent);
   background: none;
-  transition: transform var(--gt-motion-base) var(--gt-motion-ease);
+  transition: transform var(--od-motion-base) var(--od-motion-ease);
 }
 
-.gt-systems-tile__mark svg,
-.gt-systems-tile__mark-img {
+.od-systems-tile__mark svg,
+.od-systems-tile__mark-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -104,62 +152,62 @@
  * levels those rules set are kept — they are what gives the drawing its depth —
  * and only the motion is dropped. Higher specificity than LoadingMotif.css on
  * purpose; that file owns the loading surface, this one owns Systems. */
-.gt-systems-tile__mark .gt-sysmotif__buttons circle,
-.gt-systems-tile__mark .gt-sysmotif__scanline,
-.gt-systems-tile__mark .gt-sysmotif__led,
-.gt-systems-tile__mark .gt-sysmotif__platter,
-.gt-systems-tile__mark .gt-sysmotif__head {
+.od-systems-tile__mark .od-sysmotif__buttons circle,
+.od-systems-tile__mark .od-sysmotif__scanline,
+.od-systems-tile__mark .od-sysmotif__led,
+.od-systems-tile__mark .od-sysmotif__platter,
+.od-systems-tile__mark .od-sysmotif__head {
   animation: none;
 }
 
 /* Without the press animation the face buttons sit at 0.25 and read as absent,
    so the resting state has to be set rather than inherited from a keyframe. */
-.gt-systems-tile__mark .gt-sysmotif__buttons circle,
-.gt-systems-tile__mark .gt-sysmotif__led {
+.od-systems-tile__mark .od-sysmotif__buttons circle,
+.od-systems-tile__mark .od-sysmotif__led {
   opacity: 0.85;
 }
 
-.gt-systems-tile:hover .gt-systems-tile__mark,
-.gt-systems-tile:focus-within .gt-systems-tile__mark {
+.od-systems-tile:hover .od-systems-tile__mark,
+.od-systems-tile:focus-within .od-systems-tile__mark {
   transform: scale(1.07);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-systems-tile__mark {
+  .od-systems-tile__mark {
     transition: none;
   }
 
-  .gt-systems-tile:hover .gt-systems-tile__mark,
-  .gt-systems-tile:focus-within .gt-systems-tile__mark {
+  .od-systems-tile:hover .od-systems-tile__mark,
+  .od-systems-tile:focus-within .od-systems-tile__mark {
     transform: none;
   }
 }
 
-.gt-systems-group[data-family='nintendo'] .gt-systems-tile__mark {
-  color: var(--gt-family-nintendo);
+.od-systems-group[data-family='nintendo'] .od-systems-tile__mark {
+  color: var(--od-family-nintendo);
 }
 
-.gt-systems-group[data-family='sony'] .gt-systems-tile__mark {
-  color: var(--gt-family-sony);
+.od-systems-group[data-family='sony'] .od-systems-tile__mark {
+  color: var(--od-family-sony);
 }
 
-.gt-systems-group[data-family='xbox'] .gt-systems-tile__mark {
-  color: var(--gt-family-xbox);
+.od-systems-group[data-family='xbox'] .od-systems-tile__mark {
+  color: var(--od-family-xbox);
 }
 
-.gt-systems-group[data-family='sega'] .gt-systems-tile__mark {
-  color: var(--gt-family-sega);
+.od-systems-group[data-family='sega'] .od-systems-tile__mark {
+  color: var(--od-family-sega);
 }
 
-.gt-systems-group[data-family='atari'] .gt-systems-tile__mark {
-  color: var(--gt-family-atari);
+.od-systems-group[data-family='atari'] .od-systems-tile__mark {
+  color: var(--od-family-atari);
 }
 
-.gt-systems-group[data-family='pc'] .gt-systems-tile__mark {
-  color: var(--gt-accent);
+.od-systems-group[data-family='pc'] .od-systems-tile__mark {
+  color: var(--od-accent);
 }
 
-.gt-systems-tile__body {
+.od-systems-tile__body {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -169,16 +217,16 @@
   min-width: 0;
 }
 
-.gt-systems-tile__name {
+.od-systems-tile__name {
   /* Scales with the card — the system name is the label for a hero mark now,
      not a row title. Width capped so long names clamp inside the tile. */
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
   font-weight: 600;
-  line-height: var(--gt-line-tight);
+  line-height: var(--od-line-tight);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
@@ -188,18 +236,18 @@
   overflow-wrap: anywhere;
 }
 
-.gt-systems-tile__count {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+.od-systems-tile__count {
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
 }
 
-.gt-systems-tile__mode {
+.od-systems-tile__mode {
   display: inline-block;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -208,108 +256,108 @@
   opacity: 0.85;
 }
 
-.gt-systems-tile__mode--browser {
-  color: var(--gt-accent);
+.od-systems-tile__mode--browser {
+  color: var(--od-accent);
 }
 
-.gt-systems-tile__mode--companion {
-  color: var(--gt-text-muted);
+.od-systems-tile__mode--companion {
+  color: var(--od-text-muted);
 }
 
-.gt-systems-tile__mode--catalog {
-  color: var(--gt-text-muted);
+.od-systems-tile__mode--catalog {
+  color: var(--od-text-muted);
   opacity: 0.7;
 }
 
-.gt-systems-tile__completion {
+.od-systems-tile__completion {
   display: block;
   margin-top: 0.2rem;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-accent);
+  font-size: var(--od-font-xs);
+  color: var(--od-accent);
 }
 
-.gt-systems-tile__completion a {
+.od-systems-tile__completion a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.gt-systems-tile__links {
+.od-systems-tile__links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.45rem;
 }
 
-.gt-systems-tile__set-link {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-accent);
+.od-systems-tile__set-link {
+  font-size: var(--od-font-xs);
+  color: var(--od-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.gt-systems-tile__regions {
+.od-systems-tile__regions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
   margin-top: 0.35rem;
 }
 
-.gt-systems-tile__region {
+.od-systems-tile__region {
   display: inline-flex;
   align-items: baseline;
   gap: 0.2rem;
   padding: 0.1rem 0.35rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   line-height: 1.2;
   text-decoration: none;
-  color: var(--gt-text);
-  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-surface) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
 }
 
-.gt-systems-tile__region-pct {
+.od-systems-tile__region-pct {
   opacity: 0.85;
 }
 
-.gt-systems-tile__region--high {
-  border-color: color-mix(in srgb, var(--gt-accent) 70%, transparent);
-  color: var(--gt-accent);
+.od-systems-tile__region--high {
+  border-color: color-mix(in srgb, var(--od-accent) 70%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-systems-tile__region--mid {
-  border-color: color-mix(in srgb, var(--gt-warning) 65%, transparent);
-  color: var(--gt-warning);
+.od-systems-tile__region--mid {
+  border-color: color-mix(in srgb, var(--od-warning) 65%, transparent);
+  color: var(--od-warning);
 }
 
-.gt-systems-tile__region--low {
-  border-color: color-mix(in srgb, var(--gt-danger) 55%, transparent);
-  color: color-mix(in srgb, var(--gt-danger) 70%, var(--gt-warning));
+.od-systems-tile__region--low {
+  border-color: color-mix(in srgb, var(--od-danger) 55%, transparent);
+  color: color-mix(in srgb, var(--od-danger) 70%, var(--od-warning));
 }
 
-.gt-systems-tile__region--empty {
+.od-systems-tile__region--empty {
   opacity: 0.55;
 }
 
-.gt-systems-exports {
+.od-systems-exports {
   margin-top: 2rem;
   padding-top: 1.25rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-glass-border) 80%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--od-glass-border) 80%, transparent);
 }
 
-.gt-systems-exports__lede {
+.od-systems-exports__lede {
   margin: 0 0 0.85rem;
   max-width: 40rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.45;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-systems-exports__lede code {
-  font-size: var(--gt-font-sm);
+.od-systems-exports__lede code {
+  font-size: var(--od-font-sm);
 }
 
-.gt-systems-exports__actions {
+.od-systems-exports__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
@@ -319,37 +367,37 @@
 /* Vars come from playRooms.js via inline style, so a tile is dressed for the
    setting it was played in. Scoped to the tile — nothing leaks to the page. */
 
-.gt-systems-tile[data-room] {
+.od-systems-tile[data-room] {
   position: relative;
   overflow: hidden;
-  border-color: color-mix(in srgb, var(--gt-room-accent, var(--gt-warning)) 32%, transparent);
+  border-color: color-mix(in srgb, var(--od-room-accent, var(--od-warning)) 32%, transparent);
   background:
     linear-gradient(
       160deg,
-      color-mix(in srgb, var(--gt-room-glow, var(--gt-warning)) 14%, transparent),
+      color-mix(in srgb, var(--od-room-glow, var(--od-warning)) 14%, transparent),
       transparent 58%
     ),
-    color-mix(in srgb, var(--gt-room-backdrop, var(--gt-bg)) 78%, var(--gt-surface));
+    color-mix(in srgb, var(--od-room-backdrop, var(--od-bg)) 78%, var(--od-surface));
 }
 
-.gt-systems-tile[data-room]:hover,
-.gt-systems-tile[data-room]:focus-within {
-  border-color: color-mix(in srgb, var(--gt-room-accent, var(--gt-warning)) 62%, transparent);
+.od-systems-tile[data-room]:hover,
+.od-systems-tile[data-room]:focus-within {
+  border-color: color-mix(in srgb, var(--od-room-accent, var(--od-warning)) 62%, transparent);
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.4),
-    0 0 16px -2px color-mix(in srgb, var(--gt-room-glow, var(--gt-warning)) 45%, transparent);
+    0 0 16px -2px color-mix(in srgb, var(--od-room-glow, var(--od-warning)) 45%, transparent);
 }
 
-.gt-systems-tile[data-room] .gt-systems-tile__name {
-  color: color-mix(in srgb, var(--gt-room-accent, var(--gt-warning)) 85%, var(--gt-text));
+.od-systems-tile[data-room] .od-systems-tile__name {
+  color: color-mix(in srgb, var(--od-room-accent, var(--od-warning)) 85%, var(--od-text));
 }
 
 /* Ambience: a light suggestion of the setting, never enough to fight the text. */
-.gt-systems-tile[data-room='wood_den_80s']::after,
-.gt-systems-tile[data-room='teen_bedroom_90s']::after,
-.gt-systems-tile[data-room='carpet_den_late_90s']::after,
-.gt-systems-tile[data-room='media_center_00s']::after,
-.gt-systems-tile[data-room='arcade_cabinet']::after {
+.od-systems-tile[data-room='wood_den_80s']::after,
+.od-systems-tile[data-room='teen_bedroom_90s']::after,
+.od-systems-tile[data-room='carpet_den_late_90s']::after,
+.od-systems-tile[data-room='media_center_00s']::after,
+.od-systems-tile[data-room='arcade_cabinet']::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -357,7 +405,7 @@
   opacity: 0.16;
 }
 
-.gt-systems-tile[data-room='wood_den_80s']::after {
+.od-systems-tile[data-room='wood_den_80s']::after {
   background: repeating-linear-gradient(
     90deg,
     rgba(90, 50, 28, 0.45) 0 8px,
@@ -367,7 +415,7 @@
 
 /* Soft 90s wash only — hard “poster” rectangles read as broken UI chrome
    beside the system glyph. */
-.gt-systems-tile[data-room='teen_bedroom_90s']::after {
+.od-systems-tile[data-room='teen_bedroom_90s']::after {
   background: repeating-linear-gradient(
     180deg,
     rgba(80, 50, 90, 0.28) 0 10px,
@@ -375,7 +423,7 @@
   );
 }
 
-.gt-systems-tile[data-room='carpet_den_late_90s']::after {
+.od-systems-tile[data-room='carpet_den_late_90s']::after {
   background: repeating-linear-gradient(
     90deg,
     rgba(90, 40, 50, 0.35) 0 10px,
@@ -383,24 +431,24 @@
   );
 }
 
-.gt-systems-tile[data-room='arcade_cabinet']::after {
+.od-systems-tile[data-room='arcade_cabinet']::after {
   background: radial-gradient(
     120% 60% at 50% -10%,
-    color-mix(in srgb, var(--gt-room-glow, var(--gt-danger)) 70%, transparent),
+    color-mix(in srgb, var(--od-room-glow, var(--od-danger)) 70%, transparent),
     transparent 60%
   );
   opacity: 0.28;
 }
 
-.gt-systems-tile[data-room='media_center_00s']::after {
+.od-systems-tile[data-room='media_center_00s']::after {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--gt-room-glow) 28%, transparent),
+    color-mix(in srgb, var(--od-room-glow) 28%, transparent),
     transparent 55%
   );
 }
 
-.gt-systems-tile[data-room='desk']::after {
+.od-systems-tile[data-room='desk']::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -408,13 +456,13 @@
   opacity: 0.12;
   background: repeating-linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--gt-room-glow, var(--gt-accent)) 55%, transparent) 0 1px,
+    color-mix(in srgb, var(--od-room-glow, var(--od-accent)) 55%, transparent) 0 1px,
     transparent 1px 4px
   );
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-systems-tile[data-room] {
+  .od-systems-tile[data-room] {
     transition: none;
   }
 }

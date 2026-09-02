@@ -3,7 +3,7 @@
 Native Windows, with Docker Desktop running.
 
 **CI:** `.github/workflows/ci-tests.yml` spins up Postgres with
-`POSTGRES_DB=gamethecatest` and runs a *core* pytest subset only. The full suite
+`POSTGRES_DB=oneirodextest` and runs a *core* pytest subset only. The full suite
 stays local/release — see release-checklist.md.
 
 ## Start the database
@@ -23,13 +23,13 @@ docker compose -f docker-compose.review.yml up -d db
 ```
 
 ```bash
-docker exec oneirodex-review-db psql -U postgres -c "CREATE DATABASE gamethecatest;"
+docker exec oneirodex-review-db psql -U postgres -c "CREATE DATABASE oneirodextest;"
 ```
 
 Required in `.env`:
 
 ```text
-TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/gamethecatest
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/oneirodextest
 ```
 
 `conftest.py` hard-fails if that variable is missing, or if its database name
@@ -41,7 +41,7 @@ does not contain `test`. That guard is deliberate and should not be relaxed.
 before the first test.
 
 It did not always. `db.drop_all()` sat commented out "for performance", so
-`gamethecatest` kept every row any test had ever committed, going back months.
+`oneirodextest` kept every row any test had ever committed, going back months.
 That is not inert — it silently changes what a test measures:
 
 | Symptom | Cause |

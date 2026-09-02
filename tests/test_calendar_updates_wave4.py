@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def test_calendar_empty_when_igdb_off(client, admin_user, monkeypatch):
         return []
 
     monkeypatch.setattr(
-        'gametheca.routes_apis.calendar.fetch_release_calendar',
+        'oneirodex.routes_apis.calendar.fetch_release_calendar',
         boom,
     )
     resp = client.get('/api/calendar?days_ahead=30&days_behind=7&limit=10')
@@ -94,7 +94,7 @@ def test_calendar_igdb_error_dict_returns_empty_200(client, admin_user, monkeypa
     _login(client, admin_user)
 
     monkeypatch.setattr(
-        'gametheca.utils.release_calendar.make_igdb_api_request',
+        'oneirodex.utils.release_calendar.make_igdb_api_request',
         lambda *a, **k: {'error': 'IGDB settings not configured in database'},
     )
     resp = client.get('/api/calendar')

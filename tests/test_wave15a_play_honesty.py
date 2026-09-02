@@ -8,9 +8,9 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.play_url import BIOS_UPLOAD_HINT, browse_play_fields
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.play_url import BIOS_UPLOAD_HINT, browse_play_fields
 
 
 @pytest.fixture
@@ -48,12 +48,12 @@ def test_bios_upload_hint_mentions_admin_and_env_path():
 
 
 def test_config_wires_emulator_bios_path(monkeypatch):
-    monkeypatch.setenv('EMULATOR_BIOS_PATH', '/app/gametheca/static/library/bios')
+    monkeypatch.setenv('EMULATOR_BIOS_PATH', '/app/oneirodex/static/library/bios')
     # Re-read attribute the same way Config does (empty → None).
     import os
 
     value = os.getenv('EMULATOR_BIOS_PATH') or None
-    assert value == '/app/gametheca/static/library/bios'
+    assert value == '/app/oneirodex/static/library/bios'
 
     from config import Config
 
@@ -64,7 +64,7 @@ def test_config_wires_emulator_bios_path(monkeypatch):
 
 
 def test_bios_root_honors_app_config(app, tmp_path, monkeypatch):
-    from gametheca.utils.emulator_bios import bios_root
+    from oneirodex.utils.emulator_bios import bios_root
 
     custom = tmp_path / 'private-bios'
     custom.mkdir()
@@ -78,15 +78,15 @@ def test_browse_play_fields_firmware_missing(monkeypatch):
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
 
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['mednafen_psx_hw'], 'preferred': 'mednafen_psx_hw'},
     )
     monkeypatch.setattr(
-        'gametheca.utils.play_url.core_is_browser_playable',
+        'oneirodex.utils.play_url.core_is_browser_playable',
         lambda c: c == 'mednafen_psx_hw',
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_bios.list_bios_files',
+        'oneirodex.utils.emulator_bios.list_bios_files',
         lambda: [],
     )
 
@@ -109,15 +109,15 @@ def test_browse_play_fields_firmware_present(monkeypatch):
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
 
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['mednafen_psx_hw'], 'preferred': 'mednafen_psx_hw'},
     )
     monkeypatch.setattr(
-        'gametheca.utils.play_url.core_is_browser_playable',
+        'oneirodex.utils.play_url.core_is_browser_playable',
         lambda c: c == 'mednafen_psx_hw',
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_bios.list_bios_files',
+        'oneirodex.utils.emulator_bios.list_bios_files',
         lambda: [{
             'name': 'scph5501.bin',
             'size': 512 * 1024,
@@ -145,15 +145,15 @@ def test_browse_play_fields_firmware_in_subfolder_still_blocks(monkeypatch):
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
 
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['mednafen_psx_hw'], 'preferred': 'mednafen_psx_hw'},
     )
     monkeypatch.setattr(
-        'gametheca.utils.play_url.core_is_browser_playable',
+        'oneirodex.utils.play_url.core_is_browser_playable',
         lambda c: c == 'mednafen_psx_hw',
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_bios.list_bios_files',
+        'oneirodex.utils.emulator_bios.list_bios_files',
         lambda: [{
             'name': 'scph5501.bin',
             'size': 512 * 1024,
@@ -173,15 +173,15 @@ def test_browse_play_fields_no_bios_for_nes(monkeypatch):
     library = SimpleNamespace(platform=SimpleNamespace(name='NES'))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
     )
     monkeypatch.setattr(
-        'gametheca.utils.play_url.core_is_browser_playable',
+        'oneirodex.utils.play_url.core_is_browser_playable',
         lambda c: c == 'nestopia',
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_bios.list_bios_files',
+        'oneirodex.utils.emulator_bios.list_bios_files',
         lambda: [],
     )
     fields = browse_play_fields(game)
@@ -194,15 +194,15 @@ def _play_fields(monkeypatch, platform: str, core: str):
     library = SimpleNamespace(platform=SimpleNamespace(name=platform))
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': [core], 'preferred': core},
     )
     monkeypatch.setattr(
-        'gametheca.utils.play_url.core_is_browser_playable',
+        'oneirodex.utils.play_url.core_is_browser_playable',
         lambda c: c == core,
     )
     monkeypatch.setattr(
-        'gametheca.utils.emulator_bios.list_bios_files',
+        'oneirodex.utils.emulator_bios.list_bios_files',
         lambda: [],
     )
     return browse_play_fields(game)

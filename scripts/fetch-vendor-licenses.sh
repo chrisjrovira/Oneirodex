@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Drop each vendored library's canonical LICENSE file next to its code.
 #
-# gametheca/static/vendor/THIRD-PARTY-NOTICES.md is the inventory and carries the
+# oneirodex/static/vendor/THIRD-PARTY-NOTICES.md is the inventory and carries the
 # copyright lines read out of the shipped files themselves. This fetches the
 # upstream licence texts so each directory is self-describing too.
 #
@@ -15,7 +15,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VENDOR="$ROOT/gametheca/static/vendor"
+VENDOR="$ROOT/oneirodex/static/vendor"
 
 # dir<TAB>url
 TARGETS="
@@ -54,4 +54,4 @@ if [ "$failed" -gt 0 ]; then
 fi
 
 echo
-echo "Done. Inventory: gametheca/static/vendor/THIRD-PARTY-NOTICES.md"
+echo "Done. Inventory: oneirodex/static/vendor/THIRD-PARTY-NOTICES.md"

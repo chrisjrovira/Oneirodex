@@ -1,6 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SystemsPage } from './SystemsPage'
+
+beforeEach(() => {
+  window.localStorage.removeItem('od.systems.collapsedFamilies')
+})
 
 function mockFetch(payload, ok = true) {
   global.fetch = vi.fn(() =>
@@ -74,6 +78,39 @@ test('shows error retry instead of empty state when fetch fails', async () => {
   expect(screen.queryByText(/No library platforms yet/i)).not.toBeInTheDocument()
 })
 
+test('manufacturer sections fold and remember the choice', async () => {
+  mockFetch([
+    {
+      id: 'NES',
+      value: 'NES',
+      name: 'Nintendo Entertainment System (NES)',
+      game_count: 12,
+    },
+    {
+      id: 'PS1',
+      value: 'PS1',
+      name: 'Sony Playstation (PSX)',
+      game_count: 8,
+    },
+  ])
+
+  render(
+    <MemoryRouter>
+      <SystemsPage />
+    </MemoryRouter>,
+  )
+
+  const nintendo = await screen.findByRole('button', { name: /Nintendo/i })
+  expect(nintendo).toHaveAttribute('aria-expanded', 'true')
+  expect(screen.getByRole('link', { name: /Nintendo Entertainment System/i })).toBeInTheDocument()
+
+  fireEvent.click(nintendo)
+  expect(nintendo).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.queryByRole('link', { name: /Nintendo Entertainment System/i })).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Sony Playstation/i })).toBeInTheDocument()
+  expect(window.localStorage.getItem('od.systems.collapsedFamilies')).toContain('nintendo')
+})
+
 test('prefers themed system-mark WebP for the active data-theme', async () => {
   document.documentElement.setAttribute('data-theme', 'aurora')
   mockFetch([
@@ -92,7 +129,7 @@ test('prefers themed system-mark WebP for the active data-theme', async () => {
       </MemoryRouter>,
     )
     await screen.findByRole('link', { name: /Nintendo Entertainment System/i })
-    const img = container.querySelector('img.gt-systems-tile__mark-img')
+    const img = container.querySelector('img.od-systems-tile__mark-img')
     expect(img).toBeTruthy()
     expect(img.getAttribute('src')).toBe('/static/library/system-marks/aurora/nes.webp')
   } finally {

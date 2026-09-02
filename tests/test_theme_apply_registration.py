@@ -19,8 +19,8 @@ Kept free of database fixtures so this still runs when no test Postgres is up.
 import pytest
 from flask import Flask
 
-from gametheca import login_manager
-from gametheca.routes_admin_ext import admin2_bp
+from oneirodex import login_manager
+from oneirodex.routes_admin_ext import admin2_bp
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def test_the_page_that_drove_it_no_longer_posts_to_it(bare_app):
 
     page = (
         Path(__file__).resolve().parents[1]
-        / 'gametheca' / 'templates' / 'admin' / 'admin_manage_themes.html'
+        / 'oneirodex' / 'templates' / 'admin' / 'admin_manage_themes.html'
     ).read_text(encoding='utf-8')
     assert 'apply_theme' not in page
     assert 'adminThemeGrid' not in page

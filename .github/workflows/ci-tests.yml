@@ -1,4 +1,4 @@
-# GameTheca CI — PR gate with a *core* pytest subset (+ member-app / desktop vitest).
+# Oneirodex CI — PR gate with a *core* pytest subset (+ member-app / desktop vitest).
 #
 # Full pytest suite remains local / release-time (needs Unraid-like fixtures,
 # library paths, and heavier integrations). Do not treat this workflow as
@@ -36,18 +36,18 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           # DB name must contain "test" (enforced by conftest.py).
-          POSTGRES_DB: gamethecatest
+          POSTGRES_DB: oneirodextest
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d gamethecatest"
+          --health-cmd "pg_isready -U postgres -d oneirodextest"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
 
     env:
       # Must contain "test" in the database name — never point at production.
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gamethecatest
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/oneirodextest
       SECRET_KEY: ci-test-secret-key-not-for-production
       FLASK_ENV: testing
 
@@ -90,6 +90,11 @@ jobs:
           tests/test_emulator_play_matrix.py
           tests/test_console_platform_enums.py
           tests/test_computer_platform_enums.py
+          tests/test_loading_motifs.py
+          tests/test_rom_dump_suffixes.py
+          tests/test_oidc_unit.py
+          tests/test_propose_leaf_libraries.py
+          tests/test_import_leaf_libraries.py
           tests/test_licensed_catalog.py
           tests/test_tgdb_platform_siblings.py
           tests/test_routes_member.py

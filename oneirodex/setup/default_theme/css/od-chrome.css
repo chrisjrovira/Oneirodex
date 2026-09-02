@@ -1,0 +1,54 @@
+﻿/* SPA chrome: solid surfaces + readable GT text (AA on --od-surface).
+   Dropdown *layout* for admin is in od-shell.css (both shells load it).
+   These colour overrides stay member-scoped; admin-app AdminTopNav.css
+   repeats the panel surface so the SPA bundle does not wait on Reset Themes. */
+.member-spa-content {
+  color: var(--od-text);
+  background: var(--od-bg);
+}
+
+.member-spa-content .od-topnav,
+.member-spa-content .od-topnav__dropdown-panel,
+.member-spa-content .od-topnav__nav.is-open {
+  color: var(--od-text);
+}
+
+.member-spa-content .od-topnav__username,
+.member-spa-content .od-text-muted {
+  color: var(--od-text-muted);
+  opacity: 1;
+}
+
+/* Prefer opaque chrome over washed glass in the member SPA shell. */
+.member-spa-content .od-topnav {
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.member-spa-content .od-topnav__dropdown-panel {
+  background: var(--od-surface-2);
+}
+
+.member-spa-content .glass-panel,
+.member-spa-content .discovery-panel {
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
+  backdrop-filter: blur(4px);
+  border-color: var(--od-border);
+  color: var(--od-text);
+}
+
+.member-spa-content .game-card-container,
+.member-spa-content .game-library-container {
+  color: var(--od-text);
+}
+
+/* UID-009 jump top/bottom: styled by the SPA's own chrome/ScrollJump.css.
+ *
+ * A duplicate lived here and *won*, because `.member-spa-content
+ * .od-scroll-jump__btn` outranks the component's own `.od-scroll-jump__btn`.
+ * It kept the pre-W27-A1 design: position:fixed at the viewport's bottom-left,
+ * so it ignored the rail whether open or collapsed, inside a bordered,
+ * shadowed box with a second border on each button — the box around the pair.
+ * The component had already been rewritten to sit in the rail footer with no
+ * chrome; this copy is what kept that invisible. */
+

@@ -56,7 +56,7 @@ const LONG_PRESS_MS = 480
  * alternative is lifting menu state into the grid, which would re-render every
  * tile whenever any one of them opened a menu.
  */
-const TILE_OVERLAY_OPENED = 'gt-tile-overlay-opened'
+const TILE_OVERLAY_OPENED = 'od-tile-overlay-opened'
 
 function releaseYear(value) {
   if (!value) return ''
@@ -331,7 +331,7 @@ export function GameCard({
         {selectionEnabled ? (
           <input
             type="checkbox"
-            className="gt-tile-select"
+            className="od-tile-select"
             checked={selected}
             aria-label={`Select ${game.name}`}
             onChange={(event) => {
@@ -384,10 +384,10 @@ export function GameCard({
               }}
             >
               {statusPending ? (
-                <span className="gt-spinner gt-spinner--sm" aria-hidden="true" />
+                <span className="od-spinner od-spinner--sm" aria-hidden="true" />
               ) : (
                 <span
-                  className="gt-status-dot"
+                  className="od-status-dot"
                   style={{
                     background: currentStatus.color,
                     opacity: status ? 1 : 0.4,
@@ -422,7 +422,7 @@ export function GameCard({
                     }}
                   >
                     <span
-                      className="gt-status-dot"
+                      className="od-status-dot"
                       style={{ background: option.color }}
                       aria-hidden="true"
                     />
@@ -456,7 +456,7 @@ export function GameCard({
             way to look before committing. Keyboard users get it via focus. */}
         <button
           type="button"
-          className="gt-tile-preview-hint"
+          className="od-tile-preview-hint"
           aria-label={`Preview ${game.name}`}
           onClick={(event) => {
             event.preventDefault()
@@ -652,7 +652,7 @@ export function GameCard({
 
         {platformChip ? (
           <span
-            className="gt-platform-chip"
+            className="od-platform-chip"
             title={
               platformChip.extra > 0
                 ? `${platformChip.full} · also on ${platformChip.extra} other ${
@@ -663,14 +663,14 @@ export function GameCard({
           >
             {platformChip.abbrev}
             {platformChip.extra > 0 ? (
-              <span className="gt-platform-chip__more">{`+${platformChip.extra}`}</span>
+              <span className="od-platform-chip__more">{`+${platformChip.extra}`}</span>
             ) : null}
           </span>
         ) : null}
 
         {playHref ? (
           <a
-            className="gt-tile-play"
+            className="od-tile-play"
             href={playHref}
             title="Play in browser"
             aria-label={`Play ${game.name} in browser`}
@@ -687,7 +687,7 @@ export function GameCard({
                 so it has to be able to answer. */}
             <button
               type="button"
-              className="gt-tile-play gt-tile-play--disabled"
+              className="od-tile-play od-tile-play--disabled"
               aria-expanded={playInfoOpen}
               aria-controls={playInfoOpen ? `playBlock-${game.uuid}` : undefined}
               aria-label={`${game.name}: browser play unavailable — ${playBlockLabel}. Why?`}

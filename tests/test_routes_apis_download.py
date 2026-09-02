@@ -1,5 +1,5 @@
 """
-Unit tests for gametheca.routes_apis.download
+Unit tests for oneirodex.routes_apis.download
 
 Tests the download API endpoints including authentication, authorization,
 deletion functionality, security, and error handling.
@@ -10,13 +10,13 @@ import pytest
 from unittest.mock import patch
 from uuid import uuid4
 
-from gametheca.models import User, DownloadRequest, Game, Library, LibraryPlatform
+from oneirodex.models import User, DownloadRequest, Game, Library, LibraryPlatform
 
 
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints.""" 
     from sqlalchemy import delete
-    from gametheca.models import SystemEvents
+    from oneirodex.models import SystemEvents
     
     # Clean up in order of dependencies
     db_session.execute(delete(DownloadRequest))
@@ -215,7 +215,7 @@ class TestDeleteDownloadRequest:
         assert data['status'] == 'success'
         assert 'deleted successfully' in data['message']
     
-    @patch('gametheca.routes_apis.download.db')
+    @patch('oneirodex.routes_apis.download.db')
     def test_delete_request_database_error(self, mock_db, client, admin_user, sample_download_request):
         """Test handling of database errors during deletion."""
         mock_db.session.delete.side_effect = Exception("Database error")
@@ -231,7 +231,7 @@ class TestDeleteDownloadRequest:
         assert data['status'] == 'error'
         assert 'Error deleting download request' in data['message']
     
-    @patch('gametheca.routes_apis.download.log_system_event')
+    @patch('oneirodex.routes_apis.download.log_system_event')
     def test_delete_request_logging(self, mock_log, client, admin_user, sample_download_request):
         """Test that proper logging occurs during deletion."""
         with client.session_transaction() as sess:

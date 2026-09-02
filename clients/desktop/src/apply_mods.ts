@@ -1,6 +1,6 @@
 /**
  * Companion PC mod pack apply (MOD-3).
- * Fetches enabled mod metadata from GameTheca, stages under app_data/mods/{uuid}/,
+ * Fetches enabled mod metadata from Oneirodex, stages under app_data/mods/{uuid}/,
  * then applies path-safely into the local install directory.
  *
  * WebRetro cannot load arbitrary PC mods — companion-only apply path.
@@ -106,7 +106,7 @@ export function sortEnabledMods(mods: GameModRow[]): GameModRow[] {
 
 async function getModsDir(): Promise<string> {
   if (!isTauriRuntime()) {
-    return '/tmp/gametheca/mods'
+    return '/tmp/oneirodex/mods'
   }
   return invoke<string>('get_app_subdir', { subdir: 'mods' })
 }

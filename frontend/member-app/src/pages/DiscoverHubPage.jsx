@@ -65,7 +65,7 @@ export function DiscoverHubPage({ isAdmin = false, shellConfig = {} } = {}) {
         {bar}
         <PageStatus emptyMessage="Nothing assembled for this genre right now.">
           {catalogHref ? (
-            <Link className="gt-btn" to={catalogHref}>
+            <Link className="od-btn" to={catalogHref}>
               Browse catalog
             </Link>
           ) : null}
@@ -77,7 +77,7 @@ export function DiscoverHubPage({ isAdmin = false, shellConfig = {} } = {}) {
   return (
     <>
       {bar}
-      <p className="gt-more-page__lede">
+      <p className="od-more-page__lede">
         Assembled from this genre.{' '}
         {catalogHref ? (
           <Link to={catalogHref}>Browse the catalog</Link>

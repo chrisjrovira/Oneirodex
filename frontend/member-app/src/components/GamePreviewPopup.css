@@ -1,6 +1,6 @@
 /* Tile preview popup (UX-B3) — a look before committing to the full page. */
 
-.gt-preview__scrim {
+.od-preview__scrim {
   position: fixed;
   inset: 0;
   /* Above the rail and top bar (1090), below the command palette (1100).
@@ -21,12 +21,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-preview__scrim {
+  .od-preview__scrim {
     backdrop-filter: none;
   }
 }
 
-.gt-preview {
+.od-preview {
   position: relative;
   /* Wider and taller than it was (42rem / min(84vh, 34rem)).
    *
@@ -40,142 +40,142 @@
   max-height: 88vh;
   overflow-y: auto;
   padding: 1.35rem 1.5rem;
-  border-radius: var(--gt-radius-2xl);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 34%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
+  border-radius: var(--od-radius-2xl);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 96%, transparent);
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.5),
-    0 0 18px 2px color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  color: var(--gt-text);
+    0 0 18px 2px color-mix(in srgb, var(--od-accent) 18%, transparent);
+  color: var(--od-text);
 }
 
-.gt-preview__close {
+.od-preview__close {
   position: absolute;
   top: 0.5rem;
   right: 0.6rem;
   width: 2rem;
   height: 2rem;
   border: 0;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   background: transparent;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xl);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xl);
   line-height: 1;
   cursor: pointer;
 }
 
-.gt-preview__close:hover,
-.gt-preview__close:focus-visible {
-  background: color-mix(in srgb, var(--gt-accent) 18%, transparent);
-  color: var(--gt-text);
+.od-preview__close:hover,
+.od-preview__close:focus-visible {
+  background: color-mix(in srgb, var(--od-accent) 18%, transparent);
+  color: var(--od-text);
 }
 
-.gt-preview__body {
+.od-preview__body {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
 }
 
-.gt-preview__cover {
+.od-preview__cover {
   flex: 0 0 auto;
   width: 12.5rem;
   max-width: 34%;
   height: auto;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
 }
 
-.gt-preview__text {
+.od-preview__text {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.gt-preview__title {
+.od-preview__title {
   margin: 0 2rem 0.45rem 0;
-  font-size: var(--gt-font-2xl);
+  font-size: var(--od-font-2xl);
   line-height: 1.25;
 }
 
 /* State that changes what you can do with the title, above the neutral facts
    so it is read first. Colour carries meaning here: `warn` means you cannot
    play this right now. */
-.gt-preview__badges {
+.od-preview__badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin: 0 0 0.5rem;
 }
 
-.gt-preview__badge {
+.od-preview__badge {
   padding: 0.12rem 0.55rem;
-  border-radius: var(--gt-radius-pill);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  font-size: var(--od-font-xs);
   font-weight: 650;
   letter-spacing: 0.02em;
   border: 1px solid transparent;
 }
 
-.gt-preview__badge--good {
-  color: var(--gt-success);
-  border-color: color-mix(in srgb, var(--gt-success) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-success) 12%, transparent);
+.od-preview__badge--good {
+  color: var(--od-success);
+  border-color: color-mix(in srgb, var(--od-success) 45%, transparent);
+  background: color-mix(in srgb, var(--od-success) 12%, transparent);
 }
 
-.gt-preview__badge--info {
-  color: var(--gt-accent);
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+.od-preview__badge--info {
+  color: var(--od-accent);
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
 }
 
-.gt-preview__badge--warn {
-  color: var(--gt-danger);
-  border-color: color-mix(in srgb, var(--gt-danger) 50%, transparent);
-  background: color-mix(in srgb, var(--gt-danger) 14%, transparent);
+.od-preview__badge--warn {
+  color: var(--od-danger);
+  border-color: color-mix(in srgb, var(--od-danger) 50%, transparent);
+  background: color-mix(in srgb, var(--od-danger) 14%, transparent);
 }
 
-.gt-preview__badge--muted {
-  color: var(--gt-text-muted);
-  border-color: var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 70%, transparent);
+.od-preview__badge--muted {
+  color: var(--od-text-muted);
+  border-color: var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 70%, transparent);
 }
 
-.gt-preview__facts {
+.od-preview__facts {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
   margin: 0 0 0.45rem;
 }
 
-.gt-preview__fact {
+.od-preview__fact {
   padding: 0.1rem 0.5rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 80%, transparent);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 80%, transparent);
+  font-size: var(--od-font-xs);
 }
 
-.gt-preview__reason {
+.od-preview__reason {
   margin: 0 0 0.45rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-preview__genres {
+.od-preview__genres {
   margin: 0 0 0.5rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-preview__friends {
+.od-preview__friends {
   margin: 0 0 0.5rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text);
+  font-size: var(--od-font-sm);
+  color: var(--od-text);
 }
 
 /* Shortened on purpose — this previews the page, it does not replace it. */
-.gt-preview__summary {
+.od-preview__summary {
   margin: 0 0 0.9rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   line-height: 1.55;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -183,8 +183,8 @@
   overflow: hidden;
 }
 
-.gt-preview__summary--empty {
-  color: var(--gt-text-muted);
+.od-preview__summary--empty {
+  color: var(--od-text-muted);
   font-style: italic;
 }
 
@@ -193,14 +193,14 @@
    read as one stack of controls glued together. The gap between the two rows is
    larger than the gap within either, so they group as two rows rather than one
    grid. */
-.gt-preview__actions {
+.od-preview__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.85rem;
 }
 
-.gt-preview__text .gt-store-links {
+.od-preview__text .od-store-links {
   margin-top: 0.85rem;
 }
 
@@ -218,38 +218,38 @@
  * reason (missing firmware, catalog-only, no browser core) is usually the thing
  * the member needs to act on.
  */
-.gt-preview__systems {
+.od-preview__systems {
   margin-top: 1.1rem;
   padding-top: 0.9rem;
-  border-top: 1px solid var(--gt-border);
+  border-top: 1px solid var(--od-border);
 }
 
-.gt-preview__systems-title {
+.od-preview__systems-title {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   margin: 0 0 0.6rem;
-  font-size: var(--gt-label-size);
-  font-weight: var(--gt-label-weight, 700);
-  letter-spacing: var(--gt-label-tracking, 0.06em);
+  font-size: var(--od-label-size);
+  font-weight: var(--od-label-weight, 700);
+  letter-spacing: var(--od-label-tracking, 0.06em);
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-preview__systems-count {
+.od-preview__systems-count {
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: none;
-  color: var(--gt-accent);
+  color: var(--od-accent);
 }
 
-.gt-preview__systems-empty {
+.od-preview__systems-empty {
   margin: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-preview__system-list {
+.od-preview__system-list {
   display: grid;
   /* Two up when there is room, one when there is not — a launcher row needs its
      full width more than the list needs a fixed column count. */
@@ -260,63 +260,63 @@
   list-style: none;
 }
 
-.gt-preview__system {
+.od-preview__system {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.6rem 0.7rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid var(--gt-border);
-  background: color-mix(in srgb, var(--gt-surface-2) 65%, transparent);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface-2) 65%, transparent);
 }
 
-.gt-preview__system--current {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 10%, transparent);
+.od-preview__system--current {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 10%, transparent);
 }
 
-.gt-preview__system-head {
+.od-preview__system-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem;
 }
 
-.gt-preview__system-name {
-  font-size: var(--gt-font-md);
+.od-preview__system-name {
+  font-size: var(--od-font-md);
   font-weight: 650;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-preview__system-library {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-preview__system-library {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-preview__system-tag {
+.od-preview__system-tag {
   padding: 0.05rem 0.4rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+  font-size: var(--od-font-xs);
   font-weight: 650;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--gt-accent);
+  color: var(--od-accent);
 }
 
-.gt-preview__system-tag--warn {
-  border-color: color-mix(in srgb, var(--gt-danger) 45%, transparent);
-  color: var(--gt-danger);
+.od-preview__system-tag--warn {
+  border-color: color-mix(in srgb, var(--od-danger) 45%, transparent);
+  color: var(--od-danger);
 }
 
-.gt-preview__launchers {
+.od-preview__launchers {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
 }
 
-.gt-preview__launcher {
-  font-size: var(--gt-font-xs);
+.od-preview__launcher {
+  font-size: var(--od-font-xs);
   padding: 0.3rem 0.6rem;
   line-height: 1.2;
   text-decoration: none;
@@ -324,35 +324,35 @@
 
 /* The core the backend would have picked anyway, marked rather than reordered —
    the list stays in a stable order and the default is still obvious. */
-.gt-preview__launcher.is-default {
-  border-color: color-mix(in srgb, var(--gt-accent) 60%, transparent);
-  color: var(--gt-accent);
+.od-preview__launcher.is-default {
+  border-color: color-mix(in srgb, var(--od-accent) 60%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-preview__system-note {
+.od-preview__system-note {
   margin: 0;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   line-height: 1.4;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-preview__system-link {
+.od-preview__system-link {
   align-self: flex-start;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-accent);
+  font-size: var(--od-font-xs);
+  color: var(--od-accent);
 }
 
 @media (max-width: 640px) {
-  .gt-preview__body {
+  .od-preview__body {
     flex-direction: column;
   }
 
-  .gt-preview__cover {
+  .od-preview__cover {
     width: 7.5rem;
     max-width: 45%;
   }
 
-  .gt-preview__system-list {
+  .od-preview__system-list {
     grid-template-columns: 1fr;
   }
 }

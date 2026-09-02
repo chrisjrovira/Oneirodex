@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Rasterise the GameTheca mark into the PNG brand assets.
+"""Rasterise the Oneirodex mark into the PNG brand assets.
 
 There is no cairosvg on the build boxes, so this redraws the *same geometry* as
-``gametheca/static/newstyle/gametheca_mark.svg`` with Pillow. If you change the
+``oneirodex/static/newstyle/oneirodex_mark.svg`` with Pillow. If you change the
 SVG, change this too — they are intentionally a matched pair, and the SVG is the
 source of truth for proportions.
 
@@ -21,9 +21,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-NEWSTYLE = ROOT / "gametheca" / "static" / "newstyle"
+NEWSTYLE = ROOT / "oneirodex" / "static" / "newstyle"
 README_ASSETS = ROOT / "docs" / "assets" / "readme"
-ICONS = ROOT / "gametheca" / "static" / "icons"
+ICONS = ROOT / "oneirodex" / "static" / "icons"
 
 SS = 8  # supersample factor
 
@@ -91,8 +91,8 @@ def main() -> int:
 
     targets = [
         (README_ASSETS / "app-icon.png", 512),
-        (NEWSTYLE / "gametheca_logo.png", 512),
-        (NEWSTYLE / "gametheca_logo_small.png", 128),
+        (NEWSTYLE / "oneirodex_logo.png", 512),
+        (NEWSTYLE / "oneirodex_logo_small.png", 128),
         # Tab / touch icons — names are fixed by partials/favicon.html.
         (ICONS / "favicon.png", 64),
         (ICONS / "favicon-32.png", 32),
@@ -108,7 +108,7 @@ def main() -> int:
     ico = ICONS / "favicon.ico"
     draw_mark(256).save(ico, sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (256, 256)])
     print(f"  {ico.relative_to(ROOT)}  multi-size")
-    print("\nBump gt_icon_v in gametheca/templates/partials/favicon.html to bust caches.")
+    print("\nBump gt_icon_v in oneirodex/templates/partials/favicon.html to bust caches.")
     return 0
 
 

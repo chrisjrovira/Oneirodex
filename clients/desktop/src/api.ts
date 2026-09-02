@@ -1,16 +1,16 @@
 import {
-  createGamethecaClient,
-  type GamethecaClient,
-  type GamethecaClientConfig,
+  createOneirodexClient,
+  type OneirodexClient,
+  type OneirodexClientConfig,
 } from '@oneirodex/api-client'
 import type { AuthStore } from './auth.js'
 
-export function createDesktopApi(auth: AuthStore): GamethecaClient {
-  const config: GamethecaClientConfig = {
+export function createDesktopApi(auth: AuthStore): OneirodexClient {
+  const config: OneirodexClientConfig = {
     baseUrl: auth.getBaseUrl(),
     getToken: () => auth.getToken(),
   }
-  return createGamethecaClient(config)
+  return createOneirodexClient(config)
 }
 
-export type { GamethecaClient }
+export type { OneirodexClient }

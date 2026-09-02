@@ -4,13 +4,13 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from sqlalchemy import select
 
-from gametheca import create_app, db
-from gametheca.models import (
+from oneirodex import create_app, db
+from oneirodex.models import (
     User, Game, Library, GameUpdate, GameExtra, GameURL, Image, 
     Genre, GameMode, Theme, Platform, PlayerPerspective, Developer, 
     Publisher, SystemEvents, Category, Status
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -186,7 +186,7 @@ class TestGameDetailsRouteAuthentication:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
         
         assert response.status_code == 200
@@ -202,7 +202,7 @@ class TestGameDetailsRouteValidation:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get('/game_details/invalid-uuid-format')
         
         assert response.status_code == 404
@@ -220,7 +220,7 @@ class TestGameDetailsRouteValidation:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{nonexistent_uuid}')
         
         assert response.status_code == 404
@@ -238,7 +238,7 @@ class TestGameDetailsRouteValidation:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{long_invalid_string}')
         
         assert response.status_code == 404
@@ -270,7 +270,7 @@ class TestGameDetailsRouteResponse:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
 
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
 
         assert response.status_code == 200
@@ -307,7 +307,7 @@ class TestGameDetailsRouteResponse:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
 
-        with patch('gametheca.utils.game_details_payload.sanitize_string_input') as mock_sanitize:
+        with patch('oneirodex.utils.game_details_payload.sanitize_string_input') as mock_sanitize:
             mock_sanitize.return_value = 'sanitized_nfo_content'
             payload = client.get(f'/api/games/{test_game.uuid}/details').get_json()
 
@@ -339,7 +339,7 @@ class TestGameDetailsRouteLogging:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
 
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
 
         # Verify initial access request is logged with truncated UUID
@@ -362,9 +362,9 @@ class TestGameDetailsRouteLogging:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
 
-        with patch('gametheca.routes_games_ext.details.user_can_access_game',
+        with patch('oneirodex.routes_games_ext.details.user_can_access_game',
                    return_value=False):
-            with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+            with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
                 response = client.get(f'/game_details/{test_game.uuid}')
 
         assert response.status_code == 403
@@ -405,8 +405,8 @@ class TestGameDetailsUtilityFunctionLogging:
         """Test that get_game_by_uuid function logs appropriately."""
         with app.app_context():
             # Need to set up Flask-Login context
-            with patch('gametheca.utils.game_core.log_system_event') as mock_log:
-                from gametheca.utils.game_core import get_game_by_uuid
+            with patch('oneirodex.utils.game_core.log_system_event') as mock_log:
+                from oneirodex.utils.game_core import get_game_by_uuid
                 result = get_game_by_uuid(test_game.uuid)
         
         assert result.uuid == test_game.uuid
@@ -423,8 +423,8 @@ class TestGameDetailsUtilityFunctionLogging:
         """Test logging when game is not found."""
         nonexistent_uuid = str(uuid4())
         with app.app_context():
-            with patch('gametheca.utils.game_core.log_system_event') as mock_log:
-                from gametheca.utils.game_core import get_game_by_uuid
+            with patch('oneirodex.utils.game_core.log_system_event') as mock_log:
+                from oneirodex.utils.game_core import get_game_by_uuid
                 result = get_game_by_uuid(nonexistent_uuid)
         
         assert result is None
@@ -526,7 +526,7 @@ class TestGameDetailsErrorHandling:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{nonexistent_uuid}')
         
         assert response.status_code == 404
@@ -544,7 +544,7 @@ class TestGameDetailsPerformance:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_games_ext.details.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.details.log_system_event') as mock_log:
             response = client.get(f'/game_details/{test_game.uuid}')
 
         assert response.status_code == 200

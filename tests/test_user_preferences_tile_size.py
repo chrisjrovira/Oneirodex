@@ -17,7 +17,7 @@ from flask import Flask
 
 
 def test_user_preference_model_has_tile_size():
-    from gametheca.models import UserPreference
+    from oneirodex.models import UserPreference
 
     col = UserPreference.__table__.c.tile_size
     assert col is not None
@@ -33,9 +33,9 @@ def test_user_preferences_form_includes_tile_size():
     app.config['WTF_CSRF_ENABLED'] = False
 
     with app.app_context():
-        with patch('gametheca.forms.ThemeManager') as tm:
+        with patch('oneirodex.forms.ThemeManager') as tm:
             tm.return_value.get_installed_themes.return_value = []
-            from gametheca.forms import UserPreferencesForm
+            from oneirodex.forms import UserPreferencesForm
 
             form = UserPreferencesForm()
             assert 'tile_size' in form._fields
@@ -50,7 +50,7 @@ class TestTilePercentNormalization:
     """The conversion that lets old rows keep working."""
 
     def test_legacy_sizes_map_onto_the_percentage_scale(self):
-        from gametheca.routes_settings import _normalize_tile_percent
+        from oneirodex.routes_settings import _normalize_tile_percent
 
         mapped = {size: _normalize_tile_percent(size) for size in ('S', 'M', 'L', 'XL')}
         assert all(v.isdigit() for v in mapped.values())
@@ -60,18 +60,18 @@ class TestTilePercentNormalization:
         ]
 
     def test_lowercase_legacy_values_still_map(self):
-        from gametheca.routes_settings import _normalize_tile_percent
+        from oneirodex.routes_settings import _normalize_tile_percent
 
         assert _normalize_tile_percent('m') == _normalize_tile_percent('M')
 
     def test_out_of_range_is_clamped_not_rejected(self):
-        from gametheca.routes_settings import _normalize_tile_percent
+        from oneirodex.routes_settings import _normalize_tile_percent
 
         assert _normalize_tile_percent('999') == '100'
         assert _normalize_tile_percent('-40') == '0'
 
     def test_nonsense_falls_back_to_the_default(self):
-        from gametheca.routes_settings import _normalize_tile_percent
+        from oneirodex.routes_settings import _normalize_tile_percent
 
         for junk in ('', None, 'huge', '12px'):
             assert _normalize_tile_percent(junk) == '50'
@@ -82,7 +82,7 @@ def member(db_session):
     """A logged-in member. This file has no shared fixtures of its own."""
     from uuid import uuid4
 
-    from gametheca.models import User
+    from oneirodex.models import User
 
     suffix = uuid4().hex[:8]
     user = User(
@@ -106,7 +106,7 @@ def test_settings_panel_persists_the_tile_size(client, member, db_session):
     matters, and survives the code being refactored — which the string match
     would not have.
     """
-    from gametheca.models import UserPreference
+    from oneirodex.models import UserPreference
 
     with client.session_transaction() as sess:
         sess['_user_id'] = str(member.id)

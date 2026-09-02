@@ -2,59 +2,59 @@
    The vertical rhythm is deliberately uniform so the tiles carry the difference
    between one row and the next, not the chrome around them. */
 
-.gt-shelf {
+.od-shelf {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   /* Pull the next shelf into most of this row's bottom hover bleed so the
      resting gap reads tight; enlarged tiles still paint over the title below. */
-  margin-block-end: calc(var(--gt-space-2, 0.5rem) - var(--gt-shelf-bleed, 0px) * 0.55);
+  margin-block-end: calc(var(--od-space-2, 0.5rem) - var(--od-shelf-bleed, 0px) * 0.55);
 
   /* Shelf tiles are sized from the same custom property as the library grid.
-     `--gt-tile-w` and `--gt-tile-h` were only ever read here and never defined
+     `--od-tile-w` and `--od-tile-h` were only ever read here and never defined
      anywhere, so every shelf tile silently used the 200/280 fallbacks and the
-     top bar's tile-size slider — which drives `--gt-tile-min` — changed the
+     top bar's tile-size slider — which drives `--od-tile-min` — changed the
      library and left Discover exactly as it was. Deriving them here is what
      connects the control to these rows.
 
      1.4 is cover aspect plus the caption strip: it is the ratio the 200/280
      fallback pair already encoded, so nothing moves at the default size. */
-  --gt-tile-w: var(--gt-tile-min, 200px);
-  --gt-tile-h: calc(var(--gt-tile-w) * 1.4);
+  --od-tile-w: var(--od-tile-min, 200px);
+  --od-tile-h: calc(var(--od-tile-w) * 1.4);
 
   /* How far a hovered tile grows past its box, per side. The track reserves
      this inside its padding box (so overflow does not clip the scale) and
      takes it back with negative margin so the row rhythm stays tight. */
-  --gt-shelf-bleed: calc(
-    var(--gt-tile-h) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2 + 6px
+  --od-shelf-bleed: calc(
+    var(--od-tile-h) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 + 6px
   );
-  --gt-shelf-bleed-x: calc(
-    var(--gt-tile-w) * (var(--gt-tile-hover-scale, 1.25) - 1) / 2 + 6px
+  --od-shelf-bleed-x: calc(
+    var(--od-tile-w) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 + 6px
   );
 
   /* Custom bar sits in the track's bottom hover bleed, with a clear air gap
      under resting covers so News matches Latest Games (0.1rem read as glued). */
-  --gt-shelf-scrollbar-gap: 0.45rem;
-  --gt-shelf-scrollbar-lane: 0.35rem;
+  --od-shelf-scrollbar-gap: 0.45rem;
+  --od-shelf-scrollbar-lane: 0.35rem;
 }
 
 /* Head chrome shares the tile gutter so the accent mark lines up with the
    first cover. Pin / hide / see-all stay centred on the heading block. */
-.gt-shelf__head {
+.od-shelf__head {
   display: flex;
   align-items: center;
-  min-height: var(--gt-control-h, 2.25rem);
-  gap: var(--gt-space-3, 0.75rem);
-  padding-inline-start: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
-  padding-inline-end: var(--gt-gutter, 1rem);
+  min-height: var(--od-control-h, 2.25rem);
+  gap: var(--od-space-3, 0.75rem);
+  padding-inline-start: max(var(--od-gutter, 1rem), var(--od-shelf-bleed-x, 0px));
+  padding-inline-end: var(--od-gutter, 1rem);
 }
 
 /* Title + reason share one letter-bottom line (pure baseline — no optical
    nudge; a prior 0.22em top offset overshot). h2 stays name-only for a11y. */
-.gt-shelf__heading {
+.od-shelf__heading {
   display: flex;
   align-items: baseline;
-  gap: var(--gt-space-3, 0.75rem);
+  gap: var(--od-space-3, 0.75rem);
   min-width: 0;
 }
 
@@ -69,22 +69,22 @@
  * The mark is absolutely positioned at the heading's left edge (same inset as
  * the first tile) so it does not participate in the flex baseline — otherwise
  * the reason subtext lined up with the mark box instead of the letters. */
-.gt-shelf__title {
+.od-shelf__title {
   position: relative;
   display: block;
-  font-size: var(--gt-font-xl, 1.25rem);
+  font-size: var(--od-font-xl, 1.25rem);
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.15;
   margin: 0;
   /* Room for the 3px mark + gap; mark itself sits at padding edge = tile edge. */
-  padding-inline-start: calc(3px + var(--gt-space-3, 0.75rem));
-  color: var(--gt-text);
+  padding-inline-start: calc(3px + var(--od-space-3, 0.75rem));
+  color: var(--od-text);
   min-width: 0;
   flex: 0 0 auto;
 }
 
-.gt-shelf__title::before {
+.od-shelf__title::before {
   content: '';
   position: absolute;
   inset-inline-start: 0;
@@ -92,21 +92,21 @@
   bottom: 0.08em;
   width: 3px;
   height: 0.85em;
-  border-radius: var(--gt-radius-pill, 999px);
+  border-radius: var(--od-radius-pill, 999px);
   background: linear-gradient(
     to bottom,
-    var(--gt-accent),
-    color-mix(in srgb, var(--gt-accent) 15%, transparent)
+    var(--od-accent),
+    color-mix(in srgb, var(--od-accent) 15%, transparent)
   );
 }
 
 /* The word itself, so the gradient wash lands on the text and not on the
    flexbox that holds the mark too. */
-.gt-shelf__title-text {
+.od-shelf__title-text {
   background: linear-gradient(
     100deg,
-    var(--gt-text) 30%,
-    color-mix(in srgb, var(--gt-text) 72%, var(--gt-accent))
+    var(--od-text) 30%,
+    color-mix(in srgb, var(--od-text) 72%, var(--od-accent))
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -116,14 +116,14 @@
 /* Forced-colours and any engine without background-clip: text get the plain
    token colour rather than an invisible heading. */
 @supports not (background-clip: text) {
-  .gt-shelf__title-text {
+  .od-shelf__title-text {
     background: none;
-    color: var(--gt-text);
+    color: var(--od-text);
   }
 }
 
 @media (forced-colors: active) {
-  .gt-shelf__title-text {
+  .od-shelf__title-text {
     background: none;
     color: CanvasText;
   }
@@ -133,143 +133,146 @@
    recommendation reads as an ad, an explained one reads as a feature.
    Sibling of the title under baseline alignment so the bottom of these
    letters meets the bottom of the title letters. */
-.gt-shelf__reason {
-  font-size: var(--gt-font-xs, 0.75rem);
+.od-shelf__reason {
+  font-size: var(--od-font-xs, 0.75rem);
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1.15;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.gt-shelf__event {
-  font-size: var(--gt-font-xs, 0.75rem);
-  color: var(--gt-accent);
+.od-shelf__event {
+  font-size: var(--od-font-xs, 0.75rem);
+  color: var(--od-accent);
   white-space: nowrap;
 }
 
 /* Pushed to the end so the row title and the controls sit at opposite edges,
    the way every other list header on the site reads. */
-.gt-shelf__pin,
-.gt-shelf__hide {
+.od-shelf__pin,
+.od-shelf__hide {
   margin-inline-start: auto;
-  font-size: var(--gt-font-xs, 0.75rem);
+  font-size: var(--od-font-xs, 0.75rem);
   padding: 0.15rem 0.5rem;
-  border-radius: var(--gt-radius-sm, 6px);
-  border: 1px solid var(--gt-border);
+  border-radius: var(--od-radius-sm, 6px);
+  border: 1px solid var(--od-border);
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   cursor: pointer;
 }
 
-.gt-shelf__pin[aria-pressed='true'] {
-  color: var(--gt-accent);
-  border-color: var(--gt-accent);
+.od-shelf__pin[aria-pressed='true'] {
+  color: var(--od-accent);
+  border-color: var(--od-accent);
 }
 
-.gt-shelf__pin:disabled {
+.od-shelf__pin:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.gt-shelf__pin:focus-visible,
-.gt-shelf__hide:focus-visible {
-  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+.od-shelf__pin:focus-visible,
+.od-shelf__hide:focus-visible {
+  outline: var(--od-focus-ring, 2px solid var(--od-accent));
   outline-offset: 2px;
 }
 
 /* Only the first control in the end cluster claims the slot; the rest sit
    beside it. Same rule the pin and "See all" already needed. */
-.gt-shelf__pin + .gt-shelf__hide,
-.gt-shelf__hide + .gt-shelf__seeall {
+.od-shelf__pin + .od-shelf__hide,
+.od-shelf__hide + .od-shelf__seeall {
   margin-inline-start: 0;
 }
 
 /* The row chrome is for arranging the feed, not for reading it: present on
    approach, out of the way otherwise. Keyboard focus brings them back. */
-.gt-shelf__pin,
-.gt-shelf__hide {
+.od-shelf__pin,
+.od-shelf__hide {
   opacity: 0;
   transition: opacity 0.16s ease;
 }
 
-.gt-shelf:hover .gt-shelf__pin,
-.gt-shelf:hover .gt-shelf__hide,
-.gt-shelf__pin:focus-visible,
-.gt-shelf__hide:focus-visible,
-.gt-shelf__pin[aria-pressed='true'] {
+.od-shelf:hover .od-shelf__pin,
+.od-shelf:hover .od-shelf__hide,
+.od-shelf__pin:focus-visible,
+.od-shelf__hide:focus-visible,
+.od-shelf__pin[aria-pressed='true'] {
   opacity: 1;
 }
 
 /* Follows the pin when both are present, and takes the end slot when it is
    the only control. */
-.gt-shelf__seeall {
+.od-shelf__seeall {
   margin-inline-start: auto;
-  font-size: var(--gt-font-sm, 0.875rem);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm, 0.875rem);
+  color: var(--od-text-muted);
   text-decoration: none;
   white-space: nowrap;
 }
 
 /* Both controls claim the end slot, so when they appear together only the
    first one may — otherwise the second pushes off again and gaps them apart. */
-.gt-shelf__pin + .gt-shelf__seeall {
+.od-shelf__pin + .od-shelf__seeall {
   margin-inline-start: 0;
 }
 
-.gt-shelf__seeall:hover,
-.gt-shelf__seeall:focus-visible {
-  color: var(--gt-accent);
+.od-shelf__seeall:hover,
+.od-shelf__seeall:focus-visible {
+  color: var(--od-accent);
 }
 
 /* Viewport stacks above the custom bar so an enlarged tile paints over it. */
-.gt-shelf__scroller {
+.od-shelf__scroller {
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
 /* Holds the track and the two arrows. */
-.gt-shelf__viewport {
+.od-shelf__viewport {
   position: relative;
   z-index: 2;
 }
 
-.gt-shelf__track {
+.od-shelf__track {
   position: relative;
   z-index: 1;
   display: flex;
-  gap: var(--gt-tile-gap, 0.75rem);
+  gap: var(--od-tile-gap, 0.75rem);
   overflow-x: auto;
   overflow-y: hidden;
+  /* Hover-bleed padding overlaps the heading; empty track chrome must not
+     steal Pin / Hide / See all clicks. Tiles re-enable pointer events below. */
+  pointer-events: none;
   /* Snap fought custom-bar drags and bumper pans (uneven, often only-forward).
      Wheel-on-tiles already pans the page; arrows and the slider set scrollLeft. */
   scroll-snap-type: none;
-  scroll-padding-inline: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
+  scroll-padding-inline: max(var(--od-gutter, 1rem), var(--od-shelf-bleed-x, 0px));
   /* Edge columns need the same per-side growth room as the library shell, or
      badges on the first/last visible tile clip against the gutter. */
-  padding-inline: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
-  overflow-clip-margin: calc(var(--gt-shelf-bleed, 0px) + 8px);
+  padding-inline: max(var(--od-gutter, 1rem), var(--od-shelf-bleed-x, 0px));
+  overflow-clip-margin: calc(var(--od-shelf-bleed, 0px) + 8px);
   /* Native bar stays hidden: with bottom bleed restored for hover, a native
-     bar would sit under that pad again. .gt-shelf__hbar is the visible control. */
+     bar would sit under that pad again. .od-shelf__hbar is the visible control. */
   scrollbar-width: none;
   -ms-overflow-style: none;
 
   /* Pad by the overshoot on both axes so scale(+badges) stays inside the
      padding box, then pull the space back so the next shelf title is not
      pushed down by empty hover room. */
-  padding-block-start: calc(var(--gt-space-2, 0.5rem) + var(--gt-shelf-bleed, 0px));
-  padding-block-end: var(--gt-shelf-bleed, 0px);
-  margin-block-start: calc(var(--gt-shelf-bleed, 0px) * -1);
+  padding-block-start: calc(var(--od-space-2, 0.5rem) + var(--od-shelf-bleed, 0px));
+  padding-block-end: var(--od-shelf-bleed, 0px);
+  margin-block-start: calc(var(--od-shelf-bleed, 0px) * -1);
   /* Keep the bottom bleed in flow so the custom bar stays under an enlarged
      tile. Collapsing it at rest and restoring it on hover shoved the next
      shelf down every time a card grew. */
   margin-block-end: 0;
 }
 
-.gt-shelf__track::-webkit-scrollbar {
+.od-shelf__track::-webkit-scrollbar {
   display: none;
   height: 0;
   width: 0;
@@ -278,31 +281,31 @@
 /* Custom horizontal bar — under resting tiles inside the bottom bleed.
    z-index above the viewport: the track's bottom padding used to sit on top
    (viewport z-index 2) and steal wheel / drag from this lane. */
-.gt-shelf__hbar {
+.od-shelf__hbar {
   position: absolute;
   z-index: 3;
-  left: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
-  right: max(var(--gt-gutter, 1rem), var(--gt-shelf-bleed-x, 0px));
+  left: max(var(--od-gutter, 1rem), var(--od-shelf-bleed-x, 0px));
+  right: max(var(--od-gutter, 1rem), var(--od-shelf-bleed-x, 0px));
   /* Resting tile bottom sits `bleed` above the scroller foot; park the bar
      `gap` below that line so every row shares the same air under covers. */
   bottom: calc(
-    var(--gt-shelf-bleed, 0px) - var(--gt-shelf-scrollbar-lane) -
-      var(--gt-shelf-scrollbar-gap)
+    var(--od-shelf-bleed, 0px) - var(--od-shelf-scrollbar-lane) -
+      var(--od-shelf-scrollbar-gap)
   );
-  height: var(--gt-shelf-scrollbar-lane);
-  border-radius: var(--gt-radius-pill);
-  background: color-mix(in srgb, var(--gt-text) 10%, transparent);
+  height: var(--od-shelf-scrollbar-lane);
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-text) 10%, transparent);
   cursor: pointer;
   touch-action: none;
   pointer-events: auto;
 }
 
-.gt-shelf__hbar[data-idle='true'] {
+.od-shelf__hbar[data-idle='true'] {
   cursor: default;
 }
 
 /* Invisible hit pad — the visible lane is thin; wheel/drag need a taller target. */
-.gt-shelf__hbar::before {
+.od-shelf__hbar::before {
   content: '';
   position: absolute;
   left: 0;
@@ -311,30 +314,31 @@
   bottom: -0.45rem;
 }
 
-.gt-shelf__hbar-thumb {
+.od-shelf__hbar-thumb {
   position: absolute;
   top: 0;
   bottom: 0;
-  border-radius: var(--gt-radius-pill);
-  background: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-accent) 55%, transparent);
   pointer-events: none;
 }
 
 /* Every tile is the same box in every row, so rows line up with each other and
    a tile with no cover cannot make its row taller than its neighbours. */
-.gt-shelf__item {
+.od-shelf__item {
   position: relative;
   z-index: 0;
   flex: 0 0 auto;
-  width: var(--gt-tile-w, 200px);
-  height: var(--gt-tile-h, 280px);
+  width: var(--od-tile-w, 200px);
+  pointer-events: auto;
+  height: var(--od-tile-h, 280px);
 }
 
 /* News tiles share the library hover scale on shelves (theme CSS only styles
    `.game-card`). Same pattern as game tiles: always enlarge, then cancel when
    the IntersectionObserver leaves the item without `data-fully-visible` —
    requiring the attribute for the positive case left News mute when IO lagged. */
-.gt-shelf__item .gt-news-card {
+.od-shelf__item .od-news-card {
   position: relative;
   transform-origin: center center;
   transition:
@@ -343,21 +347,21 @@
     outline-color 0.16s ease;
 }
 
-.gt-shelf__item .gt-news-card:hover,
-.gt-shelf__item .gt-news-card:focus-visible {
-  transform: scale(var(--gt-tile-hover-scale, 1.25));
+.od-shelf__item .od-news-card:hover,
+.od-shelf__item .od-news-card:focus-visible {
+  transform: scale(var(--od-tile-hover-scale, 1.25));
   z-index: 40;
-  box-shadow: var(--gt-shadow-lg, 0 12px 28px color-mix(in srgb, var(--gt-bg) 55%, transparent));
+  box-shadow: var(--od-shadow-lg, 0 12px 28px color-mix(in srgb, var(--od-bg) 55%, transparent));
 }
 
 /* Clipped edge tiles stay at rest size — enlarging a half-visible cover only
    makes the scrollport crop it harder. Fully-visible is set by the shelf's
    IntersectionObserver (data-fully-visible). */
-.gt-shelf__item:not([data-fully-visible]) .game-card:hover,
-.gt-shelf__item:not([data-fully-visible]) .game-card:focus-visible,
-.gt-shelf__item:not([data-fully-visible]) .game-card:has(:focus-visible),
-.gt-shelf__item:not([data-fully-visible]) .gt-news-card:hover,
-.gt-shelf__item:not([data-fully-visible]) .gt-news-card:focus-visible {
+.od-shelf__item:not([data-fully-visible]) .game-card:hover,
+.od-shelf__item:not([data-fully-visible]) .game-card:focus-visible,
+.od-shelf__item:not([data-fully-visible]) .game-card:has(:focus-visible),
+.od-shelf__item:not([data-fully-visible]) .od-news-card:hover,
+.od-shelf__item:not([data-fully-visible]) .od-news-card:focus-visible {
   transform: none;
   box-shadow: none;
   outline: none;
@@ -367,49 +371,49 @@
 /* Same stacking fix as the library grid: a later shelf (or a later item in
    this row) would otherwise paint over the grown tile and its badges.
    Only fully-visible tiles enlarge, so only those need the lift. */
-.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:hover),
-.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card:focus-visible),
-.gt-shelf:has(.gt-shelf__item[data-fully-visible] .game-card :focus-visible),
-.gt-shelf:has(.gt-shelf__item[data-fully-visible] .gt-news-card:hover),
-.gt-shelf:has(.gt-shelf__item[data-fully-visible] .gt-news-card:focus-visible) {
+.od-shelf:has(.od-shelf__item[data-fully-visible] .game-card:hover),
+.od-shelf:has(.od-shelf__item[data-fully-visible] .game-card:focus-visible),
+.od-shelf:has(.od-shelf__item[data-fully-visible] .game-card :focus-visible),
+.od-shelf:has(.od-shelf__item[data-fully-visible] .od-news-card:hover),
+.od-shelf:has(.od-shelf__item[data-fully-visible] .od-news-card:focus-visible) {
   position: relative;
   z-index: 25;
 }
 
-.gt-shelf__item[data-fully-visible]:has(.game-card:hover),
-.gt-shelf__item[data-fully-visible]:has(.game-card:focus-visible),
-.gt-shelf__item[data-fully-visible]:has(.game-card :focus-visible),
-.gt-shelf__item[data-fully-visible]:has(.gt-news-card:hover),
-.gt-shelf__item[data-fully-visible]:has(.gt-news-card:focus-visible) {
+.od-shelf__item[data-fully-visible]:has(.game-card:hover),
+.od-shelf__item[data-fully-visible]:has(.game-card:focus-visible),
+.od-shelf__item[data-fully-visible]:has(.game-card :focus-visible),
+.od-shelf__item[data-fully-visible]:has(.od-news-card:hover),
+.od-shelf__item[data-fully-visible]:has(.od-news-card:focus-visible) {
   z-index: 25;
 }
 
 /* Open tile menu must beat neighbouring covers. Hover lift drops the moment
    the pointer leaves the card for the menu; overlay-open is the state that
    stays. Same stack as the library grid's overlay-open row. */
-.gt-shelf:has(.game-card[data-overlay-open='true']) {
+.od-shelf:has(.game-card[data-overlay-open='true']) {
   position: relative;
   z-index: 40;
 }
 
-.gt-shelf__item:has(.game-card[data-overlay-open='true']) {
+.od-shelf__item:has(.game-card[data-overlay-open='true']) {
   z-index: 40;
 }
 
 /* First and last tiles grow inward so enlarge is not sliced by the scrollport. */
-.gt-shelf__item:first-child .game-card:hover,
-.gt-shelf__item:first-child .game-card:focus-visible,
-.gt-shelf__item:first-child .game-card:has(:focus-visible),
-.gt-shelf__item:first-child .gt-news-card:hover,
-.gt-shelf__item:first-child .gt-news-card:focus-visible {
+.od-shelf__item:first-child .game-card:hover,
+.od-shelf__item:first-child .game-card:focus-visible,
+.od-shelf__item:first-child .game-card:has(:focus-visible),
+.od-shelf__item:first-child .od-news-card:hover,
+.od-shelf__item:first-child .od-news-card:focus-visible {
   transform-origin: left center;
 }
 
-.gt-shelf__item:last-child .game-card:hover,
-.gt-shelf__item:last-child .game-card:focus-visible,
-.gt-shelf__item:last-child .game-card:has(:focus-visible),
-.gt-shelf__item:last-child .gt-news-card:hover,
-.gt-shelf__item:last-child .gt-news-card:focus-visible {
+.od-shelf__item:last-child .game-card:hover,
+.od-shelf__item:last-child .game-card:focus-visible,
+.od-shelf__item:last-child .game-card:has(:focus-visible),
+.od-shelf__item:last-child .od-news-card:hover,
+.od-shelf__item:last-child .od-news-card:focus-visible {
   transform-origin: right center;
 }
 
@@ -419,54 +423,54 @@
  * wide as the content pane, and arrows in flow would cost two tiles' worth of
  * width on every shelf on the page.
  */
-.gt-shelf__arrow {
+.od-shelf__arrow {
   position: absolute;
   /* Below the track (z-index 1) so a grown tile always paints over the fade.
      Still above the hbar; pointer-events only when visible on shelf hover. */
   z-index: 0;
   top: 0;
   bottom: 0;
-  width: calc(var(--gt-gutter, 1rem) + var(--gt-space-6, 1.5rem));
+  width: calc(var(--od-gutter, 1rem) + var(--od-space-6, 1.5rem));
   display: flex;
   align-items: center;
   justify-content: center;
   border: 0;
   padding: 0;
-  font-size: var(--gt-font-2xl, 1.5rem);
+  font-size: var(--od-font-2xl, 1.5rem);
   line-height: 1;
-  color: var(--gt-text);
+  color: var(--od-text);
   cursor: pointer;
   pointer-events: none;
   /* Fades the tiles out under the arrow instead of covering them with a slab,
      which also signals that the row continues past the edge. */
   background: linear-gradient(
     to right,
-    var(--gt-bg) 35%,
-    color-mix(in srgb, var(--gt-bg) 0%, transparent)
+    var(--od-bg) 35%,
+    color-mix(in srgb, var(--od-bg) 0%, transparent)
   );
   opacity: 0;
   transition: opacity 0.16s ease;
 }
 
-.gt-shelf__arrow--start {
+.od-shelf__arrow--start {
   inset-inline-start: 0;
 }
 
-.gt-shelf__arrow--end {
+.od-shelf__arrow--end {
   inset-inline-end: 0;
   /* Fade from the trailing edge. Do not scaleX the whole control — that also
      mirrored the › glyph so the right arrow pointed left. */
   background: linear-gradient(
     to left,
-    var(--gt-bg) 35%,
-    color-mix(in srgb, var(--gt-bg) 0%, transparent)
+    var(--od-bg) 35%,
+    color-mix(in srgb, var(--od-bg) 0%, transparent)
   );
 }
 
 /* Present on shelf hover (not wheel), and always for the keyboard — a control
    that only exists under a pointer cannot be tabbed to. */
-.gt-shelf__viewport:hover .gt-shelf__arrow:not(:disabled),
-.gt-shelf__arrow:focus-visible {
+.od-shelf__viewport:hover .od-shelf__arrow:not(:disabled),
+.od-shelf__arrow:focus-visible {
   opacity: 1;
   pointer-events: auto;
   /* Lift only while clickable so the fade can receive hits without covering
@@ -477,25 +481,25 @@
 /* While a fully-visible tile is enlarged, hide arrows and the bottom slider.
    Key off the *item* (not the inner card): card:hover misses caption/badge
    gaps and lost to the shelf-hover arrow rule in practice. */
-.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible]:hover) .gt-shelf__arrow,
-.gt-shelf__viewport:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__arrow,
-.gt-shelf__viewport:has(.game-card[data-overlay-open='true']) .gt-shelf__arrow,
-.gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:hover) .gt-shelf__hbar,
-.gt-shelf__scroller:has(.gt-shelf__item[data-fully-visible]:focus-within) .gt-shelf__hbar,
-.gt-shelf__scroller:has(.game-card[data-overlay-open='true']) .gt-shelf__hbar {
+.od-shelf__viewport:has(.od-shelf__item[data-fully-visible]:hover) .od-shelf__arrow,
+.od-shelf__viewport:has(.od-shelf__item[data-fully-visible]:focus-within) .od-shelf__arrow,
+.od-shelf__viewport:has(.game-card[data-overlay-open='true']) .od-shelf__arrow,
+.od-shelf__scroller:has(.od-shelf__item[data-fully-visible]:hover) .od-shelf__hbar,
+.od-shelf__scroller:has(.od-shelf__item[data-fully-visible]:focus-within) .od-shelf__hbar,
+.od-shelf__scroller:has(.game-card[data-overlay-open='true']) .od-shelf__hbar {
   z-index: 0;
   opacity: 0;
   pointer-events: none;
 }
 
-.gt-shelf__arrow:focus-visible {
-  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+.od-shelf__arrow:focus-visible {
+  outline: var(--od-focus-ring, 2px solid var(--od-accent));
   outline-offset: -4px;
 }
 
 /* At the end of a row the arrow is inert, so it does not appear at all rather
    than appearing greyed — there is nothing past the edge to hint at. */
-.gt-shelf__arrow:disabled {
+.od-shelf__arrow:disabled {
   opacity: 0;
   pointer-events: none;
 }
@@ -503,74 +507,74 @@
 @media (hover: none) {
   /* Touch drags the row directly; the arrows would just cover the first and
      last tile. */
-  .gt-shelf__arrow {
+  .od-shelf__arrow {
     display: none;
   }
 }
 
 /* Placeholder holding the space of the tiles being fetched, so the shelf does
    not jump backwards under the pointer when they land. */
-.gt-shelf__pending {
-  border: 1px dashed var(--gt-border);
-  border-radius: var(--gt-radius-lg, 10px);
-  min-height: var(--gt-tile-h, 280px);
+.od-shelf__pending {
+  border: 1px dashed var(--od-border);
+  border-radius: var(--od-radius-lg, 10px);
+  min-height: var(--od-tile-h, 280px);
   opacity: 0.5;
 }
 
-.gt-shelf__more {
+.od-shelf__more {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--gt-space-2, 0.5rem);
-  min-height: var(--gt-tile-h, 280px);
-  border: 1px dashed var(--gt-border);
-  border-radius: var(--gt-radius-lg, 10px);
-  background: var(--gt-surface-2);
-  color: var(--gt-text-muted);
+  gap: var(--od-space-2, 0.5rem);
+  min-height: var(--od-tile-h, 280px);
+  border: 1px dashed var(--od-border);
+  border-radius: var(--od-radius-lg, 10px);
+  background: var(--od-surface-2);
+  color: var(--od-text-muted);
   text-decoration: none;
 }
 
-.gt-shelf__more:hover,
-.gt-shelf__more:focus-visible {
-  border-color: var(--gt-accent);
-  color: var(--gt-accent);
+.od-shelf__more:hover,
+.od-shelf__more:focus-visible {
+  border-color: var(--od-accent);
+  color: var(--od-accent);
 }
 
-.gt-shelf__more:focus-visible {
-  outline: var(--gt-focus-ring, 2px solid var(--gt-accent));
+.od-shelf__more:focus-visible {
+  outline: var(--od-focus-ring, 2px solid var(--od-accent));
   outline-offset: 2px;
 }
 
-.gt-shelf__more-mark {
-  font-size: var(--gt-font-xl, 1.5rem);
+.od-shelf__more-mark {
+  font-size: var(--od-font-xl, 1.5rem);
   line-height: 1;
 }
 
-.gt-shelf__more-label {
-  font-size: var(--gt-font-sm, 0.875rem);
+.od-shelf__more-label {
+  font-size: var(--od-font-sm, 0.875rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-shelf__track {
+  .od-shelf__track {
     scroll-behavior: auto;
   }
 
   /* Match theme `.game-card`: keep the hover scale (it marks the pointer target),
      drop only the animated travel. The old `transform: none` here is why News
      tiles stayed flat while Latest Games still grew under reduced-motion. */
-  .gt-shelf__item .gt-news-card {
+  .od-shelf__item .od-news-card {
     transition: none;
   }
 
-  .gt-shelf__item .gt-news-card:hover,
-  .gt-shelf__item .gt-news-card:focus-visible {
-    transform: scale(var(--gt-tile-hover-scale, 1.25));
+  .od-shelf__item .od-news-card:hover,
+  .od-shelf__item .od-news-card:focus-visible {
+    transform: scale(var(--od-tile-hover-scale, 1.25));
     transition: none;
   }
 
-  .gt-shelf__item:not([data-fully-visible]) .gt-news-card:hover,
-  .gt-shelf__item:not([data-fully-visible]) .gt-news-card:focus-visible {
+  .od-shelf__item:not([data-fully-visible]) .od-news-card:hover,
+  .od-shelf__item:not([data-fully-visible]) .od-news-card:focus-visible {
     transform: none;
   }
 }

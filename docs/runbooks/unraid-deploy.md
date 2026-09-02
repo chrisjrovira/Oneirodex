@@ -9,7 +9,7 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 | Gate | Operator step | Why |
 |---|---|---|
 | **Free host disk** | Unraid Main / Shares: free space until the array is **well under ~99% full** (target: tens of GB free on the cache/array used by Docker) | Pull + `docker compose build` fail or evict other containers when the host is full |
-| **Workspace path** | Edit the live checkout: Unraid `/mnt/user/infernal-data-streams/_projects/Oneirodex`, Windows `Z:\_projects\Oneirodex` | This tree **is** the Compose Manager stack. `/mnt/user/isos/gametheca/` is retired. Games stay on `/mnt/user/infernal-data-streams/_software/_games` (scan root), not the repo |
+| **Workspace path** | Edit the live checkout: Unraid `/mnt/user/infernal-data-streams/_projects/Oneirodex`, Windows `Z:\_projects\Oneirodex` | This tree **is** the Compose Manager stack. `/mnt/user/isos/oneirodex/` is retired. Games stay on `/mnt/user/infernal-data-streams/_software/_games` (scan root), not the repo |
 | **Disk hygiene (dev caches)** | Optional: wipe regenerable local caches only — [workspace-disk-hygiene.md](workspace-disk-hygiene.md) | Shrinks build context; does **not** free Unraid array capacity by itself |
 
 ### After deploy (every code image)
@@ -49,7 +49,7 @@ Exact steps: [libraries-and-scans.md — After A0–A14](../admin/libraries-and-
 | `SECRET_KEY` | **Yes** | Must not be the example placeholder. Generate: `python -c "import secrets; print(secrets.token_urlsafe(64))"` |
 | `DATABASE_URL` | Yes (Compose builds it) | Host is always `db` — do not use `@localhost` |
 | `DATA_FOLDER_GAMES` | Yes | **Host** games path in `.env` (Compose mounts → `/storage:ro`). Container env hard-sets `/storage`. |
-| `LIBRARY_HOST_PATH` | Yes | **Host** appdata library path → `/app/gametheca/static/library` RW |
+| `LIBRARY_HOST_PATH` | Yes | **Host** appdata library path → `/app/oneirodex/static/library` RW |
 | `POSTGRES_*` | If using bundled db | Match Compose `db` service |
 
 Template: [`.env.unraid.example`](../../.env.unraid.example) (also `.env.nas.example` / `.env.docker.example`).
@@ -61,22 +61,34 @@ Do **not** put covers, themes, or uploads on the games mount.
 | Role | Host env | Container mount | Mode | Purpose |
 |---|---|---|---|---|
 | **Games** | `DATA_FOLDER_GAMES` | `/storage` | **ro** | Library scan root only — never uploads |
-| **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/gametheca/static/library` | **rw** | Covers, themes, user uploads (`UPLOAD_FOLDER`) |
-| **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/gametheca/static/library/bios` | **rw** | Private household firmware folder under **appdata** — not the games share. See [Local private BIOS mount](#local-private-bios-mount-vs-public-upload) |
+| **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/oneirodex/static/library` | **rw** | Covers, themes, user uploads (`UPLOAD_FOLDER`) |
+| **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/oneirodex/static/library/bios` | **rw** | Private household firmware folder under **appdata** — not the games share. See [Local private BIOS mount](#local-private-bios-mount-vs-public-upload) |
 | Postgres | Compose volume `db_data` | `/var/lib/postgresql/data/pgdata` | rw | DB |
-| Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/gametheca/static/vendor/webretro/cores` | rw | Must include shipped cores — [webretro-cores.md](webretro-cores.md) |
+| Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/oneirodex/static/vendor/webretro/cores` | rw | Must include shipped cores — [webretro-cores.md](webretro-cores.md) |
 
 Unraid path examples (edit to match your shares):
 
 ```bash
 DATA_FOLDER_GAMES=/mnt/user/games
-LIBRARY_HOST_PATH=/mnt/user/appdata/gametheca/library
+LIBRARY_HOST_PATH=/mnt/user/appdata/oneirodex/library
 # Optional — after creating the host dir and uncommenting the compose bios bind:
-# EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/gametheca/bios
-# EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios
+# EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/oneirodex/bios
+# EMULATOR_BIOS_PATH=/app/oneirodex/static/library/bios
 ```
 
 App libraries in Admin should point at paths under `/storage/...` (inside the container).
+
+## HTTPS, SMTP, passkeys (HellfireNAS)
+
+The app container publishes **HTTP `:5006` only**. There is no Swag / NPM / Caddy sidecar on this host. Unraid’s own TLS bundle (`/boot/config/ssl/certs/HellfireNAS_unraid_bundle.pem`) is for the **management GUI**, not Oneirodex.
+
+To put the app on HTTPS:
+
+1. Pick a hostname (LAN DNS or public) and terminate TLS on a reverse proxy (npm / Swag / Caddy / Unraid extra nginx).
+2. Proxy to `http://127.0.0.1:5006` with `X-Forwarded-Proto: https` — [oidc-sso.md § reverse proxy](oidc-sso.md#6-reverse-proxy-and-https).
+3. Set `TRUSTED_PROXIES=1`, `SESSION_COOKIE_SECURE=true`, and Admin **Site URL** to the `https://…` base.
+
+**SMTP** is stored in Admin → Integrations → SMTP (`GlobalSettings.smtp_*`), not `.env`. Tuta: `smtp.tuta.com` port **587** STARTTLS. Do not paste the password into git or chat. **Passkeys** for Unraid’s GUI are a host setting; the Oneirodex login page has no WebAuthn yet.
 
 ### Local private BIOS mount vs public upload
 
@@ -87,9 +99,9 @@ App libraries in Admin should point at paths under `/storage/...` (inside the co
 
 **Local mount steps (optional)**
 
-1. On the host: `mkdir -p /mnt/user/appdata/gametheca/bios`
+1. On the host: `mkdir -p /mnt/user/appdata/oneirodex/bios`
 2. Place legally obtained firmware files you already own (names only — see [browser-play.md](../user/browser-play.md#bios--firmware-filenames-only)). No download links; Oneirodex does not distribute BIOS packs.
-3. In `.env`: set `EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/gametheca/bios` and keep `EMULATOR_BIOS_PATH=/app/gametheca/static/library/bios` (Compose default).
+3. In `.env`: set `EMULATOR_BIOS_HOST_PATH=/mnt/user/appdata/oneirodex/bios` and keep `EMULATOR_BIOS_PATH=/app/oneirodex/static/library/bios` (Compose default).
 4. Uncomment the bios volume line in `docker-compose.yml`, then recreate the app container.
 5. Confirm Admin → emulator BIOS lists the files. Remaining names can be uploaded one at a time, or **Scan collection** / **Install matching firmware** if the dumps live in a folder the container can see (`BIOS_IMPORT_SOURCE` or a library root).
 
@@ -127,7 +139,7 @@ Admin short form: [libraries-and-scans.md](../admin/libraries-and-scans.md#conso
 
 ## Image
 
-Local build tag `oneirodex:1.0.0-beta` (Compose default). Preferred Hub image once published: `chrisjrovira/oneirodex` — set `APP_IMAGE`. `chrisjrovira/gametheca` remains accepted. The image includes `bash` for `entrypoint.sh`. Live stacks still named `gametheca-app` pin `APP_CONTAINER_NAME` until the scan FIFO is idle.
+Local build tag `oneirodex:1.0.0-beta` (Compose default). Preferred Hub image once published: `chrisjrovira/oneirodex` — set `APP_IMAGE`. `chrisjrovira/oneirodex` remains accepted. The image includes `bash` for `entrypoint.sh`. Live stacks still named `oneirodex-app` pin `APP_CONTAINER_NAME` until the scan FIFO is idle.
 
 ## Compose Manager paths
 
@@ -141,7 +153,7 @@ This household’s Unraid stack **is** the git checkout (not a copy under `isos`
 
 Windows mapping of the same tree: `Z:\_projects\Oneirodex`. Short copy notes: [NAS-DEPLOY.md](../../NAS-DEPLOY.md).
 
-`/mnt/user/isos/gametheca/` is **retired** — do not point Compose Manager there.
+`/mnt/user/isos/oneirodex/` is **retired** — do not point Compose Manager there.
 
 Copy template (only if `.env` is missing):
 
@@ -154,7 +166,7 @@ This household’s volume binds (inside `.env`, not as the compose-file path):
 
 ```bash
 DATA_FOLDER_GAMES=/mnt/user/infernal-data-streams/_software/_games
-LIBRARY_HOST_PATH=/mnt/cache/appdata/gametheca/library
+LIBRARY_HOST_PATH=/mnt/cache/appdata/oneirodex/library
 ```
 
 ## Optional profiles (full-stack test)
@@ -210,32 +222,32 @@ SSO is **Authentik** already installed via Dockerman (`authentik` / `authentik-w
 1. **Identify the live project** (container names + `com.docker.compose.project`):
 
 ```bash
-docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep -Ei 'oneirodex|gametheca'
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep -Ei 'oneirodex|oneirodex'
 docker inspect oneirodex-db --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
 docker inspect oneirodex-app --format '{{index .Config.Labels "com.docker.compose.project"}} → {{index .Config.Labels "com.docker.compose.project.working_dir"}}'
-# Live Unraid until FIFO-idle recreate may still be gametheca-db / gametheca-app.
+# Live Unraid until FIFO-idle recreate may still be oneirodex-db / oneirodex-app.
 ```
 
 2. **Identify the volume mounted on live Postgres:**
 
 ```bash
-docker inspect gametheca-db --format '{{json .Mounts}}' | python3 -m json.tool
+docker inspect oneirodex-db --format '{{json .Mounts}}' | python3 -m json.tool
 # Look for Destination=/var/lib/postgresql/data/pgdata → Name= like <project>_db_data
 ```
 
 3. **Confirm the app points at that DB** (Compose default host is `db`, not an external URL):
 
 ```bash
-docker exec gametheca-app printenv DATABASE_URL DATABASE_HOST
+docker exec oneirodex-app printenv DATABASE_URL DATABASE_HOST
 # Expect host `db` (or the compose service name). If host is a LAN IP / other container → external DB; wiping compose db_data will not clear login.
 ```
 
 4. **Wipe THAT stack** from the project working_dir above (not a sibling `002`/`003`/`004` clone):
 
 ```bash
-cd "$(docker inspect gametheca-db --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')"
+cd "$(docker inspect oneirodex-db --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')"
 # Capture library bind before down (needed to empty host files):
-LIB=$(docker inspect gametheca-app --format '{{range .Mounts}}{{if eq .Destination "/app/gametheca/static/library"}}{{.Source}}{{end}}{{end}}')
+LIB=$(docker inspect oneirodex-app --format '{{range .Mounts}}{{if eq .Destination "/app/oneirodex/static/library"}}{{.Source}}{{end}}{{end}}')
 echo "LIBRARY host path: $LIB"
 docker compose down -v
 docker volume ls | grep -i db_data   # live <project>_db_data must be GONE
@@ -248,7 +260,7 @@ docker compose up -d --build
 
 | Failure mode | Why login/libraries survive |
 |---|---|
-| Wrong project prefix (`gametheca` vs `002`/`003`/`004`) | `down -v` removed a sibling stack’s volume; live `…_db_data` untouched |
+| Wrong project prefix (`oneirodex` vs `002`/`003`/`004`) | `down -v` removed a sibling stack’s volume; live `…_db_data` untouched |
 | `docker compose down` **without** `-v` | Containers gone; named volume `db_data` kept |
 | Portainer “Recreate” / Update without removing volume | New container remounts same `…_db_data` |
 | External `DATABASE_URL` (LAN Postgres / other stack) | Compose `db_data` wipe is irrelevant — clear that DB or point Compose back to `db` |

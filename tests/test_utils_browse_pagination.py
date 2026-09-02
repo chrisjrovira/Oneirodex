@@ -1,5 +1,5 @@
 # tests/test_utils_browse_pagination.py
-from gametheca.utils.browse_pagination import (
+from oneirodex.utils.browse_pagination import (
     ALLOWED_PAGE_SIZES,
     normalize_page_size,
 )

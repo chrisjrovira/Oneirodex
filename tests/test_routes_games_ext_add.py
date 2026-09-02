@@ -1,5 +1,5 @@
 """
-Unit tests for gametheca.routes_games_ext.add
+Unit tests for oneirodex.routes_games_ext.add
 
 Covers the "link existing library game" flow added for Track 4 (Find/Add
 MVP), plus the igdb_id prefill enhancement on the Identify GET handler.
@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 from sqlalchemy import delete, select
 
-from gametheca.models import User, Game, Library, LibraryPlatform, UnmatchedFolder
+from oneirodex.models import User, Game, Library, LibraryPlatform, UnmatchedFolder
 
 
 @pytest.fixture
@@ -116,8 +116,8 @@ class TestLinkExistingGame:
 
     def test_unsafe_path_rejected(self, client, admin_user, existing_game):
         _login(client, admin_user)
-        with patch('gametheca.routes_games_ext.add.is_safe_path', return_value=(False, 'Access denied')):
-            with patch('gametheca.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
+        with patch('oneirodex.routes_games_ext.add.is_safe_path', return_value=(False, 'Access denied')):
+            with patch('oneirodex.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
                 response = client.post('/link_existing_game', data={
                     'game_uuid': existing_game.uuid,
                     'full_disk_path': '/etc/passwd',
@@ -128,7 +128,7 @@ class TestLinkExistingGame:
 
     def test_no_allowed_bases_configured(self, client, admin_user, existing_game):
         _login(client, admin_user)
-        with patch('gametheca.routes_games_ext.add.get_allowed_base_directories', return_value=[]):
+        with patch('oneirodex.routes_games_ext.add.get_allowed_base_directories', return_value=[]):
             response = client.post('/link_existing_game', data={
                 'game_uuid': existing_game.uuid,
                 'full_disk_path': '/allowed/games/new-disk-folder',
@@ -139,8 +139,8 @@ class TestLinkExistingGame:
 
     def test_nonexistent_game_redirects_back(self, client, admin_user):
         _login(client, admin_user)
-        with patch('gametheca.routes_games_ext.add.is_safe_path', return_value=(True, None)):
-            with patch('gametheca.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
+        with patch('oneirodex.routes_games_ext.add.is_safe_path', return_value=(True, None)):
+            with patch('oneirodex.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
                 response = client.post('/link_existing_game', data={
                     'game_uuid': str(uuid4()),
                     'full_disk_path': '/allowed/games/new-disk-folder',
@@ -153,8 +153,8 @@ class TestLinkExistingGame:
         _login(client, admin_user)
         new_path = '/allowed/games/new-disk-folder'
 
-        with patch('gametheca.routes_games_ext.add.is_safe_path', return_value=(True, None)):
-            with patch('gametheca.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
+        with patch('oneirodex.routes_games_ext.add.is_safe_path', return_value=(True, None)):
+            with patch('oneirodex.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
                 response = client.post('/link_existing_game', data={
                     'game_uuid': existing_game.uuid,
                     'full_disk_path': new_path,
@@ -173,8 +173,8 @@ class TestLinkExistingGame:
         _login(client, admin_user)
         new_path = matching_unmatched_folder.folder_path
 
-        with patch('gametheca.routes_games_ext.add.is_safe_path', return_value=(True, None)):
-            with patch('gametheca.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
+        with patch('oneirodex.routes_games_ext.add.is_safe_path', return_value=(True, None)):
+            with patch('oneirodex.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
                 response = client.post('/link_existing_game', data={
                     'game_uuid': existing_game.uuid,
                     'full_disk_path': new_path,
@@ -189,9 +189,9 @@ class TestLinkExistingGame:
 
     def test_success_logs_system_event(self, client, admin_user, existing_game):
         _login(client, admin_user)
-        with patch('gametheca.routes_games_ext.add.is_safe_path', return_value=(True, None)):
-            with patch('gametheca.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
-                with patch('gametheca.routes_games_ext.add.log_system_event') as mock_log:
+        with patch('oneirodex.routes_games_ext.add.is_safe_path', return_value=(True, None)):
+            with patch('oneirodex.routes_games_ext.add.get_allowed_base_directories', return_value=['/allowed']):
+                with patch('oneirodex.routes_games_ext.add.log_system_event') as mock_log:
                     response = client.post('/link_existing_game', data={
                         'game_uuid': existing_game.uuid,
                         'full_disk_path': '/allowed/games/new-disk-folder',

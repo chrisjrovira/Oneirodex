@@ -1,0 +1,31 @@
+{% extends "base_admin.html" %}
+{# Jinja owns this body (profile forms + firmware React island) — declared so
+   the React shell never claims it (GT-A3). #}
+{% block admin_render %}legacy{% endblock %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<div class="container od-adminpage od-adminpage--lg od-adminpage--spaced">
+    <div class="od-adminpage-header">
+        <div>
+            <h1 class="od-adminpage-title">{{ icons.icon('gamepad', size=26) }} Emulator profiles</h1>
+            <p class="od-adminpage-lede">
+                Prefer a WebRetro libretro core per console platform. Play Now on game details
+                uses the preferred core when set.
+            </p>
+        </div>
+    </div>
+    <div class="od-adminpage-panel">
+        <div id="od-emu-status" class="od-adminpage-status mb-2" aria-live="polite"></div>
+        <div id="od-emu-profiles" class="od-emu-list">
+            <p class="text-muted">Loading…</p>
+        </div>
+    </div>
+    {# GT-B2 / UID-007 — React firmware panel mounts here (main.jsx). The page
+       stays declared `legacy` so the Jinja profile forms above keep rendering;
+       only firmware is React. #}
+    <div id="emulator-firmware-mount" class="od-adminpage-panel"></div>
+    <p><a class="od-adminpage-backlink" href="{{ url_for('site.admin_dashboard') }}">{{ icons.icon('arrow-left') }} Back to admin</a></p>
+</div>
+<script src="{{ url_for('static', filename='js/od_admin_emulator_profiles.js') }}"></script>
+{% endblock %}

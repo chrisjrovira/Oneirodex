@@ -6,7 +6,7 @@ than the default they rendered in the default theme's green while the rest of
 the UI changed around them — reported as "default avatars should have theme
 ready versions for each one".
 
-They are generated per preset instead, the same way ``gt-tokens.css`` is:
+They are generated per preset instead, the same way ``od-tokens.css`` is:
 :func:`_write_preset_avatars` substitutes three known source colours for the
 preset's own. Straight substitution is only safe while the source art *stays*
 inside those three colours, and nothing about editing an SVG makes that
@@ -22,7 +22,7 @@ from __future__ import annotations
 import os
 import re
 
-from gametheca.utils.preset_themes import (
+from oneirodex.utils.preset_themes import (
     AVATAR_FILES,
     AVATAR_SOURCE_ACCENT,
     AVATAR_SOURCE_MUTED,
@@ -38,7 +38,7 @@ from gametheca.utils.preset_themes import (
 
 SOURCE_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'gametheca',
+    'oneirodex',
     'setup',
     'default_theme',
     'avatars',
@@ -86,7 +86,7 @@ def test_generated_avatars_carry_the_preset_palette(tmp_path):
 
     _write_preset_avatars(os.path.dirname(SOURCE_DIR), str(target), preset)
 
-    accent = preset_tokens(preset)['gt-accent'].lower()
+    accent = preset_tokens(preset)['od-accent'].lower()
     for name in AVATAR_FILES:
         written = target / 'avatars' / name
         assert written.is_file(), f'{name} was not generated'
@@ -132,8 +132,8 @@ def _bare_source(tmp_path):
         ':root { --btn-primary: #ff5a36; --btn-primary-hover: #e04520; }\n',
         encoding='utf-8',
     )
-    (root / 'css' / 'gt-tokens.css').write_text(
-        ':root { --gt-accent: #ff5a36; }\n', encoding='utf-8'
+    (root / 'css' / 'od-tokens.css').write_text(
+        ':root { --od-accent: #ff5a36; }\n', encoding='utf-8'
     )
     return root
 

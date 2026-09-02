@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Import operator-supplied BIOS files from a local collection into the volume.
 
-GameTheca never downloads or bundles BIOS. This script does not fetch anything:
+Oneirodex never downloads or bundles BIOS. This script does not fetch anything:
 it looks through firmware *you already have* and copies the specific files the
 libretro cores ask for into the BIOS volume, flattened, under the exact names
 the cores look up. Admin → Emulators **Scan collection** / **Install matching
@@ -13,7 +13,7 @@ is written until you pass --apply.
     python scripts/import_bios.py --source E:\\_bios
     python scripts/import_bios.py --source E:\\_bios --apply
 
-The destination is `gametheca/static/library/bios` (gitignored) unless
+The destination is `oneirodex/static/library/bios` (gitignored) unless
 EMULATOR_BIOS_PATH is set or --dest is given. Firmware stays out of git.
 """
 
@@ -31,14 +31,14 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def _load_bios_module():
     """Load emulator_bios.py directly, without importing the app package.
 
-    `import gametheca.utils.emulator_bios` runs `gametheca/__init__`, which
+    `import oneirodex.utils.emulator_bios` runs `oneirodex/__init__`, which
     imports config and refuses to load without SECRET_KEY — a real requirement
     for the server and a pointless one for a script that only needs a table of
     filenames. The module itself depends on nothing but flask/werkzeug names it
     does not call at import time, so loading it by path is safe and keeps
     BIOS_REQUIREMENTS a single source of truth.
     """
-    path = os.path.join(REPO_ROOT, 'gametheca', 'utils', 'emulator_bios.py')
+    path = os.path.join(REPO_ROOT, 'oneirodex', 'utils', 'emulator_bios.py')
     spec = importlib.util.spec_from_file_location('_gt_emulator_bios', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -49,7 +49,7 @@ _bios = _load_bios_module()
 BIOS_REQUIREMENTS = _bios.BIOS_REQUIREMENTS
 BIOS_HARD_REQUIRED_CORES = _bios.BIOS_HARD_REQUIRED_CORES
 
-DEFAULT_DEST = os.path.join(REPO_ROOT, 'gametheca', 'static', 'library', 'bios')
+DEFAULT_DEST = os.path.join(REPO_ROOT, 'oneirodex', 'static', 'library', 'bios')
 
 
 def wanted_names() -> dict[str, str]:

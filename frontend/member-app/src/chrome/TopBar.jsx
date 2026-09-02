@@ -115,7 +115,7 @@ export function TopBar({
 
   return (
     <>
-      <header className="gt-topbar" ref={rootRef}>
+      <header className="od-topbar" ref={rootRef}>
         {/* The rail has three states and this button drives all of them, so
             `=== 'open'` was the wrong test: 'open' is the mobile drawer only,
             which left aria-expanded permanently false on desktop — announcing a
@@ -123,22 +123,22 @@ export function TopBar({
             Shown is 'open' or 'expanded'; the one state that is not is
             'collapsed'. partials/topbar.html has always had this right. */}
         {/* Start group. Wrapped, and paired with an equally-growing actions
-            group in gt-shell.css, so the centre slot lands on the *page's*
+            group in od-shell.css, so the centre slot lands on the *page's*
             midpoint rather than on the midpoint of whatever width the two sides
             happened to leave. Unwrapped, every side control that appeared or
             changed width nudged the view switcher off centre. */}
-        <div className="gt-topbar__start">
+        <div className="od-topbar__start">
           {/* Adjacent chromeless controls, not one outlined cluster.
               Open the nav, narrow the list — the same kind of job, done to the
               same list — so they sit together at the start of the bar. They
               were reported as a shared outline around hamburger + Filters;
-              `.gt-cbtn-group` stays for slot plumbing, but the pair no longer
+              `.od-cbtn-group` stays for slot plumbing, but the pair no longer
               shares an edge. Nothing goes between them: the page name used to,
               which pushed Filters to a different x position on every page. */}
-          <div className="gt-cbtn-group gt-topbar__cluster">
+          <div className="od-cbtn-group od-topbar__cluster">
             <button
               type="button"
-              className="gt-cbtn gt-topbar__rail-toggle"
+              className="od-cbtn od-topbar__rail-toggle"
               aria-label="Toggle navigation"
               aria-expanded={railState !== 'collapsed'}
               onClick={onToggleRail}
@@ -147,14 +147,14 @@ export function TopBar({
             </button>
 
             {/* Lead slot: Filters, immediately after the rail toggle. */}
-            <div id={TOPBAR_LEAD_ID} className="gt-topbar__lead" />
+            <div id={TOPBAR_LEAD_ID} className="od-topbar__lead" />
           </div>
 
           {/* Where a page that knows its own name puts it — a Discover row's
               "see all" page, whose title is data rather than a route. Outside
               the cluster so it reads as a label beside the controls rather
               than as a third button in the group. */}
-          <div id={TOPBAR_TITLE_ID} className="gt-topbar__title-slot" />
+          <div id={TOPBAR_TITLE_ID} className="od-topbar__title-slot" />
 
           {/* The page name, but only when the rail is collapsed, and after the
               control cluster rather than inside it.
@@ -166,18 +166,18 @@ export function TopBar({
               question nothing asked. Collapsed, the rail is a column of icons and
               the bar is the only place the answer exists. */}
           {railState === 'collapsed' && pageTitle ? (
-            <span className="gt-topbar__section">{pageTitle}</span>
+            <span className="od-topbar__section">{pageTitle}</span>
           ) : null}
         </div>
 
-        {views ? <div className="gt-topbar__views">{views}</div> : null}
+        {views ? <div className="od-topbar__views">{views}</div> : null}
 
         {/* Centre slot: the page's own views and actions. Centred and growing
             outward from the middle, so adding a view keeps the strip balanced
             instead of pushing everything right. ContextBar portals here. */}
-        <div id={TOPBAR_SLOT_ID} className="gt-topbar__page" />
+        <div id={TOPBAR_SLOT_ID} className="od-topbar__page" />
 
-        <div className="gt-topbar__actions">
+        <div className="od-topbar__actions">
           {/* The search field is gone from the bar (GT-B16).
               Typing into the library's own filter is how you search a library,
               and a second search affordance in the chrome bought nothing while
@@ -195,7 +195,7 @@ export function TopBar({
               the slider opens leftward into that slack without moving the count
               or the account button.
 
-              Rendered only where it changes something. `--gt-tile-min` is read
+              Rendered only where it changes something. `--od-tile-min` is read
               by the game grid and by the card geometry derived from it; every
               other page ignored it, so the slider sat in the bar on Help,
               Notifications, Calendar and the rest doing nothing but saving a
@@ -211,9 +211,9 @@ export function TopBar({
 
           {/* Trail slot: how much is here. Still grouped with the control that
               changes it — both answer "how much am I looking at". */}
-          <div id={TOPBAR_TRAIL_ID} className="gt-topbar__trail" />
+          <div id={TOPBAR_TRAIL_ID} className="od-topbar__trail" />
 
-          <div className="gt-topnav__dropdown">
+          <div className="od-topnav__dropdown">
             {/* Who you are, then your face.
                 It was a generic person glyph followed by a name — the one
                 identity control in the product, rendered identically for every
@@ -222,23 +222,23 @@ export function TopBar({
                 the eye reads a signed-in control in: label first, portrait at
                 the edge nearest the window corner.
 
-                Still `.gt-cbtn`, so it is the same button as everything else in
+                Still `.od-cbtn`, so it is the same button as everything else in
                 the bar; the avatar is sized to the control rather than the
                 other way round. */}
             <button
               type="button"
-              className="gt-cbtn gt-topbar__account"
+              className="od-cbtn od-topbar__account"
               aria-expanded={accountOpen}
               aria-controls={accountId}
               aria-label="Account menu"
               onClick={() => setAccountOpen((open) => !open)}
             >
-              <span className="gt-topbar__account-name">
+              <span className="od-topbar__account-name">
                 {username || 'Account'}
               </span>
               {avatar ? (
                 <img
-                  className="gt-topbar__account-avatar"
+                  className="od-topbar__account-avatar"
                   src={avatar.startsWith('/') ? avatar : `/static/${avatar}`}
                   alt=""
                   width={22}
@@ -249,15 +249,15 @@ export function TopBar({
               )}
             </button>
             {accountOpen ? (
-              <div className="gt-topnav__dropdown-panel" id={accountId} role="menu">
-                {username ? <div className="gt-topnav__username">{username}</div> : null}
+              <div className="od-topnav__dropdown-panel" id={accountId} role="menu">
+                {username ? <div className="od-topnav__username">{username}</div> : null}
                 {/* Only remaining home for the palette hint now the bar's
                     search button is gone. CommandPalette binds ⌘K itself, so
                     this is discoverability, not the trigger. */}
                 <button
                   type="button"
                   role="menuitem"
-                  className="gt-topnav__palette-hint"
+                  className="od-topnav__palette-hint"
                   onClick={() => {
                     setAccountOpen(false)
                     onOpenCommandPalette?.()

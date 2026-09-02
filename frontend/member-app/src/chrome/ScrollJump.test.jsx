@@ -57,7 +57,7 @@ describe('ScrollJump', () => {
   test('hides when the page is not scrollable', () => {
     stubScrollMetrics({ scrollHeight: 500, clientHeight: 800, scrollY: 0 })
     const { container } = render(<ScrollJump />)
-    expect(container.querySelector('.gt-scroll-jump')).toBeNull()
+    expect(container.querySelector('.od-scroll-jump')).toBeNull()
     expect(screen.queryByRole('navigation', { name: /page scroll/i })).toBeNull()
   })
 
@@ -119,14 +119,14 @@ describe('ScrollJump', () => {
     )
   })
 
-  test('scrolls .gt-shell__main when the app shell is present', async () => {
+  test('scrolls .od-shell__main when the app shell is present', async () => {
     // The regression this exists for: the shell is viewport-locked and
-    // .gt-shell__main is the only scroll container, so reading window.scrollY
+    // .od-shell__main is the only scroll container, so reading window.scrollY
     // reported "nothing to scroll" and the control rendered *nothing at all*.
     // It looked deleted rather than broken, which is why it survived a full
     // suite run unnoticed.
     const main = document.createElement('div')
-    main.className = 'gt-shell__main'
+    main.className = 'od-shell__main'
     Object.defineProperty(main, 'scrollHeight', { configurable: true, get: () => 2400 })
     Object.defineProperty(main, 'clientHeight', { configurable: true, get: () => 800 })
     main.scrollTop = 600

@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import (
+from oneirodex import db
+from oneirodex.models import (
     DiscoverySection,
     Game,
     Genre,
@@ -18,7 +18,7 @@ from gametheca.models import (
     UserTasteFacet,
     user_favorites,
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 
 NOW = datetime.now(timezone.utc)
 
@@ -86,7 +86,7 @@ def _play(db_session, user, game, *, hours=1.0, days_ago=0):
 
 class TestTasteProfile:
     def test_a_member_with_no_signal_has_no_profile(self, app, ml_user):
-        from gametheca.utils.discover_ml.profile import build_profile
+        from oneirodex.utils.discover_ml.profile import build_profile
 
         with app.app_context():
             assert build_profile(ml_user.id) == {}
@@ -94,7 +94,7 @@ class TestTasteProfile:
     def test_favouriting_a_game_weights_its_genres(
         self, app, db_session, ml_user, ml_library, genres
     ):
-        from gametheca.utils.discover_ml.profile import build_profile
+        from oneirodex.utils.discover_ml.profile import build_profile
 
         loved = _game(db_session, ml_library, 'Loved', genres=[genres[0]])
         _favorite(db_session, ml_user, loved)
@@ -108,7 +108,7 @@ class TestTasteProfile:
         self, app, db_session, ml_user, ml_library, genres
     ):
         """One 400-hour obsession must not drown out a broader taste."""
-        from gametheca.utils.discover_ml.profile import collect_signals
+        from oneirodex.utils.discover_ml.profile import collect_signals
 
         modest = _game(db_session, ml_library, 'Modest', genres=[genres[0]])
         obsession = _game(db_session, ml_library, 'Obsession', genres=[genres[1]])
@@ -123,7 +123,7 @@ class TestTasteProfile:
     def test_older_signals_weigh_less(
         self, app, db_session, ml_user, ml_library, genres
     ):
-        from gametheca.utils.discover_ml.profile import collect_signals
+        from oneirodex.utils.discover_ml.profile import collect_signals
 
         recent = _game(db_session, ml_library, 'Recent', genres=[genres[0]])
         stale = _game(db_session, ml_library, 'Stale', genres=[genres[1]])
@@ -137,7 +137,7 @@ class TestTasteProfile:
     def test_the_profile_round_trips_through_storage(
         self, app, db_session, ml_user, ml_library, genres
     ):
-        from gametheca.utils.discover_ml.profile import load_profile, rebuild_profile
+        from oneirodex.utils.discover_ml.profile import load_profile, rebuild_profile
 
         loved = _game(db_session, ml_library, 'Stored', genres=[genres[0]])
         _favorite(db_session, ml_user, loved)
@@ -150,7 +150,7 @@ class TestTasteProfile:
         self, app, db_session, ml_user, ml_library, genres
     ):
         """A facet that drops out of a taste must disappear, not linger."""
-        from gametheca.utils.discover_ml.profile import rebuild_profile
+        from oneirodex.utils.discover_ml.profile import rebuild_profile
 
         loved = _game(db_session, ml_library, 'Was Loved', genres=[genres[0]])
         _favorite(db_session, ml_user, loved)
@@ -172,7 +172,7 @@ class TestContentSimilarity:
     def test_titles_sharing_facets_are_neighbours(
         self, app, db_session, ml_library, genres
     ):
-        from gametheca.utils.discover_ml.similarity import content_neighbours
+        from oneirodex.utils.discover_ml.similarity import content_neighbours
 
         one = _game(db_session, ml_library, 'Alike One', genres=[genres[0]])
         two = _game(db_session, ml_library, 'Alike Two', genres=[genres[0]])
@@ -186,7 +186,7 @@ class TestContentSimilarity:
     def test_a_title_with_no_facets_has_no_neighbours(
         self, app, db_session, ml_library
     ):
-        from gametheca.utils.discover_ml.similarity import content_neighbours
+        from oneirodex.utils.discover_ml.similarity import content_neighbours
 
         bare = _game(db_session, ml_library, 'Bare')
 
@@ -196,7 +196,7 @@ class TestContentSimilarity:
         self, app, db_session, ml_library, genres
     ):
         """Jaccard, so a title tagged with everything is not everyone's neighbour."""
-        from gametheca.utils.discover_ml.similarity import content_neighbours
+        from oneirodex.utils.discover_ml.similarity import content_neighbours
 
         theme = Theme(name=f'MLTheme-{uuid4().hex[:6]}')
         db_session.add(theme)
@@ -219,7 +219,7 @@ class TestContentSimilarity:
 class TestCollaborativeFloor:
     def test_a_small_install_does_not_run_collaborative_filtering(self, app):
         """With a handful of members, co-occurrence is noise wearing a lab coat."""
-        from gametheca.utils.discover_ml.similarity import collab_is_meaningful
+        from oneirodex.utils.discover_ml.similarity import collab_is_meaningful
 
         with app.app_context():
             # The shared test database is nowhere near 25 members with real
@@ -229,7 +229,7 @@ class TestCollaborativeFloor:
     def test_neighbours_fall_back_to_content_below_the_floor(
         self, app, db_session, ml_library, genres
     ):
-        from gametheca.utils.discover_ml import similarity
+        from oneirodex.utils.discover_ml import similarity
 
         one = _game(db_session, ml_library, 'Fallback One', genres=[genres[0]])
         two = _game(db_session, ml_library, 'Fallback Two', genres=[genres[0]])
@@ -243,7 +243,7 @@ class TestCollaborativeFloor:
         assert blended[two.uuid] > 0
 
     def test_collab_neighbours_are_empty_below_the_floor(self, app):
-        from gametheca.utils.discover_ml.similarity import collab_neighbours
+        from oneirodex.utils.discover_ml.similarity import collab_neighbours
 
         with app.app_context():
             assert collab_neighbours() == {}
@@ -251,7 +251,7 @@ class TestCollaborativeFloor:
 
 class TestImpressionDamping:
     def test_a_title_never_shown_is_not_damped(self, app, ml_user):
-        from gametheca.utils.discover_ml.impressions import damping_for
+        from oneirodex.utils.discover_ml.impressions import damping_for
 
         with app.app_context():
             assert damping_for(ml_user.id) == {}
@@ -259,7 +259,7 @@ class TestImpressionDamping:
     def test_repeated_impressions_damp_a_title(
         self, app, db_session, ml_user, ml_library
     ):
-        from gametheca.utils.discover_ml.impressions import (
+        from oneirodex.utils.discover_ml.impressions import (
             damping_for,
             record_impressions,
         )
@@ -274,7 +274,7 @@ class TestImpressionDamping:
 
     def test_damping_has_a_floor(self, app, db_session, ml_user, ml_library):
         """A member who ignored everything should still get a feed."""
-        from gametheca.utils.discover_ml.impressions import (
+        from oneirodex.utils.discover_ml.impressions import (
             MIN_DAMPING,
             damping_for,
             record_impressions,
@@ -290,7 +290,7 @@ class TestImpressionDamping:
         self, app, db_session, ml_user, ml_library
     ):
         """A tile that got clicked has earned its place."""
-        from gametheca.utils.discover_ml.impressions import (
+        from oneirodex.utils.discover_ml.impressions import (
             damping_for,
             record_click,
             record_impressions,
@@ -306,8 +306,8 @@ class TestImpressionDamping:
     def test_recording_the_same_feed_twice_counts_twice(
         self, app, db_session, ml_user, ml_library
     ):
-        from gametheca.utils.discover_ml.impressions import record_impressions
-        from gametheca.models import UserDiscoverImpression
+        from oneirodex.utils.discover_ml.impressions import record_impressions
+        from oneirodex.models import UserDiscoverImpression
 
         shown = _game(db_session, ml_library, 'Counted')
         record_impressions(ml_user.id, [shown.uuid])
@@ -325,8 +325,8 @@ class TestImpressionDamping:
         self, app, db_session, ml_user, ml_library
     ):
         """An exempt row can legitimately repeat a title the feed already had."""
-        from gametheca.utils.discover_ml.impressions import record_impressions
-        from gametheca.models import UserDiscoverImpression
+        from oneirodex.utils.discover_ml.impressions import record_impressions
+        from oneirodex.models import UserDiscoverImpression
 
         shown = _game(db_session, ml_library, 'Repeated In One Feed')
         record_impressions(ml_user.id, [shown.uuid, shown.uuid, shown.uuid])
@@ -342,20 +342,20 @@ class TestImpressionDamping:
 
 class TestRotation:
     def test_the_seed_is_stable_within_a_day(self, app):
-        from gametheca.utils.discover_ml.impressions import rotation_seed
+        from oneirodex.utils.discover_ml.impressions import rotation_seed
 
         today = date(2026, 8, 21)
         assert rotation_seed(7, today=today) == rotation_seed(7, today=today)
 
     def test_the_seed_changes_tomorrow(self, app):
-        from gametheca.utils.discover_ml.impressions import rotation_seed
+        from oneirodex.utils.discover_ml.impressions import rotation_seed
 
         assert rotation_seed(7, today=date(2026, 8, 21)) != rotation_seed(
             7, today=date(2026, 8, 22)
         )
 
     def test_two_members_get_different_seeds(self, app):
-        from gametheca.utils.discover_ml.impressions import rotation_seed
+        from oneirodex.utils.discover_ml.impressions import rotation_seed
 
         today = date(2026, 8, 21)
         assert rotation_seed(7, today=today) != rotation_seed(8, today=today)
@@ -366,7 +366,7 @@ class TestRanking:
         self, app, db_session, ml_user, ml_library
     ):
         """A ranking built on nothing is worse than the simple answer."""
-        from gametheca.utils.discover_ml.scoring import rank_candidates
+        from oneirodex.utils.discover_ml.scoring import rank_candidates
 
         games = [_game(db_session, ml_library, f'Unranked {i}') for i in range(3)]
 
@@ -378,8 +378,8 @@ class TestRanking:
         self, app, db_session, ml_user, ml_library, genres
     ):
         """The quality prior nudges; it must not overrule affinity."""
-        from gametheca.utils.discover_ml.profile import rebuild_profile
-        from gametheca.utils.discover_ml.scoring import rank_candidates
+        from oneirodex.utils.discover_ml.profile import rebuild_profile
+        from oneirodex.utils.discover_ml.scoring import rank_candidates
 
         loved = _game(db_session, ml_library, 'Taste Anchor', genres=[genres[0]])
         _favorite(db_session, ml_user, loved)
@@ -400,7 +400,7 @@ class TestRanking:
         self, app, db_session, ml_user, ml_library
     ):
         """A row anchored on something you bounced off reads as a misunderstanding."""
-        from gametheca.utils.discover_ml.scoring import top_anchors
+        from oneirodex.utils.discover_ml.scoring import top_anchors
 
         bounced = _game(db_session, ml_library, 'Bounced Off')
         sunk = _game(db_session, ml_library, 'Hours Sunk')
@@ -432,7 +432,7 @@ class TestGeneratedRows:
         return section
 
     def test_the_template_section_is_not_itself_a_row(self, app, because_shelf):
-        from gametheca.utils.discover_providers import resolve_section
+        from oneirodex.utils.discover_providers import resolve_section
 
         with app.app_context():
             assert resolve_section(because_shelf) is None
@@ -440,7 +440,7 @@ class TestGeneratedRows:
     def test_a_generated_row_states_its_anchor(
         self, app, db_session, ml_user, ml_library
     ):
-        from gametheca.utils.discover_providers import generated_rows
+        from oneirodex.utils.discover_providers import generated_rows
 
         anchor = _game(db_session, ml_library, 'The Anchor')
         _play(db_session, ml_user, anchor, hours=50)
@@ -454,7 +454,7 @@ class TestGeneratedRows:
     def test_a_member_who_played_nothing_generates_no_rows(
         self, app, ml_user
     ):
-        from gametheca.utils.discover_providers import generated_rows
+        from oneirodex.utils.discover_providers import generated_rows
 
         with app.app_context():
             assert generated_rows(ml_user, because_shelf_section()) == []
@@ -463,7 +463,7 @@ class TestGeneratedRows:
         self, app, db_session, ml_user, ml_library, because_shelf
     ):
         """The switch an admin sees has to actually switch the family off."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         anchor = _game(db_session, ml_library, 'Hidden Family Anchor')
         because_shelf.is_visible = False
@@ -475,7 +475,7 @@ class TestGeneratedRows:
     def test_a_generated_row_resolves_by_identifier_when_visible(
         self, app, db_session, ml_user, ml_library, because_shelf
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         anchor = _game(db_session, ml_library, 'Resolvable Anchor')
 
@@ -488,7 +488,7 @@ class TestGeneratedRows:
     def test_an_anchor_that_no_longer_exists_resolves_to_nothing(
         self, app, because_shelf
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             assert resolve_identifier(f'because_you_played:{uuid4()}') is None
@@ -502,7 +502,7 @@ def because_shelf_section():
 
 class TestRebuildJob:
     def test_a_rebuild_reports_what_it_did(self, app, db_session, ml_library, genres):
-        from gametheca.utils.discover_ml.job import rebuild_all
+        from oneirodex.utils.discover_ml.job import rebuild_all
 
         _game(db_session, ml_library, 'Job One', genres=[genres[0]])
         _game(db_session, ml_library, 'Job Two', genres=[genres[0]])

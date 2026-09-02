@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, GameServer, Library, User
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Game, GameServer, Library, User
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -152,7 +152,7 @@ class TestGameServersApi:
         db_session.commit()
         _login(client, regular_user)
         with patch(
-            'gametheca.routes_apis.game_servers.probe_server_health',
+            'oneirodex.routes_apis.game_servers.probe_server_health',
             return_value={'reachable': True, 'method': 'http', 'status_code': 200, 'error': None},
         ):
             response = client.get(f'/api/game-servers/{server.uuid}/status')

@@ -25,7 +25,7 @@ def _parse_library_roots(raw):
     roots rather than not booting at all.
     """
     try:
-        from gametheca.utils.library_roots import parse_library_roots
+        from oneirodex.utils.library_roots import parse_library_roots
     except Exception:  # pragma: no cover - defensive, keeps boot resilient
         return []
     return parse_library_roots(raw)
@@ -33,7 +33,7 @@ def _parse_library_roots(raw):
 
 class Config(object):
     # Set Database connection string here or in your .env file, when using docker set the hostname to 'db'
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/gametheca')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/oneirodex')
 
     # Host path to on-disk game files (Compose mounts to /storage in the container)
     DATA_FOLDER_GAMES = os.getenv('DATA_FOLDER_GAMES', r'Z:\gamez')
@@ -48,14 +48,14 @@ class Config(object):
     # second internal disk, additional Docker binds. Entries are separated by
     # "|" and may carry a display label:
     #   GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
-    # Mounting the share stays the operator's job — this only tells GameTheca
+    # Mounting the share stays the operator's job — this only tells Oneirodex
     # which mounts are libraries. See docs/runbooks/remote-scan-locations.md.
     LIBRARY_ROOTS = _parse_library_roots(getenv_product('LIBRARY_ROOTS'))
 
     # YOU CAN LEAVE ALL THESE SETTINGS AT DEFAULT:
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'gametheca/static/library')
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'oneirodex/static/library')
     SECRET_KEY = _load_secret_key()
-    IMAGE_SAVE_PATH = os.path.join(os.path.dirname(__file__), 'gametheca/static/library/images')
+    IMAGE_SAVE_PATH = os.path.join(os.path.dirname(__file__), 'oneirodex/static/library/images')
     IGDB_API_ENDPOINT = os.getenv('IGDB_API_ENDPOINT', 'https://api.igdb.com/v4/games')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -68,7 +68,7 @@ class Config(object):
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = os.getenv('REMEMBER_COOKIE_SAMESITE', 'Lax')
 
-    # HTTP security response headers — see gametheca/utils/security_headers.py.
+    # HTTP security response headers — see oneirodex/utils/security_headers.py.
     # CSP enforces by default. Classic onclick= is gone; WebRetro WASM is a
     # native /static/* document with baseline headers only (no CSP), so Flask
     # pages do not need 'unsafe-eval'. Set CSP_ENFORCE=false to report-only.
@@ -103,7 +103,7 @@ class Config(object):
     DEV_MODE = os.getenv('DEV_MODE', 'false').lower() == 'true'
 
     # Reverse proxy / HTTPS termination — number of trusted proxy hops (0 = disabled).
-    # Set to 1 when GameTheca sits behind a single reverse proxy (nginx, Caddy, Traefik)
+    # Set to 1 when Oneirodex sits behind a single reverse proxy (nginx, Caddy, Traefik)
     # so X-Forwarded-Proto/Host are honored for OIDC redirects and external URLs.
     TRUSTED_PROXIES = int(os.getenv('TRUSTED_PROXIES', '0') or '0')
 

@@ -13,8 +13,8 @@ import pytest
 from flask import json
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Game, Library, LibraryPlatform, PcCheat, User
+from oneirodex import db
+from oneirodex.models import Game, Library, LibraryPlatform, PcCheat, User
 
 
 @pytest.fixture(scope='function', autouse=True)

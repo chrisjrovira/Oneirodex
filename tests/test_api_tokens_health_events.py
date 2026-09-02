@@ -6,10 +6,10 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import ApiToken, Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.api_tokens import (
+from oneirodex import db
+from oneirodex.models import ApiToken, Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.api_tokens import (
     VALID_SCOPES,
     generate_api_token,
     is_raw_api_token,
@@ -18,8 +18,8 @@ from gametheca.utils.api_tokens import (
     verify_bearer_token,
     verify_bearer_token_detailed,
 )
-from gametheca.utils.event_bus import event_bus
-from gametheca.utils.library_health import score_game, summarize_library_health
+from oneirodex.utils.event_bus import event_bus
+from oneirodex.utils.library_health import score_game, summarize_library_health
 
 
 @pytest.fixture
@@ -122,7 +122,7 @@ def test_bearer_auth_failure_logs_warning_without_secret(client, db_session, use
     prefix = row.token_prefix
     bad = f'gt_{prefix}_definitely-wrong-secret'
 
-    with caplog.at_level(logging.WARNING, logger='gametheca.utils.api_tokens'):
+    with caplog.at_level(logging.WARNING, logger='oneirodex.utils.api_tokens'):
         resp = client.get(
             '/api/tokens',
             headers={'Authorization': f'Bearer {bad}'},

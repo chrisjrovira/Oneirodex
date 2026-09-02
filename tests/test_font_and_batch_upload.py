@@ -9,9 +9,9 @@ import pytest
 from flask import json
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Game, Image, Library, LibraryPlatform, User
-from gametheca.utils.theme_fonts import looks_like_font, store_font_file
+from oneirodex import db
+from oneirodex.models import Game, Image, Library, LibraryPlatform, User
+from oneirodex.utils.theme_fonts import looks_like_font, store_font_file
 
 TTF_HEAD = b'\x00\x01\x00\x00'
 PNG_HEAD = b'\x89PNG\r\n\x1a\n'

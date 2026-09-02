@@ -1,33 +1,53 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-const SLOT_ID = 'gt-admin-topbar-slot'
+export const ADMIN_TOPBAR_PAGE_SLOT_ID = 'od-admin-topbar-slot'
+export const ADMIN_TOPBAR_TRAIL_SLOT_ID = 'od-admin-topbar-trail'
+export const ADMIN_TOPBAR_TITLE_SLOT_ID = 'od-admin-topbar-title'
 
 /**
  * Page actions in the admin top bar (W33-9).
  *
  * Identity already lives in the rail. Buttons that used to sit in
- * `.gt-admin-actions-row` on the page belong beside the page name, the same
- * leftover UIR-3/UIR-7 named on the member side. Portals into
- * `#gt-admin-topbar-slot` when the shell is present; falls back to the inline
- * row in tests and any host without the bar.
+ * `.od-admin-actions-row` on the page belong in the thin top bar — same leftover
+ * UIR-3/UIR-7 named on the member side.
+ *
+ * `slot="page"` (default) portals into `#od-admin-topbar-slot` (centre).
+ * `slot="trail"` portals into `#od-admin-topbar-trail` (right, beside account).
+ * `slot="title"` portals into `#od-admin-topbar-title` (left, after rail toggle).
+ * Falls back to the inline row in tests and any host without the bar.
  */
-export function AdminPageActions({ children, label = 'Page actions' }) {
-  const [slot, setSlot] = useState(null)
+export function AdminPageActions({
+  children,
+  label = 'Page actions',
+  slot = 'page',
+}) {
+  const [host, setHost] = useState(null)
+  const slotId =
+    slot === 'trail'
+      ? ADMIN_TOPBAR_TRAIL_SLOT_ID
+      : slot === 'title'
+        ? ADMIN_TOPBAR_TITLE_SLOT_ID
+        : ADMIN_TOPBAR_PAGE_SLOT_ID
 
   useEffect(() => {
-    setSlot(document.getElementById(SLOT_ID))
-  }, [])
+    setHost(document.getElementById(slotId))
+  }, [slotId])
 
-  const cluster = (
-    <div className="gt-cbtn-group" role="group" aria-label={label}>
-      {children}
-    </div>
-  )
+  const cluster =
+    slot === 'title' ? (
+      <div className="od-topbar__title-block" role="group" aria-label={label}>
+        {children}
+      </div>
+    ) : (
+      <div className="od-cbtn-group" role="group" aria-label={label}>
+        {children}
+      </div>
+    )
 
-  if (slot) {
-    return createPortal(cluster, slot)
+  if (host) {
+    return createPortal(cluster, host)
   }
 
-  return <div className="gt-admin-actions-row">{children}</div>
+  return <div className="od-admin-actions-row">{children}</div>
 }

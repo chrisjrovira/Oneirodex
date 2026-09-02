@@ -9,9 +9,9 @@ a lightweight stand-in is used instead of a real ORM-backed instance.
 
 from types import SimpleNamespace
 
-from gametheca.utils.game_core import is_propose_only_scan
-from gametheca.utils.match_proposal import build_match_proposal
-from gametheca.routes_admin_ext.settings import DEFAULT_SETTINGS, FIELD_MAPPINGS
+from oneirodex.utils.game_core import is_propose_only_scan
+from oneirodex.utils.match_proposal import build_match_proposal
+from oneirodex.routes_admin_ext.settings import DEFAULT_SETTINGS, FIELD_MAPPINGS
 
 
 class TestIsProposeOnlyScan:

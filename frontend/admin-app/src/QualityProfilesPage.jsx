@@ -209,10 +209,10 @@ export function QualityProfilesPage() {
 
   if (error && profiles.length === 0) {
     return (
-      <div className="gt-admin-page">
+      <div className="od-admin-page">
         <h1>Quality Profiles</h1>
         <PageStatus error={error} />
-        <a className="gt-btn" href="/admin/settings">
+        <a className="od-btn" href="/admin/settings">
           Back to settings
         </a>
       </div>
@@ -220,19 +220,19 @@ export function QualityProfilesPage() {
   }
 
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>Quality Profiles</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Preferred / blocked release groups, naming patterns, excluded terms, and size bands. The
         active profile scores Arr search hits and extends scan name-clean filters.
       </p>
 
-      <div className="gt-admin-panel" style={{ marginBottom: 'var(--gt-space-5)' }}>
-        <div className="gt-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
-          <label className="gt-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
+      <div className="od-admin-panel" style={{ marginBottom: 'var(--od-space-5)' }}>
+        <div className="od-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
+          <label className="od-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
             Profiles
             <select
-              className="gt-admin-input"
+              className="od-admin-input"
               aria-label="Quality profiles"
               value={selectedId}
               onChange={(e) => onSelectChange(e.target.value)}
@@ -246,77 +246,77 @@ export function QualityProfilesPage() {
               ))}
             </select>
           </label>
-          <button type="button" className="gt-btn" onClick={setActive} disabled={!selectedId || busy}>
+          <button type="button" className="od-btn" onClick={setActive} disabled={!selectedId || busy}>
             Set active
           </button>
-          <button type="button" className="gt-btn" onClick={createProfile} disabled={busy}>
+          <button type="button" className="od-btn" onClick={createProfile} disabled={busy}>
             New
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             onClick={deleteProfile}
             disabled={busy || profiles.length <= 1 || !selectedId}
           >
             Delete
           </button>
         </div>
-        <p className="gt-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
+        <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
           {status}
         </p>
       </div>
 
-      <form className="gt-admin-panel" onSubmit={saveProfile}>
-        <label className="gt-admin-field">
+      <form className="od-admin-panel" onSubmit={saveProfile}>
+        <label className="od-admin-field">
           Profile name
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={form.name}
             onChange={(e) => updateField('name', e.target.value)}
             placeholder="Default"
           />
         </label>
-        <label className="gt-admin-field">
+        <label className="od-admin-field">
           Preferred groups (comma-separated)
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={form.preferred_groups}
             onChange={(e) => updateField('preferred_groups', e.target.value)}
             placeholder="GOG, Steam"
           />
         </label>
-        <label className="gt-admin-field">
+        <label className="od-admin-field">
           Preferred naming patterns (comma-separated)
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={form.preferred_patterns}
             onChange={(e) => updateField('preferred_patterns', e.target.value)}
             placeholder="repack, proper, -GOG"
           />
         </label>
-        <label className="gt-admin-field">
+        <label className="od-admin-field">
           Blocked groups (comma-separated)
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={form.blocked_groups}
             onChange={(e) => updateField('blocked_groups', e.target.value)}
             placeholder="scene-tag, unwanted-group"
           />
         </label>
-        <label className="gt-admin-field">
+        <label className="od-admin-field">
           Excluded terms (comma-separated)
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={form.excluded_terms}
             onChange={(e) => updateField('excluded_terms', e.target.value)}
             placeholder="CAM, TS, SAMPLE"
           />
         </label>
-        <div className="gt-admin-actions-row" style={{ marginTop: 0 }}>
-          <label className="gt-admin-field" style={{ flex: '1 1 10rem' }}>
+        <div className="od-admin-actions-row" style={{ marginTop: 0 }}>
+          <label className="od-admin-field" style={{ flex: '1 1 10rem' }}>
             Min size (MB)
             <input
-              className="gt-admin-input"
+              className="od-admin-input"
               type="number"
               min="0"
               step="1"
@@ -325,10 +325,10 @@ export function QualityProfilesPage() {
               placeholder="optional"
             />
           </label>
-          <label className="gt-admin-field" style={{ flex: '1 1 10rem' }}>
+          <label className="od-admin-field" style={{ flex: '1 1 10rem' }}>
             Max size (MB)
             <input
-              className="gt-admin-input"
+              className="od-admin-input"
               type="number"
               min="0"
               step="1"
@@ -338,7 +338,7 @@ export function QualityProfilesPage() {
             />
           </label>
         </div>
-        <label className="gt-admin-field">
+        <label className="od-admin-field">
           <input
             type="checkbox"
             checked={form.prefer_repack}
@@ -346,38 +346,38 @@ export function QualityProfilesPage() {
           />{' '}
           Prefer repack / proper in titles
         </label>
-        <div className="gt-admin-actions-row">
-          <button type="submit" className="gt-btn" disabled={!selectedId || busy}>
+        <div className="od-admin-actions-row">
+          <button type="submit" className="od-btn" disabled={!selectedId || busy}>
             Save profile
           </button>
-          <a className="gt-btn" href="/admin/settings">
+          <a className="od-btn" href="/admin/settings">
             Back to settings
           </a>
         </div>
       </form>
 
-      <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
-        <h2 className="gt-admin-panel-title">Test title score</h2>
-        <p className="gt-admin-lede">
+      <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <h2 className="od-admin-panel-title">Test title score</h2>
+        <p className="od-admin-lede">
           Probe <code>POST /api/quality-profiles/score</code> against the selected profile.
         </p>
-        <div className="gt-admin-actions-row" style={{ alignItems: 'flex-end' }}>
-          <label className="gt-admin-field" style={{ flex: '1 1 16rem', margin: 0 }}>
+        <div className="od-admin-actions-row" style={{ alignItems: 'flex-end' }}>
+          <label className="od-admin-field" style={{ flex: '1 1 16rem', margin: 0 }}>
             Release title
             <input
-              className="gt-admin-input"
+              className="od-admin-input"
               value={probeTitle}
               onChange={(e) => setProbeTitle(e.target.value)}
               placeholder="Game.Title-GOG-repack"
               aria-label="Test release title"
             />
           </label>
-          <button type="button" className="gt-btn" onClick={runScoreProbe} disabled={!probeTitle.trim() || busy}>
+          <button type="button" className="od-btn" onClick={runScoreProbe} disabled={!probeTitle.trim() || busy}>
             Score
           </button>
         </div>
         {probeResult ? (
-          <p className="gt-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
+          <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
             {probeResult.error
               ? probeResult.error
               : `Score ${probeResult.score} · ${probeResult.allowed ? 'allowed' : 'blocked'}${

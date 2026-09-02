@@ -8,8 +8,24 @@ export const CATALOG_LAYOUTS = [
   { id: 'grid', label: 'Grid' },
 ]
 
-/** Resting height of one Rows-mode title. Keep in sync with GameGrid.css. */
+/** Fallback Rows height when tile min is unknown. Equals catalogRowHeightPx(180). */
 export const CATALOG_ROW_HEIGHT = 76
+
+/** Rows cover height tracks the tile slider (keep in sync with GameGrid.css). */
+export const CATALOG_ROW_MIN_PX = 56
+export const CATALOG_ROW_MAX_PX = 144
+export const CATALOG_ROW_SCALE = 0.42
+
+export function catalogRowHeightPx(tileMin) {
+  const base = Number(tileMin)
+  if (!Number.isFinite(base) || base <= 0) return CATALOG_ROW_HEIGHT
+  return Math.round(
+    Math.min(
+      CATALOG_ROW_MAX_PX,
+      Math.max(CATALOG_ROW_MIN_PX, base * CATALOG_ROW_SCALE),
+    ),
+  )
+}
 
 export function normalizeCatalogLayout(value) {
   if (value === 'tile' || value === 'rows' || value === 'grid') return value
@@ -32,18 +48,6 @@ export function persistCatalogLayout(value) {
     // View preference only.
   }
   return next
-}
-
-/**
- * Grid mode: same slider, denser tracks.
- *
- * 0.58 of the Tile min, floored at 108px, so a page of covers still reads as
- * covers rather than icons, but two extra columns fit on a typical desktop.
- */
-export function denseCatalogTileMin(baseMin) {
-  const base = Number(baseMin)
-  if (!Number.isFinite(base) || base <= 0) return 108
-  return Math.max(108, Math.round(base * 0.58))
 }
 
 export function useCatalogLayout() {

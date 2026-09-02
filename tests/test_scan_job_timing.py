@@ -6,10 +6,10 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca import db
-from gametheca.models import Library, ScanJob, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.scan_job_timing import (
+from oneirodex import db
+from oneirodex.models import Library, ScanJob, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.scan_job_timing import (
     STALL_SECONDS,
     compute_scan_job_timing,
     format_duration_label,

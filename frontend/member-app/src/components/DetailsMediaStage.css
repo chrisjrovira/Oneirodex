@@ -1,39 +1,39 @@
-.gt-details-media {
+.od-details-media {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
   min-width: 0;
 }
 
-.gt-details-media__stage {
+.od-details-media__stage {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-surface) 80%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 80%, transparent);
 }
 
-.gt-details-media__stage iframe,
-.gt-details-media__still,
-.gt-details-media__still img {
+.od-details-media__stage iframe,
+.od-details-media__still,
+.od-details-media__still img {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
 }
 
-.gt-details-media__still {
+.od-details-media__still {
   padding: 0;
   background: transparent;
   cursor: zoom-in;
 }
 
-.gt-details-media__still img {
+.od-details-media__still img {
   object-fit: cover;
 }
 
-.gt-details-media__arm {
+.od-details-media__arm {
   position: absolute;
   inset: 0;
   margin: auto;
@@ -41,47 +41,47 @@
   height: max-content;
 }
 
-.gt-details-media__bar {
+.od-details-media__bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
 }
 
-.gt-details-media__thumbs {
+.od-details-media__thumbs {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
   min-width: 0;
 }
 
-.gt-details-media__thumb {
-  padding: var(--gt-space-1) var(--gt-space-2);
-  font-size: var(--gt-font-xs);
+.od-details-media__thumb {
+  padding: var(--od-space-1) var(--od-space-2);
+  font-size: var(--od-font-xs);
 }
 
-.gt-details-media__thumb img {
+.od-details-media__thumb img {
   display: block;
   width: 4.5rem;
   height: 2.5rem;
   object-fit: cover;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
 }
 
-.gt-details-media__thumb.is-active {
-  outline: 2px solid var(--gt-accent);
+.od-details-media__thumb.is-active {
+  outline: 2px solid var(--od-accent);
   outline-offset: 1px;
 }
 
-.gt-details-media__actions {
+.od-details-media__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
   margin-inline-start: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-details-media__thumb.is-active {
+  .od-details-media__thumb.is-active {
     outline-width: 2px;
   }
 }

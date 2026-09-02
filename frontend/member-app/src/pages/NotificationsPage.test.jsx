@@ -109,7 +109,7 @@ test('new chrome moves the filter into bar two and keeps mark-all by the list', 
   // the Inbox heading row directly above it.
   const markAll = screen.getByRole('button', { name: 'Mark all read' })
   expect(markAll).toBeEnabled()
-  expect(markAll.closest('.gt-notifications__inbox-head')).not.toBeNull()
+  expect(markAll.closest('.od-notifications__inbox-head')).not.toBeNull()
 
   await user.click(screen.getByRole('button', { name: 'Archive' }))
   expect(screen.getByText('Welcome')).toBeInTheDocument()
@@ -125,7 +125,7 @@ test('keeps preferences on the Inbox row and collapsed by default', async () => 
 
   await screen.findByText('Friend request')
   const prefsToggle = screen.getByRole('button', { name: 'Preferences' })
-  expect(prefsToggle.closest('.gt-notifications__inbox-head')).not.toBeNull()
+  expect(prefsToggle.closest('.od-notifications__inbox-head')).not.toBeNull()
   expect(screen.queryByRole('region', { name: 'Notification preferences' })).toBeNull()
 
   await user.click(prefsToggle)

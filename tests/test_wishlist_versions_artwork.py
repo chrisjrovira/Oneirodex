@@ -9,9 +9,9 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import Game, GameExtra, GameUpdate, Image, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.game_versions import (
+from oneirodex.models import Game, GameExtra, GameUpdate, Image, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.game_versions import (
     cleanup_orphan_versions,
     list_game_versions,
     resolve_version_file,
@@ -270,7 +270,7 @@ def test_wishlist_create_cancel_and_admin_fulfill(client, app, db_session, user,
     db_session.commit()
 
     _login(client, app, admin)
-    with patch('gametheca.routes_apis.wishlist.notify_admins') as notify:
+    with patch('oneirodex.routes_apis.wishlist.notify_admins') as notify:
         fulfill = client.patch(
             f'/api/requests/{req_id}',
             json={'status': 'fulfilled', 'linked_game_uuid': game.uuid, 'notes': 'added'},
@@ -291,7 +291,7 @@ def test_wishlist_create_cancel_and_admin_fulfill(client, app, db_session, user,
     assert all(r['id'] != cancel_id for r in remaining)
 
 
-@patch('gametheca.utils.artwork_apply.get_provider')
+@patch('oneirodex.utils.artwork_apply.get_provider')
 def test_apply_steamgriddb_cover(mock_get_provider, client, app, db_session, admin, lib, tmp_path):
     game = Game(
         uuid=str(uuid4()),

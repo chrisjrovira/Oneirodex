@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import (
+from oneirodex import db
+from oneirodex.models import (
     Announcement,
     DiscoverySection,
     FreeGameOffer,
@@ -21,7 +21,7 @@ from gametheca.models import (
     UserPreference,
     user_favorites,
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 
 NOW = datetime.now(timezone.utc)
 
@@ -127,7 +127,7 @@ class TestContinuePlaying:
     def test_lists_what_the_member_played_most_recently_first(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         older = _game(db_session, personal_library, 'Played Earlier')
         newer = _game(db_session, personal_library, 'Played Just Now')
@@ -143,7 +143,7 @@ class TestContinuePlaying:
 
     def test_is_exempt_from_cross_row_dedupe(self, app):
         """What you are actually playing belongs here even if it is elsewhere."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             row = resolve_identifier('continue_playing')
@@ -152,7 +152,7 @@ class TestContinuePlaying:
     def test_another_members_playing_does_not_leak_in(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         stranger = _user(db_session, 'stranger')
         theirs = _game(db_session, personal_library, 'Not Mine')
@@ -169,7 +169,7 @@ class TestFriendsPlaying:
     def test_shows_what_an_accepted_friend_played(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         friend = _user(db_session, 'friend')
         _befriend(db_session, member, friend)
@@ -186,7 +186,7 @@ class TestFriendsPlaying:
         self, app, db_session, member, personal_library
     ):
         """A friendship row records who asked, not who is whose friend."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         friend = _user(db_session, 'asker')
         # The friend sent the request, so the member is the *target* row.
@@ -203,7 +203,7 @@ class TestFriendsPlaying:
     def test_a_stranger_is_not_a_friend(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         stranger = _user(db_session, 'stranger')
         game = _game(db_session, personal_library, 'Stranger Game')
@@ -218,7 +218,7 @@ class TestFriendsPlaying:
     def test_a_pending_request_is_not_a_friendship(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         pending = _user(db_session, 'pending')
         db_session.add(
@@ -240,7 +240,7 @@ class TestFriendsPlaying:
         self, app, db_session, member, personal_library
     ):
         """The opt-out is the whole point of the preference."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         friend = _user(db_session, 'private')
         _befriend(db_session, member, friend)
@@ -258,7 +258,7 @@ class TestFriendsPlaying:
         self, app, db_session, member, personal_library
     ):
         """Absence is not an opt-out. Only an explicit False is."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         friend = _user(db_session, 'nodefaults')
         _befriend(db_session, member, friend)
@@ -278,7 +278,7 @@ class TestFriendsPlaying:
     def test_two_friends_on_one_title_is_one_tile(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         one = _user(db_session, 'f1')
         two = _user(db_session, 'f2')
@@ -298,7 +298,7 @@ class TestFriendsPlaying:
     def test_no_friends_means_an_empty_row_not_an_error(
         self, app, db_session, member
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context(), app.test_request_context('/'):
             row = resolve_identifier('friends_playing')
@@ -309,7 +309,7 @@ class TestGameUpdates:
     def test_orders_by_the_most_recent_update_file(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         stale = _game(db_session, personal_library, 'Patched Long Ago')
         fresh = _game(db_session, personal_library, 'Patched Today')
@@ -344,7 +344,7 @@ class TestGameUpdates:
     def test_a_title_with_several_updates_appears_once(
         self, app, db_session, member, personal_library
     ):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         game = _game(db_session, personal_library, 'Much Patched')
         for i in range(3):
@@ -366,14 +366,14 @@ class TestGameUpdates:
 
 class TestNewsRow:
     def test_carries_articles_rather_than_games(self, app):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             row = resolve_identifier('news')
             assert row.spec.item_kind == 'articles'
 
     def test_published_announcements_appear(self, app, db_session, member):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         db_session.add(
             Announcement(
@@ -393,7 +393,7 @@ class TestNewsRow:
         assert 'Server maintenance Sunday' in titles
 
     def test_unpublished_announcements_do_not(self, app, db_session, member):
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         db_session.add(
             Announcement(
@@ -413,7 +413,7 @@ class TestNewsRow:
 
     def test_an_expired_giveaway_is_dropped(self, app, db_session, member):
         """A "free now" row showing a finished giveaway is worse than a short row."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         db_session.add(
             FreeGameOffer(
@@ -450,7 +450,7 @@ class TestArticleRowPayload:
         self, app, db_session, member
     ):
         """`item_kind` says which key to read; sending both would double the payload."""
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         db_session.add(
             Announcement(title='Payload shape', body='b', published=True, created_at=NOW)
@@ -474,7 +474,7 @@ class TestArticleRowPayload:
         assert 'games' not in payload
 
     def test_game_rows_keep_the_games_key(self, app, db_session, member):
-        from gametheca.routes_discover import build_discover_row
+        from oneirodex.routes_discover import build_discover_row
 
         section = db.session.execute(
             select(DiscoverySection).filter_by(identifier='continue_playing')
@@ -496,7 +496,7 @@ class TestArticleRowPayload:
 
     def test_ranked_rows_state_why_they_are_there(self, app):
         """An unexplained recommendation reads as an ad; a named one reads as a feature."""
-        from gametheca.utils.discover_providers import resolve_identifier
+        from oneirodex.utils.discover_providers import resolve_identifier
 
         with app.app_context():
             for identifier in ('continue_playing', 'friends_playing', 'game_updates', 'news'):
@@ -548,7 +548,7 @@ def _seed_extras_missing(db_session):
 
 class TestExtrasMissing:
     def test_hidden_when_empty(self, app, db_session, member):
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         _seed_extras_missing(db_session)
         with app.app_context():
@@ -558,7 +558,7 @@ class TestExtrasMissing:
     def test_shows_engaged_title_with_absent_file(
         self, app, db_session, member, personal_library, global_settings,
     ):
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         _seed_extras_missing(db_session)
         engaged = Game(
@@ -602,7 +602,7 @@ class TestExtrasMissing:
     def test_disc_extras_are_not_acquire_nags(
         self, app, db_session, member, personal_library, global_settings,
     ):
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         _seed_extras_missing(db_session)
         game = Game(

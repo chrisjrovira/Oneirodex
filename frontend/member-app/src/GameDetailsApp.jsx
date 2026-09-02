@@ -40,24 +40,24 @@ export function GameDetailsApp({
   ].filter(Boolean)
 
   return (
-    <div className="gt-details-react" data-game-uuid={gameUuid}>
-      <div className="gt-details-react__badges">
+    <div className="od-details-react" data-game-uuid={gameUuid}>
+      <div className="od-details-react__badges">
         <BadgeStack game={game} preferredCorner="bottom-left" maxVisible={2} />
       </div>
-      <div className="gt-details-react__meta">
-        {sizeLabel ? <span className="chip gt-chip">{sizeLabel}</span> : null}
+      <div className="od-details-react__meta">
+        {sizeLabel ? <span className="chip od-chip">{sizeLabel}</span> : null}
         {freshnessStatus ? (
-          <span className="chip gt-chip" title="Store freshness">
+          <span className="chip od-chip" title="Store freshness">
             Freshness: {freshnessStatus}
           </span>
         ) : null}
         {hltbBits.length > 0 ? (
-          <span className="chip gt-chip" title="HowLongToBeat">
+          <span className="chip od-chip" title="HowLongToBeat">
             HLTB: {hltbBits.join(' · ')}
           </span>
         ) : null}
         {libraryUuid ? (
-          <span className="chip gt-chip" title="Library">
+          <span className="chip od-chip" title="Library">
             Library {String(libraryUuid).slice(0, 8)}…
           </span>
         ) : null}

@@ -11,8 +11,8 @@ import { useEffect } from 'react'
  *
  * Density is set here too. Admin used to force `compact` on the whole body, on
  * the reasoning that admin is the dense half of the product. The cost was that
- * `--gt-control-h` dropped from 2.25rem to 1.85rem for every control on the
- * surface, so admin buttons were visibly shorter than the identical `.gt-btn`
+ * `--od-control-h` dropped from 2.25rem to 1.85rem for every control on the
+ * surface, so admin buttons were visibly shorter than the identical `.od-btn`
  * beside them in the member app — the two halves shared a stylesheet and still
  * did not match. Chrome parity is worth more than the ~6px: admin now takes the
  * same default as member, and a genuinely dense region (a long table) opts
@@ -22,13 +22,13 @@ import { useEffect } from 'react'
 export function useAdminShellFrame(railState) {
   useEffect(() => {
     const { body } = document
-    body.classList.add('gt-shell-host')
+    body.classList.add('od-shell-host')
     // Only set density if nothing upstream already chose one, so a template can
     // override without this effect fighting it on every render.
     if (!body.dataset.density) body.dataset.density = 'comfortable'
 
     return () => {
-      body.classList.remove('gt-shell-host')
+      body.classList.remove('od-shell-host')
       delete body.dataset.rail
     }
   }, [])

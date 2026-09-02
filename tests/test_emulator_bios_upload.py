@@ -12,7 +12,7 @@ import pytest
 from flask import Flask
 from werkzeug.datastructures import FileStorage
 
-from gametheca.utils.emulator_bios import (
+from oneirodex.utils.emulator_bios import (
     ALLOWED_BIOS_EXTENSIONS,
     DEFAULT_BIOS_MAX_BYTES,
     store_bios_file,
@@ -84,7 +84,7 @@ def test_default_cap_is_sane_and_allowlist_covers_the_known_cores():
     # extension: the VICE C64 ROMs have no suffix, and citra's key file is a
     # plain .txt. Those are allowed by exact name so the volume does not have to
     # accept every extensionless or text upload — see ALLOWED_BIOS_EXACT_NAMES.
-    from gametheca.utils.emulator_bios import (
+    from oneirodex.utils.emulator_bios import (
         ALLOWED_BIOS_EXACT_NAMES,
         BIOS_REQUIREMENTS,
     )

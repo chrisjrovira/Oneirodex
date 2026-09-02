@@ -92,9 +92,9 @@ export function StoragePage() {
   const applyDisabled = busy || !allowApply
 
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>Storage / hardlinks</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Preview same-volume hardlinks. Apply requires{' '}
         <code>ALLOW_HARDLINK_APPLY=true</code>. Docker read-only games mounts fail writability
         checks — preview still explains why.
@@ -141,21 +141,21 @@ export function StoragePage() {
         />
       ) : null}
 
-      {/* GT-B33: shared status block. The five `gt-admin-banner` blocks below
+      {/* GT-B33: shared status block. The five `od-admin-banner` blocks below
           deliberately stay as they are — those disclose persistent
           configuration (helpers off, apply gated, mount read-only), which is
           page content, not a transient loading/error state. */}
       <PageStatus loading={!statusLoaded} loadingMessage="Loading storage status…" />
 
       {statusError ? (
-        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+        <div className="od-admin-banner od-admin-banner--warn" role="status">
           Status API unavailable ({statusError}). Preview/Apply may still work if helpers are on;
           banners below assume helpers off until status loads.
         </div>
       ) : null}
 
       {statusLoaded && !helpersOn ? (
-        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+        <div className="od-admin-banner od-admin-banner--warn" role="status">
           Hardlink helpers are <strong>off</strong>. Set{' '}
           <code>ENABLE_HARDLINK_HELPERS=true</code> (and restart) before preview or apply will work.
           Apply also needs <code>ALLOW_HARDLINK_APPLY=true</code> — both stay env-only safety gates.
@@ -163,20 +163,20 @@ export function StoragePage() {
       ) : null}
 
       {statusLoaded && helpersOn && !allowApply ? (
-        <div className="gt-admin-banner gt-admin-banner--info" role="status">
+        <div className="od-admin-banner od-admin-banner--info" role="status">
           Helpers are <strong>on</strong>, but Apply is disabled until{' '}
           <code>ALLOW_HARDLINK_APPLY=true</code> is set (safety default). Preview still works.
         </div>
       ) : null}
 
       {statusLoaded && helpersOn && allowApply ? (
-        <div className="gt-admin-banner gt-admin-banner--ok" role="status">
+        <div className="od-admin-banner od-admin-banner--ok" role="status">
           Helpers and Apply are both <strong>enabled</strong> via environment flags.
         </div>
       ) : null}
 
       {statusLoaded && gamesRo ? (
-        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+        <div className="od-admin-banner od-admin-banner--warn" role="status">
           Games mount is <strong>read-only</strong>
           {status.games_path ? (
             <>
@@ -190,36 +190,36 @@ export function StoragePage() {
       ) : null}
 
       {statusLoaded && status.degrade_reason ? (
-        <p className="gt-admin-lede gt-admin-lede--warn" aria-live="polite">
+        <p className="od-admin-lede od-admin-lede--warn" aria-live="polite">
           {status.degrade_reason}
         </p>
       ) : null}
 
-      <div className="gt-admin-panel">
-        <label className="gt-admin-field">
+      <div className="od-admin-panel">
+        <label className="od-admin-field">
           Source file
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={source}
             onChange={(e) => setSource(e.target.value)}
             placeholder="C:\\games\\Title\\setup.exe"
             aria-label="Source file"
           />
         </label>
-        <label className="gt-admin-field">
+        <label className="od-admin-field">
           Destination path
           <input
-            className="gt-admin-input"
+            className="od-admin-input"
             value={dest}
             onChange={(e) => setDest(e.target.value)}
             placeholder="C:\\library\\Title\\setup.exe"
             aria-label="Destination path"
           />
         </label>
-        <div className="gt-admin-actions-row">
+        <div className="od-admin-actions-row">
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             onClick={() => runAction('preview')}
             disabled={previewDisabled}
             title={!helpersOn ? 'ENABLE_HARDLINK_HELPERS is off' : undefined}
@@ -228,14 +228,14 @@ export function StoragePage() {
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             onClick={() => runAction('apply')}
             disabled={applyDisabled}
             title={!allowApply ? 'ALLOW_HARDLINK_APPLY is off' : undefined}
           >
             Apply
           </button>
-          <a className="gt-btn" href="/admin/settings">
+          <a className="od-btn" href="/admin/settings">
             Back to settings
           </a>
         </div>
@@ -243,11 +243,11 @@ export function StoragePage() {
       </div>
 
       {result ? (
-        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
-          <h2 className="gt-admin-panel-title">
+        <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+          <h2 className="od-admin-panel-title">
             {resultKind === 'apply' ? 'Apply result' : 'Preview result'}
           </h2>
-          <ul className="gt-storage-result-list" aria-live="polite">
+          <ul className="od-storage-result-list" aria-live="polite">
             <li>
               Outcome:{' '}
               <strong>
@@ -289,9 +289,9 @@ export function StoragePage() {
               </li>
             ) : null}
           </ul>
-          <details className="gt-storage-raw">
+          <details className="od-storage-raw">
             <summary>Raw JSON</summary>
-            <pre className="gt-admin-output">{JSON.stringify(result, null, 2)}</pre>
+            <pre className="od-admin-output">{JSON.stringify(result, null, 2)}</pre>
           </details>
         </div>
       ) : null}

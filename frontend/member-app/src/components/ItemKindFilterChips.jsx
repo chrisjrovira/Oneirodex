@@ -120,14 +120,14 @@ export function ItemKindFilterChips({
 }) {
   const selected = new Set(parseItemKindFilter(filters.item_kind))
   return (
-    <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
+    <div className="od-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
       {ITEM_KIND_FILTER_CHIPS.map((chip) => {
         const active = selected.has(chip.kind)
         return (
           <button
             key={chip.kind}
             type="button"
-            className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+            className={`od-badge-filter-chip${active ? ' is-active' : ''}`}
             aria-pressed={active}
             title={t(chip.title)}
             onClick={() => toggleItemKindFilter(filters, chip.kind, onApply, cleanFilters)}

@@ -9,9 +9,9 @@ export const TILE_PERCENT_MIN = 0
 export const TILE_PERCENT_MAX = 100
 export const TILE_PERCENT_DEFAULT = 50
 
-/** CSS pixel range for --gt-tile-min */
-const MIN_PX = 120
-const MAX_PX = 300
+/** CSS pixel range for --od-tile-min (slider 0% → 100%). */
+export const TILE_PX_MIN = 120
+export const TILE_PX_MAX = 400
 
 /** Round to 2 decimal places without leaving trailing-zero float noise. */
 function roundFine(value) {
@@ -56,12 +56,12 @@ export const TILE_HOVER_SCALE = 1.25
 
 export function tilePercentToCssVars(percent) {
   const p = normalizeTilePercent(percent) / 100
-  const minPx = roundFine(MIN_PX + (MAX_PX - MIN_PX) * p)
+  const minPx = roundFine(TILE_PX_MIN + (TILE_PX_MAX - TILE_PX_MIN) * p)
   const gapPx = roundFine(6 + 10 * p)
   return {
-    '--gt-tile-min': `${minPx}px`,
-    '--gt-tile-gap': `${gapPx}px`,
-    '--gt-tile-hover-scale': String(TILE_HOVER_SCALE),
+    '--od-tile-min': `${minPx}px`,
+    '--od-tile-gap': `${gapPx}px`,
+    '--od-tile-hover-scale': String(TILE_HOVER_SCALE),
   }
 }
 
@@ -82,13 +82,13 @@ export function clampTileVarsForNarrowViewport(vars, isNarrow) {
   // not: at 140px that is 35px of growth, ~17px either side, and the tile stays
   // inside its own track. Keeping the clamp would mean the same hover behaved
   // differently on a phone for no reason a member could see.
-  const minPx = parseInt(String(vars['--gt-tile-min']), 10)
+  const minPx = parseInt(String(vars['--od-tile-min']), 10)
   if (!Number.isFinite(minPx) || minPx <= 140) {
     return vars
   }
   return {
     ...vars,
-    '--gt-tile-min': '140px',
-    '--gt-tile-gap': '6px',
+    '--od-tile-min': '140px',
+    '--od-tile-gap': '6px',
   }
 }

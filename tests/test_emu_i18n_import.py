@@ -11,11 +11,11 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Game, Library, User, UserOwnedTitle
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.i18n import normalize_locale
-from gametheca.utils.playnite_import import import_playnite_json
-from gametheca.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
+from oneirodex.models import Game, Library, User, UserOwnedTitle
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.i18n import normalize_locale
+from oneirodex.utils.playnite_import import import_playnite_json
+from oneirodex.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
 
 
 @pytest.fixture

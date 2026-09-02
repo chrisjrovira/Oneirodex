@@ -1,6 +1,6 @@
 import type { ApiError } from './types.js'
 
-export interface GamethecaClientConfig {
+export interface OneirodexClientConfig {
   /** Origin or base URL, e.g. https://host.example (no trailing slash) */
   baseUrl: string
   /** Returns Bearer secret (`gt_…`) or null when unauthenticated */
@@ -9,9 +9,10 @@ export interface GamethecaClientConfig {
   fetchImpl?: typeof fetch
 }
 
-export type OneirodexClientConfig = GamethecaClientConfig
+/** @deprecated P3b alias — use OneirodexClientConfig. */
+export type GamethecaClientConfig = OneirodexClientConfig
 
-export class GamethecaApiError extends Error {
+export class OneirodexApiError extends Error {
   readonly status: number
   readonly body: ApiError | string | null
 
@@ -21,11 +22,13 @@ export class GamethecaApiError extends Error {
         ? body.error
         : `HTTP ${status}`
     super(message)
-    this.name = 'GamethecaApiError'
+    this.name = 'OneirodexApiError'
     this.status = status
     this.body = body
   }
 }
+
+export { OneirodexApiError as GamethecaApiError }
 
 /** Format value for Authorization header (Bearer gt_…). */
 export function formatBearerAuthorization(token: string): string {
@@ -57,7 +60,7 @@ async function parseErrorBody(response: Response): Promise<ApiError | string | n
   }
 }
 
-export function createRequester(config: GamethecaClientConfig) {
+export function createRequester(config: OneirodexClientConfig) {
   const fetchImpl = config.fetchImpl ?? fetch
 
   return async function request<T>(
@@ -80,7 +83,7 @@ export function createRequester(config: GamethecaClientConfig) {
     })
 
     if (!response.ok) {
-      throw new GamethecaApiError(response.status, await parseErrorBody(response))
+      throw new OneirodexApiError(response.status, await parseErrorBody(response))
     }
 
     if (response.status === 204) {

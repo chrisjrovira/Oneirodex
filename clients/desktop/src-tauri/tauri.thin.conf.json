@@ -1,6 +1,6 @@
 {
-  "productName": "GameThecaThin",
-  "identifier": "com.gametheca.thin",
+  "productName": "OneirodexThin",
+  "identifier": "com.oneirodex.thin",
   "build": {
     "beforeDevCommand": "npm run build:thin",
     "beforeBuildCommand": "npm run build:thin",
@@ -10,7 +10,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "GameTheca Thin",
+        "title": "Oneirodex Thin",
         "width": 520,
         "height": 640,
         "resizable": true

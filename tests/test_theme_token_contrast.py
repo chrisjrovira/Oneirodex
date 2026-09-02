@@ -1,8 +1,8 @@
 """WCAG contrast guarantees for the --gt-* semantic status tokens.
 
 The admin stylesheets render status text (scan failed, log level error, server
-resource warnings) directly in --gt-success/--gt-danger/--gt-warning/--gt-info.
-Those tokens live only in the source gt-tokens.css and are inherited unchanged
+resource warnings) directly in --od-success/--od-danger/--od-warning/--od-info.
+Those tokens live only in the source od-tokens.css and are inherited unchanged
 by every preset, so a single value has to stay legible on the darkest and the
 lightest surface any preset produces. These tests pin that down: nudging a
 token or adding a preset with a lighter surface fails here rather than in a
@@ -16,18 +16,18 @@ import re
 
 import pytest
 
-from gametheca.utils.preset_themes import PRESET_THEMES, preset_tokens
+from oneirodex.utils.preset_themes import PRESET_THEMES, preset_tokens
 
 SOURCE_TOKENS_CSS = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    'gametheca', 'setup', 'default_theme', 'css', 'gt-tokens.css',
+    'oneirodex', 'setup', 'default_theme', 'css', 'od-tokens.css',
 )
 
 # WCAG 2.1 minimums.
 AA_BODY = 4.5
 AA_LARGE_AND_UI = 3.0
 
-SEMANTIC_TOKENS = ('gt-success', 'gt-danger', 'gt-warning', 'gt-info')
+SEMANTIC_TOKENS = ('od-success', 'od-danger', 'od-warning', 'od-info')
 
 
 def _srgb_to_linear(channel):
@@ -63,18 +63,18 @@ def read_source_tokens():
 def all_surfaces():
     """Every opaque backdrop a token can be painted on.
 
-    The shipped defaults, plus the gt-surface-2 each preset derives — that is
+    The shipped defaults, plus the od-surface-2 each preset derives — that is
     the lightest real backdrop and therefore the worst case for these colours.
     """
     tokens = read_source_tokens()
     surfaces = {
         f'default {name}': tokens[name]
-        for name in ('gt-bg', 'gt-surface', 'gt-surface-2')
+        for name in ('od-bg', 'od-surface', 'od-surface-2')
     }
     for preset in PRESET_THEMES:
         derived = preset_tokens(preset)
-        surfaces[f"{preset['slug']} gt-surface-2"] = derived['gt-surface-2']
-        surfaces[f"{preset['slug']} gt-bg"] = derived['gt-bg']
+        surfaces[f"{preset['slug']} od-surface-2"] = derived['od-surface-2']
+        surfaces[f"{preset['slug']} od-bg"] = derived['od-bg']
     return surfaces
 
 
@@ -101,7 +101,7 @@ class TestSemanticTokensExist:
     @pytest.mark.parametrize('token', SEMANTIC_TOKENS)
     def test_token_is_declared(self, token):
         assert token in read_source_tokens(), (
-            f'--{token} is missing from gt-tokens.css; the admin stylesheets '
+            f'--{token} is missing from od-tokens.css; the admin stylesheets '
             f'fall back to Bootstrap literals without it.'
         )
 
@@ -138,39 +138,39 @@ class TestSemanticTokenContrast:
         )
 
     def test_muted_text_is_readable_on_every_surface(self):
-        colour = read_source_tokens()['gt-text-muted'].strip()
+        colour = read_source_tokens()['od-text-muted'].strip()
         for name, surface in all_surfaces().items():
             ratio = contrast_ratio(colour, surface)
-            assert ratio >= AA_BODY, f'--gt-text-muted on {name}: {ratio:.2f}:1'
+            assert ratio >= AA_BODY, f'--od-text-muted on {name}: {ratio:.2f}:1'
 
     def test_body_text_is_readable_on_every_surface(self):
-        colour = read_source_tokens()['gt-text'].strip()
+        colour = read_source_tokens()['od-text'].strip()
         for name, surface in all_surfaces().items():
             ratio = contrast_ratio(colour, surface)
-            assert ratio >= AA_BODY, f'--gt-text on {name}: {ratio:.2f}:1'
+            assert ratio >= AA_BODY, f'--od-text on {name}: {ratio:.2f}:1'
 
     @pytest.mark.parametrize('token', SEMANTIC_TOKENS)
     def test_distinguishable_from_body_text(self, token):
         """A status colour that reads as ordinary text conveys nothing."""
         colour = read_source_tokens()[token].strip()
-        body = read_source_tokens()['gt-text'].strip()
+        body = read_source_tokens()['od-text'].strip()
         assert colour.lower() != body.lower()
 
 
 class TestAccentContrast:
-    """--gt-accent-contrast is the label colour on accent-filled buttons."""
+    """--od-accent-contrast is the label colour on accent-filled buttons."""
 
     def test_default_accent_pairs_with_its_contrast_token(self):
         tokens = read_source_tokens()
-        ratio = contrast_ratio(tokens['gt-accent-contrast'].strip(),
-                               tokens['gt-accent'].strip())
+        ratio = contrast_ratio(tokens['od-accent-contrast'].strip(),
+                               tokens['od-accent'].strip())
         assert ratio >= AA_BODY, f'default accent pair is only {ratio:.2f}:1'
 
     @pytest.mark.parametrize('preset', PRESET_THEMES, ids=lambda p: p['slug'])
     def test_each_preset_accent_pairs_with_its_contrast_token(self, preset):
         derived = preset_tokens(preset)
-        ratio = contrast_ratio(derived['gt-accent-contrast'], derived['gt-accent'])
+        ratio = contrast_ratio(derived['od-accent-contrast'], derived['od-accent'])
         assert ratio >= AA_LARGE_AND_UI, (
-            f"{preset['slug']}: {derived['gt-accent-contrast']} on "
-            f"{derived['gt-accent']} is only {ratio:.2f}:1"
+            f"{preset['slug']}: {derived['od-accent-contrast']} on "
+            f"{derived['od-accent']} is only {ratio:.2f}:1"
         )

@@ -8,13 +8,13 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import GlobalSettings, User
-from gametheca.utils.emulator_profiles import (
+from oneirodex.models import GlobalSettings, User
+from oneirodex.utils.emulator_profiles import (
     get_emulator_profiles,
     resolve_emulators_for_platform,
     set_emulator_profiles,
 )
-from gametheca.utils.oidc import oidc_readiness_report
+from oneirodex.utils.oidc import oidc_readiness_report
 
 
 @pytest.fixture
@@ -100,14 +100,14 @@ def test_arr_status_enabled_via_config(client, app, db_session, admin_user):
         # database happens to hold makes the answer depend on which other file
         # ran first — with none configured it is 'enabled', and in a full run
         # another file's indexer rows turn it into 'ready'.
-        with patch('gametheca.routes_arr.connector_status', return_value=[]):
+        with patch('oneirodex.routes_arr.connector_status', return_value=[]):
             resp = client.get('/api/arr/status')
             assert resp.status_code == 200
             assert resp.get_json()['enabled'] is True
             assert resp.get_json()['status'] == 'enabled'
 
         configured = [{'id': 'native_indexers', 'configured': True}]
-        with patch('gametheca.routes_arr.connector_status', return_value=configured):
+        with patch('oneirodex.routes_arr.connector_status', return_value=configured):
             body = client.get('/api/arr/status').get_json()
             assert body['status'] == 'ready'
 

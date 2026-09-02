@@ -92,8 +92,8 @@ Docker volume / FUSE mounts may miss host-side renames unless the watch runs whe
 
 ## Code
 
-- `gametheca/utils/library_watch.py` — controller + classify + ops pulse + per-lib filter
-- `gametheca/utils/library_health.py` — `path_status` + `path_health_fields`
-- `gametheca/utils/notifications.py` — `library_added` digests
+- `oneirodex/utils/library_watch.py` — controller + classify + ops pulse + per-lib filter
+- `oneirodex/utils/library_health.py` — `path_status` + `path_health_fields`
+- `oneirodex/utils/notifications.py` — `library_added` digests
 - Started from `create_app` alongside the scan scheduler
 - Tests: `tests/test_library_watch.py`, `tests/test_browse_path_status.py`

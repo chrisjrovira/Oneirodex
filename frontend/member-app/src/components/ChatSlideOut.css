@@ -2,7 +2,7 @@
 
 /* Sits with Friends on the right. It used to be bottom-left, directly on top of
    the ScrollJump up/down controls. */
-.gt-chat-slide__launcher {
+.od-chat-slide__launcher {
   position: fixed;
   right: 1rem;
   left: auto;
@@ -14,10 +14,10 @@
   gap: 0.35rem;
   min-height: 2.6rem;
   padding: 0.45rem 0.85rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
+  color: var(--od-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -25,27 +25,27 @@
   backdrop-filter: blur(10px);
 }
 
-.gt-chat-slide__launcher:hover,
-.gt-chat-slide__launcher:focus-visible {
-  border-color: var(--gt-accent);
+.od-chat-slide__launcher:hover,
+.od-chat-slide__launcher:focus-visible {
+  border-color: var(--od-accent);
   outline: none;
 }
 
-.gt-chat-slide__scrim {
+.od-chat-slide__scrim {
   position: fixed;
-  inset: var(--gt-topnav-offset, 44px) 0 0 0;
+  inset: var(--od-topnav-offset, 44px) 0 0 0;
   z-index: 57;
   margin: 0;
   padding: 0;
   border: 0;
   background: rgba(4, 8, 14, 0.35);
   cursor: pointer;
-  animation: gt-chat-scrim-in 0.18s ease-out;
+  animation: od-chat-scrim-in 0.18s ease-out;
 }
 
-.gt-chat-slide {
+.od-chat-slide {
   position: fixed;
-  top: var(--gt-topnav-offset, 44px);
+  top: var(--od-topnav-offset, 44px);
   left: 0;
   bottom: 0;
   z-index: 58;
@@ -55,52 +55,52 @@
   flex-direction: column;
   gap: 0;
   padding: 0;
-  border-radius: 0 var(--gt-radius-xl) 0 0;
+  border-radius: 0 var(--od-radius-xl) 0 0;
   border-left: none;
   box-shadow: 12px 0 40px rgba(0, 0, 0, 0.45);
   transform: translateX(0);
-  animation: gt-chat-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: od-chat-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
   transition: width 0.2s ease;
 }
 
-.gt-chat-slide.is-expanded {
+.od-chat-slide.is-expanded {
   width: min(1120px, calc(100vw - 0.25rem));
 }
 
-.gt-chat-slide__header {
+.od-chat-slide__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.65rem 0.85rem 0.45rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
   flex-shrink: 0;
 }
 
-.gt-chat-slide__title {
+.od-chat-slide__title {
   margin: 0;
   font-family: var(--font-display, inherit);
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
   letter-spacing: 0.01em;
 }
 
-.gt-chat-slide__sub {
+.od-chat-slide__sub {
   margin: 0.1rem 0 0;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-chat-slide__header-actions {
+.od-chat-slide__header-actions {
   display: flex;
   align-items: center;
   gap: 0.35rem;
 }
 
-.gt-chat-slide__expand,
-.gt-chat-slide__close {
+.od-chat-slide__expand,
+.od-chat-slide__close {
   min-height: 2rem;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
@@ -108,35 +108,35 @@
   font: inherit;
 }
 
-.gt-chat-slide__expand {
+.od-chat-slide__expand {
   padding: 0.2rem 0.55rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
 }
 
-.gt-chat-slide__close {
+.od-chat-slide__close {
   min-width: 2rem;
   padding: 0;
-  font-size: var(--gt-font-xl);
+  font-size: var(--od-font-xl);
   line-height: 1;
 }
 
-.gt-chat-slide__expand:hover,
-.gt-chat-slide__expand:focus-visible,
-.gt-chat-slide__close:hover,
-.gt-chat-slide__close:focus-visible {
-  border-color: var(--gt-accent);
+.od-chat-slide__expand:hover,
+.od-chat-slide__expand:focus-visible,
+.od-chat-slide__close:hover,
+.od-chat-slide__close:focus-visible {
+  border-color: var(--od-accent);
   outline: none;
 }
 
-.gt-chat-slide .gt-chat-panel {
+.od-chat-slide .od-chat-panel {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-@keyframes gt-chat-slide-in {
+@keyframes od-chat-slide-in {
   from {
     transform: translateX(-100%);
     opacity: 0.85;
@@ -147,7 +147,7 @@
   }
 }
 
-@keyframes gt-chat-scrim-in {
+@keyframes od-chat-scrim-in {
   from {
     opacity: 0;
   }
@@ -157,12 +157,12 @@
 }
 
 @media (max-width: 900px) {
-  .gt-chat-slide {
+  .od-chat-slide {
     width: 100vw;
     border-radius: 0;
   }
 
-  .gt-chat-slide__launcher {
+  .od-chat-slide__launcher {
     right: 0.65rem;
     left: auto;
     bottom: 4.4rem;
@@ -170,8 +170,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-chat-slide,
-  .gt-chat-slide__scrim {
+  .od-chat-slide,
+  .od-chat-slide__scrim {
     animation: none;
   }
 }

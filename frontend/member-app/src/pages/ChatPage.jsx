@@ -39,11 +39,11 @@ export function ChatPage({ shellConfig = {} } = {}) {
   }, [navigate, popout])
 
   if (!popout) {
-    return <p className="gt-more-page__lede">Opening chat…</p>
+    return <p className="od-more-page__lede">Opening chat…</p>
   }
 
   return (
-    <div className="gt-chat-standalone">
+    <div className="od-chat-standalone">
       <ChatPanel
         initialChannelId={channelFromLocation()}
         // Admins create rooms and librarians are allowed by the API; the UI

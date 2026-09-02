@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { useRowScroll } from './useRowScroll'
 
@@ -43,7 +43,7 @@ describe('useRowScroll wheel', () => {
     expect(page.scrollTop).toBe(80)
   })
 
-  test('horizontal-dominant wheel over tiles does not pan the track', () => {
+  test('horizontal-dominant wheel over tiles pans the track both ways', () => {
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
       scroll.ref.current = track
@@ -51,17 +51,54 @@ describe('useRowScroll wheel', () => {
       return scroll
     })
 
+    track.scrollLeft = 120
+    const blockedBack = !viewport.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaX: -50,
+        deltaY: 8,
+        deltaMode: 0,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    expect(blockedBack).toBe(true)
+    expect(track.scrollLeft).toBe(70)
+    expect(page.scrollTop).toBe(0)
+
+    const blockedForward = !viewport.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaX: 40,
+        deltaY: 5,
+        deltaMode: 0,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+    expect(blockedForward).toBe(true)
+    expect(track.scrollLeft).toBe(110)
+    expect(page.scrollTop).toBe(0)
+  })
+
+  test('shift-wheel over tiles pans the track backward', () => {
+    renderHook(() => {
+      const scroll = useRowScroll({ bindKey: 1 })
+      scroll.ref.current = track
+      scroll.viewportRef.current = viewport
+      return scroll
+    })
+
+    track.scrollLeft = 90
     const blocked = !viewport.dispatchEvent(
       new WheelEvent('wheel', {
-        deltaX: 60,
-        deltaY: 10,
+        deltaY: -40,
+        shiftKey: true,
         deltaMode: 0,
         bubbles: true,
         cancelable: true,
       }),
     )
     expect(blocked).toBe(true)
-    expect(track.scrollLeft).toBe(0)
+    expect(track.scrollLeft).toBe(50)
     expect(page.scrollTop).toBe(0)
   })
 
@@ -98,6 +135,36 @@ describe('useRowScroll wheel', () => {
     const blocked = !hbar.dispatchEvent(
       new WheelEvent('wheel', {
         deltaY: 50,
+        deltaMode: 0,
+        bubbles: true,
+        cancelable: true,
+        clientX: 40,
+        clientY: 204,
+      }),
+    )
+    expect(blocked).toBe(true)
+    expect(track.scrollLeft).toBe(50)
+    expect(page.scrollTop).toBe(0)
+  })
+
+  test('wheel over the slider pans the track backward', () => {
+    const hbar = document.createElement('div')
+    viewport.append(hbar)
+    hbar.getBoundingClientRect = () =>
+      ({ left: 0, right: 400, top: 200, bottom: 208, width: 400, height: 8 })
+
+    renderHook(() => {
+      const scroll = useRowScroll({ bindKey: 1 })
+      scroll.ref.current = track
+      scroll.viewportRef.current = viewport
+      scroll.hbarRef.current = hbar
+      return scroll
+    })
+
+    track.scrollLeft = 80
+    const blocked = !hbar.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: -30,
         deltaMode: 0,
         bubbles: true,
         cancelable: true,
@@ -187,6 +254,21 @@ describe('useRowScroll arrow hover', () => {
     expect(queued).toBeTruthy()
     result.current.scrollByPage(1)
     expect(queued).toBeNull()
+  })
+
+  test('a native scroll event turns the start arrow on', async () => {
+    const { result } = renderHook(() => {
+      const scroll = useRowScroll({ bindKey: 1 })
+      scroll.ref.current = track
+      return scroll
+    })
+
+    expect(result.current.overflow.start).toBe(false)
+    await act(async () => {
+      track.scrollLeft = 80
+      track.dispatchEvent(new Event('scroll'))
+    })
+    expect(result.current.overflow.start).toBe(true)
   })
 
   test('a click while hover-scrolling does not page-jump', () => {

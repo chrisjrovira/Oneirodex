@@ -5,8 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, Library, User, UserLibraryAccess
-from gametheca.platform import LibraryPlatform
+from oneirodex.models import Game, Library, User, UserLibraryAccess
+from oneirodex.platform import LibraryPlatform
 
 
 @pytest.fixture
@@ -83,7 +83,7 @@ def _login(client, user):
 
 
 def _unique_igdb_id() -> int:
-    """Avoid unique(igdb_id) collisions on a dirty gamethecatest DB."""
+    """Avoid unique(igdb_id) collisions on a dirty oneirodextest DB."""
     return 100001 + (uuid4().int % 900000)
 
 
@@ -211,7 +211,7 @@ def test_batch_freshness_check_partial_success(
         return {'status': 'current', 'confidence': 'low'}
 
     monkeypatch.setattr(
-        'gametheca.utils.freshness.check_and_store_freshness',
+        'oneirodex.utils.freshness.check_and_store_freshness',
         fake_check,
     )
     _login(client, member_user)
@@ -243,7 +243,7 @@ def test_batch_freshness_respects_acl(
     db_session.commit()
 
     monkeypatch.setattr(
-        'gametheca.utils.freshness.check_and_store_freshness',
+        'oneirodex.utils.freshness.check_and_store_freshness',
         lambda game, **kw: {'status': 'current', 'confidence': 'low'},
     )
     _login(client, child_user)
@@ -280,7 +280,7 @@ def test_admin_freshness_refresh_still_works(client, db_session, admin_user, lib
         freshness_checked_at=None,
     )
     monkeypatch.setattr(
-        'gametheca.utils.freshness.check_and_store_freshness',
+        'oneirodex.utils.freshness.check_and_store_freshness',
         lambda g, **kw: {'status': 'current', 'confidence': 'low'},
     )
     _login(client, admin_user)
@@ -308,7 +308,7 @@ def test_updates_inbox_advertises_member_batch(client, member_user):
 
 
 def test_batch_status_set_clear_and_idempotent(client, db_session, member_user, library):
-    from gametheca.models import user_game_status
+    from oneirodex.models import user_game_status
     from sqlalchemy import and_, select
 
     g1 = _make_game(db_session, library, 'Status A')
@@ -416,7 +416,7 @@ def test_batch_status_rejects_invalid_and_over_limit(client, member_user):
 
 
 def test_batch_wishlist_add_and_skip_duplicates(client, db_session, member_user, library):
-    from gametheca.models import GameRequest
+    from oneirodex.models import GameRequest
 
     g1 = _make_game(db_session, library, 'Wish A')
     g2 = _make_game(db_session, library, 'Wish B')
@@ -488,7 +488,7 @@ def test_batch_wishlist_forbidden_acl_and_over_limit(
     blocked = _make_game(db_session, other_library, 'Wish ACL No')
     _login(client, member_user)
 
-    from gametheca.utils import library_acl
+    from oneirodex.utils import library_acl
 
     real_acl = library_acl.user_can_access_game
 
@@ -497,7 +497,7 @@ def test_batch_wishlist_forbidden_acl_and_over_limit(
             return False
         return real_acl(user, game)
 
-    monkeypatch.setattr('gametheca.routes_apis.game.user_can_access_game', fake_acl)
+    monkeypatch.setattr('oneirodex.routes_apis.game.user_can_access_game', fake_acl)
 
     resp = client.post(
         '/api/games/batch/wishlist',
@@ -590,10 +590,10 @@ def test_batch_refresh_images_queues_happy_path(
         return None
 
     monkeypatch.setattr(
-        'gametheca.routes_apis.game.run_in_background', fake_run_in_background
+        'oneirodex.routes_apis.game.run_in_background', fake_run_in_background
     )
     monkeypatch.setattr(
-        'gametheca.routes_apis.game.refresh_images_in_background',
+        'oneirodex.routes_apis.game.refresh_images_in_background',
         lambda game_uuid: None,
     )
     _login(client, librarian_user)
@@ -630,7 +630,7 @@ def test_batch_refresh_images_skips_not_found_and_forbidden(
     blocked = _make_game(db_session, library, 'Refresh Blocked', igdb_id=_unique_igdb_id())
     _login(client, librarian_user)
 
-    from gametheca.utils import library_acl
+    from oneirodex.utils import library_acl
 
     real_acl = library_acl.user_can_access_game
 
@@ -639,9 +639,9 @@ def test_batch_refresh_images_skips_not_found_and_forbidden(
             return False
         return real_acl(user, game)
 
-    monkeypatch.setattr('gametheca.routes_apis.game.user_can_access_game', fake_acl)
+    monkeypatch.setattr('oneirodex.routes_apis.game.user_can_access_game', fake_acl)
     monkeypatch.setattr(
-        'gametheca.routes_apis.game.run_in_background',
+        'oneirodex.routes_apis.game.run_in_background',
         lambda app, func, *args, name=None, **kwargs: None,
     )
 

@@ -8,9 +8,9 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca import db
-from gametheca.models import ChatChannel, User
-from gametheca.utils.chat import (
+from oneirodex import db
+from oneirodex.models import ChatChannel, User
+from oneirodex.utils.chat import (
     ensure_default_channels,
     list_channels_for_user,
     open_or_create_dm,
@@ -107,7 +107,7 @@ def test_mention_fanout_skips_muted_member(app, db_session, alice, bob):
         ch = db.session.get(ChatChannel, general['id'])
         set_channel_muted(bob, ch, True)
 
-        with patch('gametheca.utils.chat.notify_user') as notify:
+        with patch('oneirodex.utils.chat.notify_user') as notify:
             msg = post_message(ch, alice, f'hey @{bob.name} ping')
             assert msg is not None
             notify.assert_not_called()
@@ -117,7 +117,7 @@ def test_dm_fanout_skips_muted(app, db_session, alice, bob):
     with app.app_context():
         dm = open_or_create_dm(alice, bob)
         set_channel_muted(bob, dm, True)
-        with patch('gametheca.utils.chat.notify_user') as notify:
+        with patch('oneirodex.utils.chat.notify_user') as notify:
             post_message(dm, alice, 'quiet please')
             notify.assert_not_called()
 
@@ -130,7 +130,7 @@ def test_dm_mention_of_non_member_not_notified(app, db_session, alice, bob, caro
     """
     with app.app_context():
         dm = open_or_create_dm(alice, bob)
-        with patch('gametheca.utils.chat.notify_user') as notify:
+        with patch('oneirodex.utils.chat.notify_user') as notify:
             post_message(dm, alice, f'hey @{carol.name} what do you think of this secret')
             notified_user_ids = {call.args[0] for call in notify.call_args_list}
             assert carol.id not in notified_user_ids

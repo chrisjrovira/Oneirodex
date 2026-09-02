@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/static/dist/member-app/',
   build: {
-    outDir: path.resolve(__dirname, '../../gametheca/static/dist/member-app'),
+    outDir: path.resolve(__dirname, '../../oneirodex/static/dist/member-app'),
     emptyOutDir: true,
     cssCodeSplit: true,
     rollupOptions: {

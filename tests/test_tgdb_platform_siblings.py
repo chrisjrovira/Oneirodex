@@ -1,7 +1,7 @@
 """TGDB Stage E platform corroboration — short siblings must not steal long hits."""
 
-from gametheca.utils.rom_archive import PLATFORM_ROM_EXTENSIONS, choose_rom_member
-from gametheca.utils.software_identify import (
+from oneirodex.utils.rom_archive import PLATFORM_ROM_EXTENSIONS, choose_rom_member
+from oneirodex.utils.software_identify import (
     filter_tgdb_hits_for_platform,
     tgdb_platform_matches,
 )

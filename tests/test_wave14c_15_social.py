@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from gametheca.utils.chat import MENTION_RE
+from oneirodex.utils.chat import MENTION_RE
 
 
 def test_mention_regex():
@@ -11,7 +11,7 @@ def test_mention_regex():
 
 
 def test_notification_helpers_importable():
-    from gametheca.utils.notifications import list_notifications, notify_user, unread_count
+    from oneirodex.utils.notifications import list_notifications, notify_user, unread_count
 
     assert callable(notify_user)
     assert callable(list_notifications)
@@ -19,7 +19,7 @@ def test_notification_helpers_importable():
 
 
 def test_chat_helpers_importable():
-    from gametheca.utils.chat import ensure_default_channels, list_channels_for_user, open_or_create_dm
+    from oneirodex.utils.chat import ensure_default_channels, list_channels_for_user, open_or_create_dm
 
     assert callable(ensure_default_channels)
     assert callable(list_channels_for_user)

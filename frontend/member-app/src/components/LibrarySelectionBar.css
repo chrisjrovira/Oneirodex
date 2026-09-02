@@ -1,197 +1,105 @@
-.gt-library-selection {
+/* Classic chrome: sticky strip above the grid (new chrome mounts this in the
+   top bar via ContextBar and uses `--bar` instead). */
+.od-library-selection:not(.od-library-selection--bar) {
   position: sticky;
-  /* Zero, not the top-bar height.
-   *
-   * The scrollport this bar sticks inside is `.gt-shell__main`, which already
-   * begins *below* the top bar — the shell's grid puts the bar in its own row.
-   * Offsetting by --gt-topbar-h therefore counted that bar twice: sticky pushes
-   * a box down whenever its flow position sits above the threshold, so the bar
-   * rendered one full top-bar height lower than the space it reserved in flow,
-   * and the first row of tiles was drawn underneath it. That is the reported
-   * "top bar lays over the first row of tiles instead of sitting on top of
-   * them", and it happened at rest, before any scrolling.
-   *
-   * At 0 the flow position and the sticky threshold coincide, so the bar sits
-   * exactly where it reserves space, and on scroll it pins to the top of the
-   * content pane — under the chrome, above the grid. */
+  /* Zero, not the top-bar height — see prior note: `.od-shell__main` already
+     begins below the top bar, so offsetting by --od-topbar-h double-counted. */
   top: 0;
   z-index: 25;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.55rem 0.85rem;
+  gap: 0.55rem;
   margin: 0 0 0.35rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 92%, transparent);
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--gt-bg) 55%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--od-bg) 55%, transparent);
 }
 
-/* Shell top-pad while this bar is up lives in gt-shell.css
-   (`#main-content.gt-shell__main:has(.gt-library-selection)`). A SPA
-   override lost to the theme's `.gt-shell > #content` ID + physical
-   `padding` shorthand. */
-
-.gt-library-selection__count {
-  font-size: var(--gt-font-sm);
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  color: var(--gt-text);
-  white-space: nowrap;
-}
-
-.gt-library-selection__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.gt-library-selection__actions .gt-btn {
-  font-size: var(--gt-font-xs);
-  padding: 0.35rem 0.65rem;
-  line-height: 1.2;
-}
-
-.gt-library-selection__actions .gt-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.gt-library-selection__status {
+/* Top-bar host: the shell frame is enough; no second card around the group. */
+.od-library-selection--bar {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  margin: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
-.gt-library-selection__status-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+.od-library-selection .od-cbtn-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.od-library-selection__count {
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  border: 0;
 }
 
-.gt-library-selection__status-select {
-  font-size: var(--gt-font-xs);
-  line-height: 1.2;
-  padding: 0.35rem 0.5rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid color-mix(in srgb, var(--gt-text) 22%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-  color: var(--gt-text);
-  max-width: 9.5rem;
+/* Match Filters / other od-pop menus: full-width stacked chromeless items. */
+.od-library-selection__menu.od-pop__menu,
+.od-pop__panel--bare .od-library-selection__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 11rem;
+  padding: 0.2rem;
 }
 
-.gt-library-selection__status-select:disabled {
+.od-library-selection__menu .od-cbtn {
+  justify-content: flex-start;
+  width: 100%;
+  border-radius: var(--od-radius-sm);
+}
+
+.od-library-selection .od-cbtn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.gt-library-selection__more {
-  position: relative;
-}
-
-.gt-library-selection__more > summary {
-  list-style: none;
-  cursor: pointer;
-}
-
-.gt-library-selection__more > summary::-webkit-details-marker {
-  display: none;
-}
-
-.gt-library-selection__more-menu {
+/* Selection chrome on tiles — bottom-right corner, above the badge stack. */
+.game-card-container.is-selectable .od-tile-select {
   position: absolute;
-  right: 0;
-  top: calc(100% + 0.3rem);
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 10.5rem;
-  padding: 0.4rem;
-  border-radius: var(--gt-radius-lg);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 96%, transparent);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--gt-bg) 55%, transparent);
-}
-
-/* Selection chrome on tiles — bottom-right corner, directly above the
-   bottom-right badge stack.
- *
- * It was the fourth button in the top-right stack, which is what made it read
- * as a UI error: the moment one tile was selected the checkbox appeared on
- * *every* tile, and four identical squares stacked down the corner of every
- * cover looks like chrome that has gone wrong rather than a mode you entered.
- * Down here it is the only occupant of its corner, it reads as a checkbox
- * rather than as another action button, and it sits above the badges instead
- * of pushing them a slot further down the opposite corner.
- *
- * It keeps the stack's size and colour so it still belongs to the same tile
- * chrome — only its position changed. */
-.game-card-container.is-selectable .gt-tile-select {
-  position: absolute;
-  /* Same shape as the top-right controls, from the same vars. Spelled out here
-     rather than joined to their selector list in the theme's components.css:
-     this class belongs to the member app, and one class defined in two
-     stylesheets resolves by load order under cssCodeSplit. */
-  width: var(--gt-tile-btn, 32px);
-  height: var(--gt-tile-btn, 32px);
-  border-radius: var(--gt-radius-sm);
-  box-shadow: var(--gt-tile-btn-shadow, 0 2px 6px rgba(0, 0, 0, 0.55));
-  right: var(--gt-tile-edge, 8px);
+  width: var(--od-tile-btn, 32px);
+  height: var(--od-tile-btn, 32px);
+  border-radius: var(--od-radius-sm);
+  box-shadow: var(--od-tile-btn-shadow, 0 2px 6px rgba(0, 0, 0, 0.55));
+  right: var(--od-tile-edge, 8px);
   left: auto;
   top: auto;
-  /* One badge row plus a gap above the bottom-right stack. Uses the badge
-     height so the clearance tracks the badges themselves rather than a
-     guess that only holds at one tile size. */
-  bottom: calc(var(--gt-tile-edge, 8px) + var(--gt-badge-h, 1.35rem) + var(--gt-tile-btn-gap, 4px));
+  bottom: calc(var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) + var(--od-tile-btn-gap, 4px));
   z-index: 16;
   margin: 0;
   appearance: none;
-  border: var(--gt-tile-btn-border);
-  background: var(--gt-tile-btn-bg);
+  border: var(--od-tile-btn-border);
+  background: var(--od-tile-btn-bg);
   backdrop-filter: blur(5px);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-/* No bottom-right badges on this tile — drop into the corner itself. */
-.game-card-container.is-selectable .game-card:not(:has(.gt-badge-stack--bottom-right)) .gt-tile-select {
-  bottom: var(--gt-tile-edge, 8px);
+.game-card-container.is-selectable .game-card:not(:has(.od-badge-stack--bottom-right)) .od-tile-select {
+  bottom: var(--od-tile-edge, 8px);
 }
 
-.game-card-container.is-selectable:hover .gt-tile-select,
-.game-card-container.is-selectable:focus-within .gt-tile-select,
-.game-card-container.is-selected .gt-tile-select,
-.game-library-container.is-selecting .gt-tile-select {
+.game-card-container.is-selectable:hover .od-tile-select,
+.game-card-container.is-selectable:focus-within .od-tile-select,
+.game-card-container.is-selected .od-tile-select,
+.game-library-container.is-selecting .od-tile-select {
   opacity: 1;
 }
 
-.game-card-container.is-selectable .gt-tile-select:checked {
-  background: color-mix(in srgb, var(--gt-accent) 85%, transparent);
-  border-color: var(--gt-accent);
+.game-card-container.is-selectable .od-tile-select:checked {
+  background: color-mix(in srgb, var(--od-accent) 85%, transparent);
+  border-color: var(--od-accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%230b0e14' stroke-width='2.2' d='M3.5 8.2l3 3 6-6'/%3E%3C/svg%3E");
-  /* Tracks the button so the tick does not shrink to a dot on a 300px tile
-     or overflow a 24px control on a 120px one. */
-  background-size: calc(var(--gt-tile-btn, 32px) * 0.62);
+  background-size: calc(var(--od-tile-btn, 32px) * 0.62);
   background-repeat: no-repeat;
   background-position: center;
 }
 
-/* Selection is the checkbox, not a sticky outline. Outline belongs to hover /
-   keyboard focus only (theme `.game-card:hover`). A selected-but-idle tile
-   must look like every other resting tile. */
 .game-card-container.is-selected .game-card {
   outline: none;
 }
@@ -201,15 +109,13 @@
 }
 
 @media (max-width: 900px) {
-  .gt-library-selection {
-    /* Same reasoning as above — the content pane is the scrollport at every
-       width, so any positive offset here re-creates the overlap. */
+  .od-library-selection:not(.od-library-selection--bar) {
     top: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-card-container.is-selectable .gt-tile-select {
+  .game-card-container.is-selectable .od-tile-select {
     transition: none;
   }
 }

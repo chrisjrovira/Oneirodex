@@ -19,7 +19,7 @@ npm install
 npm run tauri:build:thin
 ```
 
-Produces unsigned `gametheca-desktop.exe` via `tauri.thin.conf.json` (capabilities: `thin-main` / `thin-library` / `social` only). Copy to `Oneirodex-thin.exe` **before** rebuilding the full companion — both flavors share the same Cargo output path. Details: [desktop-code-signing.md](../runbooks/desktop-code-signing.md).
+Produces unsigned `oneirodex-desktop.exe` via `tauri.thin.conf.json` (capabilities: `thin-main` / `thin-library` / `social` only). Copy to `Oneirodex-thin.exe` **before** rebuilding the full companion — both flavors share the same Cargo output path. Details: [desktop-code-signing.md](../runbooks/desktop-code-signing.md).
 
 ## Connect
 

@@ -13,7 +13,7 @@ describe('mobile-density.css', () => {
   it('stacks filters and pagination under 900px', () => {
     expect(css).toContain('@media (max-width: 900px)')
     expect(css).toContain('.library-filters')
-    expect(css).toContain('.gt-pagination')
-    expect(css).toContain('.gt-chat-composer')
+    expect(css).toContain('.od-pagination')
+    expect(css).toContain('.od-chat-composer')
   })
 })

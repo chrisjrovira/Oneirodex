@@ -1,4 +1,4 @@
-.gt-set-completion-toolbar {
+.od-set-completion-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -6,28 +6,28 @@
   margin-bottom: 1rem;
 }
 
-.gt-set-completion-region {
+.od-set-completion-region {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-set-completion-region select {
-  background: var(--gt-glass-bg);
-  color: var(--gt-text);
-  border: 1px solid var(--gt-glass-border);
-  border-radius: var(--gt-radius-sm);
+.od-set-completion-region select {
+  background: var(--od-glass-bg);
+  color: var(--od-text);
+  border: 1px solid var(--od-glass-border);
+  border-radius: var(--od-radius-sm);
   padding: 0.25rem 0.4rem;
 }
 
-.gt-set-completion-msg {
-  font-size: var(--gt-font-md);
-  color: var(--gt-accent);
+.od-set-completion-msg {
+  font-size: var(--od-font-md);
+  color: var(--od-accent);
 }
 
-.gt-set-completion-missing {
+.od-set-completion-missing {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -36,37 +36,37 @@
   gap: 0.4rem;
 }
 
-.gt-set-completion-missing li {
+.od-set-completion-missing li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.55rem 0.7rem;
-  background: var(--gt-glass-bg);
-  border: 1px solid var(--gt-glass-border);
-  border-radius: var(--gt-radius-md);
+  background: var(--od-glass-bg);
+  border: 1px solid var(--od-glass-border);
+  border-radius: var(--od-radius-md);
 }
 
-.gt-set-completion-missing li span {
+.od-set-completion-missing li span {
   flex: 1 1 12rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-licensed-catalog-table {
+.od-licensed-catalog-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
 }
 
-.gt-licensed-catalog-table th,
-.gt-licensed-catalog-table td {
+.od-licensed-catalog-table th,
+.od-licensed-catalog-table td {
   text-align: left;
   padding: 0.4rem 0.55rem;
-  border-bottom: 1px solid var(--gt-glass-border);
+  border-bottom: 1px solid var(--od-glass-border);
 }
 
-.gt-licensed-catalog-table thead th {
-  color: var(--gt-text-muted);
+.od-licensed-catalog-table thead th {
+  color: var(--od-text-muted);
   font-weight: 600;
 }

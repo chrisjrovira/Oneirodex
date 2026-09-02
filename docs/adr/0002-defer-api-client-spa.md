@@ -1,4 +1,4 @@
-# ADR: Defer `@gametheca/api-client` in member SPA
+# ADR: Defer `@oneirodex/api-client` in member SPA
 
 **Date:** 2026-07-27  
 **Status:** Accepted — **defer** wiring into member SPA (MISS-UI-4)  
@@ -6,7 +6,7 @@
 
 ## Context
 
-Package `@oneirodex/api-client` (formerly `@gametheca/api-client`) exists for typed fetches. Mid-polish 0.2 → 1.0 member SPA still uses direct `fetch` / existing helpers. Forcing a one-path cutover before 1.0 adds merge risk without user-facing gain.
+Package `@oneirodex/api-client` (formerly `@oneirodex/api-client`) exists for typed fetches. Mid-polish 0.2 → 1.0 member SPA still uses direct `fetch` / existing helpers. Forcing a one-path cutover before 1.0 adds merge risk without user-facing gain.
 
 ## Decision
 

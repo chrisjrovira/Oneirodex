@@ -30,7 +30,7 @@ function ReactionLabel({ item }) {
         alt={item.label || item.emoji}
         width={16}
         height={16}
-        className="gt-chat-reaction-img"
+        className="od-chat-reaction-img"
       />
     )
   }
@@ -41,15 +41,15 @@ function MessageAttachments({ attachments }) {
   const list = normalizeAttachments(attachments)
   if (!list.length) return null
   return (
-    <ul className="gt-chat-attachments" aria-label="Attachments">
+    <ul className="od-chat-attachments" aria-label="Attachments">
       {list.map((att) => {
         const key = att.id ?? att.url ?? att.filename
         const image = isImageAttachment(att)
         return (
-          <li key={key} className="gt-chat-attachment">
+          <li key={key} className="od-chat-attachment">
             {image && att.url ? (
               <a
-                className="gt-chat-attachment__thumb"
+                className="od-chat-attachment__thumb"
                 href={att.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -59,7 +59,7 @@ function MessageAttachments({ attachments }) {
             ) : null}
             {att.url ? (
               <a
-                className="gt-chat-attachment__link"
+                className="od-chat-attachment__link"
                 href={att.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -68,7 +68,7 @@ function MessageAttachments({ attachments }) {
                 {image ? 'Open image' : att.filename || 'Download file'}
               </a>
             ) : (
-              <span className="gt-chat-attachment__link">{att.filename || 'Attachment'}</span>
+              <span className="od-chat-attachment__link">{att.filename || 'Attachment'}</span>
             )}
           </li>
         )
@@ -580,7 +580,7 @@ export function ChatPanel({
 
   if (error) {
     return (
-      <div className="gt-chat-panel gt-chat-panel--error">
+      <div className="od-chat-panel od-chat-panel--error">
         <PageStatus error={error} errorMessage="Unable to load chat." />
       </div>
     )
@@ -603,17 +603,17 @@ export function ChatPanel({
 
   return (
     <div
-      className={`gt-chat-panel${compact ? ' gt-chat-panel--compact' : ''}${expanded ? ' gt-chat-panel--expanded' : ''}`}
+      className={`od-chat-panel${compact ? ' od-chat-panel--compact' : ''}${expanded ? ' od-chat-panel--expanded' : ''}`}
     >
-      <div className="gt-chat-layout">
-        <aside className="gt-chat-channels" aria-label="Rooms">
-          <div className="gt-chat-channels__head">
+      <div className="od-chat-layout">
+        <aside className="od-chat-channels" aria-label="Rooms">
+          <div className="od-chat-channels__head">
             <h2>Rooms</h2>
             <button
               type="button"
-              className="gt-chat-icon-btn"
+              className="od-chat-icon-btn"
               aria-expanded={showTools}
-              aria-controls="gt-chat-tools"
+              aria-controls="od-chat-tools"
               onClick={() => setShowTools((v) => !v)}
               title={showTools ? 'Hide search & DM' : 'Search & DM'}
             >
@@ -622,34 +622,34 @@ export function ChatPanel({
           </div>
 
           {showTools ? (
-            <div id="gt-chat-tools" className="gt-chat-tools">
-              <form className="gt-chat-tool-form" onSubmit={runSearch}>
-                <label className="gt-chat-sr-only" htmlFor="gt-chat-search">
+            <div id="od-chat-tools" className="od-chat-tools">
+              <form className="od-chat-tool-form" onSubmit={runSearch}>
+                <label className="od-chat-sr-only" htmlFor="od-chat-search">
                   Search messages
                 </label>
                 <input
-                  id="gt-chat-search"
+                  id="od-chat-search"
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
                   placeholder="Search messages"
                   autoComplete="off"
                 />
-                <button className="gt-btn gt-btn--secondary" type="submit">
+                <button className="od-btn od-btn--secondary" type="submit">
                   Go
                 </button>
               </form>
-              <form className="gt-chat-tool-form" onSubmit={openDm}>
-                <label className="gt-chat-sr-only" htmlFor="gt-chat-dm">
+              <form className="od-chat-tool-form" onSubmit={openDm}>
+                <label className="od-chat-sr-only" htmlFor="od-chat-dm">
                   Direct message
                 </label>
                 <input
-                  id="gt-chat-dm"
+                  id="od-chat-dm"
                   value={dmName}
                   onChange={(e) => setDmName(e.target.value)}
                   placeholder="DM username"
                   autoComplete="off"
                 />
-                <button className="gt-btn gt-btn--secondary" type="submit">
+                <button className="od-btn od-btn--secondary" type="submit">
                   Open
                 </button>
               </form>
@@ -657,20 +657,20 @@ export function ChatPanel({
           ) : null}
 
           {searchHits.length > 0 ? (
-            <ul className="gt-chat-search-hits">
+            <ul className="od-chat-search-hits">
               {searchHits.map((hit) => (
                 <li key={`${hit.channel?.id}-${hit.message?.id}`}>
                   <button
                     type="button"
-                    className="gt-chat-search-hit"
+                    className="od-chat-search-hit"
                     onClick={() => {
                       if (hit.channel?.id) setActiveId(hit.channel.id)
                       setSearchHits([])
                       setShowTools(false)
                     }}
                   >
-                    <span className="gt-chat-search-hit__ch">{hit.channel?.name}</span>
-                    <span className="gt-chat-search-hit__body">
+                    <span className="od-chat-search-hit__ch">{hit.channel?.name}</span>
+                    <span className="od-chat-search-hit__body">
                       {hit.message?.user}: {hit.message?.body}
                     </span>
                   </button>
@@ -684,31 +684,31 @@ export function ChatPanel({
           ) : channels.length === 0 ? (
             <PageStatus emptyMessage="No rooms yet — #general appears after first visit when chat is seeded." />
           ) : (
-            <div className="gt-chat-channel-groups">
+            <div className="od-chat-channel-groups">
               {roomChannels.length > 0 ? (
                 <>
-                  <p className="gt-chat-channel-label">Channels</p>
-                  <ul className="gt-chat-channel-list" aria-label="Channels">
+                  <p className="od-chat-channel-label">Channels</p>
+                  <ul className="od-chat-channel-list" aria-label="Channels">
                     {roomChannels.map((ch) => (
                       <li key={ch.id}>
                         <button
                           type="button"
-                          className={`gt-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
+                          className={`od-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
                           onClick={() => setActiveId(ch.id)}
                           aria-pressed={ch.id === activeId}
                         >
-                          <span className="gt-chat-channel__hash" aria-hidden="true">
+                          <span className="od-chat-channel__hash" aria-hidden="true">
                             #
                           </span>
-                          <span className="gt-chat-channel__name">
+                          <span className="od-chat-channel__name">
                             {ch.name?.replace(/^#/, '') || ch.name}
                           </span>
                           {ch.unread ? (
-                            <span className="gt-chat-channel__unread" aria-label={`${ch.unread} unread`}>
+                            <span className="od-chat-channel__unread" aria-label={`${ch.unread} unread`}>
                               {ch.unread > 99 ? '99+' : ch.unread}
                             </span>
                           ) : null}
-                          {ch.muted ? <span className="gt-chat-channel__muted">muted</span> : null}
+                          {ch.muted ? <span className="od-chat-channel__muted">muted</span> : null}
                         </button>
                       </li>
                     ))}
@@ -717,26 +717,26 @@ export function ChatPanel({
               ) : null}
               {dmChannels.length > 0 ? (
                 <>
-                  <p className="gt-chat-channel-label">Direct</p>
-                  <ul className="gt-chat-channel-list" aria-label="Direct messages">
+                  <p className="od-chat-channel-label">Direct</p>
+                  <ul className="od-chat-channel-list" aria-label="Direct messages">
                     {dmChannels.map((ch) => (
                       <li key={ch.id}>
                         <button
                           type="button"
-                          className={`gt-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
+                          className={`od-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
                           onClick={() => setActiveId(ch.id)}
                           aria-pressed={ch.id === activeId}
                         >
-                          <span className="gt-chat-channel__hash" aria-hidden="true">
+                          <span className="od-chat-channel__hash" aria-hidden="true">
                             @
                           </span>
-                          <span className="gt-chat-channel__name">{ch.name}</span>
+                          <span className="od-chat-channel__name">{ch.name}</span>
                           {ch.unread ? (
-                            <span className="gt-chat-channel__unread" aria-label={`${ch.unread} unread`}>
+                            <span className="od-chat-channel__unread" aria-label={`${ch.unread} unread`}>
                               {ch.unread > 99 ? '99+' : ch.unread}
                             </span>
                           ) : null}
-                          {ch.muted ? <span className="gt-chat-channel__muted">muted</span> : null}
+                          {ch.muted ? <span className="od-chat-channel__muted">muted</span> : null}
                         </button>
                       </li>
                     ))}
@@ -761,30 +761,30 @@ export function ChatPanel({
           />
 
           {canCreateRooms ? (
-            <form className="gt-chat-create-room" onSubmit={createRoom}>
-              <label className="gt-chat-sr-only" htmlFor="gt-chat-new-room">
+            <form className="od-chat-create-room" onSubmit={createRoom}>
+              <label className="od-chat-sr-only" htmlFor="od-chat-new-room">
                 New room name
               </label>
               <input
-                id="gt-chat-new-room"
+                id="od-chat-new-room"
                 value={newRoomName}
                 onChange={(e) => setNewRoomName(e.target.value)}
                 placeholder="New room"
                 autoComplete="off"
                 disabled={creatingRoom}
               />
-              <button className="gt-btn" type="submit" disabled={creatingRoom || !newRoomName.trim()}>
+              <button className="od-btn" type="submit" disabled={creatingRoom || !newRoomName.trim()}>
                 Add
               </button>
             </form>
           ) : (
-            <p className="gt-chat-create-hint">Ask a household member to create a room (child accounts cannot).</p>
+            <p className="od-chat-create-hint">Ask a household member to create a room (child accounts cannot).</p>
           )}
         </aside>
 
-        <section className="gt-chat-thread" aria-label="Messages">
-          <div className="gt-chat-thread__head">
-            <div className="gt-chat-thread__title">
+        <section className="od-chat-thread" aria-label="Messages">
+          <div className="od-chat-thread__head">
+            <div className="od-chat-thread__title">
               {active?.kind === 'dm' || active?.type === 'dm' ? (
                 <strong>{active?.name || 'Select a room'}</strong>
               ) : (
@@ -793,14 +793,14 @@ export function ChatPanel({
                   {active?.name?.replace(/^#/, '') || 'Select a room'}
                 </strong>
               )}
-              <span className="gt-chat-thread__subtitle">Household room</span>
+              <span className="od-chat-thread__subtitle">Household room</span>
             </div>
-            <div className="gt-chat-thread__actions">
+            <div className="od-chat-thread__actions">
               {active ? (
                 <>
                   <button
                     type="button"
-                    className="gt-chat-icon-btn gt-chat-icon-btn--accent"
+                    className="od-chat-icon-btn od-chat-icon-btn--accent"
                     onClick={() => openVoice({ screenshare: false })}
                     aria-pressed={voiceOpen && !preferScreenshare}
                     title="Join household voice"
@@ -809,7 +809,7 @@ export function ChatPanel({
                   </button>
                   <button
                     type="button"
-                    className="gt-chat-icon-btn gt-chat-icon-btn--accent"
+                    className="od-chat-icon-btn od-chat-icon-btn--accent"
                     onClick={() => openVoice({ screenshare: true })}
                     aria-pressed={voiceOpen && preferScreenshare}
                     title="Request screenshare (may be blocked for child accounts)"
@@ -818,7 +818,7 @@ export function ChatPanel({
                   </button>
                   <button
                     type="button"
-                    className="gt-chat-icon-btn"
+                    className="od-chat-icon-btn"
                     onClick={() => void toggleMute()}
                     aria-pressed={Boolean(active.muted)}
                     disabled={roomActionBusy}
@@ -830,7 +830,7 @@ export function ChatPanel({
               {showLeave ? (
                 <button
                   type="button"
-                  className="gt-chat-icon-btn"
+                  className="od-chat-icon-btn"
                   onClick={() => void leaveActiveRoom()}
                   disabled={roomActionBusy}
                 >
@@ -840,7 +840,7 @@ export function ChatPanel({
               {showArchive ? (
                 <button
                   type="button"
-                  className="gt-chat-icon-btn"
+                  className="od-chat-icon-btn"
                   onClick={() => void archiveActiveRoom()}
                   disabled={roomActionBusy}
                 >
@@ -850,7 +850,7 @@ export function ChatPanel({
               {typeof onExpandToggle === 'function' ? (
                 <button
                   type="button"
-                  className="gt-chat-icon-btn"
+                  className="od-chat-icon-btn"
                   onClick={onExpandToggle}
                   aria-pressed={expanded}
                   title={expanded ? 'Compact chat panel' : 'Expand chat panel'}
@@ -859,7 +859,7 @@ export function ChatPanel({
                 </button>
               ) : null}
               {onClose ? (
-                <button type="button" className="gt-chat-icon-btn" aria-label="Close chat" onClick={onClose}>
+                <button type="button" className="od-chat-icon-btn" aria-label="Close chat" onClick={onClose}>
                   ×
                 </button>
               ) : null}
@@ -867,14 +867,14 @@ export function ChatPanel({
           </div>
 
           {voiceOpen ? (
-            <div className="gt-chat-voice gt-chat-voice--header" aria-label="Voice and screenshare">
-              <div className="gt-chat-voice__bar">
-                <span className="gt-chat-voice__label">
+            <div className="od-chat-voice od-chat-voice--header" aria-label="Voice and screenshare">
+              <div className="od-chat-voice__bar">
+                <span className="od-chat-voice__label">
                   {preferScreenshare ? 'Screenshare entry' : 'Voice entry'}
                 </span>
                 <button
                   type="button"
-                  className="gt-chat-icon-btn"
+                  className="od-chat-icon-btn"
                   onClick={() => setVoiceOpen(false)}
                   aria-label="Hide voice panel"
                 >
@@ -894,7 +894,7 @@ export function ChatPanel({
                 }
               />
               {!voiceChannel ? (
-                <p className="gt-chat-voice__hint">
+                <p className="od-chat-voice__hint">
                   This is the shared household lobby, not this conversation. Pick a voice
                   channel in a space to talk there instead.
                 </p>
@@ -903,16 +903,16 @@ export function ChatPanel({
           ) : null}
 
           {msg ? (
-            <p className={`gt-chat-status${msgIsError ? ' is-error' : ''}`} role={msgIsError ? 'alert' : 'status'}>
+            <p className={`od-chat-status${msgIsError ? ' is-error' : ''}`} role={msgIsError ? 'alert' : 'status'}>
               {msg}
             </p>
           ) : null}
 
-          <ul className="gt-chat-messages">
+          <ul className="od-chat-messages">
             {!activeId ? (
-              <li className="gt-chat-empty">Choose a room to start chatting.</li>
+              <li className="od-chat-empty">Choose a room to start chatting.</li>
             ) : messages.length === 0 ? (
-              <li className="gt-chat-empty">No messages yet — say hi.</li>
+              <li className="od-chat-empty">No messages yet — say hi.</li>
             ) : (
               messages.map((m, index) => {
                 const prev = messages[index - 1]
@@ -921,26 +921,26 @@ export function ChatPanel({
                   ? messages.find((x) => x.id === m.parent_message_id)
                   : null
                 return (
-                  <li key={m.id} className={`gt-chat-msg${sameAuthor ? ' is-continued' : ''}`}>
+                  <li key={m.id} className={`od-chat-msg${sameAuthor ? ' is-continued' : ''}`}>
                     {parent ? (
-                      <div className="gt-chat-reply-ref">
+                      <div className="od-chat-reply-ref">
                         ↳ {parent.user}: {String(parent.body).slice(0, 80)}
                       </div>
                     ) : null}
                     {!sameAuthor ? (
-                      <div className="gt-chat-msg__meta">
-                        <span className="gt-chat-msg__user">{m.user}</span>
-                        <time className="gt-chat-msg__time" dateTime={m.created_at || undefined}>
+                      <div className="od-chat-msg__meta">
+                        <span className="od-chat-msg__user">{m.user}</span>
+                        <time className="od-chat-msg__time" dateTime={m.created_at || undefined}>
                           {formatMsgTime(m.created_at)}
                         </time>
                       </div>
                     ) : null}
                     {m.body && String(m.body).trim() ? (
-                      <p className="gt-chat-msg__body">{m.body}</p>
+                      <p className="od-chat-msg__body">{m.body}</p>
                     ) : null}
                     <MessageAttachments attachments={m.attachments} />
-                    <div className="gt-chat-msg__actions">
-                      <button type="button" className="gt-cbtn gt-cbtn--ghost gt-btn--sm" onClick={() => setReplyTo(m)}>
+                    <div className="od-chat-msg__actions">
+                      <button type="button" className="od-cbtn od-cbtn--ghost od-btn--sm" onClick={() => setReplyTo(m)}>
                         Reply
                       </button>
                       {reactionItems.map((item) => {
@@ -955,7 +955,7 @@ export function ChatPanel({
                                it is already keyed off exactly this condition
                                everywhere else — a reaction you left reads the
                                same as an active filter. */
-                            className={`gt-cbtn gt-btn--sm${mine ? ' is-on' : ''}`}
+                            className={`od-cbtn od-btn--sm${mine ? ' is-on' : ''}`}
                             aria-pressed={mine}
                             title={mine ? `Remove ${item.label}` : `React ${item.label}`}
                             onClick={() => void toggleReaction(m.id, emoji)}
@@ -974,24 +974,24 @@ export function ChatPanel({
           </ul>
 
           {replyTo ? (
-            <div className="gt-chat-reply-bar">
+            <div className="od-chat-reply-bar">
               <span>
                 Replying to <strong>{replyTo.user}</strong>: {String(replyTo.body).slice(0, 60)}
               </span>
-              <button type="button" className="gt-chat-icon-btn" onClick={() => setReplyTo(null)}>
+              <button type="button" className="od-chat-icon-btn" onClick={() => setReplyTo(null)}>
                 Cancel
               </button>
             </div>
           ) : null}
 
           {pendingAttachments.length > 0 ? (
-            <ul className="gt-chat-pending-attachments" aria-label="Pending attachments">
+            <ul className="od-chat-pending-attachments" aria-label="Pending attachments">
               {pendingAttachments.map((att) => (
                 <li key={att.id ?? att.filename}>
                   <span>{att.filename || 'file'}</span>
                   <button
                     type="button"
-                    className="gt-chat-icon-btn"
+                    className="od-chat-icon-btn"
                     aria-label={`Remove ${att.filename || 'attachment'}`}
                     onClick={() =>
                       setPendingAttachments((prev) => prev.filter((row) => row !== att))
@@ -1005,19 +1005,19 @@ export function ChatPanel({
           ) : null}
 
           {attachHint ? (
-            <p className="gt-chat-attach-hint" role="status">
+            <p className="od-chat-attach-hint" role="status">
               {attachHint}
             </p>
           ) : null}
 
           {showEmojiPicker ? (
-            <div id={emojiPickerId} className="gt-chat-emoji-picker" role="listbox" aria-label="Emoji">
+            <div id={emojiPickerId} className="od-chat-emoji-picker" role="listbox" aria-label="Emoji">
               {reactionItems.map((item) => (
                 <button
                   key={item.emoji}
                   type="button"
                   role="option"
-                  className="gt-chat-emoji-picker__btn"
+                  className="od-chat-emoji-picker__btn"
                   title={item.label}
                   onClick={() => insertEmoji(item)}
                 >
@@ -1027,11 +1027,11 @@ export function ChatPanel({
             </div>
           ) : null}
 
-          <form className="gt-chat-composer" onSubmit={sendMessage}>
-            <div className="gt-chat-composer__tools">
+          <form className="od-chat-composer" onSubmit={sendMessage}>
+            <div className="od-chat-composer__tools">
               <button
                 type="button"
-                className="gt-chat-composer__tool"
+                className="od-chat-composer__tool"
                 aria-label="Insert emoji"
                 aria-expanded={showEmojiPicker}
                 aria-controls={emojiPickerId}
@@ -1042,7 +1042,7 @@ export function ChatPanel({
               </button>
               <button
                 type="button"
-                className="gt-chat-composer__tool"
+                className="od-chat-composer__tool"
                 aria-label="Attach file"
                 title={
                   viewerIsChild
@@ -1059,7 +1059,7 @@ export function ChatPanel({
               <input
                 ref={fileInputRef}
                 type="file"
-                className="gt-chat-sr-only"
+                className="od-chat-sr-only"
                 tabIndex={-1}
                 accept={ATTACH_ACCEPT}
                 multiple
@@ -1080,7 +1080,7 @@ export function ChatPanel({
                 }
               }}
             />
-            <button className="gt-btn gt-btn--primary" type="submit" disabled={!canSend}>
+            <button className="od-btn od-btn--primary" type="submit" disabled={!canSend}>
               Send
             </button>
           </form>

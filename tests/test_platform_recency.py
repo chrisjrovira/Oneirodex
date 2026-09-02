@@ -11,8 +11,8 @@ tests make that failure loud.
 
 from __future__ import annotations
 
-from gametheca.platform import LibraryPlatform
-from gametheca.platform_recency import (
+from oneirodex.platform import LibraryPlatform
+from oneirodex.platform_recency import (
     PLATFORM_LAUNCH_YEAR,
     missing_platforms,
     newest_platform,
@@ -48,6 +48,8 @@ def test_newer_hardware_outranks_older_within_a_family():
     assert platform_rank('ATARI_ST') < platform_rank('JAGUAR')
     assert platform_rank('ATARI_2600') < platform_rank('ATARI_8BIT') < platform_rank('ATARI_ST')
     assert platform_rank('PC_98') < platform_rank('X68000')
+    assert platform_rank('GAME_WATCH') < platform_rank('GB')
+    assert platform_rank('BBC_MICRO') < platform_rank('PC_98')
 
 
 def test_the_example_that_was_asked_for():

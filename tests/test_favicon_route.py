@@ -2,7 +2,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ICO_PATH = ROOT / "gametheca" / "static" / "icons" / "favicon.ico"
+ICO_PATH = ROOT / "oneirodex" / "static" / "icons" / "favicon.ico"
 
 
 def test_favicon_ico_route(client):

@@ -1,6 +1,6 @@
 """Fallback name truncation must stay capped (scan stall guard)."""
 
-from gametheca.utils import scanning
+from oneirodex.utils import scanning
 
 
 def test_fallback_truncation_cap_math():

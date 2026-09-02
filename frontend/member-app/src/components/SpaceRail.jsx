@@ -86,64 +86,64 @@ export function SpaceRail({
 
   if (loading) {
     return (
-      <div className="gt-space-rail" aria-busy="true">
-        <p className="gt-space-rail__hint">Loading spaces…</p>
+      <div className="od-space-rail" aria-busy="true">
+        <p className="od-space-rail__hint">Loading spaces…</p>
       </div>
     )
   }
 
   return (
-    <nav className="gt-space-rail" aria-label="Spaces">
+    <nav className="od-space-rail" aria-label="Spaces">
       {error ? (
         <PageStatus
           error={error}
           onRetry={() => void loadSpaces()}
           retryLabel="Retry"
-          className="gt-space-rail__error"
+          className="od-space-rail__error"
         />
       ) : null}
 
       {!spaces.length && !error ? (
-        <p className="gt-space-rail__hint">
+        <p className="od-space-rail__hint">
           No spaces yet. An admin can create one, or paste an invite below.
         </p>
       ) : null}
 
-      <ul className="gt-space-rail__list">
+      <ul className="od-space-rail__list">
         {spaces.map((space) => {
           const isCollapsed = Boolean(collapsed[space.id])
           const textChannels = space.channels || []
           const voiceChannels = space.voice_channels || []
           return (
-            <li key={space.id} className="gt-space-rail__space">
+            <li key={space.id} className="od-space-rail__space">
               <button
                 type="button"
-                className="gt-space-rail__space-head"
+                className="od-space-rail__space-head"
                 aria-expanded={!isCollapsed}
                 onClick={() => toggleSpace(space.id)}
               >
-                <span className="gt-space-rail__chevron" aria-hidden="true">
+                <span className="od-space-rail__chevron" aria-hidden="true">
                   {isCollapsed ? '▸' : '▾'}
                 </span>
-                <span className="gt-space-rail__space-name">{space.name}</span>
+                <span className="od-space-rail__space-name">{space.name}</span>
                 {space.visibility === 'invite' ? (
-                  <span className="gt-space-rail__tag" title="Invite only">
+                  <span className="od-space-rail__tag" title="Invite only">
                     invite
                   </span>
                 ) : null}
               </button>
 
               {!isCollapsed ? (
-                <div className="gt-space-rail__body">
+                <div className="od-space-rail__body">
                   {textChannels.length ? (
                     <>
-                      <p className="gt-space-rail__group">Text</p>
-                      <ul className="gt-space-rail__channels">
+                      <p className="od-space-rail__group">Text</p>
+                      <ul className="od-space-rail__channels">
                         {textChannels.map((channel) => (
                           <li key={channel.id}>
                             <button
                               type="button"
-                              className={`gt-space-rail__channel${
+                              className={`od-space-rail__channel${
                                 channel.id === activeChannelId ? ' is-active' : ''
                               }`}
                               aria-current={channel.id === activeChannelId ? 'true' : undefined}
@@ -159,13 +159,13 @@ export function SpaceRail({
 
                   {voiceChannels.length ? (
                     <>
-                      <p className="gt-space-rail__group">Voice</p>
-                      <ul className="gt-space-rail__channels">
+                      <p className="od-space-rail__group">Voice</p>
+                      <ul className="od-space-rail__channels">
                         {voiceChannels.map((channel) => (
                           <li key={channel.id}>
                             <button
                               type="button"
-                              className="gt-space-rail__channel gt-space-rail__channel--voice"
+                              className="od-space-rail__channel od-space-rail__channel--voice"
                               onClick={() => onSelectVoiceChannel?.(channel, space)}
                             >
                               <span aria-hidden="true">🔊</span> {channel.name}
@@ -177,7 +177,7 @@ export function SpaceRail({
                   ) : null}
 
                   {!textChannels.length && !voiceChannels.length ? (
-                    <p className="gt-space-rail__hint">No channels in this space yet.</p>
+                    <p className="od-space-rail__hint">No channels in this space yet.</p>
                   ) : null}
                 </div>
               ) : null}
@@ -186,23 +186,23 @@ export function SpaceRail({
         })}
       </ul>
 
-      <form className="gt-space-rail__join" onSubmit={redeemInvite}>
-        <label className="gt-space-rail__join-label" htmlFor="gt-space-invite">
+      <form className="od-space-rail__join" onSubmit={redeemInvite}>
+        <label className="od-space-rail__join-label" htmlFor="od-space-invite">
           Join with invite
         </label>
         <input
-          id="gt-space-invite"
+          id="od-space-invite"
           type="text"
           value={inviteToken}
           onChange={(e) => setInviteToken(e.target.value)}
           placeholder="Paste invite code"
           autoComplete="off"
         />
-        <button type="submit" className="gt-btn" disabled={joinBusy || !inviteToken.trim()}>
+        <button type="submit" className="od-btn" disabled={joinBusy || !inviteToken.trim()}>
           {joinBusy ? 'Joining…' : 'Join'}
         </button>
         {joinMsg ? (
-          <p className="gt-space-rail__hint" role="status">
+          <p className="od-space-rail__hint" role="status">
             {joinMsg}
           </p>
         ) : null}

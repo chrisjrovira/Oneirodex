@@ -23,7 +23,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import GlobalSettings, User
+from oneirodex.models import GlobalSettings, User
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def stranded_install(db_session):
     # duplicates across runs, and an unordered .first() is free to return a
     # different one per query — so configuring "a" row here and asserting on
     # "the" row later compared two different objects.
-    from gametheca.utils.global_settings import global_settings_row_or_create
+    from oneirodex.utils.global_settings import global_settings_row_or_create
 
     settings = global_settings_row_or_create()
     previous = (
@@ -92,7 +92,7 @@ class TestStrandedSetupRecovers:
 
     def test_recovery_advances_past_the_completed_step(self, client, stranded_install):
         """Step 1 is 'create the admin account', and that is provably done."""
-        from gametheca.utils.setup import get_setup_redirect_url
+        from oneirodex.utils.setup import get_setup_redirect_url
 
         url = get_setup_redirect_url()
 
@@ -111,7 +111,7 @@ class TestSetupSubmitIsAtomic:
         """
         import inspect
 
-        from gametheca import routes_setup
+        from oneirodex import routes_setup
 
         source = inspect.getsource(routes_setup.setup_submit)
         body = source[source.index('db.session.add(user)'):]

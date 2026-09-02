@@ -1,5 +1,5 @@
 ## Summary
-<!-- What changed and why (GameTheca product language only). -->
+<!-- What changed and why (Oneirodex product language only). -->
 
 ## Test plan
 <!-- How you verified. -->

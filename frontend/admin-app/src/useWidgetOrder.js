@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
-const STORAGE_PREFIX = 'gt-widget-order:'
+const STORAGE_PREFIX = 'od-widget-order:'
 
 /**
  * Reconcile a stored order against the widgets that actually exist.

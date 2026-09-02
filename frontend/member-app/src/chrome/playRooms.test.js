@@ -38,9 +38,14 @@ test('late-nineties disc generation is the carpet den', () => {
 })
 
 test('computers land on the desk', () => {
-  for (const key of ['PCDOS', 'AMIGA', 'VICE_X64SC', 'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II', 'ATARI_8BIT', 'X68000', 'PC_98']) {
+  for (const key of ['PCDOS', 'AMIGA', 'VICE_X64SC', 'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II', 'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO']) {
     expect(roomIdForPlatform(key)).toBe('desk')
   }
+})
+
+test('Game & Watch shares the 80s wood den, not the 90s handheld bedroom', () => {
+  expect(roomIdForPlatform('GAME_WATCH')).toBe('wood_den_80s')
+  expect(roomIdForPlatform('GAME_WATCH')).toBe(roomIdForPlatform('NES'))
 })
 
 test('unknown platform gets a plausible default rather than breaking', () => {
@@ -63,8 +68,8 @@ test('every room defines the full palette', () => {
 
 test('roomStyle returns custom properties only, so nothing leaks globally', () => {
   const style = roomStyle('ARCADE')
-  expect(Object.keys(style).every((k) => k.startsWith('--gt-room-'))).toBe(true)
-  expect(style['--gt-room-backdrop']).toBe(ROOMS.arcade_cabinet.backdrop)
+  expect(Object.keys(style).every((k) => k.startsWith('--od-room-'))).toBe(true)
+  expect(style['--od-room-backdrop']).toBe(ROOMS.arcade_cabinet.backdrop)
 })
 
 test('roomForPlatform returns the room object', () => {

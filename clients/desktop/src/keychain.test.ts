@@ -67,7 +67,7 @@ describe('createKeychainAdapter', () => {
     })
     await keychain.save('gt_ab12cd34_secretpart')
 
-    const auth = createAuthStore({ baseUrl: 'https://gametheca.local' })
+    const auth = createAuthStore({ baseUrl: 'https://oneirodex.local' })
     await auth.hydrateFromKeychain(keychain)
     expect(auth.getToken()).toBe('gt_ab12cd34_secretpart')
 

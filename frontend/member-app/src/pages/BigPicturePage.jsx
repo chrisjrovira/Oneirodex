@@ -261,20 +261,20 @@ export function BigPicturePage({ shellConfig = {} }) {
     : ''
 
   return (
-    <div className={`gt-bp${shellConfig.role === 'child' ? ' gt-bp--kid' : ''}`}>
-      <header className="gt-bp__header">
+    <div className={`od-bp${shellConfig.role === 'child' ? ' od-bp--kid' : ''}`}>
+      <header className="od-bp__header">
         <div>
-          <h1 className="gt-bp__title">Big Picture</h1>
-          <p className="gt-bp__hint">
+          <h1 className="od-bp__title">Big Picture</h1>
+          <p className="od-bp__hint">
             {shellConfig.role === 'child'
               ? 'Kid mode — library already filtered by parental ACL · ← → browse · Esc exit · Y friends'
               : '← → browse · Enter / A open · D download · B attract · Y friends · Esc blur · Home first'}
           </p>
         </div>
-        <div className="gt-bp__header-actions">
+        <div className="od-bp__header-actions">
           <button
             type="button"
-            className="gt-bp__link"
+            className="od-bp__link"
             aria-pressed={socialOpen}
             title="Toggle friends companion (Y)"
             onClick={() => setSocialOpen((value) => !value)}
@@ -282,13 +282,13 @@ export function BigPicturePage({ shellConfig = {} }) {
             Friends
           </button>
           <a
-            className="gt-bp__link"
+            className="od-bp__link"
             href={attractUrl(selected?.uuid)}
             title="Open Attract Mode (B)"
           >
             Attract
           </a>
-          <a className="gt-bp__exit" href="/library">
+          <a className="od-bp__exit" href="/library">
             Exit
           </a>
         </div>
@@ -300,33 +300,33 @@ export function BigPicturePage({ shellConfig = {} }) {
           errorMessage="Unable to load Big Picture."
           onRetry={() => setRetryCount((n) => n + 1)}
           retryLabel="Retry"
-          className="gt-bp__alert"
+          className="od-bp__alert"
         />
       ) : null}
 
       {!error ? (
-        <section className="gt-bp__hero" aria-live="polite">
+        <section className="od-bp__hero" aria-live="polite">
           {selected?.cover_url ? (
-            <img className="gt-bp__hero-art" src={coverUrl(selected.cover_url)} alt="" />
+            <img className="od-bp__hero-art" src={coverUrl(selected.cover_url)} alt="" />
           ) : null}
-          <div className="gt-bp__hero-body">
-            <h2 className="gt-bp__hero-title">{heroTitle}</h2>
-            {heroMeta ? <p className="gt-bp__hero-meta">{heroMeta}</p> : null}
+          <div className="od-bp__hero-body">
+            <h2 className="od-bp__hero-title">{heroTitle}</h2>
+            {heroMeta ? <p className="od-bp__hero-meta">{heroMeta}</p> : null}
             {selected?.summary ? (
-              <p className="gt-bp__hero-summary">{String(selected.summary).slice(0, 280)}</p>
+              <p className="od-bp__hero-summary">{String(selected.summary).slice(0, 280)}</p>
             ) : null}
             {selected ? (
-              <div className="gt-bp__hero-actions">
-                <Link className="gt-bp__btn gt-bp__btn--primary" to={gameDetailsUrl(selected.uuid)}>
+              <div className="od-bp__hero-actions">
+                <Link className="od-bp__btn od-bp__btn--primary" to={gameDetailsUrl(selected.uuid)}>
                   Open
                 </Link>
-                <a className="gt-bp__btn" href={downloadUrl(selected.uuid)}>
+                <a className="od-bp__btn" href={downloadUrl(selected.uuid)}>
                   Download
                 </a>
                 {selected.client_connected && selected.lifecycle_state === 'downloaded' ? (
                   <button
                     type="button"
-                    className="gt-bp__btn"
+                    className="od-bp__btn"
                     onClick={() => {
                       void queueClientCommand(selected.uuid, 'install').then(() => {
                         showToast('Install queued for companion', 'success')
@@ -336,7 +336,7 @@ export function BigPicturePage({ shellConfig = {} }) {
                     Install
                   </button>
                 ) : null}
-                <Link className="gt-bp__btn" to="/library">
+                <Link className="od-bp__btn" to="/library">
                   Exit
                 </Link>
               </div>
@@ -349,18 +349,18 @@ export function BigPicturePage({ shellConfig = {} }) {
       ) : null}
 
       {!error ? (
-        <div className="gt-bp__rail-wrap">
+        <div className="od-bp__rail-wrap">
           {loading ? (
-            <PageStatus loading loadingMessage="Loading games…" className="gt-bp__empty" />
+            <PageStatus loading loadingMessage="Loading games…" className="od-bp__empty" />
           ) : null}
 
           {!loading && list.length === 0 ? (
-            <PageStatus emptyMessage="No games in your library yet." className="gt-bp__empty" />
+            <PageStatus emptyMessage="No games in your library yet." className="od-bp__empty" />
           ) : null}
 
           {!loading && list.length > 0 ? (
             <div
-              className="gt-bp__rail"
+              className="od-bp__rail"
               role="listbox"
               aria-label="Game rail"
               onKeyDown={onKeyDown}
@@ -371,7 +371,7 @@ export function BigPicturePage({ shellConfig = {} }) {
                   ref={(element) => {
                     tileRefs.current[i] = element
                   }}
-                  className={`gt-bp__tile${i === index ? ' gt-bp__tile--focused' : ''}`}
+                  className={`od-bp__tile${i === index ? ' od-bp__tile--focused' : ''}`}
                   role="option"
                   aria-label={game.name || 'Untitled'}
                   aria-selected={i === index}
@@ -381,7 +381,7 @@ export function BigPicturePage({ shellConfig = {} }) {
                   onFocus={() => setIndex(i)}
                 >
                   <img
-                    className="gt-bp__tile-art"
+                    className="od-bp__tile-art"
                     src={coverUrl(game.cover_url)}
                     alt=""
                     width={220}
@@ -389,14 +389,14 @@ export function BigPicturePage({ shellConfig = {} }) {
                     loading="lazy"
                     decoding="async"
                   />
-                  <span className="gt-bp__tile-badges">
+                  <span className="od-bp__tile-badges">
                     {badgeBits(game).map((bit) => (
-                      <span key={bit} className="gt-bp__badge">
+                      <span key={bit} className="od-bp__badge">
                         {bit}
                       </span>
                     ))}
                   </span>
-                  <span className="gt-bp__tile-label">{game.name || 'Untitled'}</span>
+                  <span className="od-bp__tile-label">{game.name || 'Untitled'}</span>
                 </a>
               ))}
             </div>

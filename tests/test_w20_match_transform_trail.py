@@ -1,8 +1,8 @@
 """W20-2: ordered Stage A0–A14 name-transform trail on parse / proposal / dupe explain."""
 
-from gametheca.utils.duplicate_check import explain_duplicate_match
-from gametheca.utils.game_name_parse import parse_game_label
-from gametheca.utils.match_proposal import build_match_proposal
+from oneirodex.utils.duplicate_check import explain_duplicate_match
+from oneirodex.utils.game_name_parse import parse_game_label
+from oneirodex.utils.match_proposal import build_match_proposal
 
 
 def _stages(transforms):

@@ -16,10 +16,15 @@ import {
   isScanRunning,
   normalizeScanJobsList,
 } from './scanQueuePolicy'
+import {
+  scanJobsProgressSignature,
+  scanJobsStructureSignature,
+} from '../../../oneirodex/setup/default_theme/js/scanJobsDom.js'
 import { useLibraryRefreshAll } from './useLibraryRefreshAll'
 import { useLibraryScan } from './useLibraryScan'
 import { useVisibilityPoll } from './useVisibilityPoll'
 import { showToast } from './utils/toast'
+import { DashboardBoard } from './DashboardBoard'
 import {
   MeterBar,
   MetricTile,
@@ -53,7 +58,7 @@ async function getJson(url, { signal } = {}) {
 }
 
 /**
- * Dashboard glance tables (UX-C8 · W27-C1). Hand-rolled `gt-ops-table` blocks
+ * Dashboard glance tables (UX-C8 · W27-C1). Hand-rolled `od-ops-table` blocks
  * until now, which is why the dashboard's tables did not match the rest of
  * admin. `toolbar={false}` for the same reason as the Ops panels: these row
  * sets are capped at a handful, and a filter box over four errors is chrome
@@ -72,9 +77,9 @@ const DASHBOARD_ERROR_COLUMNS = [
 
 function Page({ title, lede, children }) {
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>{title}</h1>
-      {lede ? <p className="gt-admin-lede">{lede}</p> : null}
+      {lede ? <p className="od-admin-lede">{lede}</p> : null}
       {children}
     </div>
   )
@@ -87,7 +92,7 @@ function Page({ title, lede, children }) {
  * row was a duplicate nav that also made every admin page open with a wall of
  * buttons before its actual content.
  *
- * Note this is *not* the same as `.gt-admin-actions-row` generally — that class
+ * Note this is *not* the same as `.od-admin-actions-row` generally — that class
  * is still used for real page actions (save, apply, submit) across ArtStudio,
  * QualityProfiles, Users and others, and those must stay.
  */
@@ -97,7 +102,6 @@ export function DashboardPage() {
   const [error, setError] = useState(null)
   const [bootLoading, setBootLoading] = useState(true)
   const [manualRefreshing, setManualRefreshing] = useState(false)
-  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
   const requestRef = useRef({ id: 0, controller: null })
   const hasSummaryRef = useRef(false)
 
@@ -114,7 +118,6 @@ export function DashboardPage() {
         if (requestRef.current.id !== id || controller.signal.aborted) return
         setSummary(data)
         setError(null)
-        setLastUpdatedAt(new Date())
         hasSummaryRef.current = true
         if (isBoot) setBootLoading(false)
         if (isManual) setManualRefreshing(false)
@@ -166,11 +169,164 @@ export function DashboardPage() {
         ? 'warning'
         : 'good'
 
+  const hasErrors = (summary?.recent_errors || []).length > 0
+
+  const widgets = {
+    status: (
+      <OpsStatusBanner
+        severity={severity}
+        items={issues?.items}
+        ariaLabel="Health"
+      />
+    ),
+    'm-libraries': (
+      <MetricTile
+        label="Libraries"
+        value={na(library?.libraries)}
+        hint="folders"
+        tone={library?.libraries != null ? 'info' : 'na'}
+      />
+    ),
+    'm-games': (
+      <MetricTile
+        label="Games"
+        value={na(library?.games)}
+        hint={
+          library?.unmatched_folders != null
+            ? `${library.unmatched_folders} unmatched`
+            : 'catalogue'
+        }
+        tone={gamesTone}
+      />
+    ),
+    'm-health': (
+      <MetricTile
+        label="Library health"
+        value={formatLibraryHealthValue(library?.health)}
+        hint={formatLibraryHealthHint(library?.health)}
+        tone={libraryHealthTone(library?.health)}
+      />
+    ),
+    'm-scans': (
+      <MetricTile
+        label="Scans"
+        value={na(scans?.active_count)}
+        hint={
+          (scans?.jobs || [])[0]
+            ? `${scans.jobs[0].library || 'job'} · ${scans.jobs[0].progress}%`
+            : 'active'
+        }
+        tone={scansActiveTone(scans?.active_count)}
+      />
+    ),
+    'm-disk': (
+      <MetricTile
+        label="Disk"
+        value={disk?.percent != null ? `${disk.percent}%` : 'n/a'}
+        hint="games volume"
+        tone={percentHealthTone(disk?.percent)}
+      />
+    ),
+    'm-load': (
+      <MetricTile
+        label="Load 1/5/15"
+        value={formatLoadAvg(host?.load_avg)}
+        tone={host?.load_avg ? 'info' : 'na'}
+      />
+    ),
+    'm-rss': (
+      <MetricTile
+        label="Process RSS"
+        value={formatBytes(host?.process?.rss_bytes)}
+        hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
+        tone={host?.process?.rss_bytes != null ? 'info' : 'na'}
+      />
+    ),
+    'm-db': (
+      <MetricTile
+        label="DB ping"
+        value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
+        tone={dbPingTone(host?.db_ping_ms)}
+      />
+    ),
+    'm-readyz': (
+      <MetricTile
+        label="Readyz"
+        value={formatReadyz(services?.readyz)}
+        tone={readyzTone(services?.readyz)}
+      />
+    ),
+    'm-companions': (
+      <MetricTile
+        label="Companions"
+        value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
+        hint={
+          kindRows.length
+            ? kindRows.map((r) => `${r.kind} ${r.online}/${r.registered}`).join(' · ')
+            : 'by kind n/a'
+        }
+        tone={companionsTone(companions)}
+      />
+    ),
+    host: (
+      <section className="od-ops-panel od-ops-panel--embedded">
+        <h2>Host meters</h2>
+        {!host ? (
+          <p className="od-admin-lede">Host data unavailable.</p>
+        ) : (
+          <div className="od-ops-meters">
+            <MeterBar label="CPU" percent={host.cpu?.percent} />
+            <MeterBar
+              label="Memory"
+              percent={host.memory?.percent}
+              detail={
+                host.memory
+                  ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
+                  : null
+              }
+            />
+            <MeterBar label="Games disk" percent={disk?.percent} />
+          </div>
+        )}
+      </section>
+    ),
+    companions: (
+      <section className="od-ops-panel od-ops-panel--embedded">
+        <h2>Companions by kind</h2>
+        {kindRows.length === 0 ? (
+          <p className="od-admin-lede">
+            {companions
+              ? `Online ${companions.online ?? 0} / ${companions.registered ?? 0} · last seen 1h ${companions.last_seen?.within_1h ?? 0}`
+              : 'n/a'}
+          </p>
+        ) : (
+          <DataTable
+            columns={DASHBOARD_COMPANION_COLUMNS}
+            rows={kindRows}
+            getRowKey={(row) => row.kind}
+            toolbar={false}
+          />
+        )}
+      </section>
+    ),
+    errors: hasErrors ? (
+      <section className="od-ops-panel od-ops-panel--embedded">
+        <h2>Recent errors</h2>
+        <DataTable
+          columns={DASHBOARD_ERROR_COLUMNS}
+          rows={summary.recent_errors.slice(0, 4)}
+          getRowKey={(event) => event.id}
+          toolbar={false}
+        />
+      </section>
+    ) : null,
+  }
+
   return (
-    <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s).">
+    <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s). Drag a widget to move; drag the corner to resize. Reset layout is centred; hover refresh for Updated time.">
       {/* GT-B33: the shared status block, not two hand-rolled ones.
-          The error branch used to be a `.gt-admin-alert` div and the loading
-          branch a `.gt-admin-lede` paragraph — two shapes on one page, neither
+          The error branch used to be a `.od-admin-alert` div and the loading
+          branch a `.od-admin-lede` paragraph — two shapes on one page, neither
           matching the member app, and the error text discarded whatever the
           server actually said in favour of a fixed sentence. PageStatus keeps
           the operator-facing sentence and adds the status/error_code line. */}
@@ -183,163 +339,14 @@ export function DashboardPage() {
         loadingMessage="Loading dashboard…"
       />
 
-      <OpsStatusBanner
-        severity={severity}
+      <DashboardBoard
+        widgets={widgets}
+        hasErrors={hasErrors}
         asOf={summary?.as_of}
-        items={issues?.items}
-        ariaLabel="Health"
+        onRefresh={() => refresh('manual')}
+        refreshing={manualRefreshing}
+        refreshDisabled={bootLoading}
       />
-
-      <div className="gt-ops-strip" aria-label="Key metrics">
-        <MetricTile
-          label="Libraries"
-          value={na(library?.libraries)}
-          hint="folders"
-          tone={library?.libraries != null ? 'info' : 'na'}
-        />
-        <MetricTile
-          label="Games"
-          value={na(library?.games)}
-          hint={
-            library?.unmatched_folders != null
-              ? `${library.unmatched_folders} unmatched`
-              : 'catalogue'
-          }
-          tone={gamesTone}
-        />
-        <MetricTile
-          label="Library health"
-          value={formatLibraryHealthValue(library?.health)}
-          hint={formatLibraryHealthHint(library?.health)}
-          tone={libraryHealthTone(library?.health)}
-        />
-        <MetricTile
-          label="Scans"
-          value={na(scans?.active_count)}
-          hint={
-            (scans?.jobs || [])[0]
-              ? `${scans.jobs[0].library || 'job'} · ${scans.jobs[0].progress}%`
-              : 'active'
-          }
-          tone={scansActiveTone(scans?.active_count)}
-        />
-        <MetricTile
-          label="Disk"
-          value={disk?.percent != null ? `${disk.percent}%` : 'n/a'}
-          hint="games volume"
-          tone={percentHealthTone(disk?.percent)}
-        />
-        <MetricTile
-          label="Load 1/5/15"
-          value={formatLoadAvg(host?.load_avg)}
-          tone={host?.load_avg ? 'info' : 'na'}
-        />
-        <MetricTile
-          label="Process RSS"
-          value={formatBytes(host?.process?.rss_bytes)}
-          hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
-          tone={host?.process?.rss_bytes != null ? 'info' : 'na'}
-        />
-        <MetricTile
-          label="DB ping"
-          value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
-          tone={dbPingTone(host?.db_ping_ms)}
-        />
-        <MetricTile
-          label="Readyz"
-          value={formatReadyz(services?.readyz)}
-          tone={readyzTone(services?.readyz)}
-        />
-        <MetricTile
-          label="Companions"
-          value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
-          hint={
-            kindRows.length
-              ? kindRows.map((r) => `${r.kind} ${r.online}/${r.registered}`).join(' · ')
-              : 'by kind n/a'
-          }
-          tone={companionsTone(companions)}
-        />
-      </div>
-
-      <div className="gt-ops-console">
-        <section className="gt-ops-panel">
-          <h2>Host meters</h2>
-          {!host ? (
-            <p className="gt-admin-lede">Host data unavailable.</p>
-          ) : (
-            <div className="gt-ops-meters">
-              <MeterBar label="CPU" percent={host.cpu?.percent} />
-              <MeterBar
-                label="Memory"
-                percent={host.memory?.percent}
-                detail={
-                  host.memory
-                    ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
-                    : null
-                }
-              />
-              <MeterBar label="Games disk" percent={disk?.percent} />
-            </div>
-          )}
-        </section>
-
-        <section className="gt-ops-panel">
-          <h2>Companions by kind</h2>
-          {kindRows.length === 0 ? (
-            <p className="gt-admin-lede">
-              {companions
-                ? `Online ${companions.online ?? 0} / ${companions.registered ?? 0} · last seen 1h ${companions.last_seen?.within_1h ?? 0}`
-                : 'n/a'}
-            </p>
-          ) : (
-            <DataTable
-              columns={DASHBOARD_COMPANION_COLUMNS}
-              rows={kindRows}
-              getRowKey={(row) => row.kind}
-              toolbar={false}
-            />
-          )}
-        </section>
-
-        {(summary?.recent_errors || []).length > 0 ? (
-          <section className="gt-ops-panel gt-ops-panel--wide">
-            <h2>Recent errors</h2>
-            <DataTable
-              columns={DASHBOARD_ERROR_COLUMNS}
-              rows={summary.recent_errors.slice(0, 4)}
-              getRowKey={(event) => event.id}
-              toolbar={false}
-            />
-          </section>
-        ) : null}
-      </div>
-
-      <div className="gt-admin-dashboard-footer">
-        {/* The footer's five destination buttons are gone (GT-B7) — Ops, Scans,
-            Libraries, Settings and Support are all rail entries, and repeating
-            them under the dashboard was the duplicate nav. The refresh status
-            stays: it is about *this* page, not about where to go next. */}
-        <div className="gt-ops-refresh gt-ops-refresh--footer">
-          {manualRefreshing ? (
-            <span className="gt-ops-refresh__status" role="status" aria-live="polite">
-              Refreshing…
-            </span>
-          ) : lastUpdatedAt ? (
-            <span className="gt-ops-refresh__status gt-ops-refresh__status--muted">
-              Updated {lastUpdatedAt.toLocaleTimeString()}
-            </span>
-          ) : null}
-          <button
-            type="button"
-            className="gt-btn gt-btn--accent"
-            onClick={() => refresh('manual')}
-            disabled={manualRefreshing || bootLoading}
-          >
-            {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
-      </div>
     </Page>
   )
 }
@@ -371,7 +378,7 @@ export function LibrariesPage() {
   return (
     <Page title="Libraries & scans" lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs.">
       <PageStatus error={error} errorMessage="Unable to load libraries." />
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Prefer the unified classic page:{' '}
         <a href="/scan_management?active_tab=libraries">Libraries &amp; scans</a>
         {' · '}
@@ -384,17 +391,17 @@ export function LibrariesPage() {
         {' · '}
         <a href="#import-leaf">Import CSV/JSON</a>
       </p>
-      <div className="gt-admin-panel">
-        <div className="gt-admin-panel__toolbar" style={{ marginBottom: 'var(--gt-space-4)' }}>
+      <div className="od-admin-panel">
+        <div className="od-admin-panel__toolbar" style={{ marginBottom: 'var(--od-space-4)' }}>
           <button
             type="button"
-            className="gt-btn gt-btn--accent"
+            className="od-btn od-btn--accent"
             onClick={() => void startRefreshAll()}
             disabled={refreshing}
           >
             {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
           </button>
-          <p className="gt-admin-lede" style={{ margin: '0.35rem 0 0' }}>
+          <p className="od-admin-lede" style={{ margin: '0.35rem 0 0' }}>
             Re-scans each library’s last scan folder. When a scan is already running, choose{' '}
             <strong>Queue</strong> (default) or <strong>Force run now</strong>.
           </p>
@@ -434,7 +441,7 @@ export function LibrariesPage() {
                 render: (lib) => (
                   <button
                     type="button"
-                    className="gt-btn gt-btn--sm"
+                    className="od-btn od-btn--sm"
                     disabled={scanBusyKey === lib.uuid || !lib.last_scan_folder}
                     title={
                       lib.last_scan_folder
@@ -487,7 +494,7 @@ function ModuleBadge({ status }) {
   const on = Boolean(status.on)
   return (
     <span
-      className={`gt-settings-badge settings-shell-badge settings-shell-badge--${on ? 'on' : 'off'}`}
+      className={`od-settings-badge settings-shell-badge settings-shell-badge--${on ? 'on' : 'off'}`}
       data-testid="settings-module-badge"
     >
       {status.label || (on ? 'On' : 'Off')}
@@ -500,7 +507,7 @@ export function SettingsPage() {
   // Grouped rows, not a card grid (UX-C9): cards forced every module to the
   // same visual weight and spread a short list over a lot of empty space.
   //
-  // One sheet, not four stacked `.gt-admin-panel`s — nested glass on this hub
+  // One sheet, not four stacked `.od-admin-panel`s — nested glass on this hub
   // was the same "tables in tables" look UID-031 flattened on Libraries.
   //
   // The on/off badges are the Jinja hub's, restored: the template rendered them
@@ -519,19 +526,19 @@ export function SettingsPage() {
 
   return (
     <Page title="Settings" lede="Server modules, matching policy, presentation, and extensions.">
-      <div className="gt-admin-panel gt-settings">
+      <div className="od-admin-panel od-settings">
         {SETTINGS_GROUPS.map((group) => (
-          <section key={group.id} className="gt-settings-group">
-            <h2 className="gt-settings-group__title">{group.title}</h2>
-            <ul className="gt-settings-list">
+          <section key={group.id} className="od-settings-group">
+            <h2 className="od-settings-group__title">{group.title}</h2>
+            <ul className="od-settings-list">
               {group.items.map((item) => (
                 <li key={item.to}>
-                  <a className="gt-settings-row" href={item.to}>
-                    <span className="gt-settings-row__title">{item.title}</span>
+                  <a className="od-settings-row" href={item.to}>
+                    <span className="od-settings-row__title">{item.title}</span>
                     {item.statusKey ? (
                       <ModuleBadge status={moduleStatus?.[item.statusKey]} />
                     ) : null}
-                    <span className="gt-settings-row__blurb">{item.blurb}</span>
+                    <span className="od-settings-row__blurb">{item.blurb}</span>
                   </a>
                 </li>
               ))}
@@ -566,19 +573,19 @@ export function SettingsPage() {
 export function HubPage({ title, lede, links = [] }) {
   return (
     <Page title={title} lede={lede}>
-      <div className="gt-admin-panel">
+      <div className="od-admin-panel">
         {links.length ? (
-          <ul className="gt-settings-list">
+          <ul className="od-settings-list">
             {links.map((link) => (
               <li key={link.href}>
-                <a className="gt-settings-row" href={link.href}>
-                  <span className="gt-settings-row__title">{link.label}</span>
+                <a className="od-settings-row" href={link.href}>
+                  <span className="od-settings-row__title">{link.label}</span>
                 </a>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="gt-admin-lede">
+          <p className="od-admin-lede">
             Pick a destination for this section from the rail on the left.
           </p>
         )}
@@ -665,7 +672,7 @@ export function IntegrationsPage() {
       {/* Rows, not a card grid (UX-C11): providers carry wildly different link
           counts, so an even grid left tall gaps beside the short ones. Same
           dense treatment as Settings / Libraries. */}
-      <div className="gt-admin-panel gt-provider-list">
+      <div className="od-admin-panel od-provider-list">
         {INTEGRATION_CARDS.map((card) => (
           // id={card.id} is the anchor the nav actually links to. Every
           // `/admin/integrations#<id>` link in navConfig was dead because the
@@ -676,16 +683,16 @@ export function IntegrationsPage() {
           <section
             key={card.id}
             id={card.id}
-            className="gt-provider-row"
+            className="od-provider-row"
             aria-labelledby={`int-${card.id}`}
           >
-            <div className="gt-provider-row__head">
-              <h2 id={`int-${card.id}`} className="gt-provider-row__title">
+            <div className="od-provider-row__head">
+              <h2 id={`int-${card.id}`} className="od-provider-row__title">
                 <a href={card.href}>{card.title}</a>
               </h2>
-              <p className="gt-provider-row__blurb">{card.blurb}</p>
+              <p className="od-provider-row__blurb">{card.blurb}</p>
             </div>
-            <ul className="gt-provider-row__links">
+            <ul className="od-provider-row__links">
               {(card.links || []).map((link) => (
                 <li key={`${link.href}-${link.label}`}>
                   <a href={link.href}>{link.label}</a>
@@ -697,31 +704,31 @@ export function IntegrationsPage() {
       </div>
 
       {!inventory && !inventoryError ? (
-        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: 'var(--gt-space-5)' }}>
+        <div className="od-admin-panel od-admin-inventory" style={{ marginTop: 'var(--od-space-5)' }}>
           <PageStatus loading loadingMessage="Loading provider inventory…" />
         </div>
       ) : null}
 
       {inventory && inventory.length > 0 ? (
-        <div className="gt-admin-panel gt-admin-inventory" style={{ marginTop: 'var(--gt-space-5)' }}>
+        <div className="od-admin-panel od-admin-inventory" style={{ marginTop: 'var(--od-space-5)' }}>
           <h2>Provider inventory</h2>
           <p>
             Live status from <code>GET /api/admin/integrations/inventory</code> — every provider
             with a deep link (not IGDB-only).
           </p>
           {inventoryGroups.map((group) => (
-            <div key={group.id} className="gt-admin-inventory__group">
-              <h3 className="gt-admin-inventory__category">{group.label}</h3>
-              <ul className="gt-admin-inventory__list" aria-label={`${group.label} integrations`}>
+            <div key={group.id} className="od-admin-inventory__group">
+              <h3 className="od-admin-inventory__category">{group.label}</h3>
+              <ul className="od-admin-inventory__list" aria-label={`${group.label} integrations`}>
                 {group.rows.map((row) => (
                   <li key={row.id || row.name}>
                     <a href={inventoryHref(row)}>{row.name}</a>
                     {' — '}
-                    <span className="gt-admin-inventory__status">
+                    <span className="od-admin-inventory__status">
                       {row.status || (row.configured ? 'configured' : 'available')}
                     </span>
                     {row.notes ? (
-                      <span className="gt-admin-inventory__notes"> · {row.notes}</span>
+                      <span className="od-admin-inventory__notes"> · {row.notes}</span>
                     ) : null}
                   </li>
                 ))}
@@ -732,18 +739,18 @@ export function IntegrationsPage() {
       ) : null}
 
       {inventory && inventory.length === 0 && !inventoryError ? (
-        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
+        <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
           <p>Provider inventory returned no rows — use the cards above.</p>
         </div>
       ) : null}
 
       {inventoryError ? (
-        <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
+        <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
           <PageStatus emptyMessage="Provider inventory unavailable — use the cards above." />
         </div>
       ) : null}
 
-      <div className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
+      <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
         <p>
           Full Integrations tabs (SMTP · IGDB · community · artwork · ownership · OIDC · indexers)
           still render when Jinja content is present. This React hub is the fallback chrome when the
@@ -790,19 +797,19 @@ export function ThemesPage() {
 
   return (
     <Page title="Themes" lede="Reset default CSS after a deploy. Pick a look in Preferences.">
-      <div className="gt-admin-actions-row">
-        <button type="button" className="gt-btn" disabled={busy} onClick={resetThemes}>
+      <div className="od-admin-actions-row">
+        <button type="button" className="od-btn" disabled={busy} onClick={resetThemes}>
           Reset Default Themes
         </button>
-        <a className="gt-btn" href="/admin/themes/readme">
+        <a className="od-btn" href="/admin/themes/readme">
           Theme authoring readme
         </a>
       </div>
       {message ? <p>{message}</p> : null}
-      <div className="gt-admin-panel">
+      <div className="od-admin-panel">
         <p>
           After Unraid <code>build --no-cache</code>, run Reset Default Themes once so{' '}
-          <code>gt-tokens.css</code> (green accent, glass) syncs onto the library volume.
+          <code>od-tokens.css</code> (green accent, glass) syncs onto the library volume.
         </p>
       </div>
     </Page>
@@ -867,7 +874,7 @@ export function PluginsPage() {
   return (
     <Page title="Plugins & connectors" lede="Built-in registry of metadata, acquire, emu, and export hooks.">
       <PageStatus error={error} errorMessage="Unable to load plugins." />
-      <div className="gt-admin-panel">
+      <div className="od-admin-panel">
         {!plugins ? (
           <PageStatus loading loadingMessage="Loading plugins…" />
         ) : (
@@ -917,10 +924,18 @@ export function ScansPage() {
   } = useLibraryScan()
 
   const hasSnapshotRef = useRef(false)
+  const jobsSnapshotKeyRef = useRef('')
 
   useVisibilityPoll(async ({ signal }) => {
     try {
       const data = await getJson('/api/scan_jobs_status', { signal })
+      const jobs = normalizeScanJobsList(data)
+      const busy = jobs.some((job) => isScanBusyStatus(job?.status))
+      const key = `${scanJobsStructureSignature(jobs, { busy })}::${scanJobsProgressSignature(jobs)}`
+      if (key === jobsSnapshotKeyRef.current && hasSnapshotRef.current) {
+        return
+      }
+      jobsSnapshotKeyRef.current = key
       setStatus(data)
       setError(null)
       setUpdatedAt(new Date())
@@ -972,19 +987,19 @@ export function ScansPage() {
   return (
     <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
       <PageStatus error={error} errorMessage="Unable to load scan status." />
-      <div className="gt-admin-panel">
-        <div className="gt-admin-panel__toolbar" style={{ marginBottom: 'var(--gt-space-4)', display: 'flex', gap: 'var(--gt-space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="od-admin-panel">
+        <div className="od-admin-panel__toolbar" style={{ marginBottom: 'var(--od-space-4)', display: 'flex', gap: 'var(--od-space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             type="button"
-            className="gt-btn gt-btn--accent"
+            className="od-btn od-btn--accent"
             onClick={() => void startRefreshAll()}
             disabled={refreshing}
           >
             {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
           </button>
           {scanMotifActive ? (
-            <span className="gt-admin-scan-live" role="status" aria-live="polite" data-state={running ? 'running' : 'queued'}>
-              <span className="gt-spinner gt-spinner--sm" aria-hidden="true" />
+            <span className="od-admin-scan-live" role="status" aria-live="polite" data-state={running ? 'running' : 'queued'}>
+              <span className="od-spinner od-spinner--sm" aria-hidden="true" />
               {running ? 'Scanning…' : `Queued… (${queuedJobs.length})`}
             </span>
           ) : null}
@@ -999,8 +1014,8 @@ export function ScansPage() {
                 happening, and if not, why not". That mattered: a queue held up
                 by an orphaned job rendered as "Running: no · queued 1", which
                 reads as idle rather than stuck. */}
-            <p className="gt-scan-summary">{scanSummary}</p>
-            {message ? <p className="gt-admin-lede">{message}</p> : null}
+            <p className="od-scan-summary">{scanSummary}</p>
+            {message ? <p className="od-admin-lede">{message}</p> : null}
             {/* Scan jobs sort and filter like every other table now (W27-C2).
                 Each column declares `value` where what it renders is not what
                 it should sort on: Job renders a truncated code element, and
@@ -1064,23 +1079,23 @@ export function ScansPage() {
                     // where a reclaimed job now says the owner process is gone,
                     // instead of the operator seeing an idle-looking queue.
                     if (job.error_message) {
-                      return <span className="gt-scan-detail gt-scan-detail--error">{job.error_message}</span>
+                      return <span className="od-scan-detail od-scan-detail--error">{job.error_message}</span>
                     }
                     if (job.stalled) {
-                      return <span className="gt-scan-detail gt-scan-detail--warn">No progress reported</span>
+                      return <span className="od-scan-detail od-scan-detail--warn">No progress reported</span>
                     }
                     if (job.current_processing) {
-                      return <span className="gt-scan-detail">{job.current_processing}</span>
+                      return <span className="od-scan-detail">{job.current_processing}</span>
                     }
                     if (job.elapsed_label || job.eta_label) {
                       return (
-                        <span className="gt-scan-detail gt-scan-detail--muted">
+                        <span className="od-scan-detail od-scan-detail--muted">
                           {job.elapsed_label || '—'}
                           {job.eta_label ? ` · ~${job.eta_label} left` : ''}
                         </span>
                       )
                     }
-                    return <span className="gt-scan-detail gt-scan-detail--muted">—</span>
+                    return <span className="od-scan-detail od-scan-detail--muted">—</span>
                   },
                 },
                 {
@@ -1104,11 +1119,11 @@ export function ScansPage() {
                   render: (job) => {
                     const active =
                       isScanBusyStatus(job.status) || isScanQueuedStatus(job.status)
-                    if (active) return <span className="gt-admin-lede">—</span>
+                    if (active) return <span className="od-admin-lede">—</span>
                     return (
                       <button
                         type="button"
-                        className="gt-btn gt-btn--sm"
+                        className="od-btn od-btn--sm"
                         disabled={scanBusyKey === job.id || !job.library_uuid}
                         title={
                           job.library_uuid
@@ -1139,9 +1154,9 @@ export function ScansPage() {
               ]}
             />
             {updatedAt ? (
-              <p className="gt-admin-lede">Live status · last refresh {updatedAt.toLocaleTimeString()}</p>
+              <p className="od-admin-lede">Live status · last refresh {updatedAt.toLocaleTimeString()}</p>
             ) : null}
-            <p className="gt-admin-lede">
+            <p className="od-admin-lede">
               When a scan is already running, Auto Scan / Refresh all offer <strong>Queue</strong> (default) or{' '}
               <strong>Force parallel</strong> with an Unraid/NAS load warning.
             </p>
@@ -1212,6 +1227,9 @@ export function resolveAdminPage(pathname) {
   }
   if (pathname.includes('new_server_settings')) {
     return 'settings-section'
+  }
+  if (pathname.includes('/admin/system/danger') || pathname.includes('system_reset')) {
+    return 'system-danger'
   }
   if (
     pathname.includes('/admin/ops') ||

@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import (
+from oneirodex.models import (
     Game,
     Image,
     Library,

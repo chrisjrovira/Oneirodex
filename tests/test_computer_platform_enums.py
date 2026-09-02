@@ -1,13 +1,13 @@
 """Home-computer LibraryPlatform leaves (ever-made report follow-on).
 
 MSX · ZX Spectrum · Amstrad CPC · Atari ST · Apple II ·
-Atari 8-bit · Sharp X68000 · NEC PC-98.
+Atari 8-bit · Sharp X68000 · NEC PC-98 · BBC Micro.
 Companion honesty; GX4000 stays the Amstrad *console*. No WebRetro WASM.
 """
 
 from types import SimpleNamespace
 
-from gametheca.platform import (
+from oneirodex.platform import (
     Emulator,
     LibraryPlatform,
     WEBRETRO_BROWSER_KEYS,
@@ -16,13 +16,13 @@ from gametheca.platform import (
     play_mode_for_platform,
     platform_emulator_mapping,
 )
-from gametheca.utils.functions import PLATFORM_IDS
-from gametheca.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
+from oneirodex.utils.functions import PLATFORM_IDS
+from oneirodex.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
 
 
 COMPUTER_KEYS = (
     'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II',
-    'ATARI_8BIT', 'X68000', 'PC_98',
+    'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO',
 )
 
 
@@ -35,6 +35,7 @@ def test_computer_leaf_enums_exist():
     assert LibraryPlatform.ATARI_8BIT.value == 'Atari 8-bit'
     assert LibraryPlatform.X68000.value == 'Sharp X68000'
     assert LibraryPlatform.PC_98.value == 'NEC PC-98'
+    assert LibraryPlatform.BBC_MICRO.value == 'BBC Micro'
 
 
 def test_cpc_is_not_gx4000():
@@ -60,6 +61,7 @@ def test_computer_core_honesty():
     assert mapped_core_ids('ATARI_8BIT') == ['atari800']
     assert mapped_core_ids('X68000') == ['px68k']
     assert mapped_core_ids('PC_98') == ['np2kai']
+    assert mapped_core_ids('BBC_MICRO') == []
     for core in ('fuse', 'bluemsx', 'hatari', 'cap32', 'atari800', 'px68k', 'np2kai'):
         assert core not in WEBRETR_INSTALLED_CORES, core
     assert play_mode_for_platform('GX4000') == 'companion'
@@ -87,3 +89,4 @@ def test_platform_ids_wired_for_computers():
     assert PLATFORM_IDS.get('ATARI_8BIT') == 65
     assert PLATFORM_IDS.get('X68000') == 121
     assert PLATFORM_IDS.get('PC_98') == 149
+    assert PLATFORM_IDS.get('BBC_MICRO') == 69

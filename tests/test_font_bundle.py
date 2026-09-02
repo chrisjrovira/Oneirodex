@@ -13,13 +13,13 @@ import os
 
 import pytest
 
-from gametheca.utils.font_install import (
+from oneirodex.utils.font_install import (
     BUNDLED_EXTRAS,
     BUNDLED_FONTS_DIR,
     missing_builtin_fonts,
     seed_builtin_fonts,
 )
-from gametheca.utils.theme_fonts import BUILT_IN_FONTS
+from oneirodex.utils.theme_fonts import BUILT_IN_FONTS
 
 
 def test_every_registered_face_ships_in_the_bundle():
@@ -72,7 +72,7 @@ def test_seeding_is_safe_to_repeat_every_boot(tmp_path):
 
 def test_seeded_files_are_real_fonts(tmp_path):
     """A truncated or HTML-bodied .ttf exists, never renders, and hides itself."""
-    from gametheca.utils.font_install import _looks_like_font
+    from oneirodex.utils.font_install import _looks_like_font
 
     root = str(tmp_path / 'fonts')
     seed_builtin_fonts(root)

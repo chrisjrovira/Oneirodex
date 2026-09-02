@@ -1,4 +1,4 @@
-.gt-social-dock__launcher {
+.od-social-dock__launcher {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
@@ -8,10 +8,10 @@
   gap: 0.35rem;
   min-height: 2.6rem;
   padding: 0.45rem 0.85rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
+  color: var(--od-text);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -19,31 +19,31 @@
   backdrop-filter: blur(10px);
 }
 
-.gt-social-dock__launcher--bp {
+.od-social-dock__launcher--bp {
   bottom: 1.25rem;
   right: 1.25rem;
 }
 
-.gt-social-dock__badge {
+.od-social-dock__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 0.3rem;
-  border-radius: var(--gt-radius-pill);
-  background: var(--gt-accent);
-  color: var(--gt-accent-contrast);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  background: var(--od-accent);
+  color: var(--od-accent-contrast);
+  font-size: var(--od-font-xs);
   font-weight: 800;
 }
 
-.gt-social-dock__badge--pending {
-  background: var(--gt-warning);
-  color: var(--gt-accent-contrast);
+.od-social-dock__badge--pending {
+  background: var(--od-warning);
+  color: var(--od-accent-contrast);
 }
 
-.gt-social-dock {
+.od-social-dock {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
@@ -57,15 +57,15 @@
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
 }
 
-.gt-social-dock--big-picture {
+.od-social-dock--big-picture {
   right: 1.25rem;
   bottom: 1.25rem;
   z-index: 60;
   max-height: min(68vh, 580px);
 }
 
-.gt-social-dock--standalone,
-.gt-social-dock--popout {
+.od-social-dock--standalone,
+.od-social-dock--popout {
   position: relative;
   right: auto;
   bottom: auto;
@@ -76,70 +76,70 @@
   box-shadow: none;
 }
 
-.gt-social-companion-page {
+.od-social-companion-page {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--gt-accent) 18%, transparent), transparent 50%),
-    var(--gt-bg);
-  color: var(--gt-text);
+    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--od-accent) 18%, transparent), transparent 50%),
+    var(--od-bg);
+  color: var(--od-text);
 }
 
-.gt-social-dock__header {
+.od-social-dock__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.gt-social-dock__title {
+.od-social-dock__title {
   margin: 0;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
 }
 
-.gt-social-dock__sub {
+.od-social-dock__sub {
   margin: 0.15rem 0 0;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-social-dock__header-actions {
+.od-social-dock__header-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
   justify-content: flex-end;
 }
 
-.gt-social-dock__icon-btn {
+.od-social-dock__icon-btn {
   min-height: 1.8rem;
   padding: 0.2rem 0.5rem;
-  border-radius: var(--gt-radius-pill);
+  border-radius: var(--od-radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   cursor: pointer;
 }
 
-.gt-social-dock__section {
+.od-social-dock__section {
   min-height: 0;
 }
 
-.gt-social-dock__section--grow {
+.od-social-dock__section--grow {
   flex: 1;
   overflow: auto;
 }
 
-.gt-social-dock__section h3 {
+.od-social-dock__section h3 {
   margin: 0 0 0.35rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-social-dock__list,
-.gt-social-dock__now {
+.od-social-dock__list,
+.od-social-dock__now {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -148,114 +148,114 @@
   gap: 0.4rem;
 }
 
-.gt-social-dock__friend {
+.od-social-dock__friend {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   padding: 0.45rem 0.5rem;
-  border-radius: var(--gt-radius-lg);
+  border-radius: var(--od-radius-lg);
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.gt-social-dock__friend-main {
+.od-social-dock__friend-main {
   display: flex;
   align-items: flex-start;
   gap: 0.45rem;
 }
 
-.gt-social-dock__dot {
+.od-social-dock__dot {
   width: 0.55rem;
   height: 0.55rem;
   margin-top: 0.35rem;
-  border-radius: var(--gt-radius-pill);
-  background: var(--gt-text-muted);
+  border-radius: var(--od-radius-pill);
+  background: var(--od-text-muted);
   flex: 0 0 auto;
 }
 
-.gt-social-dock__dot--online,
-.gt-social-dock__dot--in-game {
-  background: var(--gt-accent);
+.od-social-dock__dot--online,
+.od-social-dock__dot--in-game {
+  background: var(--od-accent);
 }
 
-.gt-social-dock__dot--away {
-  background: var(--gt-warning);
+.od-social-dock__dot--away {
+  background: var(--od-warning);
 }
 
-.gt-social-dock__friend-text {
+.od-social-dock__friend-text {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   min-width: 0;
 }
 
-.gt-social-dock__name {
+.od-social-dock__name {
   color: inherit;
   text-decoration: none;
   font-weight: 700;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-social-dock__presence {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-social-dock__presence {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.gt-social-dock__friend-actions {
+.od-social-dock__friend-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
 }
 
-.gt-social-dock__mini {
+.od-social-dock__mini {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 1.55rem;
   padding: 0.15rem 0.45rem;
-  border-radius: var(--gt-radius-pill);
+  border-radius: var(--od-radius-pill);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: transparent;
   color: inherit;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
 }
 
-.gt-social-dock__mini:hover,
-.gt-social-dock__mini:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
+.od-social-dock__mini:hover,
+.od-social-dock__mini:focus-visible {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
 }
 
-.gt-social-dock__empty {
+.od-social-dock__empty {
   margin: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }
 
-.gt-social-dock__add {
+.od-social-dock__add {
   display: flex;
   gap: 0.4rem;
   margin: 0;
 }
 
-.gt-social-dock__add input {
+.od-social-dock__add input {
   flex: 1;
   min-width: 0;
   min-height: 2.2rem;
   padding: 0.35rem 0.55rem;
-  border-radius: var(--gt-radius-md);
+  border-radius: var(--od-radius-md);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.25);
   color: inherit;
   font: inherit;
 }
 
-.gt-social-dock__footer {
+.od-social-dock__footer {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
@@ -264,10 +264,10 @@
   padding-top: 0.45rem;
 }
 
-.gt-social-dock__footer-link {
-  font-size: var(--gt-font-xs);
+.od-social-dock__footer-link {
+  font-size: var(--od-font-xs);
   font-weight: 700;
-  color: var(--gt-accent);
+  color: var(--od-accent);
   background: none;
   border: 0;
   padding: 0;
@@ -275,19 +275,19 @@
   text-decoration: none;
 }
 
-.gt-social-dock__toast {
+.od-social-dock__toast {
   flex: 1 1 100%;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-social-dock__now a {
+.od-social-dock__now a {
   color: inherit;
 }
 
 /* Align with TopNav / mobile-density ≤900px so tablet widths don't clip the dock. */
 @media (max-width: 900px) {
-  .gt-social-dock:not(.gt-social-dock--standalone):not(.gt-social-dock--popout) {
+  .od-social-dock:not(.od-social-dock--standalone):not(.od-social-dock--popout) {
     right: 0.5rem;
     left: 0.5rem;
     width: auto;
@@ -295,12 +295,12 @@
     max-height: min(62vh, 520px);
   }
 
-  .gt-social-dock__launcher {
+  .od-social-dock__launcher {
     right: 0.75rem;
     bottom: 0.75rem;
   }
 
-  .gt-social-dock__friend-actions {
+  .od-social-dock__friend-actions {
     flex-wrap: wrap;
   }
 }

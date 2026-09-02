@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from gametheca.utils.rom_archive import (
+from oneirodex.utils.rom_archive import (
     ArchiveRomError,
     bundle_playable_rom_zip,
     choose_rom_member,
@@ -247,7 +247,7 @@ def test_rar_missing_extractor_returns_hint(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, '__import__', fake_import)
     monkeypatch.setattr(
-        'gametheca.utils.rom_archive.find_archive_extractors',
+        'oneirodex.utils.rom_archive.find_archive_extractors',
         lambda: {},
     )
     with pytest.raises(ArchiveRomError) as exc:
@@ -301,10 +301,10 @@ def test_rar_extract_via_stubbed_7z(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, '__import__', fake_import)
     monkeypatch.setattr(
-        'gametheca.utils.rom_archive.find_archive_extractors',
+        'oneirodex.utils.rom_archive.find_archive_extractors',
         lambda: {'7z': str(fake_7z)},
     )
-    monkeypatch.setattr('gametheca.utils.rom_archive._run_extractor', fake_run)
+    monkeypatch.setattr('oneirodex.utils.rom_archive._run_extractor', fake_run)
 
     path, name = resolve_playable_rom_path(
         str(rar_path),
@@ -318,7 +318,7 @@ def test_rar_extract_via_stubbed_7z(tmp_path, monkeypatch):
 
 def test_find_archive_extractors_shape(monkeypatch):
     monkeypatch.setattr(
-        'gametheca.utils.rom_archive.shutil.which',
+        'oneirodex.utils.rom_archive.shutil.which',
         lambda name: f'/usr/bin/{name}' if name in ('7z', 'bsdtar') else None,
     )
     found = find_archive_extractors()
@@ -331,7 +331,7 @@ def test_extract_rom_from_rar_missing_tool_direct(tmp_path, monkeypatch):
     rar_path = tmp_path / 'x.rar'
     rar_path.write_bytes(b'x')
     monkeypatch.setattr(
-        'gametheca.utils.rom_archive.find_archive_extractors',
+        'oneirodex.utils.rom_archive.find_archive_extractors',
         lambda: {},
     )
     import builtins

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from gametheca.utils.challenge_solver import (
+from oneirodex.utils.challenge_solver import (
     ChallengeSolverClient,
     SolverSolution,
     TokenCaptchaClient,
@@ -122,8 +122,8 @@ def test_fetch_with_challenge_retry_solver_once(app, monkeypatch):
     success = _mock_response(200, '[{"title":"Hit"}]')
 
     with app.app_context():
-        with patch('gametheca.utils.challenge_solver.requests.get', side_effect=[challenged, success]) as mock_get:
-            with patch('gametheca.utils.challenge_solver.ChallengeSolverClient.request_get') as mock_solve:
+        with patch('oneirodex.utils.challenge_solver.requests.get', side_effect=[challenged, success]) as mock_get:
+            with patch('oneirodex.utils.challenge_solver.ChallengeSolverClient.request_get') as mock_solve:
                 mock_solve.return_value = SolverSolution(
                     url='https://idx.test/search',
                     status_code=200,
@@ -147,7 +147,7 @@ def _disable_challenge_solver(app, db_session, monkeypatch):
     """Env off + clear DB toggle (test DB may retain prior saves)."""
     from sqlalchemy.orm.attributes import flag_modified
 
-    from gametheca.models import GlobalSettings
+    from oneirodex.models import GlobalSettings
 
     monkeypatch.setitem(app.config, 'ENABLE_CHALLENGE_SOLVER', False)
     row = db_session.query(GlobalSettings).order_by(GlobalSettings.id).first()
@@ -169,8 +169,8 @@ def test_fetch_with_challenge_retry_disabled_unchanged(app, db_session, monkeypa
         '<html><title>Just a moment...</title>cloudflare challenge-platform</html>',
     )
     with app.app_context():
-        with patch('gametheca.utils.challenge_solver.requests.get', return_value=challenged) as mock_get:
-            with patch('gametheca.utils.challenge_solver.ChallengeSolverClient.request_get') as mock_solve:
+        with patch('oneirodex.utils.challenge_solver.requests.get', return_value=challenged) as mock_get:
+            with patch('oneirodex.utils.challenge_solver.ChallengeSolverClient.request_get') as mock_solve:
                 resp = fetch_with_challenge_retry('get', 'https://idx.test/search', timeout=5)
     assert mock_get.call_count == 1
     assert mock_solve.call_count == 0
@@ -181,7 +181,7 @@ def test_challenge_solver_status_api(client, app, db_session, monkeypatch):
     _disable_challenge_solver(app, db_session, monkeypatch)
     from uuid import uuid4
 
-    from gametheca.models import User
+    from oneirodex.models import User
 
     admin = User(
         user_id=str(uuid4()),
@@ -207,7 +207,7 @@ def test_challenge_solver_status_api(client, app, db_session, monkeypatch):
 def test_save_challenge_config_validates_url(app, db_session, global_settings, monkeypatch):
     monkeypatch.setitem(app.config, 'ALLOW_PRIVATE_LAN_URLS', True)
     with app.app_context():
-        from gametheca.utils.challenge_solver import save_challenge_config
+        from oneirodex.utils.challenge_solver import save_challenge_config
 
         saved = save_challenge_config({
             'enabled': True,

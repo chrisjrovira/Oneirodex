@@ -8,11 +8,11 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import GlobalSettings, User
-from gametheca.utils import arr_connectors
-from gametheca.utils.arr_connectors import search_indexers
-from gametheca.utils.indexer_registry import (
+from oneirodex import db
+from oneirodex.models import GlobalSettings, User
+from oneirodex.utils import arr_connectors
+from oneirodex.utils.arr_connectors import search_indexers
+from oneirodex.utils.indexer_registry import (
     add_indexer,
     bulk_import_indexers,
     enable_presets,

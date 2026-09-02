@@ -11,7 +11,7 @@ import json
 import pytest
 from flask import Flask
 
-from gametheca.utils.api_response import api_error, api_ok, ERROR_CODES
+from oneirodex.utils.api_response import api_error, api_ok, ERROR_CODES
 
 
 @pytest.fixture()

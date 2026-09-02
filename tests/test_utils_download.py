@@ -8,9 +8,9 @@ from unittest.mock import patch, MagicMock, call
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from gametheca import create_app, db
-from gametheca.models import DownloadRequest, Game, User, GlobalSettings, Library, LibraryPlatform
-from gametheca.utils.download import (
+from oneirodex import create_app, db
+from oneirodex.models import DownloadRequest, Game, User, GlobalSettings, Library, LibraryPlatform
+from oneirodex.utils.download import (
     zip_game,
     update_download_request,
     zip_folder
@@ -266,7 +266,7 @@ class TestZipGame:
         losing this one would leave "file not found" untested entirely, since
         the guard now short-circuits every out-of-sandbox path.
         """
-        missing = os.path.join(tempfile.gettempdir(), f'gt-missing-{uuid4().hex[:8]}')
+        missing = os.path.join(tempfile.gettempdir(), f'od-missing-{uuid4().hex[:8]}')
         sample_download_request.game.full_disk_path = missing
         db_session.commit()
 

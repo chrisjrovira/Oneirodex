@@ -1,4 +1,4 @@
-# GameTheca agent skills and agents
+# Oneirodex agent skills and agents
 
 Token-efficient workflows for maintainers.
 
@@ -34,7 +34,7 @@ Load the smallest set that covers the turn. Do not follow archive or diary links
 | **ship-ready** | **Only** on explicit commit / ship / push / PR | docs gate, prompt-tree sync, conventional commit, mandatory push |
 | **issue-assess** | A pasted user report or GitHub issue | Severity · area · repro · next action. Assess only |
 | **issue-fix** | "fix #N" after triage | Smallest fix + focused test; never auto-merges |
-| **run-gametheca** | "run it", "does this work in the real app?" | Launches uvicorn against the test DB, logs in, calls the JSON API |
+| **run-oneirodex** | "run it", "does this work in the real app?" | Launches uvicorn against the test DB, logs in, calls the JSON API |
 
 `docs-sync` is mandatory on every code change — the rule lives in local `CLAUDE.md`.
 

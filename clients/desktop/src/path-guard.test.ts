@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { isPathUnderRoot } from './path-guard.js'
 
 describe('path guard', () => {
-  const root = 'C:\\GameTheca\\installs'
+  const root = 'C:\\Oneirodex\\installs'
 
   it('accepts paths inside the installs root', () => {
     expect(isPathUnderRoot(`${root}\\game-42\\game.exe`, root)).toBe(true)

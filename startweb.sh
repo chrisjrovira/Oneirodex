@@ -33,8 +33,8 @@ if [[ "$FORCE_SETUP" == "true" ]]; then
 
     # Environment variables are already loaded from .env file above
     python3 -c "
-from gametheca import create_app, db
-from gametheca.utils.setup import reset_setup_state
+from oneirodex import create_app, db
+from oneirodex.utils.setup import reset_setup_state
 
 # Create app and reset database
 app = create_app()
@@ -53,14 +53,14 @@ print('Database reset complete. Run ./startweb.sh to start the server.')
     exit 0
 fi
 
-echo "Starting GameTheca with uvicorn..."
+echo "Starting Oneirodex with uvicorn..."
 
 # Run complete startup initialization once before starting workers
 python3 -c "
-from gametheca.init_manager import run_complete_startup_initialization
+from oneirodex.init_manager import run_complete_startup_initialization
 import sys
 
-print('🚀 Starting GameTheca initialization...')
+print('🚀 Starting Oneirodex initialization...')
 if not run_complete_startup_initialization():
     print('❌ Startup initialization failed!')
     sys.exit(1)
@@ -68,8 +68,8 @@ print('✅ Initialization completed - starting workers...')
 "
 
 # Ensure environment variables are set for worker processes
-export GAMETHECA_MIGRATIONS_COMPLETE=true
-export GAMETHECA_INITIALIZATION_COMPLETE=true
+export ONEIRODEX_MIGRATIONS_COMPLETE=true
+export ONEIRODEX_INITIALIZATION_COMPLETE=true
 
 # Set port for uvicorn (default 5006, can be overridden by PORT env var)
 export PORT=${PORT:-5006}

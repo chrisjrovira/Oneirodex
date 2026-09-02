@@ -1,10 +1,39 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { expect, test, vi } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 
 import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
 import { ADMIN_NAV, HUB_LINKS } from './navConfig'
+
+const COLLAPSED_SECTIONS_KEY = 'od.admin.rail.collapsedSections'
+
+function resetCollapsedSections() {
+  try {
+    window.localStorage.removeItem(COLLAPSED_SECTIONS_KEY)
+  } catch {
+    const store = new Map()
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (key) => (store.has(key) ? store.get(key) : null),
+        setItem: (key, value) => {
+          store.set(key, String(value))
+        },
+        removeItem: (key) => {
+          store.delete(key)
+        },
+        clear: () => {
+          store.clear()
+        },
+      },
+    })
+  }
+}
+
+beforeEach(() => {
+  resetCollapsedSections()
+})
 
 /**
  * Rewritten for the rail chrome (GT-B2).
@@ -59,11 +88,11 @@ test('the rail toggle reports whether the rail is showing', () => {
 test('top bar is page scope only — no brand, no destinations', () => {
   const { container } = renderTopBar()
 
-  expect(container.querySelector('.gt-topbar')).toBeTruthy()
+  expect(container.querySelector('.od-topbar')).toBeTruthy()
   // The retired two-bar markup must not come back.
-  expect(container.querySelector('.gt-appbar')).toBeNull()
-  expect(container.querySelector('.gt-admin-topbar')).toBeNull()
-  expect(container.querySelector('.gt-admin-brand')).toBeNull()
+  expect(container.querySelector('.od-appbar')).toBeNull()
+  expect(container.querySelector('.od-admin-topbar')).toBeNull()
+  expect(container.querySelector('.od-admin-brand')).toBeNull()
 
   // None of the seven section destinations may appear in the bar — that
   // duplication is exactly what moving them to the rail removed.
@@ -85,7 +114,7 @@ test('the bar carries no search control of its own (GT-B16 parity)', () => {
 
 test('the palette hint moved into the account menu, and still opens it', () => {
   const onOpen = vi.fn()
-  document.addEventListener('gt-admin-palette:open', onOpen)
+  document.addEventListener('od-admin-palette:open', onOpen)
 
   renderTopBar()
   // fireEvent, not .click(): the menu is React state, and a raw DOM click is
@@ -97,7 +126,7 @@ test('the palette hint moved into the account menu, and still opens it', () => {
   fireEvent.click(hint)
   expect(onOpen).toHaveBeenCalledTimes(1)
 
-  document.removeEventListener('gt-admin-palette:open', onOpen)
+  document.removeEventListener('od-admin-palette:open', onOpen)
 })
 
 test('the section label appears only when the rail is collapsed', () => {
@@ -105,11 +134,23 @@ test('the section label appears only when the rail is collapsed', () => {
   // so the bar repeating it is a second answer to a question nothing asked.
   // Same rule the member bar follows.
   const expanded = renderTopBar({ railState: 'expanded' })
-  expect(expanded.container.querySelector('.gt-topbar__section')).toBeNull()
+  expect(expanded.container.querySelector('.od-topbar__section')).toBeNull()
   expanded.unmount()
 
   const collapsed = renderTopBar({ railState: 'collapsed' })
-  expect(collapsed.container.querySelector('.gt-topbar__section')).toBeTruthy()
+  expect(collapsed.container.querySelector('.od-topbar__section')).toBeTruthy()
+})
+
+test('dashboard section label is Dashboard (no product prefix)', () => {
+  const { container } = renderTopBar({
+    at: '/admin/dashboard',
+    railState: 'collapsed',
+  })
+  const section = container.querySelector('.od-topbar__section')
+  expect(section).toHaveTextContent('Dashboard')
+  expect(section.textContent).not.toMatch(/Oneirodex/i)
+  expect(section).not.toHaveTextContent('HOME')
+  expect(section).not.toHaveTextContent('Home')
 })
 
 test('top bar exposes the rail toggle and wires it up', async () => {
@@ -122,34 +163,52 @@ test('top bar exposes the rail toggle and wires it up', async () => {
   expect(onToggleRail).toHaveBeenCalledTimes(1)
 })
 
-test('rail lists every admin section and no hub subsections', () => {
-  const { container } = renderRail()
+test('rail lists every admin section', () => {
+  renderRail()
 
+  // Dashboard is a destination link; foldable sections are buttons (member LHN).
+  expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
   for (const link of ADMIN_NAV) {
-    expect(container.querySelector(`a[href="${link.path}"]`)).toBeTruthy()
+    if (link.id === 'dashboard') continue
+    expect(screen.getByRole('button', { name: link.label })).toBeInTheDocument()
   }
-  expect(container.querySelector('.gt-rail__sublist')).toBeNull()
-  expect(container.querySelector('.gt-rail__footer')).toBeNull()
 })
 
-test('rail marks the active section', () => {
+test('rail marks the active section and expands its hub subsections', () => {
   const { container } = renderRail({ at: '/admin/ops' })
 
-  const active = container.querySelector('.gt-rail__link.is-active')
-  expect(active).toBeTruthy()
-  expect(active.getAttribute('href')).toBe('/admin/ops')
-})
-
-test('rail does not expand hub links that already live on the section page', () => {
-  const { container } = renderRail({ at: '/admin/ops' })
-
-  expect(container.querySelector('.gt-rail__link.is-active')?.getAttribute('href')).toBe(
-    '/admin/ops',
-  )
+  const section = screen.getByRole('button', { name: 'System' })
+  expect(section).toHaveClass('od-rail__group-toggle')
+  expect(section).not.toHaveClass('od-rail__link')
+  expect(section).toHaveAttribute('aria-expanded', 'true')
+  expect(screen.getByRole('link', { name: 'Ops glance' })).toHaveClass('is-active')
   for (const child of HUB_LINKS.system) {
-    if (child.href === '/admin/ops') continue
-    expect(container.querySelector(`a[href="${child.href}"]`)).toBeNull()
+    expect(container.querySelector(`a[href="${child.href}"]`)).toBeTruthy()
   }
+  // Member fold: caret on the group heading, not a destination-styled row.
+  expect(container.querySelector('.od-rail__section-fold')).toBeNull()
+  expect(section.querySelector('.od-rail__icon')).toBeNull()
+})
+
+test('rail settings subsections include every settings row', () => {
+  renderRail({ at: '/admin/new_server_settings' })
+
+  expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  )
+  expect(screen.getByRole('link', { name: 'All settings' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Server settings' })).toHaveAttribute(
+    'href',
+    '/admin/new_server_settings',
+  )
+})
+
+test('rail subsection titles have no bullet markers', () => {
+  const { container } = renderRail({ at: '/admin/ops' })
+  const sub = container.querySelector('.od-rail__link--sub')
+  expect(sub).toBeTruthy()
+  expect(sub.querySelector('.od-rail__icon')).toBeNull()
 })
 
 test('the ways out of admin survive, and live in exactly one place', () => {
@@ -166,12 +225,21 @@ test('the ways out of admin survive, and live in exactly one place', () => {
 
 test('the rail brand is the mark only', () => {
   const { container } = renderRail()
-  const brand = container.querySelector('.gt-rail__brand')
-  expect(brand).toHaveClass('gt-rail__brand--mark-only')
-  expect(brand.querySelector('.gt-rail__brand-role')).toBeNull()
+  const brand = container.querySelector('.od-rail__brand')
+  expect(brand).toHaveClass('od-rail__brand--mark-only')
+  expect(brand.querySelector('.od-rail__brand-role')).toBeNull()
 })
 
 test('collapsed rail keeps accessible names', () => {
   renderRail({ at: '/admin/ops', railState: 'collapsed' })
   expect(screen.getByRole('link', { name: 'System' })).toBeInTheDocument()
+})
+
+test('account menu is a dropdown panel, not a horizontal strip', () => {
+  const { container } = renderTopBar()
+  fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+  const panel = container.querySelector('.od-topnav__dropdown-panel')
+  expect(panel).toBeTruthy()
+  expect(panel.getAttribute('role')).toBe('menu')
+  expect(panel.querySelectorAll('[role="menuitem"]').length).toBeGreaterThan(1)
 })

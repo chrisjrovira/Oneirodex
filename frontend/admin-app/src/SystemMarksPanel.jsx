@@ -244,11 +244,11 @@ export function SystemMarksPanel() {
     : ''
 
   return (
-    <section className="gt-system-marks" aria-label="Systems hub marks" data-testid="system-marks-panel">
-      <div className="gt-stock-picker__head">
+    <section className="od-system-marks" aria-label="Systems hub marks" data-testid="system-marks-panel">
+      <div className="od-stock-picker__head">
         <div>
-          <h2 className="gt-admin-panel-title">Systems hub marks</h2>
-          <p className="gt-admin-lede">
+          <h2 className="od-admin-panel-title">Systems hub marks</h2>
+          <p className="od-admin-lede">
             Full-color AI art per library platform × theme (256 WebP). The lab
             below generates <strong>one</strong> pair so you can judge quality
             before a batch. Idempotent fills skip existing files unless you
@@ -258,7 +258,7 @@ export function SystemMarksPanel() {
         </div>
         <button
           type="button"
-          className="gt-btn"
+          className="od-btn"
           disabled={loading || Boolean(busy)}
           onClick={loadCatalog}
         >
@@ -268,7 +268,7 @@ export function SystemMarksPanel() {
 
       <PageStatus error={error} />
       {status ? (
-        <p className="gt-admin-lede" role="status">
+        <p className="od-admin-lede" role="status">
           {status}
         </p>
       ) : null}
@@ -277,18 +277,18 @@ export function SystemMarksPanel() {
         <PageStatus
           loading
           loadingMessage="Loading system marks catalog…"
-          className="gt-stock-picker__empty"
+          className="od-stock-picker__empty"
         />
       ) : unavailable ? (
-        <div className="gt-stock-picker__empty" data-testid="system-marks-unavailable">
-          <p className="gt-stock-picker__empty-title">System marks API not available</p>
+        <div className="od-stock-picker__empty" data-testid="system-marks-unavailable">
+          <p className="od-stock-picker__empty-title">System marks API not available</p>
           <p>
             <code>GET {CATALOG_URL}</code> returned 404.
           </p>
         </div>
       ) : (
         <>
-          <div className="gt-system-marks__list" role="group" aria-label="Theme mark progress">
+          <div className="od-system-marks__list" role="group" aria-label="Theme mark progress">
             {items.map((row) => {
               const selectedNow = row.theme === selectedTheme
               const pct = row.total ? Math.round((row.generated / row.total) * 100) : 0
@@ -296,37 +296,37 @@ export function SystemMarksPanel() {
                 <button
                   key={row.theme}
                   type="button"
-                  className={`gt-system-marks__row${selectedNow ? ' is-selected' : ''}${
+                  className={`od-system-marks__row${selectedNow ? ' is-selected' : ''}${
                     row.complete ? ' is-complete' : ''
                   }`}
                   aria-pressed={selectedNow}
                   aria-label={`${row.theme} ${row.generated} of ${row.total}`}
                   onClick={() => setSelectedTheme(row.theme)}
                 >
-                  <span className="gt-system-marks__theme">{row.theme}</span>
-                  <span className="gt-system-marks__meta">
+                  <span className="od-system-marks__theme">{row.theme}</span>
+                  <span className="od-system-marks__meta">
                     {row.generated}/{row.total}
                     {row.era ? ` · ${row.era}` : ''}
                   </span>
                   <span
-                    className="gt-system-marks__bar"
+                    className="od-system-marks__bar"
                     aria-hidden="true"
-                    style={{ '--gt-marks-pct': `${pct}%` }}
+                    style={{ '--od-marks-pct': `${pct}%` }}
                   />
                 </button>
               )
             })}
           </div>
 
-          <section className="gt-system-marks-lab" data-testid="system-marks-lab" aria-label="System mark lab">
-            <h3 className="gt-admin-panel-title">Lab — one mark</h3>
-            <p className="gt-admin-lede">
+          <section className="od-system-marks-lab" data-testid="system-marks-lab" aria-label="System mark lab">
+            <h3 className="od-admin-panel-title">Lab — one mark</h3>
+            <p className="od-admin-lede">
               Pick a theme (list above) and a platform, edit the prompt if you
               want, then generate. The attempt log stays on this page so a
               watching session can see what you tried.
             </p>
-            <div className="gt-system-marks-lab__grid">
-              <label className="gt-system-marks-lab__field">
+            <div className="od-system-marks-lab__grid">
+              <label className="od-system-marks-lab__field">
                 <span>Platform</span>
                 <select
                   value={labPlatform}
@@ -344,14 +344,14 @@ export function SystemMarksPanel() {
                   ))}
                 </select>
               </label>
-              <div className="gt-system-marks-lab__preview">
+              <div className="od-system-marks-lab__preview">
                 {previewSrc ? (
                   <img src={previewSrc} alt={`${selectedTheme} ${labPlatform} mark`} />
                 ) : (
-                  <p className="gt-admin-lede">No mark file yet for this pair.</p>
+                  <p className="od-admin-lede">No mark file yet for this pair.</p>
                 )}
               </div>
-              <label className="gt-system-marks-lab__prompt">
+              <label className="od-system-marks-lab__prompt">
                 <span>Prompt</span>
                 <textarea
                   value={labPrompt}
@@ -362,7 +362,7 @@ export function SystemMarksPanel() {
                 />
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={Boolean(busy) || labPrompt === labDefaultPrompt}
                   onClick={() => setLabPrompt(labDefaultPrompt)}
                 >
@@ -370,10 +370,10 @@ export function SystemMarksPanel() {
                 </button>
               </label>
             </div>
-            <div className="gt-system-marks__actions">
+            <div className="od-system-marks__actions">
               <button
                 type="button"
-                className="gt-btn gt-btn--accent"
+                className="od-btn od-btn--accent"
                 disabled={Boolean(busy) || !selectedTheme || !labPlatform}
                 onClick={() => void runLabGenerate()}
               >
@@ -383,7 +383,7 @@ export function SystemMarksPanel() {
               </button>
             </div>
             {labLog.length ? (
-              <ol className="gt-system-marks-lab__log" data-testid="system-marks-lab-log">
+              <ol className="od-system-marks-lab__log" data-testid="system-marks-lab-log">
                 {labLog.map((row) => (
                   <li key={row.id}>
                     <strong>
@@ -398,10 +398,10 @@ export function SystemMarksPanel() {
             ) : null}
           </section>
 
-          <div className="gt-system-marks__actions">
+          <div className="od-system-marks__actions">
             <button
               type="button"
-              className="gt-btn gt-btn--accent"
+              className="od-btn od-btn--accent"
               disabled={Boolean(busy) || !items.length}
               onClick={() => runGenerate({ force: false })}
             >
@@ -409,7 +409,7 @@ export function SystemMarksPanel() {
             </button>
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               disabled={Boolean(busy) || !selected}
               onClick={() =>
                 runGenerate({ themes: selected ? [selected.theme] : [], force: false })
@@ -423,7 +423,7 @@ export function SystemMarksPanel() {
             </button>
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               disabled={Boolean(busy) || !selected}
               onClick={() =>
                 runGenerate({ themes: selected ? [selected.theme] : [], force: true, limit: 8 })

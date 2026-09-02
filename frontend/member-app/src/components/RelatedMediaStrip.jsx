@@ -71,20 +71,20 @@ export function RelatedMediaStrip({ gameUuid }) {
   const shown = filter === 'all' ? items : items.filter((i) => i.media_kind === filter)
 
   return (
-    <section className="gt-relmedia" aria-labelledby="gt-relmedia-heading">
-      <div className="gt-relmedia__head">
-        <h2 id="gt-relmedia-heading">Related media</h2>
-        <span className="gt-relmedia__count">{items.length}</span>
+    <section className="od-relmedia" aria-labelledby="od-relmedia-heading">
+      <div className="od-relmedia__head">
+        <h2 id="od-relmedia-heading">Related media</h2>
+        <span className="od-relmedia__count">{items.length}</span>
       </div>
-      <p className="gt-relmedia__lede">
+      <p className="od-relmedia__lede">
         Adaptations, tie-ins and soundtracks connected to this game.
       </p>
 
       {present.length > 1 ? (
-        <div className="gt-relmedia__filters" role="group" aria-label="Filter related media">
+        <div className="od-relmedia__filters" role="group" aria-label="Filter related media">
           <button
             type="button"
-            className={`gt-chip${filter === 'all' ? ' is-active' : ''}`}
+            className={`od-chip${filter === 'all' ? ' is-active' : ''}`}
             aria-pressed={filter === 'all'}
             onClick={() => setFilter('all')}
           >
@@ -94,7 +94,7 @@ export function RelatedMediaStrip({ gameUuid }) {
             <button
               key={kind}
               type="button"
-              className={`gt-chip${filter === kind ? ' is-active' : ''}`}
+              className={`od-chip${filter === kind ? ' is-active' : ''}`}
               aria-pressed={filter === kind}
               onClick={() => setFilter(kind)}
             >
@@ -104,33 +104,33 @@ export function RelatedMediaStrip({ gameUuid }) {
         </div>
       ) : null}
 
-      <ul className="gt-relmedia__list">
+      <ul className="od-relmedia__list">
         {shown.map((item) => (
           <li key={item.id}>
             <button
               type="button"
-              className="gt-relmedia__card"
+              className="od-relmedia__card"
               onClick={() => setActive(item)}
             >
               {item.cover_url ? (
                 <img
-                  className="gt-relmedia__art"
+                  className="od-relmedia__art"
                   src={item.cover_url}
                   alt=""
                   loading="lazy"
                   onError={(e) => e.currentTarget.classList.add('is-broken')}
                 />
               ) : (
-                <span className="gt-relmedia__art gt-relmedia__art--empty" aria-hidden="true">
+                <span className="od-relmedia__art od-relmedia__art--empty" aria-hidden="true">
                   {KIND_ICON[item.media_kind] || '•'}
                 </span>
               )}
-              <span className="gt-relmedia__card-body">
-                <span className="gt-relmedia__kind">
+              <span className="od-relmedia__card-body">
+                <span className="od-relmedia__kind">
                   {KIND_ICON[item.media_kind] || '•'} {kindLabel(item.media_kind)}
                 </span>
-                <strong className="gt-relmedia__title">{item.title}</strong>
-                {item.year ? <span className="gt-relmedia__year">{item.year}</span> : null}
+                <strong className="od-relmedia__title">{item.title}</strong>
+                {item.year ? <span className="od-relmedia__year">{item.year}</span> : null}
               </span>
             </button>
           </li>
@@ -139,45 +139,45 @@ export function RelatedMediaStrip({ gameUuid }) {
 
       {active ? (
         <div
-          className="gt-relmedia__scrim"
+          className="od-relmedia__scrim"
           role="presentation"
           onClick={(e) => {
             if (e.target === e.currentTarget) setActive(null)
           }}
         >
           <div
-            className="gt-relmedia__modal"
+            className="od-relmedia__modal"
             role="dialog"
             aria-modal="true"
             aria-label={active.title}
           >
             <button
               type="button"
-              className="gt-relmedia__close"
+              className="od-relmedia__close"
               aria-label="Close"
               onClick={() => setActive(null)}
             >
               ×
             </button>
 
-            <div className="gt-relmedia__modal-body">
+            <div className="od-relmedia__modal-body">
               {active.cover_url ? (
-                <img className="gt-relmedia__modal-art" src={active.cover_url} alt="" />
+                <img className="od-relmedia__modal-art" src={active.cover_url} alt="" />
               ) : null}
-              <div className="gt-relmedia__modal-text">
-                <span className="gt-relmedia__kind">
+              <div className="od-relmedia__modal-text">
+                <span className="od-relmedia__kind">
                   {KIND_ICON[active.media_kind] || '•'} {kindLabel(active.media_kind)}
                 </span>
                 <h3>{active.title}</h3>
-                <p className="gt-relmedia__meta">
+                <p className="od-relmedia__meta">
                   {[active.creator, active.year].filter(Boolean).join(' · ')}
                 </p>
                 {active.summary ? (
-                  <p className="gt-relmedia__summary">{active.summary}</p>
+                  <p className="od-relmedia__summary">{active.summary}</p>
                 ) : null}
                 {active.external_url ? (
                   <a
-                    className="gt-btn gt-btn--primary"
+                    className="od-btn od-btn--primary"
                     href={active.external_url}
                     target="_blank"
                     rel="noreferrer"
@@ -185,7 +185,7 @@ export function RelatedMediaStrip({ gameUuid }) {
                     Where to find it
                   </a>
                 ) : (
-                  <p className="gt-relmedia__meta">No link recorded for this one.</p>
+                  <p className="od-relmedia__meta">No link recorded for this one.</p>
                 )}
               </div>
             </div>

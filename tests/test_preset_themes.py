@@ -11,7 +11,7 @@ import shutil
 
 import pytest
 
-from gametheca.utils.preset_themes import (
+from oneirodex.utils.preset_themes import (
     PRESET_MANAGED_FILES,
     PRESET_MARKER_KEY,
     PRESET_SLUGS,
@@ -30,17 +30,17 @@ BASE_CSS = """:root {
     --bg-dark-30: rgba(12, 16, 22, 0.96);
     --btn-primary: #ff5a36;
     --btn-primary-hover: #e04520;
-    --gt-accent: var(--btn-primary);
+    --od-accent: var(--btn-primary);
 }
 """
 
 TOKENS_CSS = """:root {
-  --gt-bg: #0b0d10;
-  --gt-surface: #141820;
-  --gt-surface-2: #1c2230;
-  --gt-text: #f2f4f8;
-  --gt-accent: #ff5a36;
-  --gt-accent-contrast: #0b0d10;
+  --od-bg: #0b0d10;
+  --od-surface: #141820;
+  --od-surface-2: #1c2230;
+  --od-text: #f2f4f8;
+  --od-accent: #ff5a36;
+  --od-accent-contrast: #0b0d10;
 }
 """
 
@@ -53,7 +53,7 @@ def write(path, text):
 
 @pytest.fixture
 def source_tree(tmp_path):
-    """A miniature stand-in for gametheca/setup/default_theme."""
+    """A miniature stand-in for oneirodex/setup/default_theme."""
     root = tmp_path / 'default_theme'
     write(str(root / 'theme.json'), json.dumps({
         'name': 'Default Theme',
@@ -63,7 +63,7 @@ def source_tree(tmp_path):
         'release_date': '2026-07-23',
     }))
     write(str(root / 'css' / 'base.css'), BASE_CSS)
-    write(str(root / 'css' / 'gt-tokens.css'), TOKENS_CSS)
+    write(str(root / 'css' / 'od-tokens.css'), TOKENS_CSS)
     write(str(root / 'css' / 'admin' / 'admin_ops.css'), '.ops { color: red; }\n')
     write(str(root / 'css' / 'site' / 'sidebar.css'), '.sidebar { width: 10px; }\n')
     write(str(root / 'js' / 'app.js'), 'console.log("v1");\n')
@@ -83,11 +83,11 @@ def read(path):
 
 
 def accent_of(themes_root, slug):
-    """The --gt-accent value declared in a preset's own token file."""
-    tokens = read(str(themes_root / slug / 'css' / 'gt-tokens.css'))
+    """The --od-accent value declared in a preset's own token file."""
+    tokens = read(str(themes_root / slug / 'css' / 'od-tokens.css'))
     for line in tokens.splitlines():
         stripped = line.strip()
-        if stripped.startswith('--gt-accent:'):
+        if stripped.startswith('--od-accent:'):
             return stripped.split(':', 1)[1].strip().rstrip(';')
     return None
 
@@ -104,7 +104,7 @@ class TestPresetGeneration:
         install_preset_themes(str(themes_root), str(source_tree))
 
         accents = {slug: accent_of(themes_root, slug) for slug in PRESET_SLUGS}
-        assert all((themes_root / slug / 'css' / 'gt-tokens.css').is_file() for slug in PRESET_SLUGS)
+        assert all((themes_root / slug / 'css' / 'od-tokens.css').is_file() for slug in PRESET_SLUGS)
         assert len(set(accents.values())) == len(PRESET_SLUGS), accents
         assert '#ff5a36' not in accents.values()
 
@@ -117,13 +117,13 @@ class TestPresetGeneration:
     def test_tokens_carry_preset_background(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
 
-        aurora = read(str(themes_root / 'aurora' / 'css' / 'gt-tokens.css'))
-        assert '--gt-bg: #061018;' in aurora
-        assert '--gt-surface: #0a1820;' in aurora
+        aurora = read(str(themes_root / 'aurora' / 'css' / 'od-tokens.css'))
+        assert '--od-bg: #061018;' in aurora
+        assert '--od-surface: #0a1820;' in aurora
         # Wave 2d: presets override text / glass / icon geometry, not only accent.
-        assert '--gt-text: #e0f7fa;' in aurora
-        assert '--gt-icon-stroke: 2.75;' in aurora
-        assert '--gt-crt-opacity: 0.09;' in aurora
+        assert '--od-text: #e0f7fa;' in aurora
+        assert '--od-icon-stroke: 2.75;' in aurora
+        assert '--od-crt-opacity: 0.09;' in aurora
 
     def test_every_preset_pairs_an_icon_pack(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
@@ -138,18 +138,18 @@ class TestPresetGeneration:
     def test_presets_diverge_beyond_accent(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
         strokes = {
-            slug: re.search(r'--gt-icon-stroke:\s*([^;]+);', read(str(themes_root / slug / 'css' / 'gt-tokens.css'))).group(1)
+            slug: re.search(r'--od-icon-stroke:\s*([^;]+);', read(str(themes_root / slug / 'css' / 'od-tokens.css'))).group(1)
             for slug in PRESET_SLUGS
         }
         blurs = {
-            slug: re.search(r'--gt-glass-blur:\s*([^;]+);', read(str(themes_root / slug / 'css' / 'gt-tokens.css'))).group(1)
+            slug: re.search(r'--od-glass-blur:\s*([^;]+);', read(str(themes_root / slug / 'css' / 'od-tokens.css'))).group(1)
             for slug in PRESET_SLUGS
         }
         assert len(set(strokes.values())) >= 4, strokes
         assert len(set(blurs.values())) >= 4, blurs
 
         radii = {
-            slug: preset_tokens(next(p for p in PRESET_THEMES if p['slug'] == slug))['gt-radius-md']
+            slug: preset_tokens(next(p for p in PRESET_THEMES if p['slug'] == slug))['od-radius-md']
             for slug in PRESET_SLUGS
         }
         assert len(set(radii.values())) >= 4, radii
@@ -158,8 +158,8 @@ class TestPresetGeneration:
         light_accent = preset_tokens({'btn_primary': '#7dd3fc', 'bg_dark_30': '', 'bg_dark_40': ''})
         dark_accent = preset_tokens({'btn_primary': '#3b82f6', 'bg_dark_30': '', 'bg_dark_40': ''})
 
-        assert light_accent['gt-accent-contrast'] == '#0b0d10'
-        assert dark_accent['gt-accent-contrast'] == '#f2f4f8'
+        assert light_accent['od-accent-contrast'] == '#0b0d10'
+        assert dark_accent['od-accent-contrast'] == '#f2f4f8'
 
     def test_base_css_keeps_preset_button_colours(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
@@ -195,22 +195,22 @@ class TestStalenessDetection:
 
     def test_new_source_file_marks_presets_stale(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
-        write(str(source_tree / 'css' / 'gt-chrome.css'), '.chrome {}\n')
+        write(str(source_tree / 'css' / 'od-chrome.css'), '.chrome {}\n')
 
         rebuilt = install_preset_themes(str(themes_root), str(source_tree))
 
         assert rebuilt == len(PRESET_THEMES)
-        assert (themes_root / 'violet' / 'css' / 'gt-chrome.css').is_file()
+        assert (themes_root / 'violet' / 'css' / 'od-chrome.css').is_file()
 
     def test_rebuild_keeps_preset_colours(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
-        write(str(source_tree / 'css' / 'gt-chrome.css'), '.chrome {}\n')
+        write(str(source_tree / 'css' / 'od-chrome.css'), '.chrome {}\n')
         install_preset_themes(str(themes_root), str(source_tree))
 
         assert accent_of(themes_root, 'violet') == '#a78bfa'
         assert '--btn-primary: #a78bfa;' in read(str(themes_root / 'violet' / 'css' / 'base.css'))
 
-    @pytest.mark.parametrize('author', ['Oneirodex', 'GameTheca'])
+    @pytest.mark.parametrize('author', ['Oneirodex', 'Oneirodex'])
     def test_legacy_preset_without_marker_is_rebuilt(self, source_tree, themes_root, author):
         """Presets on disk from before the provenance marker — both public strings."""
         preset = PRESET_THEMES[0]
@@ -229,11 +229,11 @@ class TestStalenessDetection:
         assert rebuilt == len(PRESET_THEMES)
         marker = json.loads(read(str(legacy / 'theme.json')))[PRESET_MARKER_KEY]
         assert marker['slug'] == preset['slug']
-        assert (legacy / 'css' / 'gt-tokens.css').is_file()
+        assert (legacy / 'css' / 'od-tokens.css').is_file()
 
     def test_deleted_managed_file_forces_rebuild(self, source_tree, themes_root):
         install_preset_themes(str(themes_root), str(source_tree))
-        os.remove(str(themes_root / 'mono' / 'css' / 'gt-tokens.css'))
+        os.remove(str(themes_root / 'mono' / 'css' / 'od-tokens.css'))
 
         rebuilt = install_preset_themes(str(themes_root), str(source_tree))
 

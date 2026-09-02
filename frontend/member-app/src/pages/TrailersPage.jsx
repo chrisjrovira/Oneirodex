@@ -9,6 +9,7 @@ import {
 import { PageStatus } from '../components/PageStatus'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import { showToast } from '../utils/toast'
+import '../components/libraryFilters.css'
 import './TrailersPage.css'
 
 const SETTINGS_STORAGE_KEY = 'trailerAutoplaySettings'
@@ -219,7 +220,7 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
        image — so it recolours with whatever preset is chosen instead of pinning
        the page to one palette. Decorative parts are aria-hidden; the iframe is
        still just an iframe to a screen reader. */
-    <div className="gt-trailers__set">
+    <div className="od-trailers__set">
       {/* The title leads the set.
           It sat under the cabinet, below the bezel and the knobs, so on a tall
           player you were watching something for several seconds before the page
@@ -228,20 +229,20 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
           order a title and its video belong in. Still a link, because "what am
           I watching" and "take me to it" are the same question. */}
       {title ? (
-        <p className="gt-trailers__caption">
-          <a className="gt-trailers__title-link" href={`/game_details/${gameUuid}`}>
+        <p className="od-trailers__caption">
+          <a className="od-trailers__title-link" href={`/game_details/${gameUuid}`}>
             {title}
           </a>
         </p>
       ) : null}
-      <div className="gt-trailers__video">
-        <span className="gt-trailers__scanlines" aria-hidden="true" />
-        <span className="gt-trailers__glare" aria-hidden="true" />
+      <div className="od-trailers__video">
+        <span className="od-trailers__scanlines" aria-hidden="true" />
+        <span className="od-trailers__glare" aria-hidden="true" />
         <iframe
           ref={frameRef}
           title={title ? `Trailer — ${title}` : 'Game trailer'}
           src={src}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           allowFullScreen
         />
       </div>
@@ -252,11 +253,11 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
           video's title belongs, which is where the title is now. The knobs stay:
           they are what makes the frame read as a cabinet rather than as a grey
           bar, and they claim nothing. */}
-      <div className="gt-trailers__bezel" aria-hidden="true">
-        <span className="gt-trailers__knobs">
-          <span className="gt-trailers__knob" />
-          <span className="gt-trailers__knob" />
-          <span className="gt-trailers__led" />
+      <div className="od-trailers__bezel" aria-hidden="true">
+        <span className="od-trailers__knobs">
+          <span className="od-trailers__knob" />
+          <span className="od-trailers__knob" />
+          <span className="od-trailers__led" />
         </span>
       </div>
     </div>
@@ -266,103 +267,117 @@ function TrailerPlayer({ videoId, skipFirst, settingsRef, onAdvance, title, game
 function FilterPanel({ options, optionsError, filters, onChange, onClear, onApply }) {
   const dateRange = options?.date_range || {}
 
+  /* Same shape as Library's FilterBar: Apply/Clear fused at the top, fields in
+     `.library-filters__body`, no nested box. The popover frame is the only
+     surface when this opens under new chrome (chromeless + bare panel). */
   return (
-    <div className="gt-trailers__filter-grid">
-      {optionsError ? (
-        <p className="gt-trailers__filter-error">Filter options are unavailable right now.</p>
-      ) : null}
-
-      <div className="gt-trailers__filter-item">
-        <label htmlFor="gt-trailers-library">Library</label>
-        <select
-          id="gt-trailers-library"
-          value={filters.library}
-          onChange={(event) => onChange({ library: event.target.value })}
-        >
-          <option value="">All Libraries</option>
-          {(options?.libraries || []).map((library) => (
-            <option key={library.uuid} value={library.uuid}>
-              {library.name}
-            </option>
-          ))}
-        </select>
+    <form
+      className="container-filtersandsort library-filters od-trailers-filters"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onApply()
+      }}
+    >
+      <div className="library-filters__actions">
+        <div className="od-cbtn-group od-cbtn-group--fill">
+          <button type="submit" className="od-cbtn od-cbtn--primary">
+            Apply
+          </button>
+          <button type="button" className="od-cbtn" onClick={onClear}>
+            Clear
+          </button>
+        </div>
       </div>
 
-      <div className="gt-trailers__filter-item">
-        <label htmlFor="gt-trailers-date-from">Release Year From</label>
-        <input
-          id="gt-trailers-date-from"
-          type="number"
-          min={dateRange.min_year || 1970}
-          max={dateRange.max_year || 2030}
-          placeholder={`e.g., ${dateRange.min_year || 1990}`}
-          value={filters.dateFrom}
-          onChange={(event) => onChange({ dateFrom: event.target.value })}
-        />
-      </div>
+      <div className="library-filters__body">
+        {optionsError ? (
+          <p className="od-trailers__filter-error">Filter options are unavailable right now.</p>
+        ) : null}
 
-      <div className="gt-trailers__filter-item">
-        <label htmlFor="gt-trailers-date-to">Release Year To</label>
-        <input
-          id="gt-trailers-date-to"
-          type="number"
-          min={dateRange.min_year || 1970}
-          max={dateRange.max_year || 2030}
-          placeholder={`e.g., ${dateRange.max_year || 2024}`}
-          value={filters.dateTo}
-          onChange={(event) => onChange({ dateTo: event.target.value })}
-        />
-      </div>
+        <label htmlFor="od-trailers-library">
+          Library
+          <select
+            id="od-trailers-library"
+            className="form-control"
+            value={filters.library}
+            onChange={(event) => onChange({ library: event.target.value })}
+          >
+            <option value="">All Libraries</option>
+            {(options?.libraries || []).map((library) => (
+              <option key={library.uuid} value={library.uuid}>
+                {library.name}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <div className="gt-trailers__filter-item">
-        <label htmlFor="gt-trailers-genres">Genres</label>
-        <select
-          id="gt-trailers-genres"
-          multiple
-          size={10}
-          value={filters.genres}
-          onChange={(event) => onChange({ genres: selectedValues(event.target) })}
-        >
-          {(options?.genres || []).map((genre) => (
-            <option key={genre.id} value={String(genre.id)}>
-              {genre.name}
-            </option>
-          ))}
-        </select>
-        <small>Hold Ctrl/Cmd to select multiple</small>
-      </div>
+        <label htmlFor="od-trailers-date-from">
+          Release year from
+          <input
+            id="od-trailers-date-from"
+            className="form-control"
+            type="number"
+            min={dateRange.min_year || 1970}
+            max={dateRange.max_year || 2030}
+            placeholder={`e.g., ${dateRange.min_year || 1990}`}
+            value={filters.dateFrom}
+            onChange={(event) => onChange({ dateFrom: event.target.value })}
+          />
+        </label>
 
-      <div className="gt-trailers__filter-item">
-        <label htmlFor="gt-trailers-themes">Themes</label>
-        <select
-          id="gt-trailers-themes"
-          multiple
-          size={10}
-          value={filters.themes}
-          onChange={(event) => onChange({ themes: selectedValues(event.target) })}
-        >
-          {(options?.themes || []).map((theme) => (
-            <option key={theme.id} value={String(theme.id)}>
-              {theme.name}
-            </option>
-          ))}
-        </select>
-        <small>Hold Ctrl/Cmd to select multiple</small>
-      </div>
+        <label htmlFor="od-trailers-date-to">
+          Release year to
+          <input
+            id="od-trailers-date-to"
+            className="form-control"
+            type="number"
+            min={dateRange.min_year || 1970}
+            max={dateRange.max_year || 2030}
+            placeholder={`e.g., ${dateRange.max_year || 2024}`}
+            value={filters.dateTo}
+            onChange={(event) => onChange({ dateTo: event.target.value })}
+          />
+        </label>
 
-      {/* This panel renders inside the top bar's Filters popover, so its two
-          buttons are bar buttons — they were unclassed, which meant the UA
-          default grey rectangle sitting inside chrome built entirely from
-          `gt-cbtn`. Apply is the primary of the pair. */}
-      <div className="gt-trailers__filter-actions">
-        <button type="button" className="gt-cbtn gt-cbtn--primary" onClick={onApply}>
-          Apply filters
-        </button>
-        <button type="button" className="gt-cbtn" onClick={onClear}>
-          Clear All Filters
-        </button>
+        <label htmlFor="od-trailers-genres">
+          Genres
+          <select
+            id="od-trailers-genres"
+            className="form-control"
+            multiple
+            size={8}
+            value={filters.genres}
+            onChange={(event) => onChange({ genres: selectedValues(event.target) })}
+          >
+            {(options?.genres || []).map((genre) => (
+              <option key={genre.id} value={String(genre.id)}>
+                {genre.name}
+              </option>
+            ))}
+          </select>
+          <small>Hold Ctrl/Cmd to select multiple</small>
+        </label>
+
+        <label htmlFor="od-trailers-themes">
+          Themes
+          <select
+            id="od-trailers-themes"
+            className="form-control"
+            multiple
+            size={8}
+            value={filters.themes}
+            onChange={(event) => onChange({ themes: selectedValues(event.target) })}
+          >
+            {(options?.themes || []).map((theme) => (
+              <option key={theme.id} value={String(theme.id)}>
+                {theme.name}
+              </option>
+            ))}
+          </select>
+          <small>Hold Ctrl/Cmd to select multiple</small>
+        </label>
       </div>
-    </div>
+    </form>
   )
 }
 
@@ -370,11 +385,11 @@ function SettingsModal({ settings, onCancel, onSave }) {
   const [draft, setDraft] = useState(settings)
 
   return (
-    <div className="gt-trailers__modal-overlay" role="dialog" aria-modal="true" aria-label="Auto-Play Settings">
-      <div className="gt-trailers__modal">
+    <div className="od-trailers__modal-overlay" role="dialog" aria-modal="true" aria-label="Auto-Play Settings">
+      <div className="od-trailers__modal">
         <h2>Auto-Play Settings</h2>
 
-        <label className="gt-trailers__toggle">
+        <label className="od-trailers__toggle">
           <input
             type="checkbox"
             checked={draft.enabled}
@@ -383,9 +398,9 @@ function SettingsModal({ settings, onCancel, onSave }) {
           Auto-play next video
         </label>
 
-        <label htmlFor="gt-trailers-skip-first">Skip first (seconds)</label>
+        <label htmlFor="od-trailers-skip-first">Skip first (seconds)</label>
         <input
-          id="gt-trailers-skip-first"
+          id="od-trailers-skip-first"
           type="number"
           min={0}
           max={300}
@@ -393,9 +408,9 @@ function SettingsModal({ settings, onCancel, onSave }) {
           onChange={(event) => setDraft({ ...draft, skipFirst: event.target.value })}
         />
 
-        <label htmlFor="gt-trailers-skip-after">Skip to next after playing (seconds)</label>
+        <label htmlFor="od-trailers-skip-after">Skip to next after playing (seconds)</label>
         <input
-          id="gt-trailers-skip-after"
+          id="od-trailers-skip-after"
           type="number"
           min={0}
           max={600}
@@ -404,11 +419,11 @@ function SettingsModal({ settings, onCancel, onSave }) {
         />
         <small>Load next video after watching for this long (0 to disable)</small>
 
-        <div className="gt-trailers__modal-actions">
-          <button type="button" className="gt-btn gt-btn--ghost" onClick={onCancel}>
+        <div className="od-trailers__modal-actions">
+          <button type="button" className="od-btn od-btn--ghost" onClick={onCancel}>
             Cancel
           </button>
-          <button type="button" className="gt-btn gt-btn--accent" onClick={() => onSave(draft)}>
+          <button type="button" className="od-btn od-btn--accent" onClick={() => onSave(draft)}>
             Save
           </button>
         </div>
@@ -655,22 +670,34 @@ export function TrailersPage({ shellConfig = {} } = {}) {
              two in the centre left three peer pills that did not read as the
              same control. */
           actions={
-            <div className="gt-cbtn-group" role="group" aria-label="Trailers">
-              <Popover label="Filters" count={activeFilterBadges.length} align="start">
-                <FilterPanel
-                  options={options}
-                  optionsError={optionsError}
-                  filters={filters}
-                  onChange={handleFilterChange}
-                  onClear={handleClear}
-                  onApply={handleApply}
-                />
+            <div className="od-cbtn-group" role="group" aria-label="Trailers">
+              <Popover
+                label="Filters"
+                count={activeFilterBadges.length}
+                align="start"
+                chromeless
+              >
+                {({ close }) => (
+                  <div className="library-filters-stack">
+                    <FilterPanel
+                      options={options}
+                      optionsError={optionsError}
+                      filters={filters}
+                      onChange={handleFilterChange}
+                      onClear={handleClear}
+                      onApply={() => {
+                        handleApply()
+                        close()
+                      }}
+                    />
+                  </div>
+                )}
               </Popover>
-              <button type="button" className="gt-cbtn" onClick={requestTrailer}>
+              <button type="button" className="od-cbtn" onClick={requestTrailer}>
                 Another one
               </button>
               <Popover label="More" align="end">
-                <div className="gt-trailers__overflow">
+                <div className="od-trailers__overflow">
                   <button
                     type="button"
                     className="menu-button"
@@ -694,33 +721,33 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="gt-more-page gt-trailers">
+    <div className="od-more-page od-trailers">
       {useNewChrome ? null : (
         <>
-        <div className="gt-page-header">
+        <div className="od-page-header">
           {trailer ? (
-            <a className="gt-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
+            <a className="od-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
               <h1>{trailer.game_name}</h1>
             </a>
           ) : (
             <h1>Trailers</h1>
           )}
 
-          <div className="gt-trailers__actions">
+          <div className="od-trailers__actions">
             {attractMode ? (
               <>
-                <button type="button" className="gt-btn" onClick={exitAttractMode}>
+                <button type="button" className="od-btn" onClick={exitAttractMode}>
                   Exit Attract Mode
                 </button>
-                <button type="button" className="gt-btn" onClick={openBigPicture}>
+                <button type="button" className="od-btn" onClick={openBigPicture}>
                   Big Picture
                 </button>
               </>
             ) : null}
-            <button type="button" className="gt-btn" onClick={() => setSettingsOpen(true)}>
+            <button type="button" className="od-btn" onClick={() => setSettingsOpen(true)}>
               Settings
             </button>
-            <button type="button" className="gt-btn gt-btn--accent" onClick={requestTrailer}>
+            <button type="button" className="od-btn od-btn--accent" onClick={requestTrailer}>
               Another one
             </button>
           </div>
@@ -733,14 +760,14 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           the two-bar layout exists to remove.
 
           Conditional render rather than the `hidden` attribute, which did
-          nothing here: `.gt-trailers__filters` sets `display: flex`, and an
+          nothing here: `.od-trailers__filters` sets `display: flex`, and an
           author rule always beats the UA stylesheet's `[hidden]`. Both controls
           were showing. */}
       {useNewChrome ? null : (
-        <div className="gt-trailers__filters">
+        <div className="od-trailers__filters">
           <button
             type="button"
-            className="gt-btn gt-trailers__filter-toggle"
+            className="od-btn od-trailers__filter-toggle"
             aria-expanded={panelOpen}
             onClick={() => setPanelOpen((open) => !open)}
           >
@@ -748,9 +775,9 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           </button>
 
           {!panelOpen && activeFilterBadges.length > 0 ? (
-            <div className="gt-trailers__badges">
+            <div className="od-trailers__badges">
               {activeFilterBadges.map((badge, index) => (
-                <span key={`${index}-${badge}`} className="gt-trailers__badge">
+                <span key={`${index}-${badge}`} className="od-trailers__badge">
                   {badge}
                 </span>
               ))}
@@ -790,7 +817,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
       ) : null}
 
       {!loading && !error && emptyMessage ? (
-        <p className="gt-trailers__empty" role="status">
+        <p className="od-trailers__empty" role="status">
           {emptyMessage}
         </p>
       ) : null}

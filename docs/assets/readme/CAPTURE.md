@@ -6,10 +6,10 @@ Live pixels from local Playwright capture (`scripts/capture_docs_media.py`). Pre
 
 | Shot | README slot | `docs/media/` source | Status |
 |---|---|---|---|
-| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Refresh needed 2026-08-29** — View unfurl + selection strip tuck (last stills 2026-08-28) |
-| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Refresh needed 2026-08-29** — same chrome drift |
-| **Systems** | `screenshot-systems.png` | `systems-platforms.png` | **Recaptured 2026-08-28** |
-| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Recaptured 2026-08-28** — slide-over with seeded #general messages |
+| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Recaptured 2026-09-01** — live Catalog Tile @ ~85% from HellfireNAS |
+| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Recaptured 2026-09-01** — populated Tile grid (6,845 titles) |
+| **Systems** | `screenshot-systems.png` | `systems-platforms.png` | **Recaptured 2026-09-01** — Nintendo/Sony/Sega families expanded |
+| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Recaptured 2026-09-01** — Chat expanded over Catalog (#general empty on live) |
 
 Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; do not restore to README.
 
@@ -21,7 +21,7 @@ Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; d
 | **Ops Services tile** | `admin-ops-services.png` | Captured — LiveKit · malware · companions · queues |
 | **Features** | `admin-features.png` | Captured |
 | **Integrations** | `admin-integrations.png` | Captured |
-| **Discover** | `discover.png` | **Refresh needed 2026-08-29** — shelf slider / wheel / title mark (UID-020) |
+| **Discover** | `discover.png` | **Still owed 2026-09-01** — live Discover stayed on Loading during capture; left prior file untouched |
 | **Admin libraries** | `admin-libraries.png` | Captured — **refresh needed** after W22-1 (unified Libraries & scans tabs · multi-select · force-delete) when `:5006` healthy |
 | **`/readyz` JSON** | `readyz.json` | Captured |
 | **`/healthz` JSON** | `healthz.json` | Captured |
@@ -47,9 +47,9 @@ Also useful later: Friends companion pop-out, voice lobby with LiveKit secrets.
    ```bash
    # .env.capture.local (gitignored)
    SECRET_KEY=<generate one>
-   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/gamethecacapture
+   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/oneirodexcapture
    DATA_FOLDER_GAMES=<repo>/data/games-capture
-   UPLOAD_FOLDER=<repo>/gametheca/static/library
+   UPLOAD_FOLDER=<repo>/oneirodex/static/library
    BASE_FOLDER_WINDOWS=Z:/
    # keep outbound integrations off so capture never hits the network
    ENABLE_FREE_GAMES=false
@@ -71,7 +71,7 @@ Also useful later: Friends companion pop-out, voice lobby with LiveKit secrets.
 6. Run the app **the way the launchers do** — initialization first, then workers:
 
    ```python
-   from gametheca.init_manager import run_complete_startup_initialization
+   from oneirodex.init_manager import run_complete_startup_initialization
    run_complete_startup_initialization()      # otherwise /readyz stays 503
    uvicorn.run(asgi_app, host="127.0.0.1", port=5006)
    ```
@@ -106,7 +106,7 @@ worker 500s until restarted. If a run reports skips, restart the app and re-run.
 **2026-08-05 — capture unblocked and everything above re-shot.** `:5006` had been
 **BLOCKED (env)** since Wave 15; the blocker was that the only `.env` on the box
 is the Unraid deploy env (container-side paths). A throwaway local capture env
-plus a `gamethecacapture` DB cleared it, and all README slots + docs media were
+plus a `oneirodexcapture` DB cleared it, and all README slots + docs media were
 re-captured from live pixels against freshly built SPA dists.
 
 Two things worth knowing before the next pass:

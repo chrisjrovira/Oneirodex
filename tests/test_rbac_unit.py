@@ -1,6 +1,6 @@
 """RBAC v1 pure unit tests (no database)."""
 
-from gametheca.utils.rbac import (
+from oneirodex.utils.rbac import (
     VALID_ROLES,
     can_request_games,
     is_admin,

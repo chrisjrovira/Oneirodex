@@ -4,11 +4,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from gametheca.utils.game_core import (
+from oneirodex.utils.game_core import (
     attach_igdb_taxonomy_to_game,
     ensure_manual_identify_taxonomy,
 )
-from gametheca.utils.metadata_enrichment import apply_enriched_metadata
+from oneirodex.utils.metadata_enrichment import apply_enriched_metadata
 
 
 def test_attach_igdb_taxonomy_creates_missing_and_attaches():
@@ -35,7 +35,7 @@ def test_attach_igdb_taxonomy_creates_missing_and_attaches():
         'player_perspectives': [{'name': 'First person'}],
     }
 
-    with patch('gametheca.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
+    with patch('oneirodex.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
         attached = attach_igdb_taxonomy_to_game(game, payload)
 
     assert attached['genres'] == ['BrandNewGenre']
@@ -66,7 +66,7 @@ def test_attach_igdb_taxonomy_unions_without_duplicating():
             return existing_genre
         return SimpleNamespace(name=kwargs[name_field])
 
-    with patch('gametheca.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
+    with patch('oneirodex.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
         attached = attach_igdb_taxonomy_to_game(
             game,
             {'genres': [{'name': 'Action'}, {'name': 'Adventure'}]},
@@ -76,7 +76,7 @@ def test_attach_igdb_taxonomy_unions_without_duplicating():
     assert attached['genres'] == ['Adventure']
 
 
-@patch('gametheca.utils.game_core.fetch_game_by_igdb_id')
+@patch('oneirodex.utils.game_core.fetch_game_by_igdb_id')
 def test_ensure_manual_identify_taxonomy_fetches_and_attaches(mock_fetch):
     mock_fetch.return_value = [{
         'id': 1942,
@@ -98,7 +98,7 @@ def test_ensure_manual_identify_taxonomy_fetches_and_attaches(mock_fetch):
     def fake_get_or_create(model_class, name_field='name', **kwargs):
         return SimpleNamespace(name=kwargs[name_field])
 
-    with patch('gametheca.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
+    with patch('oneirodex.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
         result = ensure_manual_identify_taxonomy(game, 1942)
 
     mock_fetch.assert_called_once_with(1942)
@@ -115,7 +115,7 @@ def test_ensure_manual_identify_taxonomy_skips_custom_igdb_ids():
     assert ensure_manual_identify_taxonomy(game, 2000000500) is None
 
 
-@patch('gametheca.utils.metadata_enrichment.db.session.begin_nested')
+@patch('oneirodex.utils.metadata_enrichment.db.session.begin_nested')
 def test_apply_enriched_metadata_attaches_steam_genres_and_modes(mock_begin_nested):
     cm = MagicMock()
     cm.__exit__.return_value = False
@@ -153,8 +153,8 @@ def test_apply_enriched_metadata_attaches_steam_genres_and_modes(mock_begin_nest
 
 def test_attach_igdb_taxonomy_persists_with_db(app, db_session):
     """Integration: missing Genre/Theme rows are created and linked on apply."""
-    from gametheca.models import Game, Genre, Library, Theme
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Game, Genre, Library, Theme
+    from oneirodex.platform import LibraryPlatform
     from sqlalchemy import select
 
     library = Library(

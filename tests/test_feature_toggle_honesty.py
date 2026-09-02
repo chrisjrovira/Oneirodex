@@ -14,11 +14,11 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-FEATURES = ROOT / "gametheca" / "routes_admin_ext" / "features.py"
+FEATURES = ROOT / "oneirodex" / "routes_admin_ext" / "features.py"
 
 # Where a flag may legitimately be consumed.
 SEARCH_ROOTS = [
-    ROOT / "gametheca",
+    ROOT / "oneirodex",
     ROOT / "frontend" / "member-app" / "src",
     ROOT / "frontend" / "admin-app" / "src",
 ]
@@ -59,6 +59,6 @@ def test_toggle_is_actually_consumed(setting, env):
     hits = len(re.findall(r"\b" + re.escape(env) + r"\b", corpus))
     assert hits > 0, (
         f"Admin feature toggle {env} ('{setting}') is declared in features.py "
-        f"but never read anywhere in gametheca/ or the SPAs. An admin can flip "
+        f"but never read anywhere in oneirodex/ or the SPAs. An admin can flip "
         f"it and nothing happens. Either wire it up or remove the toggle."
     )

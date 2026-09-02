@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from gametheca.utils.livekit_rtc import (
+from oneirodex.utils.livekit_rtc import (
     livekit_enabled,
     mint_livekit_token,
     normalize_room_name,
@@ -45,12 +45,12 @@ def test_child_blocked_from_adult_rooms():
 
 def test_children_are_kept_out_of_the_lobby_by_default():
     """Unchanged behaviour on upgrade: the setting defaults to off."""
-    with patch('gametheca.utils.livekit_rtc.children_allowed_in_lobby', return_value=False):
+    with patch('oneirodex.utils.livekit_rtc.children_allowed_in_lobby', return_value=False):
         assert user_may_join_room(Child(), 'household:lobby') is False
 
 
 def test_a_household_can_let_children_into_the_lobby():
-    with patch('gametheca.utils.livekit_rtc.children_allowed_in_lobby', return_value=True):
+    with patch('oneirodex.utils.livekit_rtc.children_allowed_in_lobby', return_value=True):
         assert user_may_join_room(Child(), 'household:lobby') is True
         # Opting in only opens the lobby — nothing else loosens.
         assert user_may_join_room(Child(), 'adult:lounge') is False
@@ -59,7 +59,7 @@ def test_a_household_can_let_children_into_the_lobby():
 
 def test_children_allowed_in_lobby_fails_closed():
     """No app context, or an unmigrated column, must not open the lobby."""
-    from gametheca.utils.livekit_rtc import children_allowed_in_lobby
+    from oneirodex.utils.livekit_rtc import children_allowed_in_lobby
 
     assert children_allowed_in_lobby() is False
 

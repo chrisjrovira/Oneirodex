@@ -1,6 +1,6 @@
 /**
  * Per-system "room" treatment (FEAT-D5) — client mirror of
- * `gametheca/utils/play_rooms.py`.
+ * `oneirodex/utils/play_rooms.py`.
  *
  * Two layers: the **bezel** is the hardware (platform skins); the **room** is
  * the place and decade. A Mega Drive and a SNES shared a 1990s teen bedroom;
@@ -81,12 +81,14 @@ export const LCD_PLATFORMS = {
   ADVISION: 1,
   SEGA_GG: 1,
   POKE_MINI: 1,
+  GAME_WATCH: 1,
 }
 
 const PLATFORM_ROOMS = {
   NES: 'wood_den_80s',
   SEGA_MS: 'wood_den_80s',
   SEGA_SG1000: 'wood_den_80s',
+  GAME_WATCH: 'wood_den_80s',
   ATARI_2600: 'wood_den_80s',
   ATARI_5200: 'wood_den_80s',
   ATARI_7800: 'wood_den_80s',
@@ -171,6 +173,7 @@ const PLATFORM_ROOMS = {
   ATARI_8BIT: 'desk',
   X68000: 'desk',
   PC_98: 'desk',
+  BBC_MICRO: 'desk',
 }
 
 export function roomIdForPlatform(platformId) {
@@ -194,8 +197,8 @@ export function isLcdPlatform(platformId) {
 export function roomStyle(platformId) {
   const room = roomForPlatform(platformId)
   return {
-    '--gt-room-backdrop': room.backdrop,
-    '--gt-room-glow': room.glow,
-    '--gt-room-accent': room.accent,
+    '--od-room-backdrop': room.backdrop,
+    '--od-room-glow': room.glow,
+    '--od-room-accent': room.accent,
   }
 }

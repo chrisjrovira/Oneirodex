@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from gametheca.utils.theme_fonts import (
+from oneirodex.utils.theme_fonts import (
     BUILT_IN_FONTS,
     DEFAULT_FONT_ID,
     available_fonts,
@@ -110,7 +110,7 @@ def font_member(db_session):
     """A member whose preferences pin a non-default face."""
     from uuid import uuid4
 
-    from gametheca.models import User, UserPreference
+    from oneirodex.models import User, UserPreference
 
     user_uuid = str(uuid4())
     user = User(
@@ -145,7 +145,7 @@ class TestFontsCssRoute:
         assert response.status_code == 200
         assert response.headers['Content-Type'].startswith('text/css')
         body = response.get_data(as_text=True)
-        assert '--gt-font-family:' in body
+        assert '--od-font-family:' in body
         assert BUILT_IN_FONTS[DEFAULT_FONT_ID]['stack'] in body
 
     def test_signed_in_gets_the_account_preference(self, client, font_member):

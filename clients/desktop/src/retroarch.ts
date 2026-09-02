@@ -22,7 +22,7 @@ export interface RetroArchProfile {
   romPath: string
   retroarchPath?: string
   extraArgs?: string[]
-  /** Optional GameTheca game UUID — used when staging cheats before launch */
+  /** Optional Oneirodex game UUID — used when staging cheats before launch */
   gameUuid?: string
   /** Override staging root (must be under companion app_data/cheats when writing) */
   cheatsDir?: string
@@ -139,7 +139,7 @@ export function resolveCheatStagePath(cheatsDir: string, gameUuid: string, filen
 }
 
 /**
- * Download a .cht from GameTheca and write it under companion app_data/cheats/.
+ * Download a .cht from Oneirodex and write it under companion app_data/cheats/.
  * Reuses Tauri `write_file_bytes` (ACL allows downloads + cheats roots).
  * Gated by {@link shouldStageRetroArchCheat} when `cheatSurface` / `system` are known.
  */
@@ -233,7 +233,7 @@ export async function launchRetroArchProfile(profile: RetroArchProfile): Promise
   })
   const note = buildAiServiceSetupNote(profile.aiTranslate)
   if (note && typeof console !== 'undefined') {
-    console.info(`[GameTheca] ${note}`)
+    console.info(`[Oneirodex] ${note}`)
   }
   return cheatPath ? { ok: true, cheatPath } : { ok: true }
 }

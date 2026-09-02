@@ -2,9 +2,9 @@
 
 from types import SimpleNamespace
 
-from gametheca.platform import WEBRETR_INSTALLED_CORES, core_is_browser_playable
-from gametheca.utils import wanted_updates as wu
-from gametheca.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
+from oneirodex.platform import WEBRETR_INSTALLED_CORES, core_is_browser_playable
+from oneirodex.utils import wanted_updates as wu
+from oneirodex.utils.play_url import WEBRETRO_PLATFORMS, browse_play_fields
 
 
 def test_webretro_platforms_include_sega_cd_and_pcdos_gated():
@@ -22,7 +22,7 @@ def test_browse_play_fields_requires_bundled_core(monkeypatch):
         return {'emulators': ['nestopia'], 'preferred': 'nestopia'}
 
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         fake_resolve,
     )
     # No platform → not playable
@@ -34,7 +34,7 @@ def test_browse_play_url_includes_platform(monkeypatch):
     game = SimpleNamespace(uuid='aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', library=library)
 
     monkeypatch.setattr(
-        'gametheca.utils.emulator_profiles.resolve_emulators_for_platform',
+        'oneirodex.utils.emulator_profiles.resolve_emulators_for_platform',
         lambda _p: {'emulators': ['nestopia'], 'preferred': 'nestopia'},
     )
     fields = browse_play_fields(game)

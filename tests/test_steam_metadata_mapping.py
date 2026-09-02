@@ -15,9 +15,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Developer, Game, Library, LibraryPlatform, Publisher
-from gametheca.utils.steam_metadata import (
+from oneirodex import db
+from oneirodex.models import Developer, Game, Library, LibraryPlatform, Publisher
+from oneirodex.utils.steam_metadata import (
     apply_steam_metadata_to_game,
     hydrate_game_from_steam,
     parse_steam_release_date,
@@ -161,7 +161,7 @@ class TestApplyToGame:
 
 
 class TestHydrate:
-    @patch('gametheca.utils.steam_metadata.fetch_steam_app_details')
+    @patch('oneirodex.utils.steam_metadata.fetch_steam_app_details')
     def test_hydrates_from_app_id(self, mock_fetch, app, db_session, game):
         mock_fetch.return_value = APPDETAILS
         with app.app_context():
@@ -175,7 +175,7 @@ class TestHydrate:
             assert report['summary'] is True
             assert row.summary == 'A first-person puzzle game.'
 
-    @patch('gametheca.utils.steam_metadata.fetch_steam_app_details')
+    @patch('oneirodex.utils.steam_metadata.fetch_steam_app_details')
     def test_store_miss_does_not_undo_identification(self, mock_fetch, app, db_session, game):
         mock_fetch.return_value = None
         with app.app_context():

@@ -91,17 +91,17 @@ export function RemotePlayPage() {
   }
 
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>Remote play</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Register a BYO Sunshine or Wolf host. Oneirodex does not bundle Wolf/GOW — members use
         Moonlight clients with the hints you set.
       </p>
       {loading ? (
         <PageStatus loading loadingMessage="Loading remote play settings…" />
       ) : (
-        <form className="gt-admin-panel" onSubmit={save}>
-          <label className="gt-admin-field">
+        <form className="od-admin-panel" onSubmit={save}>
+          <label className="od-admin-field">
             <input
               type="checkbox"
               checked={form.enabled}
@@ -109,7 +109,7 @@ export function RemotePlayPage() {
             />{' '}
             Enable remote play (also set <code>ENABLE_REMOTE_PLAY=true</code> in .env to override)
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             Primary provider
             <select
               value={form.provider}
@@ -119,7 +119,7 @@ export function RemotePlayPage() {
               <option value="wolf">Wolf (multi-user)</option>
             </select>
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             Sunshine base URL
             <input
               type="url"
@@ -128,7 +128,7 @@ export function RemotePlayPage() {
               onChange={(e) => updateField('sunshine_base_url', e.target.value)}
             />
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             Wolf base URL
             <input
               type="url"
@@ -137,7 +137,7 @@ export function RemotePlayPage() {
               onChange={(e) => updateField('wolf_base_url', e.target.value)}
             />
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             Host label (shown to members)
             <input
               type="text"
@@ -146,7 +146,7 @@ export function RemotePlayPage() {
               onChange={(e) => updateField('host_label', e.target.value)}
             />
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             App hint (Moonlight app name)
             <input
               type="text"
@@ -155,7 +155,7 @@ export function RemotePlayPage() {
               onChange={(e) => updateField('app_hint', e.target.value)}
             />
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             PIN hint
             <input
               type="text"
@@ -164,7 +164,7 @@ export function RemotePlayPage() {
               onChange={(e) => updateField('pin_hint', e.target.value)}
             />
           </label>
-          <label className="gt-admin-field">
+          <label className="od-admin-field">
             Token hint
             <input
               type="text"
@@ -173,15 +173,15 @@ export function RemotePlayPage() {
               onChange={(e) => updateField('token_hint', e.target.value)}
             />
           </label>
-          <p className="gt-admin-hint">
+          <p className="od-admin-hint">
             LAN URLs require <code>ALLOW_PRIVATE_LAN_URLS=true</code>. Oneirodex only stores connection
             hints — it does not run Sunshine/Wolf in the app container.
           </p>
-          <div className="gt-admin-actions-row">
-            <button type="submit" className="gt-btn" disabled={busy}>
+          <div className="od-admin-actions-row">
+            <button type="submit" className="od-btn" disabled={busy}>
               {busy ? 'Saving…' : 'Save settings'}
             </button>
-            <a className="gt-btn gt-btn--ghost" href="/admin/settings">
+            <a className="od-btn od-btn--ghost" href="/admin/settings">
               Settings hub
             </a>
           </div>

@@ -5,8 +5,8 @@ button family and the bridged Bootstrap family side by side so a divergence is
 visible instead of arriving as a bug report. That only works if it stays
 complete, so these tests assert two things a stylesheet edit can quietly break:
 
-  * every ``.gt-btn`` modifier defined in gt-primitives.css is rendered here
-  * every token scale the page advertises actually exists in gt-tokens.css
+  * every ``.od-btn`` modifier defined in od-primitives.css is rendered here
+  * every token scale the page advertises actually exists in od-tokens.css
 
 Both read the real theme source rather than a fixture list, so adding a variant
 without showing it fails rather than silently shipping an unrepresented one.
@@ -18,10 +18,10 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import User
+from oneirodex.models import User
 
 
-THEME_CSS = Path(__file__).resolve().parent.parent / 'gametheca' / 'setup' / 'default_theme' / 'css'
+THEME_CSS = Path(__file__).resolve().parent.parent / 'oneirodex' / 'setup' / 'default_theme' / 'css'
 
 
 @pytest.fixture
@@ -103,23 +103,23 @@ class TestStyleguideCoverage:
         which is how `--ghost` came to be redefined in three page stylesheets
         without anyone noticing it had no canonical home.
         """
-        primitives = (THEME_CSS / 'gt-primitives.css').read_text(encoding='utf-8')
-        modifiers = set(re.findall(r'\.gt-btn--([a-z0-9-]+)', primitives))
-        assert modifiers, 'expected gt-primitives.css to define .gt-btn modifiers'
+        primitives = (THEME_CSS / 'od-primitives.css').read_text(encoding='utf-8')
+        modifiers = set(re.findall(r'\.od-btn--([a-z0-9-]+)', primitives))
+        assert modifiers, 'expected od-primitives.css to define .od-btn modifiers'
 
         _login(client, admin_user)
         html = client.get('/dev/styleguide').get_data(as_text=True)
 
-        missing = sorted(m for m in modifiers if f'gt-btn--{m}' not in html)
-        assert missing == [], f'styleguide does not render .gt-btn--{{{",".join(missing)}}}'
+        missing = sorted(m for m in modifiers if f'od-btn--{m}' not in html)
+        assert missing == [], f'styleguide does not render .od-btn--{{{",".join(missing)}}}'
 
     def test_advertised_token_scales_exist(self, client, admin_user):
         """Every --gt-* token the page references must be defined.
 
         The page builds its scales from Jinja loops, so a step removed from
-        gt-tokens.css shows up here as an empty swatch rather than an error.
+        od-tokens.css shows up here as an empty swatch rather than an error.
         """
-        tokens = (THEME_CSS / 'gt-tokens.css').read_text(encoding='utf-8')
+        tokens = (THEME_CSS / 'od-tokens.css').read_text(encoding='utf-8')
         defined = set(re.findall(r'^\s*(--gt-[a-zA-Z0-9-]+)\s*:', tokens, re.MULTILINE))
 
         _login(client, admin_user)
@@ -139,4 +139,4 @@ class TestStyleguideCoverage:
         assert 'data-sg-family="gt"' in html
         assert 'data-sg-family="bootstrap"' in html
         assert 'btn btn-primary' in html
-        assert 'gt-btn gt-btn--primary' in html
+        assert 'od-btn od-btn--primary' in html

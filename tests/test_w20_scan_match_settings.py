@@ -2,20 +2,20 @@
 
 from types import SimpleNamespace
 
-from gametheca.utils.duplicate_check import (
+from oneirodex.utils.duplicate_check import (
     DEFAULT_TITLE_THRESHOLD,
     explain_duplicate_match,
     should_mark_as_duplicate,
 )
-from gametheca.utils.gamenames import generate_goty_variants
-from gametheca.utils.game_name_parse import parse_game_label
-from gametheca.utils.match_scoring import (
+from oneirodex.utils.gamenames import generate_goty_variants
+from oneirodex.utils.game_name_parse import parse_game_label
+from oneirodex.utils.match_scoring import (
     DEFAULT_AMBIGUOUS_GAP,
     DEFAULT_HIGH_THRESHOLD,
     classify_confidence,
     select_best_match,
 )
-from gametheca.utils.scan_match_settings import (
+from oneirodex.utils.scan_match_settings import (
     CORE_DEFAULTS,
     normalize_peel_profile,
     resolve_scan_match_policy,

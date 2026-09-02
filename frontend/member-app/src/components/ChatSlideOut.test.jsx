@@ -84,10 +84,10 @@ test('launcher opens left chat slide-out with room list', async () => {
   expect(await screen.findByText('Hello household')).toBeInTheDocument()
 })
 
-test('gt-open-chat-panel event opens slide-out', async () => {
+test('od-open-chat-panel event opens slide-out', async () => {
   render(<ChatSlideOut defaultOpen={false} />)
   expect(screen.getByRole('button', { name: /open chat/i })).toBeInTheDocument()
-  window.dispatchEvent(new CustomEvent('gt-open-chat-panel'))
+  window.dispatchEvent(new CustomEvent('od-open-chat-panel'))
   await waitFor(() => {
     expect(screen.getByRole('dialog', { name: /chat/i })).toBeInTheDocument()
   })

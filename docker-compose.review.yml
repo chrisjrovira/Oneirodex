@@ -37,17 +37,17 @@ services:
     ports:
       - "5006:5006"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/gametheca
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/oneirodex
       - DATABASE_HOST=db
       - DATABASE_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=gametheca
+      - POSTGRES_DB=oneirodex
       - SECRET_KEY=review-only-not-a-production-secret
       - DATA_FOLDER_GAMES=/storage
-      - UPLOAD_FOLDER=/app/gametheca/static/library
-      # Regenerates preset themes on boot, which this review needs: gt-shell.css
-      # and gt-density.css are new files and only reach a theme folder on sync.
+      - UPLOAD_FOLDER=/app/oneirodex/static/library
+      # Regenerates preset themes on boot, which this review needs: od-shell.css
+      # and od-density.css are new files and only reach a theme folder on sync.
       - DEV_MODE=true
       - SESSION_COOKIE_SECURE=false
       - REMEMBER_COOKIE_SECURE=false
@@ -60,7 +60,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - review_storage:/storage
-      - review_library:/app/gametheca/static/library
+      - review_library:/app/oneirodex/static/library
 
   db:
     image: postgres:17.6
@@ -68,7 +68,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=gametheca
+      - POSTGRES_DB=oneirodex
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       # Published so local pytest still has a database while this stack is up.
@@ -79,7 +79,7 @@ services:
     volumes:
       - review_db:/var/lib/postgresql/data/pgdata
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gametheca"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d oneirodex"]
       interval: 5s
       timeout: 5s
       retries: 20

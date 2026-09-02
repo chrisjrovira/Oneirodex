@@ -2,10 +2,10 @@
 
 from uuid import uuid4
 
-from gametheca.models import Developer, Game, Library, Publisher, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.game_more_from import build_more_from
-from gametheca.utils.library_acl import set_user_library_allowlist
+from oneirodex.models import Developer, Game, Library, Publisher, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.game_more_from import build_more_from
+from oneirodex.utils.library_acl import set_user_library_allowlist
 
 
 def _login(client, user):

@@ -1,0 +1,326 @@
+/* Member account Jinja (profile / password / prefs / invites) — sectioned aurora, no heavy cards */
+
+.od-account {
+    --od-account-max: 40rem;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--od-account-max);
+    margin: 1rem auto 2rem;
+    padding: 0 1rem;
+    color: var(--od-text);
+    font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+.od-account--wide {
+    --od-account-max: 56rem;
+}
+
+.od-account *,
+.od-account *::before,
+.od-account *::after {
+    box-sizing: border-box;
+}
+
+.od-account-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+}
+
+.od-account-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: var(--od-radius-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--od-text-muted);
+    text-decoration: none;
+    font-size: var(--od-font-sm);
+    font-weight: 600;
+}
+
+.od-account-nav a:hover,
+.od-account-nav a:focus-visible,
+.od-account-nav a[aria-current='page'] {
+    color: var(--od-accent);
+    border-color: color-mix(in srgb, var(--od-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--od-accent) 10%, transparent);
+}
+
+/* Worse here than elsewhere: this treatment is also the [aria-current] style,
+   so without a ring the focused link and the page you are already on were the
+   same picture. */
+.od-account-nav a:focus-visible {
+    outline: 2px solid var(--od-focus-ring, var(--od-accent));
+    outline-offset: 2px;
+}
+
+.od-account-header {
+    margin-bottom: 1rem;
+}
+
+.od-account-title {
+    margin: 0 0 0.25rem;
+    font-size: var(--od-font-xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--od-text);
+}
+
+.od-account-lede {
+    margin: 0;
+    color: var(--od-text-muted);
+    font-size: var(--od-font-md);
+    line-height: 1.4;
+}
+
+/* Section stack — hairline dividers, not floating cards */
+.od-account-panel,
+.od-account-section {
+    padding: 0.85rem 0 1rem;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.od-account-panel + .od-account-panel,
+.od-account-section + .od-account-section {
+    margin-top: 0;
+    border-top: 1px solid color-mix(in srgb, var(--od-border) 75%, transparent);
+}
+
+.od-account-section__title {
+    margin: 0 0 0.55rem;
+    font-size: var(--od-font-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--od-text-muted);
+}
+
+.od-account-section__hint {
+    margin: -0.25rem 0 0.65rem;
+    font-size: var(--od-font-sm);
+    line-height: 1.35;
+    color: var(--od-text-muted);
+}
+
+.od-account-fields {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.od-account-fields--2 {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.od-account .form-group,
+.od-account .mb-3 {
+    margin-bottom: 0;
+}
+
+.od-account label,
+.od-account .form-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--od-text);
+    font-size: var(--od-font-md);
+    font-weight: 500;
+}
+
+.od-account .input-glass,
+.od-account .form-control,
+.od-account .form-select,
+.od-account input[type='text'],
+.od-account input[type='email'],
+.od-account input[type='password'] {
+    width: 100%;
+    height: 2.35rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: var(--od-radius-sm);
+    border: 1px solid var(--od-border);
+    background: color-mix(in srgb, var(--od-surface-2) 88%, transparent);
+    color: var(--od-text);
+}
+
+.od-account .input-glass:focus,
+.od-account .form-control:focus,
+.od-account .form-select:focus {
+    outline: none;
+    border-color: var(--od-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--od-accent) 28%, transparent);
+}
+
+.od-account-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+}
+
+.od-account .btn-primary,
+.od-account input[type='submit'].btn-primary {
+    border: 1px solid transparent;
+    border-radius: var(--od-radius-sm);
+    background: var(--od-accent);
+    color: var(--od-accent-contrast);
+    font-weight: 600;
+    padding: 0.45rem 0.9rem;
+}
+
+.od-account .btn-primary:hover,
+.od-account .btn-primary:focus-visible {
+    background: color-mix(in srgb, var(--od-accent) 88%, white);
+    color: var(--od-accent-contrast);
+}
+
+.od-account .btn-secondary,
+.od-account .btn-outline-secondary,
+.od-account .btn-danger,
+.od-account .btn-outline-danger {
+    border-radius: var(--od-radius-sm);
+    border: 1px solid var(--od-border);
+    background: transparent;
+    color: var(--od-text);
+    font-weight: 600;
+    padding: 0.45rem 0.9rem;
+}
+
+.od-account .btn-danger,
+.od-account .btn-outline-danger {
+    border-color: color-mix(in srgb, var(--od-danger) 55%, transparent);
+    color: var(--od-danger);
+}
+
+.od-account .btn-secondary:hover,
+.od-account .btn-outline-secondary:hover {
+    border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+    color: var(--od-accent);
+}
+
+.od-account-avatar {
+    width: 6.5rem;
+    height: 6.5rem;
+    border-radius: var(--od-radius-circle);
+    object-fit: cover;
+    border: 2px solid color-mix(in srgb, var(--od-accent) 35%, transparent);
+    display: block;
+    margin: 0 auto 0.85rem;
+}
+
+.od-account-profile-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 0.25rem;
+}
+
+.od-account-meta {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+}
+
+.od-account-meta p {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(6.5rem, 8rem) 1fr;
+    gap: 0.45rem;
+    align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--od-border) 55%, transparent);
+    font-size: var(--od-font-md);
+}
+
+.od-account-meta p:last-child {
+    border-bottom: none;
+}
+
+.od-account-meta strong {
+    color: var(--od-text-muted);
+    font-weight: 600;
+    font-size: var(--od-font-sm);
+    letter-spacing: 0.02em;
+}
+
+.od-account-invite-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+}
+
+.od-account-invite {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.65rem 0;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
+    background: transparent;
+}
+
+.od-account-invite__meta {
+    flex: 1 1 16rem;
+    min-width: 0;
+    font-size: var(--od-font-md);
+    line-height: 1.4;
+}
+
+.od-account-invite__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: flex-start;
+}
+
+.od-account .alert {
+    border-radius: var(--od-radius-sm);
+    padding: 0.55rem 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.od-account .alert-warning {
+    background: color-mix(in srgb, var(--od-warning) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--od-warning) 55%, transparent);
+    color: var(--od-text);
+}
+
+.od-account .alert-info {
+    background: color-mix(in srgb, var(--od-accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--od-accent) 40%, transparent);
+    color: var(--od-text);
+}
+
+.od-account .password-input-wrapper {
+    position: relative;
+}
+
+.od-account .toggle-password {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--od-text-muted);
+    cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .od-account-meta p {
+        grid-template-columns: 1fr;
+        gap: 0.1rem;
+    }
+}

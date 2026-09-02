@@ -9,11 +9,11 @@ import {
  */
 
 function toastHost() {
-  let host = document.getElementById('gt-toast-host')
+  let host = document.getElementById('od-toast-host')
   if (!host) {
     host = document.createElement('div')
-    host.id = 'gt-toast-host'
-    host.className = 'gt-toast-host'
+    host.id = 'od-toast-host'
+    host.className = 'od-toast-host'
     host.setAttribute('aria-live', 'polite')
     document.body.appendChild(host)
   }
@@ -23,8 +23,8 @@ function toastHost() {
 function visibleStackable(host) {
   return [...host.children].filter(
     (el) =>
-      !el.classList.contains('gt-toast--out') &&
-      (el.classList.contains('gt-toast--info') || el.classList.contains('gt-toast--success')),
+      !el.classList.contains('od-toast--out') &&
+      (el.classList.contains('od-toast--info') || el.classList.contains('od-toast--success')),
   )
 }
 
@@ -40,7 +40,7 @@ function bindToastLifecycle(el, host) {
   const remove = () => {
     window.clearTimeout(removeTimer)
     window.clearTimeout(outTimer)
-    el.classList.add('gt-toast--out')
+    el.classList.add('od-toast--out')
     outTimer = window.setTimeout(() => {
       el.remove()
       if (host && !host.childElementCount) {
@@ -56,7 +56,7 @@ function bindToastLifecycle(el, host) {
 
   const restart = () => {
     abort()
-    el.classList.remove('gt-toast--out')
+    el.classList.remove('od-toast--out')
     removeTimer = window.setTimeout(remove, 3200)
   }
 
@@ -69,20 +69,20 @@ function bindToastLifecycle(el, host) {
 
 function paintToast(host, message, safeTone, { count, stacked } = {}) {
   const el = document.createElement('div')
-  el.className = `gt-toast gt-toast--${safeTone}`
+  el.className = `od-toast od-toast--${safeTone}`
   if (stacked) {
     el.dataset.toastStack = '1'
     el.dataset.toastCount = String(count)
   }
 
   const text = document.createElement('span')
-  text.className = 'gt-toast__text'
+  text.className = 'od-toast__text'
   text.textContent = String(message)
   el.appendChild(text)
 
   const close = document.createElement('button')
   close.type = 'button'
-  close.className = 'gt-toast__close'
+  close.className = 'od-toast__close'
   close.setAttribute('aria-label', 'Dismiss notification')
   close.textContent = '×'
   el.appendChild(close)
@@ -114,7 +114,7 @@ export function showToast(message, tone = 'info', options = {}) {
     if (plan.action === 'increment-summary' && summary) {
       const next = stackCountOf(summary) + incomingCount
       summary.dataset.toastCount = String(next)
-      const text = summary.querySelector('.gt-toast__text')
+      const text = summary.querySelector('.od-toast__text')
       if (text) {
         text.textContent = stackSummaryMessage(next)
       }

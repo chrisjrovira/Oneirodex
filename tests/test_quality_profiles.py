@@ -9,9 +9,9 @@ from flask_login import login_user
 from sqlalchemy import select
 from sqlalchemy.orm.attributes import flag_modified
 
-from gametheca.models import GlobalSettings, User
-from gametheca.utils.functions import load_scanning_filter_patterns
-from gametheca.utils.quality_profiles import (
+from oneirodex.models import GlobalSettings, User
+from oneirodex.utils.functions import load_scanning_filter_patterns
+from oneirodex.utils.quality_profiles import (
     active_exclude_terms_for_scan,
     create_quality_profile,
     get_quality_profile,
@@ -251,7 +251,7 @@ def test_migrating_the_legacy_format_is_idempotent(app, db_session):
     second raised "profile not found" for the id the first had just produced —
     so anyone upgrading from the flat format hit a 404 on their first edit.
     """
-    from gametheca.utils.quality_profiles import _load_store, _migrate_raw
+    from oneirodex.utils.quality_profiles import _load_store, _migrate_raw
 
     legacy = {
         'preferred_groups': ['FITGIRL'],

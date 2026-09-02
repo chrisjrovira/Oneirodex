@@ -1,6 +1,6 @@
 /**
  * Vitest entry — re-exports theme source of truth.
- * @see gametheca/setup/default_theme/js/stageECandidates.js
+ * @see oneirodex/setup/default_theme/js/stageECandidates.js
  */
 export {
   resolveProposalBody,
@@ -11,4 +11,4 @@ export {
   stageEMatchModeLabel,
   hasStageEHints,
   stageEChipSources,
-} from '../../../gametheca/setup/default_theme/js/stageECandidates.js'
+} from '../../../oneirodex/setup/default_theme/js/stageECandidates.js'

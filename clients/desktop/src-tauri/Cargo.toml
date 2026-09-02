@@ -1,12 +1,12 @@
 [package]
-name = "gametheca-desktop"
+name = "oneirodex-desktop"
 version = "0.1.0"
-description = "GameTheca desktop companion"
-authors = ["GameTheca"]
+description = "Oneirodex desktop companion"
+authors = ["Oneirodex"]
 edition = "2021"
 
 [lib]
-name = "gametheca_desktop_lib"
+name = "oneirodex_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

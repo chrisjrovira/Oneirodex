@@ -1,6 +1,6 @@
 /**
  * Vitest entry — re-exports theme source of truth.
- * @see gametheca/setup/default_theme/js/unmatchedTriage.js
+ * @see oneirodex/setup/default_theme/js/unmatchedTriage.js
  */
 export {
   folderBasename,
@@ -8,4 +8,4 @@ export {
   detectPlatformMismatch,
   isGarbageScaffolding,
   formatPlatformMismatchTitle,
-} from '../../../gametheca/setup/default_theme/js/unmatchedTriage.js'
+} from '../../../oneirodex/setup/default_theme/js/unmatchedTriage.js'

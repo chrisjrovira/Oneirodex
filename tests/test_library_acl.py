@@ -5,9 +5,9 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_acl import (
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_acl import (
     allowed_library_uuids,
     apply_game_library_acl,
     set_user_library_allowlist,
@@ -15,7 +15,7 @@ from gametheca.utils.library_acl import (
     user_can_access_library,
 )
 from sqlalchemy import select
-from gametheca.models import Game as GameModel
+from oneirodex.models import Game as GameModel
 
 
 @pytest.fixture

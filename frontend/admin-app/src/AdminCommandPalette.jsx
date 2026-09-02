@@ -49,10 +49,10 @@ export default function AdminCommandPalette() {
     }
 
     document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('gt-admin-palette:open', onOpenRequest)
+    document.addEventListener('od-admin-palette:open', onOpenRequest)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
-      document.removeEventListener('gt-admin-palette:open', onOpenRequest)
+      document.removeEventListener('od-admin-palette:open', onOpenRequest)
     }
   }, [open, close])
 
@@ -83,16 +83,16 @@ export default function AdminCommandPalette() {
 
   return (
     <div
-      className="gt-admin-palette__scrim"
+      className="od-admin-palette__scrim"
       role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget) close()
       }}
     >
-      <div className="gt-admin-palette" role="dialog" aria-modal="true" aria-label="Search admin">
+      <div className="od-admin-palette" role="dialog" aria-modal="true" aria-label="Search admin">
         <input
           ref={inputRef}
-          className="gt-admin-palette__input"
+          className="od-admin-palette__input"
           type="text"
           placeholder="Search admin — pages, settings, integrations"
           aria-label="Search admin"
@@ -104,28 +104,28 @@ export default function AdminCommandPalette() {
           onKeyDown={onInputKeyDown}
         />
 
-        <ul className="gt-admin-palette__list" ref={listRef} role="listbox" aria-label="Results">
+        <ul className="od-admin-palette__list" ref={listRef} role="listbox" aria-label="Results">
           {results.length === 0 && (
-            <li className="gt-admin-palette__empty">No matching admin page.</li>
+            <li className="od-admin-palette__empty">No matching admin page.</li>
           )}
           {results.slice(0, 60).map((command, index) => (
             <li key={command.id}>
               <a
-                className="gt-admin-palette__row"
+                className="od-admin-palette__row"
                 href={command.href}
                 role="option"
                 aria-selected={index === active}
                 data-active={index === active}
                 onMouseEnter={() => setActive(index)}
               >
-                <span className="gt-admin-palette__label">{command.label}</span>
-                <span className="gt-admin-palette__section">{command.section}</span>
+                <span className="od-admin-palette__label">{command.label}</span>
+                <span className="od-admin-palette__section">{command.section}</span>
               </a>
             </li>
           ))}
         </ul>
 
-        <div className="gt-admin-palette__hint">
+        <div className="od-admin-palette__hint">
           <kbd>↑</kbd> <kbd>↓</kbd> to move · <kbd>Enter</kbd> to open · <kbd>Esc</kbd> to close
         </div>
       </div>

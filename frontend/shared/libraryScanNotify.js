@@ -18,7 +18,7 @@ const KIND_HINTS = new Set([
 
 const TITLE_BODY_RE = /\d+\s+games?\s+added\s+to\s+library/i
 
-const SEEN_KEY = 'gametheca.libraryScanToasts.seen.v1'
+const SEEN_KEY = 'oneirodex.libraryScanToasts.seen.v1'
 
 /**
  * @param {object | null | undefined} row

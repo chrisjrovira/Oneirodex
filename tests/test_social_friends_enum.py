@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import User, UserFriendship
+from oneirodex.models import User, UserFriendship
 
 
 @pytest.fixture

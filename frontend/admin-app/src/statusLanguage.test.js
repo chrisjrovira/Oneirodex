@@ -11,11 +11,11 @@ import { describe, expect, it } from 'vitest'
  * failed" — at least eight different shapes:
  *
  *   <p>Loading…</p>                              bare, unannounced
- *   <div role="alert" className="gt-admin-alert">
- *   <p className="gt-admin-lede" role="status">
- *   <div className="gt-error" role="alert">
- *   <p className="gt-adminpage-status" role="status">
- *   <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+ *   <div role="alert" className="od-admin-alert">
+ *   <p className="od-admin-lede" role="status">
+ *   <div className="od-error" role="alert">
+ *   <p className="od-adminpage-status" role="status">
+ *   <div className="od-admin-banner od-admin-banner--warn" role="status">
  *   <p role="alert">{error}</p>
  *   <span role="status" aria-busy="true">
  *
@@ -35,7 +35,7 @@ import { describe, expect, it } from 'vitest'
  *   - success/completion messages ("Saved", "N files added") — PageStatus has no
  *     success variant, and inventing one would make it a notification system
  *   - persistent configuration disclosure (StoragePage's five
- *     `gt-admin-banner` blocks: helpers off, apply gated, mount read-only) —
+ *     `od-admin-banner` blocks: helpers off, apply gated, mount read-only) —
  *     page content, not a transient page state
  *   - inline progress on a single control ("Uploading…", "Refreshing…",
  *     "Scanning…") — scoped to one widget, not to the page

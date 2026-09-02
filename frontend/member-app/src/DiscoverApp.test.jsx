@@ -72,7 +72,7 @@ test('renders discover section titles and games as horizontal shelves', async ()
 
   expect(await screen.findByRole('heading', { name: 'Latest Games' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Highest Rated' })).toBeInTheDocument()
-  expect(document.querySelectorAll('.gt-shelf__track')).toHaveLength(2)
+  expect(document.querySelectorAll('.od-shelf__track')).toHaveLength(2)
   expect(screen.getByRole('img', { name: 'Discover VR Game' })).toHaveAttribute(
     'src',
     '/static/library/images/discover.jpg',
@@ -100,7 +100,7 @@ test('does not render empty discover sections', async () => {
     expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()
   })
   expect(screen.queryByRole('heading', { name: 'Most Favorited Games' })).not.toBeInTheDocument()
-  expect(document.querySelector('.gt-shelf__track')).not.toBeInTheDocument()
+  expect(document.querySelector('.od-shelf__track')).not.toBeInTheDocument()
 })
 
 test('a row deeper than it can show offers a way to see all of it', async () => {
@@ -163,7 +163,7 @@ test('shows Loading Discover while sections fetch', async () => {
   })
 
   renderDiscover()
-  expect(screen.getByText('Loading Discover…')).toBeInTheDocument()
+  expect(screen.getByText('Loading Discover')).toBeInTheDocument()
 
   resolveFetch({
     ok: true,

@@ -1,6 +1,6 @@
 # Docker Compose deploy — Oneirodex
 
-Concise local/NAS path using the repo `docker-compose.yml` (`oneirodex-app` + `oneirodex-db` by default; override with `APP_CONTAINER_NAME` / `DB_CONTAINER_NAME`). Preferred Hub image once published: `chrisjrovira/oneirodex` via `APP_IMAGE`. Live Unraid stacks that still run `gametheca-app` should pin that name until the scan FIFO is idle.
+Concise local/NAS path using the repo `docker-compose.yml` (`oneirodex-app` + `oneirodex-db` by default; override with `APP_CONTAINER_NAME` / `DB_CONTAINER_NAME`). Preferred Hub image once published: `chrisjrovira/oneirodex` via `APP_IMAGE`. Live Unraid stacks that still run `oneirodex-app` should pin that name until the scan FIFO is idle.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ Concise local/NAS path using the repo `docker-compose.yml` (`oneirodex-app` + `o
 cp .env.docker.example .env          # local/NAS
 # Unraid: this checkout IS the stack — cp .env.unraid.example .env
 #   Compose Manager: /mnt/user/infernal-data-streams/_projects/Oneirodex
-#   (not /mnt/user/isos/gametheca/ — retired). See unraid-deploy.md
+#   (not /mnt/user/isos/oneirodex/ — retired). See unraid-deploy.md
 # Set SECRET_KEY (required — container refuses the placeholder)
 # Set DATA_FOLDER_GAMES = HOST games path
 # Set LIBRARY_HOST_PATH = HOST library/appdata path (default ./data/library)
@@ -28,16 +28,16 @@ App: http://localhost:5006
 
 ## Volume sectioning
 
-Do **not** conflate games (scan root) with library/uploads. Compose header has an **UNRAID VOLUMES** comment block; container env hard-sets `DATA_FOLDER_GAMES=/storage` and `UPLOAD_FOLDER=/app/gametheca/static/library` while `.env` supplies **host** bind paths.
+Do **not** conflate games (scan root) with library/uploads. Compose header has an **UNRAID VOLUMES** comment block; container env hard-sets `DATA_FOLDER_GAMES=/storage` and `UPLOAD_FOLDER=/app/oneirodex/static/library` while `.env` supplies **host** bind paths.
 
 | Role | Host env | Container mount | Mode | Purpose |
 |---|---|---|---|---|
 | **Games** | `DATA_FOLDER_GAMES` | `/storage` | **ro** | Scan root only — never uploads |
-| **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/gametheca/static/library` | **rw** | Covers, themes, uploads |
-| **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/gametheca/static/library/bios` | **rw** | Private host firmware under appdata — not games. Public stance remains Admin upload-only — [unraid-deploy.md § Local private BIOS](unraid-deploy.md#local-private-bios-mount-vs-public-upload) |
-| Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/gametheca/static/vendor/webretro/cores` | rw | Operator WASM cores — [webretro-cores.md](webretro-cores.md) |
+| **Library / uploads** | `LIBRARY_HOST_PATH` | `/app/oneirodex/static/library` | **rw** | Covers, themes, uploads |
+| **Optional BIOS / firmware** | `EMULATOR_BIOS_HOST_PATH` (uncomment bind in compose) | `/app/oneirodex/static/library/bios` | **rw** | Private host firmware under appdata — not games. Public stance remains Admin upload-only — [unraid-deploy.md § Local private BIOS](unraid-deploy.md#local-private-bios-mount-vs-public-upload) |
+| Optional WebRetro cores | `WEBRETRO_CORES_HOST_PATH` (uncomment in compose) | `/app/oneirodex/static/vendor/webretro/cores` | rw | Operator WASM cores — [webretro-cores.md](webretro-cores.md) |
 | Postgres | Compose volume `db_data` | `/var/lib/postgresql/data/pgdata` | rw | DB |
-| pg_hba | `./docker/postgres/pg_hba.conf` | `/etc/gametheca/pg_hba.conf` | ro | App↔db TCP without SSL (scram still required) |
+| pg_hba | `./docker/postgres/pg_hba.conf` | `/etc/oneirodex/pg_hba.conf` | ro | App↔db TCP without SSL (scram still required) |
 
 If app loops on `no pg_hba.conf entry … no encryption`, recreate `db` with current Compose or use the one-liner in [container-wont-start.md](container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption).
 
@@ -63,7 +63,7 @@ docker compose build --no-cache && docker compose up -d
 
 Then Reset Default Themes if the library volume still has stale CSS.
 
-**Admin SPA build note:** `frontend-build` copies `gametheca/setup/default_theme/js/stageECandidates.js` and `unmatchedTriage.js` into the build tree before `admin-app` `npm run build` so relative SoT re-exports resolve (those files are not under `frontend/admin-app/`).
+**Admin SPA build note:** `frontend-build` copies `oneirodex/setup/default_theme/js/stageECandidates.js`, `unmatchedTriage.js`, and `scanJobsDom.js` into the build tree before `admin-app` `npm run build` so relative SoT re-exports resolve (those files are not under `frontend/admin-app/`).
 
 ## Other optional profiles
 

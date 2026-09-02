@@ -4,7 +4,7 @@
 
 ## Open preferences
 
-From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ctrl/Cmd+K → Preferences. The modal uses sectioned aurora chrome (`gt-prefs-modal`: Library · Look & density · Game language) — dense sections, **no heavy cards**. Changes save to your user profile and usually reload the page.
+From the member SPA **Account** drawer (under TopNav) → **Preferences**, or Ctrl/Cmd+K → Preferences. The modal uses sectioned aurora chrome (`od-prefs-modal`: Library · Look & density · Game language) — dense sections, **no heavy cards**. Changes save to your user profile and usually reload the page.
 
 Preferences is three folding sections — **Library**, **Look & density** and **Game
 language**. Fold the ones you are not using and it stays folded next time; the panel
@@ -12,10 +12,10 @@ opens fully expanded until you change that.
 
 ## Color theme presets
 
-- Pick a preset from the **room-card picker** in Preferences — grouped into **Decade rooms** (the place you started: 1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk), **Colour cabinets** (Arcade Neon, Hot Cabinet, … plus Default), and **Installed** (uploads). The underlying `<select>` is visually hidden. Preferences is the only theme picker; if you are an admin, the Themes admin page handles installing and resetting themes, not choosing one.
+- Pick a preset from the **room-card picker** in Preferences — grouped into **Decade rooms** (the place you started: 1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk), **Colour cabinets** (Arcade Neon, Hot Cabinet, … plus Default), and **Installed** (uploads). The underlying `<select>` is visually hidden. Preferences is the only theme picker. Admins also get **Reset Default Themes** under Look & density (same action as Admin → Themes) after a deploy that changes theme CSS.
 - A theme is a **room**, not a solid colour. Member and admin chrome share wallpaper, window, posters, floor and lamp with the browser-play rooms (`html[data-era]`). Colour cabinets still sit in an era room rather than a flat slab.
 - **Default (system)** is the built-in theme id `default` (saved explicitly — not `None`). It uses the 1980s wood-den scenery with the green glass accent.
-- Default brand accent is green **`#2fd67b`** (Style B+C glass). Colour cabinets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice) plus six decade rooms recolour accent, surfaces, glass/CRT, typography, spacing, radius, paired icon geometry, **and** the era room (`GENERATOR_VERSION` 18). Ask an admin to **Reset Default Themes** after that bump or presets stay on the previous generator and miss `gt-era.css` / scan-management CSS.
+- Default brand accent is green **`#2fd67b`** (Style B+C glass). Colour cabinets (Aurora, Ember, Violet, Forest, Ocean, Rose, Mono, Sunset, Ice) plus six decade rooms recolour accent, surfaces, glass/CRT, typography, spacing, radius, paired icon geometry, **and** the era room (`GENERATOR_VERSION` 18). Ask an admin to **Reset Default Themes** after that bump or presets stay on the previous generator and miss `od-era.css` / scan-management CSS.
 - Picking a room card also selects that preset’s paired icon pack (still changeable before Save). The live preview repaints the accent **and** switches the room scenery before you save.
 - The chosen theme applies on the **next page load** — every stylesheet, the brand mark, the tile chrome, the **stock avatars**, and **backup/placeholder covers** follow it. Untitled games get a Pillow placeholder painted in the active decade room (cached per theme). The seven avatars Oneirodex ships are recoloured into each preset's palette. An avatar you uploaded yourself is your picture and is never recoloured.
 - If cards do nothing, accents look wrong, rooms stay flat, or presets still look accent-only, the library volume may have stale theme files — ask an admin to **Reset Default Themes** after a rebuild.
@@ -59,7 +59,7 @@ opens fully expanded until you change that.
 ## Tile size
 
 - Preference: continuous **0–100% slider** (TopNav) — legacy S/M/L/XL values still load and map onto the scale.
-- Affects Library / Favorites / similar grids; denser gaps on smaller sizes; grid re-measures with a short debounce so dragging feels smooth instead of snapping between sizes.
+- Affects Library / Favorites / Discover shelves; denser gaps on smaller sizes; grid re-measures with a short debounce so dragging feels smooth instead of snapping between sizes. Range is about **120–400px** (0–100%). **Grid** and **Rows** use that size too — Grid is genre shelves, Rows is a scaling title list, not a denser wrap.
 - **Everything on a tile scales with it** — the corner controls (menu, favourite, play status), the badges, the platform chip and the Preview pill all derive their size from the tile, so a 120% tile and a 30% tile read the same way rather than one being all chrome.
 - Hovering a tile grows it **25%** equally around its resting box (a transform, so the grid does not reflow). There is no accent glow on the enlarge.
 
@@ -78,7 +78,7 @@ opens fully expanded until you change that.
 
 - A theme or icon-pack change takes effect on a normal reload. Hard-refreshing used to be necessary and no longer is — if it makes a difference for you, that is worth reporting rather than repeating.
 - Admin theme install is separate from your personal preset — see [themes-reset.md](../admin/themes-reset.md).
-- If account/prefs chrome looks stale after deploy (`gt-account.css` / `modal-components` on the library volume), ask an admin for **Reset Default Themes**.
+- If account/prefs chrome looks stale after deploy (`od-account.css` / `modal-components` on the library volume), ask an admin for **Reset Default Themes**.
 - Icon packs install on app boot; they are not wiped by Reset Default Themes.
 - **Loading icons (admin):** household spinner mode — rotate catalogue or lock to one id (Admin → Themes → Loading icons). Members/SPA read `GET /api/loading-icon`. Motifs appear on Auto Scan browse + `PageStatus` loads. Admin: [themes-reset.md](../admin/themes-reset.md#loading-icons-admin).
 - Social / voice / Report issue: [social-and-voice.md](social-and-voice.md) · [faq.md](faq.md).

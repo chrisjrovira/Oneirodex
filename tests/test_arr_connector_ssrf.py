@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from gametheca.utils.arr_connectors import save_arr_config
-from gametheca.utils.security import (
+from oneirodex.utils.arr_connectors import save_arr_config
+from oneirodex.utils.security import (
     validate_connector_http_url,
     validate_user_outbound_http_url,
 )

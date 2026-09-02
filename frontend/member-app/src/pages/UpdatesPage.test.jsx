@@ -91,7 +91,7 @@ test('inbox shows apply action and queues companion update pack', async () => {
     })
   })
   expect(
-    await screen.findByText((_, el) => el?.classList?.contains('gt-updates__status') && /queued for companion/i.test(el.textContent || '')),
+    await screen.findByText((_, el) => el?.classList?.contains('od-updates__status') && /queued for companion/i.test(el.textContent || '')),
   ).toBeInTheDocument()
 })
 
@@ -141,7 +141,7 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
   // Busy feedback, whichever half of the round trip is in flight: the probe
   // ("Checking library…") or the inbox re-read that follows it ("Refreshing…").
   // The point of the test is that there *is* feedback and the list survives it.
-  const tools = refresh.closest('.gt-updates__inbox-tools')
+  const tools = refresh.closest('.od-updates__inbox-tools')
   expect(within(tools).getByRole('status')).toHaveTextContent(
     /Checking library|Refreshing/i,
   )
@@ -198,12 +198,12 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
   const refresh = await screen.findByRole('button', {
     name: 'Check the library against store versions',
   })
-  expect(refresh.closest('.gt-updates__inbox-tools')).not.toBeNull()
+  expect(refresh.closest('.od-updates__inbox-tools')).not.toBeNull()
   await user.click(refresh)
   await waitFor(() => expect(screen.getByText(/^Updated /)).toBeInTheDocument())
 
-  const tools = refresh.closest('.gt-updates__inbox-tools')
-  const stamp = tools.querySelector('.gt-updates__refresh-status')
+  const tools = refresh.closest('.od-updates__inbox-tools')
+  const stamp = tools.querySelector('.od-updates__refresh-status')
   expect(
     stamp.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()

@@ -10,8 +10,8 @@ app.db
 instance/app.db
 /logs/*
 /logs
-gametheca/static/library/images
-/gametheca/static/images/*.jpg
+oneirodex/static/library/images
+/oneirodex/static/images/*.jpg
 /venv
 /.venv
 /.git
@@ -101,14 +101,14 @@ letsrebuild.md
 htmlcov/
 
 # Static uploads and generated files (these should be mounted as volumes or generated)
-gametheca/static/library/images/
-gametheca/static/library/zips/
-gametheca/static/library/themes/
+oneirodex/static/library/images/
+oneirodex/static/library/zips/
+oneirodex/static/library/themes/
 
 # Docker library host path (default mount point for persistent library data)
 #
 # Root-anchored deliberately. As a bare `data/` this matched a directory of that
-# name at ANY depth, which silently swallowed `gametheca/data/` — package data
+# name at ANY depth, which silently swallowed `oneirodex/data/` — package data
 # that is read at runtime and has to ship: the generated per-system loading
 # motifs and the Arr indexer presets. Both existed only on the machine that
 # generated them, so the features worked in dev and were missing in every built
@@ -122,7 +122,7 @@ Thumbs.db
 .worktrees/
 
 # Frontend bundles (built by the Dockerfile / npm run build)
-gametheca/static/dist/
+oneirodex/static/dist/
 
 # Agent scratch: task briefs and reports
 .superpowers/
@@ -137,18 +137,19 @@ samples/free-roms/library/
 bios/
 **/bios/*.bin
 **/bios/*.rom
-gametheca/static/library/bios/
+oneirodex/static/library/bios/
+.bios-install-out/
 
 # Icon packs installed from setup/icon_themes at boot (like themes/)
-gametheca/static/library/icon-themes/
-gametheca/static/library/chat-emoji/
-gametheca/static/library/chat-attachments/
+oneirodex/static/library/icon-themes/
+oneirodex/static/library/chat-emoji/
+oneirodex/static/library/chat-attachments/
 
 # Uploaded/dropped-in theme fonts (operator-supplied, like icon packs above)
-gametheca/static/library/fonts/
+oneirodex/static/library/fonts/
 
 # Art-studio output — generated per install, not source
-gametheca/static/library/generated/
+oneirodex/static/library/generated/
 
 # WebRetro libretro cores — operator-provisioned, not vendored (71MB of WASM).
 #
@@ -160,8 +161,8 @@ gametheca/static/library/generated/
 #
 # Fetched on first boot (FETCH_WEBRETRO_CORES_ON_BOOT), or by hand with
 # scripts/fetch-webretro-cores.sh --defaults. The README stays tracked.
-gametheca/static/vendor/webretro/cores/*_libretro.js
-gametheca/static/vendor/webretro/cores/*_libretro.wasm
+oneirodex/static/vendor/webretro/cores/*_libretro.js
+oneirodex/static/vendor/webretro/cores/*_libretro.wasm
 
 # Debris from an unexpanded shell variable — never a real project path
 %TEMP%/

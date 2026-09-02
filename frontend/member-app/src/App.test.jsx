@@ -53,8 +53,8 @@ test('applies tile size CSS vars from shellConfig', () => {
       <App shellConfig={{ tileSize: 'L', isAdmin: false, sections: [] }} />
     </MemoryRouter>,
   )
-  // Legacy L → 75% → 255px (120 + 180*0.75)
-  expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('255px')
+  // Legacy L → 75% → 330px (120 + 280*0.75)
+  expect(document.documentElement.style.getPropertyValue('--od-tile-min')).toBe('330px')
   expect(screen.getByText('DiscoverPage')).toBeInTheDocument()
 })
 
@@ -65,8 +65,8 @@ test('renders favorites route with tile size', () => {
     </MemoryRouter>,
   )
   expect(screen.getByText('FavoritesPage')).toBeInTheDocument()
-  // Legacy S → 25% → 165px
-  expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('165px')
+  // Legacy S → 25% → 190px (120 + 280*0.25)
+  expect(document.documentElement.style.getPropertyValue('--od-tile-min')).toBe('190px')
 })
 
 test('renders downloads route', async () => {
@@ -76,7 +76,7 @@ test('renders downloads route', async () => {
     </MemoryRouter>,
   )
   expect(await screen.findByText('DownloadsPage')).toBeInTheDocument()
-  expect(document.documentElement.style.getPropertyValue('--gt-tile-min')).toBe('300px')
+  expect(document.documentElement.style.getPropertyValue('--od-tile-min')).toBe('400px')
 })
 
 test('renders news more route', async () => {

@@ -12,7 +12,7 @@ import './ExternalStoreLinks.css'
 /**
  * Recognizable brand marks — SVG paths (fill=currentColor) or PNG silhouettes
  * rendered via CSS mask-image + currentColor so icons follow light/dark aurora.
- * Chip chrome keeps --gt-store-color for border/hover only.
+ * Chip chrome keeps --od-store-color for border/hover only.
  */
 const BRANDS = [
   {
@@ -236,14 +236,14 @@ function BrandIcon({ brand }) {
   if (brand.mask) {
     return (
       <span
-        className="gt-store-link__icon gt-store-link__icon--mask"
-        style={{ '--gt-store-mask': `url("${brand.mask}")` }}
+        className="od-store-link__icon od-store-link__icon--mask"
+        style={{ '--od-store-mask': `url("${brand.mask}")` }}
         aria-hidden="true"
       />
     )
   }
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="gt-store-link__icon">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="od-store-link__icon">
       {brand.paths.map((d) => (
         <path key={d.slice(0, 24)} fill="currentColor" d={d} />
       ))}
@@ -272,22 +272,22 @@ export function ExternalStoreLinks({ urls = [], steamUrl, igdbUrl }) {
   if (!rows.length) return null
 
   return (
-    <ul className="gt-store-links" aria-label="Store and catalog links">
+    <ul className="od-store-links" aria-label="Store and catalog links">
       {rows.map((row) => {
         const brand = brandFor(row)
         return (
-          <li key={row.url} className="gt-store-links__item">
+          <li key={row.url} className="od-store-links__item">
             <a
-              className={`gt-store-link gt-store-link--${brand.id}`}
+              className={`od-store-link od-store-link--${brand.id}`}
               href={row.url}
               target="_blank"
               rel="noreferrer"
               title={brand.label}
               aria-label={brand.label}
-              style={{ '--gt-store-color': brand.color }}
+              style={{ '--od-store-color': brand.color }}
             >
               <BrandIcon brand={brand} />
-              <span className="gt-store-link__label">{brand.label}</span>
+              <span className="od-store-link__label">{brand.label}</span>
             </a>
           </li>
         )

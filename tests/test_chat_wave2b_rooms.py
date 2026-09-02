@@ -7,9 +7,9 @@ from uuid import uuid4
 import pytest
 from flask_login import login_user
 
-from gametheca import db
-from gametheca.models import ChatChannel, User
-from gametheca.utils.chat import (
+from oneirodex import db
+from oneirodex.models import ChatChannel, User
+from oneirodex.utils.chat import (
     archive_channel,
     create_household_channel,
     ensure_default_channels,

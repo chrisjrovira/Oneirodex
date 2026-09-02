@@ -121,7 +121,7 @@ def write_license_note(rom_path: Path, entry: dict[str, str]) -> Path:
         f"URL: {entry.get('url', '')}\n"
         f"Notes: {entry.get('notes', '')}\n"
         "\n"
-        "Fetched by GameTheca scripts/fetch-free-roms.py for legal emulator smoke tests.\n"
+        "Fetched by Oneirodex scripts/fetch-free-roms.py for legal emulator smoke tests.\n"
         "Do not redistribute commercial dumps. See samples/free-roms/README.md.\n"
     )
     note_path.write_text(body, encoding="utf-8")
@@ -130,7 +130,7 @@ def write_license_note(rom_path: Path, entry: dict[str, str]) -> Path:
 
 def print_layout_hint(out_dir: Path, platforms: list[str]) -> None:
     print()
-    print("Suggested GameTheca library layout (Unraid / Compose games mount = /storage):")
+    print("Suggested Oneirodex library layout (Unraid / Compose games mount = /storage):")
     print()
     print("  Host (after fetch):")
     for p in platforms:

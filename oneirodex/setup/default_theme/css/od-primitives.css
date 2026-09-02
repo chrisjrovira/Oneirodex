@@ -1,0 +1,602 @@
+/* GT primitives (GT-A4)
+ * ---------------------------------------------------------------------------
+ * One source for the four shapes that every surface was re-inventing:
+ * button, input, card, section head — plus the empty/error blocks that pages
+ * were hand-rolling because PageStatus had no error state.
+ *
+ * Why this file exists
+ *   Before GT-A1/A4 there was a colour system (od-tokens) but no shape system,
+ *   so 36 member stylesheets each defined their own `button {}` with slightly
+ *   different padding and radius, and 47 Jinja admin pages fell back to raw
+ *   Bootstrap. Two visual languages, neither authoritative.
+ *
+ * Rules for contributors
+ *   - Never hardcode px radius, spacing, or font-size in a component. Use the
+ *     --od-* scales. If a value is missing from the scale, add it here rather
+ *     than inventing a local one.
+ *   - Do not restyle `button` as a bare element selector in page CSS. Apply
+ *     .od-btn (or a modifier) instead, so themes can restyle every control.
+ *   - Loaded from base.html / base_admin.html / base_empty.html, so this is
+ *     available to Jinja pages and to both React SPAs.
+ *   - This is a theme asset: after editing, run Admin → Themes → Reset Default
+ *     Themes or the library theme copies will keep serving the old file.
+ */
+
+/* --------------------------------------------------------------------------
+   Button
+   -------------------------------------------------------------------------- */
+
+/* The same control as `.od-cbtn` in od-appbar.css, deliberately.
+ *
+ * These were two button languages: this one sized from `--od-font-md` with
+ * symmetric padding, the bar one sized from `--od-control-h`. Both are used on
+ * member pages — often in the same view — so which class a page reached for
+ * decided whether its buttons matched the library. "Still looks like the old
+ * style" was reported against Collections, Wishlist, Trailers, Updates and
+ * Favorites independently; every one of them was this.
+ *
+ * Rather than rewrite ~150 call sites (and miss the ones no tester has found),
+ * the two classes now resolve to one shape. `.od-btn` stays as the name most of
+ * the product already uses, and keeps its own variants; it simply stops being a
+ * different size and a different hover from the bar it sits under.
+ *
+ * `--od-control-h` is density-aware, so this also puts every `.od-btn` on the
+ * compact/comfortable/TV scales it was previously ignoring.
+ */
+.od-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--od-space-2);
+  min-height: var(--od-control-h);
+  padding: 0 var(--od-space-4);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: transparent;
+  /* Muted at rest, full text on hover — the bar's contrast ramp. `inherit`
+     made a resting button exactly as loud as the prose beside it. */
+  color: var(--od-text-muted);
+  font: inherit;
+  font-size: var(--od-font-sm);
+  line-height: var(--od-line-tight);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    border-color var(--od-motion-fast) var(--od-motion-ease),
+    color var(--od-motion-fast) var(--od-motion-ease),
+    background-color var(--od-motion-fast) var(--od-motion-ease);
+}
+
+.od-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  color: var(--od-text);
+}
+
+/* The slab this class used to be, kept for the two places that want a button
+   to be the loudest thing on the screen — the setup wizard's next step and a
+   full-width empty-state CTA. Opt-in, so nothing inherits it by accident. */
+.od-btn--lg {
+  min-height: 0;
+  padding: var(--od-space-3) var(--od-space-5);
+  font-size: var(--od-font-md);
+}
+
+/* Keyboard focus must stay visible on every theme, including CRT/sharp packs
+   where the accent border alone can read as decoration. */
+/* Fallback deliberately: an undefined custom property makes the whole
+   declaration invalid at computed-value time, so a theme that shipped without
+   --od-focus-ring would lose the focus outline entirely rather than fall back
+   to something. That failure has already happened once here, to .od-btn's
+   border and fill on system-skinned pages. */
+.od-btn:focus-visible,
+.od-input:focus-visible,
+.od-card:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
+  outline-offset: 2px;
+}
+
+.od-btn:disabled,
+.od-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.od-btn--primary {
+  background: var(--od-accent);
+  border-color: var(--od-accent);
+  color: var(--od-accent-contrast);
+}
+
+.od-btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
+  background: color-mix(in srgb, var(--od-accent) 85%, var(--od-bg));
+  border-color: var(--od-accent);
+  color: var(--od-accent-contrast);
+}
+
+/* Destructive actions read as danger in every theme — semantic colours are
+   deliberately excluded from preset overrides for exactly this reason. */
+.od-btn--danger:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--od-danger);
+  color: var(--od-danger);
+}
+
+/* Secondary — a filled, non-committal action. Lived only in member-app's
+   glass.css, so Jinja and admin pages had no equivalent and reached for
+   Bootstrap's .btn-secondary instead. */
+.od-btn--secondary {
+  border-color: var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
+}
+
+.od-btn--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  color: var(--od-accent);
+}
+
+/* Ghost — transparent with a hairline border, for dense rows of tertiary
+   actions.
+
+   This is the variant that proved the cost of having no canonical home: it was
+   copy-pasted into HelpPage.css, NewsPage.css and NotificationsPage.css as
+   three near-identical blocks (one had picked up a stray text-decoration). With
+   cssCodeSplit on, which copy won depended on which route chunks the user had
+   already loaded — so the same button could change appearance based on
+   navigation history. */
+.od-btn--ghost {
+  border-color: color-mix(in srgb, var(--od-border) 85%, transparent);
+  background: transparent;
+  color: var(--od-text);
+}
+
+.od-btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  color: var(--od-accent);
+}
+
+/* Retained because admin chrome selectors still name it. Prefer --ghost. */
+.od-btn--quiet {
+  border-color: transparent;
+}
+
+/* Now that the base carries `min-height`, a small button has to lower it —
+   otherwise `--sm` trimmed the horizontal padding and left the control the
+   same height, which read as "the same button, squeezed". */
+.od-btn--sm {
+  min-height: calc(var(--od-control-h) - var(--od-space-3));
+  padding: 0 var(--od-space-3);
+  font-size: var(--od-font-xs);
+}
+
+.od-btn--pill {
+  border-radius: var(--od-radius-pill);
+}
+
+/* Equal-width action bars (Unmatched resolve row, batch bars) */
+.od-btn-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--od-space-2);
+}
+
+.od-btn-bar--equal .od-btn {
+  flex: 1 1 0;
+}
+
+/* --------------------------------------------------------------------------
+   Input
+   -------------------------------------------------------------------------- */
+
+.od-input,
+.od-select,
+.od-textarea {
+  min-width: 0;
+  padding: var(--od-space-2) var(--od-space-3);
+  background: color-mix(in srgb, var(--od-surface) 90%, transparent);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  color: inherit;
+  font: inherit;
+  font-size: var(--od-font-md);
+}
+
+.od-input:disabled,
+.od-select:disabled,
+.od-textarea:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.od-input::placeholder,
+.od-textarea::placeholder {
+  color: var(--od-text-muted);
+  opacity: 0.75;
+}
+
+/* --------------------------------------------------------------------------
+   Card / surface
+   -------------------------------------------------------------------------- */
+
+.od-card {
+  padding: var(--od-space-4);
+  background: color-mix(in srgb, var(--od-surface) 92%, transparent);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-lg);
+}
+
+.od-card--flat {
+  background: transparent;
+  box-shadow: none;
+}
+
+.od-card--raised {
+  box-shadow: var(--od-shadow-md);
+}
+
+/* --------------------------------------------------------------------------
+   Section head — the uppercase micro-label pattern that Wishlist, News,
+   Collections, Notifications and Tokens each redefined separately.
+   -------------------------------------------------------------------------- */
+
+.od-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--od-space-3);
+  margin: 0 0 var(--od-space-3);
+  padding-bottom: var(--od-space-1);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--od-border) 75%, transparent);
+}
+
+.od-section-head__title {
+  margin: 0;
+  font-size: var(--od-label-size);
+  font-weight: var(--od-label-weight);
+  letter-spacing: var(--od-label-tracking);
+  text-transform: uppercase;
+  color: var(--od-text-muted);
+}
+
+.od-section-head__count {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+  opacity: 0.85;
+}
+
+/* --------------------------------------------------------------------------
+   Dense list rows (News-style) — shared by Wishlist, News, Notifications,
+   Updates, Activity so "a list" looks the same wherever it appears.
+   -------------------------------------------------------------------------- */
+
+.od-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.od-list__row {
+  padding: var(--od-space-3) var(--od-space-1);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--od-border) 65%, transparent);
+}
+
+.od-list__row:last-child {
+  border-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Empty / error blocks
+
+   Paired with the PageStatus React component so a Jinja page and an SPA page
+   report "nothing here" and "this failed" identically. Error is a real state,
+   not a toast: it stays on screen and owns a retry affordance.
+   -------------------------------------------------------------------------- */
+
+.od-empty {
+  margin: 0;
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
+}
+
+.od-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--od-space-3);
+  padding: var(--od-space-4);
+  border: 1px solid color-mix(in srgb, var(--od-danger) 45%, transparent);
+  border-left: 3px solid var(--od-danger);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-danger) 8%, transparent);
+  color: var(--od-text);
+  font-size: var(--od-font-md);
+}
+
+.od-error__message {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
+/* Technical detail (status code, backend reason) is available but never the
+   headline — operators need it, household members should not have to read it. */
+.od-error__detail {
+  margin: var(--od-space-1) 0 0;
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
+}
+
+/* --------------------------------------------------------------------------
+   Icon motion
+   --------------------------------------------------------------------------
+
+   Icons had no motion of their own anywhere in the product. Buttons and rail
+   links animated their *background* on hover and the glyph inside sat perfectly
+   still, so a control read as "the box lit up" rather than as "this thing
+   responded to me" — and a press had no visual answer at all beyond the
+   background swapping again.
+
+   One rule for every glyph, applied from the interactive ancestor rather than
+   from the icon, because an icon does not know whether it is inside a button.
+   `.od-icon` is the shared class on every SVG we ship (see `base` in
+   frontend/member-app/src/chrome/icons.jsx and partials/icons.html), so the
+   SPA glyphs and the Jinja ones move identically without either side opting in.
+
+   The ease overshoots on the way up and settles: that small bounce is what
+   separates "animated" from "resized". The press is faster than the hover on
+   purpose — a press should feel like it happened, not like it is happening.
+   -------------------------------------------------------------------------- */
+
+/* Geometry, moved here from site/sidebar.css (W28).
+ *
+ * Colour is deliberately absent: the glyphs use `stroke="currentColor"` and
+ * inherit whatever the active theme sets. Stroke and fill come from the
+ * `--od-icon-*` tokens so a colour preset can own an icon silhouette without
+ * fighting icon-pack CSS.
+ *
+ * It lived in `site/sidebar.css`, which only base.html links — so admin pages
+ * and the pop-out hosts had no icon geometry and the preset tokens never
+ * reached them. All three bases link this file. */
+.od-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+  stroke-width: var(--od-icon-stroke);
+  stroke-linecap: var(--od-icon-linecap);
+  stroke-linejoin: var(--od-icon-linejoin);
+  fill: var(--od-icon-fill);
+  fill-opacity: var(--od-icon-fill-opacity);
+  /* will-change is deliberately absent: these are everywhere, and promoting a
+     few hundred glyphs to their own layers costs more than the animation. */
+  transition: transform var(--od-motion-base) cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+/* A glyph that is drawn solid must survive a stroke-only theme.
+ *
+ * `--od-icon-fill-opacity: 0` is how the outline packs (Arcade Neon, Modern
+ * Violet, Vector Green, Modern Rose, Modern Ice — five of nine presets) get
+ * their silhouette. It is set on `.od-icon`, the `<svg>`, and inherits down to
+ * every sub-path.
+ *
+ * A sub-path drawn as `fill="currentColor" stroke="none"` — the compass needle,
+ * the play triangle, the activity dot, and 23 rail glyphs in total — has a
+ * `fill` presentation attribute, which beats the inherited `fill: none`, but no
+ * `fill-opacity` attribute at all. So it kept its colour and lost its opacity:
+ * a solid shape painted at zero alpha, with no stroke to fall back on.
+ *
+ * For most glyphs that cost a detail. For **Favorites** it cost the whole icon,
+ * because the heart is a single solid path — which is the "some theme icons are
+ * still invisible, like favorites under arcade neon" report, and it was five
+ * themes rather than one.
+ *
+ * Writing `fill="currentColor"` on a sub-path is an explicit statement that
+ * this piece is solid, so the theme tokens do not get to overrule it. Targeting
+ * the sub-path directly is what makes this work: a declaration on the element
+ * outranks a value inherited from its parent, whatever the specificity.
+ *
+ * The reverse case needs no rule — a sub-path marked `fill="none"` keeps its
+ * own attribute under the filled packs for exactly the same reason.
+ */
+.od-icon [fill='currentColor'] {
+  fill: currentColor;
+  fill-opacity: 1;
+}
+
+
+/* `:where()`, not `:is()` — this is the whole point of the block.
+ *
+ * `:is()` takes the specificity of its most specific argument, and
+ * `[role='button']` is an attribute selector at (0,1,0). With `:hover` and
+ * `.od-icon` that put this rule at (0,3,0) — an exact tie with any ordinary
+ * component rule of the shape `.thing:hover .od-icon`, e.g.
+ * `.od-shelf__edge:hover .od-icon` in DiscoverShelf.css. A tie is broken by
+ * source order, and with `cssCodeSplit: true` a lazy route chunk's order
+ * depends on which pages the reader visited first — so which animation won was
+ * a function of navigation history. That is the same load-order hazard W27
+ * records, and it is not something the duplicate-class guard can see, because
+ * these are different classes in a descendant chain rather than one class
+ * owned twice.
+ *
+ * `:where()` contributes zero specificity, putting this at (0,2,0). Every
+ * component rule now outranks it deterministically and a component can style
+ * its own glyph without knowing this file exists.
+ *
+ * The *descendant* combinator is deliberate and load-bearing: `partials/rail.html`
+ * wraps every glyph in `<span class="od-rail__icon">`, so a child combinator
+ * would silently drop the animation across the entire Jinja rail — the exact
+ * fix-that-breaks-more this block is being corrected for. Reach stays; only
+ * specificity changes. */
+:where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):hover
+  .od-icon,
+:where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):focus-visible
+  .od-icon {
+  transform: scale(1.16);
+}
+
+:where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):active
+  .od-icon {
+  transform: scale(0.86);
+  transition-duration: var(--od-motion-fast);
+  transition-timing-function: var(--od-motion-ease);
+}
+
+/* The rotating-cog rule that used to sit here has been removed rather than
+   rewritten. It keyed off `[data-icon='settings']` and `[data-icon='admin']`,
+   and there is no `data-icon` attribute anywhere in the product — the templates
+   set `data-icon-pack` on <html>, which is a different thing. Its third arm,
+   `.od-icon--spin`, is applied by nothing. All three selectors matched no
+   element, so the "a cog should turn" behaviour never ran once. Re-adding it
+   means giving the macro in partials/icons.html a real `data-icon` hook first. */
+
+/* Refresh / retry controls: the glyph completes a turn when the action starts,
+   so the icon reports the work rather than only labelling it. Driven by the
+   busy attribute the buttons already set. */
+:where(button, a)[aria-busy='true'] .od-icon,
+.is-refreshing .od-icon {
+  animation: od-icon-spin 900ms linear infinite;
+}
+
+@keyframes od-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* A toggle that just turned on pops once. `.is-on` and aria-pressed are both
+   already in use across the chrome, so nothing has to be re-marked. */
+:where(button, [role='button'])[aria-pressed='true'] > .od-icon,
+:where(button, [role='button']).is-on > .od-icon {
+  animation: od-icon-pop var(--od-motion-slow) var(--od-motion-ease);
+}
+
+@keyframes od-icon-pop {
+  0% {
+    transform: scale(0.7);
+  }
+  55% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Reduced motion zeroes the duration tokens, which stops the easing but not the
+   transform itself — a glyph would still jump between two sizes. Drop the
+   movement entirely instead; hover feedback is already carried by colour. */
+@media (prefers-reduced-motion: reduce) {
+  .od-icon,
+  :where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):hover
+    .od-icon,
+  :where(a, button, summary, label, [role='button'], [role='menuitem'], [role='tab']):active
+    .od-icon {
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ---------- Page status: loading / error / empty (GT-A1 · GT-A2 · GT-B33) ----
+ *
+ * Moved here from frontend/member-app/src/components/PageStatus.css so both
+ * halves of the product render the same status block from one source — the
+ * UIR-4 pattern already used for the rail and the app bar.
+ *
+ * It had to move rather than be copied. The member SPA bundled these rules, so
+ * the admin SPA could not reach them, and admin grew its own status language
+ * instead: at least eight different shapes across fifteen files — bare
+ * `<p>Loading…</p>`, `.od-admin-alert`, `.od-admin-lede[role=status]`,
+ * `.od-error`, `.od-adminpage-status`, `.od-admin-banner--warn` and more. Every
+ * one of them is a different answer to "this page is busy" or "this page
+ * failed". Duplicating the CSS into the admin bundle would have made that two
+ * sources of truth for one visual language, which is the thing this file
+ * exists to prevent.
+ *
+ * Both hosts already load od-primitives.css (base.html and base_admin.html), so
+ * nothing new has to be linked for either app to pick these up.
+ *
+ * Geometry comes from the shared scales — no local px.
+ */
+
+.od-page-status {
+  margin: var(--od-space-1) 0;
+  padding: var(--od-space-4) var(--od-space-5);
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-glass-border);
+  background: var(--od-glass-bg);
+  backdrop-filter: blur(var(--od-glass-blur));
+  color: var(--od-text-muted);
+}
+
+.od-page-status__message {
+  margin: 0;
+  font-size: var(--od-font-md);
+  line-height: var(--od-line-base);
+  color: inherit;
+}
+
+.od-page-status--loading {
+  display: flex;
+  align-items: center;
+  gap: var(--od-space-4);
+  border-color: color-mix(in srgb, var(--od-accent) 36%, transparent);
+  color: var(--od-accent);
+}
+
+/* Page-owning wait: cover the viewport so loading is not a banner at the top
+   of a section. Nested panels keep the compact .od-page-status--loading row. */
+.od-page-status--takeover {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  flex-direction: column;
+  justify-content: center;
+  background: color-mix(in srgb, var(--od-bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+
+.od-page-status--takeover .od-loading-motif {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.od-page-status--takeover .od-page-status__message {
+  font-size: var(--od-font-lg);
+  font-weight: 600;
+  color: var(--od-text);
+}
+
+.od-page-status--empty {
+  border-style: dashed;
+}
+
+/* Error (GT-A2)
+   Danger tokens are intentionally outside preset overrides, so a failure reads
+   as a failure on every theme — including the low-chroma mono pack where an
+   accent-tinted border would not register as a problem. */
+.od-page-status--error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--od-space-4);
+  border-color: color-mix(in srgb, var(--od-danger) 45%, transparent);
+  border-left: 3px solid var(--od-danger);
+  background: color-mix(in srgb, var(--od-danger) 8%, var(--od-surface));
+  color: var(--od-text);
+}
+
+.od-page-status__body {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.od-page-status__detail {
+  margin: var(--od-space-1) 0 0;
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
+}

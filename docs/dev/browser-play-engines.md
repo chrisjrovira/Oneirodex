@@ -16,7 +16,7 @@ Product locks still apply: self-hosted, ROMs stay on the NAS, BIOS upload-only, 
 
 | Source | What it is | Self-host / embed | Fit for Oneirodex |
 |---|---|---|---|
-| **WebRetro** (current) | BinBashBanana packaging of RetroArch Emscripten + cores | Already vendored under `gametheca/static/vendor/webretro/` | **Keep as engine A baseline**; modernize, do not throw away BIOS/saves/rooms work |
+| **WebRetro** (current) | BinBashBanana packaging of RetroArch Emscripten + cores | Already vendored under `oneirodex/static/vendor/webretro/` | **Keep as engine A baseline**; modernize, do not throw away BIOS/saves/rooms work |
 | **RetroArch Web** (official) | Upstream Emscripten / workerized WASMFS work | Build/host yourself; same core family | **Upstream for core upgrades**, not a second UX |
 | **Nostalgist.js** | MIT JS API over RetroArch WASM (`launch({ core, rom, bios })`) | npm; resolve cores/ROMs/BIOS to our URLs | **Best modernize path** for the libretro engine — programmatic launch, saveState/loadState hooks |
 | **koin.js** | React `GamePlayer` on Nostalgist (+ touch, RA hooks, cloud-save callbacks) | npm; SharedArrayBuffer headers | **Best SPA chrome** for member-app if we want a React player shell on top of Nostalgist |
@@ -107,7 +107,7 @@ Honesty badges stay per-platform × **capability**, not per-engine marketing. If
 
 ## References
 
-- Current launch: `gametheca/utils/play_url.py`, `gametheca/static/vendor/webretro/`
+- Current launch: `oneirodex/utils/play_url.py`, `oneirodex/static/vendor/webretro/`
 - Matrix: [docs/user/browser-play.md](../user/browser-play.md)
 - Cores: [docs/runbooks/webretro-cores.md](../runbooks/webretro-cores.md)
 - Nostalgist: https://nostalgist.js.org/

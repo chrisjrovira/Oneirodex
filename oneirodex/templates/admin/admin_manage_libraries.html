@@ -1,0 +1,70 @@
+{% extends "base_admin.html" %}
+{% block content %}
+{% import 'partials/icons.html' as icons %}
+{% import 'partials/chrome.html' as chrome %}
+
+<link rel="stylesheet" href="{{ 'css/admin/admin-pages.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
+<link rel="stylesheet" href="{{ 'css/admin/admin_manage_libs.css'|theme_asset }}">
+<script src="{{ url_for('static', filename='vendor/sortablejs/1.15.2/Sortable.min.js') }}"></script>
+{#
+  theme_asset serves library/themes copies (Reset Themes to refresh). Inline so delete
+  confirm stays clickable without that step — theme .modal { z-index:1000 } sits under
+  Bootstrap's .modal-backdrop (1050).
+#}
+<style>
+  #deleteWarningModal.modal,
+  #batchEditModal.modal {
+    z-index: 1065 !important;
+    background: transparent !important;
+    pointer-events: none !important;
+  }
+  #deleteWarningModal .modal-dialog,
+  #batchEditModal .modal-dialog {
+    pointer-events: auto !important;
+    z-index: 1;
+  }
+  #deleteWarningModal .modal-content,
+  #deleteWarningModal .btn,
+  #batchEditModal .modal-content,
+  #batchEditModal .btn {
+    pointer-events: auto !important;
+  }
+  body.modal-open > .modal-backdrop {
+    z-index: 1060 !important;
+  }
+  #deleteSpinner.spinner-overlay {
+    z-index: 1070;
+  }
+</style>
+
+{# Rendered unconditionally, unlike the other three: UIR-4 removed this
+   page's own header rather than branching, so there is no old-chrome
+   markup left to fall back to. Hoisted out of the card so the bar spans
+   the page like the member SPA's rather than sitting inset inside it. #}
+{# UIR-4: the title/lede block and the Bootstrap tab strip are exactly
+   what bar two replaces — sibling views on the left, actions on the
+   right. Same markup contract as the member SPA's ContextBar; the shared
+   od-appbar.css is what makes them look identical. #}
+{% call chrome.contextbar(
+     views=[
+       ('libraries', 'Libraries', url_for('library.libraries')),
+       ('auto', 'Auto scan', url_for('main.scan_management', active_tab='auto')),
+       ('tools', 'Library tools', url_for('main.scan_management', active_tab='tools')),
+       ('manual', 'Manual scan', url_for('main.scan_management', active_tab='manual')),
+       ('unmatched', 'Unmatched', url_for('main.scan_management', active_tab='unmatched')),
+       ('scan_filters', 'Filters', url_for('main.scan_management', active_tab='scan_filters')),
+       ('file_extensions', 'Extensions', url_for('main.scan_management', active_tab='file_extensions')),
+       ('image_queue', 'Image queue', url_for('main.scan_management', active_tab='image_queue')),
+     ],
+     active='libraries') %}
+{% endcall %}
+<div class="admin_manage_libraries-library-container">
+  <div class="container-settings od-adminpage od-adminpage--xl">
+    {% include 'admin/partials/admin_libraries_panel.html' %}
+  </div>
+</div>
+
+<script src="{{ 'js/admin_manage_libs.js'|theme_asset }}"></script>
+<script src="{{ url_for('static', filename='js/od_reparent_lib_modals.js') }}"></script>
+{% endblock %}

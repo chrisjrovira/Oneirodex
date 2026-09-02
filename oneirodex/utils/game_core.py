@@ -1,0 +1,2665 @@
+from datetime import datetime, UTC
+from flask import flash, current_app, abort, has_request_context
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, update, delete
+from werkzeug.utils import secure_filename
+import os, uuid
+
+from oneirodex import db
+from oneirodex.models import (
+    Game, Image, Library, GlobalSettings,
+    Developer, Publisher, Genre, Theme, GameMode, Platform, 
+    PlayerPerspective, GameURL, ScanJob, Category, Status,
+    game_developer_association
+)
+from oneirodex.utils.licensed_catalog import upsert_releases_from_igdb_payload
+from oneirodex.utils.global_settings import global_settings_row
+from oneirodex.utils.functions import (
+    read_first_nfo_content, delete_associations_for_game,
+    website_category_to_string,
+    igdb_platform_id_for, format_size, download_image, download_stored_image,
+    cover_title_for_uuid, get_folder_size_in_bytes_updates
+)
+from oneirodex.utils.igdb_api import make_igdb_api_request
+from oneirodex.utils.gamenames import generate_goty_variants
+from oneirodex.utils.fandom_alias import (
+    fandom_match_reason,
+    fandom_suggested_kind,
+    is_fandom_soft_propose,
+)
+from oneirodex.utils.match_scoring import select_best_match, rank_candidates
+from oneirodex.utils.match_proposal import (
+    MATCH_REASON_CATALOG_DISAGREEMENT,
+    build_match_proposal,
+    write_match_proposal,
+)
+from oneirodex.utils.game_name_parse import parse_game_label, detect_update_packaging
+from oneirodex.utils.image_kinds import IGDB_DOWNLOAD_KINDS
+from oneirodex.utils.rom_name_peel import (
+    parse_console_rom_label,
+    should_arcade_propose_first,
+    should_use_console_rom_peel,
+)
+from oneirodex.utils.scan_match_settings import resolve_scan_match_policy
+from oneirodex.utils.metadata_providers import stage_d_source_ids
+from oneirodex.utils.software_identify import (
+    apply_catalog_identity_to_game,
+    corroborate_igdb_with_catalogs,
+    igdb_retry_title_from_store,
+    resolve_stage_d_store_candidate,
+    try_stage_d_store_identify,
+)
+from oneirodex.utils.steam_lookup import fetch_steam_title_by_app_id
+from oneirodex.utils.secondary_scrapers import (
+    fetch_steam_data, game_indicates_vr, normalize_perspective_name, VR_PERSPECTIVE_NAME
+)
+from oneirodex.utils.metadata_enrichment import apply_enriched_metadata
+from oneirodex.utils.notifications import notify_admins_new_game
+from oneirodex.utils.scanning import log_unmatched_folder, delete_game_images
+from oneirodex.utils.event_logging import log_system_event
+from oneirodex.utils.duplicate_check import explain_duplicate_match, should_mark_as_duplicate
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from oneirodex.utils.worker_caps import (
+    clamp_image_download_batch,
+    clamp_image_download_threads,
+    cooperative_yield,
+)
+
+# IGDB API mapping dictionaries for category, status, and player perspective
+category_mapping = {
+    0: Category.MAIN_GAME,
+    1: Category.DLC_ADDON,
+    2: Category.EXPANSION,
+    3: Category.BUNDLE,
+    4: Category.STANDALONE_EXPANSION,
+    5: Category.MOD,
+    6: Category.EPISODE,
+    7: Category.SEASON,
+    8: Category.REMAKE,
+    9: Category.REMASTER,
+    10: Category.EXPANDED_GAME,
+    11: Category.PORT,
+    12: Category.PACK,
+    13: Category.UPDATE
+}
+
+status_mapping = {
+    1: Status.RELEASED,
+    2: Status.ALPHA,
+    3: Status.BETA,
+    4: Status.EARLY_ACCESS,
+    6: Status.OFFLINE,
+    7: Status.CANCELLED
+}
+
+
+def handle_existing_igdb_collision(
+    *,
+    existing_game,
+    igdb_id,
+    full_disk_path,
+    game_name,
+    scan_job_id,
+    library_uuid,
+    candidates=None,
+    steam_title=None,
+    match_policy=None,
+    peel=None,
+):
+    """
+    Same IGDB ID already in library. Mark Duplicate only for true title/path
+    copies; otherwise Unmatched + proposal so remasters/collections can be reviewed.
+
+    BE-DET-5: when both sides are clear multi-disc siblings (same cleaned title,
+    different disc index), attach the new path as a disc GameExtra and return
+    the existing Game (no second Game, no Duplicate trail).
+
+    Returns existing Game on multi-disc attach; None when caller should abort import.
+    """
+    # BE-DET-5 — clear multi-disc sibling → one Game + disc index (not N Games).
+    try:
+        from oneirodex.utils.multi_disc import try_attach_multi_disc_sibling
+
+        if try_attach_multi_disc_sibling(
+            existing_game=existing_game,
+            full_disk_path=full_disk_path,
+            game_name=game_name,
+            peel=peel,
+        ):
+            print(
+                f"📀 [MULTI-DISC] Attached disc sibling for IGDB ID {igdb_id}: "
+                f"'{game_name}' → existing '{existing_game.name}' "
+                f"({existing_game.full_disk_path})"
+            )
+            return existing_game
+    except Exception as multi_err:  # noqa: BLE001
+        print(f"⚠️ Multi-disc attach skipped for {full_disk_path}: {multi_err}")
+
+    policy = match_policy if isinstance(match_policy, dict) else resolve_scan_match_policy()
+    dupe_thr = policy.get('dupe_title_threshold')
+    if should_mark_as_duplicate(
+        existing_game, full_disk_path, game_name, title_threshold=dupe_thr,
+    ):
+        match = explain_duplicate_match(
+            existing_game, full_disk_path, game_name, title_threshold=dupe_thr,
+        )
+        print(
+            f"Duplicate folder for IGDB ID {igdb_id}: "
+            f"'{game_name}' ≈ existing '{existing_game.name}' "
+            f"({existing_game.full_disk_path}) reason={match['match_reason']} "
+            f"score={match['match_score']}"
+        )
+        log_unmatched_folder(
+            scan_job_id,
+            full_disk_path,
+            'Duplicate',
+            library_uuid=library_uuid,
+            matched_game_uuid=match.get('matched_game_uuid'),
+            match_reason=match.get('match_reason'),
+            match_score=match.get('match_score'),
+        )
+        return None
+
+    print(
+        f"IGDB ID {igdb_id} already used by '{existing_game.name}' "
+        f"at {existing_game.full_disk_path}, but folder '{game_name}' looks different — "
+        "logging Unmatched for review (not Duplicate)."
+    )
+    log_unmatched_folder(scan_job_id, full_disk_path, 'Unmatched', library_uuid=library_uuid)
+    try:
+        proposal = build_match_proposal(
+            game_name,
+            candidates or [{'id': igdb_id, 'name': existing_game.name}],
+            steam_title=steam_title,
+            confidence='low',
+        )
+        proposal['proposal']['already_in_library'] = {
+            'uuid': existing_game.uuid,
+            'name': existing_game.name,
+            'path': existing_game.full_disk_path,
+            'igdb_id': igdb_id,
+            'reason': 'igdb_id_collision_different_folder_title',
+        }
+        if write_match_proposal(full_disk_path, proposal):
+            try:
+                from oneirodex.utils.match_proposal import sync_unmatched_kind_hint
+
+                sync_unmatched_kind_hint(full_disk_path, proposal)
+            except Exception:
+                pass
+    except Exception as proposal_err:
+        print(f"⚠️ Failed to write collision proposal for {full_disk_path}: {proposal_err}")
+    return None
+
+
+def get_or_create_entity(model_class, name_field="name", **kwargs):
+    """
+    Thread-safe helper to get an existing entity or create a new one.
+    Handles race conditions that occur during multithreaded scanning.
+    
+    Args:
+        model_class: The SQLAlchemy model class (Genre, Theme, etc.)
+        name_field: The field name to query by (default: "name")
+        **kwargs: The attributes to query and create with
+        
+    Returns:
+        The existing or newly created entity instance
+    """
+    filter_value = kwargs.get(name_field)
+    
+    # First attempt: try to get existing entity
+    entity = db.session.execute(
+        select(model_class).filter_by(**{name_field: filter_value})
+    ).scalar_one_or_none()
+    
+    if entity:
+        return entity
+    
+    # Entity doesn't exist, try to create it
+    try:
+        entity = model_class(**kwargs)
+        db.session.add(entity)
+        db.session.flush()  # Flush to check for constraint violations immediately
+        return entity
+    except IntegrityError:
+        # Handle race condition: another thread created the entity
+        db.session.rollback()
+        # Query again to get the entity created by the other thread
+        entity = db.session.execute(
+            select(model_class).filter_by(**{name_field: filter_value})
+        ).scalar_one_or_none()
+        if entity:
+            return entity
+        else:
+            # This should not happen, but raise an error if it does
+            raise RuntimeError(f"Failed to create or retrieve {model_class.__name__} with {name_field}='{filter_value}'")
+
+
+def is_propose_only_scan(settings):
+    """
+    Determine whether the propose-only scan setting is enabled.
+
+    Accepts either a settings dict (as built/threaded through scan helpers)
+    or a GlobalSettings SQLAlchemy instance. When enabled, the scanner must
+    never auto-import a game — even on a high-confidence IGDB match — and
+    should instead write a match proposal sidecar for admin review.
+    """
+    if not settings:
+        return False
+    if isinstance(settings, dict):
+        return bool(settings.get('propose_only_scan'))
+    return bool(getattr(settings, 'propose_only_scan', False))
+
+
+def enrich_game_with_steam(game, lookup_name=None):
+    """Backfill Steam store metadata onto a Game instance.
+
+    Attaches summary (when missing), VR/player perspectives, genres, and
+    GameMode rows mapped from Steam categories. Steam freeform tags have no
+    Game column and are skipped. Never queues DRM downloads.
+
+    The Steam HTTP lookup happens first and touches no DB state; the
+    resulting metadata is then attached inside a SQLAlchemy savepoint
+    (see `apply_enriched_metadata`) so a failure while attaching it
+    cannot poison the caller's larger create/scan transaction.
+    """
+    name = lookup_name or getattr(game, 'name', None)
+    if not name:
+        result = {
+            'applied': False,
+            'is_vr': False,
+            'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
+            'reason': 'no_name',
+        }
+        print("Steam enrichment skipped (no_name); Steam VR: no")
+        return result
+
+    # A game already flagged VR used to short-circuit here, which also skipped the
+    # summary/genre/mode backfill — VR detection is only one part of this pass.
+    already_vr = game_indicates_vr(game)
+
+    steam_data = fetch_steam_data(name)
+    if not steam_data:
+        result = {
+            'applied': False,
+            'is_vr': already_vr,
+            'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
+            'reason': 'no_steam_data',
+        }
+        print(f"Steam enrichment for '{name}': skipped (no_steam_data); Steam VR: no")
+        return result
+
+    is_vr = bool(steam_data.get('is_vr'))
+    existing_names = {
+        normalize_perspective_name(getattr(p, 'name', '') or '')
+        for p in (game.player_perspectives or [])
+    }
+    perspective_names = [
+        normalize_perspective_name(n)
+        for n in (steam_data.get('player_perspectives') or [])
+    ]
+    new_names = [name_ for name_ in perspective_names if name_ and name_ not in existing_names]
+
+    existing_genres = {
+        (getattr(g, 'name', '') or '').strip().lower()
+        for g in (getattr(game, 'genres', None) or [])
+    }
+    new_genres = [
+        g.strip()
+        for g in (steam_data.get('genres') or [])
+        if g and g.strip() and g.strip().lower() not in existing_genres
+    ]
+
+    existing_modes = {
+        (getattr(m, 'name', '') or '').strip().lower()
+        for m in (getattr(game, 'game_modes', None) or [])
+    }
+    new_modes = [
+        m.strip()
+        for m in (steam_data.get('game_modes') or [])
+        if m and m.strip() and m.strip().lower() not in existing_modes
+    ]
+
+    enriched = {
+        'summary': steam_data.get('summary'),
+        'player_perspectives': new_names,
+        'genres': new_genres,
+        'game_modes': new_modes,
+    }
+    applied_ok = apply_enriched_metadata(
+        game,
+        enriched,
+        perspective_factory=lambda persp_name: get_or_create_entity(PlayerPerspective, name=persp_name),
+        genre_factory=lambda genre_name: get_or_create_entity(Genre, name=genre_name),
+        game_mode_factory=lambda mode_name: get_or_create_entity(GameMode, name=mode_name),
+    )
+    perspectives_added = new_names if applied_ok else []
+    genres_added = new_genres if applied_ok else []
+    modes_added = new_modes if applied_ok else []
+    reason = None if applied_ok else 'enrichment_savepoint_rollback'
+
+    # Scalar store fields the relation-oriented enrichment above does not cover:
+    # developer, publisher, release date and App ID were previously dropped, so
+    # even a successfully enriched game showed blank credits.
+    if applied_ok:
+        try:
+            from oneirodex.utils.steam_metadata import (
+                apply_steam_metadata_to_game,
+                parse_steam_release_date,
+            )
+
+            apply_steam_metadata_to_game(game, {
+                'developer': steam_data.get('developer'),
+                'publisher': steam_data.get('publisher'),
+                'first_release_date': parse_steam_release_date(steam_data.get('release_date')),
+                'cover_url': steam_data.get('cover_url'),
+                'steam_app_id': steam_data.get('steam_app_id'),
+            })
+        except Exception as scalar_err:  # noqa: BLE001
+            print(f"Steam scalar backfill skipped for '{name}': {scalar_err}")
+
+    result = {
+        'applied': applied_ok,
+        'is_vr': is_vr or VR_PERSPECTIVE_NAME in perspectives_added or game_indicates_vr(game),
+        'perspectives_added': perspectives_added,
+        'genres_added': genres_added,
+        'game_modes_added': modes_added,
+        'reason': reason,
+        'steam_app_id': steam_data.get('steam_app_id'),
+    }
+    vr_label = 'yes' if result['is_vr'] else 'no'
+    app_id = result.get('steam_app_id')
+    app_txt = f"; steam_app_id={app_id}" if app_id else ''
+    if applied_ok:
+        added_txt = ', '.join(perspectives_added) if perspectives_added else 'none'
+        genre_txt = ', '.join(genres_added) if genres_added else 'none'
+        print(
+            f"Steam enrichment for '{name}': Steam VR: {vr_label}; "
+            f"perspectives_added=[{added_txt}]; genres_added=[{genre_txt}]{app_txt}"
+        )
+    else:
+        print(
+            f"Steam enrichment for '{name}': skipped ({reason}); Steam VR: {vr_label}"
+        )
+    return result
+
+
+def _game_core_fields_missing(game):
+    """True while the fields a library page actually shows are still blank."""
+    if not (getattr(game, 'summary', None) or '').strip():
+        return True
+    if not (getattr(game, 'genres', None) or []):
+        return True
+    if getattr(game, 'developer_id', None) is None:
+        return True
+    return False
+
+
+def enrich_game_all_sources(game, lookup_name=None):
+    """Fill a newly identified game from every source, not just Steam.
+
+    ``enrich_game_with_steam`` was the whole of what a scanned title received,
+    and it answers for exactly one store. That is fine for a PC library and
+    useless everywhere else: a SNES ROM is not on Steam, so every console row
+    landed with ``no_steam_data`` — blank summary, no genres, no developer —
+    even though searches for TheGamesDB, MobyGames, Giant Bomb and RAWG already
+    existed. They were reachable from *manual* identify only.
+
+    So: Steam first, but only where a title could plausibly be on it, then
+    :func:`~oneirodex.utils.metadata_cascade.hydrate_game_from_cascade` for the
+    rest. Steam is skipped in the cascade because the pass above already asked
+    it, and asks for more than the cascade does (VR perspectives, game modes).
+
+    The cascade runs inside a SAVEPOINT for the same reason the Steam pass does:
+    a metadata miss must never roll back the import that triggered it.
+
+    Returns the Steam result dict, plus a ``cascade`` key holding the walk's
+    trace (``None`` when the title was already complete).
+    """
+    from oneirodex.utils.metadata_cascade import PC_PLATFORMS, hydrate_game_from_cascade
+
+    name = lookup_name or getattr(game, 'name', None)
+    platform = getattr(getattr(game, 'library', None), 'platform', None)
+    platform_name = getattr(platform, 'name', platform)
+    key = str(platform_name or '').strip().upper()
+
+    # No platform recorded means we cannot rule Steam out, so we still ask.
+    if not key or key in PC_PLATFORMS:
+        result = enrich_game_with_steam(game, lookup_name=name)
+    else:
+        result = {
+            'applied': False,
+            'is_vr': game_indicates_vr(game),
+            'perspectives_added': [],
+            'genres_added': [],
+            'game_modes_added': [],
+            'reason': 'platform_not_on_steam',
+        }
+        print(f"Steam enrichment for '{name}': skipped (platform_not_on_steam)")
+
+    result['cascade'] = None
+    if not _game_core_fields_missing(game):
+        return result
+
+    try:
+        with db.session.begin_nested():
+            outcome = hydrate_game_from_cascade(
+                game,
+                name=name,
+                library_platform=platform_name,
+                skip=('steam',),
+            )
+        result['cascade'] = outcome.get('trace')
+        trace = outcome.get('trace') or {}
+        contributed = ', '.join(trace.get('contributed') or []) or 'none'
+        print(
+            f"Cascade enrichment for '{name}': "
+            f"queried=[{', '.join(trace.get('queried') or []) or 'none'}]; "
+            f"contributed=[{contributed}]"
+        )
+    except Exception as cascade_err:  # noqa: BLE001
+        print(f"Cascade enrichment savepoint rollback for '{name}': {cascade_err}")
+
+    return result
+
+
+def attach_igdb_taxonomy_to_game(game, igdb_payload):
+    """Attach IGDB genres/themes/modes/platforms/perspectives with create-missing upsert.
+
+    Same behavior as scan identify (`retrieve_and_save_game`): names not yet in
+    the local taxonomy become new Genre/Theme/GameMode/Platform/PlayerPerspective
+    rows via `get_or_create_entity`, then are linked to the game. Existing
+    relations are preserved (union). Does not touch DRM binaries.
+    """
+    if not game or not isinstance(igdb_payload, dict):
+        return {
+            'genres': [],
+            'themes': [],
+            'game_modes': [],
+            'platforms': [],
+            'player_perspectives': [],
+        }
+
+    attached = {
+        'genres': [],
+        'themes': [],
+        'game_modes': [],
+        'platforms': [],
+        'player_perspectives': [],
+    }
+
+    def _attach(key, model_class, relation_attr):
+        entries = igdb_payload.get(key) or []
+        relation = getattr(game, relation_attr)
+        existing = {
+            (getattr(e, 'name', '') or '').strip().lower()
+            for e in (relation or [])
+        }
+        for entry in entries:
+            if isinstance(entry, dict):
+                raw_name = entry.get('name')
+            else:
+                raw_name = entry
+            if not raw_name:
+                continue
+            name = str(raw_name).strip()
+            if not name:
+                continue
+            lowered = name.lower()
+            entity = get_or_create_entity(model_class, name=name)
+            if lowered not in existing or entity not in relation:
+                if entity not in relation:
+                    relation.append(entity)
+                existing.add(lowered)
+                attached[key].append(name)
+
+    _attach('genres', Genre, 'genres')
+    _attach('themes', Theme, 'themes')
+    _attach('game_modes', GameMode, 'game_modes')
+    _attach('platforms', Platform, 'platforms')
+    _attach('player_perspectives', PlayerPerspective, 'player_perspectives')
+    return attached
+
+
+def ensure_manual_identify_taxonomy(game, igdb_id):
+    """Re-fetch IGDB by id and attach taxonomy on manual identify/apply.
+
+    Closes the form-checkbox gap: names absent from the DB taxonomy are created
+    instead of being silently dropped by the Identify UI. Custom-range ids
+    (>= 2000000420) skip the IGDB round-trip. Returns the attach summary or None.
+    """
+    if game is None or igdb_id is None:
+        return None
+    try:
+        numeric_id = int(igdb_id)
+    except (TypeError, ValueError):
+        return None
+    if numeric_id >= 2000000420:
+        return None
+
+    response = fetch_game_by_igdb_id(numeric_id)
+    if not response or not isinstance(response, list) or not response:
+        return None
+    return attach_igdb_taxonomy_to_game(game, response[0])
+
+
+
+def create_game_instance(
+    game_data,
+    full_disk_path,
+    folder_size_bytes,
+    library_uuid,
+    *,
+    peel: dict | None = None,
+):
+    global settings
+    settings = global_settings_row()
+    new_game = None  # Initialize new_game to None
+    
+    try:
+        if not isinstance(game_data, dict):
+            raise ValueError("create_game_instance game_data is not a dictionary")
+
+        # Fetch library details using library_uuid
+        library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalar_one_or_none()
+        if not library:
+            print(f"Library with UUID {library_uuid} not found.")
+            return None
+
+        category_id = game_data.get('category')
+        category_enum = category_mapping.get(category_id, None)
+        status_id = game_data.get('status')
+        status_enum = status_mapping.get(status_id, None)
+        if 'videos' in game_data:
+            video_urls = [f"https://www.youtube.com/watch?v={video['video_id']}" for video in game_data['videos']]
+            videos_comma_separated = ','.join(video_urls)
+        else:
+            videos_comma_separated = ""
+            
+        print(f"create_game_instance Creating game instance for '{game_data.get('name')}' with UUID: {game_data.get('id')} in library '{library.name}' on platform '{library.platform.name}'.")
+        new_game = Game(
+            library_uuid=library_uuid,
+            igdb_id=game_data['id'],
+            name=game_data['name'],
+            summary=game_data.get('summary'),
+            storyline=game_data.get('storyline'),
+            url=game_data.get('url'),
+            first_release_date=datetime.fromtimestamp(game_data.get('first_release_date', 0), UTC) if game_data.get('first_release_date') else None,
+            aggregated_rating=game_data.get('aggregated_rating'),
+            aggregated_rating_count=game_data.get('aggregated_rating_count'),
+            rating=game_data.get('rating'),
+            rating_count=game_data.get('rating_count'),
+            slug=game_data.get('slug'),
+            status=status_enum,
+            category=category_enum,
+            total_rating=game_data.get('total_rating'),
+            total_rating_count=game_data.get('total_rating_count'),
+            video_urls=videos_comma_separated,
+            full_disk_path=full_disk_path,
+            size=folder_size_bytes,
+            date_created=datetime.now(UTC),
+            date_identified=datetime.now(UTC),
+            steam_url='',
+            times_downloaded=0
+        )
+        from oneirodex.utils.library_health import mark_game_path_ok
+
+        mark_game_path_ok(new_game)
+
+        db.session.add(new_game)
+        db.session.flush()
+        try:
+            from oneirodex.utils.rom_hash import apply_file_hashes_to_game
+
+            apply_file_hashes_to_game(new_game, full_disk_path)
+        except Exception as hash_err:  # noqa: BLE001 — hashing must not fail the scan
+            print(f"create_game_instance ROM hash skipped for '{new_game.name}': {hash_err}")
+        try:
+            from oneirodex.utils.rom_language import apply_rom_language_fields
+
+            apply_rom_language_fields(
+                new_game,
+                full_disk_path or new_game.name,
+                peel=peel,
+            )
+        except Exception as lang_err:  # noqa: BLE001
+            print(f"create_game_instance ROM language parse skipped: {lang_err}")
+        try:
+            from oneirodex.utils.multi_disc import apply_disc_fields
+
+            apply_disc_fields(
+                new_game,
+                full_disk_path or new_game.name,
+                peel=peel,
+            )
+        except Exception as disc_err:  # noqa: BLE001
+            print(f"create_game_instance disc index parse skipped: {disc_err}")
+        try:
+            platform_key = getattr(library.platform, 'name', None)
+            upsert_releases_from_igdb_payload(platform_key or '', game_data)
+        except Exception as catalog_err:  # noqa: BLE001 — cache must not fail the scan
+            print(f"create_game_instance licensed catalog cache skipped: {catalog_err}")
+        fetch_and_store_game_urls(new_game.uuid, game_data['id'])
+        print(f"create_game_instance Finished processing game '{new_game.name}'. URLs (if any) have been fetched and stored.")
+        
+    except Exception as e:
+        game_name = game_data.get('name') if isinstance(game_data, dict) else str(game_data)
+        print(f"create_game_instance Error during the game instance creation or URL fetching for game '{game_name}'. Error: {e}")
+    
+    return new_game
+
+
+
+def normalize_igdb_image_ref(image_data):
+    """Normalize an IGDB cover/screenshot ref to ``(id, url_or_none)``.
+
+    IGDB returns bare integer IDs when a field is requested without expansion
+    (``cover``, ``screenshots``) and dicts when expanded (``cover.url``).
+    Passing a dict into ``where id={...}`` silently fails to store a cover
+    while screenshot ID lists still succeed — the "screenshots yes, cover
+    placeholder" symptom after identify/match.
+    """
+    if image_data is None:
+        return None, None
+    if isinstance(image_data, dict):
+        raw_id = image_data.get('id')
+        image_id = None
+        if raw_id is not None and str(raw_id).strip() != '':
+            try:
+                image_id = int(raw_id)
+            except (TypeError, ValueError):
+                image_id = str(raw_id).strip()
+        download_url = None
+        raw_url = image_data.get('url')
+        if isinstance(raw_url, str) and raw_url.strip():
+            download_url = _absolute_igdb_image_url(raw_url)
+        if not download_url and image_data.get('image_id'):
+            stem = str(image_data['image_id']).strip()
+            if stem:
+                download_url = (
+                    f'https://images.igdb.com/igdb/image/upload/t_original/{stem}.jpg'
+                )
+        return image_id, download_url
+    if isinstance(image_data, (int, float)) and not isinstance(image_data, bool):
+        return int(image_data), None
+    text = str(image_data).strip()
+    if not text:
+        return None, None
+    if text.isdigit():
+        return int(text), None
+    if text.startswith(('http://', 'https://', '//')):
+        return None, _absolute_igdb_image_url(text)
+    return text, None
+
+
+def _absolute_igdb_image_url(url):
+    """Force https + prefer original size for local download / remote fallback."""
+    if not url:
+        return None
+    url = str(url).strip()
+    if not url:
+        return None
+    if url.startswith('//'):
+        url = 'https:' + url
+    elif not url.startswith(('http://', 'https://')):
+        if url.startswith('images.igdb.com/') or url.startswith('www.igdb.com/'):
+            url = 'https://' + url
+        else:
+            return url
+    return url.replace('/t_thumb/', '/t_original/')
+
+
+def _igdb_endpoint_for_image_type(image_type):
+    if image_type == 'cover':
+        return 'https://api.igdb.com/v4/covers'
+    if image_type == 'screenshot':
+        return 'https://api.igdb.com/v4/screenshots'
+    return None
+
+
+def _resolve_igdb_download_url(image_id, image_type, known_url=None):
+    """Return an absolute download URL, using known_url or a covers/screenshots lookup."""
+    if known_url:
+        return _absolute_igdb_image_url(known_url)
+    if image_id is None:
+        return None
+    endpoint = _igdb_endpoint_for_image_type(image_type)
+    if not endpoint:
+        return None
+    response = make_igdb_api_request(endpoint, f'fields url, image_id; where id={image_id};')
+    if not response or 'error' in response:
+        return None
+    row = response[0] if isinstance(response, list) and response else None
+    if not row:
+        return None
+    url = row.get('url')
+    if url:
+        return _absolute_igdb_image_url(url)
+    stem = row.get('image_id')
+    if stem:
+        return f'https://images.igdb.com/igdb/image/upload/t_original/{stem}.jpg'
+    return None
+
+
+def store_image_url_for_download(game_uuid, image_data, image_type='cover'):
+    """Store image URL in database for later async download.
+
+    Accepts a bare IGDB image id, an expanded ``{id, url}`` dict, or a remote URL
+    string. Always persists a row when a download URL can be resolved so the UI
+    can show the remote cover before the local file lands.
+    """
+    try:
+        image_id, known_url = normalize_igdb_image_ref(image_data)
+        if image_type not in IGDB_DOWNLOAD_KINDS:
+            print(f"Unsupported image_type for store: {image_type}")
+            return
+
+        download_url = _resolve_igdb_download_url(image_id, image_type, known_url=known_url)
+        if not download_url:
+            print(f"Failed to resolve download URL for {image_type} ref {image_data!r}.")
+            return
+
+        id_part = image_id if image_id is not None else 'url'
+        file_name = secure_filename(f"{game_uuid}_{image_type}_{id_part}.jpg")
+
+        image = Image(
+            game_uuid=game_uuid,
+            image_type=image_type,
+            url=file_name,
+            igdb_image_id=str(image_id) if image_id is not None else None,
+            download_url=download_url,
+            is_downloaded=False,
+            last_error=None,
+        )
+        db.session.add(image)
+
+    except Exception as e:
+        print(f"Error storing image URL for {image_type} {image_data}: {e}")
+
+
+def smart_process_images_for_game(
+    game_uuid,
+    cover_data=None,
+    screenshots_data=None,
+    app=None,
+    download_immediately=True,
+):
+    """Smart image processing that uses settings to determine single-thread vs turbo mode.
+
+    When download_immediately is False, only IGDB image URLs are stored (is_downloaded=False)
+    so a background worker can fetch files later without blocking identify.
+
+    Cover and screenshot refs may be bare IGDB ids or expanded ``{id, url}`` objects.
+    """
+    if app is None:
+        app = current_app._get_current_object()
+    
+    try:
+        with app.app_context():
+            # Get settings to determine processing mode
+            from oneirodex.models import GlobalSettings
+            from oneirodex.utils.cover_selection import image_save_path_status
+
+            settings = global_settings_row()
+            
+            # Store image URLs first (always) — cover must not be skipped when
+            # IGDB returns an expanded object instead of a bare id.
+            if cover_data is not None:
+                store_image_url_for_download(game_uuid, cover_data, 'cover')
+            if screenshots_data:
+                for screenshot_ref in screenshots_data:
+                    if screenshot_ref is not None:
+                        store_image_url_for_download(game_uuid, screenshot_ref, 'screenshot')
+            db.session.commit()
+
+            if not download_immediately:
+                return 0
+
+            path_status = image_save_path_status()
+            if not path_status.get('writable'):
+                err = path_status.get('error') or 'IMAGE_SAVE_PATH is not writable'
+                now = datetime.now(UTC)
+                pending = db.session.execute(
+                    select(Image).filter_by(game_uuid=game_uuid, is_downloaded=False)
+                ).scalars().all()
+                for image in pending:
+                    image.last_error = err
+                    image.last_attempt_at = now
+                if pending:
+                    db.session.commit()
+                print(f"Skipping eager image download for {game_uuid}: {err}")
+                # Remote download_url remains on each row for resolve_cover_url.
+                return 0
+            
+            # Decide processing mode based on settings
+            if settings and settings.use_turbo_image_downloads:
+                # TURBO MODE - Download immediately with parallel processing
+                threads = clamp_image_download_threads(
+                    settings.turbo_download_threads or 4
+                )
+                return download_images_for_game_turbo(game_uuid, app, max_workers=threads)
+            else:
+                # SINGLE THREAD MODE - Download one by one
+                print(f"🐌 SINGLE THREAD: Processing images for game {game_uuid}")
+                return download_images_for_game(game_uuid, app)
+                
+    except Exception as e:
+        print(f"Error in smart image processing for game {game_uuid}: {e}")
+        return 0
+
+
+def queue_post_identify_enrichment(
+    game_uuid,
+    *,
+    fetch_hltb=False,
+    cover_data=None,
+    screenshots_data=None,
+    app=None,
+    run_inline=False,
+    compute_folder_size=True,
+):
+    """Run Steam / image / HLTB / folder-size work after the Game row is committed.
+
+    Scan workers call this with run_inline=False so identify returns quickly.
+    Tests can pass run_inline=True.
+    """
+    if app is None:
+        app = current_app._get_current_object()
+
+    def _worker():
+        with app.app_context():
+            try:
+                game = db.session.execute(
+                    select(Game).filter_by(uuid=game_uuid)
+                ).scalar_one_or_none()
+                if not game:
+                    return
+
+                if compute_folder_size and game.full_disk_path:
+                    try:
+                        size_bytes = get_folder_size_in_bytes_updates(game.full_disk_path)
+                        game.size = size_bytes
+                        db.session.commit()
+                        print(
+                            f"Deferred folder size for {game.name}: {format_size(size_bytes)}"
+                        )
+                    except Exception as size_err:  # noqa: BLE001
+                        print(f"Deferred folder size failed for {game_uuid}: {size_err}")
+                        try:
+                            db.session.rollback()
+                        except Exception:
+                            pass
+                        game = db.session.execute(
+                            select(Game).filter_by(uuid=game_uuid)
+                        ).scalar_one_or_none()
+                        if not game:
+                            return
+
+                try:
+                    enrich_game_all_sources(game, lookup_name=game.name)
+                    db.session.commit()
+                except Exception as steam_err:  # noqa: BLE001
+                    print(f"Deferred metadata enrichment failed for {game_uuid}: {steam_err}")
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+
+                try:
+                    smart_process_images_for_game(
+                        game_uuid,
+                        cover_data=cover_data,
+                        screenshots_data=screenshots_data,
+                        app=app,
+                        download_immediately=True,
+                    )
+                except Exception as img_err:  # noqa: BLE001
+                    print(f"Deferred image processing failed for {game_uuid}: {img_err}")
+
+                if fetch_hltb:
+                    settings = global_settings_row()
+                    if settings and settings.enable_hltb_integration:
+                        try:
+                            from oneirodex.utils.hltb import update_game_hltb_sync
+
+                            update_game_hltb_sync(game_uuid, game.name)
+                        except Exception as hltb_err:  # noqa: BLE001
+                            print(f"Deferred HLTB failed for {game_uuid}: {hltb_err}")
+            except Exception as enrich_err:  # noqa: BLE001
+                print(f"Post-identify enrichment failed for {game_uuid}: {enrich_err}")
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
+    if run_inline:
+        _worker()
+        return None
+
+    thread = threading.Thread(
+        target=_worker,
+        daemon=True,
+        name=f'enrich-{str(game_uuid)[:8]}',
+    )
+    thread.start()
+    return thread
+
+
+def download_images_for_game_turbo(game_uuid, app=None, max_workers=5):
+    """Download all pending images for a specific game using turbo mode."""
+    if app is None:
+        app = current_app._get_current_object()
+    max_workers = clamp_image_download_threads(max_workers)
+
+    try:
+        with app.app_context():
+            pending_images = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, is_downloaded=False)).scalars().all()
+            
+            if not pending_images:
+                print(f"No pending images for game {game_uuid}.")
+                return 0
+            
+            downloaded_count = 0
+            successful_images = []
+            failed_images = {}
+            now = datetime.now(UTC)
+            
+            # Use ThreadPoolExecutor for parallel downloads
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_image = {
+                    executor.submit(download_single_image_worker, image, app): image 
+                    for image in pending_images
+                }
+                
+                for future in as_completed(future_to_image):
+                    image = future_to_image[future]
+                    try:
+                        result = future.result()
+                        if result['success']:
+                            successful_images.append(image.id)
+                            downloaded_count += 1
+                        else:
+                            failed_images[image.id] = result.get('error') or 'Download failed for an unknown reason.'
+                    except Exception as e:
+                        print(f"❌ Failed downloading image {image.id}: {e}")
+                        failed_images[image.id] = str(e)
+                    cooperative_yield()
+            
+            # Update database
+            if successful_images:
+                db.session.execute(
+                    update(Image).filter(Image.id.in_(successful_images)).values(
+                        is_downloaded=True, last_error=None, last_attempt_at=now
+                    )
+                )
+            for image_id, error in failed_images.items():
+                db.session.execute(
+                    update(Image).filter(Image.id == image_id).values(last_error=error, last_attempt_at=now)
+                )
+            if successful_images or failed_images:
+                db.session.commit()
+            
+            print(f"🚀 Downloaded {downloaded_count} images for game {game_uuid[:8]}... ({len(failed_images)} failed)")
+            return downloaded_count
+            
+    except Exception as e:
+        print(f"Error in turbo download for game {game_uuid}: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return 0
+
+
+def process_and_save_image(game_uuid, image_data, image_type='cover'):
+    """Fetch (or reuse) an IGDB image URL, download it, and persist an Image row.
+
+    ``image_data`` may be a bare id or an expanded ``{id, url}`` dict. When the
+    dict already carries ``url``, skip the extra IGDB lookup so cover is not
+    dropped under rate limits while screenshots still land.
+    """
+    from oneirodex.utils.cover_selection import image_save_path_status
+
+    image_id, known_url = normalize_igdb_image_ref(image_data)
+    if image_type not in IGDB_DOWNLOAD_KINDS:
+        print(f"Unsupported image_type: {image_type}")
+        return
+
+    url = _resolve_igdb_download_url(image_id, image_type, known_url=known_url)
+    if not url:
+        print(f"Failed to resolve URL for {image_type} ref {image_data!r}.")
+        return
+
+    id_part = image_id if image_id is not None else 'url'
+    file_name = secure_filename(f"{game_uuid}_{image_type}_{id_part}.jpg")
+    save_path = os.path.join(current_app.config['IMAGE_SAVE_PATH'], file_name)
+
+    path_status = image_save_path_status()
+    if not path_status.get('writable'):
+        error = path_status.get('error') or 'IMAGE_SAVE_PATH is not writable'
+        image = Image(
+            game_uuid=game_uuid,
+            image_type=image_type,
+            url=file_name,
+            igdb_image_id=str(image_id) if image_id is not None else None,
+            download_url=url,
+            is_downloaded=False,
+            last_error=error,
+            last_attempt_at=datetime.now(UTC),
+        )
+        db.session.add(image)
+        print(f"Queued {image_type} for game {game_uuid} without download: {error}")
+        return
+
+    success, error = download_image(
+        url,
+        save_path,
+        image_type=image_type,
+        title=cover_title_for_uuid(game_uuid),
+    )
+
+    image = Image(
+        game_uuid=game_uuid,
+        image_type=image_type,
+        url=file_name,
+        igdb_image_id=str(image_id) if image_id is not None else None,
+        download_url=url,
+        is_downloaded=success,
+        last_error=None if success else (error or 'Download failed for an unknown reason.'),
+        last_attempt_at=datetime.now(UTC),
+    )
+    db.session.add(image)
+    if not success:
+        print(f"Failed to download {image_type} for game {game_uuid}: {image.last_error}")
+
+    
+def fetch_and_store_game_urls(game_uuid, igdb_id):
+    try:
+        website_query = f'fields url, category; where game={igdb_id};'        
+        websites_response = make_igdb_api_request('https://api.igdb.com/v4/websites', website_query)
+        
+        if websites_response and 'error' not in websites_response:
+            for website in websites_response:
+                
+                new_url = GameURL(
+                    game_uuid=game_uuid,
+                    url_type=website_category_to_string(website.get('category'), website.get('url')),
+                    url=website.get('url')
+                )
+                db.session.add(new_url)
+        else:
+            print(f"No URLs found or failed to retrieve URLs for game IGDB ID {igdb_id}.")
+    except Exception as e:
+        print(f"Exception while fetching/storing URLs for game UUID {game_uuid}, IGDB ID {igdb_id}: {e}")
+        
+
+    
+def search_igdb_for_game(search_name, platform_id, limit=10):
+    """
+    Search IGDB for games matching name (and optional platform).
+    Returns a list of game dicts, or None if the API errors / returns empty.
+    """
+    query_fields = """fields id, name, cover.url, cover.image_id, summary, url, release_dates.date, release_dates.region, release_dates.platform, platforms.name, genres.name, themes.name, game_modes.name,
+                      screenshots.url, screenshots.image_id, videos.video_id, first_release_date, aggregated_rating, involved_companies, player_perspectives.name,
+                      aggregated_rating_count, rating, rating_count, slug, status, category, total_rating,
+                      total_rating_count;"""
+    safe_limit = max(1, min(int(limit), 20))
+    query_filter = f'search "{search_name}"; limit {safe_limit};'
+    if platform_id is not None:
+        query_filter += f' where platforms = ({platform_id});'
+
+    response_json = make_igdb_api_request(current_app.config['IGDB_API_ENDPOINT'], query_fields + query_filter)
+
+    if 'error' not in response_json and response_json:
+        return response_json
+    return None
+
+
+def fetch_game_by_igdb_id(igdb_id):
+    """
+    Fetch game data from IGDB API by exact IGDB ID.
+
+    Args:
+        igdb_id: IGDB game ID
+
+    Returns:
+        list: IGDB API response (list with one game dict), or None on error
+    """
+    from oneirodex.utils.igdb_api import make_igdb_api_request
+
+    try:
+        query = f"""
+            fields id, name, summary, storyline, url, slug, first_release_date,
+                   aggregated_rating, aggregated_rating_count, rating, rating_count,
+                   total_rating, total_rating_count, status, category,
+                   cover.url, screenshots.url, videos.video_id,
+                   genres.name, themes.name, game_modes.name, platforms.name,
+                   player_perspectives.name, involved_companies,
+                   release_dates.date, release_dates.region, release_dates.platform;
+            where id = {igdb_id};
+            limit 1;
+        """
+
+        response = make_igdb_api_request(current_app.config['IGDB_API_ENDPOINT'], query)
+
+        if response and 'error' not in response and len(response) > 0:
+            print(f"Fetched game by ID {igdb_id}: {response[0].get('name')}")
+            return response
+        else:
+            print(f"Failed to fetch game by ID {igdb_id}: {response}")
+            return None
+
+    except Exception as e:
+        print(f"Error fetching game by IGDB ID {igdb_id}: {e}")
+        return None
+
+
+def retrieve_and_save_game(
+    game_name,
+    full_disk_path,
+    scan_job_id=None,
+    library_uuid=None,
+    fetch_hltb=False,
+    settings=None,
+    defer_enrichment=None,
+):
+    # print(f"retrieve_and_save_game Retrieving and saving game: {game_name} on {full_disk_path} to library with UUID {library_uuid}.")
+    from oneirodex.utils.local_metadata import read_local_metadata
+    from oneirodex.utils.event_logging import log_system_event
+    from flask import flash
+
+    # Scan workers pass scan_job_id — defer Steam/images/HLTB so identify commits fast.
+    if defer_enrichment is None:
+        defer_enrichment = scan_job_id is not None
+
+    library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalar_one_or_none()
+    if not library:
+        print(f"retrieve_and_save_game Library with UUID {library_uuid} not found.")
+        return None
+
+
+    existing_game_by_path = check_existing_game_by_path(full_disk_path)
+    if existing_game_by_path:
+        return existing_game_by_path
+
+    # Load settings once if not provided
+    # Settings can be either a dict (from threaded scan) or a SQLAlchemy object
+    if settings is None:
+        settings_obj = global_settings_row()
+        # Convert to dict for consistent handling
+        settings = {
+            'use_local_metadata': settings_obj.use_local_metadata if settings_obj else False,
+            'write_local_metadata': settings_obj.write_local_metadata if settings_obj else False,
+            'use_local_images': settings_obj.use_local_images if settings_obj else False,
+            'local_metadata_filename': settings_obj.local_metadata_filename if settings_obj else 'oneirodex.json',
+            'propose_only_scan': settings_obj.propose_only_scan if settings_obj else False,
+        }
+        match_policy = resolve_scan_match_policy(settings_obj)
+    elif not isinstance(settings, dict):
+        # If it's a SQLAlchemy object, convert to dict
+        match_policy = resolve_scan_match_policy(settings)
+        settings = {
+            'use_local_metadata': settings.use_local_metadata,
+            'write_local_metadata': settings.write_local_metadata,
+            'use_local_images': settings.use_local_images,
+            'local_metadata_filename': settings.local_metadata_filename or 'oneirodex.json',
+            'propose_only_scan': getattr(settings, 'propose_only_scan', False),
+        }
+    else:
+        match_policy = resolve_scan_match_policy(settings)
+
+    settings['propose_only_scan'] = bool(
+        settings.get('propose_only_scan') or match_policy.get('propose_only_scan')
+    )
+
+    # PRIORITY 1: Check for local metadata file (NEW!)
+    if settings and settings.get('use_local_metadata'):
+        print(f"🔍 [LOCAL METADATA] Checking for existing metadata file in: {full_disk_path}")
+        local_metadata = read_local_metadata(full_disk_path,
+                                             settings.get('local_metadata_filename', 'oneirodex.json'))
+        if local_metadata and 'igdb_id' in local_metadata:
+            igdb_id = local_metadata['igdb_id']
+            print(f"✅ LOCAL METADATA: Found IGDB ID {igdb_id} in {full_disk_path}")
+
+            # Fetch game data directly by IGDB ID
+            response_json = fetch_game_by_igdb_id(igdb_id)
+
+            if response_json and 'error' not in response_json and len(response_json) > 0:
+                print(f"✅ Successfully fetched game from local metadata: {response_json[0].get('name')}")
+
+                # Check for duplicate
+                existing_game_with_same_igdb_id = db.session.execute(
+                    select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)
+                ).scalar_one_or_none()
+
+                if existing_game_with_same_igdb_id:
+                    return handle_existing_igdb_collision(
+                        existing_game=existing_game_with_same_igdb_id,
+                        igdb_id=igdb_id,
+                        full_disk_path=full_disk_path,
+                        game_name=game_name,
+                        scan_job_id=scan_job_id,
+                        library_uuid=library_uuid,
+                        candidates=response_json,
+                        match_policy=match_policy,
+                        peel=None,
+                    )
+
+                # Create game from IGDB data (continue with existing logic at line 472)
+                nfo_content = read_first_nfo_content(full_disk_path)
+                # Scan path: defer full tree walk — large NAS/Unraid folders block identify for minutes.
+                if defer_enrichment:
+                    folder_size_bytes = 0
+                    print(f"Deferring folder size walk for scan identify: {full_disk_path}")
+                else:
+                    folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
+                    print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
+                new_game = create_game_instance(
+                    game_data=response_json[0],
+                    full_disk_path=full_disk_path,
+                    folder_size_bytes=folder_size_bytes,
+                    library_uuid=library.uuid
+                )
+
+                if new_game is None:
+                    print(f"Failed to create game instance from local metadata for {game_name}. Skipping further processing.")
+                    return None
+
+                attach_igdb_taxonomy_to_game(new_game, response_json[0])
+
+                if 'involved_companies' in response_json[0]:
+                    involved_company_ids = response_json[0]['involved_companies']
+                    if involved_company_ids:
+                        enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
+                    else:
+                        print("No involved companies found for game from local metadata.")
+
+                if not defer_enrichment:
+                    enrich_game_all_sources(new_game, lookup_name=new_game.name)
+
+                if 'videos' in response_json[0]:
+                    video_urls = [f"https://www.youtube.com/embed/{video['video_id']}" for video in response_json[0]['videos']]
+                    videos_comma_separated = ','.join(video_urls)
+                    new_game.video_urls = videos_comma_separated
+
+                db.session.commit()
+                print(f"Processing images for game: {new_game.name}")
+                # Use smart image processing — pass expanded cover/screenshot
+                # objects when present so store can reuse URLs without a second
+                # IGDB round-trip (bare ids still work).
+                cover_data = response_json[0].get('cover')
+                screenshots_data = response_json[0].get('screenshots') or []
+                if defer_enrichment:
+                    queue_post_identify_enrichment(
+                        new_game.uuid,
+                        fetch_hltb=fetch_hltb,
+                        cover_data=cover_data,
+                        screenshots_data=screenshots_data,
+                    )
+                else:
+                    smart_process_images_for_game(new_game.uuid, cover_data, screenshots_data)
+
+                    if fetch_hltb:
+                        # Fetch HLTB data if requested
+                        from oneirodex.utils.hltb import update_game_hltb_sync
+                        update_game_hltb_sync(new_game.uuid, new_game.name)
+
+                # Now write the metadata file if setting is enabled
+                if settings and settings.get('write_local_metadata'):
+                    print(f"💾 [LOCAL METADATA] Writing metadata file for '{new_game.name}' (from existing local metadata)")
+                    from oneirodex.utils.local_metadata import write_local_metadata
+                    write_success = write_local_metadata(
+                        full_disk_path=full_disk_path,
+                        igdb_id=igdb_id,
+                        game_title=new_game.name,
+                        manually_verified=True,
+                        filename=settings.get('local_metadata_filename', 'oneirodex.json')
+                    )
+                    if not write_success:
+                        print("⚠️ [LOCAL METADATA] Failed to write metadata file (already exists or permission issue)")
+
+                return new_game
+            else:
+                # Failed to fetch from IGDB - check if it's a connectivity issue
+                error_msg = f"⚠️ Local metadata has IGDB ID {igdb_id} but failed to fetch from API."
+                print(error_msg)
+                log_system_event(
+                    f"Failed to fetch game data for IGDB ID {igdb_id} from local metadata at {full_disk_path}. Check internet connection or IGDB API status.",
+                    event_type='metadata',
+                    event_level='warning'
+                )
+                # Fall through to normal search below
+        else:
+            print("📝 [LOCAL METADATA] No existing metadata file found, will attempt IGDB search")
+
+    platform_id = igdb_platform_id_for(library.platform)
+
+    # PRIORITY 2: Search IGDB API by folder/file name (existing code)
+    # Prefer Steam App ID title hint when folder name contains (digits)
+    raw_folder_label = os.path.basename(full_disk_path.rstrip('\\/'))
+    use_console_rom_peel = should_use_console_rom_peel(library, full_disk_path, settings)
+    if use_console_rom_peel:
+        parsed_label = parse_console_rom_label(
+            raw_folder_label,
+            platform=library.platform,
+        )
+    else:
+        parsed_label = parse_game_label(
+            raw_folder_label,
+            peel_profile=match_policy.get('peel_profile'),
+        )
+
+    # W22-M5 — bare UPDATE/Updates package folders: never auto-import, never Soft title.
+    update_meta = {
+        'is_bare_update_package': bool(parsed_label.get('is_bare_update_package')),
+        'update_folder_hint': bool(parsed_label.get('update_folder_hint')),
+        'match_reason': parsed_label.get('update_match_reason'),
+    }
+    if not use_console_rom_peel and not update_meta['match_reason']:
+        update_meta = detect_update_packaging(
+            raw_folder_label,
+            cleaned_name=parsed_label.get('cleaned_name'),
+            transforms=parsed_label.get('transforms'),
+        )
+    if update_meta.get('is_bare_update_package'):
+        print(
+            f"📦 [UPDATE-PACKAGE] Folder '{raw_folder_label}' looks like an update/"
+            "patch package — propose/Unmatched only (never auto-import / Soft title)."
+        )
+        try:
+            proposal = {
+                'proposal': {
+                    'cleaned_name': (parsed_label.get('cleaned_name') or '').strip(),
+                    'transforms': list(parsed_label.get('transforms') or []),
+                    'candidates': [],
+                    'confidence': 'none',
+                    'suggested_kind': None,
+                    'update_folder_hint': True,
+                    'is_bare_update_package': True,
+                    'match_reason': 'update_package_folder',
+                    'proposed_at': datetime.now(UTC).isoformat(),
+                }
+            }
+            if write_match_proposal(full_disk_path, proposal):
+                print(
+                    f"📝 [UPDATE-PACKAGE] Wrote update-package proposal for "
+                    f"'{raw_folder_label}'"
+                )
+            try:
+                from oneirodex.utils.match_proposal import sync_unmatched_kind_hint
+
+                sync_unmatched_kind_hint(full_disk_path, proposal)
+            except Exception:
+                pass
+        except Exception as proposal_err:
+            print(
+                f"⚠️ Failed to write update-package proposal for "
+                f"{full_disk_path}: {proposal_err}"
+            )
+        if scan_job_id:
+            log_unmatched_folder(
+                scan_job_id,
+                full_disk_path,
+                'Unmatched',
+                library_uuid=library.uuid,
+                match_reason='update_package_folder',
+                suggested_kind=None,
+                suggested_candidate_name=None,
+            )
+        return None
+
+    steam_title = None
+    if parsed_label.get('steam_app_id'):
+        steam_title = fetch_steam_title_by_app_id(parsed_label['steam_app_id'])
+        if steam_title:
+            print(f"Steam App ID {parsed_label['steam_app_id']} resolved to '{steam_title}'")
+
+    # Prefer parse_game_label Stage A0–A14 (PC/folder) or console B15–B20 peel for
+    # files-mode ROM leaves. Fall back to scan-cleaned name. C11 bare franchise /
+    # ROM propose-only (proto/hack/unl/multicart) → propose only (no auto-import).
+    # BE-DET-8: ARCADE set basenames + large ARCADE trees → propose-first.
+    # BE-DET-9: fandom soft alias / series / remaster / EN↔JP → propose-first.
+    variant_base = (parsed_label.get('cleaned_name') or '').strip() or game_name
+    bare_franchise = bool(parsed_label.get('bare_franchise'))
+    arcade_propose_first = should_arcade_propose_first(
+        library, full_disk_path, parsed_label,
+    )
+    fandom_soft_propose = is_fandom_soft_propose(variant_base)
+    rom_propose_only = bool(
+        parsed_label.get('propose_only')
+        or parsed_label.get('is_multicart')
+        or arcade_propose_first
+        or fandom_soft_propose
+    )
+    if rom_propose_only:
+        bare_franchise = True
+    search_variants = generate_goty_variants(variant_base, policy=match_policy)
+    # Re-attach spaced " VR" when Stage A peeled a VR suffix (helps Steam/IGDB
+    # titles like "3DSen VR" after glued 3DSenVR → 3DSen).
+    if parsed_label.get('had_vr_suffix') and variant_base:
+        vr_variant = f'{variant_base} VR'
+        if vr_variant not in search_variants:
+            search_variants.insert(1 if search_variants else 0, vr_variant)
+    if game_name and game_name.strip() and not bare_franchise:
+        for extra in generate_goty_variants(game_name, policy=match_policy):
+            if extra not in search_variants:
+                search_variants.append(extra)
+    if steam_title and steam_title not in search_variants:
+        search_variants = [steam_title] + [v for v in search_variants if v != steam_title]
+    print(f"Generated search variants for '{variant_base}': {search_variants}")
+    if bare_franchise:
+        reason_bits = []
+        if parsed_label.get('is_multicart'):
+            reason_bits.append('multicart')
+        if arcade_propose_first:
+            if parsed_label.get('is_arcade_set'):
+                reason_bits.append('ARCADE set propose-first')
+            else:
+                reason_bits.append('large ARCADE propose-first')
+        elif parsed_label.get('propose_only') and not parsed_label.get('is_multicart'):
+            reason_bits.append('ROM propose-only')
+        if fandom_soft_propose:
+            reason_bits.append(
+                fandom_match_reason(variant_base) or 'fandom soft alias'
+            )
+        if parsed_label.get('bare_franchise'):
+            reason_bits.append('bare franchise (C11)')
+        detail = ', '.join(reason_bits) if reason_bits else 'propose/manual only'
+        print(
+            f"🏷️ [{detail}] Label '{variant_base}' — "
+            "will propose/manual only (no auto-import)"
+        )
+
+    response_json = None
+    successful_search_name = None
+    selected_game = None
+    high_confidence_candidates = None
+    last_low_confidence_candidates = None
+    last_low_confidence_search = None
+
+    high_thr = match_policy.get('match_high_threshold')
+    amb_gap = match_policy.get('match_ambiguous_gap')
+
+    # Try each variant until we find a high-confidence match
+    for search_name in search_variants:
+        print(f"Trying IGDB search with: '{search_name}'")
+        candidates = search_igdb_for_game(search_name, platform_id, limit=10)
+        if not candidates:
+            print(f"No match found for variant: '{search_name}'")
+            continue
+
+        best, confidence = select_best_match(
+            search_name,
+            candidates,
+            steam_title=steam_title,
+            high_threshold=high_thr,
+            ambiguous_gap=amb_gap,
+        )
+        ranked = rank_candidates(search_name, candidates, steam_title=steam_title)
+        print(
+            f"IGDB candidates for '{search_name}': "
+            + ", ".join(f"{c.get('name')}={c.get('match_score'):.2f}" for c in ranked[:5])
+            + f" → confidence={confidence}"
+        )
+
+        if confidence == 'high' and best is not None:
+            selected_game = best
+            successful_search_name = search_name
+            response_json = [best]
+            high_confidence_candidates = candidates
+            print(f"High-confidence match with search variant: '{search_name}' → {best.get('name')}")
+            break
+
+        last_low_confidence_candidates = candidates
+        last_low_confidence_search = search_name
+        print(f"Low-confidence / ambiguous results for '{search_name}' — not auto-importing")
+
+    # Store-title IGDB retry: after folder variants miss, ask Steam/GOG/Epic for
+    # an exact title and re-search IGDB once with that canonical name. Raises
+    # hit-rate without fuzzy auto-import; Stage D still owns custom-range create.
+    store_candidate = None
+    if (
+        selected_game is None
+        and not bare_franchise
+        and not is_propose_only_scan(settings)
+    ):
+        try:
+            store_candidate = resolve_stage_d_store_candidate(
+                cleaned_name=variant_base,
+                steam_app_id=parsed_label.get('steam_app_id'),
+                steam_title=steam_title,
+                sources=stage_d_source_ids(),
+            )
+        except Exception as store_err:
+            print(f"⚠️ [Stage D] Store resolve failed for {full_disk_path}: {store_err}")
+            store_candidate = None
+        retry_title = igdb_retry_title_from_store(store_candidate, search_variants)
+        if retry_title:
+            print(f"Trying IGDB search with store title: '{retry_title}'")
+            candidates = search_igdb_for_game(retry_title, platform_id, limit=10)
+            if candidates:
+                best, confidence = select_best_match(
+                    retry_title,
+                    candidates,
+                    steam_title=retry_title,
+                    high_threshold=high_thr,
+                    ambiguous_gap=amb_gap,
+                )
+                ranked = rank_candidates(retry_title, candidates, steam_title=retry_title)
+                print(
+                    f"IGDB candidates for store title '{retry_title}': "
+                    + ", ".join(
+                        f"{c.get('name')}={c.get('match_score'):.2f}" for c in ranked[:5]
+                    )
+                    + f" → confidence={confidence}"
+                )
+                if confidence == 'high' and best is not None:
+                    selected_game = best
+                    successful_search_name = retry_title
+                    response_json = [best]
+                    high_confidence_candidates = candidates
+                    print(
+                        f"High-confidence match with store title: '{retry_title}' "
+                        f"→ {best.get('name')}"
+                    )
+
+    if selected_game is not None:
+        try:
+            platform_key = getattr(getattr(library, 'platform', None), 'name', None)
+            catalog = corroborate_igdb_with_catalogs(
+                igdb_name=selected_game.get('name'),
+                cleaned_name=variant_base,
+                library_platform=platform_key,
+            )
+        except Exception as catalog_err:
+            print(f"⚠️ [W34] Catalog corroboration failed for {full_disk_path}: {catalog_err}")
+            catalog = {
+                'verdict': 'no_signal',
+                'agreed': [],
+                'disagreed': [],
+                'skipped': ['error'],
+            }
+        if catalog.get('verdict') == 'disagree':
+            print(
+                f"🛑 [W34] Catalog disagreement for '{game_name}' "
+                f"(IGDB {selected_game.get('name')}) — writing Review proposal, not importing."
+            )
+            try:
+                proposal = build_match_proposal(
+                    game_name,
+                    high_confidence_candidates or [selected_game],
+                    steam_title=steam_title,
+                    confidence='high',
+                )
+                body = proposal.setdefault('proposal', {})
+                body['match_reason'] = MATCH_REASON_CATALOG_DISAGREEMENT
+                body['action'] = 'review'
+                body['catalog_disagreement'] = {
+                    'igdb_name': selected_game.get('name'),
+                    'cleaned_name': variant_base,
+                    'disagreed': catalog.get('disagreed') or [],
+                    'agreed': catalog.get('agreed') or [],
+                }
+                if write_match_proposal(full_disk_path, proposal):
+                    print(
+                        f"📝 [W34] Wrote catalog-disagreement proposal for '{variant_base}' "
+                        f"→ {os.path.join(full_disk_path, 'oneirodex.proposal.json')}"
+                    )
+            except Exception as proposal_err:
+                print(
+                    f"⚠️ [W34] Failed to write catalog-disagreement proposal "
+                    f"for {full_disk_path}: {proposal_err}"
+                )
+            log_unmatched_folder(
+                scan_job_id,
+                full_disk_path,
+                'Unmatched',
+                library_uuid=library.uuid,
+                match_reason=MATCH_REASON_CATALOG_DISAGREEMENT,
+            )
+            return None
+    else:
+        catalog = {'verdict': 'no_signal', 'agreed': [], 'disagreed': [], 'skipped': []}
+
+    # PROPOSE-ONLY MODE / C11 bare franchise / BE-DET-9 fandom soft:
+    # never auto-import. Write the proposal sidecar for admin review and stop
+    # short of creating a Game. Soft alias never invents IGDB IDs alone.
+    if selected_game is not None and (is_propose_only_scan(settings) or bare_franchise):
+        if fandom_soft_propose:
+            reason = fandom_match_reason(variant_base) or 'fandom soft alias'
+        elif bare_franchise and not is_propose_only_scan(settings):
+            reason = "bare franchise (C11) / propose-first"
+        else:
+            reason = "propose_only_scan is enabled"
+        print(
+            f"🧪 [PROPOSE-ONLY] High-confidence match found for '{game_name}' "
+            f"(→ {selected_game.get('name')}) but {reason} — "
+            "writing proposal instead of importing."
+        )
+        try:
+            proposal = build_match_proposal(
+                game_name,
+                high_confidence_candidates or [selected_game],
+                steam_title=steam_title,
+                confidence='high',
+                suggested_kind=(
+                    fandom_suggested_kind(variant_base) if fandom_soft_propose else None
+                ),
+            )
+            if fandom_soft_propose:
+                reason_code = fandom_match_reason(variant_base)
+                if reason_code:
+                    proposal['match_reason'] = reason_code
+            if write_match_proposal(full_disk_path, proposal):
+                print(
+                    f"📝 [PROPOSE-ONLY] Wrote high-confidence match proposal for '{successful_search_name}' "
+                    f"→ {os.path.join(full_disk_path, 'oneirodex.proposal.json')}"
+                )
+        except Exception as proposal_err:
+            print(f"⚠️ Failed to write high-confidence match proposal for {full_disk_path}: {proposal_err}")
+        return None
+
+    if response_json and 'error' not in response_json and selected_game is not None:
+        igdb_id = selected_game.get('id')
+        if successful_search_name != game_name:
+            print(f"Found game '{game_name}' using search variant '{successful_search_name}' with IGDB ID {igdb_id}")
+        else:
+            print(f"Found game {game_name} with IGDB ID {igdb_id}")
+
+        # Check for existing game with the same IGDB ID but different folder path
+        existing_game_with_same_igdb_id = db.session.execute(select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)).scalar_one_or_none()
+        if existing_game_with_same_igdb_id:
+            return handle_existing_igdb_collision(
+                existing_game=existing_game_with_same_igdb_id,
+                igdb_id=igdb_id,
+                full_disk_path=full_disk_path,
+                game_name=game_name,
+                scan_job_id=scan_job_id,
+                library_uuid=library_uuid,
+                candidates=high_confidence_candidates or [selected_game],
+                steam_title=steam_title,
+                match_policy=match_policy,
+                peel=parsed_label if use_console_rom_peel else None,
+            )
+        else:
+            nfo_content = read_first_nfo_content(full_disk_path)
+            # Scan path: defer full tree walk — large NAS/Unraid folders block identify for minutes.
+            if defer_enrichment:
+                folder_size_bytes = 0
+                print(f"Deferring folder size walk for scan identify: {full_disk_path}")
+            else:
+                folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
+                print(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
+            new_game = create_game_instance(game_data=selected_game, full_disk_path=full_disk_path, folder_size_bytes=folder_size_bytes, library_uuid=library.uuid, peel=parsed_label if use_console_rom_peel else None)
+            
+            if new_game is None:
+                print(f"Failed to create game instance for {game_name}. Skipping further processing.")
+                return None
+
+            if catalog.get('verdict') == 'agree' and catalog.get('agreed'):
+                try:
+                    apply_catalog_identity_to_game(new_game, catalog['agreed'])
+                except Exception as stamp_err:
+                    print(f"⚠️ [W34] Catalog identity stamp failed: {stamp_err}")
+                    
+            attach_igdb_taxonomy_to_game(new_game, selected_game)
+
+            if 'involved_companies' in selected_game:
+                involved_company_ids = selected_game['involved_companies']
+                if involved_company_ids:
+                    enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
+                else:
+                    print(f"No involved companies found for {game_name}.")
+
+            if not defer_enrichment:
+                enrich_game_all_sources(new_game, lookup_name=new_game.name)
+
+            if 'videos' in selected_game:
+                video_urls = [f"https://www.youtube.com/embed/{video['video_id']}" for video in selected_game['videos']]
+                videos_comma_separated = ','.join(video_urls)
+                new_game.video_urls = videos_comma_separated
+            
+            db.session.commit()
+            print(f"Processing images for game: {new_game.name}")
+            # Pass cover/screenshot refs as returned by IGDB (id or {id,url}).
+            # store_image_url_for_download normalizes both shapes so cover is
+            # not skipped when search returns expanded objects.
+            cover_data = selected_game.get('cover')
+            screenshots_data = selected_game.get('screenshots') or []
+            if defer_enrichment:
+                queue_post_identify_enrichment(
+                    new_game.uuid,
+                    fetch_hltb=fetch_hltb,
+                    cover_data=cover_data,
+                    screenshots_data=screenshots_data,
+                )
+            else:
+                smart_process_images_for_game(new_game.uuid, cover_data, screenshots_data)
+            try:
+                new_game.nfo_content = nfo_content
+                for column in new_game.__table__.columns:
+                    getattr(new_game, column.name)
+                db.session.commit()
+                print(f"Game and its images saved successfully : {new_game.name}.")
+
+                # Write local metadata file if enabled (for newly identified games)
+                # Use the settings dict we already have (no DB query needed)
+                if settings and settings.get('write_local_metadata'):
+                    print(f"💾 [LOCAL METADATA] Writing metadata file for newly identified game '{new_game.name}'")
+                    from oneirodex.utils.local_metadata import write_local_metadata
+                    write_success = write_local_metadata(
+                        full_disk_path=new_game.full_disk_path,
+                        igdb_id=new_game.igdb_id,
+                        game_title=new_game.name,
+                        manually_verified=False,  # Auto-identified during scan
+                        filename=settings.get('local_metadata_filename', 'oneirodex.json')
+                    )
+                    if write_success:
+                        print(f"✅ [LOCAL METADATA] Successfully wrote metadata file for '{new_game.name}'")
+                    else:
+                        print(f"⚠️ [LOCAL METADATA] Failed to write metadata file for '{new_game.name}'")
+
+                notify_admins_new_game(new_game.uuid, new_game.name)
+
+                # Fetch HowLongToBeat data if enabled (sync path only; deferred when scanning)
+                if not defer_enrichment:
+                    hltb_settings = global_settings_row()
+                    if fetch_hltb and hltb_settings and hltb_settings.enable_hltb_integration:
+                        try:
+                            from oneirodex.utils.hltb import update_game_hltb_sync
+                            print(f"Fetching HowLongToBeat data for '{new_game.name}'...")
+                            update_game_hltb_sync(new_game.uuid, new_game.name)
+                        except Exception as e:
+                            print(f"Failed to fetch HLTB data for '{new_game.name}': {e}")
+                            # Don't fail the scan if HLTB fetch fails
+
+            except IntegrityError as e: 
+                db.session.rollback()
+                print(f"Failed to save game due to a database error: {e}")
+                if has_request_context():
+                    flash("Failed to save game due to a duplicate entry.")
+                else:
+                    print("Failed to save game due to a duplicate entry.")
+            return new_game
+    else:
+        if response_json and 'error' in response_json:
+            # Check specifically for authentication error
+            if response_json.get('error') == 'Failed to retrieve access token':
+                error_msg = 'IGDB API Authentication Failed'
+                if scan_job_id:
+                    # Column-only update — avoid loading a ScanJob ORM row that could
+                    # clobber folders_success/failed from the scan coordinator.
+                    db.session.execute(
+                        update(ScanJob)
+                        .where(ScanJob.id == scan_job_id)
+                        .values(
+                            error_message=error_msg,
+                            status='Failed',
+                            is_enabled=False,
+                        )
+                    )
+                    db.session.commit()
+                
+                log_system_event(f"IGDB API Authentication Failed: {response_json.get('error')}", 
+                                 event_type='scan', event_level='error')
+                return None
+            
+        print(f"No match found: {game_name} in library {library.name} on platform {library.platform.name}.")
+
+        # Stage D (W20-5a): IGDB miss → Steam App ID / exact storesearch or GOG
+        # exact title → custom-range Game. Skipped for C11 bare franchise and
+        # propose-only (those stay proposal / Unmatched). Ambiguous → fall through.
+        if not bare_franchise and not is_propose_only_scan(settings):
+            try:
+                stage_d_size = 0
+                if not defer_enrichment:
+                    try:
+                        stage_d_size = get_folder_size_in_bytes_updates(full_disk_path)
+                    except Exception as size_err:
+                        print(f"⚠️ [Stage D] Folder size skipped: {size_err}")
+                        stage_d_size = 0
+                stage_d_game = try_stage_d_store_identify(
+                    raw_label=raw_folder_label or game_name,
+                    cleaned_name=variant_base,
+                    full_disk_path=full_disk_path,
+                    library_uuid=library.uuid,
+                    steam_app_id=parsed_label.get('steam_app_id'),
+                    steam_title=steam_title,
+                    size=stage_d_size,
+                    candidate=store_candidate,
+                    sources=stage_d_source_ids(),
+                )
+                if stage_d_game is not None:
+                    print(
+                        f"✅ [Stage D] Custom game from store cascade: "
+                        f"'{stage_d_game.name}' (igdb_id={stage_d_game.igdb_id}, "
+                        f"steam_app_id={getattr(stage_d_game, 'steam_app_id', None)}, "
+                        f"item_kind={getattr(stage_d_game, 'item_kind', None)})"
+                    )
+                    try:
+                        db.session.commit()
+                    except Exception as commit_err:
+                        db.session.rollback()
+                        print(f"⚠️ [Stage D] Commit failed: {commit_err}")
+                        stage_d_game = None
+                if stage_d_game is not None:
+                    if settings and settings.get('write_local_metadata'):
+                        try:
+                            from oneirodex.utils.local_metadata import write_local_metadata
+
+                            write_local_metadata(
+                                full_disk_path=full_disk_path,
+                                igdb_id=stage_d_game.igdb_id,
+                                game_title=stage_d_game.name,
+                                manually_verified=False,
+                                filename=settings.get(
+                                    'local_metadata_filename', 'oneirodex.json',
+                                ),
+                            )
+                        except Exception as meta_err:
+                            print(f"⚠️ [Stage D] Local metadata write failed: {meta_err}")
+                    try:
+                        notify_admins_new_game(stage_d_game.uuid, stage_d_game.name)
+                    except Exception:
+                        pass
+                    return stage_d_game
+            except Exception as stage_d_err:
+                print(f"⚠️ [Stage D] Store cascade failed for {full_disk_path}: {stage_d_err}")
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
+            # DAT unique hash (W21-BE-DAT): console IGDB miss → unique CRC/MD5/SHA1
+            # short-circuit before Stage E TGDB propose. Ambiguous / missing DAT /
+            # unhashable → fall through. Skipped for C11 / propose_only / multicart
+            # (same gate as Stage D).
+            try:
+                from oneirodex.utils.set_completion import try_dat_hash_identify
+
+                platform_key = getattr(
+                    getattr(library, 'platform', None), 'name', None,
+                )
+                dat_size = 0
+                if not defer_enrichment:
+                    try:
+                        dat_size = get_folder_size_in_bytes_updates(full_disk_path)
+                    except Exception:
+                        dat_size = 0
+                dat_game = try_dat_hash_identify(
+                    full_disk_path=full_disk_path,
+                    library_uuid=library.uuid,
+                    library_platform=platform_key,
+                    size=dat_size,
+                )
+                if dat_game is not None:
+                    print(
+                        f"✅ [DAT] Unique hash identify: '{dat_game.name}' "
+                        f"(igdb_id={dat_game.igdb_id}, "
+                        f"crc={getattr(dat_game, 'file_crc', None)})"
+                    )
+                    try:
+                        db.session.commit()
+                    except Exception as commit_err:
+                        db.session.rollback()
+                        print(f"⚠️ [DAT] Commit failed: {commit_err}")
+                        dat_game = None
+                if dat_game is not None:
+                    if settings and settings.get('write_local_metadata'):
+                        try:
+                            from oneirodex.utils.local_metadata import write_local_metadata
+
+                            write_local_metadata(
+                                full_disk_path=full_disk_path,
+                                igdb_id=dat_game.igdb_id,
+                                game_title=dat_game.name,
+                                manually_verified=False,
+                                filename=settings.get(
+                                    'local_metadata_filename', 'oneirodex.json',
+                                ),
+                            )
+                        except Exception as meta_err:
+                            print(f"⚠️ [DAT] Local metadata write failed: {meta_err}")
+                    try:
+                        notify_admins_new_game(dat_game.uuid, dat_game.name)
+                    except Exception:
+                        pass
+                    return dat_game
+            except Exception as dat_err:
+                print(f"⚠️ [DAT] Hash identify failed for {full_disk_path}: {dat_err}")
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
+        # Enrich Unmatched proposal with Steam software/emulator candidates so
+        # gaming-adjacent titles (e.g. 3DSenVR) get an honest propose list
+        # instead of empty IGDB-only Unmatched. Stage E (after Stage D miss)
+        # adds propose-only MobyGames / TheGamesDB exact-title hints — no Game.
+        try:
+            from oneirodex.utils.software_identify import (
+                enrich_proposal_with_software,
+                enrich_proposal_with_stage_e,
+            )
+
+            proposal = build_match_proposal(
+                raw_folder_label or game_name,
+                last_low_confidence_candidates or [],
+                steam_title=steam_title,
+            )
+            if update_meta.get('update_folder_hint'):
+                body = proposal.setdefault('proposal', {})
+                body['update_folder_hint'] = True
+                body['match_reason'] = (
+                    update_meta.get('match_reason') or 'update_packaging_hint'
+                )
+                # UPDATE packaging ≠ Soft title — do not invent experience.
+                if body.get('suggested_kind') == 'experience' and not body.get(
+                    'software_candidates'
+                ):
+                    body['suggested_kind'] = None
+            proposal = enrich_proposal_with_software(
+                proposal, raw_folder_label or game_name,
+            )
+            try:
+                platform_key = getattr(
+                    getattr(library, 'platform', None), 'name', None,
+                )
+                proposal = enrich_proposal_with_stage_e(
+                    proposal,
+                    cleaned_name=variant_base,
+                    library_platform=platform_key,
+                )
+            except Exception as stage_e_err:
+                print(f"⚠️ [Stage E] Propose enrich failed for {full_disk_path}: {stage_e_err}")
+            if write_match_proposal(full_disk_path, proposal):
+                body = proposal.get('proposal', {}) or {}
+                soft_n = len(body.get('software_candidates') or [])
+                stage_e_n = len(body.get('stage_e_candidates') or [])
+                kind = body.get('suggested_kind')
+                print(
+                    f"📝 Wrote software-enriched match proposal for '{variant_base}' "
+                    f"(igdb_candidates={len(last_low_confidence_candidates or [])}, "
+                    f"software_candidates={soft_n}, stage_e_candidates={stage_e_n}, "
+                    f"suggested_kind={kind}) "
+                    f"→ {os.path.join(full_disk_path, 'oneirodex.proposal.json')}"
+                )
+                # Denormalize onto UnmatchedFolder when the row already exists
+                # (log_unmatched_folder also reads the sidecar when creating).
+                try:
+                    from oneirodex.utils.match_proposal import sync_unmatched_kind_hint
+
+                    sync_unmatched_kind_hint(full_disk_path, proposal)
+                except Exception:
+                    pass
+        except Exception as proposal_err:
+            print(f"⚠️ Failed to write match proposal for {full_disk_path}: {proposal_err}")
+        if has_request_context():
+            flash("No game data found for the given name.")
+        else:
+            print("No game data found for the given name.")
+        return None
+    
+def check_existing_game_by_path(full_disk_path):
+    """
+    Checks if a game already exists in the library by its disk path.
+
+    Parameters:
+    - full_disk_path: The full disk path of the game to check.
+
+    Returns:
+    - The existing Game object if found, None otherwise.
+    """
+    existing_game_by_path = db.session.execute(select(Game).filter_by(full_disk_path=full_disk_path)).scalar_one_or_none()
+    if existing_game_by_path:
+        print(f"Skipping {existing_game_by_path.name} on {full_disk_path} (path already in library).")
+        return existing_game_by_path 
+    return None
+
+def check_existing_game_by_igdb_id(igdb_id):
+    return db.session.execute(select(Game).filter_by(igdb_id=igdb_id)).scalar_one_or_none()
+
+
+def enumerate_companies(game_instance, igdb_game_id, involved_company_ids):
+    if not involved_company_ids:
+        print("No company IDs provided for enumeration.")
+        return
+
+    company_ids_str = ','.join(map(str, involved_company_ids))
+    # print(f"Company IDs: {company_ids_str}")
+
+    try:
+        response_json = make_igdb_api_request(
+            "https://api.igdb.com/v4/involved_companies",
+            f"""fields company.name, developer, publisher, game;
+                where game={igdb_game_id} & id=({company_ids_str});"""
+        )
+
+        if not isinstance(response_json, list):
+            print(f"Unexpected response structure: {response_json}")
+            return
+
+        for company_data in response_json:
+            company_info = company_data.get('company')
+            if not isinstance(company_info, dict) or 'name' not in company_info:
+                print(f"Unexpected company data structure or missing name: {company_data}")
+                continue  # Skip to the next
+
+            company_name = company_info['name'][:50] 
+            is_developer = company_data.get('developer', False)
+            is_publisher = company_data.get('publisher', False)
+
+            if is_developer:
+                # print(f"Company {company_name} is a developer.")
+                developer = get_or_create_entity(Developer, name=company_name)
+
+                game_instance.developer = developer
+
+            if is_publisher:
+                # print(f"Company {company_name} is a publisher.")
+                publisher = get_or_create_entity(Publisher, name=company_name)
+                game_instance.publisher = publisher
+    except Exception as e:
+        print(f"Failed to enumerate companies due to an error: {e}")
+        return
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Failed to enumerate companies due to a database error: {e}")
+        
+def get_game_by_uuid(game_uuid):
+    log_system_event(
+        f"Searching for game UUID: {game_uuid[:8]}...",
+        event_type='game',
+        event_level='debug'
+    )
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none()
+    if game:
+        log_system_event(
+            f"Game '{game.name}' (ID: {game.id}, IGDB: {game.igdb_id}) found for UUID search",
+            event_type='game',
+            event_level='debug'
+        )
+        return game
+    else:
+        log_system_event(
+            f"Game not found for UUID: {game_uuid[:8]}...",
+            event_type='game',
+            event_level='debug'
+        )
+        return None
+    
+def remove_from_lib(game_uuid):
+    """
+    Remove a game from the library and clean up associated files.
+    
+    Args:
+        game_uuid (str): UUID of the game to remove
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Get the game
+        game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none()
+        if not game:
+            print(f"Game with UUID {game_uuid} not found")
+            return False
+            
+        # Delete associated images from disk
+        delete_game_images(game_uuid)
+        
+        # Delete the game (cascade will handle related records)
+        db.session.delete(game)
+        db.session.commit()
+        
+        log_system_event(f"Game deleted: {game.name} (UUID: {game_uuid})", event_type='game', event_level='information')
+        print(f"Successfully removed game {game.name} (UUID: {game_uuid}) from library")
+        return True
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error removing game from library: {str(e)}")
+        return False
+    
+
+def delete_game(game_identifier):
+    """Delete a game by UUID or Game object.""" 
+    game_to_delete = None
+    if isinstance(game_identifier, Game):
+        game_to_delete = game_identifier
+        game_uuid_str = game_to_delete.uuid
+    else:
+        try:
+            # Parse without forcing version=4: uuid.UUID(x, version=4) rewrites the
+            # version/variant bits, so a non-v4 UUID would be looked up under a
+            # different string and never be found.
+            game_uuid_str = str(uuid.UUID(game_identifier))
+        except (ValueError, AttributeError, TypeError):
+            print(f"Invalid UUID format: {game_identifier}")
+            abort(404)
+        game_to_delete = db.session.execute(select(Game).filter_by(uuid=game_uuid_str)).scalar_one_or_none()
+        if game_to_delete is None:
+            print(f"No game found with UUID {game_uuid_str}")
+            abort(404)
+
+    try:
+        print(f"Found game to delete: {game_to_delete}")
+        db.session.execute(delete(GameURL).filter_by(game_uuid=game_uuid_str))
+        delete_associations_for_game(game_to_delete)
+        # game_developer_association has a FK to games but no relationship on the
+        # Game model, so the ORM never clears it. Rows left here (from older
+        # schema versions) block the delete with a FK violation.
+        db.session.execute(
+            game_developer_association.delete().where(
+                game_developer_association.c.game_id == game_to_delete.id
+            )
+        )
+        delete_game_images(game_uuid_str)
+        db.session.delete(game_to_delete)
+        db.session.commit()
+        print(f'Deleted game with UUID: {game_uuid_str}')
+    except Exception as e:
+        db.session.rollback()
+        print(f'Error deleting game with UUID {game_uuid_str}: {e}')
+        if has_request_context():
+            flash(f'Error deleting game: {e}', 'error')
+        # Re-raise so the caller reports the real failure. Swallowing this made
+        # /delete_game return "success" while the game was still in the library.
+        raise
+
+
+def download_pending_images(batch_size=10, delay_between_downloads=1, app=None):
+    """Download images that are queued but not yet downloaded."""
+    if app is None:
+        app = current_app._get_current_object()
+        
+    try:
+        with app.app_context():
+            # Get pending images
+            pending_images = db.session.execute(select(Image).filter_by(is_downloaded=False).limit(batch_size)).scalars().all()
+            
+            if not pending_images:
+                print("No pending images to download.")
+                return 0
+            
+            downloaded_count = 0
+            failed_count = 0
+            for image in pending_images:
+                try:
+                    image.last_attempt_at = datetime.now(UTC)
+
+                    if not image.download_url:
+                        image.last_error = 'No download URL on record for this image.'
+                        failed_count += 1
+                        print(f"No download URL for image {image.id}, skipping.")
+                        continue
+
+                    # Download the image
+                    save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
+
+                    success, error = download_stored_image(image, save_path)
+
+                    if success:
+                        image.is_downloaded = True
+                        image.last_error = None
+                        downloaded_count += 1
+                        print(f"Downloaded {image.image_type} for game {image.game_uuid}: {image.url}")
+                    else:
+                        image.last_error = error or 'Download failed for an unknown reason.'
+                        failed_count += 1
+                        print(f"Failed to download image {image.id}: {image.last_error}")
+
+                    # Small delay to avoid overwhelming the server
+                    if delay_between_downloads > 0:
+                        time.sleep(delay_between_downloads)
+                        
+                except Exception as e:
+                    image.last_error = f"Unexpected error: {e}"
+                    failed_count += 1
+                    print(f"Error downloading image {image.id}: {e}")
+                    continue
+            
+            # Commit all changes
+            db.session.commit()
+            print(f"Downloaded {downloaded_count} images ({failed_count} failed).")
+            return downloaded_count
+            
+    except Exception as e:
+        print(f"Error in batch image download: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return 0
+
+
+def start_background_image_downloader(interval_seconds=60):
+    """Start a background thread that periodically downloads pending images."""
+    # Capture the current app instance
+    app = current_app._get_current_object()
+    
+    def background_worker():
+        from oneirodex.utils.shutdown import should_continue_processing, sleep_interruptible
+        while should_continue_processing():
+            try:
+                download_pending_images(batch_size=20, delay_between_downloads=0.5, app=app)
+                # Use interruptible sleep to allow quick shutdown
+                if not sleep_interruptible(interval_seconds):
+                    break  # Shutdown requested during sleep
+            except Exception as e:
+                print(f"Background image downloader error: {e}")
+                if not sleep_interruptible(interval_seconds):
+                    break  # Shutdown requested during error sleep
+        print("🛑 Background image downloader stopped due to shutdown request")
+    
+    thread = threading.Thread(target=background_worker, daemon=True)
+    thread.start()
+    print(f"Background image downloader started (interval: {interval_seconds}s)")
+    return thread
+
+
+def download_images_for_game(game_uuid, app=None):
+    """Download all pending images for a specific game immediately."""
+    if app is None:
+        app = current_app._get_current_object()
+        
+    try:
+        with app.app_context():
+            pending_images = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, is_downloaded=False)).scalars().all()
+            
+            if not pending_images:
+                print(f"No pending images for game {game_uuid}.")
+                return 0
+            
+            downloaded_count = 0
+            for image in pending_images:
+                try:
+                    image.last_attempt_at = datetime.now(UTC)
+
+                    if not image.download_url:
+                        image.last_error = 'No download URL on record for this image.'
+                        continue
+
+                    save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
+
+                    success, error = download_stored_image(image, save_path)
+
+                    if success:
+                        image.is_downloaded = True
+                        image.last_error = None
+                        downloaded_count += 1
+                    else:
+                        image.last_error = error or 'Download failed for an unknown reason.'
+                        print(f"Failed to download image {image.id}: {image.last_error}")
+
+                except Exception as e:
+                    image.last_error = f"Unexpected error: {e}"
+                    print(f"Error downloading image {image.id}: {e}")
+                    continue
+            
+            db.session.commit()
+            print(f"Downloaded {downloaded_count} images for game {game_uuid}.")
+            return downloaded_count
+            
+    except Exception as e:
+        print(f"Error downloading images for game {game_uuid}: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return 0
+
+
+def download_single_image_worker(image, app, title=None):
+    """Worker function to download a single image - designed for parallel execution."""
+    try:
+        if not image.download_url:
+            return {'success': False, 'image_id': image.id, 'error': 'No download URL on record for this image.'}
+
+        save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
+
+        success, error = download_image(
+            image.download_url,
+            save_path,
+            image_type=image.image_type,
+            title=title,
+        )
+
+        if not success:
+            return {'success': False, 'image_id': image.id, 'error': error or 'Download failed for an unknown reason.'}
+
+        return {
+            'success': True, 
+            'image_id': image.id, 
+            'game_uuid': image.game_uuid,
+            'image_type': image.image_type,
+            'url': image.url
+        }
+        
+    except Exception as e:
+        return {'success': False, 'image_id': image.id, 'error': str(e)}
+
+
+def turbo_download_images(batch_size=100, max_workers=5, app=None):
+    """MAXIMUM SPEED parallel image downloading with multiple threads."""
+    if app is None:
+        app = current_app._get_current_object()
+    max_workers = clamp_image_download_threads(max_workers)
+    batch_size = clamp_image_download_batch(batch_size)
+
+    try:
+        with app.app_context():
+            # Get pending images
+            pending_images = db.session.execute(select(Image).filter_by(is_downloaded=False).limit(batch_size)).scalars().all()
+            
+            if not pending_images:
+                return {'downloaded': 0, 'failed': 0, 'message': 'No pending images'}
+            
+            downloaded_count = 0
+            failed_count = 0
+            successful_images = []
+            failed_images = {}
+            now = datetime.now(UTC)
+            
+            titles = {
+                g.uuid: g.name
+                for g in db.session.execute(
+                    select(Game).filter(
+                        Game.uuid.in_({img.game_uuid for img in pending_images})
+                    )
+                ).scalars()
+            }
+
+            # Create thread pool and submit all download tasks
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all download jobs
+                future_to_image = {
+                    executor.submit(
+                        download_single_image_worker,
+                        image,
+                        app,
+                        titles.get(image.game_uuid),
+                    ): image
+                    for image in pending_images
+                }
+                
+                # Process completed downloads as they finish
+                for future in as_completed(future_to_image):
+                    image = future_to_image[future]
+                    try:
+                        result = future.result()
+                        
+                        if result['success']:
+                            successful_images.append(image.id)
+                            downloaded_count += 1
+                        else:
+                            failed_count += 1
+                            failed_images[image.id] = result.get('error') or 'Download failed for an unknown reason.'
+                            print(f"❌ Failed to download image {result['image_id']}: {result['error']}")
+                            
+                    except Exception as e:
+                        failed_count += 1
+                        failed_images[image.id] = str(e)
+                        print(f"❌ Exception downloading image {image.id}: {e}")
+            
+            # Update database - mark successful downloads as completed
+            if successful_images:
+                db.session.execute(
+                    update(Image).filter(Image.id.in_(successful_images)).values(
+                        is_downloaded=True, last_error=None, last_attempt_at=now
+                    )
+                )
+            for image_id, error in failed_images.items():
+                db.session.execute(
+                    update(Image).filter(Image.id == image_id).values(last_error=error, last_attempt_at=now)
+                )
+            if successful_images or failed_images:
+                db.session.commit()
+            
+            result_message = f"🚀 Downloaded {downloaded_count} images ({failed_count} failed)" if failed_count > 0 else f"🚀 Downloaded {downloaded_count} images"
+            if downloaded_count > 0:
+                print(result_message)
+            
+            return {
+                'downloaded': downloaded_count,
+                'failed': failed_count,
+                'message': result_message
+            }
+            
+    except Exception as e:
+        print(f"Error in turbo download: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return {'downloaded': 0, 'failed': 0, 'message': f'Error: {str(e)}'}
+
+
+def start_turbo_background_downloader(interval_seconds=30, max_workers=4, batch_size=50):
+    """Start a HIGH SPEED background downloader with parallel processing."""
+    app = current_app._get_current_object()
+    max_workers = clamp_image_download_threads(max_workers)
+    batch_size = clamp_image_download_batch(batch_size)
+
+    def turbo_background_worker():
+        from oneirodex.utils.shutdown import should_continue_processing, sleep_interruptible
+        print(f"🔥 TURBO BACKGROUND DOWNLOADER STARTED - {max_workers} workers, {batch_size} batch, {interval_seconds}s interval")
+        while should_continue_processing():
+            try:
+                result = turbo_download_images(batch_size=batch_size, max_workers=max_workers, app=app)
+                if result['downloaded'] > 0:
+                    print(f"🚀 Background turbo download: {result['message']}")
+                # Use interruptible sleep to allow quick shutdown
+                if not sleep_interruptible(interval_seconds):
+                    break  # Shutdown requested during sleep
+            except Exception as e:
+                print(f"Turbo background downloader error: {e}")
+                if not sleep_interruptible(interval_seconds):
+                    break  # Shutdown requested during error sleep
+        print("🛑 Turbo background downloader stopped due to shutdown request")
+    
+    thread = threading.Thread(target=turbo_background_worker, daemon=True)
+    thread.start()
+    print("🔥 TURBO BACKGROUND DOWNLOADER LAUNCHED!")
+    return thread
+
+
+def find_missing_images_for_library(library_uuid=None, app=None):
+    """
+    Find all images that have URLs in the database but are missing from disk.
+    
+    Parameters:
+    - library_uuid: UUID of library to check (optional, checks all games if None)
+    - app: Flask app context (optional)
+    
+    Returns:
+    - Dictionary with statistics and list of missing images
+    """
+    if app is None:
+        app = current_app._get_current_object()
+    
+    try:
+        with app.app_context():
+            # Build query based on library filter
+            if library_uuid:
+                images_query = select(Image).join(Game).filter(Game.library_uuid == library_uuid)
+                print(f"🔍 Checking for missing images in library {library_uuid}")
+            else:
+                images_query = select(Image)
+                print("🔍 Checking for missing images across all libraries")
+            
+            # Get all images with download URLs
+            all_images = db.session.execute(images_query.filter(Image.download_url.isnot(None))).scalars().all()
+            
+            if not all_images:
+                print("No images with download URLs found in database.")
+                return {
+                    'total_checked': 0,
+                    'missing_count': 0,
+                    'missing_images': [],
+                    'already_queued': 0
+                }
+            
+            print(f"📊 Found {len(all_images)} images to check")
+            
+            missing_images = []
+            already_queued_count = 0
+            
+            for image in all_images:
+                try:
+                    # Check if image is already marked as not downloaded (already in queue)
+                    if not image.is_downloaded:
+                        already_queued_count += 1
+                        continue
+                    
+                    # Build expected file path
+                    image_save_path = os.path.join(app.config['IMAGE_SAVE_PATH'], image.url)
+                    
+                    # Check if file exists on disk
+                    if not os.path.exists(image_save_path):
+                        missing_images.append({
+                            'id': image.id,
+                            'game_uuid': image.game_uuid,
+                            'image_type': image.image_type,
+                            'url': image.url,
+                            'download_url': image.download_url,
+                            'file_path': image_save_path
+                        })
+                        print(f"❌ Missing: {image.image_type} for game {image.game_uuid}: {image.url}")
+                    
+                except Exception as e:
+                    print(f"Error checking image {image.id}: {e}")
+                    continue
+            
+            result = {
+                'total_checked': len(all_images),
+                'missing_count': len(missing_images),
+                'missing_images': missing_images,
+                'already_queued': already_queued_count
+            }
+            
+            print(f"📈 Missing images summary: {len(missing_images)} missing, {already_queued_count} already queued, {len(all_images)} total checked")
+            return result
+            
+    except Exception as e:
+        print(f"Error in find_missing_images_for_library: {e}")
+        return {
+            'total_checked': 0,
+            'missing_count': 0,
+            'missing_images': [],
+            'already_queued': 0,
+            'error': str(e)
+        }
+
+
+def queue_missing_images_for_download(missing_images_list, app=None):
+    """
+    Mark missing images as not downloaded so they get picked up by the download queue.
+    
+    Parameters:
+    - missing_images_list: List of missing image dictionaries from find_missing_images_for_library
+    - app: Flask app context (optional)
+    
+    Returns:
+    - Number of images successfully queued
+    """
+    if app is None:
+        app = current_app._get_current_object()
+    
+    if not missing_images_list:
+        print("No missing images to queue.")
+        return 0
+    
+    try:
+        with app.app_context():
+            queued_count = 0
+            image_ids = [img['id'] for img in missing_images_list]
+            
+            # Update images to mark them as not downloaded (queued for download)
+            db.session.execute(
+                update(Image).filter(Image.id.in_(image_ids)).values(is_downloaded=False)
+            )
+            updated_count = len(image_ids)
+            
+            db.session.commit()
+            queued_count = updated_count
+            
+            print(f"📥 Successfully queued {queued_count} missing images for download")
+            
+            # Trigger immediate download if turbo mode is enabled
+            settings = global_settings_row()
+            if settings and settings.use_turbo_image_downloads:
+                print("🚀 Turbo mode enabled - triggering immediate download")
+                # Run a small batch download to start processing immediately
+                download_result = turbo_download_images(
+                    batch_size=min(20, queued_count),
+                    max_workers=clamp_image_download_threads(
+                        settings.turbo_download_threads or 4
+                    ),
+                    app=app
+                )
+                print(f"⚡ Quick download result: {download_result.get('message', 'Download initiated')}")
+            
+            return queued_count
+            
+    except Exception as e:
+        print(f"Error queuing missing images: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return 0
+
+
+def process_missing_images_for_scan(library_uuid=None, app=None):
+    """
+    Complete workflow to find and queue missing images for download during scan.
+    
+    Parameters:
+    - library_uuid: UUID of library to process (optional, processes all if None)
+    - app: Flask app context (optional)
+    
+    Returns:
+    - Dictionary with results summary
+    """
+    if app is None:
+        app = current_app._get_current_object()
+    
+    print(f"🔍 Starting missing images processing for library: {library_uuid or 'ALL'}")
+    
+    # Step 1: Find missing images
+    missing_result = find_missing_images_for_library(library_uuid, app)
+    
+    if missing_result.get('error'):
+        return {
+            'success': False,
+            'error': missing_result['error'],
+            'found': 0,
+            'queued': 0
+        }
+    
+    # Step 2: Queue missing images if any found
+    queued_count = 0
+    if missing_result['missing_count'] > 0:
+        queued_count = queue_missing_images_for_download(missing_result['missing_images'], app)
+    
+    result = {
+        'success': True,
+        'total_checked': missing_result['total_checked'],
+        'found': missing_result['missing_count'],
+        'queued': queued_count,
+        'already_queued': missing_result['already_queued'],
+        'message': f"Found {missing_result['missing_count']} missing images, queued {queued_count} for download"
+    }
+    
+    print(f"✅ Missing images processing complete: {result['message']}")
+    return result

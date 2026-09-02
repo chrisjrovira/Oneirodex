@@ -1,21 +1,21 @@
 /* "Add to collection…" — a tile menu row that opens a short list, and the same
    control as a page button on game details. */
 
-.gt-add-collection {
+.od-add-collection {
   display: contents;
 }
 
 /* On a page the control is a normal inline cluster rather than menu rows, so it
    needs its own box back. */
-.gt-add-collection--inline {
+.od-add-collection--inline {
   display: inline-flex;
   position: relative;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
 }
 
-.gt-add-collection__list {
+.od-add-collection__list {
   display: flex;
   flex-direction: column;
   /* Long shelf lists scroll inside the menu rather than growing it past the
@@ -27,28 +27,28 @@
 
 /* Indented under the trigger so the list reads as belonging to it rather than
    as more top-level menu items. */
-.gt-add-collection--menu .gt-add-collection__list .menu-button {
-  padding-inline-start: var(--gt-space-6);
+.od-add-collection--menu .od-add-collection__list .menu-button {
+  padding-inline-start: var(--od-space-6);
 }
 
-.gt-add-collection--inline .gt-add-collection__list {
+.od-add-collection--inline .od-add-collection__list {
   position: absolute;
   top: 100%;
   inset-inline-start: 0;
   z-index: 30;
   min-width: 14rem;
-  margin-block-start: var(--gt-space-2);
-  padding: var(--gt-space-2);
-  gap: var(--gt-space-1);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-md);
-  background: var(--gt-surface);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--gt-bg) 70%, transparent);
+  margin-block-start: var(--od-space-2);
+  padding: var(--od-space-2);
+  gap: var(--od-space-1);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: var(--od-surface);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--od-bg) 70%, transparent);
 }
 
-.gt-add-collection__note {
+.od-add-collection__note {
   margin: 0;
-  padding: var(--gt-space-2) var(--gt-space-3);
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  padding: var(--od-space-2) var(--od-space-3);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }

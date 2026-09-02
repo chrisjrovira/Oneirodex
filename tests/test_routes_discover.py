@@ -5,11 +5,11 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from flask import Flask
-from gametheca import create_app, db
-from gametheca.models import (
+from oneirodex import create_app, db
+from oneirodex.models import (
     Game, Library, DiscoverySection, Image, User
 )
-from gametheca.platform import LibraryPlatform
+from oneirodex.platform import LibraryPlatform
 from sqlalchemy import select
 
 
@@ -149,7 +149,7 @@ class TestDiscoverRoute:
     def test_discover_route_callable(self, app):
         """Test discover route core functionality with mocked authentication."""
         with app.app_context():
-            from gametheca.routes_discover import discover
+            from oneirodex.routes_discover import discover
             assert callable(discover)
 
 
@@ -161,7 +161,7 @@ class TestDiscoverSectionsApi:
         assert response.status_code in (302, 401)
 
     def test_build_discover_sections_shape(self, app, db_session, test_user, test_discovery_sections, test_games):
-        from gametheca.routes_discover import build_discover_sections
+        from oneirodex.routes_discover import build_discover_sections
 
         with app.app_context():
             with app.test_request_context('/'):
@@ -283,11 +283,11 @@ def _discover_game(**overrides):
 class TestGameDetails:
     """Test game details functionality."""
 
-    @patch('gametheca.routes_discover.game_card_flags')
+    @patch('oneirodex.routes_discover.game_card_flags')
     def test_discover_game_data_matches_shared_card_shape(
         self, mock_game_card_flags, tmp_path
     ):
-        from gametheca.routes_discover import serialize_discover_game
+        from oneirodex.routes_discover import serialize_discover_game
 
         # root_path decides where cover placeholders are rendered. Plain
         # `Flask(__name__)` puts it at tests/, so a resolved title wrote a real
@@ -302,7 +302,7 @@ class TestGameDetails:
         # test_utils_cover_url.py, and depending on it here made the assertion
         # a statement about the developer's filesystem.
         with app.test_request_context(), patch(
-            'gametheca.routes_discover.resolve_game_cover_url',
+            'oneirodex.routes_discover.resolve_game_cover_url',
             return_value='/static/library/images/cover.jpg',
         ):
             result = serialize_discover_game(
@@ -320,7 +320,7 @@ class TestGameDetails:
         assert result['client_connected'] is False
 
     def test_discover_game_data_preserves_static_cover_url(self, tmp_path):
-        from gametheca.routes_discover import serialize_discover_game
+        from oneirodex.routes_discover import serialize_discover_game
 
         # Same reason as above: cover resolution runs for real here, and its
         # placeholder step writes to root_path.
@@ -380,14 +380,14 @@ class TestGameDetails:
 class TestContextProcessor:
     """Test the context processor functionality."""
 
-    @patch('gametheca.routes_discover.get_global_settings')
+    @patch('oneirodex.routes_discover.get_global_settings')
     def test_inject_settings_context_processor(self, mock_get_global_settings, app):
         """Test that the context processor injects global settings."""
-        mock_settings = {'theme': 'default', 'site_name': 'GameTheca'}
+        mock_settings = {'theme': 'default', 'site_name': 'Oneirodex'}
         mock_get_global_settings.return_value = mock_settings
         
         with app.app_context():
-            from gametheca.routes_discover import inject_settings
+            from oneirodex.routes_discover import inject_settings
             result = inject_settings()
             
         assert result == mock_settings

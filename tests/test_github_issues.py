@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from gametheca.utils.github_issues import build_issue_body, create_github_issue, support_github_config
+from oneirodex.utils.github_issues import build_issue_body, create_github_issue, support_github_config
 
 
 def test_build_issue_body_includes_fields():
@@ -38,7 +38,7 @@ def test_create_github_issue_skipped_without_token(monkeypatch):
 
 def test_create_github_issue_posts_when_token_set(monkeypatch):
     monkeypatch.setenv('SUPPORT_GITHUB_TOKEN', 'ghp_test')
-    monkeypatch.setenv('SUPPORT_GITHUB_REPO', 'chrisjrovira/gametheca')
+    monkeypatch.setenv('SUPPORT_GITHUB_REPO', 'chrisjrovira/oneirodex')
 
     class Resp:
         def __enter__(self):
@@ -48,9 +48,9 @@ def test_create_github_issue_posts_when_token_set(monkeypatch):
             return False
 
         def read(self):
-            return b'{"number": 42, "html_url": "https://github.com/chrisjrovira/gametheca/issues/42"}'
+            return b'{"number": 42, "html_url": "https://github.com/chrisjrovira/oneirodex/issues/42"}'
 
-    with patch('gametheca.utils.github_issues.urllib.request.urlopen', return_value=Resp()):
+    with patch('oneirodex.utils.github_issues.urllib.request.urlopen', return_value=Resp()):
         result = create_github_issue(title='hello', body='world', labels=['support'])
     assert result['ok'] is True
     assert result['number'] == 42

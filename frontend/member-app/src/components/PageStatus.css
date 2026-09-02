@@ -1,6 +1,6 @@
 /* Moved to the shared theme (GT-B33).
  *
- * `.gt-page-status` now lives in `gametheca/setup/default_theme/css/gt-primitives.css`,
+ * `.od-page-status` now lives in `oneirodex/setup/default_theme/css/od-primitives.css`,
  * which base.html and base_admin.html both load — so the member SPA, the admin
  * SPA and the Jinja pages all render this block from one source.
  *

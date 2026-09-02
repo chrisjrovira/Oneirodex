@@ -1,8 +1,8 @@
 {
-  "name": "gametheca-desktop",
+  "name": "oneirodex-desktop",
   "private": true,
   "version": "1.0.0-beta",
-  "description": "GameTheca desktop companion (Tauri 2)",
+  "description": "Oneirodex desktop companion (Tauri 2)",
   "type": "module",
   "scripts": {
     "dev": "vite",

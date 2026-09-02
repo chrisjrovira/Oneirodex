@@ -119,41 +119,41 @@ function FirmwareMissingDialog({ open, markdown, onClose }) {
 
   return (
     <div
-      className="gt-open-path"
+      className="od-open-path"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={onClose}
     >
-      <div className="gt-open-path__panel" onClick={(event) => event.stopPropagation()}>
-        <div className="gt-open-path__toolbar">
-          <h2 id={titleId} className="gt-open-path__title">
+      <div className="od-open-path__panel" onClick={(event) => event.stopPropagation()}>
+        <div className="od-open-path__toolbar">
+          <h2 id={titleId} className="od-open-path__title">
             Missing firmware
           </h2>
           <button
             ref={closeRef}
             type="button"
-            className="gt-open-path__close"
+            className="od-open-path__close"
             onClick={onClose}
             aria-label="Dismiss missing firmware report"
           >
             ×
           </button>
         </div>
-        <p className="gt-open-path__reason">
+        <p className="od-open-path__reason">
           Markdown you can paste into notes. Oneirodex never downloads BIOS.
         </p>
         <textarea
-          className="gt-input"
+          className="od-input"
           readOnly
           rows={16}
           value={markdown}
           aria-label="Missing firmware report (markdown)"
         />
-        <div className="gt-open-path__actions">
+        <div className="od-open-path__actions">
           <button
             type="button"
-            className="gt-btn gt-btn--primary"
+            className="od-btn od-btn--primary"
             onClick={() => {
               void copyText(markdown)
                 .then(() => setCopied(true))
@@ -162,11 +162,11 @@ function FirmwareMissingDialog({ open, markdown, onClose }) {
           >
             Copy markdown
           </button>
-          <button type="button" className="gt-btn" onClick={onClose}>
+          <button type="button" className="od-btn" onClick={onClose}>
             Close
           </button>
         </div>
-        {copied ? <p className="gt-open-path__status">Copied to clipboard</p> : null}
+        {copied ? <p className="od-open-path__status">Copied to clipboard</p> : null}
       </div>
     </div>
   )
@@ -317,11 +317,11 @@ export function EmulatorFirmwarePanel() {
     busy === 'scan' ? 'Scanning…' : busy === 'install' ? 'Installing…' : busy === 'upload' ? 'Uploading…' : null
 
   return (
-    <section className="gt-adminpage-panel" aria-labelledby="gt-firmware-heading">
-      <h2 id="gt-firmware-heading" className="gt-section-head__title">
+    <section className="od-adminpage-panel" aria-labelledby="od-firmware-heading">
+      <h2 id="od-firmware-heading" className="od-section-head__title">
         Firmware / BIOS
       </h2>
-      <p className="gt-adminpage-lede">
+      <p className="od-adminpage-lede">
         Some cores need system files you legally own. Upload one file, scan a folder
         of dumps you already have, or mount them at <code>EMULATOR_BIOS_PATH</code>.
         Oneirodex never downloads BIOS for you.
@@ -356,30 +356,30 @@ export function EmulatorFirmwarePanel() {
         />
       ) : null}
 
-      <h3 className="gt-section-head__title">Install from a collection</h3>
-      <p className="gt-adminpage-lede">
+      <h3 className="od-section-head__title">Install from a collection</h3>
+      <p className="od-adminpage-lede">
         Point at a folder on this server. Subfolders are searched too. Matching
         names are offered for every system the service supports; if two dumps share
         a filename, pick which one that system should use. Cores read one file per
         name from the firmware root, so a shared filename is one dump for every
         system that uses it.
       </p>
-      <label className="gt-adminpage-lede" htmlFor="gt-firmware-source">
+      <label className="od-adminpage-lede" htmlFor="od-firmware-source">
         Firmware collection folder
       </label>
       <input
-        id="gt-firmware-source"
-        className="gt-input"
+        id="od-firmware-source"
+        className="od-input"
         type="text"
         value={sourceFolder}
         disabled={working}
         placeholder="Folder on this server (searched recursively)"
         onChange={(event) => setSourceFolder(event.target.value)}
       />
-      <div className="gt-btn-bar">
+      <div className="od-btn-bar">
         <button
           type="button"
-          className="gt-btn gt-btn--primary"
+          className="od-btn od-btn--primary"
           disabled={working || !sourceFolder.trim()}
           onClick={() => void scanCollection()}
         >
@@ -387,7 +387,7 @@ export function EmulatorFirmwarePanel() {
         </button>
         <button
           type="button"
-          className="gt-btn"
+          className="od-btn"
           disabled={working || !sourceFolder.trim()}
           onClick={() => void installMatching()}
         >
@@ -395,7 +395,7 @@ export function EmulatorFirmwarePanel() {
         </button>
         <button
           type="button"
-          className="gt-btn"
+          className="od-btn"
           disabled={working || !reportMarkdown}
           onClick={() => setReportOpen(true)}
         >
@@ -412,10 +412,10 @@ export function EmulatorFirmwarePanel() {
         </label>
       </div>
 
-      <div className="gt-btn-bar">
+      <div className="od-btn-bar">
         <input
           ref={inputRef}
-          className="gt-input"
+          className="od-input"
           type="file"
           aria-label="Firmware file"
           disabled={working}
@@ -434,7 +434,7 @@ export function EmulatorFirmwarePanel() {
       <PageStatus error={error} onRetry={load} />
 
       {notice ? (
-        <p className="gt-adminpage-status" role="status">
+        <p className="od-adminpage-status" role="status">
           {notice}
         </p>
       ) : null}
@@ -443,14 +443,14 @@ export function EmulatorFirmwarePanel() {
 
       {!loading && !error && plan ? (
         <>
-          <h3 className="gt-section-head__title">Matching dumps in the collection</h3>
+          <h3 className="od-section-head__title">Matching dumps in the collection</h3>
           {(plan.matches || []).length === 0 ? (
-            <p className="gt-empty">
+            <p className="od-empty">
               No filenames this service asks for were in that folder. The missing
               report lists what to add.
             </p>
           ) : (
-            <ul className="gt-list">
+            <ul className="od-list">
               {(plan.matches || []).map((match) => {
                 const systems = (match.systems || [])
                   .map((row) => row.label)
@@ -459,7 +459,7 @@ export function EmulatorFirmwarePanel() {
                 const versions = match.versions || []
                 const conflict = versions.filter((row) => row.digest).length > 1
                 return (
-                  <li key={match.name} className="gt-list__row">
+                  <li key={match.name} className="od-list__row">
                     <label>
                       <input
                         type="checkbox"
@@ -478,21 +478,21 @@ export function EmulatorFirmwarePanel() {
                       {match.already ? ' (already on the volume)' : ''}
                     </label>
                     {systems ? (
-                      <p className="gt-error__detail">Systems: {systems}</p>
+                      <p className="od-error__detail">Systems: {systems}</p>
                     ) : null}
-                    {match.note ? <p className="gt-error__detail">{match.note}</p> : null}
+                    {match.note ? <p className="od-error__detail">{match.note}</p> : null}
                     {conflict ? (
                       <fieldset>
                         <legend>Which dump for {match.name}</legend>
                         {versions.map((version) => {
                           const choice = versionChoice(version)
-                          const id = `gt-fw-${match.name}-${choice}`
+                          const id = `od-fw-${match.name}-${choice}`
                           return (
                             <label key={choice} htmlFor={id}>
                               <input
                                 id={id}
                                 type="radio"
-                                name={`gt-fw-${match.name}`}
+                                name={`od-fw-${match.name}`}
                                 value={choice}
                                 checked={selections[match.name] === choice}
                                 disabled={working || !included}
@@ -520,13 +520,13 @@ export function EmulatorFirmwarePanel() {
 
       {!loading && !error ? (
         <>
-          <h3 className="gt-section-head__title">Cores</h3>
+          <h3 className="od-section-head__title">Cores</h3>
           {cores.length === 0 ? (
-            <p className="gt-empty">No cores declare firmware requirements.</p>
+            <p className="od-empty">No cores declare firmware requirements.</p>
           ) : (
-            <ul className="gt-list">
+            <ul className="od-list">
               {cores.map((core) => (
-                <li key={core.core} className="gt-list__row">
+                <li key={core.core} className="od-list__row">
                   <strong>{coreLabel(core.core)}</strong>{' '}
                   <span>
                     {core.ready
@@ -535,12 +535,12 @@ export function EmulatorFirmwarePanel() {
                         ? 'files found, but in a subfolder'
                         : 'missing system files'}
                   </span>
-                  <p className="gt-error__detail">
+                  <p className="od-error__detail">
                     Accepts: {(core.required || []).join(', ')}
                     {core.present?.length ? ` · present: ${core.present.join(', ')}` : ''}
                   </p>
                   {core.misplaced?.length ? (
-                    <p className="gt-error__detail">
+                    <p className="od-error__detail">
                       Move to the firmware root to load:{' '}
                       {core.misplaced.map((f) => `${f.subdir}/${f.name}`).join(', ')}
                     </p>
@@ -550,22 +550,22 @@ export function EmulatorFirmwarePanel() {
             </ul>
           )}
 
-          <h3 className="gt-section-head__title">Files on volume</h3>
+          <h3 className="od-section-head__title">Files on volume</h3>
           {files.length === 0 ? (
-            <p className="gt-empty">
+            <p className="od-empty">
               No firmware found on the volume. Cores that need it will stay
               unavailable for browser play. Files in subfolders are listed here
               too — if you copied a set in and see nothing, check the path the
               volume is actually mounted at.
             </p>
           ) : (
-            <ul className="gt-list">
+            <ul className="od-list">
               {files.map((file) => (
-                <li key={`${file.subdir}/${file.name}`} className="gt-list__row">
+                <li key={`${file.subdir}/${file.name}`} className="od-list__row">
                   <code>{file.subdir ? `${file.subdir}/${file.name}` : file.name}</code>{' '}
                   <span>{formatBytes(file.size)}</span>
                   {file.loadable === false ? (
-                    <span className="gt-badge gt-badge--warn">subfolder</span>
+                    <span className="od-badge od-badge--warn">subfolder</span>
                   ) : null}
                 </li>
               ))}

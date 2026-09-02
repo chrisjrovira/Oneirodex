@@ -1,0 +1,30 @@
+path,name,platform,scan_mode,scan_depth
+/storage/_console-gaming/NINTENDO/Nintendo Virtual Boy,Nintendo Virtual Boy,VB,files,1
+/storage/_console-gaming/NINTENDO/Nintendo Wii,Nintendo Wii,WII,folders,1
+/storage/_console-gaming/NINTENDO/Nintendo 3DS,Nintendo 3DS,N3DS,folders,1
+/storage/_console-gaming/Sony/Sony PS Vita,Sony PS Vita,PSVITA,folders,1
+/storage/_console-gaming/Xbox,Xbox,XBOX,folders,1
+/storage/_console-gaming/Xbox 360,Xbox 360,X360,folders,1
+/storage/_console-gaming/Xbox One,Xbox One,XONE,folders,1
+/storage/_console-gaming/Xbox Series X,Xbox Series X,XSX,folders,1
+/storage/_console-gaming/Commodore/Commodore 64,Commodore 64,VICE_X64SC,files,1
+/storage/_console-gaming/Commodore/Commodore 128,Commodore 128,VICE_X128,files,1
+/storage/_console-gaming/Commodore/Commodore VIC-20,Commodore VIC-20,VICE_XVIC,files,1
+/storage/_console-gaming/Commodore/Commodore Plus-4,Commodore Plus/4,VICE_XPLUS4,files,1
+/storage/_console-gaming/Commodore/Commodore PET,Commodore PET,VICE_XPET,files,1
+/storage/_console-gaming/NINTENDO/Nintendo Wii U,Nintendo Wii U,WII_U,folders,1
+/storage/_console-gaming/NINTENDO/Nintendo Pokemon Mini,Nintendo Pokemon Mini,POKE_MINI,files,1
+/storage/_console-gaming/Philips CD-i,Philips CD-i,CD_I,folders,1
+/storage/_console-gaming/Sega/Sega Pico,Sega Pico,SEGA_PICO,files,1
+/storage/_console-gaming/ATARI/Atari Jaguar CD,Atari Jaguar CD,JAGUAR_CD,folders,1
+/storage/_console-gaming/Commodore Amiga CD32,Commodore Amiga CD32,AMIGA_CD32,folders,1
+/storage/_console-gaming/MSX,MSX,MSX,files,1
+/storage/_console-gaming/ZX Spectrum,ZX Spectrum,ZX_SPECTRUM,files,1
+/storage/_console-gaming/Amstrad CPC,Amstrad CPC,CPC,files,1
+/storage/_console-gaming/Atari ST,Atari ST,ATARI_ST,files,1
+/storage/_console-gaming/Apple II,Apple II,APPLE_II,files,1
+/storage/_console-gaming/Atari 8-bit,Atari 8-bit,ATARI_8BIT,files,1
+/storage/_console-gaming/Sharp X68000,Sharp X68000,X68000,files,1
+/storage/_console-gaming/NEC PC-98,NEC PC-98,PC_98,files,1
+/storage/_console-gaming/BBC Micro,BBC Micro,BBC_MICRO,files,1
+/storage/_console-gaming/NINTENDO/Nintendo Game & Watch,Nintendo Game & Watch,GAME_WATCH,files,1

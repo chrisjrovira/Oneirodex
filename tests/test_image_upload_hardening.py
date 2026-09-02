@@ -26,8 +26,8 @@ import pytest
 from PIL import Image as PILImage
 from sqlalchemy import text
 
-from gametheca.models import Game, Library, LibraryPlatform, User
-from gametheca.routes import MAX_IMAGE_PIXELS, MAX_IMAGE_UPLOAD_BYTES
+from oneirodex.models import Game, Library, LibraryPlatform, User
+from oneirodex.routes import MAX_IMAGE_PIXELS, MAX_IMAGE_UPLOAD_BYTES
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -185,7 +185,7 @@ class TestDecompressionBomb:
                 return _Huge()
             return real_open(fp, *args, **kwargs)
 
-        monkeypatch.setattr('gametheca.routes.PILImage.open', fake_open)
+        monkeypatch.setattr('oneirodex.routes.PILImage.open', fake_open)
         response = _upload(client, admin_user, sample_game, _png(10, 10))
 
         assert response.status_code == 400

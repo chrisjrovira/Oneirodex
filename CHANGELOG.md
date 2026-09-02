@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Oneirodex are documented in this file. Historical entries keep the former public string GameTheca.
+All notable changes to Oneirodex are documented in this file. Historical entries keep the former public string GameTheca where the first rewrite left it; do not restore git history.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -8,12 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Catalog edge-column tiles keep covers/badges on hover enlarge (bleed ×1.5 for 1fr stretch + `overflow-clip-margin-inline`). `GENERATOR_VERSION` **28**.
+- Catalog **Grid** is genre shelves at full tile size without clipping headings (no shell hover-pad pullback). **Rows** height follows the tile-size slider (56–144px). `GENERATOR_VERSION` **27**.
+- Libraries panel: view tabs have no underlines; page sits left under the thin bar; column filters sit beside titles (themed typeahead, not white); “N libraries” + Games popover live on the page (not the top bar); Scan/Edit share colour and size; “0 selected” is hidden; optional Group column + action; game counts heat against the platform’s released set. `GENERATOR_VERSION` **26**.
+- Admin Dashboard: Reset layout has no rest outline; Health strip grows with Degraded issues; drag/resize use real row pitch (`3.5rem` was parsed as 3.5px and vanished widgets). Layout storage **v4**. `GENERATOR_VERSION` **25**.
+- Admins can **Reset Default Themes** from Preferences → Look & density (same `POST /admin/themes/reset` as Admin → Themes).
+- Compose binds WebRetro cores from `WEBRETRO_CORES_HOST_PATH` (default `/mnt/cache/appdata/oneirodex/webretro-cores`) so fetched cores survive recreate.
+- Catalog / News / Favorites layout control shows the **active view name** (Tile · Rows · Grid, or News Card · Grid · RSS) instead of a fixed “View” label; the unfurl menu keeps the View name for assistive tech.
+- Thin member top bar stays solid on tile hover; enlarged Catalog / Discover tiles overlap it (`GENERATOR_VERSION` **24**). No more opacity in/out.
+- Catalog / Discover tiles: no outline at rest; hovered enlarge uses a tight accent ring. Library edge tiles overlap left/right (centred scale). Play on a tile follows `--od-tile-*`. `GENERATOR_VERSION` **22**.
 - Admin Settings hub is one sheet with On/Off pills beside each title (UID-033 — human QA still open).
-- Discover shelves use a pixel hbar, matching News scrollbar spacing, overlay-open tiles, and a Ways to Play rail glyph (UID-020 — human QA still open). `GENERATOR_VERSION` **19**.
+- Libraries & scans stays clickable during a live scan: job progress patches in place, unmatched does not rebuild on other panes. `GENERATOR_VERSION` **21**.
+- Discover shelves use a pixel hbar, matching News scrollbar spacing, overlay-open tiles, and a Ways to Play rail glyph (UID-020 — human QA still open).
+- BBC Micro and Game & Watch are companion leaves (no WebRetro WASM). Their dump suffixes (`.ssd` `.mgw` …) seed AllowedFileType on boot. Authentik groups `oneirodex-admin` / `librarian` / `child` map like the `oneirodex-*` aliases.
 - Compose passes remaining OIDC and product-flag env into the app container (no `env_file` dump). Unraid Authentik LAN HTTP: [oidc-authentik-unraid.md](docs/runbooks/oidc-authentik-unraid.md) Appendix A.
-- GitHub default is **`chrisjrovira/oneirodex`** (the old `chrisjrovira/gametheca` URL still redirects). `SUPPORT_GITHUB_REPO` and `GT_SOURCE_URL` / `ONEIRODEX_SOURCE_URL` follow. Origin URL is `https://github.com/chrisjrovira/oneirodex.git`.
-- Identifier **phase 3a** ([ADR 0003](docs/adr/0003-product-name-oneirodex.md)): `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. Package path `gametheca/` and `.gt-*` classes stay.
-- Identifier **phase 3b** (partial): Compose defaults `oneirodex-app` / `oneirodex-db` / `oneirodex:1.0.0-beta`; npm `@oneirodex/api-client` (`createOneirodexClient` aliases `createGamethecaClient`); review containers `oneirodex-review-app` / `oneirodex-review-db`. Pytest database name remains `gamethecatest`. Pin live Unraid `APP_CONTAINER_NAME=gametheca-app` until the scan FIFO is idle. Package path / `.gt-*` / `RESET GAMETHECA` unchanged.
+- GitHub default is **`chrisjrovira/oneirodex`** (the old `chrisjrovira/oneirodex` URL still redirects). `SUPPORT_GITHUB_REPO` and `GT_SOURCE_URL` / `ONEIRODEX_SOURCE_URL` follow. Origin URL is `https://github.com/chrisjrovira/oneirodex.git`.
+- Identifier **phase 3a** ([ADR 0003](docs/adr/0003-product-name-oneirodex.md)): `ONEIRODEX_*` env wins over `GT_*`; CSS `--od-*` aliases `--gt-*`. Package path `oneirodex/` and `.gt-*` classes stay.
+- Identifier **phase 3b** (2026-08-31): Python package `oneirodex/`; CSS `.od-*` / `--od-*`; live Unraid `oneirodex-*` containers; Postgres database `oneirodex`. `RESET ONEIRODEX` is the confirm phrase; `RESET GAMETHECA` remains accepted one release. `createGamethecaClient` aliases `createOneirodexClient`.
 - Icon packs: **library / discover / systems** ship distinct SVGs on Filled, Duotone, Pixel, Soft, and Mono. Outline stays the inline stroke set.
 
 ### Added
@@ -22,11 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] — 2026-07-24
 
-First milestone release on the `feature/roadmap-q1-foundation` track (GameTheca rebrand + gap close).
+First milestone release on the `feature/roadmap-q1-foundation` track (Oneirodex rebrand + gap close).
 
 ### Added
 
-- GameTheca package cutover (`gametheca/`), Docker image `chrisjrovira/gametheca`
+- Oneirodex package cutover (`oneirodex/`), Docker image `chrisjrovira/oneirodex`
 - Optional *arr module (Prowlarr/Jackett + qBittorrent) and **arr→hardlink** pipeline (triple-gated)
 - Release calendar, quality profiles, GiantBomb/PCGW providers
 - Detail-page layout editor (order/visibility)
@@ -111,11 +122,11 @@ contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
 - **UID-004 Search name** — Admin Dupe glance + Unmatched operator label **Amend naming** → **Search name** (labels · tooltips · toasts); Kind Soft title/Utility intact — [libraries-and-scans.md](docs/admin/libraries-and-scans.md#unmatched-folders)
 - **UID-016 Dupe side-by-side Compare** — Admin Dupe glance + Unmatched show This folder | Library game columns (path · size · date); soft-read UI + Backend null-safe `size_bytes`/mtime on list/`matched_game` (library from Game; folder size null until denorm) — [libraries-and-scans.md](docs/admin/libraries-and-scans.md#unmatched-folders)
 - **Desktop distribution — unsigned only** — Windows code-signing certs will never be pursued; CI no longer has an optional `signtool` step — [desktop-code-signing.md](docs/runbooks/desktop-code-signing.md)
-- Pin `requirements.txt` with `==` versions for reproducible 1.0 builds; Compose local image tag `gametheca:0.2.0` (matches `app_version`)
+- Pin `requirements.txt` with `==` versions for reproducible 1.0 builds; Compose local image tag `oneirodex:0.2.0` (matches `app_version`)
 - **OpenAPI / semver hygiene** — `docs/openapi/openapi.json` `info.version` **0.2.0** aligned with `app_version` / Compose image tag
 - **Default `UVICORN_WORKERS=1`** in Docker (`startweb-docker.sh`, Compose, `.env*.example`); override to 2+ still allowed
 - **Two-bar chrome (UIR).** One `AppBar` for identity and destinations, one `ContextBar` under it for what the current page can do. Page titles and ledes retire under `data-chrome="v2"` — a heading that says "Library" while you are looking at the library is the least useful pixel on the page — and header *actions* stay put until each page moves them in. Library, News, Notifications and Calendar have moved: their hand-rolled tab strips are now bar two's segmented control, and Calendar's two window selects are a badged popover. Admin's Jinja renders the same bars from the same stylesheet, pinned by `tests/test_chrome_parity.py`, because the two SPA builds cannot import from each other. Behind `ENABLE_NEW_CHROME` until every page has adopted it — [getting-started.md](docs/user/getting-started.md) (two-bar chrome)
-- **Member SPA rebrand (wave 1):** browse routes (Discover, Library, Favorites, Downloads) serve a React Router shell from `frontend/member-app` (`member-app.js`), with GameTheca top nav, design tokens, and Docker multi-stage build of `/static/dist/member-app/`
+- **Member SPA rebrand (wave 1):** browse routes (Discover, Library, Favorites, Downloads) serve a React Router shell from `frontend/member-app` (`member-app.js`), with Oneirodex top nav, design tokens, and Docker multi-stage build of `/static/dist/member-app/`
 - Docs: progress, bug triage, preferences/themes, security, social-av plans; Discord/webhook promises excised; peer catalogs kept private
 - Mobile density: FilterBar + PaginationBar + Chat touch targets ≤900px
 - WebRetro cloud saves: export retries, `.mcr`/`.sav` pick, auto `_cmd_load_state` when available
@@ -133,11 +144,11 @@ contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
 - Setup wizard mid-flow redirect: step map includes Features (3) + IGDB (4); `/setup` no longer claims “already completed” while wizard is in progress
 - `InitManager` back-compat alias for `InitializationManager` (setup seed helpers)
 - Admin Features template extends `base_admin.html`; Integrations community chat POST route restored (`admin2.community_chat_settings`)
-- Admin SPA `hasLegacyBody` detects `.gt-admin-card` so Features Jinja is not pushed below an empty React hub
+- Admin SPA `hasLegacyBody` detects `.od-admin-card` so Features Jinja is not pushed below an empty React hub
 - `admin_required` role normalization; honest `/playromtest` messaging
 - Docker Compose forces `DATABASE_URL` host `db` (stops Unraid `.env` `@localhost` loops)
 - Entrypoint rewrites loopback DB URLs inside containers
-- Local image tag `gametheca:0.2.0` (matches `app_version`; no Docker Hub pull required for local compose)
+- Local image tag `oneirodex:0.2.0` (matches `app_version`; no Docker Hub pull required for local compose)
 - Env examples / NAS deploy docs clarified for Compose vs native installs
 
 ### Removed
@@ -154,7 +165,7 @@ contract had drifted across `0.1.0` and `0.2.0` and now all read `1.0.0-beta`.
 
 - Live Authentik smoke (operator secrets) — OIDC stays **opt-in** (`OIDC_ENABLED` off by default)
 - Native Quest APK (PWA MVP ships in 0.1.0)
-- Publish optional Hub image `chrisjrovira/gametheca` when ready
+- Publish optional Hub image `chrisjrovira/oneirodex` when ready
 - ClamAV daemon reachability for malware scan; LiveKit compose profile for voice; deferred WebRetro WASM (PCE/VICE/DOS)
 - Optional Compose `observability` profile (Prometheus/Grafana) — stub only; see [observability-profile.md](docs/runbooks/observability-profile.md)
 
@@ -181,10 +192,10 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **Admin firmware collection scan.** Admin → Emulators can point at a folder of dumps you already own (subfolders included), install every name the service asks for, pick which dump to use when filenames collide, and copy a markdown list of what is still missing. Same walk as `scripts/import_bios.py`. Oneirodex still never downloads BIOS.
 - **Set completion and Playtime use bar two.** Platform/region identity, owned count, **Systems** / **Browse library**, and the region filter live in the context bar; Playtime totals (`duration · n games`) sit in the trail instead of a page title card.
 - **Admin Users roster is the editor.** Invites / Support sit in the top bar; **Edit** saves role through the existing user API. The classic second editor is gone.
-- **Oneirodex public string (ADR 0003 phase 1).** UI, Help, README, user/admin docs, and the desktop window title say **Oneirodex**. Package path, Docker image, GitHub repo, `GT_*`, and `gt-` CSS stay `gametheca`. Danger-zone confirm is `RESET ONEIRODEX`; `RESET GAMETHECA` still works.
+- **Oneirodex public string (ADR 0003 phase 1).** UI, Help, README, user/admin docs, and the desktop window title say **Oneirodex**. Package path, Docker image, GitHub repo, `GT_*`, and `gt-` CSS stay `oneirodex`. Danger-zone confirm is `RESET ONEIRODEX`; `RESET ONEIRODEX` still works.
 - **Play-mode matrix for every platform.** Tests and play-skins cover the full `LibraryPlatform` enum — not only NES and Game Boy. SG-1000 and Neo Geo Pocket Color browser-play via already-shipped WASM. Legal sample fetch adds Game Boy Color (`cgb-acid2`) and SNES (`SuperBossGaiden.sfc`). Remaining browser systems stay documented as skipped until a licensed URL exists.
 - **Catalog disagreement goes to Review.** A high-confidence IGDB hit is still checked against Steam / GOG plus unique-exact MobyGames / TheGamesDB. Folder `Doom` / IGDB `Doom 3` writes `catalog_disagreement` instead of auto-importing or peeling the name until it fits. Remaster/subtitle store titles are no-signal, not a veto.
-- **Remaining sheets use radius, type, and semantic colour tokens.** Member Chat / News / Big Picture / Calendar / Collections / details / filters / cheats / dock, admin styles / Dupe glance / Ops, plus classic scan jobs, game details, base, account, profile, and setup. Hardware-family marks are `--gt-family-*`. Token ratchet **1074 → 0**. Member SPA needs an image rebuild; classic admin needs **Reset Default Themes**.
+- **Remaining sheets use radius, type, and semantic colour tokens.** Member Chat / News / Big Picture / Calendar / Collections / details / filters / cheats / dock, admin styles / Dupe glance / Ops, plus classic scan jobs, game details, base, account, profile, and setup. Hardware-family marks are `--od-family-*`. Token ratchet **1074 → 0**. Member SPA needs an image rebuild; classic admin needs **Reset Default Themes**.
 - **More small sheets use radius and type tokens.** Scan conflict, Open path, Propose leaves, Command palette, Chat slide-out, store links, library selection bar, DataTable, game preview, glass, Loading overlay, Cheats, plus classic admin Help / Dashboard / Server status / shell / Identify. Token ratchet **1195 → 1074**.
 - **Classic admin JSON failures use the shared envelope.** `api_error` can put job/queue `status` and honesty `code` on the body (`body_status` / `body_code`) without colliding with HTTP `status=` or envelope `error_code`. Scan-queue rejected/started, library reorder/delete confirm, unmatched delete, and download `path_missing` / request status migrated. Ratchet **41 → 11** annotated keeps (`/healthz`, batch `ok`, Ollama, hardlink preview, game-details play status, OIDC report).
 - **Arr refusals use the shared envelope.** A UTF-8 BOM on `routes_arr.py` made the lint skip the file. The ratchet now reads `utf-8-sig`. Arr module/indexer/search/download/hardlink errors go through `api_error`; job-state payloads through `api_ok`. Remainder still **11** keeps.
@@ -193,10 +204,10 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **Preferences opens again.** The grouped room-card picker crashed because Jinja treated `group.items` as `dict.items`. It now walks `group['items']`.
 - **Nineteen more APIs report failure through the shared envelope.** Playtime, SMTP, IGDB settings, filters, assists, folder browse, layouts, LiveKit tokens, VR browse, ambient lighting, challenge solver, remote play, plus libraries crop preview, whitelist delete, Playnite import, loading icons, metadata search, invite delete, and preferences. Ratchet **130 → 50**. SMTP/IGDB save still include `status: 'success'` for classic admin JS; error bodies use `ok` / `success` / `message` (`api_error` cannot carry a body `status` key). IGDB no longer returns raw exception text.
 - **Twelve more APIs report failure through the shared envelope.** Calendar, locale, admin games search, scan/match, notifications, SSE fallbacks, updates store-search, malware-scan refusals, plugins/activity stream, librarian decorator, Flask download/ROM ASGI fallbacks.
-- **Decade room themes.** Preferences is no longer a tiny colour-chip grid. Six era rooms (1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk) plus the existing colour cabinets sit in the same wallpaper/window/floor language as browser play, on member *and* admin chrome. Untitled-game placeholders and Art Studio backup packs follow the room. Needs **Reset Default Themes** (`GENERATOR_VERSION` 17) so volume copies pick up `gt-era.css`.
+- **Decade room themes.** Preferences is no longer a tiny colour-chip grid. Six era rooms (1980s wood den, 1990s teen bedroom, late-90s carpet den, 2000s media centre, arcade floor, computer desk) plus the existing colour cabinets sit in the same wallpaper/window/floor language as browser play, on member *and* admin chrome. Untitled-game placeholders and Art Studio backup packs follow the room. Needs **Reset Default Themes** (`GENERATOR_VERSION` 17) so volume copies pick up `od-era.css`.
 - **Amazon Games live ownership register sync.** Same shape as Steam / GOG / Epic: IDs and names into `UserOwnedTitle`, never a download. Unofficial Nile / Heroic entitlements; paste a token JSON (or household env). Fail honestly on 401. CSV still works.
 - **Disc chips on game details.** Multi-disc titles show count + Disc N on the details identity row. Tiles stay at the UID-001 badge cap.
-- **Oneirodex identifier phase 2 started (dual names).** Compose `APP_IMAGE` / `APP_CONTAINER_NAME` keep existing `gametheca-*` defaults. Preferred Hub image once published: `chrisjrovira/oneirodex`. Package / `GT_*` / `gt-` unchanged.
+- **Oneirodex identifier phase 2 started (dual names).** Compose `APP_IMAGE` / `APP_CONTAINER_NAME` keep existing `oneirodex-*` defaults. Preferred Hub image once published: `chrisjrovira/oneirodex`. Package / `GT_*` / `gt-` unchanged.
 - **GOG and Epic live ownership register sync.** Same shape as Steam: IDs and names into `UserOwnedTitle`, never a download. Unofficial Galaxy / launcher surfaces; paste a refresh token or Epic device-auth JSON (or household env). Fail honestly on 401. CSV still works.
 - **Operator notes for snes9x / genesis_plus_gx non-commercial clauses.** Quotes from upstream plus questions to take to a lawyer — [webretro-core-clauses.md](docs/admin/webretro-core-clauses.md). Not counsel.
 - **Operator privacy / data-handling notes.** What the host stores, what can leave if you enable SMTP / metadata APIs / OIDC / LiveKit / GitHub support, and how `child` accounts are denied download and Acquire — [privacy-data-handling.md](docs/admin/privacy-data-handling.md). Not a public ToS.
@@ -271,16 +282,16 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **BIOS import** from an operator-supplied local collection (`scripts/import_bios.py`), preferring the
   majority copy when candidates disagree
 - **Cabinet playback on the WebRetro play bar.** Save / Load / Rewind (hold) / fast-forward / Picture (CRT · Sharp · Soft) / shortcut help. RetroArch rewind is on for light cores with a 10 MB buffer; it stays off on N64/PS1/Saturn/Dreamcast/PSP. No shader packs, no run-ahead — [browser-play.md](docs/user/browser-play.md)
-- **Ownership polling** (`gametheca/utils/ownership_poller.py`) and a `/styleguide` route
+- **Ownership polling** (`oneirodex/utils/ownership_poller.py`) and a `/styleguide` route
 - **CSS token lint** (`scripts/css-token-lint.mjs`) with a baseline — 2365 violations down to 1317
-- **Sortable classic tables** (`js/gt_sortable_table.js`) — the Jinja counterpart to the React
+- **Sortable classic tables** (`js/od_sortable_table.js`) — the Jinja counterpart to the React
   `DataTable`, so a table sorts the same way on both stacks instead of per page or not at all. Adopted
   on **Active Scan Jobs**, which had no sorting at all, and on **Unmatched**, which had its own
   private implementation. A page opts in with two attributes and the module wires itself up, because
   a page that must remember to call something eventually will not. A table that should arrive already
-  ordered declares it in markup (`data-gt-sort-default`) rather than being re-sorted after each render
+  ordered declares it in markup (`data-od-sort-default`) rather than being re-sorted after each render
 
-- **Theme asset freshness check** (`gametheca/utils/theme_freshness.py`), surfaced as a **Theme assets**
+- **Theme asset freshness check** (`oneirodex/utils/theme_freshness.py`), surfaced as a **Theme assets**
   panel in the Ops console. Theme CSS only reaches `static/library/themes/` on a **Reset Themes**, and
   nothing reported the drift — the only symptom was "the fix didn't work". The panel hashes source
   against deployed and distinguishes *behind* from *never deployed*, since those are different problems
@@ -392,7 +403,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
 - **The News page leads with admin notes**, full width, and only when there are any. Headlines dropped
   their full-row span so News and Free sit side by side beneath the notes instead of Free sharing a row
   with an often-empty panel
-- **Help quick-navigation is one segmented strip** on the shared `.gt-seg` the context bar and admin tab
+- **Help quick-navigation is one segmented strip** on the shared `.od-seg` the context bar and admin tab
   strips already use, instead of a third set of individually bordered pills wrapping into ragged rows.
   Help sections became panels matching the admin guide they were meant to resemble
 - **Licensed under AGPL-3.0**
@@ -450,8 +461,8 @@ Work since the 1.0.0-beta tag (2026-08-06).
   has a distinct silhouette and one filled signature element, verified as 31 unique drawings
 - **Rail brand, icons and labels now share one column.** The brand had its own inset and a 1.4rem mark
   against the rows' 1.15rem icons, so the mark, the wordmark and the nav labels sat on three different
-  left edges in the first 3rem of the rail. All three now derive from `--gt-rail-inset` and
-  `--gt-rail-icon-w`
+  left edges in the first 3rem of the rail. All three now derive from `--od-rail-inset` and
+  `--od-rail-icon-w`
 - **A page's controls followed you to every other page.** The first `ContextBar` mounted after login
   never had its portal torn down, so Activity's "Everyone / Friends only" strip sat in the top bar's
   centre slot for the rest of the session — Library rendered it *above* its own view strip, which read
@@ -476,7 +487,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
   it; keyboard focus keeps a ring on the range itself
 - **Filters no longer drifts away from the hamburger.** The page name rendered between the rail toggle
   and the Filters slot, so Filters sat at a different x on every page. The two are one cluster now,
-  and all bar buttons land on `--gt-control-h` — an icon-only button was previously shorter and
+  and all bar buttons land on `--od-control-h` — an icon-only button was previously shorter and
   narrower than the labelled one beside it
 - **Hover glow raised 25%** (53%/26px/4px → 66%/33px/5px). The ring came off in the previous pass,
   leaving the glow as the only hover marker, and it lost that argument against a bright cover
@@ -510,7 +521,7 @@ Work since the 1.0.0-beta tag (2026-08-06).
   migrated (6 → 2) with its main success path still hand-rolling `ok`, and how `wishlist.py` left the
   baseline altogether with three such returns in it. It now also resolves `body = {…}` → `jsonify(body)`
   and `jsonify(helper())` for bare functions defined in the file or imported absolutely from inside
-  `gametheca/`. Attribute calls like `obj.to_dict()` are deliberately left alone: they cannot be tied to
+  `oneirodex/`. Attribute calls like `obj.to_dict()` are deliberately left alone: they cannot be tied to
   one definition, and their `status` is usually a real field rather than an envelope — a lint that cries
   wolf gets `--update`-ed away, which is the one outcome that breaks a ratchet. **The recorded count
   went 846 → 856, and the rise is the point**: those ten call sites were always there, and four of them
@@ -754,14 +765,14 @@ Work since the 1.0.0-beta tag (2026-08-06).
   stacked flush and `getTotalSize()` ran short by one gap per row. The estimate now includes the gap and
   the row carries it as padding, so the measured height agrees
 - **Top-right tile buttons were hard to see and ignored the theme** — flat `rgba(0,0,0,.7)` on a white
-  hairline with a fixed white glyph, which vanished over light cover art. Repointed at `--gt-surface` /
-  `--gt-border` / `--gt-text`, and the menu offset now derives from the same stride as the button stack
+  hairline with a fixed white glyph, which vanished over light cover art. Repointed at `--od-surface` /
+  `--od-border` / `--od-text`, and the menu offset now derives from the same stride as the button stack
   instead of a magic `82px`, so hiding or adding a control moves the menu with it
 - **The scroll pair floated in a box instead of aligning to the rail.** `chrome/ScrollJump.css` had
-  already been rewritten to sit in the rail footer, but a duplicate in `gt-chrome.css` won on
+  already been rewritten to sit in the rail footer, but a duplicate in `od-chrome.css` won on
   specificity and kept the old fixed-position bordered design. The duplicate is gone. The selection bar
   and filter panel also docked at a literal `3.25rem` — the comfortable-density top bar height — so they
-  detached and floated over the tiles on compact; both read `--gt-topbar-h` now
+  detached and floated over the tiles on compact; both read `--od-topbar-h` now
 - **The Help quick-nav chips and section headers had no focus indicator**, clearing their outline and
   leaning on a treatment hover already produces, so a keyboard user could not tell focus from hover. Same
   visible ring as everywhere else now; the panel radius became a declared token rather than a raw `14px`
@@ -791,14 +802,14 @@ Work since the 1.0.0-beta tag (2026-08-06).
   bar links, theme links, scan filter chips, account nav, loading-motif specimens) shared one rule with
   `:hover`, so a focused control and a hovered one looked identical. Account nav was the worst: that
   same styling is its "current page" state, so focus and "you are already here" were the same picture
-- **Disabled chrome buttons looked and behaved like live ones.** `.gt-cbtn` had no disabled styling at
+- **Disabled chrome buttons looked and behaved like live ones.** `.od-cbtn` had no disabled styling at
   all, so "Mark all read" with nothing unread, refresh while refreshing, and delete mid-delete were
   indistinguishable from working buttons — and still lit up on hover, so the one control that would not
   respond was the one inviting the click
 - **Background workers shared the request's database session.** Six sites paired
   `@copy_current_request_context` with a raw `Thread`, which carries the request's session onto the new
   thread — including library deletion, which walks every game committing repeatedly. Replaced by
-  `run_in_background()` ([gametheca/utils/background.py](gametheca/utils/background.py)), which runs the
+  `run_in_background()` ([oneirodex/utils/background.py](oneirodex/utils/background.py)), which runs the
   worker in its own `app_context` and so its own session, and logs failures against a named task instead
   of a bare traceback. None of these workers ever wanted a request context; the decorator was handing
   them one they did not use, and the shared session came along with it. Two sites also passed ORM objects

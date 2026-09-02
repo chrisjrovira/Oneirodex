@@ -20,13 +20,13 @@ import ipaddress
 import pytest
 import requests
 
-from gametheca.utils import security
-from gametheca.utils.http_safe import (
+from oneirodex.utils import security
+from oneirodex.utils.http_safe import (
     BlockedOutboundUrl,
     safe_get,
     safe_request,
 )
-from gametheca.utils.security import (
+from oneirodex.utils.security import (
     is_blocked_outbound_host,
     is_cloud_metadata_host,
     validate_connector_http_url,
@@ -308,7 +308,7 @@ def test_lan_connector_pin_keeps_rfc1918(monkeypatch, resolves):
 
 def test_provider_cover_fetch_rejects_loopback():
     """Artwork providers used raw requests.get — same SSRF hole download_image closed."""
-    from gametheca.utils.providers.base import fetch_outbound_image
+    from oneirodex.utils.providers.base import fetch_outbound_image
 
     with pytest.raises(ValueError, match='Blocked'):
         fetch_outbound_image('http://127.0.0.1/cover.jpg', timeout=1)

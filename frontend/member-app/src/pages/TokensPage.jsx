@@ -144,11 +144,11 @@ export function TokensPage() {
   const presetMeta = presets[preset] || PRESET_FALLBACK[preset] || PRESET_FALLBACK.companion
 
   return (
-    <div className="gt-more-page gt-tokens gt-panels">
-      <div className="gt-page-header gt-panels__full">
+    <div className="od-more-page od-tokens od-panels">
+      <div className="od-page-header od-panels__full">
         <h1>API tokens</h1>
       </div>
-      <p className="gt-more-page__lede">
+      <p className="od-more-page__lede">
         Create personal access tokens for the desktop companion. The full secret is shown once —
         paste it into the companion Connect screen; it is stored in the OS keyring, not in this UI.
         Format is <code>gt_&lt;prefix&gt;_&lt;secret&gt;</code>. Hyphens and underscores inside the
@@ -167,44 +167,44 @@ export function TokensPage() {
       ) : null}
 
       {createdSecret ? (
-        <section className="gt-tokens__secret" aria-labelledby="gt-tokens-secret-heading">
-          <h2 id="gt-tokens-secret-heading">New token secret</h2>
-          <p className="gt-tokens__warning" role="status">
+        <section className="od-tokens__secret" aria-labelledby="od-tokens-secret-heading">
+          <h2 id="od-tokens-secret-heading">New token secret</h2>
+          <p className="od-tokens__warning" role="status">
             {createdSecret.warning}
           </p>
-          <p className="gt-tokens__secret-meta">
+          <p className="od-tokens__secret-meta">
             {createdSecret.name}
             {createdSecret.prefix ? ` · prefix ${createdSecret.prefix}` : null}
           </p>
-          <label className="gt-tokens__secret-label" htmlFor="gt-tokens-one-time-secret">
+          <label className="od-tokens__secret-label" htmlFor="od-tokens-one-time-secret">
             One-time secret
           </label>
           <input
             ref={secretInputRef}
-            id="gt-tokens-one-time-secret"
+            id="od-tokens-one-time-secret"
             type="text"
             readOnly
             spellCheck={false}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
-            className="gt-tokens__secret-value"
+            className="od-tokens__secret-value"
             value={createdSecret.secret}
             onFocus={(event) => {
               event.target.select()
               event.target.setSelectionRange(0, event.target.value.length)
             }}
           />
-          <p className="gt-tokens__secret-hint">
+          <p className="od-tokens__secret-hint">
             Includes <code>-</code> / <code>_</code> when present — that is expected, not truncation.
           </p>
-          <div className="gt-tokens__secret-actions">
-            <button type="button" className="gt-btn gt-btn--primary" onClick={() => void copySecret()}>
+          <div className="od-tokens__secret-actions">
+            <button type="button" className="od-btn od-btn--primary" onClick={() => void copySecret()}>
               {copyState === 'copied' ? 'Copied' : 'Copy secret'}
             </button>
             <button
               type="button"
-              className="gt-btn"
+              className="od-btn"
               onClick={() => {
                 setCreatedSecret(null)
                 setCopyState('idle')
@@ -214,12 +214,12 @@ export function TokensPage() {
             </button>
           </div>
           {copyState === 'copied' ? (
-            <p role="status" className="gt-tokens__copy-status">
+            <p role="status" className="od-tokens__copy-status">
               Secret copied. Paste the full token into the companion Connect screen.
             </p>
           ) : null}
           {copyState === 'failed' ? (
-            <p role="alert" className="gt-tokens__copy-status">
+            <p role="alert" className="od-tokens__copy-status">
               Clipboard unavailable (common on plain HTTP). The secret field is selected — press
               Ctrl+C / ⌘C and paste the full <code>gt_…</code> string without trimming at{' '}
               <code>-</code>.
@@ -228,10 +228,10 @@ export function TokensPage() {
         </section>
       ) : null}
 
-      <section className="gt-tokens__create" aria-labelledby="gt-tokens-create-heading">
-        <h2 id="gt-tokens-create-heading">Create token</h2>
-        <form className="gt-tokens__form" onSubmit={(event) => void onCreate(event)}>
-          <label className="gt-tokens__field">
+      <section className="od-tokens__create" aria-labelledby="od-tokens-create-heading">
+        <h2 id="od-tokens-create-heading">Create token</h2>
+        <form className="od-tokens__form" onSubmit={(event) => void onCreate(event)}>
+          <label className="od-tokens__field">
             <span>Name</span>
             <input
               type="text"
@@ -245,10 +245,10 @@ export function TokensPage() {
               required
             />
           </label>
-          <fieldset className="gt-tokens__presets" disabled={busy}>
+          <fieldset className="od-tokens__presets" disabled={busy}>
             <legend>Preset</legend>
             {Object.entries(presets).map(([key, meta]) => (
-              <label key={key} className="gt-tokens__preset">
+              <label key={key} className="od-tokens__preset">
                 <input
                   type="radio"
                   name="token-preset"
@@ -258,22 +258,22 @@ export function TokensPage() {
                 />
                 <span>
                   <strong>{meta.label || key}</strong>
-                  <span className="gt-tokens__preset-scopes">
+                  <span className="od-tokens__preset-scopes">
                     {(meta.scopes || []).join(', ') || '—'}
                   </span>
                   {PRESET_FALLBACK[key]?.hint ? (
-                    <span className="gt-tokens__preset-hint">{PRESET_FALLBACK[key].hint}</span>
+                    <span className="od-tokens__preset-hint">{PRESET_FALLBACK[key].hint}</span>
                   ) : null}
                 </span>
               </label>
             ))}
           </fieldset>
-          <p className="gt-tokens__preset-summary">
+          <p className="od-tokens__preset-summary">
             Selected scopes: {(presetMeta.scopes || []).join(', ') || '—'}
           </p>
           <button
             type="submit"
-            className="gt-btn gt-btn--primary"
+            className="od-btn od-btn--primary"
             disabled={busy || !name.trim()}
           >
             {busy ? 'Working…' : 'Create token'}
@@ -281,26 +281,26 @@ export function TokensPage() {
         </form>
       </section>
 
-      <section className="gt-tokens__list-wrap" aria-labelledby="gt-tokens-list-heading">
-        <h2 id="gt-tokens-list-heading">Your tokens</h2>
+      <section className="od-tokens__list-wrap" aria-labelledby="od-tokens-list-heading">
+        <h2 id="od-tokens-list-heading">Your tokens</h2>
         {activeTokens.length === 0 ? (
-          <p className="gt-more-page__lede">No active tokens yet.</p>
+          <p className="od-more-page__lede">No active tokens yet.</p>
         ) : (
-          <ul className="gt-tokens__list">
+          <ul className="od-tokens__list">
             {activeTokens.map((row) => (
-              <li key={row.id} className="gt-tokens__row">
-                <div className="gt-tokens__row-main">
+              <li key={row.id} className="od-tokens__row">
+                <div className="od-tokens__row-main">
                   <strong>{row.name}</strong>
-                  <span className="gt-tokens__prefix">{row.token_prefix}</span>
-                  <span className="gt-tokens__scopes">{(row.scopes || []).join(', ')}</span>
-                  <span className="gt-tokens__meta">
+                  <span className="od-tokens__prefix">{row.token_prefix}</span>
+                  <span className="od-tokens__scopes">{(row.scopes || []).join(', ')}</span>
+                  <span className="od-tokens__meta">
                     Created {formatWhen(row.created_at)}
                     {row.last_used_at ? ` · Last used ${formatWhen(row.last_used_at)}` : ' · Never used'}
                   </span>
                 </div>
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={busy}
                   onClick={() => void onRevoke(row.id, row.name)}
                 >

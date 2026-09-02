@@ -18,8 +18,8 @@ while any legacy duplicates are still being collapsed.
 
 from sqlalchemy import select
 
-from gametheca.models import GlobalSettings
-from gametheca.utils.global_settings import (
+from oneirodex.models import GlobalSettings
+from oneirodex.utils.global_settings import (
     global_settings_row,
     global_settings_row_or_create,
 )
@@ -89,13 +89,13 @@ class TestCreateIsIdempotent:
 
 
 def count_rows() -> int:
-    from gametheca import db
+    from oneirodex import db
 
     return len(db.session.execute(select(GlobalSettings)).scalars().all())
 
 
 def db_min_id() -> int:
-    from gametheca import db
+    from oneirodex import db
 
     return min(
         row.id for row in db.session.execute(select(GlobalSettings)).scalars().all()

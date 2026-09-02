@@ -96,7 +96,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
     ? `${libraryPlatform} · ${(report && report.region) || region}`
     : 'Set completion'
   const regionSelect = (
-    <label className="gt-set-completion-region">
+    <label className="od-set-completion-region">
       Region
       <select
         aria-label="Region"
@@ -113,24 +113,24 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
   )
   const libraryLinks = libraryPlatform ? (
     <>
-      <Link className={useNewChrome ? 'gt-cbtn' : 'gt-btn'} to="/systems">
+      <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
         Systems
       </Link>
       <Link
-        className={useNewChrome ? 'gt-cbtn' : 'gt-btn'}
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
         to={`/library?library_platform=${encodeURIComponent(libraryPlatform)}`}
       >
         Browse library
       </Link>
       <Link
-        className={useNewChrome ? 'gt-cbtn' : 'gt-btn'}
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
         to={`/systems/catalog?library_platform=${encodeURIComponent(libraryPlatform)}`}
       >
         Licensed catalog
       </Link>
     </>
   ) : (
-    <Link className={useNewChrome ? 'gt-cbtn' : 'gt-btn'} to="/systems">
+    <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
       Back to Systems
     </Link>
   )
@@ -153,13 +153,13 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
     return (
       <>
         {chrome}
-        <div className="gt-more-page gt-set-completion-page">
+        <div className="od-more-page od-set-completion-page">
           {useNewChrome ? null : (
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>Set completion</h1>
             </div>
           )}
-          <p className="gt-more-page__lede">
+          <p className="od-more-page__lede">
             Open this page from Systems after an admin uploads a reference DAT.
           </p>
           {useNewChrome ? null : libraryLinks}
@@ -173,9 +173,9 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
     return (
       <>
         {chrome}
-        <div className="gt-more-page gt-set-completion-page">
+        <div className="od-more-page od-set-completion-page">
           {useNewChrome ? null : (
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>
                 {libraryPlatform} · {region}
               </h1>
@@ -187,7 +187,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
                 {`No reference set uploaded for ${libraryPlatform}/${region}.`}
               </p>
               {useNewChrome ? null : (
-                <Link className="gt-btn" to="/systems">
+                <Link className="od-btn" to="/systems">
                   Systems
                 </Link>
               )}
@@ -208,9 +208,9 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
     return (
       <>
         {chrome}
-        <div className="gt-more-page gt-set-completion-page">
+        <div className="od-more-page od-set-completion-page">
           {useNewChrome ? null : (
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>
                 {libraryPlatform} · {region}
               </h1>
@@ -225,42 +225,42 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
   return (
     <>
       {chrome}
-      <div className="gt-more-page gt-set-completion-page">
+      <div className="od-more-page od-set-completion-page">
         {useNewChrome ? null : (
           <>
-            <div className="gt-page-header">
+            <div className="od-page-header">
               <h1>
                 {libraryPlatform} · {report.region}
               </h1>
             </div>
-            <p className="gt-more-page__lede">
+            <p className="od-more-page__lede">
               {report.set_name || 'Reference set'} — {report.owned} / {report.total} owned (
               {report.percent}%). Title match only; CRC matching comes later. Missing:{' '}
               {report.missing_count}.
             </p>
-            <div className="gt-set-completion-toolbar">
+            <div className="od-set-completion-toolbar">
               {libraryLinks}
               {regionSelect}
             </div>
           </>
         )}
         {useNewChrome ? (
-          <p className="gt-more-page__lede">
+          <p className="od-more-page__lede">
             {report.set_name || 'Reference set'}. Title match only; CRC matching comes later.
             Missing: {report.missing_count}.
           </p>
         ) : null}
-        {actionMsg ? <p className="gt-set-completion-msg">{actionMsg}</p> : null}
+        {actionMsg ? <p className="od-set-completion-msg">{actionMsg}</p> : null}
         {missing.length === 0 ? (
-          <p className="gt-more-page__lede">No missing titles for this set — nice.</p>
+          <p className="od-more-page__lede">No missing titles for this set — nice.</p>
         ) : (
-          <ul className="gt-set-completion-missing">
+          <ul className="od-set-completion-missing">
             {missing.map((row) => (
               <li key={row.normalized_name || row.name}>
                 <span>{row.name}</span>
                 <button
                   type="button"
-                  className="gt-btn"
+                  className="od-btn"
                   disabled={busyTitle === row.name}
                   onClick={() => addToWishlist(row.name)}
                 >

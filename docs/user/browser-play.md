@@ -18,9 +18,9 @@ Oneirodex play modes for systems **below PS5 / Xbox Series**. Those two stay **c
 | Dreamcast · 3DS · PS Vita · PS2 | No | Preferred | flycast / citra / vita3k / pcsx2 companion cores + hints |
 | Xbox · 360 · One · PS3 · PS4 | Catalog | Optional BYO | `play_mode=companion` + hints; no fake Play |
 | Wii U · Switch | Catalog | — | Enums shipped; no Dolphin / no browser Play |
-| Pokémon Mini · CD-i · Sega Pico · Jaguar CD | No | Preferred | Companion; Jaguar CD never shares cart `virtualjaguar` |
+| Pokémon Mini · CD-i · Sega Pico · Jaguar CD · Game & Watch | No | Preferred | Companion; Jaguar CD never shares cart `virtualjaguar`. Game & Watch `gw` is not in WebRetro WASM. |
 | Amiga · Amiga CD32 | No | Preferred | PUAE companion; CD32 is distinct from Amiga |
-| MSX · ZX Spectrum · Amstrad CPC · Atari ST · Apple II · Atari 8-bit · X68000 · PC-98 | No | Preferred | `bluemsx` / Fuse / cap32 / Hatari / AppleWin BYO / atari800 / PX68K / np2kai. GX4000 stays the Amstrad *console* (Retro family). No WebRetro WASM. |
+| MSX · ZX Spectrum · Amstrad CPC · Atari ST · Apple II · Atari 8-bit · X68000 · PC-98 · BBC Micro | No | Preferred | `bluemsx` / Fuse / cap32 / Hatari / AppleWin BYO / atari800 / PX68K / np2kai / BeebEm BYO. GX4000 stays the Amstrad *console* (Retro family). No WebRetro WASM. |
 | PS5 · Xbox Series | Catalog only | — | `play_mode=catalog` |
 
 Admin: upload BIOS via Admin → Emulators, **Scan collection** on a folder of dumps you already own, or on household Unraid optionally mount a private appdata BIOS folder — see [BIOS / firmware](#bios--firmware-filenames-only). Browse API returns `bios` + `n64_note` on playable titles. Systems hub badges show **Browser** / **Companion** / **Catalog** per platform. **More → Ways to Play** and Game Catalog `play_mode=` filter the catalog by that same honesty. Operator core drops: [webretro-cores.md](../runbooks/webretro-cores.md) · health: `GET /api/emulator/health` (`deferred_cores`) · JS allowlist: `GET /api/emulator/installed-cores.js`.
@@ -33,7 +33,7 @@ Oneirodex **does not ship** copyrighted BIOS binaries in git, CI artifacts, or t
 |---|---|---|
 | **Admin upload** (public / default) | Always available | `POST /api/emulator-bios` → container `…/static/library/bios/` (WebRetro `biosCdn`) |
 | **Scan a collection** | Admin → Emulators | Point at a folder of dumps you already own (subfolders included). Scan, pick versions when names collide, install matching firmware. Missing names open as copyable markdown. Same path can be `BIOS_IMPORT_SOURCE` for boot import. |
-| **Local private mount** (household Unraid) | Optional | Bind host `/mnt/user/appdata/gametheca/bios` → `/app/gametheca/static/library/bios` — [unraid-deploy.md](../runbooks/unraid-deploy.md#local-private-bios-mount-vs-public-upload). Not the games share. |
+| **Local private mount** (household Unraid) | Optional | Bind host `/mnt/user/appdata/oneirodex/bios` → `/app/oneirodex/static/library/bios` — [unraid-deploy.md](../runbooks/unraid-deploy.md#local-private-bios-mount-vs-public-upload). Not the games share. |
 
 **Expected filenames** (checklist — no download links):
 
@@ -57,11 +57,11 @@ never had scanlines. The **Picture** control on the play bar cycles three treatm
 Browser play opens `webretro.html` with a per-system **artistic room** — multi-layer wallpaper, floor plane, ambient lamp, bezel material sheen, bar typography hierarchy (brand eyebrow + system label), and light motion (wall drift · lamp breathe · bezel specular) — not just an accent color. Pass `platform=` (or rely on `core=` mapping) so the skin applies immediately; the bar shows the system name as the hero label.
 
 - **← Game Catalog** and **Power** always leave to `/library`. They clear the emulator’s leave-site guard first (WebRetro installs `onbeforeunload` after the ROM starts; Cancel on that dialog looked like the buttons did nothing). They never use `history.back()` — the iframe can add its own history entries and strand you on the play shell.
-- **Pause · Reset · Mute · volume · Save · Load · Rewind · FF · Picture** sit on the play bar and talk to the WebRetro iframe over the save-bridge (`gt-pause` / `gt-reset` / `gt-audio` / `gt-save-state` / `gt-load-state` / `gt-cabinet-key` / `gt-picture`). Mute and volume write RetroArch `audio_mute` / `audio_volume` and reload config. **Save / Load** click the iframe's own state commands (also **F2** / **F3** with the game focused). **Rewind** is a hold (Right Shift, or hold the bar button). **FF** toggles with **F5** (hold **Tab** in the game to burst). **Picture** cycles CRT (room scanlines + tube vignette) · Sharp (nearest-neighbour, scanlines off) · Soft (RetroArch `video_smooth`). This is CSS plus one RetroArch flag — **no shader presets are vendored**, and run-ahead is not enabled (single-thread WASM cannot afford it). Rewind stays **off** on heavy cores (N64, PS1, Saturn, Dreamcast, PSP). An in-game overlay repeats Pause/Reset/Mute/Save/Load/Rewind/FF/Power; it stays visible on touch, and on a pointer it fades in when you move over the play stage. The overlay gradient itself is click-through so WebRetro’s **Start** and core list stay reachable — only the overlay buttons take the pointer. Press **?** for the shortcut list.
+- **Pause · Reset · Mute · volume · Save · Load · Rewind · FF · Picture** sit on the play bar and talk to the WebRetro iframe over the save-bridge (`od-pause` / `od-reset` / `od-audio` / `od-save-state` / `od-load-state` / `od-cabinet-key` / `od-picture`). Mute and volume write RetroArch `audio_mute` / `audio_volume` and reload config. **Save / Load** click the iframe's own state commands (also **F2** / **F3** with the game focused). **Rewind** is a hold (Right Shift, or hold the bar button). **FF** toggles with **F5** (hold **Tab** in the game to burst). **Picture** cycles CRT (room scanlines + tube vignette) · Sharp (nearest-neighbour, scanlines off) · Soft (RetroArch `video_smooth`). This is CSS plus one RetroArch flag — **no shader presets are vendored**, and run-ahead is not enabled (single-thread WASM cannot afford it). Rewind stays **off** on heavy cores (N64, PS1, Saturn, Dreamcast, PSP). An in-game overlay repeats Pause/Reset/Mute/Save/Load/Rewind/FF/Power; it stays visible on touch, and on a pointer it fades in when you move over the play stage. The overlay gradient itself is click-through so WebRetro’s **Start** and core list stay reachable — only the overlay buttons take the pointer. Press **?** for the shortcut list.
 - Distinct rooms include **1980s wood den**, **1990s teen bedroom**, **late-90s carpet den**, **2000s media centre**, **arcade floor**, and **computer desk** — the same setting language as the UI theme picker. Bezel chrome stays per-platform; the room is the decade you sit in. Distinguishable at a glance without reading docs.
 - The emulator screen is **aspect-locked to the core's native shape** (SNES/NES/Genesis ~4:3, GBA 3:2, GB/GBC ~10:9, NDS portrait dual-screen, PSP/Vita ~16:9, etc.) instead of stretching to fill the bezel, so you no longer get big empty black bars around the picture.
 - Motion respects `prefers-reduced-motion`.
-- After deploy, hard-refresh the play tab (Ctrl+F5) so cached `play-skins.css` / `.js` drop. Smoke: `node gametheca/static/vendor/webretro/play-skins.assert.mjs`.
+- After deploy, hard-refresh the play tab (Ctrl+F5) so cached `play-skins.css` / `.js` drop. Smoke: `node oneirodex/static/vendor/webretro/play-skins.assert.mjs`.
 
 ## Audio/video tuning + WASM limits (SNES and friends)
 
@@ -90,7 +90,7 @@ Browser Play streams via `GET /api/downloadrom/<uuid>` (ASGI). Server extracts a
 | `.rar` | Requires `rarfile` + a host `unrar`/`bsdtar`/`7z` binary — the Docker image ships `libarchive-tools` (`bsdtar`) + `p7zip-full` (`7z`) so this works out of the box in Compose/Unraid |
 | `.gz` | Single ROM wrappers only (`Adventure.nes.gz`). `.tar.gz` is **not** browser-playable (`play_blocker=unsupported_archive`) |
 
-Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#gt-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch` — including `missing_extractor` (prefer `.zip` / host tools). Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
+Failures return JSON: `{"error": "…", "code": "…", "hint": "…"}` (`error` always present). The play shell (`webretro.html`) surfaces non-2xx `/api/downloadrom/` responses in an accessible `#od-play-alert` region (`error` plus optional `hint`) instead of a silent `.catch` — including `missing_extractor` (prefer `.zip` / host tools). Browse may set `play_blocker=unsupported_archive`; GameCard / Game Details show a disabled Play control with tooltip when that blocker is present.
 
 When `firmware_missing` is true, browse/details also return `bios_required`, `bios.message`, and `bios.hint`. Member SPA blocks Play (quiet honesty + Help / Admin → Emulators for librarians) — **never** a Download BIOS CTA. Optional accuracy files do **not** set `firmware_missing`: NES carts play without `disksys.rom`, SNES without DSP/CX4 ROMs, N64 without 64DD IPL, Genesis carts without Sega CD BIOS. Sega CD and other hard-required systems still grey Play until a matching dump is on the firmware volume. Version Download uses `POST /api/downloads/games/<uuid>` and toasts Backend `hint` on **410** `path_missing`.
 
@@ -102,7 +102,7 @@ Single-file discs (`.iso`, `.chd`, a lone `.bin`) stream unchanged — no zip wr
 
 ## Cloud saves (WebRetro bridge)
 
-The play bar **Sync cloud saves** uses `gt-bridge.js` postMessage (`gt-export-saves` / `gt-import-saves`):
+The play bar **Sync cloud saves** uses `od-bridge.js` postMessage (`od-export-saves` / `od-import-saves`):
 
 - Export retries briefly so slow cores can flush `.state` / battery SRAM.
 - SRAM pick prefers `.srm`, then memory-card `.mcr`, then `.sav` (helps PS1-style cores).

@@ -1,8 +1,8 @@
 """W21-BE-3 — IGDB easy-title miss recovery (mocked candidates, no live IGDB)."""
 
-from gametheca.utils.gamenames import generate_goty_variants
-from gametheca.utils.game_name_parse import parse_game_label
-from gametheca.utils.match_scoring import (
+from oneirodex.utils.gamenames import generate_goty_variants
+from oneirodex.utils.game_name_parse import parse_game_label
+from oneirodex.utils.match_scoring import (
     DEFAULT_HIGH_THRESHOLD,
     score_candidate,
     select_best_match,

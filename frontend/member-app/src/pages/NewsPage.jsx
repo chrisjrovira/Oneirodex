@@ -265,19 +265,19 @@ export function NewsPage({ shellConfig = {} }) {
         />
       ) : null}
     <div
-      className="gt-more-page gt-news gt-news--fill"
+      className="od-more-page od-news od-news--fill"
       data-layout={layout}
       data-tab={activeTab}
     >
       {useNewChrome ? null : (
-        <div className="gt-page-header gt-news__header gt-panels__full">
+        <div className="od-page-header od-news__header od-panels__full">
           <div>
             <h1>News</h1>
-            <p className="gt-more-page__lede">
+            <p className="od-more-page__lede">
               Admin notes, free claims, and gaming headlines.
             </p>
           </div>
-          <nav className="gt-news__tabs" aria-label="News sections">
+          <nav className="od-news__tabs" aria-label="News sections">
             {NEWS_VIEWS.map(({ id, label }) => (
               <button
                 key={id}
@@ -302,8 +302,8 @@ export function NewsPage({ shellConfig = {} }) {
       />
 
       {!error && !loading && featured && (activeTab === 'all' || activeTab === 'admins') ? (
-        <section className="gt-news__hero gt-panels__full" aria-label="Featured">
-          <p className="gt-news__hero-kicker">
+        <section className="od-news__hero od-panels__full" aria-label="Featured">
+          <p className="od-news__hero-kicker">
             {featured.kind === 'admin'
               ? 'From your admins'
               : featured.kind === 'free'
@@ -312,26 +312,26 @@ export function NewsPage({ shellConfig = {} }) {
           </p>
           {featured.kind === 'headline' ? (
             <a
-              className="gt-news__hero-link"
+              className="od-news__hero-link"
               href={featured.item.url}
               target="_blank"
               rel="noreferrer"
             >
-              <h2 className="gt-news__hero-title">{featured.item.title}</h2>
+              <h2 className="od-news__hero-title">{featured.item.title}</h2>
             </a>
           ) : (
-            <h2 className="gt-news__hero-title">{featured.item.title}</h2>
+            <h2 className="od-news__hero-title">{featured.item.title}</h2>
           )}
           {featured.kind === 'admin' && featured.item.body ? (
-            <p className="gt-news__hero-body">{truncate(featured.item.body, 280)}</p>
+            <p className="od-news__hero-body">{truncate(featured.item.body, 280)}</p>
           ) : null}
           {featured.kind === 'headline' && featured.item.summary ? (
-            <p className="gt-news__hero-body">{truncate(featured.item.summary, 220)}</p>
+            <p className="od-news__hero-body">{truncate(featured.item.summary, 220)}</p>
           ) : null}
           {featured.kind === 'free' && featured.item.description ? (
-            <p className="gt-news__hero-body">{truncate(featured.item.description, 180)}</p>
+            <p className="od-news__hero-body">{truncate(featured.item.description, 180)}</p>
           ) : null}
-          <p className="gt-news__hero-meta">
+          <p className="od-news__hero-meta">
             {featured.kind === 'admin' && featured.item.created_at ? (
               <time dateTime={featured.item.created_at}>
                 {formatLocaleDate(featured.item.created_at)}
@@ -349,7 +349,7 @@ export function NewsPage({ shellConfig = {} }) {
             ) : null}
             {featured.kind === 'free' ? (
               <>
-                <span className="gt-news__store">{storeLabel(featured.item.store)}</span>
+                <span className="od-news__store">{storeLabel(featured.item.store)}</span>
                 {featured.item.ends_at ? (
                   <time dateTime={featured.item.ends_at}>
                     Ends {formatEndsAt(featured.item.ends_at)}
@@ -361,7 +361,7 @@ export function NewsPage({ shellConfig = {} }) {
         </section>
       ) : null}
 
-      <div className="gt-news__stage">
+      <div className="od-news__stage">
       {/* Admin notes lead, full width, and only when there are any.
           `announcements` is an array, so the old `announcements &&` was true
           even when empty and rendered a heading, a zero count and "No
@@ -370,19 +370,19 @@ export function NewsPage({ shellConfig = {} }) {
           empty state still shows, because there the section *is* the page and
           silence would read as a failed load. */}
       {!error && announcements && showAdmins && (announcements.length > 0 || activeTab === 'admins') ? (
-        <section className="gt-news__section gt-news__admins" aria-labelledby="news-admins-heading">
-          <div className="gt-news__section-head">
+        <section className="od-news__section od-news__admins" aria-labelledby="news-admins-heading">
+          <div className="od-news__section-head">
             <h2 id="news-admins-heading">From your admins</h2>
-            <span className="gt-news__count">{announcements.length}</span>
+            <span className="od-news__count">{announcements.length}</span>
           </div>
-          <div className="gt-news__panel-body">
-          {announcements.length === 0 ? <p className="gt-news__empty">No announcements yet.</p> : null}
+          <div className="od-news__panel-body">
+          {announcements.length === 0 ? <p className="od-news__empty">No announcements yet.</p> : null}
           {adminRest.length > 0 ? (
-            <ul className="gt-news__rail">
+            <ul className="od-news__rail">
               {adminRest.map((item) => (
-                <li key={item.id} className="gt-news__rail-item gt-news__rail-item--admin">
+                <li key={item.id} className="od-news__rail-item od-news__rail-item--admin">
                   <article>
-                    <header className="gt-news__rail-head">
+                    <header className="od-news__rail-head">
                       <strong>{item.title}</strong>
                       {item.created_at ? (
                         <time dateTime={item.created_at}>
@@ -401,43 +401,43 @@ export function NewsPage({ shellConfig = {} }) {
       ) : null}
 
       {!error && freeGames && showFree ? (
-        <section id="free-games" className="gt-news__section gt-news__free" aria-labelledby="news-free-heading">
-          <div className="gt-news__section-head">
+        <section id="free-games" className="od-news__section od-news__free" aria-labelledby="news-free-heading">
+          <div className="od-news__section-head">
             <h2 id="news-free-heading">Free now</h2>
-            <span className="gt-news__count">{freeGames.length}</span>
+            <span className="od-news__count">{freeGames.length}</span>
           </div>
-          <p className="gt-news__hint">
+          <p className="od-news__hint">
             Claim on the store. Oneirodex does not download DRM titles — sync Ownership after claiming.
           </p>
           {freeGames.length === 0 ? (
-            <p className="gt-news__empty">No free offers cached yet. Check back after the next refresh.</p>
+            <p className="od-news__empty">No free offers cached yet. Check back after the next refresh.</p>
           ) : layout === 'rss' ? (
-            <div className="gt-news__panel-body">
-            <ul className="gt-news__magazine">
+            <div className="od-news__panel-body">
+            <ul className="od-news__magazine">
               {freeItems.map((item) => {
                 const https = item.links?.https || item.claim_url || item.store_url
                 const protocol = item.links?.protocol
                 const ends = formatEndsAt(item.ends_at)
                 return (
-                  <li key={`${item.store}-${item.external_id}`} className="gt-news__mag-row">
+                  <li key={`${item.store}-${item.external_id}`} className="od-news__mag-row">
                     <article>
-                      <header className="gt-news__rail-head">
-                        <span className="gt-news__store">{storeLabel(item.store)}</span>
+                      <header className="od-news__rail-head">
+                        <span className="od-news__store">{storeLabel(item.store)}</span>
                         <strong>{item.title}</strong>
                         {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
                       </header>
-                      <p className="gt-news__actions">
+                      <p className="od-news__actions">
                         {item.connected && item.id ? (
                           <button
                             type="button"
-                            className="gt-btn gt-btn--primary"
+                            className="od-btn od-btn--primary"
                             onClick={() => void claimAssist(item)}
                           >
                             Claim &amp; sync
                           </button>
                         ) : https ? (
                           <a
-                            className="gt-btn gt-btn--primary"
+                            className="od-btn od-btn--primary"
                             href={https}
                             target="_blank"
                             rel="noreferrer"
@@ -446,13 +446,13 @@ export function NewsPage({ shellConfig = {} }) {
                           </a>
                         ) : null}
                         {protocol ? (
-                          <a className="gt-btn gt-btn--ghost" href={protocol}>
+                          <a className="od-btn od-btn--ghost" href={protocol}>
                             Open in app
                           </a>
                         ) : null}
                       </p>
                       {assistMsg[item.id] ? (
-                        <p className="gt-news__assist-msg">{assistMsg[item.id]}</p>
+                        <p className="od-news__assist-msg">{assistMsg[item.id]}</p>
                       ) : null}
                     </article>
                   </li>
@@ -461,32 +461,32 @@ export function NewsPage({ shellConfig = {} }) {
             </ul>
             </div>
           ) : (
-            <div className="gt-news__panel-body">
-            <ul className="gt-news__free-strip">
+            <div className="od-news__panel-body">
+            <ul className="od-news__free-strip">
               {freeItems.map((item) => {
                 const https = item.links?.https || item.claim_url || item.store_url
                 const protocol = item.links?.protocol
                 const ends = formatEndsAt(item.ends_at)
                 return (
-                  <li key={`${item.store}-${item.external_id}`} className="gt-news__free-tile">
+                  <li key={`${item.store}-${item.external_id}`} className="od-news__free-tile">
                     <article>
-                      <div className="gt-news__free-row">
+                      <div className="od-news__free-row">
                         {item.image_url ? (
                           <img
-                            className="gt-news__free-thumb"
+                            className="od-news__free-thumb"
                             src={item.image_url}
                             alt=""
                             loading="lazy"
                           />
                         ) : (
-                          <div className="gt-news__free-thumb gt-news__free-thumb--empty" aria-hidden="true" />
+                          <div className="od-news__free-thumb od-news__free-thumb--empty" aria-hidden="true" />
                         )}
-                        <div className="gt-news__free-body">
-                          <p className="gt-news__meta">
-                            <span className="gt-news__store">{storeLabel(item.store)}</span>
+                        <div className="od-news__free-body">
+                          <p className="od-news__meta">
+                            <span className="od-news__store">{storeLabel(item.store)}</span>
                             {item.worth ? <span>{item.worth}</span> : null}
                             {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
-                            {item.connected ? <span className="gt-news__linked">Linked</span> : null}
+                            {item.connected ? <span className="od-news__linked">Linked</span> : null}
                           </p>
                           <strong>{item.title}</strong>
                           {item.description ? <p>{truncate(item.description, 110)}</p> : null}
@@ -494,18 +494,18 @@ export function NewsPage({ shellConfig = {} }) {
                               Linked store → claim assist opens the offer *and*
                               registers ownership. Not linked → plain deeplink,
                               with the reason it is not seamless stated once. */}
-                          <p className="gt-news__actions">
+                          <p className="od-news__actions">
                             {item.connected && item.id ? (
                               <>
                                 <button
                                   type="button"
-                                  className="gt-btn gt-btn--primary"
+                                  className="od-btn od-btn--primary"
                                   onClick={() => void claimAssist(item)}
                                 >
                                   Claim &amp; sync
                                 </button>
                                 {protocol ? (
-                                  <a className="gt-btn gt-btn--ghost" href={protocol}>
+                                  <a className="od-btn od-btn--ghost" href={protocol}>
                                     Open in app
                                   </a>
                                 ) : null}
@@ -514,7 +514,7 @@ export function NewsPage({ shellConfig = {} }) {
                               <>
                                 {https ? (
                                   <a
-                                    className="gt-btn gt-btn--primary"
+                                    className="od-btn od-btn--primary"
                                     href={https}
                                     target="_blank"
                                     rel="noreferrer"
@@ -522,14 +522,14 @@ export function NewsPage({ shellConfig = {} }) {
                                     Claim on {storeLabel(item.store)}
                                   </a>
                                 ) : null}
-                                <Link className="gt-news__connect-hint" to="/ownership">
+                                <Link className="od-news__connect-hint" to="/ownership">
                                   Link {storeLabel(item.store)} to sync automatically
                                 </Link>
                               </>
                             )}
                           </p>
                           {assistMsg[item.id] ? (
-                            <p className="gt-news__assist-msg">{assistMsg[item.id]}</p>
+                            <p className="od-news__assist-msg">{assistMsg[item.id]}</p>
                           ) : null}
                         </div>
                       </div>
@@ -548,24 +548,24 @@ export function NewsPage({ shellConfig = {} }) {
           Free up beside admins and left the page reading as one long scroll on
           the tab that shows everything. */}
       {!error && headlines && showHeadlines ? (
-        <section className="gt-news__section gt-news__headlines" aria-labelledby="news-headlines-heading">
-          <div className="gt-news__section-head">
+        <section className="od-news__section od-news__headlines" aria-labelledby="news-headlines-heading">
+          <div className="od-news__section-head">
             <h2 id="news-headlines-heading">Gaming headlines</h2>
-            <span className="gt-news__count">{visibleHeadlines.length}</span>
+            <span className="od-news__count">{visibleHeadlines.length}</span>
           </div>
 
           {/* Pick your sites. Every configured source is listed whether or not
               it has an article today — filtering by what happened to arrive
               would hide a quiet site behind its own silence. */}
           {sources.length > 0 ? (
-            <div className="gt-news__sources" role="group" aria-label="Headline sources">
+            <div className="od-news__sources" role="group" aria-label="Headline sources">
               {sources.map((source) => {
                 const on = !mutedSources.has(source)
                 return (
                   <button
                     key={source}
                     type="button"
-                    className="gt-cbtn gt-news__source"
+                    className="od-cbtn od-news__source"
                     aria-pressed={on}
                     onClick={() => toggleSource(source)}
                     title={on ? `Hide ${source}` : `Show ${source}`}
@@ -578,19 +578,19 @@ export function NewsPage({ shellConfig = {} }) {
           ) : null}
 
           {visibleHeadlines.length === 0 ? (
-            <p className="gt-news__empty">
+            <p className="od-news__empty">
               {mutedSources.size > 0 && headlines.length > 0
                 ? 'Every source is switched off — turn one back on above.'
                 : 'No external headlines available right now.'}
             </p>
           ) : layout === 'rss' ? (
-            <div className="gt-news__panel-body">
-            <ul className="gt-news__magazine">
+            <div className="od-news__panel-body">
+            <ul className="od-news__magazine">
               {headlineItems.map((item) => (
-                <li key={item.url} className="gt-news__mag-row">
+                <li key={item.url} className="od-news__mag-row">
                   <article>
                     <a
-                      className="gt-news__mag-link"
+                      className="od-news__mag-link"
                       href={item.url}
                       target="_blank"
                       rel="noreferrer"
@@ -598,8 +598,8 @@ export function NewsPage({ shellConfig = {} }) {
                       <strong>{item.title}</strong>
                     </a>
                     {item.summary ? <p>{truncate(item.summary, 180)}</p> : null}
-                    <p className="gt-news__meta">
-                      <span className="gt-news__source">{item.source}</span>
+                    <p className="od-news__meta">
+                      <span className="od-news__source">{item.source}</span>
                       {item.published_at ? (
                         <time dateTime={item.published_at}>
                           {formatLocaleDate(item.published_at)}
@@ -615,20 +615,20 @@ export function NewsPage({ shellConfig = {} }) {
             /* Image-forward cards (UX-C14) — the way Steam/Epic present news.
                Feeds that carry no artwork fall back to a text card rather than
                a broken frame. Grid mode keeps this markup and densifies in CSS. */
-            <div className="gt-news__panel-body">
-            <ul className="gt-news__cards">
+            <div className="od-news__panel-body">
+            <ul className="od-news__cards">
               {headlineItems.map((item) => (
-                <li key={item.url} className="gt-news__card">
+                <li key={item.url} className="od-news__card">
                   <a
-                    className="gt-news__card-link"
+                    className="od-news__card-link"
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <span className="gt-news__card-art-wrap">
+                    <span className="od-news__card-art-wrap">
                       {item.image_url ? (
                         <img
-                          className="gt-news__card-art"
+                          className="od-news__card-art"
                           src={item.image_url}
                           alt=""
                           loading="lazy"
@@ -637,13 +637,13 @@ export function NewsPage({ shellConfig = {} }) {
                           }}
                         />
                       ) : (
-                        <span className="gt-news__card-art gt-news__card-art--empty" aria-hidden="true" />
+                        <span className="od-news__card-art od-news__card-art--empty" aria-hidden="true" />
                       )}
                       {item.source ? (
-                        <span className="gt-news__card-badge">{item.source}</span>
+                        <span className="od-news__card-badge">{item.source}</span>
                       ) : null}
                       {item.published_at ? (
-                        <time className="gt-news__card-when" dateTime={item.published_at}>
+                        <time className="od-news__card-when" dateTime={item.published_at}>
                           {formatLocaleDate(item.published_at, {
                             compact: true,
                             fallback: null,
@@ -651,10 +651,10 @@ export function NewsPage({ shellConfig = {} }) {
                         </time>
                       ) : null}
                     </span>
-                    <span className="gt-news__card-body">
-                      <strong className="gt-news__card-title">{item.title}</strong>
+                    <span className="od-news__card-body">
+                      <strong className="od-news__card-title">{item.title}</strong>
                       {item.summary ? (
-                        <span className="gt-news__card-summary">{truncate(item.summary, 140)}</span>
+                        <span className="od-news__card-summary">{truncate(item.summary, 140)}</span>
                       ) : null}
                     </span>
                   </a>

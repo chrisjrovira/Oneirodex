@@ -8,14 +8,14 @@ import pytest
 from flask import Flask
 from flask_login import login_user
 
-from gametheca.models import User
-from gametheca.utils.bios_install import (
+from oneirodex.models import User
+from oneirodex.utils.bios_install import (
     apply_firmware_import,
     firmware_import_allowed_bases,
     plan_firmware_import,
     volume_missing_markdown,
 )
-from gametheca.utils.security import is_safe_path
+from oneirodex.utils.security import is_safe_path
 
 
 @pytest.fixture()
@@ -165,7 +165,7 @@ def test_scan_and_install_routes(client, app, db_session, configured_install, tm
     app.config['BIOS_IMPORT_SOURCE'] = str(pack)
 
     monkeypatch.setattr(
-        'gametheca.routes_apis.emulator_cheats.firmware_import_allowed_bases',
+        'oneirodex.routes_apis.emulator_cheats.firmware_import_allowed_bases',
         lambda _app: [str(tmp_path)],
     )
 
@@ -201,7 +201,7 @@ def test_scan_refuses_a_folder_outside_the_allowlist(
     pack.mkdir()
     allowed.mkdir()
     monkeypatch.setattr(
-        'gametheca.routes_apis.emulator_cheats.firmware_import_allowed_bases',
+        'oneirodex.routes_apis.emulator_cheats.firmware_import_allowed_bases',
         lambda _app: [str(allowed)],
     )
 

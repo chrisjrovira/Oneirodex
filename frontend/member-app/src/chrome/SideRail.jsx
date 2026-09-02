@@ -56,7 +56,7 @@ function useCollapsedGroups() {
  * are the ones getMoreGroups already defined for the old menu — that grouping
  * was sound, it was just being applied to a popover that hid it.
  *
- * Styling lives entirely in the theme's gt-shell.css so the admin shell and
+ * Styling lives entirely in the theme's od-shell.css so the admin shell and
  * legacy Jinja pages render the same rail from the same source (the UIR-4
  * pattern). This component contributes no CSS of its own.
  */
@@ -110,11 +110,11 @@ export function SideRail({
         <li key={link.id}>
           <button
             type="button"
-            className="gt-rail__link"
+            className="od-rail__link"
             /* Which destination this row is, for the stylesheet.
                Every icon animated identically on hover — one shared pop — so
                the motion said "you are on a row" rather than "you are on
-               Favorites". gt-shell.css keys a per-destination animation off
+               Favorites". od-shell.css keys a per-destination animation off
                this attribute: the heart beats, the download arrow falls, the
                calendar leaf turns. */
             data-rail-item={link.id}
@@ -123,10 +123,10 @@ export function SideRail({
               onCloseDrawer?.()
             }}
           >
-            <span className="gt-rail__icon" aria-hidden="true">
+            <span className="od-rail__icon" aria-hidden="true">
               <RailIcon name={link.id} />
             </span>
-            <span className="gt-rail__label">{link.label}</span>
+            <span className="od-rail__label">{link.label}</span>
           </button>
         </li>
       )
@@ -137,7 +137,7 @@ export function SideRail({
         <NavLink
           to={link.to}
           className={({ isActive }) =>
-            isActive ? 'gt-rail__link is-active' : 'gt-rail__link'
+            isActive ? 'od-rail__link is-active' : 'od-rail__link'
           }
           data-rail-item={link.id}
           aria-expanded={link.id === 'library' ? !filtersHidden : undefined}
@@ -146,10 +146,10 @@ export function SideRail({
           // only thing left that names the target on hover.
           title={collapsed ? link.label : undefined}
         >
-          <span className="gt-rail__icon" aria-hidden="true">
+          <span className="od-rail__icon" aria-hidden="true">
             <RailIcon name={link.id} />
           </span>
-          <span className="gt-rail__label">{link.label}</span>
+          <span className="od-rail__label">{link.label}</span>
         </NavLink>
       </li>
     )
@@ -158,39 +158,39 @@ export function SideRail({
   // Container, not the landmark — see AdminSideRail: a brand link inside
   // <nav> is announced as a destination and shadows real ones in queries.
   return (
-    <div className="gt-rail">
+    <div className="od-rail">
       {/* Mark only, no wordmark (W28). The glyph is the brand; the word beside
           it was a second answer to the same question and it capped the mark at
-          rail-icon size. `gt-rail__brand-text` stays in the markup and is
+          rail-icon size. `od-rail__brand-text` stays in the markup and is
           hidden in CSS — it is the link's accessible name. */}
-      <a className="gt-rail__brand gt-rail__brand--mark-only" href="/discover">
-        {/* Painted from a mask so it follows the theme — see .gt-brand-mark. */}
-        <span className="gt-rail__mark gt-brand-mark" aria-hidden="true" />
-        <span className="gt-rail__brand-text">Oneirodex</span>
+      <a className="od-rail__brand od-rail__brand--mark-only" href="/discover">
+        {/* Painted from a mask so it follows the theme — see .od-brand-mark. */}
+        <span className="od-rail__mark od-brand-mark" aria-hidden="true" />
+        <span className="od-rail__brand-text">Oneirodex</span>
       </a>
 
-      <nav className="gt-rail__nav" aria-label="Primary">
+      <nav className="od-rail__nav" aria-label="Primary">
         {/* The five core destinations, under the product's own name.
             Foldable like every other group — it was the one block of the rail
             that could not be put away, and on a short screen it was also the
             block between you and the groups you had already chosen to keep
             open. The heading uses the same toggle as the rest, so there is one
             fold interaction in the rail rather than two. */}
-        <ul className="gt-rail__group gt-rail__list">
-          <li className="gt-rail__group-label">
+        <ul className="od-rail__group od-rail__list">
+          <li className="od-rail__group-label">
             <button
               type="button"
-              className="gt-rail__group-toggle"
+              className="od-rail__group-toggle"
               aria-expanded={!primaryFolded}
               onClick={() => toggleGroup(PRIMARY_GROUP.id)}
             >
-              <span className="gt-rail__group-caret" aria-hidden="true" />
+              <span className="od-rail__group-caret" aria-hidden="true" />
               <span>{PRIMARY_GROUP.label}</span>
             </button>
           </li>
           {primaryFolded ? null : primary.map((link) => (
-            <li key={link.id} className="gt-rail__item">
-              <ul className="gt-rail__list">{renderLink(link)}</ul>
+            <li key={link.id} className="od-rail__item">
+              <ul className="od-rail__list">{renderLink(link)}</ul>
               {/* Slot for the active section's own controls (GT-B4).
                   Library filters used to be a second 17.5rem aside next to the
                   rail — two left-hand panels, which is what read as broken.
@@ -200,8 +200,8 @@ export function SideRail({
                   should not have to know what a filter is. */}
               {link.id === 'library' ? (
                 <div
-                  id="gt-rail-slot"
-                  className={`gt-rail__slot${filtersHidden ? ' is-hidden' : ''}`}
+                  id="od-rail-slot"
+                  className={`od-rail__slot${filtersHidden ? ' is-hidden' : ''}`}
                 />
               ) : null}
             </li>
@@ -214,15 +214,15 @@ export function SideRail({
           // disappeared with no visible control to bring them back.
           const folded = !collapsed && collapsedGroups.has(group.id)
           return (
-            <ul className="gt-rail__group gt-rail__list" key={group.id}>
-              <li className="gt-rail__group-label">
+            <ul className="od-rail__group od-rail__list" key={group.id}>
+              <li className="od-rail__group-label">
                 <button
                   type="button"
-                  className="gt-rail__group-toggle"
+                  className="od-rail__group-toggle"
                   aria-expanded={!folded}
                   onClick={() => toggleGroup(group.id)}
                 >
-                  <span className="gt-rail__group-caret" aria-hidden="true" />
+                  <span className="od-rail__group-caret" aria-hidden="true" />
                   <span>{group.label}</span>
                 </button>
               </li>
@@ -232,22 +232,22 @@ export function SideRail({
         })}
 
         {isAdmin ? (
-          <ul className="gt-rail__group gt-rail__list">
-            <li className="gt-rail__group-label" aria-hidden="true">
+          <ul className="od-rail__group od-rail__list">
+            <li className="od-rail__group-label" aria-hidden="true">
               Manage
             </li>
             <li>
               {/* Full page load: admin is a separate bundle, not a route here. */}
               <a
-                className="gt-rail__link"
+                className="od-rail__link"
                 data-rail-item="admin"
                 href="/admin/dashboard"
                 title={collapsed ? 'Admin' : undefined}
               >
-                <span className="gt-rail__icon" aria-hidden="true">
+                <span className="od-rail__icon" aria-hidden="true">
                   <RailIcon name="admin" />
                 </span>
-                <span className="gt-rail__label">Admin</span>
+                <span className="od-rail__label">Admin</span>
               </a>
             </li>
           </ul>
@@ -259,7 +259,7 @@ export function SideRail({
           floating it meant a control permanently sitting on top of the thing it
           scrolls. */}
       {footer ? (
-        <div className="gt-rail__footer gt-rail__footer--controls">{footer}</div>
+        <div className="od-rail__footer od-rail__footer--controls">{footer}</div>
       ) : null}
     </div>
   )

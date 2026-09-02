@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Generate the per-system loading-motif catalogue from LibraryPlatform.
 
-GT-B24. One motif per system GameTheca serves — 117 of them — rather than six
+GT-B24. One motif per system Oneirodex serves — 117 of them — rather than six
 abstract shapes. Generated rather than hand-written for two reasons:
 
   * `LibraryPlatform` is the only authoritative list of what we support. A
@@ -29,8 +29,8 @@ import re
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-PLATFORM_PY = REPO / 'gametheca' / 'platform.py'
-OUT_JSON = REPO / 'gametheca' / 'data' / 'loading_motifs.json'
+PLATFORM_PY = REPO / 'oneirodex' / 'platform.py'
+OUT_JSON = REPO / 'oneirodex' / 'data' / 'loading_motifs.json'
 # Emitted into the app tree rather than imported across it: frontend/shared had
 # to be staged explicitly in the Dockerfile and broke the image build once
 # (see dockerStagedImports.test.js). A generated file inside member-app/src is
@@ -46,9 +46,9 @@ FAMILY_RULES: list[tuple[str, str, str]] = [
     # Commodore is its own picker group — VICE + Amiga outgrew a single
     # "Home computer" bucket once 8-bit micros were added (CI ratchet: 12).
     (r'^(AMIGA|VICE_|C16)', 'Commodore', 'computer'),
-    (r'^(ATARI_ST|ATARI_8BIT|MSX|ZX|CPC|GX4000|APPLE_II|X68000|PC_98)', 'Home computer', 'computer'),
+    (r'^(ATARI_ST|ATARI_8BIT|MSX|ZX|CPC|GX4000|APPLE_II|X68000|PC_98|BBC_MICRO)', 'Home computer', 'computer'),
     (r'^(NES|SNES|N64|NGC|WII|WII_U|SWITCH|FDS|SUFAMI)', 'Nintendo', 'pad'),
-    (r'^(GB|GBA|GBC|NDS|N3DS|VB|POKE_MINI)', 'Nintendo handheld', 'handheld'),
+    (r'^(GB|GBA|GBC|NDS|N3DS|VB|POKE_MINI|GAME_WATCH)', 'Nintendo handheld', 'handheld'),
     (r'^(PSX|PS2|PS3|PS4|PS5)$', 'PlayStation', 'pad'),
     (r'^(PSP|PSVITA)$', 'PlayStation handheld', 'handheld'),
     (r'^(XBOX|X360|XONE|XSX)$', 'Xbox', 'pad'),
@@ -132,7 +132,7 @@ def build() -> dict:
         )
 
     return {
-        'generated_from': 'gametheca/platform.py',
+        'generated_from': 'oneirodex/platform.py',
         'count': len(rows),
         'families': dict(sorted(families.items())),
         'motifs': rows,

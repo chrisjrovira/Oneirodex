@@ -79,7 +79,7 @@ export function VoiceLobby({
     return (
       <section>
         <h2>Voice lobby</h2>
-        <p className="gt-more-page__lede">
+        <p className="od-more-page__lede">
           Voice is on by default. If tokens fail, set LIVEKIT_URL / API key/secret and run the compose
           `livekit` profile. Chat and friends work without it.
         </p>
@@ -88,19 +88,19 @@ export function VoiceLobby({
   }
 
   return (
-    <section className={compact ? 'gt-voice-lobby gt-voice-lobby--compact' : 'gt-voice-lobby'}>
+    <section className={compact ? 'od-voice-lobby od-voice-lobby--compact' : 'od-voice-lobby'}>
       {!compact ? <h2>Voice lobby</h2> : <h3>{roomLabel || 'Party voice'}</h3>}
       {!compact ? (
-        <p className="gt-more-page__lede">
+        <p className="od-more-page__lede">
           Household voice via LiveKit SFU. Room ids stay opaque (no game titles in the SFU).
         </p>
       ) : (
-        <p className="gt-voice-lobby__hint">
+        <p className="od-voice-lobby__hint">
           Voice &amp; screenshare use LiveKit. Child accounts: audio OK; camera/screenshare may be
           blocked by the server.
         </p>
       )}
-      <p className="gt-voice-lobby__room">
+      <p className="od-voice-lobby__room">
         Room: <code>{roomLabel || room}</code>
       </p>
       <label>
@@ -124,7 +124,7 @@ export function VoiceLobby({
         {' '}
         Spectator (listen only — no mic/camera publish)
       </label>
-      <button type="button" className="gt-btn" disabled={busy} onClick={() => void joinLobby()}>
+      <button type="button" className="od-btn" disabled={busy} onClick={() => void joinLobby()}>
         {busy ? 'Connecting…' : screenshare ? 'Get voice + screenshare token' : 'Get voice token'}
       </button>
       {error ? <PageStatus error={error} /> : null}

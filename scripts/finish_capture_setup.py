@@ -10,9 +10,9 @@ if ROOT not in sys.path:
 
 from sqlalchemy import select
 
-from gametheca import create_app, db
-from gametheca.models import GlobalSettings, Library, LibraryPlatform
-from gametheca.utils.setup import (
+from oneirodex import create_app, db
+from oneirodex.models import GlobalSettings, Library, LibraryPlatform
+from oneirodex.utils.setup import (
     get_current_setup_step,
     is_setup_required,
     mark_setup_complete,
@@ -49,7 +49,7 @@ def main() -> None:
 
         # Prefer full seed helpers when InitManager export is healthy.
         try:
-            from gametheca.init_data import (
+            from oneirodex.init_data import (
                 initialize_allowed_file_types,
                 initialize_default_settings,
                 initialize_discovery_sections,

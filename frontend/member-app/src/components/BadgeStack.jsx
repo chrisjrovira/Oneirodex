@@ -96,14 +96,14 @@ export function BadgeStack({
 
   if (!hasMain && dismissible && dismissed.length > 0) {
     return (
-      <div className="gt-badge-layers" aria-label="Game badges">
+      <div className="od-badge-layers" aria-label="Game badges">
         <div
-          className="gt-badge-stack gt-badge-stack--top-left gt-badge-stack--interactive"
+          className="od-badge-stack od-badge-stack--top-left od-badge-stack--interactive"
           data-corner="top-left"
         >
           <button
             type="button"
-            className="gt-badge gt-badge--restore"
+            className="od-badge od-badge--restore"
             title="Restore hidden badges"
             aria-label="Restore badges"
             onClick={handleRestore}
@@ -116,14 +116,14 @@ export function BadgeStack({
   }
 
   return (
-    <div className="gt-badge-layers" aria-label="Game badges">
+    <div className="od-badge-layers" aria-label="Game badges">
       {corners.map((slot) => (
         <div
           key={slot.corner}
-          className={`gt-badge-stack gt-badge-stack--${slot.corner}${
-            hasVr && slot.corner === 'top-left' ? ' gt-badge-stack--vr' : ''
-          }${hasMissing && slot.corner === 'top-left' ? ' gt-badge-stack--missing' : ''}${
-            dismissible ? ' gt-badge-stack--interactive' : ''
+          className={`od-badge-stack od-badge-stack--${slot.corner}${
+            hasVr && slot.corner === 'top-left' ? ' od-badge-stack--vr' : ''
+          }${hasMissing && slot.corner === 'top-left' ? ' od-badge-stack--missing' : ''}${
+            dismissible ? ' od-badge-stack--interactive' : ''
           }`}
           data-corner={slot.corner}
           data-vr-in-stack={hasVr && slot.corner === 'top-left' ? 'top-left' : undefined}
@@ -134,15 +134,15 @@ export function BadgeStack({
           {slot.badges.map((badge) => (
             <span
               key={badge.kind}
-              className={`gt-badge gt-badge--${badge.tone}`}
+              className={`od-badge od-badge--${badge.tone}`}
               data-badge={badge.kind}
               title={badge.title}
             >
-              <span className="gt-badge__label">{badge.label}</span>
+              <span className="od-badge__label">{badge.label}</span>
               {dismissible && !PINNED_BADGE_KINDS.has(badge.kind) ? (
                 <button
                   type="button"
-                  className="gt-badge__dismiss"
+                  className="od-badge__dismiss"
                   aria-label={`Hide ${badge.label} badge`}
                   title="Hide this badge"
                   onClick={(event) => handleDismiss(badge.kind, event)}
@@ -153,7 +153,7 @@ export function BadgeStack({
             </span>
           ))}
           {slot.overflow > 0 && (
-            <span className="gt-badge gt-badge--overflow" title={`${slot.overflow} more badges`}>
+            <span className="od-badge od-badge--overflow" title={`${slot.overflow} more badges`}>
               +{slot.overflow}
             </span>
           )}

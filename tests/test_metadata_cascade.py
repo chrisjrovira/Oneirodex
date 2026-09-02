@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from gametheca.utils import metadata_cascade as mc
+from oneirodex.utils import metadata_cascade as mc
 
 
 def _hit(name, **extra):
@@ -112,6 +112,13 @@ class TestWalkOrder:
 
 class TestSkip:
     """The scan path runs its own Steam pass, so it asks the walk to leave it out."""
+
+    def test_operator_disabled_providers_are_skipped(self, spy, monkeypatch):
+        monkeypatch.setattr(mc, 'disabled_enrich_sources', lambda: frozenset({'steam', 'epic'}))
+        mc.cascade_metadata('Nothing', library_platform='PCWIN')
+        assert 'steam' not in spy['calls']
+        assert 'epic' not in spy['calls']
+        assert spy['calls'][0] == 'gog'
 
     def test_a_skipped_source_is_never_queried(self, spy):
         mc.cascade_metadata('Nothing', library_platform='PCWIN', skip=('steam',))
@@ -282,7 +289,7 @@ class TestEnrichmentNeverRewritesIdentity:
             applied.update(metadata)
             return {'summary': True}
 
-        import gametheca.utils.steam_metadata as sm
+        import oneirodex.utils.steam_metadata as sm
         monkeypatch.setattr(sm, 'apply_steam_metadata_to_game', fake_apply)
 
         mc.hydrate_game_from_cascade(FakeGame(), library_platform='PCWIN')

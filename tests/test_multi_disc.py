@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.utils.multi_disc import (
+from oneirodex.utils.multi_disc import (
     apply_disc_fields,
     attach_disc_sibling,
     disc_browse_fields,
@@ -17,7 +17,7 @@ from gametheca.utils.multi_disc import (
     parse_disc_fields,
     try_attach_multi_disc_sibling,
 )
-from gametheca.utils.rom_name_peel import (
+from oneirodex.utils.rom_name_peel import (
     capture_disc_index,
     parse_console_rom_label,
 )
@@ -129,7 +129,7 @@ def test_filter_cue_bin_companions_keeps_cue_drops_bin(tmp_path):
 
 
 def test_get_game_names_from_files_filters_cue_bin(tmp_path):
-    from gametheca.utils.gamenames import get_game_names_from_files
+    from oneirodex.utils.gamenames import get_game_names_from_files
 
     (tmp_path / 'Title (USA) (Disc 1).cue').write_text('FILE "Title.bin" BINARY\n', encoding='utf-8')
     (tmp_path / 'Title (USA) (Disc 1).bin').write_bytes(b'X' * 64)
@@ -158,8 +158,8 @@ def test_apply_disc_fields_from_peel():
 
 
 def test_attach_disc_sibling_and_browse_fields(app, db_session):
-    from gametheca.models import Game, GameExtra, Library
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Game, GameExtra, Library
+    from oneirodex.platform import LibraryPlatform
 
     library = Library(
         name=f'PSX_MD_{uuid4().hex[:8]}',
@@ -213,8 +213,8 @@ def test_attach_disc_sibling_and_browse_fields(app, db_session):
 
 
 def test_attach_prefers_lower_disc_as_primary(app, db_session):
-    from gametheca.models import Game, GameExtra, Library
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Game, GameExtra, Library
+    from oneirodex.platform import LibraryPlatform
 
     library = Library(
         name=f'PSX_MD2_{uuid4().hex[:8]}',
@@ -251,8 +251,8 @@ def test_attach_prefers_lower_disc_as_primary(app, db_session):
 
 
 def test_try_attach_refuses_different_title(app, db_session):
-    from gametheca.models import Game, Library
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Game, Library
+    from oneirodex.platform import LibraryPlatform
 
     library = Library(
         name=f'PSX_MD3_{uuid4().hex[:8]}',

@@ -100,8 +100,8 @@ the mock's repr, so `game.name` was a child Mock throughout the discover tests
 used there now: they can only supply what a test actually declares, which is the
 property that made the `full_disk_path` gap visible instead of silent.
 
-**Patching `<module>.os.path.join` patches it globally.** `gametheca.routes.os`
-*is* the `os` module, so `@patch('gametheca.routes.os.path.join')` replaces
+**Patching `<module>.os.path.join` patches it globally.** `oneirodex.routes.os`
+*is* the `os` module, so `@patch('oneirodex.routes.os.path.join')` replaces
 `os.path.join` everywhere — and `pathlib` joins through it, so building a path
 with `tmp_path / name` inside such a patch returns the mock's own value.
 

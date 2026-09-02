@@ -1,0 +1,251 @@
+/* Edit Images — Oneirodex aurora shell (source theme; Reset Themes to refresh copies) */
+
+.od-edit-images {
+  --od-edit-accent: var(--od-accent);
+  --od-edit-text: var(--od-text);
+  --od-edit-muted: var(--od-text-muted);
+  --od-edit-surface: var(--od-surface);
+  --od-edit-surface-2: var(--od-surface-2);
+  --od-edit-border: var(--od-border);
+  max-width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2.5rem;
+  color: var(--od-edit-text);
+}
+
+.od-edit-images__header {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--od-radius-xl);
+  border: 1px solid color-mix(in srgb, var(--od-edit-border) 90%, transparent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--od-edit-accent) 12%, transparent),
+      transparent 55%
+    ),
+    color-mix(in srgb, var(--od-edit-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.od-edit-images__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: var(--od-font-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--od-edit-muted);
+}
+
+.od-edit-images__title {
+  margin: 0 0 0.25rem;
+  font-size: clamp(var(--od-font-2xl), 2.2vw, var(--od-font-3xl));
+  font-weight: 700;
+  color: var(--od-edit-text);
+}
+
+.od-edit-images__game-name {
+  margin: 0 0 0.55rem;
+  font-size: var(--od-font-lg);
+  font-weight: 600;
+  color: var(--od-edit-accent);
+}
+
+.od-edit-images__lede {
+  margin: 0 0 0.85rem;
+  max-width: 42rem;
+  font-size: var(--od-font-md);
+  line-height: 1.45;
+  color: var(--od-edit-muted);
+}
+
+.od-edit-images__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.od-edit-images__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0 0 1.1rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border-radius: var(--od-radius-xl);
+  border: 1px solid color-mix(in srgb, var(--od-edit-border) 90%, transparent);
+  background: color-mix(in srgb, var(--od-edit-surface) 82%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.od-edit-images__panel h2 {
+  margin: 0;
+  font-size: var(--od-font-base);
+  font-weight: 650;
+}
+
+.od-edit-images__panel h3 {
+  margin: 0;
+  font-size: var(--od-font-base);
+  font-weight: 650;
+}
+
+.od-edit-images__hint,
+.od-edit-images__status {
+  margin: 0;
+  font-size: var(--od-font-sm);
+  line-height: 1.4;
+  color: var(--od-edit-muted);
+}
+
+.od-edit-images__label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: var(--od-font-xs);
+  letter-spacing: 0.02em;
+  color: var(--od-edit-muted);
+}
+
+.od-edit-images__upload-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px dashed color-mix(in srgb, var(--od-edit-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--od-edit-surface-2) 70%, transparent);
+}
+
+.od-edit-images__search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.od-edit-images__search-row .form-select,
+.od-edit-images__search-row .form-control {
+  max-width: 16rem;
+}
+
+.od-edit-images__results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.od-edit-images__dropzone {
+  width: 100%;
+  min-height: 7rem;
+  border: 2px dashed color-mix(in srgb, var(--od-edit-border) 100%, transparent);
+  border-radius: var(--od-radius-lg);
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--od-edit-muted);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.od-edit-images__dropzone.highlight,
+.od-edit-images__dropzone:hover {
+  border-color: color-mix(in srgb, var(--od-edit-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--od-edit-accent) 8%, transparent);
+  color: var(--od-edit-text);
+}
+
+.od-edit-images .form-control,
+.od-edit-images .form-select {
+  background: var(--od-edit-surface-2);
+  border-color: var(--od-edit-border);
+  color: var(--od-edit-text);
+}
+
+.od-edit-images .btn-primary {
+  background: var(--od-edit-accent);
+  border-color: var(--od-edit-accent);
+  color: var(--od-accent-contrast);
+}
+
+.od-edit-images .btn-secondary {
+  background: color-mix(in srgb, var(--od-edit-surface-2) 90%, transparent);
+  border-color: var(--od-edit-border);
+  color: var(--od-edit-text);
+}
+
+.od-edit-images__modal {
+  background: var(--od-edit-surface);
+  color: var(--od-edit-text);
+  border: 1px solid var(--od-edit-border);
+}
+
+.image-editor-image img {
+  width: 300px;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-edit-border) 80%, transparent);
+}
+
+.image-editor-image {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.image-editor-list {
+  display: flex;
+  flex-direction: row;
+  overflow: auto;
+  gap: 0.75rem;
+}
+
+.delete-cover-image-container {
+  width: 300px;
+  max-width: 100%;
+  display: inline-block;
+}
+
+.cover-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.spinner {
+  display: none;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 50px;
+  height: 50px;
+  border: 5px solid color-mix(in srgb, var(--od-edit-border) 100%, transparent);
+  border-top: 5px solid var(--od-edit-accent);
+  border-radius: var(--od-radius-circle);
+  animation: od-edit-spin 1s linear infinite;
+  z-index: 1000;
+}
+
+@keyframes od-edit-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Keep legacy id hooks used by game_edit_images.js */
+#upload-area {
+  margin-bottom: 0.75rem;
+}
+
+#upload-area.highlight {
+  border-color: color-mix(in srgb, var(--od-edit-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--od-edit-accent) 8%, transparent);
+}
+
+@media (max-width: 900px) {
+  .od-edit-images {
+    padding: 0.75rem 0.85rem 2rem;
+  }
+
+  .od-edit-images__search-row .form-select,
+  .od-edit-images__search-row .form-control {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+}

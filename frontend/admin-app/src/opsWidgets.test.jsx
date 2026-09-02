@@ -129,8 +129,8 @@ describe('normalizeLibraryHealth / formatters', () => {
 
 describe('LibraryHealthFactors grade edge cues', () => {
   test('libraryHealthFactorsGradeClass maps poor/fair only', () => {
-    expect(libraryHealthFactorsGradeClass('poor')).toBe(' gt-ops-health-factors--poor')
-    expect(libraryHealthFactorsGradeClass('fair')).toBe(' gt-ops-health-factors--fair')
+    expect(libraryHealthFactorsGradeClass('poor')).toBe(' od-ops-health-factors--poor')
+    expect(libraryHealthFactorsGradeClass('fair')).toBe(' od-ops-health-factors--fair')
     expect(libraryHealthFactorsGradeClass('good')).toBe('')
     expect(libraryHealthFactorsGradeClass(null)).toBe('')
   })
@@ -144,55 +144,55 @@ describe('LibraryHealthFactors grade edge cues', () => {
       <LibraryHealthFactors health={{ score: 28, grade: 'poor', factors }} />,
     )
     expect(screen.getByLabelText('Top health factors')).toHaveClass(
-      'gt-ops-health-factors',
-      'gt-ops-health-factors--poor',
+      'od-ops-health-factors',
+      'od-ops-health-factors--poor',
     )
     expect(screen.getByLabelText('Top health factors')).not.toHaveClass(
-      'gt-ops-health-factors--fair',
+      'od-ops-health-factors--fair',
     )
 
     rerender(<LibraryHealthFactors health={{ score: 72, grade: 'fair', factors }} />)
     expect(screen.getByLabelText('Top health factors')).toHaveClass(
-      'gt-ops-health-factors',
-      'gt-ops-health-factors--fair',
+      'od-ops-health-factors',
+      'od-ops-health-factors--fair',
     )
     expect(screen.getByLabelText('Top health factors')).not.toHaveClass(
-      'gt-ops-health-factors--poor',
+      'od-ops-health-factors--poor',
     )
 
     rerender(<LibraryHealthFactors health={{ score: 90, grade: 'good', factors }} />)
     expect(screen.getByLabelText('Top health factors')).not.toHaveClass(
-      'gt-ops-health-factors--poor',
+      'od-ops-health-factors--poor',
     )
     expect(screen.getByLabelText('Top health factors')).not.toHaveClass(
-      'gt-ops-health-factors--fair',
+      'od-ops-health-factors--fair',
     )
   })
 })
 
 describe('MetricTile tone class', () => {
-  test('applies gt-ops-metric--{grade} and ignores unknown tone', () => {
+  test('applies od-ops-metric--{grade} and ignores unknown tone', () => {
     const { rerender, container } = render(
       <MetricTile label="Library health" value="81 · good" hint="ok" tone="good" />,
     )
-    expect(container.firstChild).toHaveClass('gt-ops-metric', 'gt-ops-metric--good')
+    expect(container.firstChild).toHaveClass('od-ops-metric', 'od-ops-metric--good')
 
     rerender(<MetricTile label="Library health" value="64 · fair" tone="fair" />)
-    expect(container.firstChild).toHaveClass('gt-ops-metric--fair')
+    expect(container.firstChild).toHaveClass('od-ops-metric--fair')
 
     rerender(<MetricTile label="Library health" value="31 · poor" tone="poor" />)
-    expect(container.firstChild).toHaveClass('gt-ops-metric--poor')
+    expect(container.firstChild).toHaveClass('od-ops-metric--poor')
 
     rerender(<MetricTile label="Library health" value="n/a" tone="na" />)
-    expect(container.firstChild).toHaveClass('gt-ops-metric--na')
+    expect(container.firstChild).toHaveClass('od-ops-metric--na')
 
     rerender(<MetricTile label="CPU" value="12%" />)
-    expect(container.firstChild).toHaveClass('gt-ops-metric')
-    expect(container.firstChild).not.toHaveClass('gt-ops-metric--good')
-    expect(container.firstChild).not.toHaveClass('gt-ops-metric--na')
+    expect(container.firstChild).toHaveClass('od-ops-metric')
+    expect(container.firstChild).not.toHaveClass('od-ops-metric--good')
+    expect(container.firstChild).not.toHaveClass('od-ops-metric--na')
 
     rerender(<MetricTile label="X" value="1" tone="weird" />)
-    expect(container.firstChild.className).toBe('gt-ops-metric')
+    expect(container.firstChild.className).toBe('od-ops-metric')
   })
 })
 
@@ -314,8 +314,8 @@ describe('MetricStrip', () => {
     )
     expect(screen.getByLabelText('Roster')).toBeInTheDocument()
     expect(screen.getByText('Accounts')).toBeInTheDocument()
-    expect(container.querySelector('.gt-ops-metric--info')).toBeTruthy()
-    expect(container.querySelector('.gt-ops-metric--warning')).toBeTruthy()
+    expect(container.querySelector('.od-ops-metric--info')).toBeTruthy()
+    expect(container.querySelector('.od-ops-metric--warning')).toBeTruthy()
   })
 
   test('skips entries with no value so pages need no branching', () => {
@@ -333,7 +333,7 @@ describe('MetricStrip', () => {
 
   test('renders nothing rather than an empty strip', () => {
     const { container } = render(<MetricStrip items={[]} />)
-    expect(container.querySelector('.gt-ops-strip')).toBeNull()
+    expect(container.querySelector('.od-ops-strip')).toBeNull()
   })
 })
 

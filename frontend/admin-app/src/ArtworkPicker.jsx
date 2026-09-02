@@ -244,44 +244,44 @@ export function ArtworkPicker({
   )
 
   return (
-    <div className={`gt-artwork-picker${compact ? ' gt-artwork-picker--compact' : ''}`}>
+    <div className={`od-artwork-picker${compact ? ' od-artwork-picker--compact' : ''}`}>
       {!compact ? (
-        <h2 className="gt-admin-panel-title">Artwork search</h2>
+        <h2 className="od-admin-panel-title">Artwork search</h2>
       ) : null}
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Search SteamGridDB / IGDB / Giant Bomb and apply cover, logo, or hero. Identify chips
         (Meta Quest / Epic / itch / Giant Bomb / MobyGames / TheGamesDB) use metadata sources — apply
         only when a cover URL is present. Artwork only — never downloads games.
       </p>
 
       {!gameUuid ? (
-        <p className="gt-admin-lede" role="status">
+        <p className="od-admin-lede" role="status">
           Select a library title (search above, or Open picker from a queue group) to enable Apply.
         </p>
       ) : (
-        <p className="gt-admin-lede">
+        <p className="od-admin-lede">
           Target: <strong>{gameName || gameUuid}</strong>{' '}
-          <code className="gt-mono">{gameUuid}</code>
+          <code className="od-mono">{gameUuid}</code>
         </p>
       )}
 
       <PageStatus error={error} />
       {status ? (
-        <p className="gt-admin-lede" aria-live="polite">
+        <p className="od-admin-lede" aria-live="polite">
           {status}
         </p>
       ) : null}
 
       {identifySources.length ? (
-        <div className="gt-artwork-picker__chips" role="group" aria-label="Identify metadata sources">
-          <span className="gt-artwork-picker__chips-label">Identify</span>
+        <div className="od-artwork-picker__chips" role="group" aria-label="Identify metadata sources">
+          <span className="od-artwork-picker__chips-label">Identify</span>
           {identifySources.map((src) => {
             const active = identifySource === src.id
             return (
               <button
                 key={src.id}
                 type="button"
-                className={`gt-chip${active ? ' is-active' : ''}`}
+                className={`od-chip${active ? ' is-active' : ''}`}
                 aria-pressed={active}
                 title={src.note || src.name}
                 onClick={() => selectIdentifyChip(src.id)}
@@ -295,7 +295,7 @@ export function ArtworkPicker({
         </div>
       ) : null}
 
-      <div className="gt-artwork-picker__controls">
+      <div className="od-artwork-picker__controls">
         <label>
           Provider
           <select
@@ -330,7 +330,7 @@ export function ArtworkPicker({
             ))}
           </select>
         </label>
-        <label className="gt-artwork-picker__query">
+        <label className="od-artwork-picker__query">
           Search
           <input
             type="search"
@@ -348,7 +348,7 @@ export function ArtworkPicker({
         </label>
         <button
           type="button"
-          className="gt-btn gt-btn--primary"
+          className="od-btn od-btn--primary"
           disabled={busy === 'search' || (!query.trim() && !gameUuid)}
           onClick={runSearch}
         >
@@ -356,7 +356,7 @@ export function ArtworkPicker({
         </button>
       </div>
 
-      <div className="gt-artwork-picker__grid" role="list">
+      <div className="od-artwork-picker__grid" role="list">
         {results.map((item) => {
           const key = item.id || item.url
           const applying = busy === `apply-${key}`
@@ -366,7 +366,7 @@ export function ArtworkPicker({
             <div key={key} role="listitem">
               <button
                 type="button"
-                className="gt-artwork-picker__card"
+                className="od-artwork-picker__card"
                 title={canApply ? label : `${label} (no cover URL)`}
                 disabled={!canApply || Boolean(busy)}
                 onClick={() => applyResult(item)}
@@ -378,14 +378,14 @@ export function ArtworkPicker({
                     loading="lazy"
                     className={
                       imageType === 'hero' && !identifyMode
-                        ? 'gt-artwork-picker__thumb gt-artwork-picker__thumb--hero'
-                        : 'gt-artwork-picker__thumb'
+                        ? 'od-artwork-picker__thumb od-artwork-picker__thumb--hero'
+                        : 'od-artwork-picker__thumb'
                     }
                   />
                 ) : (
-                  <span className="gt-artwork-picker__thumb gt-artwork-picker__thumb--empty" />
+                  <span className="od-artwork-picker__thumb od-artwork-picker__thumb--empty" />
                 )}
-                <span className="gt-artwork-picker__caption">
+                <span className="od-artwork-picker__caption">
                   {applying ? 'Applying…' : label}
                 </span>
               </button>
@@ -394,7 +394,7 @@ export function ArtworkPicker({
         })}
       </div>
       {!results.length && !busy && !error && status === '' ? (
-        <p className="gt-admin-lede">Results appear here after Search.</p>
+        <p className="od-admin-lede">Results appear here after Search.</p>
       ) : null}
     </div>
   )

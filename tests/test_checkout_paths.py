@@ -1,6 +1,6 @@
 """Live checkout path is Oneirodex, not the retired Gametheca folder name.
 
-Filesystem-only. Package path `gametheca/` and container names stay.
+Filesystem-only. Package path `oneirodex/` and container names stay.
 """
 
 from pathlib import Path

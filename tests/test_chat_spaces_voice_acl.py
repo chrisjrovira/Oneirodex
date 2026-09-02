@@ -13,9 +13,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Game, Library, LibraryPlatform, User
-from gametheca.utils.chat_spaces import (
+from oneirodex import db
+from oneirodex.models import Game, Library, LibraryPlatform, User
+from oneirodex.utils.chat_spaces import (
     add_space_member,
     channels_for_space,
     create_channel,
@@ -27,7 +27,7 @@ from gametheca.utils.chat_spaces import (
     user_can_access_channel,
     user_is_space_member,
 )
-from gametheca.utils.livekit_rtc import user_may_join_room, voice_room_name
+from oneirodex.utils.livekit_rtc import user_may_join_room, voice_room_name
 
 
 @pytest.fixture(scope='function', autouse=True)

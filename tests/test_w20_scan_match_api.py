@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca import cache, db
-from gametheca.models import GlobalSettings, User
-from gametheca.utils.scan_match_settings import CORE_DEFAULTS, get_scan_match_config
+from oneirodex import cache, db
+from oneirodex.models import GlobalSettings, User
+from oneirodex.utils.scan_match_settings import CORE_DEFAULTS, get_scan_match_config
 
 
 @pytest.fixture

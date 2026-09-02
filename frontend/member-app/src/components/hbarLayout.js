@@ -32,3 +32,22 @@ export function hbarLayout({
   const leftPx = max > 0 && usable > 0 ? (clampedLeft / max) * usable : 0
   return { max, thumbPx, leftPx, usable }
 }
+
+/**
+ * Inverse of `leftPx`: pointer X on the rail → track scrollLeft.
+ *
+ * Drag used to size the thumb in percent with a CSS min-width, so the
+ * mapping only walked forward. This stays in pixels and is symmetric.
+ */
+export function scrollLeftFromPointer({
+  clientX = 0,
+  railLeft = 0,
+  grab = 0,
+  usable = 0,
+  max = 0,
+} = {}) {
+  if (max <= 1 || usable <= 0) return 0
+  const x = clientX - railLeft - grab
+  const t = Math.min(1, Math.max(0, x / usable))
+  return t * max
+}

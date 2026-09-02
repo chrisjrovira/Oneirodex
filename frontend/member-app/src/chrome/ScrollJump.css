@@ -9,7 +9,7 @@
  * A horizontal pair, not a vertical stack: two stacked round buttons in a
  * corner read as one clipped control, which is what looked broken. */
 
-.gt-scroll-jump {
+.od-scroll-jump {
   /* In the rail footer now, not floating (W27-A1).
    *
    * As an absolutely-positioned overlay this had two problems: it sat on top of
@@ -27,21 +27,21 @@
 /* The rail hides its footer when collapsed, which is right for the admin rail's
    text label but would take a working control away from anyone who prefers the
    narrow rail. Controls survive the collapse; they just stack. */
-[data-rail='collapsed'] .gt-rail__footer--controls {
+[data-rail='collapsed'] .od-rail__footer--controls {
   display: block;
 }
 
-[data-rail='collapsed'] .gt-scroll-jump {
+[data-rail='collapsed'] .od-scroll-jump {
   flex-direction: column;
   align-items: center;
 }
 
-.gt-scroll-jump__btn {
+.od-scroll-jump__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--gt-control-h);
-  height: var(--gt-control-h);
+  width: var(--od-control-h);
+  height: var(--od-control-h);
   padding: 0;
   /* No border, no fill, no box.
    *
@@ -51,9 +51,9 @@
    * of the nav. Borderless icon buttons match the rail's own links, which carry
    * no chrome until hovered either. */
   border: 0;
-  border-radius: var(--gt-radius-sm, 6px);
+  border-radius: var(--od-radius-sm, 6px);
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -62,26 +62,26 @@
     opacity 0.15s ease;
 }
 
-.gt-scroll-jump__btn:hover:not(:disabled),
-.gt-scroll-jump__btn:focus-visible {
+.od-scroll-jump__btn:hover:not(:disabled),
+.od-scroll-jump__btn:focus-visible {
   /* Same hover treatment the rail links use, so the pair reads as part of the
      nav rather than as a separate control group. */
-  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
-  color: var(--gt-accent);
+  background: color-mix(in srgb, var(--od-accent) 14%, transparent);
+  color: var(--od-accent);
   outline: none;
 }
 
-.gt-scroll-jump__btn:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gt-focus-ring) 55%, transparent);
+.od-scroll-jump__btn:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--od-focus-ring) 55%, transparent);
 }
 
-.gt-scroll-jump__btn:disabled {
+.od-scroll-jump__btn:disabled {
   opacity: 0.35;
   cursor: default;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-scroll-jump__btn {
+  .od-scroll-jump__btn {
     transition: none;
   }
 }
@@ -90,7 +90,7 @@
   /* Positioning offsets deliberately gone — the pair is laid out by the rail
      footer at every width now, so overriding left/bottom here is what produced
      the edge-to-edge bar. Only the touch-target size still varies. */
-  .gt-scroll-jump__btn {
+  .od-scroll-jump__btn {
     width: 2.15rem;
     height: 2.15rem;
   }

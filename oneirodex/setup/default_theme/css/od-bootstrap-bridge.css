@@ -1,0 +1,271 @@
+/* Bootstrap → GT bridge (GT-A5)
+ * ---------------------------------------------------------------------------
+ * The member SPA had 314 `.od-btn` call sites and no Bootstrap buttons; the 48
+ * Jinja admin pages plus login/setup had 254 Bootstrap `.btn` call sites and no
+ * `.od-btn`. Two button vocabularies with zero overlap, which is why the same
+ * product read as two different products depending on which half you were in.
+ *
+ * Porting 254 call sites across 89 templates is the expensive fix. This is the
+ * cheap one: Bootstrap 5.3 builds every button out of its own `--bs-btn-*`
+ * custom properties, so re-pointing those at the GT scales restyles all of them
+ * without touching a single template.
+ *
+ * Why variables rather than overrides
+ *   Redeclaring `.btn-primary { background: ... }` would win only while this
+ *   file loads after bootstrap.min.css, and would need `!important` the moment
+ *   that changed. Setting `--bs-btn-bg` instead works *through* Bootstrap's own
+ *   cascade, so its hover/active/disabled states stay internally consistent and
+ *   keep deriving from the value set here.
+ *
+ * Load order
+ *   Must come after vendor/bootstrap/*/css/bootstrap.min.css. Linked from
+ *   base.html, base_admin.html and base_empty.html.
+ *
+ * This is a theme asset — presets are regenerated from this tree, so an edit
+ * here reaches every preset on the next sync.
+ */
+
+/* --------------------------------------------------------------------------
+   Base — shape, metrics and the neutral (unmodified `.btn`) appearance.
+   Mirrors .od-btn in od-primitives.css.
+   -------------------------------------------------------------------------- */
+
+.btn {
+  --bs-btn-padding-y: var(--od-space-2);
+  --bs-btn-padding-x: var(--od-space-4);
+  --bs-btn-font-family: var(--font-ui);
+  --bs-btn-font-size: var(--od-font-md);
+  --bs-btn-font-weight: 500;
+  --bs-btn-line-height: var(--od-line-tight);
+  --bs-btn-border-width: 1px;
+  --bs-btn-border-radius: var(--od-radius-sm);
+
+  --bs-btn-color: var(--od-text);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--od-border);
+
+  --bs-btn-hover-color: var(--od-accent);
+  --bs-btn-hover-bg: transparent;
+  --bs-btn-hover-border-color: var(--od-accent);
+
+  --bs-btn-active-color: var(--od-accent);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-accent) 16%, transparent);
+  --bs-btn-active-border-color: var(--od-accent);
+
+  --bs-btn-disabled-color: var(--od-text-muted);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--od-border);
+  --bs-btn-disabled-opacity: 0.5;
+
+  transition:
+    border-color var(--od-motion-fast) var(--od-motion-ease),
+    color var(--od-motion-fast) var(--od-motion-ease),
+    background-color var(--od-motion-fast) var(--od-motion-ease);
+}
+
+/* Bootstrap's focus ring is a box-shadow keyed to --bs-btn-focus-shadow-rgb,
+   which cannot take a color-mix(). Use the same outline the GT primitives use so
+   keyboard focus looks identical on both halves of the app. */
+.btn:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--od-focus-ring);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Solid variants
+   -------------------------------------------------------------------------- */
+
+.btn-primary {
+  --bs-btn-color: var(--od-accent-contrast);
+  --bs-btn-bg: var(--od-accent);
+  --bs-btn-border-color: var(--od-accent);
+  --bs-btn-hover-color: var(--od-accent-contrast);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--od-accent) 85%, var(--od-bg));
+  --bs-btn-hover-border-color: var(--od-accent);
+  --bs-btn-active-color: var(--od-accent-contrast);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-accent) 75%, var(--od-bg));
+  --bs-btn-active-border-color: var(--od-accent);
+  --bs-btn-disabled-color: var(--od-accent-contrast);
+  --bs-btn-disabled-bg: var(--od-accent);
+  --bs-btn-disabled-border-color: var(--od-accent);
+}
+
+/* .btn-secondary, .btn-light and .btn-dark all mean "the non-committal one" in
+   these templates — they were picked by whoever wrote the page, not by intent.
+   Collapsing them onto one appearance is most of the visible inconsistency. */
+.btn-secondary,
+.btn-light,
+.btn-dark {
+  --bs-btn-color: var(--od-text);
+  --bs-btn-bg: var(--od-surface-2);
+  --bs-btn-border-color: var(--od-border);
+  --bs-btn-hover-color: var(--od-accent);
+  --bs-btn-hover-bg: var(--od-surface-2);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  --bs-btn-active-color: var(--od-accent);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-accent) 16%, var(--od-surface-2));
+  --bs-btn-active-border-color: var(--od-accent);
+  --bs-btn-disabled-color: var(--od-text-muted);
+  --bs-btn-disabled-bg: var(--od-surface-2);
+  --bs-btn-disabled-border-color: var(--od-border);
+}
+
+/* Semantic variants keep their meaning in every preset: od-tokens deliberately
+   excludes --od-danger / -success / -warning / -info from preset overrides so a
+   failure reads as red no matter the theme. */
+.btn-danger {
+  --bs-btn-color: var(--od-accent-contrast);
+  --bs-btn-bg: var(--od-danger);
+  --bs-btn-border-color: var(--od-danger);
+  --bs-btn-hover-color: var(--od-accent-contrast);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--od-danger) 85%, var(--od-bg));
+  --bs-btn-hover-border-color: var(--od-danger);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-danger) 75%, var(--od-bg));
+  --bs-btn-active-border-color: var(--od-danger);
+  --bs-btn-disabled-color: var(--od-accent-contrast);
+  --bs-btn-disabled-bg: var(--od-danger);
+  --bs-btn-disabled-border-color: var(--od-danger);
+}
+
+.btn-success {
+  --bs-btn-color: var(--od-accent-contrast);
+  --bs-btn-bg: var(--od-success);
+  --bs-btn-border-color: var(--od-success);
+  --bs-btn-hover-color: var(--od-accent-contrast);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--od-success) 85%, var(--od-bg));
+  --bs-btn-hover-border-color: var(--od-success);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-success) 75%, var(--od-bg));
+  --bs-btn-active-border-color: var(--od-success);
+  --bs-btn-disabled-color: var(--od-accent-contrast);
+  --bs-btn-disabled-bg: var(--od-success);
+  --bs-btn-disabled-border-color: var(--od-success);
+}
+
+.btn-warning {
+  --bs-btn-color: var(--od-accent-contrast);
+  --bs-btn-bg: var(--od-warning);
+  --bs-btn-border-color: var(--od-warning);
+  --bs-btn-hover-color: var(--od-accent-contrast);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--od-warning) 85%, var(--od-bg));
+  --bs-btn-hover-border-color: var(--od-warning);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-warning) 75%, var(--od-bg));
+  --bs-btn-active-border-color: var(--od-warning);
+  --bs-btn-disabled-color: var(--od-accent-contrast);
+  --bs-btn-disabled-bg: var(--od-warning);
+  --bs-btn-disabled-border-color: var(--od-warning);
+}
+
+.btn-info {
+  --bs-btn-color: var(--od-accent-contrast);
+  --bs-btn-bg: var(--od-info);
+  --bs-btn-border-color: var(--od-info);
+  --bs-btn-hover-color: var(--od-accent-contrast);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--od-info) 85%, var(--od-bg));
+  --bs-btn-hover-border-color: var(--od-info);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-info) 75%, var(--od-bg));
+  --bs-btn-active-border-color: var(--od-info);
+  --bs-btn-disabled-color: var(--od-accent-contrast);
+  --bs-btn-disabled-bg: var(--od-info);
+  --bs-btn-disabled-border-color: var(--od-info);
+}
+
+/* --------------------------------------------------------------------------
+   Outline variants — the GT ghost treatment.
+   -------------------------------------------------------------------------- */
+
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-light,
+.btn-outline-dark {
+  --bs-btn-color: var(--od-text);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: color-mix(in srgb, var(--od-border) 85%, transparent);
+  --bs-btn-hover-color: var(--od-accent);
+  --bs-btn-hover-bg: transparent;
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  --bs-btn-active-color: var(--od-accent);
+  --bs-btn-active-bg: color-mix(in srgb, var(--od-accent) 12%, transparent);
+  --bs-btn-active-border-color: var(--od-accent);
+  --bs-btn-disabled-color: var(--od-text-muted);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--od-border);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--od-danger);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: color-mix(in srgb, var(--od-danger) 45%, transparent);
+  --bs-btn-hover-color: var(--od-accent-contrast);
+  --bs-btn-hover-bg: var(--od-danger);
+  --bs-btn-hover-border-color: var(--od-danger);
+  --bs-btn-active-color: var(--od-accent-contrast);
+  --bs-btn-active-bg: var(--od-danger);
+  --bs-btn-active-border-color: var(--od-danger);
+  --bs-btn-disabled-color: var(--od-text-muted);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--od-border);
+}
+
+/* --------------------------------------------------------------------------
+   Sizes — match .od-btn--sm rather than Bootstrap's own ladder.
+   -------------------------------------------------------------------------- */
+
+.btn-sm {
+  --bs-btn-padding-y: var(--od-space-1);
+  --bs-btn-padding-x: var(--od-space-3);
+  --bs-btn-font-size: var(--od-font-sm);
+  --bs-btn-border-radius: var(--od-radius-sm);
+}
+
+.btn-lg {
+  --bs-btn-padding-y: var(--od-space-3);
+  --bs-btn-padding-x: var(--od-space-5);
+  --bs-btn-font-size: var(--od-font-base);
+  --bs-btn-border-radius: var(--od-radius-md);
+}
+
+/* --------------------------------------------------------------------------
+   Adjacent Bootstrap surfaces that sit next to those buttons. Without these the
+   buttons stop looking Bootstrap-ish while their containers still do.
+   -------------------------------------------------------------------------- */
+
+.form-control,
+.form-select {
+  --bs-border-radius: var(--od-radius-sm);
+  background-color: var(--od-surface);
+  border-color: var(--od-border);
+  color: var(--od-text);
+  font-size: var(--od-font-md);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--od-surface);
+  border-color: var(--od-accent);
+  box-shadow: none;
+  outline: 2px solid var(--od-focus-ring);
+  outline-offset: 1px;
+  color: var(--od-text);
+}
+
+.form-control::placeholder {
+  color: var(--od-text-muted);
+}
+
+.card,
+.modal-content {
+  --bs-card-bg: var(--od-surface);
+  --bs-card-border-color: var(--od-border);
+  --bs-card-border-radius: var(--od-radius-lg);
+  --bs-modal-bg: var(--od-surface);
+  --bs-modal-border-color: var(--od-border);
+  --bs-modal-border-radius: var(--od-radius-lg);
+  --bs-modal-color: var(--od-text);
+}
+
+.badge {
+  --bs-badge-border-radius: var(--od-radius-sm);
+  --bs-badge-font-size: var(--od-font-xs);
+  --bs-badge-font-weight: var(--od-label-weight);
+}

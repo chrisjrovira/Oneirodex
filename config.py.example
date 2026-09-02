@@ -2,7 +2,7 @@ import os, secrets
 
 class Config(object):
     # Set Database connection string here or in your .env file, when using docker set the hostname to 'db'
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/gametheca')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/oneirodex')
     
     # Host path to on-disk game files (Compose mounts to /storage in the container)
     DATA_FOLDER_GAMES = os.getenv('DATA_FOLDER_GAMES', 'Z:\gamez')
@@ -14,9 +14,9 @@ class Config(object):
         BASE_FOLDER_POSIX = os.getenv('BASE_FOLDER_POSIX', '/storage')
 
     # YOU CAN LEAVE ALL THESE SETTINGS AT DEFAULT:
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'gametheca/static/library')
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'oneirodex/static/library')
     SECRET_KEY = os.getenv('SECRET_KEY') or 'you-will-never-guess-this'
-    IMAGE_SAVE_PATH = os.path.join(os.path.dirname(__file__), 'gametheca/static/library/images')
+    IMAGE_SAVE_PATH = os.path.join(os.path.dirname(__file__), 'oneirodex/static/library/images')
     IGDB_API_ENDPOINT = os.getenv('IGDB_API_ENDPOINT', 'https://api.igdb.com/v4/games')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

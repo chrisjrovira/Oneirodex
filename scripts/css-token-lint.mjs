@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Design-token lint for GameTheca CSS.
+ * Design-token lint for Oneirodex CSS.
  *
- * The design system in `gt-tokens.css` was not being used: the type scale had 9
+ * The design system in `od-tokens.css` was not being used: the type scale had 9
  * call sites against 40+ ad-hoc font sizes, and the radius scale had 1. Nothing
  * stopped a new stylesheet from inventing `font-size: 0.78rem` next to an
  * existing `0.8rem`, so "inconsistent across pages" was the guaranteed outcome
@@ -33,7 +33,7 @@ const BASELINE_PATH = join(REPO_ROOT, 'scripts', 'css-token-lint.baseline.json')
 
 /** Trees that must obey the token scales. */
 const SCAN_ROOTS = [
-  'gametheca/setup/default_theme/css',
+  'oneirodex/setup/default_theme/css',
   'frontend/member-app/src',
   'frontend/admin-app/src',
   'frontend/ops-glance/src',
@@ -43,7 +43,7 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'vendor', '__pycache__', '.gi
 
 /**
  * Radius literals that carry meaning the scale cannot express. `50%` and the
- * pill value have tokens (`--gt-radius-circle` / `--gt-radius-pill`), so they
+ * pill value have tokens (`--od-radius-circle` / `--od-radius-pill`), so they
  * are still reported; `0` genuinely means "no radius" and is not a scale value.
  */
 const ALLOWED_RADIUS_LITERALS = new Set(['0', 'inherit', 'initial', 'unset', 'revert'])
@@ -53,8 +53,8 @@ const ALLOWED_FONT_SIZE_LITERALS = new Set(['inherit', 'initial', 'unset', 'reve
 
 const RULES = {
   'no-raw-color': 'hex literal outside a custom-property definition — use var(--gt-*)',
-  'no-raw-radius': 'border-radius literal — use var(--gt-radius-*)',
-  'no-raw-font-size': 'font-size literal — use var(--gt-font-*)',
+  'no-raw-radius': 'border-radius literal — use var(--od-radius-*)',
+  'no-raw-font-size': 'font-size literal — use var(--od-font-*)',
   'no-raw-inline-style': 'literal in a JSX inline style — use var(--gt-*)',
 }
 
@@ -142,7 +142,7 @@ export function lintCss(css, relPath) {
     const at = () => ({ file: relPath, line: lineOf(clean, index) })
 
     // A hex literal anywhere in the value, including inside color-mix() etc.
-    // Fallbacks such as `var(--gt-text, #f2f4f8)` still count: a fallback that
+    // Fallbacks such as `var(--od-text, #f2f4f8)` still count: a fallback that
     // never matches the active theme is how a green leaks into a pink theme.
     const hexes = value.match(/#[0-9a-fA-F]{3,8}\b/g)
     if (hexes) {

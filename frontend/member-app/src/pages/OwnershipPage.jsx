@@ -253,8 +253,8 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
 
   if (error) {
     return (
-      <div className="gt-more-page gt-ownership">
-        <div className="gt-page-header">
+      <div className="od-more-page od-ownership">
+        <div className="od-page-header">
           <h1>Store Ownership</h1>
         </div>
         <PageStatus
@@ -289,13 +289,13 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
         }
       />
     ) : null}
-    <div className="gt-more-page gt-ownership">
+    <div className="od-more-page od-ownership">
       {useNewChrome ? null : (
         <>
-          <div className="gt-page-header">
+          <div className="od-page-header">
             <h1>Store Ownership</h1>
           </div>
-          <p className="gt-more-page__lede">
+          <p className="od-more-page__lede">
             Link store accounts and import owned-title lists to show which library games you
             also own elsewhere. Register-only sync — Oneirodex never downloads games or DRM
             from stores.
@@ -308,32 +308,32 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
           blank with nothing explaining why. */}
       <LoadingOverlay active={!summary} label="Loading ownership status…" delayMs={0} />
 
-      <div className="gt-ownership__status" aria-live="polite">
+      <div className="od-ownership__status" aria-live="polite">
 
         {summary && !enabled ? (
-          <p className="gt-ownership__empty">
+          <p className="od-ownership__empty">
             Store ownership sync is disabled by your administrator.
           </p>
         ) : null}
 
         {summary && enabled && (summary.total_owned ?? 0) === 0 ? (
-          <p className="gt-ownership__empty">
+          <p className="od-ownership__empty">
             No owned titles synced yet. Connect a store or import a CSV below.
           </p>
         ) : null}
 
         {summary && enabled ? (
-          <article className="gt-ownership__card">
-            <header className="gt-ownership__card-head">
-              <div className="gt-ownership__card-title">
+          <article className="od-ownership__card">
+            <header className="od-ownership__card-head">
+              <div className="od-ownership__card-title">
                 <strong>Owned titles</strong>
-                <span className="gt-ownership__pill">register-only</span>
+                <span className="od-ownership__pill">register-only</span>
               </div>
-              <span className="gt-ownership__card-counts">
+              <span className="od-ownership__card-counts">
                 {summary.total_owned ?? 0} synced · {summary.total_matched ?? 0} matched
               </span>
             </header>
-            <ul className="gt-ownership__store-grid">
+            <ul className="od-ownership__store-grid">
               {STORES.map((store) => {
                 const state = stores[store.key] || {}
                 const connected = !!state.connected
@@ -342,21 +342,21 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                 return (
                   <li
                     key={store.key}
-                    className="gt-ownership__store-row"
+                    className="od-ownership__store-row"
                     data-connected={connected ? '1' : '0'}
                   >
-                    <span className="gt-ownership__store-label">{store.label}</span>
-                    <span className="gt-ownership__store-state">
+                    <span className="od-ownership__store-label">{store.label}</span>
+                    <span className="od-ownership__store-state">
                       {connected ? 'connected' : 'not connected'}
                     </span>
-                    <span className="gt-ownership__store-counts">
+                    <span className="od-ownership__store-counts">
                       {owned} titles · {matched} matched
                     </span>
                   </li>
                 )
               })}
             </ul>
-            <p className="gt-ownership__card-note">
+            <p className="od-ownership__card-note">
               {summary.has_steam_api_key
                 ? 'Steam API key configured'
                 : 'Steam: no API key — use CSV import'}
@@ -368,13 +368,13 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
       </div>
 
       {summary && enabled && !useNewChrome ? (
-        <p className="gt-ownership__meta">
+        <p className="od-ownership__meta">
           Pick a store above to connect it or import a list.
         </p>
       ) : null}
 
       {summary && enabled && useNewChrome && !selectedStore ? (
-        <p className="gt-ownership__hint">
+        <p className="od-ownership__hint">
           Choose a store in the bar above to link it or import a list.
         </p>
       ) : null}
@@ -385,13 +385,13 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
             const message = messages[store.key]
             const busy = busyAction?.startsWith(`${store.key}:`)
             return (
-              <section key={store.key} className="gt-ownership__section">
+              <section key={store.key} className="od-ownership__section">
                 <h2>{store.label}</h2>
-                <p className="gt-ownership__meta">{store.meta}</p>
+                <p className="od-ownership__meta">{store.meta}</p>
 
                 {message ? (
                   <p
-                    className="gt-ownership__message"
+                    className="od-ownership__message"
                     data-tone={message.tone}
                     role={message.tone === 'error' ? 'alert' : 'status'}
                   >
@@ -451,16 +451,16 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                     </label>
                   ) : null}
                   {state.has_credential ? (
-                    <p className="gt-ownership__meta">A live-sync token is saved for this store.</p>
+                    <p className="od-ownership__meta">A live-sync token is saved for this store.</p>
                   ) : null}
-                  <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy}>
+                  <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
                     {busyAction === `${store.key}:connect` ? 'Saving…' : store.saveLabel}
                   </button>
                 </form>
 
-                <div className="gt-ownership__actions">
+                <div className="od-ownership__actions">
                   {store.canSync ? (
-                    <button type="button" className="gt-cbtn" disabled={busy} onClick={() => handleSync(store)}>
+                    <button type="button" className="od-cbtn" disabled={busy} onClick={() => handleSync(store)}>
                       {busyAction === `${store.key}:sync`
                         ? `Syncing from ${store.label}…`
                         : `Sync from ${store.label}`}
@@ -468,7 +468,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                   ) : null}
                   <button
                     type="button"
-                    className="gt-cbtn"
+                    className="od-cbtn"
                     disabled={busy || !state.connected}
                     onClick={() => handleDisconnect(store)}
                   >
@@ -503,7 +503,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
                       }}
                     />
                   </label>
-                  <button type="submit" className="gt-cbtn gt-cbtn--primary" disabled={busy}>
+                  <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
                     {busyAction === `${store.key}:csv` ? 'Importing…' : 'Import CSV'}
                   </button>
                 </form>

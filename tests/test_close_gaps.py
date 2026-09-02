@@ -9,12 +9,12 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca import db
-from gametheca.models import Game, GlobalSettings, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.quality_profiles import score_release_title
-from gametheca.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
-from gametheca.utils.stats_share import build_playtime_share_svg, format_duration
+from oneirodex import db
+from oneirodex.models import Game, GlobalSettings, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.quality_profiles import score_release_title
+from oneirodex.utils.rom_archive import ArchiveRomError, resolve_playable_rom_path
+from oneirodex.utils.stats_share import build_playtime_share_svg, format_duration
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def test_format_duration_and_svg():
 
 def test_quality_score_blocks_group(app, db_session):
     from sqlalchemy.orm.attributes import flag_modified
-    from gametheca.utils.quality_profiles import save_quality_profile
+    from oneirodex.utils.quality_profiles import save_quality_profile
 
     # Ordered by id, like the product's own `_settings_row()`. A bare `limit(1)`
     # has no defined order in Postgres, so once the suite has left more than one
@@ -145,7 +145,7 @@ def test_calendar_endpoint_without_igdb(client, app, admin, monkeypatch):
         }]
 
     monkeypatch.setattr(
-        'gametheca.routes_apis.calendar.fetch_release_calendar',
+        'oneirodex.routes_apis.calendar.fetch_release_calendar',
         fake_fetch,
     )
     resp = client.get('/api/calendar')
@@ -186,7 +186,7 @@ def test_resolve_7z_without_py7zr(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, '__import__', fake_import)
     monkeypatch.setattr(
-        'gametheca.utils.rom_archive.find_archive_extractors',
+        'oneirodex.utils.rom_archive.find_archive_extractors',
         lambda: {},
     )
     with pytest.raises(ArchiveRomError) as exc:

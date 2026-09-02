@@ -10,7 +10,7 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.utils.system_marks import (
+from oneirodex.utils.system_marks import (
     build_system_mark_prompt,
     generate_system_marks,
     list_system_marks_catalog,
@@ -98,7 +98,7 @@ def test_cli_help_exits_zero():
 
 @pytest.fixture
 def admin_user(db_session):
-    from gametheca.models import User
+    from oneirodex.models import User
 
     uid = str(uuid4())
     suffix = uid[:8]
@@ -121,7 +121,7 @@ def test_art_studio_system_marks_api_catalog_and_generate(client, db_session, ad
         sess['_fresh'] = True
 
     with patch(
-        'gametheca.routes_admin_ext.art_studio.list_system_marks_catalog',
+        'oneirodex.routes_admin_ext.art_studio.list_system_marks_catalog',
         return_value=[{
             'theme': 'default',
             'era': 'wood_den_80s',
@@ -149,7 +149,7 @@ def test_art_studio_system_marks_api_catalog_and_generate(client, db_session, ad
     assert 'path' not in lab_body
 
     with patch(
-        'gametheca.routes_admin_ext.art_studio.generate_system_marks',
+        'oneirodex.routes_admin_ext.art_studio.generate_system_marks',
         return_value={'generated': 1, 'skipped': 0, 'errors': [], 'results': []},
     ) as gen:
         response = client.post(
@@ -179,7 +179,7 @@ def test_art_studio_lab_prompt_requires_one_pair(client, db_session, admin_user)
     assert rejected.get_json().get('error_code') == 'bad_request'
 
     with patch(
-        'gametheca.routes_admin_ext.art_studio.generate_system_marks',
+        'oneirodex.routes_admin_ext.art_studio.generate_system_marks',
         return_value={'generated': 1, 'skipped': 0, 'errors': [], 'results': []},
     ) as gen:
         ok = client.post(

@@ -1,5 +1,5 @@
 """
-Unit tests for gametheca.routes_apis.game
+Unit tests for oneirodex.routes_apis.game
 
 Tests the game API endpoints including search, screenshots, game movement,
 and IGDB ID generation functionality.
@@ -11,13 +11,13 @@ import json
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
 
-from gametheca.models import User, Game, Library, Image, LibraryPlatform
+from oneirodex.models import User, Game, Library, Image, LibraryPlatform
 
 
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints."""
     from sqlalchemy import delete
-    from gametheca.models import SystemEvents
+    from oneirodex.models import SystemEvents
     
     # Clean up in order of dependencies
     db_session.execute(delete(SystemEvents))
@@ -470,7 +470,7 @@ class TestMoveGameToLibraryAPI:
         assert data['success'] is False
         assert 'Game or target library not found' in data['message']
     
-    @patch('gametheca.routes_apis.game.log_system_event')
+    @patch('oneirodex.routes_apis.game.log_system_event')
     def test_move_game_logging(self, mock_log, client, librarian_user, sample_games, target_library):
         """Test that move operation is properly logged."""
         with client.session_transaction() as sess:
@@ -534,7 +534,7 @@ class TestGetNextCustomIGDBIdAPI:
         # Should return next available after the highest (2000000425 + 1)
         assert data['next_id'] == 2000000426
     
-    @patch('gametheca.routes_apis.game.db.session.execute')
+    @patch('oneirodex.routes_apis.game.db.session.execute')
     def test_next_igdb_id_database_error(self, mock_execute, client, regular_user):
         """Test error handling in next IGDB ID endpoint."""
         mock_execute.side_effect = Exception("Database error")

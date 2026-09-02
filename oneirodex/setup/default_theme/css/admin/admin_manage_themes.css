@@ -1,0 +1,427 @@
+/* Admin → Themes — dense od-adminpage blocks (no legacy padding stacks). */
+
+.od-themes-page {
+    --od-themes-gap: 0.85rem;
+    --od-themes-pad: 0.9rem 1rem;
+    --od-themes-radius: 10px;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0.25rem 0 1.25rem;
+}
+
+.od-themes-flash {
+    max-width: 1080px;
+    margin: 0 auto 0.75rem;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.od-themes-header {
+    margin-bottom: var(--od-themes-gap);
+    padding-bottom: 0.75rem;
+    gap: 0.65rem;
+}
+
+.od-themes-kicker {
+    margin: 0 0 0.2rem;
+    font-size: var(--od-font-xs);
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--od-accent);
+}
+
+.od-themes-header .od-adminpage-title {
+    margin: 0 0 0.25rem;
+    font-size: clamp(var(--od-font-xl), 2.4vw, var(--od-font-3xl));
+}
+
+.od-themes-header .od-adminpage-lede {
+    margin: 0;
+    font-size: var(--od-font-md);
+    max-width: 58ch;
+}
+
+.od-themes-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--od-radius-sm);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface-2);
+    color: var(--od-text);
+    text-decoration: none;
+    font-size: var(--od-font-sm);
+    font-weight: 550;
+    white-space: nowrap;
+}
+
+.od-themes-link:hover,
+.od-themes-link:focus-visible {
+    color: var(--od-accent);
+    border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+}
+
+/* See admin-shell.css: hover styling alone is not a focus indicator. */
+.od-themes-link:focus-visible {
+    outline: 2px solid var(--od-focus-ring, var(--od-accent));
+    outline-offset: 2px;
+}
+
+/* ---- section blocks ---- */
+
+.od-themes-block {
+    background: var(--od-surface);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-themes-radius);
+    padding: var(--od-themes-pad);
+    margin-bottom: var(--od-themes-gap);
+}
+
+.od-themes-block:last-child {
+    margin-bottom: 0;
+}
+
+.od-themes-block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.85rem;
+    margin-bottom: 0.65rem;
+}
+
+.od-themes-block-head h2 {
+    margin: 0;
+    font-size: var(--od-font-base);
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    color: var(--od-text);
+}
+
+.od-themes-block-hint {
+    margin: 0;
+    flex: 1 1 14rem;
+    font-size: var(--od-font-sm);
+    color: var(--od-text-muted);
+    max-width: 62ch;
+}
+
+.od-themes-page .theme-swatch-grid {
+    margin-top: 0;
+    gap: 0.45rem;
+    grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
+}
+
+.od-themes-page .theme-swatch {
+    padding: 0.55rem 0.3rem 0.45rem;
+    border-radius: var(--od-radius-sm);
+    background: color-mix(in srgb, var(--od-text) 3%, transparent);
+}
+
+.od-themes-page .theme-swatch-chip {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+.theme-apply-status {
+    min-height: 1.1rem;
+    margin: 0.45rem 0 0;
+    font-size: var(--od-font-sm);
+    color: var(--od-text-muted);
+}
+
+.theme-apply-status.is-error {
+    color: var(--od-danger);
+    font-weight: 600;
+}
+
+/* ---- install / reset toolbar ---- */
+
+.od-themes-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.od-themes-upload {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem 0.65rem;
+    align-items: end;
+}
+
+.od-themes-upload-label {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: var(--od-font-xs);
+    font-weight: 550;
+    color: var(--od-text-muted);
+}
+
+.od-themes-file {
+    width: 100%;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--od-radius-sm);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface-2);
+    color: var(--od-text);
+    font-size: var(--od-font-sm);
+}
+
+.od-themes-reset {
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.od-themes-btn {
+    white-space: nowrap;
+    border-radius: var(--od-radius-sm) !important;
+    font-size: var(--od-font-sm) !important;
+    padding: 0.4rem 0.75rem !important;
+}
+
+/* ---- Loading icon lock / rotate (Wave 2d) ---- */
+
+.od-themes-loading {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.od-themes-loading__modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1.25rem;
+}
+
+.od-themes-loading__mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--od-font-md);
+    color: var(--od-text);
+    cursor: pointer;
+}
+
+.od-themes-loading__pick {
+    display: grid;
+    grid-template-columns: minmax(10rem, 16rem) auto;
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.od-themes-loading__select {
+    max-width: 16rem;
+}
+
+.od-themes-loading__preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 2.75rem;
+    color: var(--od-accent);
+}
+
+/* Caption under the specimen row (W27-E2). Takes the full row so it reads as a
+   note about the set rather than as another item in it. */
+.od-themes-loading__note {
+    flex-basis: 100%;
+    margin: 0.15rem 0 0;
+    font-size: var(--od-font-xs, 0.78rem);
+    color: var(--od-text-muted);
+}
+
+.od-themes-loading__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1rem;
+}
+
+/* ---- installed list (not cards) ---- */
+
+.themes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+}
+
+.theme-list-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem 1rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--od-radius-sm);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface-2);
+}
+
+.theme-list-row.is-active,
+.theme-list-row.default-theme.is-active {
+    border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+    box-shadow: inset 3px 0 0 var(--od-accent);
+}
+
+.theme-list-row.default-theme:not(.is-active) {
+    border-color: color-mix(in srgb, var(--od-accent) 28%, var(--od-border));
+}
+
+.theme-list-row__main {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.theme-list-row__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.55rem;
+    margin: 0 0 0.15rem;
+}
+
+.theme-list-row__title strong {
+    font-size: var(--od-font-md);
+    font-weight: 650;
+    color: var(--od-text);
+}
+
+.theme-list-row__meta {
+    margin: 0;
+    font-size: var(--od-font-xs);
+    color: var(--od-text-muted);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.theme-list-row__meta code {
+    font-size: var(--od-font-xs);
+    padding: 0.05rem 0.25rem;
+    border-radius: var(--od-radius-xs);
+    background: color-mix(in srgb, var(--od-text) 6%, transparent);
+    color: var(--od-text);
+}
+
+.theme-list-row__actions {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.theme-card-badge {
+    flex-shrink: 0;
+    padding: 0.12rem 0.4rem;
+    border-radius: var(--od-radius-xs);
+    font-size: var(--od-font-xs);
+    font-weight: 650;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--od-accent);
+    background: color-mix(in srgb, var(--od-accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--od-accent) 35%, transparent);
+}
+
+.theme-card-badge--live {
+    color: var(--od-text);
+}
+
+/* Legacy card selectors kept inert if old markup cached */
+.themes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.theme-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    background: var(--od-surface-2);
+    border: 1px solid var(--od-border);
+    border-radius: var(--od-radius-sm);
+    padding: 0.55rem 0.7rem;
+}
+
+.theme-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.theme-card-head h3 {
+    margin: 0;
+    font-size: var(--od-font-md);
+    font-weight: 650;
+}
+
+.theme-card-meta,
+.theme-card-desc {
+    display: none;
+}
+
+.theme-card-actions {
+    margin: 0;
+}
+
+.alert {
+    padding: 0.45rem 0.65rem;
+    border-radius: var(--od-radius-sm);
+    margin: 0;
+    color: var(--od-text);
+    border: 1px solid var(--od-border);
+    background-color: var(--od-surface-2);
+    font-size: var(--od-font-sm);
+}
+
+.alert-success {
+    background-color: var(--alert-success-bg);
+    border-color: var(--btn-success);
+}
+
+.alert-danger,
+.alert-error {
+    background-color: var(--alert-danger-bg);
+    border-color: var(--btn-danger);
+}
+
+.alert-warning {
+    background-color: var(--alert-warning-bg);
+    border-color: var(--btn-warning);
+}
+
+.alert-info {
+    background-color: var(--alert-info-bg);
+    border-color: var(--btn-info);
+}
+
+@media (max-width: 720px) {
+    .od-themes-tools,
+    .od-themes-upload {
+        grid-template-columns: 1fr;
+    }
+
+    .od-themes-loading__pick {
+        grid-template-columns: 1fr;
+    }
+
+    .od-themes-reset {
+        width: 100%;
+    }
+
+    .od-themes-reset .od-themes-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-list-row {
+        transition: none;
+    }
+}

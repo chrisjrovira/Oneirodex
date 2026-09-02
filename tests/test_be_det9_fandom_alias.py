@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from gametheca.utils.fandom_alias import (
+from oneirodex.utils.fandom_alias import (
     SOFT_ALIAS_SCORE_BOOST,
     expand_fandom_search_variants,
     fandom_match_reason,
@@ -13,8 +13,8 @@ from gametheca.utils.fandom_alias import (
     is_fandom_soft_propose,
     lookup_fandom_alias,
 )
-from gametheca.utils.gamenames import generate_goty_variants
-from gametheca.utils.match_scoring import (
+from oneirodex.utils.gamenames import generate_goty_variants
+from oneirodex.utils.match_scoring import (
     DEFAULT_HIGH_THRESHOLD,
     score_candidate,
     select_best_match,

@@ -8,10 +8,10 @@ from io import BytesIO
 from werkzeug.datastructures import FileStorage
 from PIL import Image as PILImage
 
-from gametheca import create_app, db
-from gametheca.models import User, InviteToken, UserPreference
-from gametheca.forms import EditProfileForm, UserPasswordForm, UserPreferencesForm
-from gametheca.utils.avatar import DEFAULT_AVATAR
+from oneirodex import create_app, db
+from oneirodex.models import User, InviteToken, UserPreference
+from oneirodex.forms import EditProfileForm, UserPasswordForm, UserPreferencesForm
+from oneirodex.utils.avatar import DEFAULT_AVATAR
 
 
 
@@ -129,7 +129,7 @@ def create_test_file(filename='test.png', size=1024):
 class TestSettingsContextProcessor:
     """Test the settings context processor."""
     
-    @patch('gametheca.routes_settings.get_global_settings')
+    @patch('oneirodex.routes_settings.get_global_settings')
     def test_inject_settings_cached(self, mock_get_settings, app):
         """Test that inject_settings returns global settings."""
         # Mock the settings
@@ -141,7 +141,7 @@ class TestSettingsContextProcessor:
         mock_get_settings.return_value = mock_settings
         
         with app.app_context():
-            from gametheca.routes_settings import inject_settings
+            from oneirodex.routes_settings import inject_settings
             result = inject_settings()
             
             assert result == mock_settings
@@ -157,7 +157,7 @@ class TestSettingsProfileEdit:
         assert response.status_code == 302
         assert '/login' in response.location
     
-    @patch('gametheca.routes_settings.render_template')
+    @patch('oneirodex.routes_settings.render_template')
     def test_get_profile_edit_authenticated(self, mock_render, client, test_user):
         """Test GET request with authenticated user."""
         mock_render.return_value = 'rendered template'
@@ -186,7 +186,7 @@ class TestSettingsProfileEdit:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.avatar.data = None
@@ -205,7 +205,7 @@ class TestSettingsProfileEdit:
             sess['_fresh'] = True
         
         # Test basic form submission without file - this validates the route works
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.avatar.data = None  # No file uploaded
@@ -223,7 +223,7 @@ class TestSettingsProfileEdit:
             sess['_fresh'] = True
         
         # Test that the route correctly handles form validation
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.avatar.data = None  # No file for this simplified test
@@ -240,7 +240,7 @@ class TestSettingsProfileEdit:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             
@@ -252,7 +252,7 @@ class TestSettingsProfileEdit:
             mock_form.avatar.data = mock_file
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.flash') as mock_flash:
+            with patch('oneirodex.routes_settings.flash') as mock_flash:
                 response = client.post('/settings_profile_edit', data={}, follow_redirects=False)
 
                 assert response.status_code == 302
@@ -268,7 +268,7 @@ class TestSettingsProfileEdit:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             
@@ -281,9 +281,9 @@ class TestSettingsProfileEdit:
             mock_form_class.return_value = mock_form
             
             # Patched where the upload path now lives, not on the route module.
-            with patch('gametheca.utils.avatar.os.makedirs',
+            with patch('oneirodex.utils.avatar.os.makedirs',
                        side_effect=OSError('Permission denied')), \
-                 patch('gametheca.routes_settings.flash') as mock_flash:
+                 patch('oneirodex.routes_settings.flash') as mock_flash:
 
                 response = client.post('/settings_profile_edit', data={}, follow_redirects=False)
 
@@ -298,14 +298,14 @@ class TestSettingsProfileEdit:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.avatar.data = None
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.db.session.commit', side_effect=Exception('Database error')):
-                with patch('gametheca.routes_settings.flash') as mock_flash:
+            with patch('oneirodex.routes_settings.db.session.commit', side_effect=Exception('Database error')):
+                with patch('oneirodex.routes_settings.flash') as mock_flash:
                     response = client.post('/settings_profile_edit', data={}, follow_redirects=False)
                     
                     assert response.status_code == 302
@@ -317,7 +317,7 @@ class TestSettingsProfileEdit:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_settings.EditProfileForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.EditProfileForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = False
             mock_avatar_field = MagicMock()
@@ -326,9 +326,9 @@ class TestSettingsProfileEdit:
             mock_form.errors = {'avatar': ['Invalid file type']}
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.render_template') as mock_render:
+            with patch('oneirodex.routes_settings.render_template') as mock_render:
                 mock_render.return_value = 'error template'
-                with patch('gametheca.routes_settings.flash') as mock_flash:
+                with patch('oneirodex.routes_settings.flash') as mock_flash:
                     response = client.post('/settings_profile_edit', data={})
                     
                     assert response.status_code == 200
@@ -344,7 +344,7 @@ class TestSettingsProfileView:
         assert response.status_code == 302
         assert '/login' in response.location
     
-    @patch('gametheca.routes_settings.render_template')
+    @patch('oneirodex.routes_settings.render_template')
     def test_get_profile_view_authenticated(self, mock_render, client, test_user, invite_tokens, db_session):
         """Test GET request with authenticated user."""
         mock_render.return_value = 'rendered template'
@@ -375,7 +375,7 @@ class TestAccountPasswordChange:
         assert response.status_code == 302
         assert '/login' in response.location
     
-    @patch('gametheca.routes_settings.render_template')
+    @patch('oneirodex.routes_settings.render_template')
     def test_get_password_change_authenticated(self, mock_render, client, test_user):
         """Test GET request with authenticated user."""
         mock_render.return_value = 'rendered template'
@@ -405,13 +405,13 @@ class TestAccountPasswordChange:
             'confirm_password': 'newpassword123'
         }
         
-        with patch('gametheca.routes_settings.UserPasswordForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPasswordForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.password.data = 'newpassword123'
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.flash') as mock_flash:
+            with patch('oneirodex.routes_settings.flash') as mock_flash:
                 response = client.post('/settings_password', data=form_data, follow_redirects=False)
                 
                 assert response.status_code == 302
@@ -428,14 +428,14 @@ class TestAccountPasswordChange:
             'confirm_password': 'newpassword123'
         }
         
-        with patch('gametheca.routes_settings.UserPasswordForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPasswordForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.password.data = 'newpassword123'
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.db.session.commit', side_effect=Exception('Database error')):
-                with patch('gametheca.routes_settings.flash') as mock_flash:
+            with patch('oneirodex.routes_settings.db.session.commit', side_effect=Exception('Database error')):
+                with patch('oneirodex.routes_settings.flash') as mock_flash:
                     response = client.post('/settings_password', data=form_data)
                     
                     assert response.status_code == 200
@@ -451,7 +451,7 @@ class TestSettingsPanel:
         assert response.status_code == 302
         assert '/login' in response.location
     
-    @patch('gametheca.routes_settings.render_template')
+    @patch('oneirodex.routes_settings.render_template')
     def test_get_settings_panel_authenticated(self, mock_render, client, test_user):
         """Test GET request with authenticated user."""
         mock_render.return_value = 'rendered template'
@@ -485,7 +485,7 @@ class TestSettingsPanel:
             'theme': 'dark'
         }
         
-        with patch('gametheca.routes_settings.UserPreferencesForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPreferencesForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.items_per_page.data = 50
@@ -530,7 +530,7 @@ class TestSettingsPanel:
             'theme': 'light'
         }
         
-        with patch('gametheca.routes_settings.UserPreferencesForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPreferencesForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.items_per_page.data = 100
@@ -569,7 +569,7 @@ class TestSettingsPanel:
             'theme': 'default'  # Should be stored as None
         }
         
-        with patch('gametheca.routes_settings.UserPreferencesForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPreferencesForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.items_per_page.data = 20
@@ -610,7 +610,7 @@ class TestSettingsPanel:
             'theme': 'dark'
         }
         
-        with patch('gametheca.routes_settings.UserPreferencesForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPreferencesForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = True
             mock_form.items_per_page.data = 20
@@ -627,7 +627,7 @@ class TestSettingsPanel:
             mock_form.preferred_game_locale.data = 'en-US'
             mock_form_class.return_value = mock_form
             
-            with patch('gametheca.routes_settings.db.session.commit', side_effect=Exception('Database error')):
+            with patch('oneirodex.routes_settings.db.session.commit', side_effect=Exception('Database error')):
                 response = client.post('/settings_panel', data=form_data)
                 
                 assert response.status_code == 500
@@ -641,7 +641,7 @@ class TestSettingsPanel:
             sess['_user_id'] = str(test_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_settings.UserPreferencesForm') as mock_form_class:
+        with patch('oneirodex.routes_settings.UserPreferencesForm') as mock_form_class:
             mock_form = MagicMock()
             mock_form.validate_on_submit.return_value = False
             mock_form.errors = {'items_per_page': ['Invalid choice']}
@@ -681,7 +681,7 @@ class TestFontPickerIsReachable:
 
     def test_font_choices_include_more_than_the_default(self, app):
         """A picker offering one option is indistinguishable from no picker."""
-        from gametheca.utils.theme_fonts import available_fonts
+        from oneirodex.utils.theme_fonts import available_fonts
 
         with app.app_context():
             assert len(available_fonts()) > 1

@@ -45,14 +45,14 @@ test('matches new store brand ids from type and url', () => {
     />,
   )
 
-  expect(screen.getByRole('link', { name: 'PlayStation' })).toHaveClass('gt-store-link--playstation')
-  expect(screen.getByRole('link', { name: 'Xbox' })).toHaveClass('gt-store-link--xbox')
-  expect(screen.getByRole('link', { name: 'Amazon' })).toHaveClass('gt-store-link--amazon')
-  expect(screen.getByRole('link', { name: 'Humble' })).toHaveClass('gt-store-link--humble')
-  expect(screen.getByRole('link', { name: 'itch.io' })).toHaveClass('gt-store-link--itch')
-  expect(screen.getByRole('link', { name: 'EA' })).toHaveClass('gt-store-link--ea')
-  expect(screen.getByRole('link', { name: 'Ubisoft' })).toHaveClass('gt-store-link--ubisoft')
-  expect(screen.getByRole('link', { name: 'Fandom' })).toHaveClass('gt-store-link--fandom')
+  expect(screen.getByRole('link', { name: 'PlayStation' })).toHaveClass('od-store-link--playstation')
+  expect(screen.getByRole('link', { name: 'Xbox' })).toHaveClass('od-store-link--xbox')
+  expect(screen.getByRole('link', { name: 'Amazon' })).toHaveClass('od-store-link--amazon')
+  expect(screen.getByRole('link', { name: 'Humble' })).toHaveClass('od-store-link--humble')
+  expect(screen.getByRole('link', { name: 'itch.io' })).toHaveClass('od-store-link--itch')
+  expect(screen.getByRole('link', { name: 'EA' })).toHaveClass('od-store-link--ea')
+  expect(screen.getByRole('link', { name: 'Ubisoft' })).toHaveClass('od-store-link--ubisoft')
+  expect(screen.getByRole('link', { name: 'Fandom' })).toHaveClass('od-store-link--fandom')
 })
 
 test('dedupes urls and uses unknown mark for empty / unrecognized types', () => {
@@ -68,8 +68,8 @@ test('dedupes urls and uses unknown mark for empty / unrecognized types', () => 
   )
 
   expect(screen.getAllByRole('link', { name: 'Steam' })).toHaveLength(1)
-  expect(screen.getByRole('link', { name: 'Link' })).toHaveClass('gt-store-link--unknown')
-  expect(screen.getByRole('link', { name: 'obscure-shop' })).toHaveClass('gt-store-link--unknown')
+  expect(screen.getByRole('link', { name: 'Link' })).toHaveClass('od-store-link--unknown')
+  expect(screen.getByRole('link', { name: 'obscure-shop' })).toHaveClass('od-store-link--unknown')
 })
 
 test('returns null when no safe http links', () => {

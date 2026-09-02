@@ -2,76 +2,76 @@
    Sits inside a popover that already draws the frame, so this contributes
    structure and rhythm only — no border, no surface of its own. */
 
-.gt-rowsettings {
+.od-rowsettings {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-5);
+  gap: var(--od-space-5);
   min-width: 20rem;
   max-width: 26rem;
 }
 
-.gt-rowsettings__group {
+.od-rowsettings__group {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
 }
 
-.gt-rowsettings__heading {
+.od-rowsettings__heading {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
   margin: 0;
-  font-size: var(--gt-label-size);
-  font-weight: var(--gt-label-weight);
-  letter-spacing: var(--gt-label-tracking);
+  font-size: var(--od-label-size);
+  font-weight: var(--od-label-weight);
+  letter-spacing: var(--od-label-tracking);
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 /* "2 of 3" — the pin budget, stated rather than discovered by finding the pin
    control disabled. */
-.gt-rowsettings__budget {
+.od-rowsettings__budget {
   font-variant-numeric: tabular-nums;
   text-transform: none;
   letter-spacing: normal;
 }
 
-.gt-rowsettings__list {
+.od-rowsettings__list {
   display: flex;
   flex-direction: column;
-  gap: var(--gt-space-2);
+  gap: var(--od-space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.gt-rowsettings__row {
+.od-rowsettings__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--gt-space-4);
+  gap: var(--od-space-4);
 }
 
-.gt-rowsettings__title {
+.od-rowsettings__title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
 /* A hidden row still reads as one of the rows — dimmed, not struck through or
    greyed to unreadable. It is a state you can leave, and the control beside it
    is how. */
-.gt-rowsettings__row[data-hidden] .gt-rowsettings__title {
-  color: var(--gt-text-muted);
+.od-rowsettings__row[data-hidden] .od-rowsettings__title {
+  color: var(--od-text-muted);
   text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--gt-text-muted) 50%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--od-text-muted) 50%, transparent);
 }
 
-.gt-rowsettings__empty {
+.od-rowsettings__empty {
   margin: 0;
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
 }

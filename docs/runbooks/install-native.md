@@ -55,7 +55,7 @@ Start it: `./startweb.sh` — then open http://localhost:5006
 ### Run at boot (systemd)
 
 ```ini
-# /etc/systemd/system/gametheca.service
+# /etc/systemd/system/oneirodex.service
 [Unit]
 Description=Oneirodex
 After=network-online.target postgresql.service
@@ -65,10 +65,10 @@ RequiresMountsFor=/mnt/nas/roms
 
 [Service]
 Type=simple
-User=gametheca
-Group=gametheca
-WorkingDirectory=/opt/gametheca
-ExecStart=/opt/gametheca/startweb.sh
+User=oneirodex
+Group=oneirodex
+WorkingDirectory=/opt/oneirodex
+ExecStart=/opt/oneirodex/startweb.sh
 Restart=on-failure
 RestartSec=10
 
@@ -78,8 +78,8 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now gametheca
-journalctl -u gametheca -f
+sudo systemctl enable --now oneirodex
+journalctl -u oneirodex -f
 ```
 
 `RequiresMountsFor` is the line people leave out. Without it systemd starts
@@ -110,28 +110,28 @@ Start it: `./startweb.sh`
 ### Run at login (launchd)
 
 ```xml
-<!-- ~/Library/LaunchAgents/com.gametheca.server.plist -->
+<!-- ~/Library/LaunchAgents/com.oneirodex.server.plist -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.gametheca.server</string>
+  <key>Label</key><string>com.oneirodex.server</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/YOU/gametheca/startweb.sh</string>
+    <string>/Users/YOU/oneirodex/startweb.sh</string>
   </array>
-  <key>WorkingDirectory</key><string>/Users/YOU/gametheca</string>
+  <key>WorkingDirectory</key><string>/Users/YOU/oneirodex</string>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>/Users/YOU/gametheca/gametheca.log</string>
-  <key>StandardErrorPath</key><string>/Users/YOU/gametheca/gametheca.err</string>
+  <key>StandardOutPath</key><string>/Users/YOU/oneirodex/oneirodex.log</string>
+  <key>StandardErrorPath</key><string>/Users/YOU/oneirodex/oneirodex.err</string>
 </dict>
 </plist>
 ```
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.gametheca.server.plist
+launchctl load ~/Library/LaunchAgents/com.oneirodex.server.plist
 ```
 
 A `LaunchAgent` runs in your login session, so Finder-mounted shares are
@@ -199,9 +199,9 @@ authenticate to a network share, so a NAS library goes unreachable.
 **NSSM** for a proper service entry:
 
 ```powershell
-nssm install Oneirodex "C:\gametheca\startweb_windows.cmd"
-nssm set Oneirodex AppDirectory "C:\gametheca"
-nssm set Oneirodex ObjectName ".\gametheca-svc" "PASSWORD"
+nssm install Oneirodex "C:\oneirodex\startweb_windows.cmd"
+nssm set Oneirodex AppDirectory "C:\oneirodex"
+nssm set Oneirodex ObjectName ".\oneirodex-svc" "PASSWORD"
 nssm start Oneirodex
 ```
 
@@ -249,7 +249,7 @@ library database — game *files* on disk are untouched.
 |---|---|
 | `SECRET_KEY environment variable is not set` | `.env` was not loaded, or still has the placeholder. Start via `startweb.sh`, not `python asgi.py` |
 | `connection refused` on 5432 | PostgreSQL is not running — `systemctl status postgresql`, `brew services list`, or Services on Windows |
-| `database ... does not exist` | Re-run the installer, or `createdb gametheca` |
+| `database ... does not exist` | Re-run the installer, or `createdb oneirodex` |
 | Port 5006 in use | `PORT=5010 ./startweb.sh`, or `--port` at install time |
 | Library grid unstyled | Frontend bundles missing — `cd frontend/member-app && npm ci && npm run build` |
 | Scan sees an empty folder | Permissions or an unmounted share — [remote-scan-locations.md](remote-scan-locations.md#troubleshooting) |

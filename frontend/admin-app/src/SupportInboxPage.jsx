@@ -50,14 +50,14 @@ export function SupportInboxPage() {
 
   if (error) {
     return (
-      <div className="gt-adminpage">
+      <div className="od-adminpage">
         <PageStatus error errorMessage="Unable to load support tickets." />
       </div>
     )
   }
 
   return (
-    <div className="gt-adminpage">
+    <div className="od-adminpage">
       <h1>Support inbox</h1>
       <p>Teammate reports from the member app. GitHub Issues when SUPPORT_GITHUB_TOKEN is set.</p>
       {/* UID-014 — the strip exists so every admin page answers "how bad is it"
@@ -118,7 +118,7 @@ export function SupportInboxPage() {
             filterable: false,
             render: (t) =>
               t.status === 'open' ? (
-                <button type="button" className="gt-btn" onClick={() => void resolve(t.id)}>
+                <button type="button" className="od-btn" onClick={() => void resolve(t.id)}>
                   Resolve
                 </button>
               ) : null,

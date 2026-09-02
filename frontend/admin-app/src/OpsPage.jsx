@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageStatus } from './PageStatus'
 
+import { DashboardBoard } from './DashboardBoard'
 import { DataTable } from './DataTable'
-import { SystemResetPanel } from './SystemResetPanel'
-import { useWidgetOrder } from './useWidgetOrder'
+import { OpsLogModal } from './OpsLogModal'
+import { defaultOpsLayout, OPS_STORAGE_KEY, opsWidgetMins } from './opsLayout'
 import {
   LibraryHealthFactors,
   formatScanJobCounters,
@@ -41,7 +42,6 @@ async function getJson(url, { signal } = {}) {
   return response.json()
 }
 
-
 function livekitLabel(livekit) {
   if (!livekit) return 'n/a'
   if (livekit.configured) {
@@ -65,15 +65,6 @@ const DETAIL_PANELS = {
 
 const DETAIL_PANEL_IDS = Object.keys(DETAIL_PANELS)
 
-/**
- * Ops panel tables (UX-C8 · W27-C1).
- *
- * These were hand-rolled `gt-ops-table` blocks, so they were the surfaces that
- * disagreed with every other admin table. They take `toolbar={false}`: the row
- * sets here are short and capped, and a filter box over them is the "more
- * chrome than content" problem — but the header, sorting and empty state are
- * now the shared ones.
- */
 const COMPANION_KIND_COLUMNS = [
   { key: 'kind', label: 'Kind' },
   { key: 'online', label: 'Online', align: 'right' },
@@ -93,27 +84,20 @@ const SCAN_JOB_COLUMNS = [
     key: 'progress',
     label: 'Progress',
     render: (job) => formatScanJobCounters(job),
-    // Sorts on folders done rather than the rendered "3/25 (12%)", which would
-    // compare as text and put 10 before 9.
     value: (job) => Number(job.folders_success ?? 0) + Number(job.folders_failed ?? 0),
   },
   {
-    // Same priority the Scans page uses (GT-B38): the reason a job stopped
-    // outranks what it was doing, because it is the only thing that explains a
-    // queue that is no longer moving. This column showed `current_processing`
-    // alone, which is null on a failed job — so the console reported that a
-    // scan had failed and never why, the reclaim message included.
     key: 'detail',
     label: 'Detail',
     render: (job) => {
       if (job.error_message) {
-        return <span className="gt-ops-table__error">{job.error_message}</span>
+        return <span className="od-ops-table__error">{job.error_message}</span>
       }
       if (job.stalled) {
-        return <span className="gt-ops-table__muted">No progress reported</span>
+        return <span className="od-ops-table__muted">No progress reported</span>
       }
       return (
-        <span className="gt-ops-table__muted">{job.current_processing || '—'}</span>
+        <span className="od-ops-table__muted">{job.current_processing || '—'}</span>
       )
     },
   },
@@ -125,61 +109,18 @@ const RECENT_ERROR_COLUMNS = [
 ]
 
 /**
- * A key/value block in the Ops console.
- *
- * The System, Database and Logs panels were three copies of the same fifteen
- * lines, so adding Configuration would have made four. Deliberately a plain
- * table and not a DataTable: these are read top to bottom, and a filter box
- * above six rows of host facts is more chrome than content.
- *
- * Renders nothing when there is no data, rather than an empty frame implying a
- * reading that failed — "no section" and "a section that came back blank" would
- * otherwise look identical.
+ * A key/value block in the Ops console. Board drag replaces ↑↓ reorder.
  */
-function DetailPanel({ title, values, onMove, canMoveUp, canMoveDown }) {
+function DetailPanel({ title, values }) {
   const entries = Object.entries(values || {})
   if (entries.length === 0) return null
 
   return (
-    <section className="gt-ops-panel">
-      {/* Move controls, not drag handles.
-       *
-       * Buttons are the whole mechanism rather than a fallback bolted onto a
-       * drag: they work with a keyboard, a screen reader, a touch screen and a
-       * mouse without any of them being a second-class path, and they need no
-       * drag library. Reordering rewrites the DOM rather than setting CSS
-       * `order`, because visual order that disagrees with tab order is a worse
-       * bug than the one being fixed.
-       *
-       * Ends are disabled rather than hidden, so the control group does not
-       * change width as a panel moves and the buttons stay where the hand
-       * expects them. */}
-      <div className="gt-ops-panel__head">
+    <section className="od-ops-panel od-ops-panel--embedded">
+      <div className="od-ops-panel__head">
         <h2>{title}</h2>
-        {onMove ? (
-          <div className="gt-ops-panel__move" role="group" aria-label={`Reorder ${title}`}>
-            <button
-              type="button"
-              className="gt-cbtn gt-cbtn--icon"
-              onClick={() => onMove(-1)}
-              disabled={!canMoveUp}
-              aria-label={`Move ${title} earlier`}
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              className="gt-cbtn gt-cbtn--icon"
-              onClick={() => onMove(1)}
-              disabled={!canMoveDown}
-              aria-label={`Move ${title} later`}
-            >
-              ↓
-            </button>
-          </div>
-        ) : null}
       </div>
-      <table className="gt-ops-table">
+      <table className="od-ops-table">
         <tbody>
           {entries.map(([key, value]) => (
             <tr key={key}>
@@ -200,32 +141,42 @@ export function OpsPage() {
   const [bootLoading, setBootLoading] = useState(true)
   /** Manual Refresh button feedback only. */
   const [manualRefreshing, setManualRefreshing] = useState(false)
-  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
-  // Server status folded in (GT-B21 · UID-015). Separate request from the
-  // summary poll: these values barely move, so re-fetching them every 15s to
-  // learn the OS name would be wasted work.
   const [systemDetail, setSystemDetail] = useState(null)
   const [recentLogs, setRecentLogs] = useState(null)
-  // Only the panels that actually have data, because `DetailPanel` renders
-  // nothing without any — and a slot held by something invisible poisons the
-  // reordering it takes part in. Passing the *declared* five meant the last
-  // visible panel's ↓ stayed enabled (it had an absent panel below it) and one
-  // press swapped it with nothing the operator could see. Reachable for real:
-  // `get_config_values()` returns `{}` when none of its whitelisted paths are
-  // configured, and `theme_assets` is absent against any older backend.
-  //
-  // The order preference is a superset held inside `useWidgetOrder`, so a panel
-  // dropping out here does not cost it its saved position when it comes back.
-  const presentDetailIds = useMemo(
-    () =>
-      DETAIL_PANEL_IDS.filter(
-        (id) => Object.keys(systemDetail?.[id] || {}).length > 0,
-      ),
-    [systemDetail],
-  )
-  const detailOrder = useWidgetOrder('ops-detail', presentDetailIds)
+  const [fullLogOpen, setFullLogOpen] = useState(false)
+  const [fullLogEvents, setFullLogEvents] = useState(null)
+  const [fullLogLoading, setFullLogLoading] = useState(false)
+  const [fullLogError, setFullLogError] = useState(null)
   const requestRef = useRef({ id: 0, controller: null })
   const hasSnapshotRef = useRef(false)
+
+  const openFullLog = useCallback(() => {
+    setFullLogOpen(true)
+    if (window.location.hash !== '#full-log') {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#full-log`)
+    }
+  }, [])
+
+  const closeFullLog = useCallback(() => {
+    setFullLogOpen(false)
+    if (window.location.hash === '#full-log') {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+    }
+  }, [])
+
+  const loadFullLog = useCallback(() => {
+    setFullLogLoading(true)
+    setFullLogError(null)
+    getJson('/admin/api/ops/logs?limit=200')
+      .then((data) => {
+        setFullLogEvents(data?.events || [])
+        setFullLogLoading(false)
+      })
+      .catch((err) => {
+        setFullLogError(err?.message || 'Unable to load events')
+        setFullLogLoading(false)
+      })
+  }, [])
 
   const refresh = useCallback((source = 'poll') => {
     const isManual = source === 'manual'
@@ -240,7 +191,6 @@ export function OpsPage() {
         if (requestRef.current.id !== id || controller.signal.aborted) return
         setSnapshot(data)
         setError(null)
-        setLastUpdatedAt(new Date())
         hasSnapshotRef.current = true
         if (isBoot) setBootLoading(false)
         if (isManual) setManualRefreshing(false)
@@ -261,13 +211,9 @@ export function OpsPage() {
         if (!cancelled) setSystemDetail(data)
       })
       .catch(() => {
-        // Soft-fail: one unavailable stat source must not blank the console.
         if (!cancelled) setSystemDetail(null)
       })
 
-    // Separate request from the system detail (W27-D2). A failing log read must
-    // not take the host panels down with it, and vice versa — they are two
-    // independent reasons the console could be partially unavailable.
     getJson('/admin/api/ops/logs?limit=50')
       .then((data) => {
         if (!cancelled) setRecentLogs(data?.events || [])
@@ -299,6 +245,24 @@ export function OpsPage() {
     }
   }, [refresh])
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const shouldOpen =
+      window.location.hash === '#full-log' || params.get('open') === 'full-log'
+    if (shouldOpen) openFullLog()
+    const onHash = () => {
+      if (window.location.hash === '#full-log') openFullLog()
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [openFullLog])
+
+  useEffect(() => {
+    if (!fullLogOpen) return undefined
+    loadFullLog()
+    return undefined
+  }, [fullLogOpen, loadFullLog])
+
   const host = snapshot?.host
   const library = snapshot?.library
   const scans = snapshot?.scans
@@ -309,57 +273,35 @@ export function OpsPage() {
   const kindRows = companionKindRows(companions?.by_kind)
   const lastSeen = companions?.last_seen
 
-  return (
-    <div className="gt-admin-page gt-ops-page">
-      <div className="gt-ops-header">
-        <div>
-          <h1>System · Ops</h1>
-          <p className="gt-admin-lede">Observability console — host, readiness, companions, scans (~15s).</p>
-        </div>
-        <div className="gt-ops-refresh">
-          {manualRefreshing ? (
-            <span className="gt-ops-refresh__status" role="status" aria-live="polite">
-              Refreshing…
-            </span>
-          ) : lastUpdatedAt ? (
-            <span className="gt-ops-refresh__status gt-ops-refresh__status--muted">
-              Updated {lastUpdatedAt.toLocaleTimeString()}
-            </span>
-          ) : null}
-          <button
-            type="button"
-            className="gt-btn gt-btn--accent"
-            onClick={() => refresh('manual')}
-            disabled={manualRefreshing || bootLoading}
-          >
-            {manualRefreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
-      </div>
+  const presentDetailIds = useMemo(
+    () =>
+      DETAIL_PANEL_IDS.filter(
+        (id) => Object.keys(systemDetail?.[id] || {}).length > 0,
+      ),
+    [systemDetail],
+  )
 
-      {/* The `Refreshing…` indicator above is not a page status — it reports
-          one control's activity and stays where it is. */}
-      <PageStatus
-        error={error}
-        loading={bootLoading && !snapshot}
-        loadingMessage="Loading ops summary…"
-      />
-
-      <OpsStatusBanner
-        severity={severity}
-        asOf={snapshot?.as_of}
-        items={issues?.items}
-        ariaLabel="System status"
-      />
-
-      <div className="gt-ops-strip" aria-label="Key metrics">
+  const widgets = useMemo(() => {
+    const map = {
+      status: (
+        <OpsStatusBanner
+          severity={severity}
+          items={issues?.items}
+          ariaLabel="System status"
+        />
+      ),
+      'm-cpu': (
         <MetricTile
           label="CPU"
           value={na(host?.cpu?.percent, '%')}
           hint={na(host?.cpu?.cores_logical, ' cores')}
           tone={usageTone(host?.cpu?.percent)}
         />
+      ),
+      'm-load': (
         <MetricTile label="Load 1/5/15" value={formatLoadAvg(host?.load_avg)} hint="host" />
+      ),
+      'm-memory': (
         <MetricTile
           label="Memory"
           value={na(host?.memory?.percent, '%')}
@@ -370,18 +312,23 @@ export function OpsPage() {
           }
           tone={usageTone(host?.memory?.percent)}
         />
+      ),
+      'm-rss': (
         <MetricTile
           label="Process RSS"
           value={formatBytes(host?.process?.rss_bytes)}
           hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
         />
+      ),
+      'm-db': (
         <MetricTile
           label="DB ping"
           value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
           hint="SELECT 1"
-          // Milliseconds, not a percentage — a healthy local DB answers in single digits.
           tone={usageTone(host?.db_ping_ms, { warn: 50, bad: 250 })}
         />
+      ),
+      'm-readyz': (
         <MetricTile
           label="Readyz"
           value={formatReadyz(services?.readyz)}
@@ -390,17 +337,23 @@ export function OpsPage() {
             services?.readyz == null ? null : services?.readyz?.http_status === 200,
           )}
         />
+      ),
+      'm-companions': (
         <MetricTile
           label="Companions"
           value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
           hint={`${lastSeen?.within_1h ?? 0} in 1h · ${lastSeen?.stale ?? 0} stale`}
         />
+      ),
+      'm-disk': (
         <MetricTile
           label="Games disk"
           value={na(host?.disk_games?.percent ?? host?.disk_base?.percent, '%')}
           hint="volume use"
           tone={usageTone(host?.disk_games?.percent ?? host?.disk_base?.percent)}
         />
+      ),
+      'm-watch': (
         <MetricTile
           label="Library watch"
           value={formatLibraryWatchStatus(services?.library_watch)}
@@ -410,33 +363,38 @@ export function OpsPage() {
               : 'GT_LIBRARY_WATCH off'
           }
         />
+      ),
+      'm-health': (
         <MetricTile
           label="Library health"
           value={formatLibraryHealthValue(library?.health)}
           hint={formatLibraryHealthHint(library?.health)}
           tone={libraryHealthTone(library?.health)}
         />
-      </div>
-
-      <div className="gt-ops-console">
-        <section className="gt-ops-panel">
+      ),
+      host: (
+        <section className="od-ops-panel od-ops-panel--embedded">
           <h2>Host meters</h2>
           {!host ? (
             <p>{snapshot?.host_error || 'Host data unavailable.'}</p>
           ) : (
             <>
-              <p className="gt-ops-panel__lede">
+              <p className="od-ops-panel__lede">
                 <strong>{host.hostname || 'Unknown host'}</strong>
                 {' · '}
                 {host.os || 'Unknown OS'} · {host.ip || 'No IP'}
                 {' · '}
                 up {host.uptime_system || 'n/a'} / app {host.uptime_app || 'n/a'}
               </p>
-              <div className="gt-ops-meters">
+              <div className="od-ops-meters">
                 <MeterBar
                   label="CPU"
                   percent={host.cpu?.percent}
-                  detail={host.cpu?.cores_logical != null ? `${host.cpu.cores_logical} logical cores` : null}
+                  detail={
+                    host.cpu?.cores_logical != null
+                      ? `${host.cpu.cores_logical} logical cores`
+                      : null
+                  }
                 />
                 <MeterBar
                   label="Memory"
@@ -469,20 +427,15 @@ export function OpsPage() {
             </>
           )}
         </section>
-
-        {/* Deliberately a plain table, not a DataTable (UX-C8). These rows are
-            a fixed diagnostic checklist — readyz, LiveKit, malware, queues,
-            library watch — read top to bottom in a known order, with any game
-            servers appended. Sorting them alphabetically would break the order
-            an operator scans, and each row's cells are bespoke rather than one
-            shape repeated, which is what the shared table is for. */}
-        <section className="gt-ops-panel gt-ops-panel--services">
+      ),
+      services: (
+        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--services">
           <h2>Services</h2>
           {!services ? (
             <p>{snapshot?.services_error || 'Services data unavailable.'}</p>
           ) : (
-            <div className="gt-ops-panel__scroll">
-              <table className="gt-ops-table gt-ops-table--services">
+            <div className="od-ops-panel__scroll">
+              <table className="od-ops-table od-ops-table--services">
                 <thead>
                   <tr>
                     <th>Service</th>
@@ -497,7 +450,10 @@ export function OpsPage() {
                     <td>
                       {services.readyz?.checks
                         ? Object.entries(services.readyz.checks)
-                            .map(([k, v]) => `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`)
+                            .map(
+                              ([k, v]) =>
+                                `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`,
+                            )
                             .join(' · ') || 'n/a'
                         : 'n/a'}
                     </td>
@@ -519,7 +475,8 @@ export function OpsPage() {
                   <tr>
                     <td>Queues</td>
                     <td>
-                      {services.queues?.scans_active ?? 0} active · {services.queues?.scans_pending ?? 0} pending
+                      {services.queues?.scans_active ?? 0} active ·{' '}
+                      {services.queues?.scans_pending ?? 0} pending
                     </td>
                     <td>{services.queues?.downloads_open ?? 0} downloads open</td>
                   </tr>
@@ -546,24 +503,26 @@ export function OpsPage() {
             </div>
           )}
         </section>
-
-        <section className="gt-ops-panel">
+      ),
+      companions: (
+        <section className="od-ops-panel od-ops-panel--embedded">
           <h2>Companions</h2>
           {!companions ? (
             <p>n/a</p>
           ) : (
             <>
-              <p className="gt-ops-panel__lede">
+              <p className="od-ops-panel__lede">
                 Online {companions.online ?? 0} / {companions.registered ?? 0}
                 {' · '}
                 window {companions.window_minutes ?? 3}m
                 {' · '}
                 newest {lastSeen?.newest ? new Date(lastSeen.newest).toLocaleString() : 'n/a'}
                 {' · '}
-                1h {lastSeen?.within_1h ?? 0} · 24h {lastSeen?.within_24h ?? 0} · stale {lastSeen?.stale ?? 0}
+                1h {lastSeen?.within_1h ?? 0} · 24h {lastSeen?.within_24h ?? 0} · stale{' '}
+                {lastSeen?.stale ?? 0}
               </p>
               {kindRows.length === 0 ? (
-                <p className="gt-admin-lede">No registered companions by kind.</p>
+                <p className="od-admin-lede">No registered companions by kind.</p>
               ) : (
                 <DataTable
                   columns={COMPANION_KIND_COLUMNS}
@@ -575,14 +534,15 @@ export function OpsPage() {
             </>
           )}
         </section>
-
-        <section className="gt-ops-panel">
+      ),
+      library: (
+        <section className="od-ops-panel od-ops-panel--embedded">
           <h2>Library pulse</h2>
           {!library ? (
             <p>{snapshot?.library_error || 'Library data unavailable.'}</p>
           ) : (
             <>
-              <div className="gt-ops-strip gt-ops-strip--compact">
+              <div className="od-ops-strip od-ops-strip--compact">
                 <MetricTile label="Libraries" value={na(library.libraries)} />
                 <MetricTile label="Games" value={na(library.games)} />
                 <MetricTile label="Unmatched" value={na(library.unmatched_folders)} />
@@ -601,20 +561,21 @@ export function OpsPage() {
             </>
           )}
         </section>
-
-        <section className="gt-ops-panel gt-ops-panel--wide">
+      ),
+      scans: (
+        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--wide">
           <h2>Scans</h2>
           {!scans ? (
             <p>{snapshot?.scans_error || 'Scan data unavailable.'}</p>
           ) : (scans.jobs || []).length === 0 ? (
-            <p className="gt-admin-lede">
+            <p className="od-admin-lede">
               {scans.active_count ?? 0} active
               {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
               {' · '}no recent jobs.
             </p>
           ) : (
             <>
-              <p className="gt-ops-panel__lede">
+              <p className="od-ops-panel__lede">
                 {scans.active_count ?? 0} active
                 {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
               </p>
@@ -627,11 +588,12 @@ export function OpsPage() {
             </>
           )}
         </section>
-
-        <section className="gt-ops-panel gt-ops-panel--wide">
+      ),
+      errors: (
+        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--wide">
           <h2>Recent errors</h2>
           {(snapshot?.recent_errors || []).length === 0 ? (
-            <p className="gt-admin-lede">{snapshot?.recent_errors_error || 'No recent errors.'}</p>
+            <p className="od-admin-lede">{snapshot?.recent_errors_error || 'No recent errors.'}</p>
           ) : (
             <DataTable
               columns={RECENT_ERROR_COLUMNS}
@@ -641,49 +603,24 @@ export function OpsPage() {
             />
           )}
         </section>
-      </div>
+      ),
+    }
 
-      {/* Server status, folded in (GT-B21 · UID-015).
-          It was a separate page, so "is this box healthy?" meant reading two
-          screens and holding them side by side. Ops already owned host meters,
-          services, scans and errors; this is the remainder. */}
-      {systemDetail ? (
-        <div className="gt-ops-console">
-          {/* Order is the operator's, and it persists (task #6). Which of these
-              matters most depends on what you are chasing — a slow box, a full
-              disk, a failing migration — and that is not something a default
-              can know. Configuration is here because it was the last thing the
-              standalone Server info page showed that Ops did not (W27-D1). */}
-          {detailOrder.ids.map((id, index) => (
-            <DetailPanel
-              key={id}
-              title={DETAIL_PANELS[id]}
-              values={systemDetail[id]}
-              onMove={(delta) => detailOrder.move(id, delta)}
-              canMoveUp={index > 0}
-              canMoveDown={index < detailOrder.ids.length - 1}
-            />
-          ))}
-          {/* Only once something has been moved — otherwise it is a control
-              that does nothing, in chrome this wave spent its time thinning. */}
-          {detailOrder.isCustom ? (
-            <p className="gt-ops-panel__reset">
-              <button type="button" className="gt-cbtn" onClick={detailOrder.reset}>
-                Reset panel order
-              </button>
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+    for (const id of presentDetailIds) {
+      map[`detail-${id}`] = (
+        <DetailPanel title={DETAIL_PANELS[id]} values={systemDetail[id]} />
+      )
+    }
 
-      {/* Recent log, in the console rather than on its own page (W27-D2).
-          An error metric is only useful next to the error that produced it.
-          This is the recent slice; /admin/system_logs keeps the paginated
-          browser with type/level/date filters for deep work, so there are not
-          two log browsers to keep in step. */}
-      {recentLogs ? (
-        <section className="gt-ops-panel gt-ops-panel--wide">
-          <h2>Recent log</h2>
+    if (recentLogs) {
+      map['recent-log'] = (
+        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--wide">
+          <div className="od-ops-panel__head">
+            <h2>Recent log</h2>
+            <button type="button" className="od-ops-log__full" onClick={openFullLog}>
+              Full log — filter by type, level and text
+            </button>
+          </div>
           <DataTable
             rows={recentLogs}
             getRowKey={(row) => row.id}
@@ -694,9 +631,6 @@ export function OpsPage() {
               {
                 key: 'timestamp',
                 label: 'When',
-                // Sorts on the ISO string, which orders correctly, while the
-                // cell shows local time. Sorting the rendered value would order
-                // by whatever the viewer's locale formatting happens to be.
                 render: (row) =>
                   row.timestamp ? new Date(row.timestamp).toLocaleString() : '—',
               },
@@ -710,18 +644,82 @@ export function OpsPage() {
               },
             ]}
           />
-          <p className="gt-admin-lede">
-            <a href="/admin/system_logs">Full log — filter by type, level and date</a>
-          </p>
         </section>
-      ) : null}
+      )
+    }
 
-      {/* System destinations moved to the rail (GT-B7) — this row repeated
-          every entry the rail already lists while the System section is open. */}
+    return map
+  }, [
+    severity,
+    issues,
+    host,
+    services,
+    companions,
+    lastSeen,
+    kindRows,
+    library,
+    scans,
+    snapshot,
+    presentDetailIds,
+    systemDetail,
+    recentLogs,
+    openFullLog,
+  ])
 
-      {/* Last on the page on purpose: a control that empties the database
-          should not sit above the ones you use daily. */}
-      <SystemResetPanel />
+  const visibleKey = useMemo(
+    () =>
+      Object.keys(widgets)
+        .filter((id) => widgets[id])
+        .sort()
+        .join('|'),
+    [widgets],
+  )
+
+  const getDefaultLayout = useCallback(
+    () =>
+      defaultOpsLayout({
+        visibleIds: visibleKey ? visibleKey.split('|') : [],
+      }),
+    [visibleKey],
+  )
+
+  return (
+    <div className="od-admin-page od-ops-page">
+      <h1 className="od-ops-page__sr-title">Ops</h1>
+
+      <PageStatus
+        error={error}
+        loading={bootLoading && !snapshot}
+        loadingMessage="Loading ops summary…"
+      />
+
+      <DashboardBoard
+        widgets={widgets}
+        storageKey={OPS_STORAGE_KEY}
+        defaultLayout={getDefaultLayout}
+        minsFn={opsWidgetMins}
+        asOf={snapshot?.as_of}
+        onRefresh={() => refresh('manual')}
+        refreshing={manualRefreshing}
+        refreshDisabled={bootLoading}
+        layoutLabel="Ops layout"
+        statusLabel="Ops controls"
+        refreshAriaLabel="Refresh"
+        boardAriaLabel="Key metrics"
+      />
+
+      <OpsLogModal
+        open={fullLogOpen}
+        events={fullLogEvents}
+        loading={fullLogLoading}
+        error={fullLogError}
+        onClose={closeFullLog}
+        onCleared={() => {
+          setFullLogEvents([])
+          setRecentLogs([])
+          loadFullLog()
+        }}
+      />
     </div>
   )
 }

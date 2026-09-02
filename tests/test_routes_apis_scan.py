@@ -5,10 +5,10 @@ from uuid import uuid4
 from datetime import datetime, timezone, timedelta
 from flask import url_for
 
-from gametheca import db
-from gametheca.models import User, Library, ScanJob, UnmatchedFolder
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.functions import PLATFORM_IDS
+from oneirodex import db
+from oneirodex.models import User, Library, ScanJob, UnmatchedFolder
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.functions import PLATFORM_IDS
 
 
 def safe_cleanup_database(db_session):
@@ -379,7 +379,7 @@ class TestScanJobsStatus:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        with patch('gametheca.utils.scan_queue.drain_scan_queue') as drain:
+        with patch('oneirodex.utils.scan_queue.drain_scan_queue') as drain:
             response = client.get('/api/scan_jobs_status')
         assert response.status_code == 200
         drain.assert_not_called()
@@ -403,7 +403,7 @@ class TestScanJobsStatus:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        with patch('gametheca.utils.scan_queue.drain_scan_queue') as drain:
+        with patch('oneirodex.utils.scan_queue.drain_scan_queue') as drain:
             drain.return_value = None
             response = client.get('/api/scan_jobs_status')
         assert response.status_code == 200
@@ -480,7 +480,7 @@ class TestUnmatchedFolders:
         assert folder['platform_id'] == PLATFORM_IDS.get('PCWIN')  # Should be 6
         assert folder['platform_id'] == 6
     
-    @patch('gametheca.routes_apis.scan.igdb_platform_id_for', return_value=None)
+    @patch('oneirodex.routes_apis.scan.igdb_platform_id_for', return_value=None)
     def test_unmatched_folders_no_platform_mapping(self, _mock_igdb, client, admin_user, db_session):
         """Test unmatched_folders when platform exists but has no ID mapping."""
         # Create library with a platform; lookup is stubbed to None.
@@ -551,7 +551,7 @@ class TestUnmatchedFolders:
         # read with getattr; a Mock invents every one of them, so the response
         # died in jsonify ("Object of type Mock is not JSON serializable")
         # rather than exercising the None-platform branch this test is named for.
-        with patch('gametheca.routes_apis.scan.db.session.execute') as mock_execute:
+        with patch('oneirodex.routes_apis.scan.db.session.execute') as mock_execute:
             platform = None  # the edge case under test
             mock_execute.return_value.all.return_value = [
                 (unmatched, sample_library.name, platform)

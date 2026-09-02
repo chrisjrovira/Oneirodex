@@ -120,7 +120,7 @@ function libraryInitialConfig(shellConfig) {
  */
 function RouteFallback() {
   return (
-    <div className="gt-route-fallback" role="status" aria-live="polite">
+    <div className="od-route-fallback" role="status" aria-live="polite">
       <LoadingOverlay active blocking delayMs={120} label="Loading…" />
     </div>
   )
@@ -155,15 +155,15 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
       /* A chat client, not the site with its chrome removed.
          The pop-out was a bare <main>, which at 420px read as a panel but on a
          maximised window simply became the normal page with no navigation —
-         "just another instance of the site". `gt-popout` gives it its own
+         "just another instance of the site". `od-popout` gives it its own
          identity at any width: a titled surface that stays a chat client
          rather than a page that lost its bars. */
-      <div className="gt-popout" data-surface="chat">
-        <header className="gt-popout__bar">
-          <span className="gt-popout__mark gt-brand-mark" aria-hidden="true" />
-          <span className="gt-popout__title">Chat</span>
+      <div className="od-popout" data-surface="chat">
+        <header className="od-popout__bar">
+          <span className="od-popout__mark od-brand-mark" aria-hidden="true" />
+          <span className="od-popout__title">Chat</span>
         </header>
-        <main id="main-content" className="gt-popout-main" tabIndex={-1}>
+        <main id="main-content" className="od-popout-main" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
@@ -177,11 +177,11 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
 
   return (
     <div
-      className="gt-shell"
+      className="od-shell"
       data-rail={railState}
       data-surface={chatSurface ? 'chat' : undefined}
     >
-      <a className="gt-skip-link" href="#main-content">
+      <a className="od-skip-link" href="#main-content">
         Skip to main content
       </a>
       <SideRail
@@ -199,7 +199,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
       {drawerOpen ? (
         <button
           type="button"
-          className="gt-rail__scrim"
+          className="od-rail__scrim"
           aria-label="Close navigation"
           onClick={closeDrawer}
         />
@@ -219,7 +219,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
       />
-      <main id="main-content" className="gt-shell__main" tabIndex={-1}>
+      <main id="main-content" className="od-shell__main" tabIndex={-1}>
         <Outlet />
       </main>
       {!hideDock ? (

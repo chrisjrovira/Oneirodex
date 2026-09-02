@@ -16,7 +16,7 @@
  * and 2px stroke, so the icon-pack tokens restyle these for free.
  */
 const base = {
-  className: 'gt-icon',
+  className: 'od-icon',
   // Padded by a unit on each side: a 2px stroke sitting on the edge of the
   // 24-unit grid is otherwise sliced in half by the viewport boundary. The
   // member rail uses the same box — see its RailIcon, where the viewBox was

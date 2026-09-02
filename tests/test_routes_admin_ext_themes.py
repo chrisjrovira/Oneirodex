@@ -7,10 +7,10 @@ import zipfile
 from pathlib import Path
 from flask import url_for
 from unittest.mock import patch, MagicMock, mock_open
-from gametheca.models import User
-from gametheca import db
-from gametheca.routes_admin_ext.themes import validate_theme_file, is_valid_theme_name
-from gametheca.utils.preset_themes import PRESET_SLUGS
+from oneirodex.models import User
+from oneirodex import db
+from oneirodex.routes_admin_ext.themes import validate_theme_file, is_valid_theme_name
+from oneirodex.utils.preset_themes import PRESET_SLUGS
 from uuid import uuid4
 from io import BytesIO
 
@@ -82,7 +82,7 @@ def theme_sandbox(app, tmp_path, monkeypatch):
     source = root / 'setup' / 'default_theme'
     (source / 'css').mkdir(parents=True)
     (source / 'theme.json').write_text(
-        json.dumps({'name': 'Default Theme', 'author': 'GameTheca', 'version': '2.1.0'}),
+        json.dumps({'name': 'Default Theme', 'author': 'Oneirodex', 'version': '2.1.0'}),
         encoding='utf-8',
     )
     # Same shape as the source tree in test_preset_themes.py: preset generation
@@ -93,17 +93,17 @@ def theme_sandbox(app, tmp_path, monkeypatch):
         '    --bg-dark-30: rgba(12, 16, 22, 0.96);\n'
         '    --btn-primary: #ff5a36;\n'
         '    --btn-primary-hover: #e04520;\n'
-        '    --gt-accent: var(--btn-primary);\n'
+        '    --od-accent: var(--btn-primary);\n'
         '}\n',
         encoding='utf-8',
     )
-    (source / 'css' / 'gt-tokens.css').write_text(
+    (source / 'css' / 'od-tokens.css').write_text(
         ':root {\n'
-        '  --gt-bg: #0b0d10;\n'
-        '  --gt-surface: #141820;\n'
-        '  --gt-text: #f2f4f8;\n'
-        '  --gt-accent: #ff5a36;\n'
-        '  --gt-accent-contrast: #0b0d10;\n'
+        '  --od-bg: #0b0d10;\n'
+        '  --od-surface: #141820;\n'
+        '  --od-text: #f2f4f8;\n'
+        '  --od-accent: #ff5a36;\n'
+        '  --od-accent-contrast: #0b0d10;\n'
         '}\n',
         encoding='utf-8',
     )
@@ -286,7 +286,7 @@ class TestManageThemesRoute:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
         
-        with patch('gametheca.routes_admin_ext.themes.ThemeManager') as mock_theme_manager:
+        with patch('oneirodex.routes_admin_ext.themes.ThemeManager') as mock_theme_manager:
             mock_instance = MagicMock()
             mock_theme_manager.return_value = mock_instance
             mock_instance.get_installed_themes.return_value = []
@@ -295,8 +295,8 @@ class TestManageThemesRoute:
             response = client.get('/admin/themes')
             assert response.status_code == 200
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_upload_folder_creation(self, mock_path, mock_theme_manager, 
                                                  client, admin_user, sample_theme_data):
         """Test upload folder creation when it doesn't exist."""
@@ -326,8 +326,8 @@ class TestManageThemesRoute:
         mock_upload_folder.mkdir.assert_called_once()
         assert response.status_code == 302  # Redirect after processing
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_upload_folder_creation_error(self, mock_path, mock_theme_manager, 
                                                        client, admin_user, sample_theme_data):
         """Test error handling when upload folder creation fails."""
@@ -354,8 +354,8 @@ class TestManageThemesRoute:
         response = client.post('/admin/themes', data=data, content_type='multipart/form-data')
         assert response.status_code == 302  # Redirect after error
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_successful_upload(self, mock_path, mock_theme_manager, client, admin_user, sample_theme_data):
         """Test successful theme upload."""
         with client.session_transaction() as sess:
@@ -382,8 +382,8 @@ class TestManageThemesRoute:
         assert response.status_code == 302  # Redirect after success
         mock_instance.upload_theme.assert_called_once()
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_upload_failure(self, mock_path, mock_theme_manager, client, admin_user, sample_theme_data):
         """Test theme upload failure."""
         with client.session_transaction() as sess:
@@ -409,8 +409,8 @@ class TestManageThemesRoute:
         response = client.post('/admin/themes', data=data, content_type='multipart/form-data')
         assert response.status_code == 302  # Redirect after failure
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_upload_value_error(self, mock_path, mock_theme_manager, client, admin_user, sample_theme_data):
         """Test theme upload with ValueError."""
         with client.session_transaction() as sess:
@@ -436,8 +436,8 @@ class TestManageThemesRoute:
         response = client.post('/admin/themes', data=data, content_type='multipart/form-data')
         assert response.status_code == 302  # Redirect after error
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_upload_unexpected_error(self, mock_path, mock_theme_manager, client, admin_user, sample_theme_data):
         """Test theme upload with unexpected error."""
         with client.session_transaction() as sess:
@@ -463,9 +463,9 @@ class TestManageThemesRoute:
         response = client.post('/admin/themes', data=data, content_type='multipart/form-data')
         assert response.status_code == 302  # Redirect after error
 
-    @patch('gametheca.routes_admin_ext.themes.validate_theme_file')
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
-    @patch('gametheca.routes_admin_ext.themes.Path')
+    @patch('oneirodex.routes_admin_ext.themes.validate_theme_file')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.Path')
     def test_manage_themes_file_too_large(self, mock_path, mock_theme_manager, mock_validate, client, admin_user, sample_theme_data):
         """Test theme upload with file too large."""
         with client.session_transaction() as sess:
@@ -558,7 +558,7 @@ class TestDeleteThemeRoute:
         assert response.status_code == 302
         assert 'login' in response.location
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
     def test_delete_theme_success(self, mock_theme_manager, client, admin_user):
         """Test successful theme deletion."""
         with client.session_transaction() as sess:
@@ -572,7 +572,7 @@ class TestDeleteThemeRoute:
         assert response.status_code == 302  # Redirect after deletion
         mock_instance.delete_themefile.assert_called_once_with('test_theme')
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
     def test_delete_theme_value_error(self, mock_theme_manager, client, admin_user):
         """Test theme deletion with ValueError."""
         with client.session_transaction() as sess:
@@ -586,7 +586,7 @@ class TestDeleteThemeRoute:
         response = client.post('/admin/themes/delete/Default')
         assert response.status_code == 302  # Redirect after error
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
     def test_delete_theme_unexpected_error(self, mock_theme_manager, client, admin_user):
         """Test theme deletion with unexpected error."""
         with client.session_transaction() as sess:
@@ -630,7 +630,7 @@ class TestResetDefaultThemesRoute:
         assert response.status_code == 302
         assert 'login' in response.location
 
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('oneirodex.routes_admin_ext.themes.log_system_event')
     def test_reset_default_themes_missing_source(self, mock_log, client, admin_user, theme_sandbox):
         """No tracked source: bail out without disturbing what is installed.
 
@@ -652,7 +652,7 @@ class TestResetDefaultThemesRoute:
         # A reset that cannot proceed must leave the installed theme alone.
         assert (installed / 'theme.json').is_file()
 
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('oneirodex.routes_admin_ext.themes.log_system_event')
     def test_reset_default_themes_success(self, mock_log, client, admin_user, theme_sandbox):
         """The stale install is replaced from source, presets included."""
         themes_root = theme_sandbox / 'static' / 'library' / 'themes'
@@ -666,12 +666,12 @@ class TestResetDefaultThemesRoute:
         assert response.status_code == 302
         installed = json.loads((themes_root / 'default' / 'theme.json').read_text(encoding='utf-8'))
         assert installed['name'] == 'Default Theme'
-        assert (themes_root / 'default' / 'css' / 'gt-tokens.css').is_file()
+        assert (themes_root / 'default' / 'css' / 'od-tokens.css').is_file()
         # The route installs the colour presets alongside the default.
         for slug in PRESET_SLUGS:
             assert (themes_root / slug / 'theme.json').is_file(), slug
 
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('oneirodex.routes_admin_ext.themes.log_system_event')
     @patch('shutil.rmtree', side_effect=PermissionError('theme folder in use'))
     def test_reset_default_themes_remove_failure(
         self, mock_rmtree, mock_log, client, admin_user, theme_sandbox
@@ -686,7 +686,7 @@ class TestResetDefaultThemesRoute:
         assert response.status_code == 302
         assert 'Failed to remove existing default theme' in logged_messages(mock_log)
 
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('oneirodex.routes_admin_ext.themes.log_system_event')
     @patch('shutil.copytree', side_effect=Exception('Copy failed'))
     def test_reset_default_themes_copy_failure(
         self, mock_copytree, mock_log, client, admin_user, theme_sandbox
@@ -710,7 +710,7 @@ class TestResetDefaultThemesRoute:
         assert 'Failed to copy default theme' in logged_messages(mock_log)
         assert not (themes_root / 'default').exists()
 
-    @patch('gametheca.routes_admin_ext.themes.log_system_event')
+    @patch('oneirodex.routes_admin_ext.themes.log_system_event')
     @patch('pathlib.Path.mkdir', side_effect=OSError('no such device'))
     def test_reset_default_themes_unexpected_error(
         self, mock_mkdir, mock_log, client, admin_user, theme_sandbox
@@ -800,7 +800,7 @@ class TestThemeRoutesIntegration:
             assert response.status_code == 302
             assert 'login' in response.location
 
-    @patch('gametheca.routes_admin_ext.themes.ThemeManager')
+    @patch('oneirodex.routes_admin_ext.themes.ThemeManager')
     def test_theme_workflow_complete(self, mock_theme_manager, client, admin_user, sample_theme_data):
         """Test complete theme management workflow."""
         with client.session_transaction() as sess:

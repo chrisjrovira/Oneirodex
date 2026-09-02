@@ -9,9 +9,9 @@ import pytest
 from flask import json
 from sqlalchemy import text
 
-from gametheca import db
-from gametheca.models import Game, Library, LibraryPlatform, User
-from gametheca.utils.freshness.service import (
+from oneirodex import db
+from oneirodex.models import Game, Library, LibraryPlatform, User
+from oneirodex.utils.freshness.service import (
     check_library_freshness,
     scan_freshness_enabled,
 )
@@ -81,7 +81,7 @@ class TestGate:
 
 
 class TestLibraryPass:
-    @patch('gametheca.utils.freshness.service.check_and_store_freshness')
+    @patch('oneirodex.utils.freshness.service.check_and_store_freshness')
     def test_checks_titles_and_reports_counts(self, mock_check, app, db_session, library):
         mock_check.return_value = {'status': 'current'}
         with app.app_context():
@@ -89,13 +89,13 @@ class TestLibraryPass:
             assert result['checked'] == 3
             assert result['failed'] == 0
 
-    @patch('gametheca.utils.freshness.service.check_and_store_freshness')
+    @patch('oneirodex.utils.freshness.service.check_and_store_freshness')
     def test_counts_titles_that_are_behind(self, mock_check, app, db_session, library):
         mock_check.return_value = {'status': 'behind'}
         with app.app_context():
             assert check_library_freshness(library.uuid, limit=10)['behind'] == 3
 
-    @patch('gametheca.utils.freshness.service.check_and_store_freshness')
+    @patch('oneirodex.utils.freshness.service.check_and_store_freshness')
     def test_a_store_outage_does_not_fail_the_pass(self, mock_check, app, db_session, library):
         """The scan already succeeded — a store being down must not undo that."""
         mock_check.side_effect = RuntimeError('store down')
@@ -104,13 +104,13 @@ class TestLibraryPass:
             assert result['failed'] == 3
             assert result['checked'] == 0
 
-    @patch('gametheca.utils.freshness.service.check_and_store_freshness')
+    @patch('oneirodex.utils.freshness.service.check_and_store_freshness')
     def test_limit_caps_the_work(self, mock_check, app, db_session, library):
         mock_check.return_value = {'status': 'current'}
         with app.app_context():
             assert check_library_freshness(library.uuid, limit=2)['checked'] == 2
 
-    @patch('gametheca.utils.freshness.service.check_and_store_freshness')
+    @patch('oneirodex.utils.freshness.service.check_and_store_freshness')
     def test_only_missing_skips_titles_already_known(self, mock_check, app, db_session, library):
         mock_check.return_value = {'status': 'current'}
         with app.app_context():
@@ -128,7 +128,7 @@ class TestLibraryPass:
 
 
 class TestApi:
-    @patch('gametheca.utils.freshness.service.check_and_store_freshness')
+    @patch('oneirodex.utils.freshness.service.check_and_store_freshness')
     def test_runs_against_an_existing_library(self, mock_check, client, app, db_session, admin_user, library):
         mock_check.return_value = {'status': 'current'}
         _login(client, admin_user)

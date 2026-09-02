@@ -1,7 +1,7 @@
 /**
  * Member preferences helpers.
  *
- * Theme tokens live in the volume-served `gt-tokens.css` stylesheet. Changing
+ * Theme tokens live in the volume-served `od-tokens.css` stylesheet. Changing
  * theme from the SPA (Preferences modal or `/settings_panel`) must end in a
  * full page reload so that stylesheet is re-fetched. The theme preferences
  * modal (`preferences_modal.js`) already calls `window.location.reload()` after
@@ -77,8 +77,8 @@ export async function openPreferencesModal() {
     throw new Error('preferences modal markup missing')
   }
 
-  if (typeof window.gtHoistBootstrapModals === 'function') {
-    window.gtHoistBootstrapModals(modalElement)
+  if (typeof window.odHoistBootstrapModals === 'function') {
+    window.odHoistBootstrapModals(modalElement)
   }
 
   const bootstrap = window.bootstrap

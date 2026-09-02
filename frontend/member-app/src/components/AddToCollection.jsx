@@ -94,10 +94,10 @@ export function AddToCollection({
   }
 
   return (
-    <div className={`gt-add-collection gt-add-collection--${variant}`}>
+    <div className={`od-add-collection od-add-collection--${variant}`}>
       <button
         type="button"
-        className={variant === 'menu' ? 'menu-button' : 'gt-cbtn'}
+        className={variant === 'menu' ? 'menu-button' : 'od-cbtn'}
         aria-expanded={open}
         onClick={(event) => {
           // In a tile menu this click must not reach the tile underneath, which
@@ -111,21 +111,21 @@ export function AddToCollection({
       </button>
 
       {open ? (
-        <div className="gt-add-collection__list" role="group" aria-label="Collections">
+        <div className="od-add-collection__list" role="group" aria-label="Collections">
           {error ? (
             <PageStatus
               error={error}
               errorMessage="Could not load your shelves."
-              className="gt-add-collection__note"
+              className="od-add-collection__note"
             />
           ) : null}
 
           {!error && collections === null ? (
-            <p className="gt-add-collection__note">Loading shelves…</p>
+            <p className="od-add-collection__note">Loading shelves…</p>
           ) : null}
 
           {collections?.length === 0 ? (
-            <p className="gt-add-collection__note">
+            <p className="od-add-collection__note">
               No shelves yet — make one from Collections.
             </p>
           ) : null}
@@ -134,7 +134,7 @@ export function AddToCollection({
             <button
               key={collection.uuid}
               type="button"
-              className={variant === 'menu' ? 'menu-button' : 'gt-cbtn'}
+              className={variant === 'menu' ? 'menu-button' : 'od-cbtn'}
               disabled={Boolean(busyUuid)}
               onClick={(event) => {
                 event.preventDefault()

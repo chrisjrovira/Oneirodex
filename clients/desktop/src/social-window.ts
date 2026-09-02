@@ -97,7 +97,7 @@ function browserOpenFeatures(placement: SocialWindowPlacement): string {
 
 /**
  * Open (or focus) the stay-on-top Friends companion as a compact bottom-right popup.
- * Requires the user to be logged into the GameTheca site in that webview once.
+ * Requires the user to be logged into the Oneirodex site in that webview once.
  * Does not require companion API Connect — Friends uses the site session.
  * Heartbeat/offline gating does not block open; only a missing Server URL does.
  *
@@ -117,7 +117,7 @@ export async function openSocialCompanionWindow(
   const placement = resolveBottomRightPlacement(availWidth, availHeight)
 
   if (!isTauriRuntime()) {
-    window.open(url, 'gt-social-companion', browserOpenFeatures(placement))
+    window.open(url, 'od-social-companion', browserOpenFeatures(placement))
     return 'browser'
   }
 
@@ -145,7 +145,7 @@ export async function openSocialCompanionWindow(
 
   const webview = new WebviewWindow(SOCIAL_LABEL, {
     url,
-    title: 'GameTheca Friends',
+    title: 'Oneirodex Friends',
     width: placement.width,
     height: placement.height,
     x: placement.x,

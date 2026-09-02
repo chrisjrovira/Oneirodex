@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-API = ROOT / 'gametheca' / 'routes_apis' / 'collections.py'
+API = ROOT / 'oneirodex' / 'routes_apis' / 'collections.py'
 SPA_API = ROOT / 'frontend' / 'member-app' / 'src' / 'api' / 'collections.js'
 DETAIL = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionDetailPage.jsx'
 LIST = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionsPage.jsx'
@@ -59,7 +59,7 @@ def test_spa_list_shows_item_counts_and_delete():
 
 
 def test_newsletter_ckeditor_targets_content_field():
-    html = (ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_newsletter.html').read_text(
+    html = (ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_newsletter.html').read_text(
         encoding='utf-8',
     )
     assert "document.querySelector('#content')" in html
@@ -67,7 +67,7 @@ def test_newsletter_ckeditor_targets_content_field():
 
 
 def test_statistics_scripts_use_theme_asset():
-    html = (ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_statistics.html').read_text(
+    html = (ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_statistics.html').read_text(
         encoding='utf-8',
     )
     assert "js/chart-utils.js'|theme_asset" in html
@@ -77,16 +77,16 @@ def test_statistics_scripts_use_theme_asset():
 
 def test_statistics_charts_sit_in_a_bounded_grid():
     """W27-D3: Bootstrap columns + unbounded Chart.js grew a dual-axis scroll."""
-    html = (ROOT / 'gametheca' / 'templates' / 'admin' / 'admin_statistics.html').read_text(
+    html = (ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_statistics.html').read_text(
         encoding='utf-8',
     )
     css = (
-        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin-pages.css'
+        ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin-pages.css'
     ).read_text(encoding='utf-8')
     js = (
-        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'js' / 'chart-utils.js'
+        ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'js' / 'chart-utils.js'
     ).read_text(encoding='utf-8')
-    assert 'gt-adminpage-charts' in html
+    assert 'od-adminpage-charts' in html
     assert 'col-md-6' not in html
     assert 'maintainAspectRatio: false' in js
     assert 'height: 17.5rem' in css
@@ -94,14 +94,14 @@ def test_statistics_charts_sit_in_a_bounded_grid():
 
 def test_orphaned_manage_downloads_css_is_gone():
     path = (
-        ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / 'admin'
+        ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'admin'
         / 'admin_manage_downloads.css'
     )
     assert not path.exists()
 
 
 def test_init_manager_has_no_emoji_and_uses_safe_print():
-    src = (ROOT / 'gametheca' / 'init_manager.py').read_text(encoding='utf-8')
+    src = (ROOT / 'oneirodex' / 'init_manager.py').read_text(encoding='utf-8')
     assert 'def _safe_print' in src
     assert '_safe_print(' in src
     for glyph in ('🚀', '✅', '❌', '⚠️'):

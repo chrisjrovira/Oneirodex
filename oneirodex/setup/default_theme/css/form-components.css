@@ -1,0 +1,596 @@
+/* === UNIFIED FORM SYSTEM === */
+/* Consolidates form styling duplicated across 15+ files */
+
+/* Base Form Control Styling */
+.form-control {
+    background: var(--form-bg);
+    border: 1px solid var(--form-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-white);
+    padding: var(--spacing-sm);
+    width: 100%;
+    transition: all var(--transition-fast);
+    line-height: 1.1;
+    font-size: var(--font-size-base);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--form-focus-border);
+    background: var(--form-focus-bg);
+    box-shadow: var(--form-focus-shadow);
+    color: var(--text-white);
+}
+
+.form-control::placeholder {
+    color: var(--form-placeholder);
+}
+
+/* Form Select Styling */
+.form-select {
+    background: var(--form-bg);
+    border: 1px solid var(--form-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-white);
+    padding: var(--spacing-sm);
+    width: 100%;
+    transition: all var(--transition-fast);
+}
+
+.form-select:focus {
+    background: var(--form-focus-bg);
+    border-color: var(--border-light-30);
+    color: var(--text-white);
+    box-shadow: 0 0 0 0.25rem var(--bg-light-overlay);
+}
+
+/* Form Group Layout */
+.form-group {
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group label {
+    color: var(--text-white);
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    display: block;
+}
+
+/* Admin Form Variants */
+.admin-form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-form-label {
+    color: var(--text-white);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    display: block;
+}
+
+.admin-input {
+    background: var(--bg-dark-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-white);
+    padding: var(--spacing-sm);
+    width: 100%;
+    transition: border-color var(--transition-fast);
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: var(--border-light-strong);
+    background: var(--bg-dark-primary);
+}
+
+/* Glass Input Variant */
+.input-glass {
+    width: 95%;
+    border: none;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    color: black;
+    margin: var(--spacing-3);
+    margin-left: var(--spacing-3) !important;
+    height: 38px;
+    box-shadow: var(--shadow-inset);
+}
+
+/* Apply consistent styling to all input types */
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="search"],
+form input[type="number"],
+form input[type="date"],
+form input[type="tel"],
+form input[type="url"],
+form input[type="time"],
+form input[type="range"],
+form input[type="color"],
+form select,
+form textarea {
+    box-shadow: var(--shadow-inset);
+    background: var(--form-bg);
+    border: 1px solid var(--form-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-white);
+    padding: var(--spacing-sm);
+    transition: all var(--transition-fast);
+}
+
+form input[type="text"]:focus,
+form input[type="password"]:focus,
+form input[type="email"]:focus,
+form input[type="search"]:focus,
+form input[type="number"]:focus,
+form input[type="date"]:focus,
+form input[type="tel"]:focus,
+form input[type="url"]:focus,
+form input[type="time"]:focus,
+form input[type="range"]:focus,
+form input[type="color"]:focus,
+form select:focus,
+form textarea:focus {
+    outline: none;
+    border-color: var(--form-focus-border);
+    background: var(--form-focus-bg);
+    box-shadow: var(--form-focus-shadow);
+}
+
+/* Global option styling for all select elements */
+form select option,
+.form-select option,
+.form-control option {
+    background: var(--bg-dark-30);
+    color: var(--text-white);
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Form Text Helpers */
+.form-text {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: 0.25rem;
+    line-height: 1.2;
+    border-radius: var(--border-radius-xs);
+    padding-left: var(--spacing-sm);
+}
+
+.form-text-muted {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: 0.25rem;
+    line-height: 1.2;
+}
+
+.form-text-light {
+    color: var(--text-muted-light);
+    font-size: var(--font-size-xs);
+    margin-top: 0.2rem;
+    line-height: 1.2;
+}
+
+/* Form File Upload */
+.form-control-file {
+    background-color: var(--form-bg);
+    border: 1px solid var(--border-light-30);
+    border-radius: var(--border-radius-xs);
+    padding: var(--spacing-sm);
+    color: var(--text-white);
+    width: 100%;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--btn-primary);
+}
+
+/* Form Validation States */
+.form-control.is-valid {
+    border-color: var(--btn-success);
+    background: var(--alert-success-bg);
+}
+
+.form-control.is-invalid,
+.invalid-input {
+    border: 2px solid var(--btn-danger);
+    background: var(--alert-danger-bg);
+}
+
+.form-control.is-invalid:focus {
+    border-color: var(--btn-danger);
+    box-shadow: 0 0 0 0.2rem var(--alert-danger-shadow);
+}
+
+/* Settings Form Layout */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-rem-lg);
+}
+
+/* Button Group in Forms */
+.button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+/* Form Specific Container */
+.form-container {
+    background: var(--container-dark-primary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-lg) auto;
+    box-shadow: var(--shadow-glass);
+}
+
+/* Upload Form Specific */
+.theme-upload-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-label {
+    color: var(--text-white);
+    margin-bottom: var(--spacing-sm);
+    display: block;
+    font-weight: 500;
+}
+
+/* Search Form Styling */
+.search-form .form-control {
+    background: var(--form-bg-dark);
+    border: 1px solid var(--form-border);
+    color: var(--text-white);
+}
+
+
+/* Dropdown Styling */
+.dropdown-perpage {
+    position: relative;
+    min-width: 40px;
+    max-width: 75px;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-lg);
+    background-color: var(--bg-dark-primary);
+    cursor: pointer;
+    margin-left: var(--spacing-xs);
+    color: var(--text-white);
+    border: 1px solid var(--form-border);
+}
+
+.dropdown-perpage:focus {
+    outline: none;
+    border-color: var(--form-focus-border);
+}
+
+.dropdown-perpage option {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--bg-dark-primary);
+    color: var(--text-white);
+}
+
+/* Form Responsive Design */
+@media (max-width: 768px) {
+    .form-text-light {
+        font-size: var(--font-size-xs);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .button-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .input-glass {
+        width: 200px;
+    }
+
+    .form-container {
+        padding: var(--spacing-lg);
+        margin: var(--spacing-sm);
+    }
+}
+
+/* Form Animation */
+.form-control,
+.form-select,
+.admin-input {
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus,
+.admin-input:focus {
+    transform: translateY(-1px);
+}
+
+/* === MERGED FROM settings_password.css === */
+
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password {
+    position: absolute;
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-gray-888);
+    padding: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password:hover {
+    color: var(--color-dark-333);
+}
+
+/* Second copy of the same rule that was in admin_manage_igdb_settings.css —
+   outline removed, nothing put back, so the show/hide password control was
+   invisible to a keyboard on a field whose contents are hidden too. Both now
+   carry the shared ring. */
+.toggle-password:focus-visible {
+    outline: 2px solid var(--od-focus-ring, var(--od-accent));
+    outline-offset: 2px;
+}
+
+.input-glass {
+    padding-right: 40px;
+}
+
+.settings_password-password {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-white);
+    font-weight: bold;
+}
+
+.settings_password-password-form {
+    margin-bottom: var(--spacing-lg);
+}
+
+#password-form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Button margin removed - handled by specific containers */
+
+/* === THEME SWATCH PICKER === */
+/* Used by the preferences modal. The <select> this mirrors is kept in the DOM
+   (visually-hidden, aria-hidden) purely as the form's submitted value — these
+   cards are the only picker a user sees. Decade rooms + colour cabinets share
+   the same button contract (.theme-swatch) so the delegated click handler in
+   preferences_modal.js keeps working. */
+.theme-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 4px;
+}
+.theme-picker-group__title {
+    margin: 0 0 0.2rem;
+    font-size: var(--od-label-size);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--od-text-muted);
+}
+.theme-picker-group__hint {
+    margin: 0 0 0.55rem;
+    font-size: var(--od-font-sm);
+    color: var(--od-text-muted);
+}
+.theme-card-grid,
+.theme-swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+}
+.theme-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: var(--od-radius-md);
+    background: transparent;
+    color: var(--od-text);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+.theme-swatch:hover {
+    border-color: var(--od-border);
+    background: color-mix(in srgb, var(--od-surface-2) 60%, transparent);
+}
+.theme-swatch.is-selected {
+    border-color: var(--od-accent);
+    background: color-mix(in srgb, var(--od-accent) 10%, transparent);
+}
+.theme-swatch:focus-visible {
+    outline: 2px solid var(--od-focus-ring);
+    outline-offset: 2px;
+}
+.theme-swatch[disabled] { cursor: progress; opacity: 0.6; }
+.theme-card-preview {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: var(--od-radius-sm);
+    background: var(--od-era-bg, var(--od-surface-2));
+    border: 1px solid var(--od-border);
+}
+.theme-card-preview .od-era-wall,
+.theme-card-preview .od-era-window,
+.theme-card-preview .od-era-posters,
+.theme-card-preview .od-era-furnish,
+.theme-card-preview .od-era-stand,
+.theme-card-preview .od-era-floor,
+.theme-card-preview .od-era-lamp {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.theme-card-preview .od-era-wall {
+    background: var(--od-era-wallpaper, none);
+}
+.theme-card-preview .od-era-floor {
+    inset: auto 0 0 0;
+    height: var(--od-era-floor-h, 36%);
+    background: var(--od-era-floor, none);
+}
+.theme-card-preview .od-era-lamp {
+    background: var(--od-era-ambient, none);
+}
+.theme-card-preview .od-era-window {
+    inset: var(--od-era-window-inset, 10% 8% auto auto);
+    width: var(--od-era-window-w, 0);
+    height: var(--od-era-window-h, 0);
+    background: var(--od-era-window, none);
+    box-shadow: var(--od-era-window-frame, none);
+    opacity: var(--od-era-window-opacity, 0);
+}
+.theme-card-preview .od-era-posters {
+    inset: 12% 28% 40% 6%;
+    background: var(--od-era-posters, none);
+    opacity: var(--od-era-posters-opacity, 0);
+}
+.theme-card-preview .od-era-furnish {
+    inset: auto auto 12% auto;
+    left: var(--od-era-bed-left, 4%);
+    width: var(--od-era-bed-w, 0);
+    height: var(--od-era-bed-h, 0);
+    background: var(--od-era-bed, none);
+    opacity: var(--od-era-bed-opacity, 0);
+}
+.theme-card-preview .od-era-stand {
+    inset: auto 8% 4% 8%;
+    height: var(--od-era-furniture-h, 0);
+    background: var(--od-era-furniture, none);
+    opacity: var(--od-era-furniture-opacity, 0);
+}
+.theme-swatch-chip {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--od-radius-circle);
+    border: 2px solid var(--od-border);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--od-bg) 55%, transparent);
+    background: var(--od-surface-2);
+    z-index: 1;
+}
+.theme-swatch.is-selected .theme-swatch-chip {
+    border-color: var(--od-accent);
+}
+.theme-swatch-label {
+    font-size: var(--od-font-sm);
+    line-height: 1.2;
+    color: var(--od-text-muted);
+}
+.theme-swatch.is-selected .theme-swatch-label {
+    color: var(--od-text);
+    font-weight: 600;
+}
+.theme-card-blurb {
+    font-size: var(--od-font-xs);
+    line-height: 1.25;
+    color: var(--od-text-muted);
+}
+
+/* Per-theme chip colours. Hex lives on --od-swatch-fill (a token definition);
+   background then uses that token so css-token-lint does not treat the chip
+   as a raw colour use. Each fill is the accent that theme actually ships.
+
+   Source of truth: preset_tokens() in oneirodex/utils/preset_themes.py, whose
+   'od-accent' is PRESET_THEMES[*]['btn_primary']; the default theme's accent
+   is --od-accent in css/od-tokens.css. tests/test_theme_picker_ui.py
+   reads both and fails if the values below drift out of sync. */
+.theme-swatch-default { --od-swatch-fill: #2fd67b; background: var(--od-swatch-fill); }
+.theme-swatch-aurora { --od-swatch-fill: #22d3ee; background: var(--od-swatch-fill); }
+.theme-swatch-ember { --od-swatch-fill: #f472b6; background: var(--od-swatch-fill); }
+.theme-swatch-violet { --od-swatch-fill: #a78bfa; background: var(--od-swatch-fill); }
+.theme-swatch-forest { --od-swatch-fill: #4ade80; background: var(--od-swatch-fill); }
+.theme-swatch-ocean { --od-swatch-fill: #3b82f6; background: var(--od-swatch-fill); }
+.theme-swatch-rose { --od-swatch-fill: #fb7185; background: var(--od-swatch-fill); }
+.theme-swatch-mono { --od-swatch-fill: #94a3b8; background: var(--od-swatch-fill); }
+.theme-swatch-sunset { --od-swatch-fill: #fbbf24; background: var(--od-swatch-fill); }
+.theme-swatch-ice { --od-swatch-fill: #7dd3fc; background: var(--od-swatch-fill); }
+.theme-swatch-era-80s { --od-swatch-fill: #e8c07d; background: var(--od-swatch-fill); }
+.theme-swatch-era-90s { --od-swatch-fill: #c9a0d4; background: var(--od-swatch-fill); }
+.theme-swatch-era-late90s { --od-swatch-fill: #8aa4ff; background: var(--od-swatch-fill); }
+.theme-swatch-era-00s { --od-swatch-fill: #3f9bff; background: var(--od-swatch-fill); }
+.theme-swatch-era-arcade { --od-swatch-fill: #ff2d6f; background: var(--od-swatch-fill); }
+.theme-swatch-era-desk { --od-swatch-fill: #5ef08a; background: var(--od-swatch-fill); }
+
+/* Icon pack picker — orthogonal to color themes; previews use .od-icon + data-icon-pack.
+   Mirrors the theme swatch grid: the <select> is a visually-hidden form-data
+   carrier, these chips are the only visible/interactive picker. */
+.icon-pack-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 4px;
+}
+.icon-pack-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 4rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--od-radius-md);
+    background: color-mix(in srgb, var(--od-surface-2) 55%, transparent);
+    color: var(--od-text);
+    cursor: pointer;
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+.icon-pack-chip:hover {
+    border-color: var(--od-border);
+}
+.icon-pack-chip.is-selected {
+    border-color: var(--od-accent);
+    background: color-mix(in srgb, var(--od-accent) 12%, transparent);
+}
+.icon-pack-chip:focus-visible {
+    outline: 2px solid var(--od-focus-ring);
+    outline-offset: 2px;
+}
+.icon-pack-chip-icons {
+    display: inline-flex;
+    gap: 0.3rem;
+    color: var(--od-accent);
+}
+.icon-pack-chip-label {
+    font-size: var(--od-font-xs);
+    line-height: 1.1;
+}
+.icon-pack-chip.is-selected .icon-pack-chip-label {
+    color: var(--od-text);
+    font-weight: 600;
+}

@@ -33,7 +33,7 @@ def bios_volume(app, tmp_path):
 
 
 def test_finds_files_in_subdirectories(app, bios_volume):
-    from gametheca.utils.emulator_bios import list_bios_files
+    from oneirodex.utils.emulator_bios import list_bios_files
 
     with app.test_request_context():
         names = {row['name'] for row in list_bios_files()}
@@ -43,7 +43,7 @@ def test_finds_files_in_subdirectories(app, bios_volume):
 
 
 def test_reports_which_subdirectory_a_file_is_in(app, bios_volume):
-    from gametheca.utils.emulator_bios import list_bios_files
+    from oneirodex.utils.emulator_bios import list_bios_files
 
     with app.test_request_context():
         rows = {row['name']: row for row in list_bios_files()}
@@ -55,7 +55,7 @@ def test_reports_which_subdirectory_a_file_is_in(app, bios_volume):
 
 def test_only_root_files_are_loadable(app, bios_volume):
     """Being found is not being usable — cores read the system root only."""
-    from gametheca.utils.emulator_bios import list_bios_files
+    from oneirodex.utils.emulator_bios import list_bios_files
 
     with app.test_request_context():
         rows = {row['name']: row for row in list_bios_files()}
@@ -66,7 +66,7 @@ def test_only_root_files_are_loadable(app, bios_volume):
 
 
 def test_an_empty_volume_lists_nothing_without_erroring(app, tmp_path):
-    from gametheca.utils.emulator_bios import list_bios_files
+    from oneirodex.utils.emulator_bios import list_bios_files
 
     app.config['EMULATOR_BIOS_PATH'] = str(tmp_path / 'empty')
     with app.test_request_context():
@@ -75,7 +75,7 @@ def test_an_empty_volume_lists_nothing_without_erroring(app, tmp_path):
 
 def test_core_status_separates_misplaced_from_missing(app, tmp_path):
     """The distinction that turns a dead end into an actionable message."""
-    from gametheca.utils.emulator_bios import BIOS_REQUIREMENTS, bios_status_for_cores
+    from oneirodex.utils.emulator_bios import BIOS_REQUIREMENTS, bios_status_for_cores
 
     core, required = next(iter(BIOS_REQUIREMENTS.items()))
     wanted = required[0]
@@ -94,7 +94,7 @@ def test_core_status_separates_misplaced_from_missing(app, tmp_path):
 
 
 def test_root_file_reports_ready(app, tmp_path):
-    from gametheca.utils.emulator_bios import BIOS_REQUIREMENTS, bios_status_for_cores
+    from oneirodex.utils.emulator_bios import BIOS_REQUIREMENTS, bios_status_for_cores
 
     core, required = next(iter(BIOS_REQUIREMENTS.items()))
     root = tmp_path / 'bios'
@@ -111,7 +111,7 @@ def test_root_file_reports_ready(app, tmp_path):
 
 def _first_platform_needing_bios(app, tmp_path):
     """(platform name, one required filename) for a system that needs firmware."""
-    from gametheca.utils.emulator_bios import bios_status_for_platforms
+    from oneirodex.utils.emulator_bios import bios_status_for_platforms
 
     app.config['EMULATOR_BIOS_PATH'] = str(tmp_path / 'probe')
     with app.test_request_context():
@@ -128,7 +128,7 @@ def test_platform_status_does_not_call_a_nested_file_ready(app, tmp_path):
     my systems can actually play?", and a nested file is precisely the case
     where the honest answer is no.
     """
-    from gametheca.utils.emulator_bios import bios_status_for_platforms
+    from oneirodex.utils.emulator_bios import bios_status_for_platforms
 
     platform, wanted = _first_platform_needing_bios(app, tmp_path)
 
@@ -149,7 +149,7 @@ def test_platform_status_does_not_call_a_nested_file_ready(app, tmp_path):
 
 
 def test_platform_status_reports_ready_for_a_root_file(app, tmp_path):
-    from gametheca.utils.emulator_bios import bios_status_for_platforms
+    from oneirodex.utils.emulator_bios import bios_status_for_platforms
 
     platform, wanted = _first_platform_needing_bios(app, tmp_path)
 
@@ -175,7 +175,7 @@ def test_cartridge_sega_systems_do_not_inherit_the_sega_cd_bios(app, tmp_path):
     reported ready on the strength of firmware irrelevant to a cartridge. The
     verdict happened to be right and the reason shown to the operator was wrong.
     """
-    from gametheca.utils.emulator_bios import bios_status_for_platforms
+    from oneirodex.utils.emulator_bios import bios_status_for_platforms
 
     root = tmp_path / 'bios'
     root.mkdir(parents=True)
@@ -200,7 +200,7 @@ def test_cartridge_sega_systems_do_not_inherit_the_sega_cd_bios(app, tmp_path):
 
 def test_other_shared_core_platforms_are_scoped_too(app, tmp_path):
     """The same trap on three more cores — assert the whole set, not one case."""
-    from gametheca.utils.emulator_bios import bios_status_for_platforms
+    from oneirodex.utils.emulator_bios import bios_status_for_platforms
 
     root = tmp_path / 'bios'
     root.mkdir(parents=True)
@@ -224,8 +224,8 @@ def test_other_shared_core_platforms_are_scoped_too(app, tmp_path):
 
 def test_every_override_names_a_real_platform(app):
     """A typo in the override table would silently do nothing."""
-    from gametheca.platform import LibraryPlatform
-    from gametheca.utils.emulator_bios import PLATFORM_BIOS_OVERRIDES
+    from oneirodex.platform import LibraryPlatform
+    from oneirodex.utils.emulator_bios import PLATFORM_BIOS_OVERRIDES
 
     known = {p.name for p in LibraryPlatform}
     unknown = sorted(set(PLATFORM_BIOS_OVERRIDES) - known)
@@ -234,7 +234,7 @@ def test_every_override_names_a_real_platform(app):
 
 def test_optional_cart_systems_drop_out_of_the_platform_panel(app, tmp_path):
     """NES/SNES/N64 optional files must not look like a missing-BIOS row."""
-    from gametheca.utils.emulator_bios import bios_status_for_platforms
+    from oneirodex.utils.emulator_bios import bios_status_for_platforms
 
     root = tmp_path / 'bios'
     root.mkdir(parents=True)

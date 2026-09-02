@@ -1,103 +1,103 @@
 /* Admin ⌘K palette (GT-A7).
  *
- * Written entirely against the --gt-* scales — no literal colours, radii or
+ * Written entirely against the --od-* scales — no literal colours, radii or
  * font sizes — so it is the first admin surface that needs no exception in the
  * css-token-lint baseline, and it retints with the operator's selected theme
  * for free. New admin CSS should look like this file.
  */
 
-.gt-admin-palette__scrim {
+.od-admin-palette__scrim {
   position: fixed;
   inset: 0;
   z-index: 1080;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 12vh var(--gt-space-5) var(--gt-space-5);
-  background: color-mix(in srgb, var(--gt-bg) 72%, transparent);
-  backdrop-filter: blur(var(--gt-glass-blur));
+  padding: 12vh var(--od-space-5) var(--od-space-5);
+  background: color-mix(in srgb, var(--od-bg) 72%, transparent);
+  backdrop-filter: blur(var(--od-glass-blur));
 }
 
-.gt-admin-palette {
+.od-admin-palette {
   width: min(640px, 100%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-xl);
-  box-shadow: var(--gt-shadow-lg);
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-xl);
+  box-shadow: var(--od-shadow-lg);
 }
 
-.gt-admin-palette__input {
-  padding: var(--gt-space-4) var(--gt-space-5);
+.od-admin-palette__input {
+  padding: var(--od-space-4) var(--od-space-5);
   border: 0;
-  border-bottom: 1px solid var(--gt-border);
+  border-bottom: 1px solid var(--od-border);
   background: transparent;
-  color: var(--gt-text);
+  color: var(--od-text);
   font: inherit;
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
 }
 
-.gt-admin-palette__input::placeholder {
-  color: var(--gt-text-muted);
+.od-admin-palette__input::placeholder {
+  color: var(--od-text-muted);
 }
 
-.gt-admin-palette__input:focus {
+.od-admin-palette__input:focus {
   outline: none;
 }
 
-.gt-admin-palette__list {
+.od-admin-palette__list {
   margin: 0;
-  padding: var(--gt-space-2);
+  padding: var(--od-space-2);
   list-style: none;
   overflow-y: auto;
   max-height: 52vh;
 }
 
-.gt-admin-palette__row {
+.od-admin-palette__row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--gt-space-4);
-  padding: var(--gt-space-3) var(--gt-space-4);
-  border-radius: var(--gt-radius-sm);
-  color: var(--gt-text);
+  gap: var(--od-space-4);
+  padding: var(--od-space-3) var(--od-space-4);
+  border-radius: var(--od-radius-sm);
+  color: var(--od-text);
   text-decoration: none;
 }
 
-.gt-admin-palette__row[data-active='true'] {
-  background: color-mix(in srgb, var(--gt-accent) 14%, transparent);
-  color: var(--gt-accent);
+.od-admin-palette__row[data-active='true'] {
+  background: color-mix(in srgb, var(--od-accent) 14%, transparent);
+  color: var(--od-accent);
 }
 
-.gt-admin-palette__label {
-  font-size: var(--gt-font-md);
+.od-admin-palette__label {
+  font-size: var(--od-font-md);
 }
 
-.gt-admin-palette__section {
+.od-admin-palette__section {
   flex-shrink: 0;
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
 }
 
-.gt-admin-palette__empty {
-  padding: var(--gt-space-5);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+.od-admin-palette__empty {
+  padding: var(--od-space-5);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   text-align: center;
 }
 
-.gt-admin-palette__hint {
-  padding: var(--gt-space-3) var(--gt-space-5);
-  border-top: 1px solid var(--gt-border);
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-xs);
+.od-admin-palette__hint {
+  padding: var(--od-space-3) var(--od-space-5);
+  border-top: 1px solid var(--od-border);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
 }
 
-.gt-admin-palette__hint kbd {
-  padding: 0 var(--gt-space-1);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-xs);
+.od-admin-palette__hint kbd {
+  padding: 0 var(--od-space-1);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-xs);
   font-family: inherit;
 }

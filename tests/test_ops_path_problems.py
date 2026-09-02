@@ -1,5 +1,5 @@
 """Ops path issues must not treat Unraid RO games mounts as bad."""
-from gametheca.utils.ops_summary import _path_problems
+from oneirodex.utils.ops_summary import _path_problems
 
 
 def test_games_ro_mount_is_not_a_path_problem():
@@ -12,7 +12,7 @@ def test_games_ro_mount_is_not_a_path_problem():
                 'write': False,
             },
             'UPLOAD_FOLDER': {
-                'path': '/app/gametheca/static/library',
+                'path': '/app/oneirodex/static/library',
                 'exists': True,
                 'read': True,
                 'write': True,
@@ -38,7 +38,7 @@ def test_base_folder_ro_mount_is_not_a_path_problem():
                 'write': False,
             },
             'UPLOAD_FOLDER': {
-                'path': '/app/gametheca/static/library',
+                'path': '/app/oneirodex/static/library',
                 'exists': True,
                 'read': True,
                 'write': True,
@@ -80,7 +80,7 @@ def test_upload_not_writable_is_reported():
     problems = _path_problems(
         {
             'UPLOAD_FOLDER': {
-                'path': '/app/gametheca/static/library',
+                'path': '/app/oneirodex/static/library',
                 'exists': True,
                 'read': True,
                 'write': False,

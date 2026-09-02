@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'gametheca.dismissedBadges.v1'
+const STORAGE_KEY = 'oneirodex.dismissedBadges.v1'
 
 function readStore() {
   try {

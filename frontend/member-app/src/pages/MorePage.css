@@ -1,72 +1,72 @@
 /* Shared hub / “More” page rhythm for member SPA routes. */
 
-.gt-more-page {
+.od-more-page {
   max-width: 72rem;
   width: 100%;
   min-width: 0;
   margin: 0 auto;
   padding: 0.75rem 1rem 2rem;
-  color: var(--gt-text);
+  color: var(--od-text);
   box-sizing: border-box;
   overflow-wrap: break-word;
 }
 
-.gt-more-page .gt-page-header {
+.od-more-page .od-page-header {
   margin-bottom: 0.35rem;
 }
 
-.gt-more-page .gt-page-header h1 {
-  font-size: var(--gt-font-xl);
+.od-more-page .od-page-header h1 {
+  font-size: var(--od-font-xl);
 }
 
-.gt-more-page__lede {
+.od-more-page__lede {
   margin: 0 0 1rem;
   max-width: 42rem;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-base);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-base);
   line-height: 1.45;
 }
 
-.gt-more-page [role='alert'] {
+.od-more-page [role='alert'] {
   margin-bottom: 1rem;
   padding: 0.65rem 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--gt-danger) 45%, transparent);
-  border-radius: var(--gt-radius-sm);
-  background: color-mix(in srgb, var(--gt-danger) 10%, transparent);
-  color: var(--gt-text);
+  border: 1px solid color-mix(in srgb, var(--od-danger) 45%, transparent);
+  border-radius: var(--od-radius-sm);
+  background: color-mix(in srgb, var(--od-danger) 10%, transparent);
+  color: var(--od-text);
 }
 
-.gt-more-page [role='alert'] button,
-.gt-more-page button {
+.od-more-page [role='alert'] button,
+.od-more-page button {
   font: inherit;
 }
 
-.gt-more-page ul {
+.od-more-page ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.gt-more-page__list,
-.gt-news__list,
-.gt-updates__list {
+.od-more-page__list,
+.od-news__list,
+.od-updates__list {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
 }
 
-.gt-more-page__list > li,
-.gt-news__card {
+.od-more-page__list > li,
+.od-news__card {
   display: flex;
   gap: 0.75rem;
   padding: 0.65rem 0.8rem;
-  background: var(--gt-surface);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-sm);
-  color: var(--gt-text);
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  color: var(--od-text);
 }
 
-.gt-news__card article {
+.od-news__card article {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -75,34 +75,34 @@
 }
 
 /* Updates residual densify — row separators, not glass cards */
-.gt-updates__list {
+.od-updates__list {
   gap: 0;
 }
 
-.gt-updates__list > li {
+.od-updates__list > li {
   display: block;
   padding: 0.55rem 0.1rem;
   background: transparent;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 65%, transparent);
   border-radius: 0;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-updates__list > li a {
+.od-updates__list > li a {
   color: inherit;
   text-decoration: none;
 }
 
-.gt-updates__list > li a:hover {
-  color: var(--gt-accent);
+.od-updates__list > li a:hover {
+  color: var(--od-accent);
 }
 
-.gt-news__card p,
-.gt-news__card time,
-.gt-updates__list span {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+.od-news__card p,
+.od-news__card time,
+.od-updates__list span {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
   line-height: 1.4;
 }
 
@@ -111,34 +111,34 @@
    Full width means the actions can sit at a predictable right edge instead of
    wrapping under the name at every other viewport, so the eye runs down one
    column of names and one column of controls. */
-.gt-updates__inbox-item {
+.od-updates__inbox-item {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: space-between;
-  padding: var(--gt-space-3) var(--gt-space-4);
+  padding: var(--od-space-3) var(--od-space-4);
   border: 1px solid transparent;
-  border-radius: var(--gt-radius-md);
-  transition: background-color var(--gt-motion-fast) var(--gt-motion-ease),
-    border-color var(--gt-motion-fast) var(--gt-motion-ease);
+  border-radius: var(--od-radius-md);
+  transition: background-color var(--od-motion-fast) var(--od-motion-ease),
+    border-color var(--od-motion-fast) var(--od-motion-ease);
 }
 
 /* A row you are about to act on lifts out of the list. Nothing moves — only
    the surface changes — so the buttons stay where the pointer is heading. */
-.gt-updates__inbox-list > li:hover .gt-updates__inbox-item {
-  background: color-mix(in srgb, var(--gt-text) 4%, transparent);
-  border-color: var(--gt-border);
+.od-updates__inbox-list > li:hover .od-updates__inbox-item {
+  background: color-mix(in srgb, var(--od-text) 4%, transparent);
+  border-color: var(--od-border);
 }
 
 /* Zebra banding at the row level rather than a divider per row: with the
    actions pushed to the far right, a hairline between rows reads as a table
    rule and the page starts to look like a spreadsheet. */
-.gt-updates__inbox-list > li:nth-child(even) .gt-updates__inbox-item {
-  background: color-mix(in srgb, var(--gt-text) 2.5%, transparent);
+.od-updates__inbox-list > li:nth-child(even) .od-updates__inbox-item {
+  background: color-mix(in srgb, var(--od-text) 2.5%, transparent);
 }
 
-.gt-updates__inbox-main {
+.od-updates__inbox-main {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -146,7 +146,7 @@
   flex: 1 1 240px;
 }
 
-.gt-updates__inbox-actions {
+.od-updates__inbox-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -154,21 +154,21 @@
 
 /* "Behind" is the only thing on the row that decides whether you act, so it is
    a chip rather than a coloured word lost in a line of metadata. */
-.gt-updates__status {
+.od-updates__status {
   display: inline-flex;
   align-items: center;
-  gap: var(--gt-space-1);
+  gap: var(--od-space-1);
   padding: 0.1rem 0.45rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
-  color: var(--gt-accent);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
+  color: var(--od-accent);
+  font-size: var(--od-font-xs);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.gt-help__sections {
+.od-help__sections {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -180,63 +180,63 @@
    padding, same head. Neither is the point of the page, and framing them
    together says so — previously Search stores was bare and the calendar teaser
    was bare in a different way. */
-.gt-updates__search,
-.gt-updates__calendar {
+.od-updates__search,
+.od-updates__calendar {
   margin: 0;
-  padding: var(--gt-space-4);
-  border: 1px solid var(--gt-border);
-  border-radius: var(--gt-radius-lg);
-  background: color-mix(in srgb, var(--gt-surface) 55%, transparent);
+  padding: var(--od-space-4);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-lg);
+  background: color-mix(in srgb, var(--od-surface) 55%, transparent);
 }
 
-.gt-updates__section-head {
+.od-updates__section-head {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   margin: 0 0 0.55rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 75%, transparent);
 }
 
 /* Inbox controls, sitting on the heading row (W28): the timestamp, then the
    refresh glyph, then the library sweep. `margin-left: auto` rather than
    `justify-content: space-between` on the parent, because the parent also has
    to keep working for the section heads that carry no tools at all. */
-.gt-updates__inbox-tools {
+.od-updates__inbox-tools {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: var(--gt-space-3);
+  gap: var(--od-space-3);
   flex-wrap: wrap;
 }
 
 /* Glyph only. The label is on `aria-label`: beside a control already captioned
    by the timestamp it stands next to, the word "Refresh" is a third piece of
    text in a row that is meant to read at a glance. */
-.gt-updates__refresh-btn {
+.od-updates__refresh-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding-inline: var(--gt-space-3);
+  padding-inline: var(--od-space-3);
 }
 
-.gt-updates__scan-result {
+.od-updates__scan-result {
   margin: 0 0 0.6rem;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-updates__section-head h2,
-.gt-updates__inbox > .gt-updates__section-head h2 {
+.od-updates__section-head h2,
+.od-updates__inbox > .od-updates__section-head h2 {
   margin: 0;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-updates__header {
+.od-updates__header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -244,42 +244,42 @@
   gap: 0.75rem 1rem;
 }
 
-.gt-updates__header .gt-more-page__lede {
+.od-updates__header .od-more-page__lede {
   margin-bottom: 0;
 }
 
-.gt-updates__refresh {
+.od-updates__refresh {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
 }
 
-.gt-updates__refresh-status {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text);
+.od-updates__refresh-status {
+  font-size: var(--od-font-sm);
+  color: var(--od-text);
 }
 
-.gt-updates__refresh-status--muted {
-  color: var(--gt-text-muted);
+.od-updates__refresh-status--muted {
+  color: var(--od-text-muted);
 }
 
-.gt-updates__inbox > h2,
-.gt-updates__calendar h2 {
+.od-updates__inbox > h2,
+.od-updates__calendar h2 {
   margin: 0 0 0.55rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 /* The top rule and the stacked margin are retired: the calendar teaser is a
    framed panel beside Search stores now, not the last block of a single column,
    so a divider above it drew a line across the middle of a two-panel row. Its
-   surface is defined with `.gt-updates__search` above. */
+   surface is defined with `.od-updates__search` above. */
 
-.gt-updates__calendar-head {
+.od-updates__calendar-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -288,29 +288,29 @@
   margin-bottom: 0.55rem;
 }
 
-.gt-updates__calendar-head h2 {
+.od-updates__calendar-head h2 {
   margin: 0;
 }
 
-.gt-updates__calendar-link {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-accent);
+.od-updates__calendar-link {
+  font-size: var(--od-font-sm);
+  color: var(--od-accent);
   text-decoration: none;
 }
 
-.gt-updates__calendar-link:hover,
-.gt-updates__calendar-link:focus-visible {
+.od-updates__calendar-link:hover,
+.od-updates__calendar-link:focus-visible {
   text-decoration: underline;
   outline: none;
 }
 
-.gt-updates__calendar-empty {
+.od-updates__calendar-empty {
   margin: 0;
-  font-size: var(--gt-font-md);
-  color: var(--gt-text-muted);
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
 }
 
-.gt-updates__calendar-list {
+.od-updates__calendar-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -319,23 +319,23 @@
   gap: 0;
 }
 
-.gt-updates__calendar-list > li {
+.od-updates__calendar-list > li {
   display: grid;
   grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 0.55rem 0.75rem;
   padding: 0.45rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 60%, transparent);
   background: transparent;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-updates__calendar-list time {
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-sm);
+.od-updates__calendar-list time {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
   white-space: nowrap;
 }
 
-.gt-updates__search-form {
+.od-updates__search-form {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
@@ -343,20 +343,20 @@
   margin-bottom: 0.75rem;
 }
 
-.gt-updates__search-form label {
+.od-updates__search-form label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   min-width: 10rem;
 }
 
-.gt-updates__search-form input,
-.gt-updates__search-form select {
+.od-updates__search-form input,
+.od-updates__search-form select {
   padding: 0.4rem 0.55rem;
-  border-radius: var(--gt-radius-md);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 35%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 90%, transparent);
   color: inherit;
   font: inherit;
 }

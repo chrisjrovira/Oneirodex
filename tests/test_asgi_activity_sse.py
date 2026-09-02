@@ -7,7 +7,7 @@ import inspect
 from unittest.mock import AsyncMock
 
 from asgi import LazyASGIApp
-from gametheca.utils.event_bus import AppEvent, encode_sse, event_bus
+from oneirodex.utils.event_bus import AppEvent, encode_sse, event_bus
 
 
 def test_encode_sse_bytes():

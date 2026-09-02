@@ -24,7 +24,7 @@ limit_req_zone $binary_remote_addr zone=gt_login:10m rate=5r/m;
 server {
   location = /login {
     limit_req zone=gt_login burst=10 nodelay;
-    proxy_pass http://gametheca_upstream;
+    proxy_pass http://oneirodex_upstream;
   }
 }
 ```

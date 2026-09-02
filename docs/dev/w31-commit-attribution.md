@@ -34,30 +34,30 @@ Both sides touched these, additively and in distinct regions:
 
 | File | UI side | Security side |
 |---|---|---|
-| `gametheca/models.py` | `scan_jobs.owner_token` | `api_tokens.expires_at` |
-| `gametheca/updateschema.py` | `owner_token` migration | `expires_at` migration |
-| `gametheca/templates/base_admin.html` | admin identity attributes for the account control | AGPL source-offer footer |
-| `gametheca/templates/site/member_spa.html` | W29 shell config | AGPL / source URL |
-| `gametheca/setup/default_theme/css/gt-shell.css` | W29/W30 rail + shell | — (minor) |
+| `oneirodex/models.py` | `scan_jobs.owner_token` | `api_tokens.expires_at` |
+| `oneirodex/updateschema.py` | `owner_token` migration | `expires_at` migration |
+| `oneirodex/templates/base_admin.html` | admin identity attributes for the account control | AGPL source-offer footer |
+| `oneirodex/templates/site/member_spa.html` | W29 shell config | AGPL / source URL |
+| `oneirodex/setup/default_theme/css/od-shell.css` | W29/W30 rail + shell | — (minor) |
 | local strategy notes (`progress.md`, that commit) | W29/W30 wave rows | security wave rows |
 
 ## UI pass (W29 + W30) — 130 files
 
 **backend** (13)
 
-- `gametheca/routes.py`
-- `gametheca/routes_admin_ext/system.py`
-- `gametheca/routes_apis/account.py`
-- `gametheca/routes_apis/discover.py`
-- `gametheca/routes_discover.py`
-- `gametheca/utilities.py`
-- `gametheca/utils/avatar.py`
-- `gametheca/utils/discover_pins.py`
-- `gametheca/utils/emulator_bios.py`
-- `gametheca/utils/game_details_payload.py`
-- `gametheca/utils/preset_themes.py`
-- `gametheca/utils/scan_queue.py`
-- `gametheca/utils/system_reset.py`
+- `oneirodex/routes.py`
+- `oneirodex/routes_admin_ext/system.py`
+- `oneirodex/routes_apis/account.py`
+- `oneirodex/routes_apis/discover.py`
+- `oneirodex/routes_discover.py`
+- `oneirodex/utilities.py`
+- `oneirodex/utils/avatar.py`
+- `oneirodex/utils/discover_pins.py`
+- `oneirodex/utils/emulator_bios.py`
+- `oneirodex/utils/game_details_payload.py`
+- `oneirodex/utils/preset_themes.py`
+- `oneirodex/utils/scan_queue.py`
+- `oneirodex/utils/system_reset.py`
 
 **docs** (8)
 
@@ -166,12 +166,12 @@ Both sides touched these, additively and in distinct regions:
 
 **templates** (6)
 
-- `gametheca/templates/admin/admin_discovery_sections.html`
-- `gametheca/templates/partials/rail.html`
-- `gametheca/templates/settings/modal_preferences.html`
-- `gametheca/templates/settings/settings_profile_edit.html`
-- `gametheca/templates/settings/settings_profile_view.html`
-- `gametheca/templates/site/styleguide.html`
+- `oneirodex/templates/admin/admin_discovery_sections.html`
+- `oneirodex/templates/partials/rail.html`
+- `oneirodex/templates/settings/modal_preferences.html`
+- `oneirodex/templates/settings/settings_profile_edit.html`
+- `oneirodex/templates/settings/settings_profile_view.html`
+- `oneirodex/templates/site/styleguide.html`
 
 **tests** (5)
 
@@ -183,19 +183,19 @@ Both sides touched these, additively and in distinct regions:
 
 **theme assets** (13)
 
-- `gametheca/setup/default_theme/avatars/arcade.svg`
-- `gametheca/setup/default_theme/avatars/cartridge.svg`
-- `gametheca/setup/default_theme/avatars/controller.svg`
-- `gametheca/setup/default_theme/avatars/default.svg`
-- `gametheca/setup/default_theme/avatars/disc.svg`
-- `gametheca/setup/default_theme/avatars/dpad.svg`
-- `gametheca/setup/default_theme/avatars/joystick.svg`
-- `gametheca/setup/default_theme/css/games/library_browser.css`
-- `gametheca/setup/default_theme/css/gt-appbar.css`
-- `gametheca/setup/default_theme/css/gt-density.css`
-- `gametheca/setup/default_theme/css/gt-primitives.css`
-- `gametheca/setup/default_theme/css/gt-tokens.css`
-- `gametheca/setup/default_theme/css/modal-components.css`
+- `oneirodex/setup/default_theme/avatars/arcade.svg`
+- `oneirodex/setup/default_theme/avatars/cartridge.svg`
+- `oneirodex/setup/default_theme/avatars/controller.svg`
+- `oneirodex/setup/default_theme/avatars/default.svg`
+- `oneirodex/setup/default_theme/avatars/disc.svg`
+- `oneirodex/setup/default_theme/avatars/dpad.svg`
+- `oneirodex/setup/default_theme/avatars/joystick.svg`
+- `oneirodex/setup/default_theme/css/games/library_browser.css`
+- `oneirodex/setup/default_theme/css/od-appbar.css`
+- `oneirodex/setup/default_theme/css/od-density.css`
+- `oneirodex/setup/default_theme/css/od-primitives.css`
+- `oneirodex/setup/default_theme/css/od-tokens.css`
+- `oneirodex/setup/default_theme/css/modal-components.css`
 
 ## Security / legal audit — 100 files
 
@@ -207,20 +207,20 @@ Both sides touched these, additively and in distinct regions:
 - `README.md`
 - `asgi.py`
 - `config.py`
-- `gametheca/__init__.py`
-- `gametheca/init_data.py`
-- `gametheca/platform.py`
-- `gametheca/routes_login.py`
-- `gametheca/utils/api_response.py`
-- `gametheca/utils/api_tokens.py`
-- `gametheca/utils/arr_connectors.py`
-- `gametheca/utils/auth.py`
-- `gametheca/utils/challenge_solver.py`
-- `gametheca/utils/functions.py`
-- `gametheca/utils/http_retry.py`
-- `gametheca/utils/http_safe.py`
-- `gametheca/utils/security.py`
-- `gametheca/utils/security_headers.py`
+- `oneirodex/__init__.py`
+- `oneirodex/init_data.py`
+- `oneirodex/platform.py`
+- `oneirodex/routes_login.py`
+- `oneirodex/utils/api_response.py`
+- `oneirodex/utils/api_tokens.py`
+- `oneirodex/utils/arr_connectors.py`
+- `oneirodex/utils/auth.py`
+- `oneirodex/utils/challenge_solver.py`
+- `oneirodex/utils/functions.py`
+- `oneirodex/utils/http_retry.py`
+- `oneirodex/utils/http_safe.py`
+- `oneirodex/utils/security.py`
+- `oneirodex/utils/security_headers.py`
 
 **clients/desktop** (4)
 

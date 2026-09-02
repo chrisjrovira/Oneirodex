@@ -9,9 +9,9 @@ import pytest
 from flask_login import login_user
 from werkzeug.datastructures import FileStorage
 
-from gametheca.models import Game, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.set_completion import (
+from oneirodex.models import Game, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.set_completion import (
     compute_set_completion,
     normalize_set_title,
     parse_dat_bytes,
@@ -294,7 +294,7 @@ def test_crc_match_beats_title(app, db_session, admin, nes_lib, member, tmp_path
     tag = uuid4().hex[:8]
     rom = tmp_path / f'weird-name-{tag}.nes'
     rom.write_bytes(b'NES\x1a' + b'\0' * 100)
-    from gametheca.utils.rom_hash import hash_rom_file
+    from oneirodex.utils.rom_hash import hash_rom_file
 
     hashes = hash_rom_file(rom)
     assert hashes is not None
@@ -344,7 +344,7 @@ def test_crc_match_beats_title(app, db_session, admin, nes_lib, member, tmp_path
 
 
 def test_hash_rom_file_and_rehash_api(app, client, db_session, admin, nes_lib, tmp_path):
-    from gametheca.utils.rom_hash import hash_rom_file
+    from oneirodex.utils.rom_hash import hash_rom_file
 
     rom = tmp_path / 'solo.nes'
     rom.write_bytes(b'abc123')

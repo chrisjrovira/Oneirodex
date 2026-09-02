@@ -8,8 +8,8 @@ from uuid import uuid4
 import pytest
 from werkzeug.datastructures import FileStorage
 
-from gametheca.routes_apis.emulator_cheats import _game_cheat_surface, _refuse_non_retroarch
-from gametheca.utils.emulator_cheats import (
+from oneirodex.routes_apis.emulator_cheats import _game_cheat_surface, _refuse_non_retroarch
+from oneirodex.utils.emulator_cheats import (
     build_cht_text,
     create_cheat_file,
     delete_cheat_file,

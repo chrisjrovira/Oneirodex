@@ -7,16 +7,16 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import Game, Image, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.cover_selection import (
+from oneirodex.models import Game, Image, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.cover_selection import (
     POLICY_ALIASES,
     apply_policy_to_game,
     image_save_path_status,
     resolve_policy,
     search_cover_candidates,
 )
-from gametheca.utils.providers import ImageSearchResult, reset_provider_cache
+from oneirodex.utils.providers import ImageSearchResult, reset_provider_cache
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +45,7 @@ def test_image_save_path_status(app, tmp_path):
     assert status['error'] is None
 
 
-@patch('gametheca.utils.cover_selection.get_provider')
+@patch('oneirodex.utils.cover_selection.get_provider')
 def test_search_cover_candidates_records_provider_errors(mock_get):
     disabled = MagicMock()
     disabled.is_enabled.return_value = False
@@ -71,9 +71,9 @@ def test_search_cover_candidates_records_provider_errors(mock_get):
     assert any(e['provider'] == 'steamgriddb' for e in result['errors'])
 
 
-@patch('gametheca.utils.cover_selection.apply_cover_from_url')
-@patch('gametheca.utils.cover_selection.search_cover_candidates')
-@patch('gametheca.utils.cover_selection.image_save_path_status')
+@patch('oneirodex.utils.cover_selection.apply_cover_from_url')
+@patch('oneirodex.utils.cover_selection.search_cover_candidates')
+@patch('oneirodex.utils.cover_selection.image_save_path_status')
 def test_apply_policy_prefers_first_provider(mock_path, mock_search, mock_apply, db_session):
     mock_path.return_value = {'path': '/tmp', 'exists': True, 'writable': True, 'error': None}
     mock_search.return_value = {
@@ -95,7 +95,7 @@ def test_apply_policy_prefers_first_provider(mock_path, mock_search, mock_apply,
     mock_apply.assert_called_once()
 
 
-@patch('gametheca.utils.cover_selection.image_save_path_status')
+@patch('oneirodex.utils.cover_selection.image_save_path_status')
 def test_apply_policy_fails_when_path_not_writable(mock_path, db_session):
     mock_path.return_value = {
         'path': '/ro',
@@ -167,7 +167,7 @@ def test_image_queue_includes_failure_reason_and_path(client, db_session, admin_
     assert data['images'][0]['status'] == 'failed'
 
 
-@patch('gametheca.routes_admin_ext.images.batch_apply_covers')
+@patch('oneirodex.routes_admin_ext.images.batch_apply_covers')
 def test_artwork_auto_pick_route(mock_batch, client, db_session, admin_user, app, tmp_path):
     img_root = tmp_path / 'images'
     img_root.mkdir()

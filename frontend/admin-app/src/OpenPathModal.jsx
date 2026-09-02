@@ -78,21 +78,21 @@ export function OpenPathModal({ open, path = '', label = 'Path', matchReason = '
 
   return (
     <div
-      className="gt-open-path"
+      className="od-open-path"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={onClose}
     >
-      <div className="gt-open-path__panel" onClick={(event) => event.stopPropagation()}>
-        <div className="gt-open-path__toolbar">
-          <h2 id={titleId} className="gt-open-path__title">
+      <div className="od-open-path__panel" onClick={(event) => event.stopPropagation()}>
+        <div className="od-open-path__toolbar">
+          <h2 id={titleId} className="od-open-path__title">
             {label}
           </h2>
           <button
             ref={closeRef}
             type="button"
-            className="gt-open-path__close"
+            className="od-open-path__close"
             onClick={onClose}
             aria-label="Close"
           >
@@ -100,20 +100,20 @@ export function OpenPathModal({ open, path = '', label = 'Path', matchReason = '
           </button>
         </div>
         {matchReason ? (
-          <p className="gt-open-path__reason">
+          <p className="od-open-path__reason">
             <strong>Match reason:</strong> {matchReason}
           </p>
         ) : null}
-        <p className="gt-open-path__path">
+        <p className="od-open-path__path">
           <code>{path}</code>
         </p>
-        <div className="gt-open-path__actions">
-          <button type="button" className="gt-btn gt-btn--primary" onClick={() => void handleCopy()}>
+        <div className="od-open-path__actions">
+          <button type="button" className="od-btn od-btn--primary" onClick={() => void handleCopy()}>
             Copy path
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={busy}
             onClick={() => void handleOpenExplorer()}
           >
@@ -121,7 +121,7 @@ export function OpenPathModal({ open, path = '', label = 'Path', matchReason = '
           </button>
         </div>
         {status ? (
-          <p className="gt-open-path__status" role="status">
+          <p className="od-open-path__status" role="status">
             {status}
           </p>
         ) : null}

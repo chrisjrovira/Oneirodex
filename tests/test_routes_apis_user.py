@@ -1,5 +1,5 @@
 """
-Unit tests for gametheca.routes_apis.user
+Unit tests for oneirodex.routes_apis.user
 
 Tests the user API endpoints including current user role retrieval,
 username checking, and favorite game management functionality.
@@ -9,7 +9,7 @@ import pytest
 import json
 from uuid import uuid4
 
-from gametheca.models import User, Game, Library, LibraryPlatform
+from oneirodex.models import User, Game, Library, LibraryPlatform
 
 
 @pytest.fixture

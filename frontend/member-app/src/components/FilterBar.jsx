@@ -239,11 +239,11 @@ export function FilterBar({
           read as one segmented control. Dismiss is click-outside / Escape /
           the Filters trigger — a third Done in this cluster was redundant. */}
       <div className="library-filters__actions">
-        <div className="gt-cbtn-group gt-cbtn-group--fill">
-          <button className="gt-cbtn gt-cbtn--primary" type="submit">
+        <div className="od-cbtn-group od-cbtn-group--fill">
+          <button className="od-cbtn od-cbtn--primary" type="submit">
             {t('Apply')}
           </button>
-          <button className="gt-cbtn" type="button" onClick={clear}>
+          <button className="od-cbtn" type="button" onClick={clear}>
             {t('Clear')}
           </button>
         </div>
@@ -253,7 +253,7 @@ export function FilterBar({
         <fieldset className="library-filters__signals library-filters__signals--bar">
           <legend className="visually-hidden">{t('Signals')}</legend>
           <div
-            className="gt-cbtn-group gt-cbtn-group--fill"
+            className="od-cbtn-group od-cbtn-group--fill"
             role="group"
             aria-label={t('Badge filters')}
           >
@@ -263,7 +263,7 @@ export function FilterBar({
                 <button
                   key={chip.param}
                   type="button"
-                  className={`gt-cbtn${active ? ' is-on' : ''}`}
+                  className={`od-cbtn${active ? ' is-on' : ''}`}
                   aria-pressed={active}
                   title={t(chip.title)}
                   onClick={() =>
@@ -376,7 +376,7 @@ export function FilterBar({
         {hideKind ? null : (
         <fieldset className="library-filters__signals">
           <legend>{t('Kind')}</legend>
-          <div className="gt-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
+          <div className="od-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
             {ITEM_KIND_FILTER_CHIPS.map((chip) => {
               const active = parseItemKindFilter(
                 filters.item_kind ?? draft.item_kind,
@@ -385,7 +385,7 @@ export function FilterBar({
                 <button
                   key={chip.kind}
                   type="button"
-                  className={`gt-badge-filter-chip${active ? ' is-active' : ''}`}
+                  className={`od-badge-filter-chip${active ? ' is-active' : ''}`}
                   aria-pressed={active}
                   title={t(chip.title)}
                   onClick={() =>

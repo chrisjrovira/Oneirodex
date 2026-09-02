@@ -11,9 +11,9 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca import db
-from gametheca.models import User
-from gametheca.utils.system_reset import (
+from oneirodex import db
+from oneirodex.models import User
+from oneirodex.utils.system_reset import (
     RESET_SCOPES,
     SCOPE_IMPLIES,
     expand_scopes,
@@ -23,7 +23,7 @@ from gametheca.utils.system_reset import (
 
 def test_every_table_belongs_to_exactly_one_scope():
     """A new model must be assigned a scope, or the reset silently skips it."""
-    import gametheca.models  # noqa: F401  — populates db.metadata
+    import oneirodex.models  # noqa: F401  — populates db.metadata
 
     all_tables = {table.name for table in db.metadata.sorted_tables}
 
@@ -112,8 +112,8 @@ def test_plan_matches_what_postgres_will_actually_truncate(app, db_session):
 
 def test_plan_changes_nothing(app, db_session):
     """Previewing a reset is not a reset."""
-    from gametheca.models import Library
-    from gametheca.platform import LibraryPlatform
+    from oneirodex.models import Library
+    from oneirodex.platform import LibraryPlatform
 
     with app.app_context():
         library = Library(name='PlanOnly', platform=LibraryPlatform.PCWIN)
@@ -178,8 +178,8 @@ class TestResetApi:
 
     def test_without_confirm_it_only_previews(self, admin_client, db_session):
         """The default for a destructive endpoint must be to describe, not do."""
-        from gametheca.models import Library
-        from gametheca.platform import LibraryPlatform
+        from oneirodex.models import Library
+        from oneirodex.platform import LibraryPlatform
 
         library = Library(name='SurvivesPreview', platform=LibraryPlatform.PCWIN)
         db_session.add(library)
@@ -198,8 +198,8 @@ class TestResetApi:
         assert db_session.get(Library, uuid) is not None
 
     def test_wrong_confirmation_phrase_rejected(self, admin_client, db_session):
-        from gametheca.models import Library
-        from gametheca.platform import LibraryPlatform
+        from oneirodex.models import Library
+        from oneirodex.platform import LibraryPlatform
 
         library = Library(name='SurvivesBadPhrase', platform=LibraryPlatform.PCWIN)
         db_session.add(library)
@@ -218,8 +218,8 @@ class TestResetApi:
         self, admin_client, db_session
     ):
         """The point of the catalog scope: rescan immediately, no re-setup."""
-        from gametheca.models import Game, Library
-        from gametheca.platform import LibraryPlatform
+        from oneirodex.models import Game, Library
+        from oneirodex.platform import LibraryPlatform
 
         library = Library(name='KeptLibrary', platform=LibraryPlatform.PCWIN)
         db_session.add(library)
@@ -232,7 +232,7 @@ class TestResetApi:
 
         response = admin_client.post(
             '/admin/api/system/reset',
-            json={'scopes': ['catalog'], 'confirm': 'RESET GAMETHECA'},
+            json={'scopes': ['catalog'], 'confirm': 'RESET ONEIRODEX'},
         )
         assert response.status_code == 200
         assert response.get_json()['performed'] is True
@@ -243,14 +243,14 @@ class TestResetApi:
 
     def test_user_reset_keeps_the_acting_admin(self, admin_client, db_session, admin_user):
         """Never lock the operator out of the install they just reset."""
-        from gametheca.models import User
+        from oneirodex.models import User
 
         admin_id = admin_user.id
         admin_name = admin_user.name
 
         response = admin_client.post(
             '/admin/api/system/reset',
-            json={'scopes': ['users'], 'confirm': 'RESET GAMETHECA'},
+            json={'scopes': ['users'], 'confirm': 'RESET ONEIRODEX'},
         )
         assert response.status_code == 200
         body = response.get_json()
@@ -269,6 +269,6 @@ class TestResetApi:
             sess['_fresh'] = True
         response = client.post(
             '/admin/api/system/reset',
-            json={'scopes': ['catalog'], 'confirm': 'RESET GAMETHECA'},
+            json={'scopes': ['catalog'], 'confirm': 'RESET ONEIRODEX'},
         )
         assert response.status_code in (302, 403)

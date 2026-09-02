@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { hbarLayout } from './hbarLayout'
+import { hbarLayout, scrollLeftFromPointer } from './hbarLayout'
 
 describe('hbarLayout', () => {
   test('a short row fills the rail', () => {
@@ -25,6 +25,34 @@ describe('hbarLayout', () => {
     expect(layout.max).toBe(750)
     expect(layout.thumbPx).toBe(50)
     expect(layout.leftPx).toBe(0)
+  })
+
+  test('pointer X maps back to scrollLeft so a drag can walk backward', () => {
+    const layout = hbarLayout({
+      scrollLeft: 375,
+      scrollWidth: 1000,
+      clientWidth: 250,
+      railWidth: 200,
+      minThumbPx: 32,
+    })
+    const mid = scrollLeftFromPointer({
+      clientX: 100 + layout.leftPx + layout.thumbPx / 2,
+      railLeft: 100,
+      grab: layout.thumbPx / 2,
+      usable: layout.usable,
+      max: layout.max,
+    })
+    expect(mid).toBe(375)
+
+    const back = scrollLeftFromPointer({
+      clientX: 100 + layout.leftPx + layout.thumbPx / 2 - 40,
+      railLeft: 100,
+      grab: layout.thumbPx / 2,
+      usable: layout.usable,
+      max: layout.max,
+    })
+    expect(back).toBeLessThan(mid)
+    expect(back).toBeGreaterThan(0)
   })
 
   test('scroll position maps through the usable rail in both directions', () => {

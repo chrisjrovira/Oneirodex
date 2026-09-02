@@ -7,7 +7,7 @@ import { ExternalStoreLinks } from './ExternalStoreLinks'
 import './GamePreviewPopup.css'
 
 /** Fired when a preview opens, so any other open preview closes itself. */
-const PREVIEW_OPENED = 'gt-preview-opened'
+const PREVIEW_OPENED = 'od-preview-opened'
 
 /**
  * Shortened game detail shown before committing to the full page (UX-B3).
@@ -272,7 +272,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
   // so `fixed` means fixed.
   return createPortal(
     <div
-      className="gt-preview__scrim"
+      className="od-preview__scrim"
       role="presentation"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
@@ -281,7 +281,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
       }}
     >
       <div
-        className="gt-preview"
+        className="od-preview"
         role="dialog"
         aria-modal="true"
         aria-label={`Preview of ${game.name}`}
@@ -289,7 +289,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
       >
         <button
           type="button"
-          className="gt-preview__close"
+          className="od-preview__close"
           onClick={onClose}
           ref={closeRef}
           aria-label="Close preview"
@@ -297,22 +297,22 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
           ×
         </button>
 
-        <div className="gt-preview__body">
+        <div className="od-preview__body">
           {game.cover_url ? (
-            <img className="gt-preview__cover" src={game.cover_url} alt="" loading="lazy" />
+            <img className="od-preview__cover" src={game.cover_url} alt="" loading="lazy" />
           ) : null}
 
-          <div className="gt-preview__text">
-            <h2 className="gt-preview__title">{game.name}</h2>
+          <div className="od-preview__text">
+            <h2 className="od-preview__title">{game.name}</h2>
 
-            {why ? <p className="gt-preview__reason">{why}</p> : null}
+            {why ? <p className="od-preview__reason">{why}</p> : null}
 
             {badges.length ? (
-              <p className="gt-preview__badges">
+              <p className="od-preview__badges">
                 {badges.map((badge) => (
                   <span
                     key={badge.id}
-                    className={`gt-preview__badge gt-preview__badge--${badge.tone}`}
+                    className={`od-preview__badge od-preview__badge--${badge.tone}`}
                   >
                     {badge.label}
                   </span>
@@ -321,9 +321,9 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
             ) : null}
 
             {facts.length ? (
-              <p className="gt-preview__facts">
+              <p className="od-preview__facts">
                 {facts.map((fact, index) => (
-                  <span key={`${fact}-${index}`} className="gt-preview__fact">
+                  <span key={`${fact}-${index}`} className="od-preview__fact">
                     {fact}
                   </span>
                 ))}
@@ -331,15 +331,15 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
             ) : null}
 
             {genres.length ? (
-              <p className="gt-preview__genres">{genres.join(' · ')}</p>
+              <p className="od-preview__genres">{genres.join(' · ')}</p>
             ) : null}
 
-            {household ? <p className="gt-preview__friends">{household}</p> : null}
+            {household ? <p className="od-preview__friends">{household}</p> : null}
 
             {game.summary ? (
-              <p className="gt-preview__summary">{game.summary}</p>
+              <p className="od-preview__summary">{game.summary}</p>
             ) : (
-              <p className="gt-preview__summary gt-preview__summary--empty">
+              <p className="od-preview__summary od-preview__summary--empty">
                 No summary yet for this title.
               </p>
             )}
@@ -350,9 +350,9 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
               igdbUrl={game.url_igdb || game.url}
             />
 
-            <div className="gt-preview__actions">
+            <div className="od-preview__actions">
               <Link
-                className="gt-btn gt-btn--primary"
+                className="od-btn od-btn--primary"
                 to={`/game_details/${game.uuid}`}
                 onClick={() => recordRecentTitle({ uuid: game.uuid, name: game.name })}
               >
@@ -362,62 +362,62 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
           </div>
         </div>
 
-        <section className="gt-preview__systems" aria-label="Available systems">
-          <h3 className="gt-preview__systems-title">
+        <section className="od-preview__systems" aria-label="Available systems">
+          <h3 className="od-preview__systems-title">
             Available on
             {systemCountLabel(editions) ? (
-              <span className="gt-preview__systems-count">
+              <span className="od-preview__systems-count">
                 {systemCountLabel(editions)}
               </span>
             ) : null}
           </h3>
 
           {editions === null ? (
-            <p className="gt-preview__systems-empty">Checking your libraries…</p>
+            <p className="od-preview__systems-empty">Checking your libraries…</p>
           ) : editions.length === 0 ? (
-            <p className="gt-preview__systems-empty">
+            <p className="od-preview__systems-empty">
               {editionsFailed
                 ? 'Could not check which systems this is on.'
                 : 'Only in this library.'}
             </p>
           ) : (
-            <ul className="gt-preview__system-list">
+            <ul className="od-preview__system-list">
               {editions.map((edition) => {
                 const blocker = editionBlockerText(edition)
                 return (
                   <li
                     key={edition.uuid}
-                    className={`gt-preview__system${
-                      edition.is_current ? ' gt-preview__system--current' : ''
+                    className={`od-preview__system${
+                      edition.is_current ? ' od-preview__system--current' : ''
                     }`}
                   >
-                    <div className="gt-preview__system-head">
-                      <span className="gt-preview__system-name">
+                    <div className="od-preview__system-head">
+                      <span className="od-preview__system-name">
                         {edition.library_platform_label ||
                           edition.library_platform ||
                           'Unknown system'}
                       </span>
                       {edition.library_name ? (
-                        <span className="gt-preview__system-library">
+                        <span className="od-preview__system-library">
                           {edition.library_name}
                         </span>
                       ) : null}
                       {edition.is_current ? (
-                        <span className="gt-preview__system-tag">This copy</span>
+                        <span className="od-preview__system-tag">This copy</span>
                       ) : null}
                       {edition.path_missing ? (
-                        <span className="gt-preview__system-tag gt-preview__system-tag--warn">
+                        <span className="od-preview__system-tag od-preview__system-tag--warn">
                           Files missing
                         </span>
                       ) : null}
                     </div>
 
                     {edition.launchers?.length ? (
-                      <div className="gt-preview__launchers">
+                      <div className="od-preview__launchers">
                         {edition.launchers.map((launcher) => (
                           <a
                             key={`${edition.uuid}:${launcher.core}`}
-                            className={`gt-btn gt-btn--secondary gt-preview__launcher${
+                            className={`od-btn od-btn--secondary od-preview__launcher${
                               launcher.is_default ? ' is-default' : ''
                             }`}
                             href={launcher.play_url}
@@ -430,12 +430,12 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
                         ))}
                       </div>
                     ) : (
-                      <p className="gt-preview__system-note">{blocker}</p>
+                      <p className="od-preview__system-note">{blocker}</p>
                     )}
 
                     {!edition.is_current ? (
                       <Link
-                        className="gt-preview__system-link"
+                        className="od-preview__system-link"
                         to={`/game_details/${edition.uuid}`}
                       >
                         Open this copy

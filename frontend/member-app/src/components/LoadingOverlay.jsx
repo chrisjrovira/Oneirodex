@@ -44,13 +44,13 @@ export function LoadingOverlay({
 
   return (
     <div
-      className={`gt-loading-overlay${blocking ? ' gt-loading-overlay--blocking' : ''}`}
+      className={`od-loading-overlay${blocking ? ' od-loading-overlay--blocking' : ''}`}
       role="status"
       aria-live="polite"
     >
-      <div className="gt-loading-overlay__card">
+      <div className="od-loading-overlay__card">
         <LoadingMotif motifId={motifId} />
-        <span className="gt-loading-overlay__label">{label}</span>
+        <span className="od-loading-overlay__label">{label}</span>
       </div>
     </div>
   )

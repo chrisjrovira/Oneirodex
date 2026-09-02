@@ -1,5 +1,5 @@
 # tests/test_utils_ops_issues.py
-from gametheca.utils.ops_issues import derive_issues
+from oneirodex.utils.ops_issues import derive_issues
 
 
 def test_good_when_healthy():

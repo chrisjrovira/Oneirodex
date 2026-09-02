@@ -1,5 +1,5 @@
 import pytest
-from gametheca.utils.filename import sanitize_filename
+from oneirodex.utils.filename import sanitize_filename
 
 
 class TestSanitizeFilename:

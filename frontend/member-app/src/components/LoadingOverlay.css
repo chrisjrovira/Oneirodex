@@ -3,71 +3,71 @@
    Fixed-position on purpose: inline spinners reflow the page every time the
    server does something, which moves buttons under the pointer mid-click. */
 
-.gt-loading-overlay {
+.od-loading-overlay {
   position: fixed;
-  right: var(--gt-gutter);
+  right: var(--od-gutter);
   /* Was 8.5rem to clear the Friends dock, which the rail replaced (GT-B2).
      Sitting that high with nothing under it read as a floating orphan. */
-  bottom: var(--gt-gutter);
+  bottom: var(--od-gutter);
   z-index: 70;
   pointer-events: none;
 }
 
 /* Long, page-owning work is a full-viewport takeover (same contract as
-   `.gt-page-status--takeover`). A banner at the top of a section read as a
+   `.od-page-status--takeover`). A banner at the top of a section read as a
    toast, not as "this page is busy". Corner overlay above stays for routine
    non-blocking requests. */
-.gt-loading-overlay--blocking {
+.od-loading-overlay--blocking {
   position: fixed;
   inset: 0;
   z-index: 400;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--gt-bg) 82%, transparent);
+  background: color-mix(in srgb, var(--od-bg) 82%, transparent);
   backdrop-filter: blur(12px);
   pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-loading-overlay--blocking {
+  .od-loading-overlay--blocking {
     backdrop-filter: none;
-    background: color-mix(in srgb, var(--gt-bg) 80%, transparent);
+    background: color-mix(in srgb, var(--od-bg) 80%, transparent);
   }
 }
 
-.gt-loading-overlay__card {
+.od-loading-overlay__card {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
   padding: 0.5rem 0.85rem;
-  border-radius: var(--gt-radius-pill);
-  border: 1px solid color-mix(in srgb, var(--gt-accent) 38%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 94%, transparent);
+  border-radius: var(--od-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--od-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 94%, transparent);
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
-  color: var(--gt-text);
-  font-size: var(--gt-font-sm);
+  color: var(--od-text);
+  font-size: var(--od-font-sm);
   font-weight: 600;
 }
 
-.gt-loading-overlay--blocking .gt-loading-overlay__card {
-  border-radius: var(--gt-radius-2xl);
+.od-loading-overlay--blocking .od-loading-overlay__card {
+  border-radius: var(--od-radius-2xl);
   padding: 0.9rem 1.2rem;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
 }
 
-.gt-loading-overlay__label {
+.od-loading-overlay__label {
   white-space: nowrap;
 }
 
 @media (max-width: 640px) {
-  .gt-loading-overlay {
+  .od-loading-overlay {
     right: 0.65rem;
     bottom: 7.5rem;
   }
 
-  .gt-loading-overlay__label {
+  .od-loading-overlay__label {
     max-width: 12rem;
     white-space: normal;
   }

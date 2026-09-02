@@ -11,7 +11,7 @@ import {
 
 function FieldNumber({ id, label, hint, value, onChange, min = 0, max = 1, step = 0.01 }) {
   return (
-    <label className="gt-admin-field" htmlFor={id}>
+    <label className="od-admin-field" htmlFor={id}>
       {label}
       <input
         id={id}
@@ -22,7 +22,7 @@ function FieldNumber({ id, label, hint, value, onChange, min = 0, max = 1, step 
         value={value}
         onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
       />
-      {hint ? <span className="gt-admin-hint">{hint}</span> : null}
+      {hint ? <span className="od-admin-hint">{hint}</span> : null}
     </label>
   )
 }
@@ -91,9 +91,9 @@ export function ScanMatchSettingsPage() {
   const variantKeys = SAFE_VARIANT_KEYS.filter((key) => exposed.includes(key))
 
   return (
-    <div className="gt-admin-page">
+    <div className="od-admin-page">
       <h1>Scan / match policy</h1>
-      <p className="gt-admin-lede">
+      <p className="od-admin-lede">
         Control how library scans propose vs auto-import matches. Many-leaf console libraries stay
         leaf-only — Oneirodex does not offer mega-library or depth-3 family walk options here. A
         high-confidence IGDB hit is still checked against Steam / GOG plus unique-exact MobyGames /
@@ -102,13 +102,13 @@ export function ScanMatchSettingsPage() {
         down until it fits.
       </p>
 
-      {/* The two `gt-admin-banner` blocks below stay as banners: they disclose
+      {/* The two `od-admin-banner` blocks below stay as banners: they disclose
           rollout state (which policy fields Backend exposes), which is page
           content rather than a transient loading/error state. */}
       <PageStatus loading={loading} loadingMessage="Loading scan/match settings…" />
 
       {!loading && degradeReason ? (
-        <div className="gt-admin-banner gt-admin-banner--warn" role="status">
+        <div className="od-admin-banner od-admin-banner--warn" role="status">
           {degradeReason}{' '}
           <a href="/admin/new_server_settings">Open Server Settings</a> for propose-only until
           Backend exposes this API.
@@ -116,18 +116,18 @@ export function ScanMatchSettingsPage() {
       ) : null}
 
       {!loading && !degradeReason && exposed.length > 0 ? (
-        <div className="gt-admin-banner gt-admin-banner--info" role="status">
+        <div className="od-admin-banner od-admin-banner--info" role="status">
           Editing {exposed.length} policy field{exposed.length === 1 ? '' : 's'} from Backend.
           Fields not yet rolled out stay hidden.
         </div>
       ) : null}
 
       {!loading && exposed.length > 0 ? (
-        <form className="gt-admin-panel" onSubmit={save}>
+        <form className="od-admin-panel" onSubmit={save}>
           {showPropose ? (
-            <fieldset className="gt-admin-fieldset">
+            <fieldset className="od-admin-fieldset">
               <legend>Propose-only (libraries)</legend>
-              <label className="gt-admin-field gt-admin-field--check" htmlFor="propose_only_scan">
+              <label className="od-admin-field od-admin-field--check" htmlFor="propose_only_scan">
                 <input
                   id="propose_only_scan"
                   type="checkbox"
@@ -136,7 +136,7 @@ export function ScanMatchSettingsPage() {
                 />
                 <span>
                   Propose-only scan mode
-                  <span className="gt-admin-hint">
+                  <span className="od-admin-hint">
                     When on, the scanner never auto-imports games — not even on a high-confidence
                     IGDB match. It writes proposal sidecars / unmatched rows for admin review. Prefer
                     this for a first pass on a large PC or many-leaf console tree.
@@ -147,7 +147,7 @@ export function ScanMatchSettingsPage() {
           ) : null}
 
           {showDupe || showHigh || showGap ? (
-            <fieldset className="gt-admin-fieldset">
+            <fieldset className="od-admin-fieldset">
               <legend>Match confidence</legend>
               {showDupe ? (
                 <FieldNumber
@@ -180,9 +180,9 @@ export function ScanMatchSettingsPage() {
           ) : null}
 
           {showPeel ? (
-            <fieldset className="gt-admin-fieldset">
+            <fieldset className="od-admin-fieldset">
               <legend>Peel profile</legend>
-              <label className="gt-admin-field" htmlFor="peel_profile">
+              <label className="od-admin-field" htmlFor="peel_profile">
                 Name peel aggressiveness
                 <select
                   id="peel_profile"
@@ -196,7 +196,7 @@ export function ScanMatchSettingsPage() {
                     Aggressive — more Stage A/C peels and variants (still no mega-lib)
                   </option>
                 </select>
-                <span className="gt-admin-hint">
+                <span className="od-admin-hint">
                   Controls how eagerly folder names are cleaned and variant-expanded before IGDB
                   scoring. Does not change library depth or create mega-libraries.
                 </span>
@@ -205,15 +205,15 @@ export function ScanMatchSettingsPage() {
           ) : null}
 
           {variantKeys.length > 0 ? (
-            <fieldset className="gt-admin-fieldset">
+            <fieldset className="od-admin-fieldset">
               <legend>Safe search variants</legend>
-              <p className="gt-admin-hint">
+              <p className="od-admin-hint">
                 Optional Backend toggles for Stage C variants. Hidden when not shipped.
               </p>
               {variantKeys.map((key) => {
                 const meta = SAFE_VARIANT_LABELS[key] || { label: key, hint: '' }
                 return (
-                  <label key={key} className="gt-admin-field gt-admin-field--check" htmlFor={key}>
+                  <label key={key} className="od-admin-field od-admin-field--check" htmlFor={key}>
                     <input
                       id={key}
                       type="checkbox"
@@ -222,7 +222,7 @@ export function ScanMatchSettingsPage() {
                     />
                     <span>
                       {meta.label}
-                      {meta.hint ? <span className="gt-admin-hint">{meta.hint}</span> : null}
+                      {meta.hint ? <span className="od-admin-hint">{meta.hint}</span> : null}
                     </span>
                   </label>
                 )
@@ -230,19 +230,19 @@ export function ScanMatchSettingsPage() {
             </fieldset>
           ) : null}
 
-          <div className="gt-admin-actions-row">
-            <button type="submit" className="gt-btn" disabled={!canSave}>
+          <div className="od-admin-actions-row">
+            <button type="submit" className="od-btn" disabled={!canSave}>
               {busy ? 'Saving…' : 'Save settings'}
             </button>
-            <a className="gt-btn gt-btn--ghost" href="/admin/settings">
+            <a className="od-btn od-btn--ghost" href="/admin/settings">
               Settings hub
             </a>
-            <a className="gt-btn gt-btn--ghost" href="/admin/new_server_settings">
+            <a className="od-btn od-btn--ghost" href="/admin/new_server_settings">
               Server Settings
             </a>
           </div>
           {message ? (
-            <p role="status" className="gt-admin-lede gt-admin-lede--ok">
+            <p role="status" className="od-admin-lede od-admin-lede--ok">
               {message}
             </p>
           ) : null}
@@ -251,18 +251,18 @@ export function ScanMatchSettingsPage() {
       ) : null}
 
       {!loading && !exposed.length ? (
-        <div className="gt-admin-panel">
-          <p className="gt-admin-lede">
+        <div className="od-admin-panel">
+          <p className="od-admin-lede">
             No scan/match policy fields are available from Backend yet. Defaults stay in code
             (`high_threshold` {SCAN_MATCH_DEFAULTS.match_high_threshold}, `ambiguous_gap`{' '}
             {SCAN_MATCH_DEFAULTS.match_ambiguous_gap}). Propose-only remains on{' '}
             <a href="/admin/new_server_settings">Server Settings</a>.
           </p>
-          <div className="gt-admin-actions-row">
-            <a className="gt-btn" href="/admin/new_server_settings">
+          <div className="od-admin-actions-row">
+            <a className="od-btn" href="/admin/new_server_settings">
               Open Server Settings
             </a>
-            <a className="gt-btn gt-btn--ghost" href="/admin/settings">
+            <a className="od-btn od-btn--ghost" href="/admin/settings">
               Settings hub
             </a>
           </div>

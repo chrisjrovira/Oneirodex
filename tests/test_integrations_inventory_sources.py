@@ -1,7 +1,7 @@
 """Every metadata source the cascade uses must appear in Integrations (GT-B26).
 
 `metadata_cascade` walks eight sources. The Integrations inventory listed four
-of them, so the admin page told operators GameTheca scraped IGDB and three
+of them, so the admin page told operators Oneirodex scraped IGDB and three
 databases while it was in fact querying five more — Steam, GOG, Epic, itch.io
 and RAWG — with no way to see or reason about them.
 
@@ -14,13 +14,13 @@ import pytest
 
 
 def _cascade_source_ids() -> set[str]:
-    from gametheca.utils.metadata_cascade import CONSOLE_ORDER, PC_ORDER
+    from oneirodex.utils.metadata_cascade import CONSOLE_ORDER, PC_ORDER
 
     return {spec.id for spec in (*PC_ORDER, *CONSOLE_ORDER)}
 
 
 def _inventory_ids(app) -> set[str]:
-    from gametheca.utils.integrations_inventory import build_integrations_inventory
+    from oneirodex.utils.integrations_inventory import build_integrations_inventory
 
     with app.app_context():
         return {row['id'] for row in build_integrations_inventory()}
@@ -50,7 +50,7 @@ def test_keyless_sources_report_as_usable(app):
     Reporting Steam or RAWG as unconfigured would read as broken on a working
     install, since there is no credential for an operator to supply.
     """
-    from gametheca.utils.integrations_inventory import build_integrations_inventory
+    from oneirodex.utils.integrations_inventory import build_integrations_inventory
 
     with app.app_context():
         rows = {r['id']: r for r in build_integrations_inventory()}
@@ -65,7 +65,7 @@ def test_keyless_sources_report_as_usable(app):
 @pytest.mark.parametrize('source', ['steam', 'gog', 'epic', 'itch', 'rawg'])
 def test_new_sources_are_metadata_category(app, source):
     """They belong with the other scrapers, not in a category of their own."""
-    from gametheca.utils.integrations_inventory import build_integrations_inventory
+    from oneirodex.utils.integrations_inventory import build_integrations_inventory
 
     with app.app_context():
         rows = {r['id']: r for r in build_integrations_inventory()}

@@ -1,6 +1,6 @@
 """Unit tests for custom Discover zone helpers (no database required)."""
 
-from gametheca.utils.discovery_zones import (
+from oneirodex.utils.discovery_zones import (
     FILTER_TYPES,
     MAX_MANUAL_GAMES,
     normalize_manual_uuids,

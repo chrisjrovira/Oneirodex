@@ -5,10 +5,10 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, GlobalSettings, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.browse_filters import apply_item_kind_filter
-from gametheca.utils.item_kind import parse_item_kinds_param
+from oneirodex.models import Game, GlobalSettings, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.browse_filters import apply_item_kind_filter
+from oneirodex.utils.item_kind import parse_item_kinds_param
 
 
 @pytest.fixture

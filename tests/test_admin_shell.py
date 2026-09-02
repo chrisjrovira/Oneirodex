@@ -5,29 +5,29 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATES = ROOT / 'gametheca' / 'templates'
+TEMPLATES = ROOT / 'oneirodex' / 'templates'
 ADMIN_TEMPLATES = TEMPLATES / 'admin'
 BASE_ADMIN = TEMPLATES / 'base_admin.html'
 ADMIN_APP_SRC = ROOT / 'frontend' / 'admin-app' / 'src'
 #: How the brand mark is rendered, which is no longer a file reference.
 #:
-#: It used to be `gametheca_mark.svg` in an <img src>. That raster bakes the
+#: It used to be `oneirodex_mark.svg` in an <img src>. That raster bakes the
 #: default green and a dark plate into the file, and an external SVG loaded
 #: through <img> cannot read the page's custom properties — so on every preset
 #: but the default the whole shell changed colour and the mark stayed green.
-#: The mark is now painted: a `.gt-brand-mark` element masked with a monochrome
-#: silhouette and filled with var(--gt-accent).
+#: The mark is now painted: a `.od-brand-mark` element masked with a monochrome
+#: silhouette and filled with var(--od-accent).
 #:
 #: Counting the *class* rather than a filename is the same guard one level up.
 #: The comment below already argued that naming a location is what keeps
 #: breaking this test; naming an asset turned out to have the same flaw, and
 #: this is the second half of that lesson.
-BRAND_MARK = 'gt-brand-mark'
+BRAND_MARK = 'od-brand-mark'
 
 #: The silhouette the class masks, and the stylesheet that paints it. A class
 #: reference alone is hollow — it renders a blank box if either is missing.
-BRAND_GLYPH = 'gametheca_glyph.svg'
-BRAND_CSS = 'gt-shell.css'
+BRAND_GLYPH = 'oneirodex_glyph.svg'
+BRAND_CSS = 'od-shell.css'
 
 #: Admin shell chrome — the components making up the persistent nav frame.
 #: Deliberately a *category* rather than a filename: the mark moving between
@@ -73,7 +73,7 @@ def test_the_admin_brand_mark_is_rendered_by_exactly_one_chrome_component():
     a future move of the mark between chrome components stays green on its own.
 
     A third break, and the same lesson one level up: the mark stopped being a
-    raster in an <img> and became a masked `.gt-brand-mark` element, so it could
+    raster in an <img> and became a masked `.od-brand-mark` element, so it could
     follow the selected theme. Counting a *filename* re-pinned an asset the way
     the earlier versions re-pinned a location. The class is what "renders the
     brand" now means, so that is what is counted — with the glyph and the
@@ -109,16 +109,16 @@ def test_the_admin_brand_mark_is_rendered_by_exactly_one_chrome_component():
     # A reference alone is hollow if what it points at is gone. For a masked
     # mark that means two things, and missing either renders a blank box rather
     # than failing loudly in the browser.
-    glyph = ROOT / 'gametheca' / 'static' / 'newstyle' / BRAND_GLYPH
-    assert glyph.is_file(), f'{BRAND_GLYPH} is missing — .gt-brand-mark has nothing to mask'
+    glyph = ROOT / 'oneirodex' / 'static' / 'newstyle' / BRAND_GLYPH
+    assert glyph.is_file(), f'{BRAND_GLYPH} is missing — .od-brand-mark has nothing to mask'
 
-    paint = ROOT / 'gametheca' / 'setup' / 'default_theme' / 'css' / BRAND_CSS
+    paint = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / BRAND_CSS
     css = paint.read_text(encoding='utf-8')
     assert f'.{BRAND_MARK}' in css, f'no .{BRAND_MARK} rule in {BRAND_CSS}'
     assert BRAND_GLYPH in css, f'.{BRAND_MARK} in {BRAND_CSS} does not reference {BRAND_GLYPH}'
     # The point of the rewrite: the fill follows the theme rather than the file.
-    assert '--gt-accent' in css.split(f'.{BRAND_MARK}', 1)[1][:400], (
-        f'.{BRAND_MARK} does not paint with var(--gt-accent) — the mark would '
+    assert '--od-accent' in css.split(f'.{BRAND_MARK}', 1)[1][:400], (
+        f'.{BRAND_MARK} does not paint with var(--od-accent) — the mark would '
         'stop following the selected theme, which is the whole reason it is masked'
     )
 

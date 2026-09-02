@@ -7,7 +7,7 @@ if (!root) {
 void (async () => {
   if (mode === 'thin') {
     const { mountThinApp } = await import('./thin-app.js')
-    document.title = 'GameTheca Thin'
+    document.title = 'Oneirodex Thin'
     await mountThinApp(root)
     return
   }

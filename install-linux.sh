@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #═══════════════════════════════════════════════
-#   GameTheca Linux Auto-Installer v1.0
+#   Oneirodex Linux Auto-Installer v1.0
 #   Automated installation script for Linux systems
 #   Compatible with bash, zsh, and other POSIX shells
 #═══════════════════════════════════════════════
@@ -63,7 +63,7 @@ log() {
 print_header() {
     clear
     echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
-    echo -e "${WHITE}    GameTheca Linux Auto-Installer v1.0${NC}"
+    echo -e "${WHITE}    Oneirodex Linux Auto-Installer v1.0${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
     echo
 }
@@ -257,7 +257,7 @@ parse_arguments() {
 
 # Show help information
 show_help() {
-    echo "GameTheca Linux Auto-Installer"
+    echo "Oneirodex Linux Auto-Installer"
     echo
     echo "USAGE:"
     echo "  ./install-linux.sh [OPTIONS]"
@@ -281,7 +281,7 @@ show_help() {
     echo "  ./install-linux.sh --force --dev --verbose"
     echo
     echo "SCAN LOCATIONS:"
-    echo "  GameTheca scans any path this machine can open, so a NAS share counts"
+    echo "  Oneirodex scans any path this machine can open, so a NAS share counts"
     echo "  once the host has mounted it. Mount it first (fstab / systemd automount),"
     echo "  then pass the mount point to --library-roots. Details:"
     echo "  docs/runbooks/remote-scan-locations.md"
@@ -514,18 +514,18 @@ configure_postgresql_auth() {
         return 0
     }
 
-    # Add password authentication for gametheca database
-    print_verbose "Adding password authentication for gametheca database..."
+    # Add password authentication for oneirodex database
+    print_verbose "Adding password authentication for oneirodex database..."
 
     # Add our rules at the top (before default rules)
     {
-        echo "# Added by GameTheca installer - $(date)"
-        echo "local   gametheca   gamethecauser   md5"
-        echo "local   gametheca   postgres         md5"
-        echo "host    gametheca   gamethecauser   127.0.0.1/32   md5"
-        echo "host    gametheca   postgres         127.0.0.1/32   md5"
-        echo "host    gametheca   gamethecauser   ::1/128        md5"
-        echo "host    gametheca   postgres         ::1/128        md5"
+        echo "# Added by Oneirodex installer - $(date)"
+        echo "local   oneirodex   oneirodexuser   md5"
+        echo "local   oneirodex   postgres         md5"
+        echo "host    oneirodex   oneirodexuser   127.0.0.1/32   md5"
+        echo "host    oneirodex   postgres         127.0.0.1/32   md5"
+        echo "host    oneirodex   oneirodexuser   ::1/128        md5"
+        echo "host    oneirodex   postgres         ::1/128        md5"
         echo ""
     } | sudo tee "$PG_HBA_CONF.new" >/dev/null
 
@@ -556,13 +556,13 @@ test_database_connection() {
         print_info "Connection attempt $attempt/$max_attempts"
 
         # Method 1: TCP/IP with localhost
-        if PGPASSWORD="$DB_PASSWORD" psql -h localhost -U gamethecauser -d gametheca -c "SELECT 1;" >/dev/null 2>&1; then
+        if PGPASSWORD="$DB_PASSWORD" psql -h localhost -U oneirodexuser -d oneirodex -c "SELECT 1;" >/dev/null 2>&1; then
             print_success "Database connection test successful (localhost TCP/IP)"
             return 0
         fi
 
         # Method 2: TCP/IP with 127.0.0.1
-        if PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U gamethecauser -d gametheca -c "SELECT 1;" >/dev/null 2>&1; then
+        if PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U oneirodexuser -d oneirodex -c "SELECT 1;" >/dev/null 2>&1; then
             print_success "Database connection test successful (127.0.0.1 TCP/IP)"
             return 0
         fi
@@ -570,10 +570,10 @@ test_database_connection() {
         # Method 3: Create .pgpass file for authentication
         if [ "$attempt" -eq $max_attempts ]; then
             print_info "Trying .pgpass authentication method..."
-            echo "localhost:5432:gametheca:gamethecauser:$DB_PASSWORD" > ~/.pgpass
+            echo "localhost:5432:oneirodex:oneirodexuser:$DB_PASSWORD" > ~/.pgpass
             chmod 600 ~/.pgpass
 
-            if psql -h localhost -U gamethecauser -d gametheca -c "SELECT 1;" >/dev/null 2>&1; then
+            if psql -h localhost -U oneirodexuser -d oneirodex -c "SELECT 1;" >/dev/null 2>&1; then
                 rm ~/.pgpass 2>/dev/null
                 print_success "Database connection test successful (.pgpass method)"
                 return 0
@@ -665,29 +665,29 @@ ALTER USER postgres WITH ENCRYPTED PASSWORD 'postgres';
 -- Create user
 DO \$\$
 BEGIN
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'gamethecauser') THEN
-        CREATE USER gamethecauser WITH ENCRYPTED PASSWORD '$DB_PASSWORD';
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'oneirodexuser') THEN
+        CREATE USER oneirodexuser WITH ENCRYPTED PASSWORD '$DB_PASSWORD';
     END IF;
 END
 \$\$;
 
 -- Create database
-SELECT 'CREATE DATABASE gametheca OWNER gamethecauser'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'gametheca')\gexec
+SELECT 'CREATE DATABASE oneirodex OWNER oneirodexuser'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'oneirodex')\gexec
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE gametheca TO gamethecauser;
-GRANT CREATE ON SCHEMA public TO gamethecauser;
+GRANT ALL PRIVILEGES ON DATABASE oneirodex TO oneirodexuser;
+GRANT CREATE ON SCHEMA public TO oneirodexuser;
 
--- Also grant postgres user access to gametheca database as fallback
-GRANT ALL PRIVILEGES ON DATABASE gametheca TO postgres;
+-- Also grant postgres user access to oneirodex database as fallback
+GRANT ALL PRIVILEGES ON DATABASE oneirodex TO postgres;
 
 -- Exit without testing connection here (avoids peer auth issues)
 \q
 EOF
 
     if [ $? -eq 0 ]; then
-        print_success "Database 'gametheca' created with user 'gamethecauser'"
+        print_success "Database 'oneirodex' created with user 'oneirodexuser'"
     else
         print_error "Failed to create database or user"
         return 1
@@ -700,7 +700,7 @@ EOF
     if ! test_database_connection; then
         print_warning "Database connection test failed"
         print_info "The database and user were created, but connection testing failed"
-        print_info "This may not prevent GameTheca from working if the application can connect"
+        print_info "This may not prevent Oneirodex from working if the application can connect"
         print_info "You can continue with the installation"
 
         # Ask user if they want to continue
@@ -748,7 +748,7 @@ setup_python_environment() {
 
 # Configure application settings
 configure_application() {
-    print_step "Configuring GameTheca application..."
+    print_step "Configuring Oneirodex application..."
 
     # Copy configuration files
     if [ ! -f "$SCRIPT_DIR/config.py" ] || [ "$FORCE_INSTALL" = true ]; then
@@ -787,7 +787,7 @@ configure_application() {
 
     # Extra scan locations. Anything already mounted on this machine qualifies —
     # a NAS share under /mnt, a second disk, an external drive. Mounting is the
-    # operator's job; this only records where GameTheca should look.
+    # operator's job; this only records where Oneirodex should look.
     if [ -z "$LIBRARY_ROOTS" ]; then
         echo
         print_info "Extra scan locations beyond $GAMES_DIR (optional)."
@@ -817,13 +817,13 @@ configure_application() {
     print_verbose "Creating environment configuration..."
 
     cat > "$SCRIPT_DIR/.env" << EOF
-# GameTheca Configuration - Generated by auto-installer $(date)
+# Oneirodex Configuration - Generated by auto-installer $(date)
 
 # Database connection
-DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gametheca
+DATABASE_URL=postgresql://oneirodexuser:$DB_PASSWORD@localhost:5432/oneirodex
 
 # Test database (only needed if running unit tests)
-TEST_DATABASE_URL=postgresql://gamethecauser:$DB_PASSWORD@localhost:5432/gamethecatest
+TEST_DATABASE_URL=postgresql://oneirodexuser:$DB_PASSWORD@localhost:5432/oneirodextest
 
 # Game files directory
 DATA_FOLDER_GAMES=$GAMES_DIR
@@ -841,7 +841,7 @@ BASE_FOLDER_POSIX=/
 SECRET_KEY=$SECRET_KEY
 
 # Upload directory for cover images and zips
-UPLOAD_FOLDER=$SCRIPT_DIR/gametheca/static/library
+UPLOAD_FOLDER=$SCRIPT_DIR/oneirodex/static/library
 
 # Development mode
 DEV_MODE=${DEV_MODE:-false}
@@ -866,7 +866,7 @@ validate_installation() {
         source "$SCRIPT_DIR/venv/bin/activate"
 
         # Test Flask app creation
-        if python3 -c "from gametheca import create_app; app = create_app(); print('Flask app creation: OK')" >/dev/null 2>&1; then
+        if python3 -c "from oneirodex import create_app; app = create_app(); print('Flask app creation: OK')" >/dev/null 2>&1; then
             print_success "Flask application setup validated"
         else
             print_error "Flask application validation failed"
@@ -883,7 +883,7 @@ validate_installation() {
             print_success "Database connection validated"
         else
             print_warning "Database connection validation failed"
-            print_info "This may not prevent GameTheca from functioning"
+            print_info "This may not prevent Oneirodex from functioning"
         fi
     fi
 
@@ -911,7 +911,7 @@ show_summary() {
         echo -e "${CYAN}📌 Extra Scan Locations:${NC} $LIBRARY_ROOTS"
     fi
     if [ "$SKIP_DB" != true ]; then
-        echo -e "${CYAN}📌 Database:${NC} gametheca (credentials stored in .env)"
+        echo -e "${CYAN}📌 Database:${NC} oneirodex (credentials stored in .env)"
     fi
     echo -e "${CYAN}📌 Start Command:${NC} ./startweb.sh"
     echo -e "${CYAN}📌 Stop:${NC} Press Ctrl+C"
@@ -920,7 +920,7 @@ show_summary() {
     echo
 
     # Ask if user wants to start the application
-    read -p "Start GameTheca now? [Y/n]: " start_now
+    read -p "Start Oneirodex now? [Y/n]: " start_now
     case "${start_now:-Y}" in
         [Yy]|[Yy][Ee][Ss])
             start_it=true
@@ -931,7 +931,7 @@ show_summary() {
     esac
     if [ "$start_it" = true ]; then
         echo
-        print_info "Starting GameTheca..."
+        print_info "Starting Oneirodex..."
         print_info "Open your browser to http://localhost:$CUSTOM_PORT when ready"
         print_info "Press Ctrl+C to stop the application"
         echo
@@ -941,7 +941,7 @@ show_summary() {
         exec ./startweb.sh
     else
         echo
-        print_info "To start GameTheca later, run: ./startweb.sh"
+        print_info "To start Oneirodex later, run: ./startweb.sh"
         print_info "Then open your browser to: http://localhost:$CUSTOM_PORT"
     fi
 }
@@ -949,7 +949,7 @@ show_summary() {
 # Main installation function
 main() {
     # Initialize log file
-    echo "GameTheca Linux Auto-Installer - $(date)" > "$LOG_FILE"
+    echo "Oneirodex Linux Auto-Installer - $(date)" > "$LOG_FILE"
 
     print_header
 
@@ -961,7 +961,7 @@ main() {
     print_info "  • Install system packages (Python, PostgreSQL, build tools)"
     print_info "  • Configure PostgreSQL database"
     print_info "  • Set up Python virtual environment"
-    print_info "  • Configure GameTheca application"
+    print_info "  • Configure Oneirodex application"
     echo
     print_info "Administrative privileges are required for system package installation."
 
@@ -984,12 +984,12 @@ main() {
         exit 1
     fi
 
-    # Check if already in GameTheca directory
+    # Check if already in Oneirodex directory
     if [ ! -f "$SCRIPT_DIR/startweb.sh" ] || [ ! -f "$SCRIPT_DIR/requirements.txt" ]; then
-        print_error "This script must be run from the GameTheca directory"
+        print_error "This script must be run from the Oneirodex directory"
         print_info "Please clone the repository first:"
-        print_info "  git clone https://github.com/chrisjrovira/gametheca.git"
-        print_info "  cd gametheca"
+        print_info "  git clone https://github.com/chrisjrovira/oneirodex.git"
+        print_info "  cd oneirodex"
         print_info "  ./install-linux.sh"
         exit 1
     fi

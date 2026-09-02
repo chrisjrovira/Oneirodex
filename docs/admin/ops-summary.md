@@ -2,9 +2,9 @@
 
 **Audience:** Admins / operators reading Admin → Ops  
 **Endpoint:** `GET /admin/api/ops/summary` (admin session)  
-**UI:** `/admin/ops` and Dashboard poll ~15s (**silent** auto-refresh — no toast spam). Manual **Refresh** shows brief feedback. A first poll that fails uses the shared status block (Retry) rather than empty host panels. Services table scrolls when the list is long. **Grafana-style observability console** (Member UI + Ops wave Pass A–F): status strip + `issues.items` in **two folds** — **Action required** and **Warning / Info** (empty folds hidden). Banner label/tone follows items: any action-fold item → Action required; else soft items only → Warning / Info; else healthy. Dense metric tiles (load / RSS / db_ping / readyz / companions / **library watch** / **library health**), host meters, services/scans/errors tables. Library watch shows **off** + env note when `GT_LIBRARY_WATCH` is unset (default). Library health shows compact score · grade + top factors (honest **n/a** / “not scored yet” when `library.health` absent or thin); the tile border/value tones by `grade` (`good`/`fair`/`poor`, muted **na** when thin/null); when `grade` is **poor**, the factors list gets a light danger-edged cue; when **fair**, a warn-gold left edge (good/na unmarked). Null metrics render as **n/a** (e.g. `load_avg` on Windows). Backend enrichments: `host.load_avg` · `host.process` · `host.db_ping_ms` · `services.readyz` · `services.library_watch` · `library.health` · companions `by_kind` + `last_seen`.
+**UI:** `/admin/ops` and Dashboard poll ~15s (**silent** auto-refresh — no toast spam). On Dashboard, manual refresh is the **reset icon beside Updated** in the status banner (no duplicate footer timestamp). Dashboard widgets are a 12-column board: drag a widget (not its buttons) to move — the tile follows the pointer via transform and commits on release; drag the **bottom-right corner** to resize (~1.85× a cell of travel per step). No grab bar. **Reset layout** sits in the thin top-bar trail as a `od-cbtn` (library-style), beside account. Layout persists in `localStorage` key `od-admin-dashboard-layout-v3` (a key bump also clears sticky bad layouts). Metric tiles fill the row width; panel titles (Host meters, Companions by kind) match metric-label type. A first poll that fails uses the shared status block (Retry) rather than empty host panels. Services table scrolls when the list is long. **Grafana-style observability console** (Member UI + Ops wave Pass A–F): status strip + `issues.items` in **two folds** — **Action required** and **Warning / Info** (empty folds hidden). Banner label/tone follows items: any action-fold item → Action required; else soft items only → Warning / Info; else healthy. Dense metric tiles (load / RSS / db_ping / readyz / companions / **library watch** / **library health**), host meters, services/scans/errors tables. Library watch shows **off** + env note when `GT_LIBRARY_WATCH` is unset (default). Library health shows compact score · grade + top factors (honest **n/a** / “not scored yet” when `library.health` absent or thin); the tile border/value tones by `grade` (`good`/`fair`/`poor`, muted **na** when thin/null); when `grade` is **poor**, the factors list gets a light danger-edged cue; when **fair**, a warn-gold left edge (good/na unmarked). Null metrics render as **n/a** (e.g. `load_avg` on Windows). Backend enrichments: `host.load_avg` · `host.process` · `host.db_ping_ms` · `services.readyz` · `services.library_watch` · `library.health` · companions `by_kind` + `last_seen`.
 
-**Server logs:** classic Admin → Server logs is also reachable at **`/admin/server_logs`** (alias of the status/logs surface).
+**Server logs:** live on **Ops → Full log** (`/admin/ops?open=full-log`). Bookmarks to `/admin/server_logs` / `/admin/system_logs` redirect there.
 
 Top-level keys include `as_of`, `host`, `network`, `issues`, `scans`, `library`, **`services`**, `recent_errors` (plus `*_error` when a section fails).
 
@@ -41,7 +41,7 @@ Disk pressure alone never forces `overall: bad`/`warn` or `category: action`/`wa
 
 ## `scans` key
 
-Built by `gametheca.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glance for Unraid library scans — counters come from atomic `bump_scan_job_progress`.
+Built by `oneirodex.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glance for Unraid library scans — counters come from atomic `bump_scan_job_progress`.
 
 | Field | Meaning |
 |---|---|
@@ -68,7 +68,7 @@ List/poll with filters: `GET /api/scan_jobs_status?status=Running,Queued&library
 
 ## `services` key
 
-Built by `gametheca.utils.ops_summary._services_snapshot`. Brief field map:
+Built by `oneirodex.utils.ops_summary._services_snapshot`. Brief field map:
 
 | Field | Meaning |
 |---|---|
@@ -104,7 +104,7 @@ install toward first-boot state.
 **It never deletes files.** Scanned games, artwork you supplied, firmware on the
 BIOS volume and the theme tree are all left exactly as they are. That is
 structural, not a promise: the reset path in
-`gametheca/utils/system_reset.py` has no filesystem access at all, so a rescan
+`oneirodex/utils/system_reset.py` has no filesystem access at all, so a rescan
 rebuilds the catalog from the media still sitting on disk.
 
 | Scope | Clears | Keeps |

@@ -6,7 +6,7 @@ of the three — or wanted a site of its own — had no say at all.
 
 import pytest
 
-from gametheca.utils.gaming_news import (
+from oneirodex.utils.gaming_news import (
     DEFAULT_FEED_URLS,
     feed_urls,
     source_name,
@@ -70,7 +70,7 @@ class TestFeedApi:
     def test_response_lists_the_configured_sources(self, client, db_session, monkeypatch):
         from uuid import uuid4
 
-        from gametheca.models import User
+        from oneirodex.models import User
 
         monkeypatch.setenv('GT_NEWS_FEEDS', 'https://a.example/f,https://b.example/f')
         suffix = str(uuid4())[:8]

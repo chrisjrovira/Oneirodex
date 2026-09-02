@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fetch / validate WebRetro libretro WASM cores into gametheca/static/vendor/webretro/cores/
+# Fetch / validate WebRetro libretro WASM cores into oneirodex/static/vendor/webretro/cores/
 #
 # Usage:
 #   ./scripts/fetch-webretro-cores.sh --defaults
@@ -13,7 +13,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CORES_DIR="${WEBRETR_CORES_DIR:-$ROOT/gametheca/static/vendor/webretro/cores}"
+CORES_DIR="${WEBRETR_CORES_DIR:-$ROOT/oneirodex/static/vendor/webretro/cores}"
 CDN="https://cdn.jsdelivr.net/gh/BinBashBanana/webretro@6.5/cores"
 
 DEFAULT_CORES=(

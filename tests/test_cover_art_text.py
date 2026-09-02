@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from gametheca.utils.cover_art_studio import _fit_title_font, render_cover_art
+from oneirodex.utils.cover_art_studio import _fit_title_font, render_cover_art
 
 
 def _portrait_bounds(width=512, height=768):

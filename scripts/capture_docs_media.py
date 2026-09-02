@@ -1,7 +1,7 @@
 """
 Local media capture for docs (screenshots + short tour video).
 
-Requires a running GameTheca on BASE_URL (default http://127.0.0.1:5006)
+Requires a running Oneirodex on BASE_URL (default http://127.0.0.1:5006)
 and Playwright Chromium (`pip install playwright && playwright install chromium`).
 
 Blocks long-lived SSE (`/api/activity/stream`) so a single-worker uvicorn

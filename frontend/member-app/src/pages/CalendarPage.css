@@ -1,6 +1,6 @@
 /* Release calendar — List / Month; aurora densify; no card clutter */
 
-.gt-calendar__header {
+.od-calendar__header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -9,114 +9,114 @@
   margin-bottom: 0.85rem;
 }
 
-.gt-calendar__header .gt-more-page__lede {
+.od-calendar__header .od-more-page__lede {
   margin-bottom: 0;
 }
 
-.gt-calendar__controls {
+.od-calendar__controls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 0.65rem 1rem;
 }
 
-.gt-calendar__views {
+.od-calendar__views {
   display: inline-flex;
   flex-wrap: wrap;
-  border: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
-  border-radius: var(--gt-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  border-radius: var(--od-radius-sm);
   overflow: hidden;
 }
 
-.gt-calendar__views button {
+.od-calendar__views button {
   padding: 0.35rem 0.7rem;
   border: none;
   background: transparent;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   cursor: pointer;
 }
 
-.gt-calendar__views button + button {
-  border-left: 1px solid color-mix(in srgb, var(--gt-border) 80%, transparent);
+.od-calendar__views button + button {
+  border-left: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
 }
 
-.gt-calendar__views button.is-active,
-.gt-calendar__views button:hover,
-.gt-calendar__views button:focus-visible {
-  color: var(--gt-accent);
-  background: color-mix(in srgb, var(--gt-accent) 12%, transparent);
+.od-calendar__views button.is-active,
+.od-calendar__views button:hover,
+.od-calendar__views button:focus-visible {
+  color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 12%, transparent);
   outline: none;
 }
 
-.gt-calendar__window {
+.od-calendar__window {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.55rem 0.75rem;
   align-items: flex-end;
 }
 
-.gt-calendar__window label {
+.od-calendar__window label {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-calendar__window select {
+.od-calendar__window select {
   min-width: 6.5rem;
   padding: 0.35rem 0.5rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 90%, transparent);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-border) 85%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 90%, transparent);
+  color: var(--od-text);
   font: inherit;
-  font-size: var(--gt-font-sm);
+  font-size: var(--od-font-sm);
   font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
 }
 
-.gt-calendar__section {
+.od-calendar__section {
   margin: 0;
 }
 
-.gt-calendar__section-head {
+.od-calendar__section-head {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   margin: 0 0 0.55rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 75%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 75%, transparent);
 }
 
-.gt-calendar__section-head h2 {
+.od-calendar__section-head h2 {
   margin: 0;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-calendar__count {
-  font-size: var(--gt-font-xs);
-  color: var(--gt-text-muted);
+.od-calendar__count {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
   opacity: 0.85;
 }
 
-.gt-calendar__empty {
+.od-calendar__empty {
   margin: 0;
-  color: var(--gt-text-muted);
-  font-size: var(--gt-font-md);
+  color: var(--od-text-muted);
+  font-size: var(--od-font-md);
 }
 
-.gt-calendar__list {
+.od-calendar__list {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -125,24 +125,24 @@
   padding: 0;
 }
 
-.gt-calendar__row {
+.od-calendar__row {
   display: grid;
   grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 0.65rem 0.85rem;
   align-items: baseline;
   padding: 0.55rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 65%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 65%, transparent);
   background: transparent;
   border-radius: 0;
 }
 
-.gt-calendar__row time {
-  font-size: var(--gt-font-sm);
-  color: var(--gt-text-muted);
+.od-calendar__row time {
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
   white-space: nowrap;
 }
 
-.gt-calendar__body {
+.od-calendar__body {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -150,67 +150,108 @@
   min-width: 0;
 }
 
-.gt-calendar__title-link {
+.od-calendar__title-link {
   color: inherit;
   text-decoration: none;
 }
 
-.gt-calendar__title-link:hover strong,
-.gt-calendar__title-link:focus-visible strong {
-  color: var(--gt-accent);
+.od-calendar__title-link:hover strong,
+.od-calendar__title-link:focus-visible strong {
+  color: var(--od-accent);
   outline: none;
 }
 
-.gt-calendar__meta {
-  font-size: var(--gt-font-xs);
+.od-calendar__meta {
+  font-size: var(--od-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
+}
+
+/* Fill the main pane like News: Releases head stays put; List / Month scroll
+   inside instead of lengthening the shell into doom-scroll. */
+.od-more-page.od-calendar--fill {
+  max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.od-calendar--fill .od-calendar__header {
+  flex: 0 0 auto;
+}
+
+.od-calendar--fill .od-calendar__section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.od-calendar--fill .od-calendar__section-head {
+  flex: 0 0 auto;
+}
+
+.od-calendar--fill .od-calendar__list,
+.od-calendar--fill .od-calendar__month,
+.od-calendar--fill .od-calendar__section > .od-calendar__empty {
+  flex: 1;
+  min-height: 0;
+}
+
+.od-calendar--fill .od-calendar__list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
 }
 
 /* —— Month grid —— */
 
-.gt-calendar__month {
+.od-calendar__month {
   display: grid;
   gap: 1rem;
 }
 
-.gt-calendar__month-nav {
+.od-calendar__month-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.gt-calendar__month-label {
+.od-calendar__month-label {
   margin: 0;
-  font-size: var(--gt-font-base);
+  font-size: var(--od-font-base);
   font-weight: 650;
   letter-spacing: 0.01em;
-  color: var(--gt-text);
+  color: var(--od-text);
 }
 
-.gt-calendar__nav-btn {
+.od-calendar__nav-btn {
   width: 2rem;
   height: 2rem;
-  border-radius: var(--gt-radius-sm);
-  border: 1px solid color-mix(in srgb, var(--gt-border) 85%, transparent);
-  background: color-mix(in srgb, var(--gt-surface) 88%, transparent);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-sm);
+  border: 1px solid color-mix(in srgb, var(--od-border) 85%, transparent);
+  background: color-mix(in srgb, var(--od-surface) 88%, transparent);
+  color: var(--od-text);
   font: inherit;
-  font-size: var(--gt-font-lg);
+  font-size: var(--od-font-lg);
   line-height: 1;
   cursor: pointer;
 }
 
-.gt-calendar__nav-btn:hover,
-.gt-calendar__nav-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent) 45%, transparent);
-  color: var(--gt-accent);
+.od-calendar__nav-btn:hover,
+.od-calendar__nav-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--od-accent) 45%, transparent);
+  color: var(--od-accent);
   outline: none;
 }
 
-.gt-calendar__grid {
+.od-calendar__grid {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -222,62 +263,102 @@
  * Stacked, selecting a busy day pushed the month up and off the top of the
  * viewport — you clicked a date and lost the calendar you were reading. Beside
  * it, the grid never moves, and the panel's own scroll cap (see
- * `.gt-calendar__day-list`) keeps a launch Friday inside its column instead of
+ * `.od-calendar__day-list`) keeps a launch Friday inside its column instead of
  * setting the page height.
  *
  * Below the breakpoint it stays a single column, which is the right shape for a
  * phone and is what the day panel was always designed for. */
 @media (min-width: 1100px) {
-  .gt-calendar__month {
+  .od-calendar__month {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem);
     grid-template-areas:
       'nav nav'
       'grid panel';
-    align-items: start;
+    align-items: stretch;
     gap: 0.75rem 1.25rem;
   }
 
-  .gt-calendar__month-nav {
+  .od-calendar--fill .od-calendar__month {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .od-calendar__month-nav {
     grid-area: nav;
   }
 
-  .gt-calendar__grid {
+  .od-calendar__grid {
     grid-area: grid;
+    min-height: 0;
   }
 
-  .gt-calendar__day-panel {
+  .od-calendar--fill .od-calendar__grid {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .od-calendar--fill .od-calendar__day-grid {
+    flex: 1;
+    min-height: 0;
+    grid-auto-rows: minmax(4.5rem, 1fr);
+  }
+
+  .od-calendar__day-panel {
     grid-area: panel;
     /* It is a column of its own now, not a block under a rule. */
     padding-top: 0;
     border-top: 0;
   }
 
-  /* With a column to itself the day's list can breathe further than it can
-     when it is sharing the page width with nothing. */
-  .gt-calendar__day-list {
+  /* Panel matches the month grid height; the day's titles scroll inside. */
+  .od-calendar--fill .od-calendar__day-panel {
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .od-calendar--fill .od-calendar__day-panel-title,
+  .od-calendar--fill .od-calendar__day-panel > .od-calendar__empty {
+    flex: 0 0 auto;
+  }
+
+  .od-calendar--fill .od-calendar__day-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+
+  /* Non-fill fallback when the page is not locking the shell. */
+  .od-calendar__day-list {
     max-height: min(58vh, 30rem);
+  }
+
+  .od-calendar--fill .od-calendar__day-list {
+    max-height: none;
   }
 }
 
-.gt-calendar__weekday-row,
-.gt-calendar__day-grid {
+.od-calendar__weekday-row,
+.od-calendar__day-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.2rem;
 }
 
-.gt-calendar__weekday {
+.od-calendar__weekday {
   padding: 0.25rem 0.15rem;
   text-align: center;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
-.gt-calendar__day {
+.od-calendar__day {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -289,31 +370,31 @@
   min-height: 6.4rem;
   padding: 0.35rem 0.2rem 0.4rem;
   border: 1px solid transparent;
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--od-radius-sm);
   background: transparent;
-  color: var(--gt-text);
+  color: var(--od-text);
   font: inherit;
   cursor: pointer;
 }
 
-.gt-calendar__day.is-out {
+.od-calendar__day.is-out {
   opacity: 0.28;
   cursor: default;
 }
 
-.gt-calendar__day.has-releases {
-  background: color-mix(in srgb, var(--gt-accent) 8%, transparent);
-  border-color: color-mix(in srgb, var(--gt-accent) 22%, transparent);
+.od-calendar__day.has-releases {
+  background: color-mix(in srgb, var(--od-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--od-accent) 22%, transparent);
 }
 
-.gt-calendar__day.is-selected {
-  border-color: color-mix(in srgb, var(--gt-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--gt-accent) 16%, transparent);
+.od-calendar__day.is-selected {
+  border-color: color-mix(in srgb, var(--od-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--od-accent) 16%, transparent);
 }
 
-.gt-calendar__day:not(.is-out):hover,
-.gt-calendar__day:not(.is-out):focus-visible {
-  border-color: color-mix(in srgb, var(--gt-accent) 40%, transparent);
+.od-calendar__day:not(.is-out):hover,
+.od-calendar__day:not(.is-out):focus-visible {
+  border-color: color-mix(in srgb, var(--od-accent) 40%, transparent);
   outline: none;
 }
 
@@ -323,21 +404,21 @@
  * three states the cell already has — has-releases, is-selected, hover — rather
  * than fighting them for the same background. Today can be any of those at the
  * same time, and it stays legible in all four combinations. */
-.gt-calendar__day.is-today .gt-calendar__day-num {
+.od-calendar__day.is-today .od-calendar__day-num {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 1.45rem;
   height: 1.45rem;
-  border-radius: var(--gt-radius-circle);
-  box-shadow: inset 0 0 0 2px var(--gt-accent);
-  color: var(--gt-text);
+  border-radius: var(--od-radius-circle);
+  box-shadow: inset 0 0 0 2px var(--od-accent);
+  color: var(--od-text);
   font-weight: 700;
 }
 
 /* How many releases land on the day, without opening it. */
-.gt-calendar__day-count {
+.od-calendar__day-count {
   position: absolute;
   top: 0.25rem;
   inset-inline-end: 0.25rem;
@@ -347,48 +428,76 @@
   align-items: center;
   justify-content: center;
   padding: 0 0.2rem;
-  border-radius: var(--gt-radius-pill);
-  background: var(--gt-accent);
-  color: var(--gt-bg);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-pill);
+  background: var(--od-accent);
+  color: var(--od-bg);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.gt-calendar__day-num {
-  font-size: var(--gt-font-sm);
+.od-calendar__day-num {
+  font-size: var(--od-font-sm);
   font-weight: 600;
   line-height: 1;
 }
 
 /* --- Day artwork (W28) ---------------------------------------------------
  *
- * Replaces `.gt-calendar__markers` / `.gt-calendar__dot`: up to three identical
+ * Replaces `.od-calendar__markers` / `.od-calendar__dot`: up to three identical
  * dots told you a day was busy and nothing else, so the month grid had to be
  * clicked cell by cell to be read at all. */
-.gt-calendar__day-art {
+/* Busy days stack every cover in a scrollable column so the cell itself can
+   be scrubbed — auto-rotate hid every title but one and stayed too small. */
+.od-calendar__day-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.od-calendar__day.has-releases {
+  min-height: 7.5rem;
+  overflow: hidden;
+}
+
+.od-calendar--fill .od-calendar__day.has-releases {
+  min-height: 0;
+  height: 100%;
+}
+
+.od-calendar__day-art {
   position: relative;
   display: block;
   width: 100%;
-  max-width: 2.9rem;
+  max-width: 3.4rem;
+  flex: 0 0 auto;
   aspect-ratio: 3 / 4;
-  border-radius: var(--gt-radius-xs);
+  border-radius: var(--od-radius-xs);
   overflow: hidden;
-  background: color-mix(in srgb, var(--gt-accent) 12%, var(--gt-surface-2));
+  background: color-mix(in srgb, var(--od-accent) 12%, var(--od-surface-2));
 }
 
-.gt-calendar__day-cover {
+.od-calendar__day-cover {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   /* Each swap is a new element (keyed on the URL), so this plays on arrival
      rather than needing a transition between two states. */
-  animation: gt-calendar-cover-in var(--gt-motion-slow) var(--gt-motion-ease);
+  animation: od-calendar-cover-in var(--od-motion-slow) var(--od-motion-ease);
 }
 
-@keyframes gt-calendar-cover-in {
+@keyframes od-calendar-cover-in {
   from {
     opacity: 0;
   }
@@ -399,46 +508,46 @@
 
 /* No artwork from IGDB: the initial, rather than an empty box that reads as a
    failed image. */
-.gt-calendar__day-cover--blank {
+.od-calendar__day-cover--blank {
   display: grid;
   place-items: center;
-  font-size: var(--gt-font-md);
+  font-size: var(--od-font-md);
   font-weight: 700;
-  color: var(--gt-accent);
+  color: var(--od-accent);
 }
 
 /* "+2": how many more titles are behind the one currently showing. */
-.gt-calendar__day-more {
+.od-calendar__day-more {
   position: absolute;
   right: 1px;
   bottom: 1px;
   padding: 0 0.2rem;
-  border-radius: var(--gt-radius-xs);
-  background: color-mix(in srgb, var(--gt-bg) 82%, transparent);
-  color: var(--gt-text);
-  font-size: var(--gt-font-xs);
+  border-radius: var(--od-radius-xs);
+  background: color-mix(in srgb, var(--od-bg) 82%, transparent);
+  color: var(--od-text);
+  font-size: var(--od-font-xs);
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gt-calendar__day-cover {
+  .od-calendar__day-cover {
     animation: none;
   }
 }
 
-.gt-calendar__day-panel {
+.od-calendar__day-panel {
   padding-top: 0.35rem;
-  border-top: 1px solid color-mix(in srgb, var(--gt-border) 70%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--od-border) 70%, transparent);
 }
 
-.gt-calendar__day-panel-title {
+.od-calendar__day-panel-title {
   margin: 0 0 0.45rem;
-  font-size: var(--gt-font-xs);
+  font-size: var(--od-font-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--gt-text-muted);
+  color: var(--od-text-muted);
 }
 
 /* A day's titles scroll inside the panel rather than growing it.
@@ -451,7 +560,7 @@
  *
  * `max-height` rather than a fixed one: a day with two releases still takes two
  * rows' worth of space, not a reserved slab of empty panel. */
-.gt-calendar__day-list {
+.od-calendar__day-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -465,32 +574,32 @@
 }
 
 
-.gt-calendar__day-item {
+.od-calendar__day-item {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.35rem 0.65rem;
   padding: 0.45rem 0.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--gt-border) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-border) 55%, transparent);
 }
 
 @media (max-width: 640px) {
-  .gt-calendar__day {
+  .od-calendar__day {
     min-height: 5rem;
     padding: 0.25rem 0.1rem 0.3rem;
   }
 
-  .gt-calendar__day-num {
-    font-size: var(--gt-font-xs);
+  .od-calendar__day-num {
+    font-size: var(--od-font-xs);
   }
 
-  .gt-calendar__day-art {
+  .od-calendar__day-art {
     max-width: 2.1rem;
   }
 }
 
 @media (max-width: 520px) {
-  .gt-calendar__row {
+  .od-calendar__row {
     grid-template-columns: 1fr;
     gap: 0.2rem;
   }

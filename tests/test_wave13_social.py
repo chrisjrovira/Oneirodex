@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from gametheca.models import GlobalSettings, UserFriendship
+from oneirodex.models import GlobalSettings, UserFriendship
 
 
 def test_community_chat_columns_exist():

@@ -11,8 +11,8 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import User
-from gametheca.utils.accounts import is_placeholder_email
+from oneirodex.models import User
+from oneirodex.utils.accounts import is_placeholder_email
 
 
 @pytest.fixture

@@ -12,8 +12,8 @@ if str(ROOT) not in sys.path:
 
 from sqlalchemy import select
 
-from gametheca import create_app, db
-from gametheca.models import Game, Library
+from oneirodex import create_app, db
+from oneirodex.models import Game, Library
 
 # folder under DATA_FOLDER_GAMES → library name keyword
 ENTRIES = [

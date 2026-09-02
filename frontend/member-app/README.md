@@ -1,6 +1,6 @@
 # member-app
 
-React member SPA for **GameTheca** (Discover, Library, Favorites, Downloads).
+React member SPA for **Oneirodex** (Discover, Library, Favorites, Downloads).
 
 ## Build
 
@@ -9,7 +9,7 @@ npm ci
 npm run build
 ```
 
-Output is written to `gametheca/static/dist/member-app/` (see `vite.config.js`).
+Output is written to `oneirodex/static/dist/member-app/` (see `vite.config.js`).
 
 ## Test
 
@@ -19,4 +19,4 @@ npm test
 
 ## Docker
 
-The root `Dockerfile` builds this bundle in the `frontend-build` stage and copies the result into the Python image at `/app/gametheca/static/dist/member-app`.
+The root `Dockerfile` builds this bundle in the `frontend-build` stage and copies the result into the Python image at `/app/oneirodex/static/dist/member-app`.

@@ -5,9 +5,9 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from gametheca.models import Game, GlobalSettings, Library, User
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.browse_filters import apply_name_filter
+from oneirodex.models import Game, GlobalSettings, Library, User
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.browse_filters import apply_name_filter
 
 
 @pytest.fixture

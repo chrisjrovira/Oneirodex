@@ -9,7 +9,7 @@ const PER_PAGE_OPTIONS = [20, 50, 100, 200, 300, 400, 500, 1000]
  * that says where you are. First/Last stay next to Previous/Next rather than at
  * the ends of the group: the pair you reach for repeatedly should not be
  * separated by the pair you use once. The four moves share one ARIA group
- * (`gt-seg`) but are not a boxed segmented control.
+ * (`od-seg`) but are not a boxed segmented control.
  *
  * Per page and the indicator swapped ends. The setting leads because it is the
  * thing you reach for deliberately, and `Page 3 of 12` reads as the closing
@@ -40,11 +40,11 @@ export function PaginationBar({
   ]
 
   return (
-    <nav className="pagination-controls gt-pagination" aria-label="Game Catalog pagination">
+    <nav className="pagination-controls od-pagination" aria-label="Game Catalog pagination">
       {/* Control first, label after — "50 per page" is how the setting reads
           aloud, and the number is the part you look for when scanning the bar.
           Label-then-control put a word where the eye expects the value. */}
-      <label className="gt-pagination__perpage">
+      <label className="od-pagination__perpage">
         <select
           className="dropdown-perpage"
           aria-label={t('Per page')}
@@ -60,15 +60,15 @@ export function PaginationBar({
             <option value={perPage}>{perPage}</option>
           )}
         </select>
-        <span className="gt-pagination__label">{t('Per page')}</span>
+        <span className="od-pagination__label">{t('Per page')}</span>
       </label>
 
-      <div className="gt-seg gt-pagination__moves" role="group" aria-label={t('Pages')}>
+      <div className="od-seg od-pagination__moves" role="group" aria-label={t('Pages')}>
         {moves.map((move) => (
           <button
             key={move.id}
             type="button"
-            className="gt-seg__item btn-pagination"
+            className="od-seg__item btn-pagination"
             aria-label={move.label}
             disabled={!move.enabled}
             onClick={() => onPageChange(move.to)}
@@ -78,7 +78,7 @@ export function PaginationBar({
         ))}
       </div>
 
-      <span className="page-info gt-pagination__page" aria-live="polite">
+      <span className="page-info od-pagination__page" aria-live="polite">
         {t('Page {page} of {pages}', { page, pages })}
       </span>
     </nav>

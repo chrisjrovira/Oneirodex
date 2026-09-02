@@ -1,6 +1,6 @@
 """Unit tests for game server health probes."""
 
-from gametheca.utils.game_servers import parse_connect_string, probe_server_health
+from oneirodex.utils.game_servers import parse_connect_string, probe_server_health
 
 
 def test_parse_connect_string():
@@ -22,7 +22,7 @@ def test_probe_server_health_http(monkeypatch):
             return 200
 
     monkeypatch.setattr(
-        'gametheca.utils.game_servers.urlopen',
+        'oneirodex.utils.game_servers.urlopen',
         lambda *args, **kwargs: FakeResponse(),
     )
     result = probe_server_health(None, 'http://127.0.0.1/health')

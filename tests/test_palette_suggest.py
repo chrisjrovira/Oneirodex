@@ -3,10 +3,10 @@
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from gametheca.models import Game, Library, User, UserGameProgress, user_favorites
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.library_acl import set_user_library_allowlist
-from gametheca.utils.palette_suggest import clamp_suggest_limit, palette_suggest
+from oneirodex.models import Game, Library, User, UserGameProgress, user_favorites
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.library_acl import set_user_library_allowlist
+from oneirodex.utils.palette_suggest import clamp_suggest_limit, palette_suggest
 
 NOW = datetime.now(timezone.utc)
 

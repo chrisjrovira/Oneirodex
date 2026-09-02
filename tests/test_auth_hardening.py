@@ -16,15 +16,15 @@ from uuid import uuid4
 
 import pytest
 
-from gametheca.models import ApiToken, User
-from gametheca.utils import api_tokens
-from gametheca.utils.api_tokens import (
+from oneirodex.models import ApiToken, User
+from oneirodex.utils import api_tokens
+from oneirodex.utils.api_tokens import (
     generate_api_token,
     require_api_scope,
     user_has_scope,
     verify_bearer_token_detailed,
 )
-from gametheca.utils.auth import safe_next_url
+from oneirodex.utils.auth import safe_next_url
 
 
 @pytest.fixture

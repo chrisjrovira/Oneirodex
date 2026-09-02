@@ -12,7 +12,7 @@ const BEST_AVAILABLE_POLICY = 'sgdb_then_igdb_then_generate'
 /** Store/service labels useful as covers/batch `service` filters (library-name match). */
 const SERVICE_SOURCE_IDS = new Set(['steam', 'gog', 'epic', 'itch', 'meta_quest'])
 
-/** Locked image kind taxonomy (BE-DET-10) — keep in sync with gametheca/utils/image_kinds.py. */
+/** Locked image kind taxonomy (BE-DET-10) — keep in sync with oneirodex/utils/image_kinds.py. */
 const IMAGE_KIND_OPTIONS = [
   { id: 'cover', label: 'Covers' },
   { id: 'screenshot', label: 'Screenshots' },
@@ -354,39 +354,39 @@ export function ImagesPage({ embedded = false }) {
   }
 
   return (
-    <div className={embedded ? 'gt-images-embedded' : 'gt-admin-page'}>
+    <div className={embedded ? 'od-images-embedded' : 'od-admin-page'}>
       {!embedded ? (
         <>
           <h1>Art &amp; images</h1>
-          <p className="gt-admin-lede">
+          <p className="od-admin-lede">
             Pick artwork for one title, manage the download queue, and open the classic Image Queue
             when you need the full scan-mgmt table. Admin only.
           </p>
         </>
       ) : (
-        <p className="gt-admin-lede">
+        <p className="od-admin-lede">
           Search provider art for one library title, then manage pending/failed downloads in bulk.
         </p>
       )}
 
-      <div className="gt-admin-actions-row">
-        <a className="gt-btn" href="/scan_management?active_tab=image_queue">
+      <div className="od-admin-actions-row">
+        <a className="od-btn" href="/scan_management?active_tab=image_queue">
           Classic Image Queue
         </a>
         {!embedded ? (
-          <a className="gt-btn" href="/admin/art_studio">
+          <a className="od-btn" href="/admin/art_studio">
             Art studio
           </a>
         ) : null}
-        <a className="gt-btn" href="/admin/integrations#steamgriddb">
+        <a className="od-btn" href="/admin/integrations#steamgriddb">
           SteamGridDB settings
         </a>
       </div>
 
-      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
-        <h2 className="gt-admin-panel-title">Single title</h2>
-        <div className="gt-images-game-search">
-          <label className="gt-images-game-search__field">
+      <section className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <h2 className="od-admin-panel-title">Single title</h2>
+        <div className="od-images-game-search">
+          <label className="od-images-game-search__field">
             Find game in library
             <input
               type="search"
@@ -401,27 +401,27 @@ export function ImagesPage({ embedded = false }) {
               placeholder="Type a title…"
             />
           </label>
-          <button type="button" className="gt-btn" onClick={searchGames}>
+          <button type="button" className="od-btn" onClick={searchGames}>
             Find
           </button>
           {gameUuid ? (
-            <button type="button" className="gt-btn" onClick={() => syncGameParam('', '')}>
+            <button type="button" className="od-btn" onClick={() => syncGameParam('', '')}>
               Clear target
             </button>
           ) : null}
           {gameUuid ? (
-            <a className="gt-btn" href={`/edit_game_images/${encodeURIComponent(gameUuid)}`}>
+            <a className="od-btn" href={`/edit_game_images/${encodeURIComponent(gameUuid)}`}>
               Classic edit images
             </a>
           ) : null}
         </div>
         {gameHits.length ? (
-          <ul className="gt-images-game-hits">
+          <ul className="od-images-game-hits">
             {gameHits.map((g) => (
               <li key={g.uuid}>
                 <button
                   type="button"
-                  className="gt-btn gt-btn--ghost"
+                  className="od-btn od-btn--ghost"
                   onClick={() => {
                     syncGameParam(g.uuid, g.name)
                     setGameHits([])
@@ -445,9 +445,9 @@ export function ImagesPage({ embedded = false }) {
         />
       </section>
 
-      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
-        <h2 className="gt-admin-panel-title">Mass image queue</h2>
-        <p className="gt-admin-lede">
+      <section className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <h2 className="od-admin-panel-title">Mass image queue</h2>
+        <p className="od-admin-lede">
           Filter pending/failed downloads, retry, and batch download. Library / platform / service
           scope auto-pick and mass search for missing covers (SteamGridDB → IGDB → generate). Queue
           list itself is not yet filterable by platform — needs Backend enrichment on{' '}
@@ -466,12 +466,12 @@ export function ImagesPage({ embedded = false }) {
         ) : null}
         <PageStatus error={queueError} />
         {queueMsg ? (
-          <p className="gt-admin-lede" aria-live="polite">
+          <p className="od-admin-lede" aria-live="polite">
             {queueMsg}
           </p>
         ) : null}
 
-        <div className="gt-images-filters">
+        <div className="od-images-filters">
           <label>
             Status
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
@@ -533,7 +533,7 @@ export function ImagesPage({ embedded = false }) {
               ))}
             </select>
           </label>
-          <label className="gt-images-filters__check">
+          <label className="od-images-filters__check">
             <input
               type="checkbox"
               checked={groupToggle}
@@ -543,10 +543,10 @@ export function ImagesPage({ embedded = false }) {
           </label>
         </div>
 
-        <div className="gt-admin-actions-row">
+        <div className="od-admin-actions-row">
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={Boolean(queueBusy)}
             onClick={() => downloadBatch(10)}
           >
@@ -554,7 +554,7 @@ export function ImagesPage({ embedded = false }) {
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={Boolean(queueBusy)}
             onClick={() => downloadBatch(50)}
           >
@@ -562,7 +562,7 @@ export function ImagesPage({ embedded = false }) {
           </button>
           <button
             type="button"
-            className="gt-btn gt-btn--primary"
+            className="od-btn od-btn--primary"
             disabled={Boolean(queueBusy)}
             onClick={retryFailed}
           >
@@ -570,7 +570,7 @@ export function ImagesPage({ embedded = false }) {
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={Boolean(queueBusy)}
             onClick={massSearch}
             title="POST /admin/api/covers/batch/search"
@@ -579,7 +579,7 @@ export function ImagesPage({ embedded = false }) {
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={Boolean(queueBusy)}
             onClick={autoPick}
             title={`POST /admin/api/covers/batch/apply policy=${BEST_AVAILABLE_POLICY}`}
@@ -588,7 +588,7 @@ export function ImagesPage({ embedded = false }) {
           </button>
           <button
             type="button"
-            className="gt-btn"
+            className="od-btn"
             disabled={Boolean(queueBusy) || !gameUuid}
             onClick={generateArtwork}
             title={
@@ -599,7 +599,7 @@ export function ImagesPage({ embedded = false }) {
           >
             {queueBusy === 'generate' ? 'Generating…' : 'Generate artwork'}
           </button>
-          <button type="button" className="gt-btn" disabled={Boolean(queueBusy)} onClick={loadQueue}>
+          <button type="button" className="od-btn" disabled={Boolean(queueBusy)} onClick={loadQueue}>
             Refresh
           </button>
         </div>
@@ -607,34 +607,34 @@ export function ImagesPage({ embedded = false }) {
         {loadingQueue ? (
           <PageStatus loading inline loadingMessage="Loading queue…" />
         ) : images.length === 0 ? (
-          <p className="gt-admin-lede">No images match these filters.</p>
+          <p className="od-admin-lede">No images match these filters.</p>
         ) : groups ? (
-          <div className="gt-images-groups">
+          <div className="od-images-groups">
             {groups.map((group) => {
               const failed = group.items.filter((i) => i.status === 'failed').length
               const pending = group.items.filter((i) => i.status === 'pending').length
               return (
-                <div key={group.uuid || group.name} className="gt-images-group">
-                  <div className="gt-images-group__head">
+                <div key={group.uuid || group.name} className="od-images-group">
+                  <div className="od-images-group__head">
                     <div>
                       <strong>{group.name}</strong>{' '}
-                      <code className="gt-mono">{group.uuid}</code>
+                      <code className="od-mono">{group.uuid}</code>
                       {failed ? (
-                        <span className="gt-badge gt-badge--danger">{failed} failed</span>
+                        <span className="od-badge od-badge--danger">{failed} failed</span>
                       ) : null}
                       {pending ? (
-                        <span className="gt-badge gt-badge--warn">{pending} pending</span>
+                        <span className="od-badge od-badge--warn">{pending} pending</span>
                       ) : null}
                     </div>
                     <button
                       type="button"
-                      className="gt-btn gt-btn--ghost"
+                      className="od-btn od-btn--ghost"
                       onClick={() => syncGameParam(group.uuid, group.name)}
                     >
                       Open picker
                     </button>
                   </div>
-                  <ul className="gt-images-group__list">
+                  <ul className="od-images-group__list">
                     {group.items.map((image) => (
                       <QueueRow
                         key={image.id}
@@ -664,12 +664,12 @@ export function ImagesPage({ embedded = false }) {
                     <img
                       src={image.local_url}
                       alt=""
-                      className="gt-images-row__thumb"
+                      className="od-images-row__thumb"
                       loading="lazy"
                     />
                   ) : (
                     <span
-                      className="gt-images-row__thumb gt-images-row__thumb--empty"
+                      className="od-images-row__thumb od-images-row__thumb--empty"
                       aria-hidden="true"
                     />
                   ),
@@ -697,11 +697,11 @@ export function ImagesPage({ embedded = false }) {
                   const status =
                     image.status || (image.is_downloaded ? 'downloaded' : 'pending')
                   return (
-                    <span className="gt-images-row__actions">
+                    <span className="od-images-row__actions">
                       {status === 'pending' || status === 'failed' || image.file_missing ? (
                         <button
                           type="button"
-                          className="gt-btn gt-btn--ghost"
+                          className="od-btn od-btn--ghost"
                           disabled={Boolean(queueBusy)}
                           onClick={() => downloadOne(image.id)}
                         >
@@ -710,7 +710,7 @@ export function ImagesPage({ embedded = false }) {
                       ) : null}
                       <button
                         type="button"
-                        className="gt-btn gt-btn--ghost"
+                        className="od-btn od-btn--ghost"
                         disabled={Boolean(queueBusy)}
                         onClick={() => removeOne(image.id)}
                       >
@@ -729,27 +729,27 @@ export function ImagesPage({ embedded = false }) {
         )}
       </section>
 
-      <section className="gt-admin-panel" style={{ marginTop: 'var(--gt-space-5)' }}>
-        <h2 className="gt-admin-panel-title">Missing covers (health)</h2>
-        <p className="gt-admin-lede">
+      <section className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <h2 className="od-admin-panel-title">Missing covers (health)</h2>
+        <p className="od-admin-lede">
           From <code>/api/health/library</code> worst list — open picker or generate placeholders in
           Art studio. Full “missing cover” filter on the download queue needs Backend.
         </p>
         <PageStatus error={missingError} />
         {!missingCovers.length && !missingError ? (
-          <p className="gt-admin-lede">No missing-cover titles in the health sample.</p>
+          <p className="od-admin-lede">No missing-cover titles in the health sample.</p>
         ) : (
-          <ul className="gt-images-missing">
+          <ul className="od-images-missing">
             {missingCovers.map((g) => (
               <li key={g.uuid}>
                 <button
                   type="button"
-                  className="gt-btn gt-btn--ghost"
+                  className="od-btn od-btn--ghost"
                   onClick={() => syncGameParam(g.uuid, g.name)}
                 >
                   {g.name}
                 </button>
-                <span className="gt-admin-lede">score {g.score}</span>
+                <span className="od-admin-lede">score {g.score}</span>
               </li>
             ))}
           </ul>
@@ -763,30 +763,30 @@ function QueueRow({ image, busy, onDownload, onDelete, showGame = false }) {
   const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending')
   const failure = queueFailureText(image)
   return (
-    <li className="gt-images-row">
+    <li className="od-images-row">
       {image.local_url ? (
-        <img src={image.local_url} alt="" className="gt-images-row__thumb" loading="lazy" />
+        <img src={image.local_url} alt="" className="od-images-row__thumb" loading="lazy" />
       ) : (
-        <span className="gt-images-row__thumb gt-images-row__thumb--empty" aria-hidden="true" />
+        <span className="od-images-row__thumb od-images-row__thumb--empty" aria-hidden="true" />
       )}
-      <div className="gt-images-row__meta">
+      <div className="od-images-row__meta">
         {showGame ? <strong>{image.game_name}</strong> : null}
         <span>
           {image.image_type} · {status}
           {image.file_missing ? ' · file missing' : ''}
           {failure ? (
-            <span className="gt-images-row__error" title={failure}>
+            <span className="od-images-row__error" title={failure}>
               {' '}
               — {failure}
             </span>
           ) : null}
         </span>
       </div>
-      <div className="gt-images-row__actions">
+      <div className="od-images-row__actions">
         {status === 'pending' || status === 'failed' || image.file_missing ? (
           <button
             type="button"
-            className="gt-btn gt-btn--ghost"
+            className="od-btn od-btn--ghost"
             disabled={Boolean(busy)}
             onClick={() => onDownload(image.id)}
           >
@@ -795,7 +795,7 @@ function QueueRow({ image, busy, onDownload, onDelete, showGame = false }) {
         ) : null}
         <button
           type="button"
-          className="gt-btn gt-btn--ghost"
+          className="od-btn od-btn--ghost"
           disabled={Boolean(busy)}
           onClick={() => onDelete(image.id)}
         >

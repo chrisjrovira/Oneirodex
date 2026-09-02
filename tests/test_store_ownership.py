@@ -7,9 +7,9 @@ import pytest
 from flask_login import login_user
 from sqlalchemy import select
 
-from gametheca.models import Game, GlobalSettings, Library, StoreAccount, User, UserOwnedTitle
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.store_ownership import (
+from oneirodex.models import Game, GlobalSettings, Library, StoreAccount, User, UserOwnedTitle
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.store_ownership import (
     connect_gog_account,
     disconnect_epic_account,
     disconnect_gog_account,
@@ -211,7 +211,7 @@ def test_import_meta_quest_csv_matches_by_name(db_session, lib, user):
 
 
 def test_match_meta_quest_by_game_url(db_session, lib):
-    from gametheca.models import GameURL
+    from oneirodex.models import GameURL
 
     game_uuid = str(uuid4())
     quest_id = f'oculus-{uuid4().hex[:12]}'
@@ -381,9 +381,9 @@ def test_ownership_api_disabled(client, app, db_session, user):
     assert resp.status_code == 403
 
 
-@patch('gametheca.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership._outbound')
 def test_steam_sync_register_only(mock_out, db_session, user):
-    from gametheca.utils.store_ownership import connect_steam_account, sync_steam_owned_games
+    from oneirodex.utils.store_ownership import connect_steam_account, sync_steam_owned_games
 
     _ensure_global_settings(
         db_session,
@@ -414,9 +414,9 @@ def test_steam_sync_register_only(mock_out, db_session, user):
     assert len(rows) == 2
 
 
-@patch('gametheca.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership._outbound')
 def test_gog_live_sync_register_only(mock_out, db_session, user):
-    from gametheca.utils.store_ownership import connect_gog_account, sync_gog_owned_games
+    from oneirodex.utils.store_ownership import connect_gog_account, sync_gog_owned_games
 
     _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     connect_gog_account(user.id, refresh_token='refresh-abc')
@@ -458,9 +458,9 @@ def test_gog_live_sync_register_only(mock_out, db_session, user):
     assert 'access_token' not in account.to_dict()
 
 
-@patch('gametheca.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership._outbound')
 def test_epic_live_sync_register_only(mock_out, db_session, user):
-    from gametheca.utils.store_ownership import connect_epic_account, sync_epic_owned_games
+    from oneirodex.utils.store_ownership import connect_epic_account, sync_epic_owned_games
 
     _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     connect_epic_account(
@@ -505,9 +505,9 @@ def test_epic_live_sync_register_only(mock_out, db_session, user):
     assert {row.external_app_id for row in rows} == {'cat-a', 'cat-b'}
 
 
-@patch('gametheca.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership._outbound')
 def test_gog_401_fails_honestly(mock_out, db_session, user):
-    from gametheca.utils.store_ownership import connect_gog_account, sync_gog_owned_games
+    from oneirodex.utils.store_ownership import connect_gog_account, sync_gog_owned_games
 
     _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     connect_gog_account(user.id, refresh_token='dead-token')
@@ -528,7 +528,7 @@ def test_gog_401_fails_honestly(mock_out, db_session, user):
 
 
 def test_flatten_amazon_nile_user_json():
-    from gametheca.utils.store_ownership import _flatten_amazon_credential
+    from oneirodex.utils.store_ownership import _flatten_amazon_credential
 
     nested = {
         'tokens': {
@@ -549,9 +549,9 @@ def test_flatten_amazon_nile_user_json():
     assert flat['user_id'] == 'amzn1.account.x'
 
 
-@patch('gametheca.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership._outbound')
 def test_amazon_live_sync_register_only(mock_out, db_session, user):
-    from gametheca.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
+    from oneirodex.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
 
     _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     connect_amazon_account(
@@ -603,9 +603,9 @@ def test_amazon_live_sync_register_only(mock_out, db_session, user):
     assert 'access_token' not in account.to_dict()
 
 
-@patch('gametheca.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership._outbound')
 def test_amazon_401_fails_honestly(mock_out, db_session, user):
-    from gametheca.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
+    from oneirodex.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
 
     _ensure_global_settings(db_session, enable_store_ownership_sync=True)
     connect_amazon_account(

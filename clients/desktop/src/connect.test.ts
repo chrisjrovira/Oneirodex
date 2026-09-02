@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GamethecaApiError } from '@oneirodex/api-client'
-import type { GamethecaClient } from '@oneirodex/api-client'
+import { OneirodexApiError } from '@oneirodex/api-client'
+import type { OneirodexClient } from '@oneirodex/api-client'
 
 import {
   fetchLibraryPreview,
@@ -12,8 +12,8 @@ import {
 } from './connect.js'
 import { createLifecycleRegistry } from './lifecycle.js'
 
-function mockClient(partial: Partial<GamethecaClient>): GamethecaClient {
-  return partial as GamethecaClient
+function mockClient(partial: Partial<OneirodexClient>): OneirodexClient {
+  return partial as OneirodexClient
 }
 
 describe('validateConnection', () => {
@@ -47,7 +47,7 @@ describe('validateConnection', () => {
     const client = mockClient({
       browse: {
         listCollections: vi.fn(async () => {
-          throw new GamethecaApiError(401, { error: 'unauthorized' })
+          throw new OneirodexApiError(401, { error: 'unauthorized' })
         }),
         search: vi.fn(),
       },
@@ -102,7 +102,7 @@ describe('validateConnection', () => {
     const client = mockClient({
       browse: {
         listCollections: vi.fn(async () => {
-          throw new GamethecaApiError(403, { error: 'forbidden' })
+          throw new OneirodexApiError(403, { error: 'forbidden' })
         }),
         search: vi.fn(),
       },

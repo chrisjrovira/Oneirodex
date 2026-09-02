@@ -3,9 +3,9 @@
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from gametheca.models import Game, Genre, Library, User, UserGameProgress, user_favorites
-from gametheca.platform import LibraryPlatform
-from gametheca.utils.discover_hubs import (
+from oneirodex.models import Game, Genre, Library, User, UserGameProgress, user_favorites
+from oneirodex.platform import LibraryPlatform
+from oneirodex.utils.discover_hubs import (
     build_genre_hub,
     catalog_href_for_genre,
     hub_path_for_genre,
