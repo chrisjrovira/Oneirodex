@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Admin shell shows the AGPL source offer again when `source_url` is configured.
 
 ### Changed
+- **Copy pass (member + admin).** One voice rule: playful where nothing is wrong (empty states, first run), plain where something failed (errors, destructive confirms). Catalog empty/error strings rewritten in `i18n.js` **en and es together**; member-facing `api_error` detail rewritten; the scan-lock message is one sentence across **6** sites and no longer says “try again later” (retrying does nothing — waiting for the scan does); image-size refusal names the real **60 megapixel** bound; 11 destructive confirmations front-load the consequence. `Clear` → `Clear filters`; sort labels and `All …` options in sentence case; `Filesize` → `File size`.
 - Catalog edge-column tiles keep covers/badges on hover enlarge (bleed ×1.5 for 1fr stretch + `overflow-clip-margin-inline`). `GENERATOR_VERSION` **28**.
 - Catalog **Grid** is genre shelves at full tile size without clipping headings (no shell hover-pad pullback). **Rows** height follows the tile-size slider (56–144px). `GENERATOR_VERSION` **27**.
 - Libraries panel: view tabs have no underlines; page sits left under the thin bar; column filters sit beside titles (themed typeahead, not white); “N libraries” + Games popover live on the page (not the top bar); Scan/Edit share colour and size; “0 selected” is hidden; optional Group column + action; game counts heat against the platform’s released set. `GENERATOR_VERSION` **26**.

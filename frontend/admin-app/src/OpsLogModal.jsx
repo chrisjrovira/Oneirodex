@@ -43,7 +43,9 @@ export function OpsLogModal({ open, events = null, loading = false, error = null
   if (!open) return null
 
   async function handleClear() {
-    const ok = window.confirm('Clear all system events? This cannot be undone.')
+    const count = Array.isArray(events) ? events.length : null
+    const scope = count === null ? 'all system events' : count === 1 ? '1 system event' : `all ${count} system events`
+    const ok = window.confirm(`Delete ${scope}? This can't be undone.`)
     if (!ok) return
     setClearing(true)
     setClearError(null)

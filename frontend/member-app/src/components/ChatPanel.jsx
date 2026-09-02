@@ -499,7 +499,7 @@ export function ChatPanel({
     const current = channels.find((c) => c.id === activeId)
     if (!current || !canArchiveChannel(current, viewer)) return
     const label = current.name?.replace(/^#/, '') || current.name || 'this room'
-    const ok = window.confirm(`Archive #${label}? The room will be hidden for everyone.`)
+    const ok = window.confirm(`Archive #${label}? It disappears for everyone, not just you.`)
     if (!ok) return
     setRoomActionBusy(true)
     showStatus(null)

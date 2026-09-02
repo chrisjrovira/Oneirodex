@@ -379,7 +379,7 @@ class TestGameEditErrorHandling:
             response = client.post(f'/game_edit/{test_game.uuid}', data=form_data)
         
         assert response.status_code == 200  # Renders form with error
-        assert b'Cannot edit the game while a scan job is running' in response.data
+        assert b'A scan is running' in response.data
     
     def test_database_rollback_on_integrity_error(self, client, admin_user, test_game, form_data, test_library):
         """Test that database rollback occurs on integrity errors."""

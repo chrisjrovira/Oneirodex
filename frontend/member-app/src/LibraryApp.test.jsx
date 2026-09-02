@@ -499,7 +499,9 @@ test('failed first browse uses PageStatus with Retry', async () => {
     />,
   )
 
-  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load games.')
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    "Couldn't load your catalog.",
+  )
   expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
 
   failBrowse = false

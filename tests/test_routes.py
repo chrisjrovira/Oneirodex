@@ -1005,7 +1005,7 @@ class TestMainBlueprint:
         
         data = json.loads(response.data)
         assert data['success'] == False
-        assert 'Cannot delete the game while a scan job is running' in data['message']
+        assert 'A scan is running' in data['message']
 
     @patch('flask_login.current_user')
     @patch('oneirodex.routes.is_safe_path', return_value=(True, None))

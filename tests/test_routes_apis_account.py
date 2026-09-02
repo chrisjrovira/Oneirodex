@@ -96,7 +96,7 @@ class TestPasswordChange:
         })
 
         assert response.status_code == 422
-        assert 'do not match' in response.get_json()['error']
+        assert "don't match" in response.get_json()['error']
 
     def test_short_password_is_refused(self, client, member):
         login(client, member)
@@ -234,7 +234,14 @@ class TestStockAvatars:
             entry['id'] for entry in STOCK_AVATARS
         }
         for entry in body['stock_avatars']:
-            assert entry['url'].endswith(entry['path'])
+            # `path` is the identity the client sends back; `url` is what it
+            # renders, and for shipped avatars that resolves into the *active
+            # theme* so the art recolours with the preset (see avatar_url).
+            # Asserting url.endswith(path) predated theming and had been failing
+            # ever since — the file is not in CI's core list, so nothing caught it.
+            filename = entry['path'].rsplit('/', 1)[-1]
+            assert entry['url'].endswith(filename)
+            assert entry['url'].startswith('/static/')
             assert entry['label']
 
     def test_choosing_one_sets_it(self, client, db_session, member):

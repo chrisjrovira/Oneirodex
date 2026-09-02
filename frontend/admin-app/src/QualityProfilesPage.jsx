@@ -154,7 +154,9 @@ export function QualityProfilesPage() {
   async function deleteProfile() {
     if (!selectedId || profiles.length <= 1 || busy) return
     const selected = profiles.find((p) => p.id === selectedId)
-    if (!window.confirm(`Delete profile “${selected?.name || selectedId}”?`)) return
+    if (!window.confirm(
+        `Delete profile “${selected?.name || selectedId}”? Downloads using it fall back to the default.`,
+      )) return
     setBusy(true)
     setError(null)
     try {

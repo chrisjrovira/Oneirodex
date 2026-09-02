@@ -664,7 +664,7 @@ def restart_scan_job(job_id):
 @admin_required
 def edit_game_images(game_uuid):
     if is_scan_job_running():
-        flash('Image editing is restricted while a scan job is running. Please try again later.', 'warning')
+        flash('A scan is running. Image editing is available again as soon as it finishes.', 'warning')
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none() or abort(404)
     cover_image = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='cover')).scalars().first()
     screenshots = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='screenshot')).scalars().all()
@@ -702,11 +702,11 @@ def upload_image(game_uuid):
     print(f"Uploading image for game {game_uuid}")
     if is_scan_job_running():
         print(f"Attempt to upload image for game UUID: {game_uuid} while scan job is running")
-        flash('Cannot upload images while a scan job is running. Please try again later.', 'error')
-        return api_error('Cannot upload images while a scan job is running. Please try again later.', code='forbidden')
+        flash('A scan is running. Image uploads are available again as soon as it finishes.', 'error')
+        return api_error('A scan is running. Image uploads are available again as soon as it finishes.', code='forbidden')
 
     if 'file' not in request.files:
-        return api_error('No file part', code='bad_request')
+        return api_error('No file was included.', code='bad_request')
 
     file = request.files['file']
     try:
@@ -718,7 +718,7 @@ def upload_image(game_uuid):
         return api_error(image_kinds_error_message(), code='bad_request')
 
     if file.filename == '':
-        return api_error('No selected file', code='bad_request')
+        return api_error('No file was selected.', code='bad_request')
 
     # Validate file extension and content type
     allowed_extensions = {'jpg', 'jpeg', 'png', 'gif'}
@@ -726,7 +726,7 @@ def upload_image(game_uuid):
     file_extension = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
 
     if file_extension not in allowed_extensions:
-        return api_error('Only JPG, PNG and GIF files are allowed', code='bad_request')
+        return api_error('Upload a JPG, PNG, or GIF.', code='bad_request')
 
     # Size first, before anything decodes the file. The previous version read
     # `file.content_length`, which is 0 for an ordinary multipart upload, so the
@@ -751,7 +751,10 @@ def upload_image(game_uuid):
     # A few hundred KB of PNG can declare a 40000x40000 canvas; verify() does not
     # decode it, but the resize below would.
     if (img.width * img.height) > MAX_IMAGE_PIXELS:
-        return api_error('Image dimensions are too large', code='bad_request')
+        return api_error(
+            f'That image is too big. The limit is {MAX_IMAGE_PIXELS // 1_000_000} megapixels.',
+            code='bad_request',
+        )
 
     # Resized output has to be *saved*, which is what was missing: thumbnail()
     # mutates `img` in place and the code then wrote the original bytes back
@@ -814,7 +817,7 @@ def upload_image(game_uuid):
 def delete_image():
     if is_scan_job_running():
         print("Attempt to delete image while scan job is running")
-        return api_error('Cannot delete images while a scan job is running. Please try again later.', code='forbidden')
+        return api_error('A scan is running. Deleting images is available again as soon as it finishes.', code='forbidden')
 
     try:
         data = request.get_json()
@@ -1043,7 +1046,7 @@ def delete_game_route(game_uuid):
     
     if is_scan_job_running():
         print(f"Error: Attempt to delete game UUID: {game_uuid} while scan job is running")
-        return api_error('Cannot delete the game while a scan job is running. Please try again later.', code='forbidden')
+        return api_error('A scan is running. Deleting games is available again as soon as it finishes.', code='forbidden')
     
     try:
         delete_game(game_uuid)
@@ -1053,7 +1056,7 @@ def delete_game_route(game_uuid):
         return api_error('Game not found.', code='not_found')
     except Exception as e:
         print(f"Error deleting game {game_uuid}: {e}")
-        return api_error('Could not remove the game', code='internal')
+        return api_error("Couldn't remove that game. Nothing was changed.", code='internal')
 
 
 @bp.route('/delete_folder', methods=['POST'])
@@ -1126,7 +1129,7 @@ def delete_full_game():
 
     if is_scan_job_running():
         print(f"Error: Attempt to delete full game UUID: {game_uuid} while scan job is running")
-        return api_error('Cannot delete the game while a scan job is running. Please try again later.', code='forbidden')
+        return api_error('A scan is running. Deleting games is available again as soon as it finishes.', code='forbidden')
 
     game_to_delete = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalar_one_or_none()
     print(f"Route: /delete_full_game - Game to delete: {game_to_delete}")

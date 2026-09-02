@@ -548,7 +548,7 @@ export function DupeGlance({ onOpenPath }) {
   async function handleBackfillKindHints() {
     if (
       !window.confirm(
-        'Backfill Suggested kind hints from on-disk scan proposals for rows that still have null hints? Safe to re-run; only updates empty hints.',
+        'Fill in missing kind hints from scan proposals? Only rows with no hint change, and it is safe to re-run.',
       )
     ) {
       return
