@@ -2,14 +2,16 @@
 
 Admin Settings → Site URL is preferred when it is a real non-loopback host.
 When that is still the install default, fall back to the host the client
-actually reached (`request.url_root`) so LAN invite links are usable.
+actually reached — but only when that host is one we trust, because these
+origins end up inside emails carrying registration and reset tokens. See
+`oneirodex.utils.trusted_host` for why the raw `request.url_root` is not safe
+to use here.
 """
 
 from __future__ import annotations
 
-from flask import request
-
 from oneirodex.utils.global_settings import global_settings_row
+from oneirodex.utils.trusted_host import trusted_origin_from_request
 
 _LOCAL_SITE_DEFAULTS = frozenset({
     '',
@@ -21,7 +23,15 @@ _LOCAL_SITE_DEFAULTS = frozenset({
 
 
 def configured_site_url() -> str:
-    settings = global_settings_row()
+    # Reading Site URL touches the DB, and this function sits in the password
+    # reset path — an unreadable settings row (or no app context, as in a unit
+    # test or a worker) must not be what stops a member resetting their
+    # password. Falling through is safe: the caller then uses the *trusted*
+    # request origin, never an attacker-supplied one.
+    try:
+        settings = global_settings_row()
+    except Exception:
+        return ''
     return ((settings.site_url if settings else None) or '').strip().rstrip('/')
 
 
@@ -36,14 +46,9 @@ def public_origin() -> str:
     configured = configured_site_url()
     if configured and not is_local_site_url(configured):
         return configured
-    try:
-        root = (request.url_root or '').rstrip('/')
-        if root and not is_local_site_url(root):
-            return root
-        if root:
-            return root
-    except RuntimeError:
-        pass
+    root = trusted_origin_from_request()
+    if root:
+        return root
     return configured or 'http://127.0.0.1'
 
 

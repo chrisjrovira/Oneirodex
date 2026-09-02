@@ -8,15 +8,30 @@
  *
  * Structure vs progress: only a structure change needs a full rebuild
  * (status, actions, which jobs are listed). Progress patches the bar in place.
+ *
+ * Signatures are JSON, not delimiter-joined. Half these fields are filesystem
+ * paths and operator-typed search names, so a `|` or `;` inside one could make
+ * two different job lists render the same signature — and a collision here is
+ * invisible: the poller just skips a rebuild it needed and the table goes stale.
  */
+
+/** JSON so a value containing the separator cannot forge another row's signature. */
+function signature(rows) {
+    return JSON.stringify(rows);
+}
 
 export function scanJobProgressCounts(job) {
     const success = Number(job && job.folders_success) || 0;
     const failed = Number(job && job.folders_failed) || 0;
     const total = Number(job && job.total_folders) || 0;
     const processed = success + failed;
+    // `!= null` rather than `||`: the server reporting a real 0% must win over
+    // the computed fallback instead of being read as "absent".
+    const reported = job == null ? null : job.progress_percentage;
     const percentage = total > 0
-        ? (Number(job && job.progress_percentage) || Math.round((processed / total) * 1000) / 10)
+        ? (reported != null && Number.isFinite(Number(reported))
+            ? Number(reported)
+            : Math.round((processed / total) * 1000) / 10)
         : 0;
     return { success, failed, total, processed, percentage };
 }
@@ -29,12 +44,12 @@ export function scanJobsStructureSignature(jobs, { busy = false } = {}) {
         job && job.library_uuid || '',
         job && job.scan_folder || '',
         job && job.queue_position != null ? job.queue_position : '',
-    ].join('|'));
-    return `${busy ? 1 : 0};${rows.join(';')}`;
+    ]);
+    return signature([busy ? 1 : 0, rows]);
 }
 
 export function scanJobsProgressSignature(jobs) {
-    return (Array.isArray(jobs) ? jobs : []).map((job) => {
+    return signature((Array.isArray(jobs) ? jobs : []).map((job) => {
         const { processed, total, percentage } = scanJobProgressCounts(job);
         return [
             job && job.id,
@@ -45,12 +60,12 @@ export function scanJobsProgressSignature(jobs) {
             job && job.elapsed_label || '',
             job && job.eta_label || '',
             job && job.stalled ? 1 : 0,
-        ].join('|');
-    }).join(';');
+        ];
+    }));
 }
 
 export function unmatchedFoldersSignature(folders) {
-    return (Array.isArray(folders) ? folders : []).map((folder) => [
+    return signature((Array.isArray(folders) ? folders : []).map((folder) => [
         folder && folder.id,
         folder && folder.status || '',
         folder && folder.folder_path || '',
@@ -58,7 +73,7 @@ export function unmatchedFoldersSignature(folders) {
         folder && folder.bad_match_reason || '',
         folder && folder.suggested_kind || '',
         folder && folder.why_unmatched || '',
-    ].join('|')).join(';');
+    ]));
 }
 
 /** 3s only while a job is running *and* the jobs pane is on screen. */

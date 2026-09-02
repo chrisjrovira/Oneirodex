@@ -242,7 +242,16 @@ def send_email_quiet(to, subject, html_body):
 
 
 def send_password_reset_email(user_email, token):
-    reset_url = url_for('main.reset_password', token=token, _external=True)
+    # Two fixes in one line. The endpoint is `login.reset_password` — there is
+    # no `main.reset_password`, so the old `url_for('main.reset_password', ...)`
+    # raised BuildError and no reset mail was ever sent. And `_external=True`
+    # took the origin from the request's Host header, which an unauthenticated
+    # caller controls; `public_origin()` prefers Site URL and only falls back to
+    # a *trusted* request host. See oneirodex/utils/trusted_host.py.
+    from oneirodex.utils.public_origin import public_origin
+
+    reset_path = url_for('login.reset_password', token=token)
+    reset_url = f"{public_origin()}{reset_path}"
     html = f'''<p>Ahoy there!</p>
 
 <p>Ye be wantin' to reset yer password, aye? No worries, we got ye covered! Jus' click on the link below to set a new course for yer password:</p>

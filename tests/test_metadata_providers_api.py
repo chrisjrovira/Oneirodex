@@ -102,6 +102,45 @@ def test_put_empty_body_is_400(client, admin_user, clean_settings, app):
     assert body['ok'] is False
 
 
+def test_put_only_unknown_keys_is_400(client, admin_user, clean_settings, app):
+    """A typo used to match no provider, change nothing, and still answer 200."""
+    _login(client, admin_user)
+    response = client.put(
+        '/api/admin/integrations/metadata-providers',
+        data=json.dumps({'steamm': False}),
+        content_type='application/json',
+    )
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body['ok'] is False
+    assert body['error_code'] == 'bad_request'
+    assert 'steamm' in body['error']
+    # The bad request must not have touched the stored flags.
+    assert get_metadata_providers_config()['providers']['steam'] is True
+
+
+def test_put_mixed_known_and_unknown_keys_still_applies(client, admin_user, clean_settings, app):
+    """Only an all-unknown body is rejected — a known key still saves."""
+    _login(client, admin_user)
+    response = client.put(
+        '/api/admin/integrations/metadata-providers',
+        data=json.dumps({'gog': False, 'nonsense': True}),
+        content_type='application/json',
+    )
+    assert response.status_code == 200
+    assert response.get_json()['providers']['gog'] is False
+
+
+def test_get_returns_the_shared_envelope(client, admin_user, clean_settings, app):
+    """New routes go through api_ok, not a bare jsonify."""
+    _login(client, admin_user)
+    body = client.get('/api/admin/integrations/metadata-providers').get_json()
+    assert body['ok'] is True
+    assert body['error'] is None
+    assert body['error_code'] is None
+    assert set(body['providers']) == {'steam', 'gog', 'epic'}
+
+
 def test_metadata_providers_requires_admin(client, clean_settings, app, db_session):
     unique = str(uuid4())[:8]
     user = User(

@@ -93,8 +93,8 @@ export function useLibrariesContextbarUnfurl(enabled) {
 
       anchor.appendChild(trigger)
       anchor.appendChild(panelEl)
-      anchor._gtSetOpen = setOpen
-      anchor._gtActiveWhen = activeWhen
+      anchor._odSetOpen = setOpen
+      anchor._odActiveWhen = activeWhen
       return anchor
     }
 
@@ -139,7 +139,7 @@ export function useLibrariesContextbarUnfurl(enabled) {
     }
 
     api.closeAll = () => {
-      unfurls.forEach((node) => node._gtSetOpen?.(false))
+      unfurls.forEach((node) => node._odSetOpen?.(false))
       views.classList.remove('is-unfurled')
       seg.classList.remove('is-unfurled')
     }
@@ -148,7 +148,7 @@ export function useLibrariesContextbarUnfurl(enabled) {
       unfurls.forEach((node) => {
         const trigger = node.querySelector(':scope > .od-seg__item')
         if (!trigger) return
-        const on = Boolean(node._gtActiveWhen?.())
+        const on = Boolean(node._odActiveWhen?.())
         // While a menu is open the trigger stays visually active.
         if (trigger.getAttribute('aria-expanded') === 'true') return
         trigger.classList.toggle('active', on)
@@ -165,7 +165,13 @@ export function useLibrariesContextbarUnfurl(enabled) {
       if (firstKeep) seg.insertBefore(node, firstKeep)
       else seg.appendChild(node)
     })
-    ;[librariesItem, autoItem, manualItem].forEach((el) => el?.remove())
+    // Remember where each original sat. This effect rewrites DOM that React
+    // does not own, so cleanup has to be able to put the Jinja-rendered segment
+    // back exactly as it was.
+    const displaced = [librariesItem, autoItem, manualItem]
+      .filter(Boolean)
+      .map((el) => ({ el, parent: el.parentNode, next: el.nextSibling }))
+    displaced.forEach(({ el }) => el.remove())
 
     seg.dataset.odUnfurlReady = '1'
     api.syncActive()
@@ -189,6 +195,21 @@ export function useLibrariesContextbarUnfurl(enabled) {
       document.removeEventListener('click', onDocClick)
       document.removeEventListener('keydown', onKey)
       document.removeEventListener('shown.bs.tab', onTabShown)
+
+      // Undo the rewrite as well. Without this the injected triggers outlive
+      // the effect that owned them, and because `odUnfurlReady` stays set the
+      // next mount returns early — leaving menus that no longer close on
+      // Escape or click-outside, and an active state that never re-syncs.
+      unfurls.forEach((node) => node.remove())
+      // Reverse order so each restored node's original `nextSibling` is back in
+      // the DOM before the node that precedes it needs to anchor against it.
+      ;[...displaced].reverse().forEach(({ el, parent, next }) => {
+        if (!parent || !parent.isConnected) return
+        parent.insertBefore(el, next && next.parentNode === parent ? next : null)
+      })
+      views.classList.remove('is-unfurled')
+      seg.classList.remove('is-unfurled')
+      delete seg.dataset.odUnfurlReady
     }
   }, [enabled])
 }
