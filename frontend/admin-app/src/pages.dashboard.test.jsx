@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach } from 'vitest'
 import { DashboardPage } from './pages'
 import { DASHBOARD_STORAGE_KEY } from './dashboardLayout'
@@ -127,11 +127,13 @@ test('DashboardPage shows library health tile when library.health present', asyn
   })
   const { container } = render(<DashboardPage />)
   await screen.findByRole('button', { name: 'Refresh dashboard' })
-  const health = [...container.querySelectorAll('.od-ops-metric')].find((node) =>
-    node.querySelector('.od-ops-metric__label')?.textContent === 'Library health',
-  )
-  expect(health).toBeTruthy()
-  expect(health.querySelector('.od-ops-metric__value')).toHaveTextContent('81 · good')
+  await waitFor(() => {
+    const health = [...container.querySelectorAll('.od-ops-metric')].find((node) =>
+      node.querySelector('.od-ops-metric__label')?.textContent === 'Library health',
+    )
+    expect(health).toBeTruthy()
+    expect(health.querySelector('.od-ops-metric__value')).toHaveTextContent('81 · good')
+  })
 })
 
 test('DashboardPage renders Action required and Warning / Info folds', async () => {

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    gametheca_desktop_lib::run()
+    oneirodex_desktop_lib::run()
 }
