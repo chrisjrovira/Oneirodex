@@ -118,7 +118,7 @@ test('group column is present only when a library is grouped', async () => {
 })
 
 test('group column is omitted when nothing is grouped', async () => {
-  getJson.mockResolvedValueOnce(ROWS.map((row) => ({ ...row, group_name: null })))
+  getJson.mockResolvedValue(ROWS.map((row) => ({ ...row, group_name: null })))
   render(<LibrariesPanel />)
   await screen.findByText('_pc')
   expect(screen.queryByRole('columnheader', { name: /Group/i })).toBeNull()

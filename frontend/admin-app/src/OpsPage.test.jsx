@@ -303,7 +303,7 @@ test('OpsPage shows library watch running with roots and pending', async () => {
   render(<OpsPage />)
 
   expect(await screen.findByRole('heading', { name: 'Services' })).toBeInTheDocument()
-  expect(screen.getByText(/3 roots · 2 pending · 3s debounce/)).toBeInTheDocument()
+  expect(await screen.findByText(/3 roots · 2 pending · 3s debounce/)).toBeInTheDocument()
   const strip = screen.getByLabelText('Key metrics')
   expect(strip).toHaveTextContent(/Library watch/)
   expect(strip).toHaveTextContent(/running/)
