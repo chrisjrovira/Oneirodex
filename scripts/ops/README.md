@@ -30,22 +30,33 @@ The rest are read-only diagnostics: `unraid_status_snapshot.py`,
 None of them write git config; the `unraid_git_*` helpers pass
 `safe.directory` per invocation instead.
 
-## ⚠ `unraid_patch_env.py` — known defects, do not run unreviewed
+## `unraid_patch_env.py` — two defects fixed 2026-09-02
 
-Flagged during the 2026-09-02 sweep and **not yet fixed** — the script was moved
-here as-is:
+Both found during the sweep, both now fixed. Recorded because the second one
+governs how *any* script here should touch the live `.env`.
 
-1. **It writes LiveKit's published sample credentials into the live `.env`**:
-   `LIVEKIT_API_KEY=devkey` / `LIVEKIT_API_SECRET=secret`, alongside
-   `ENABLE_LIVEKIT=true` and a LAN `LIVEKIT_URL`. Those are the values from
-   LiveKit's own getting-started docs. Anyone who can reach that port can mint
-   room tokens. Real keys belong in the host `.env`, never in a tracked script.
-2. **It rewrites the live `.env` in place**, non-atomically, with no backup
-   (`ENV_PATH.write_text(...)`). `CLAUDE.md` says the root `.env` is live local
-   config and is never to be overwritten. An interrupted run truncates it.
+**1. It no longer writes LiveKit config.** It used to upsert
+`ENABLE_LIVEKIT=true` with `LIVEKIT_API_KEY=devkey` /
+`LIVEKIT_API_SECRET=secret` and a LAN `ws://` URL. Those are not a leaked
+secret — they are the keys the compose `livekit` service's `--dev` mode has
+built in, and `.env.example` ships `devkey` too. The problem was posture: the
+script pushed a dev configuration onto a live host, overriding
+`.env.unraid.example`, which leaves `LIVEKIT_API_KEY` deliberately **blank**.
+With the server on `--bind 0.0.0.0` and the port published on every interface,
+anyone on the LAN reaching `:7880` could mint room tokens. Turning LiveKit on
+for real means dropping `--dev` and setting real keys in the host `.env` — an
+operator decision, not one a flags-merge script should make.
 
-Fix both before this is run again, or delete it — the OIDC-secret half is the
-only part that still earns its place.
+**2. The `.env` write is atomic.** It was `read_text` then `write_text` in
+place: an interrupt between truncate and flush left a half-written file holding
+`SECRET_KEY`, `OIDC_CLIENT_SECRET` and the database credentials, with no way
+back. `write_atomic()` now copies the current file to `.env.bak` first, writes
+a sibling temp file, `fsync`s it, and `os.replace`s it into position — atomic
+on the same filesystem, Windows included. A failure anywhere leaves the
+original untouched and cleans up the temp. `.env.bak` is gitignored.
+
+**Any future script here that edits the live `.env` must use `write_atomic()`,
+not `write_text()`.**
 
 ## Convention
 
