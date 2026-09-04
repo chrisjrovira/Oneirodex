@@ -507,14 +507,22 @@ def fetch_gamerpower_giveaways() -> list[dict[str, Any]]:
             if store != 'other':
                 break
         eid = str(item.get('id') or _stable_id('gp', title, claim))
+        # GamerPower only ships wide banners, which crop through the middle of
+        # the key art in Discover's 2×3 frame. A Steam giveaway carries its
+        # appid in the claim URL, and Steam's portrait capsule is a
+        # deterministic URL off that — so those tiles can have real cover art
+        # without a lookup. Other stores keep the banner; there is no
+        # equivalent well-known portrait for them.
+        appid = re.search(r'/app/(\d+)', claim)
+        image_url = item.get('image') or item.get('thumbnail')
+        if store == 'steam' and appid:
+            image_url = _steam_portrait_capsule_url(appid.group(1))
         out.append({
             'store': store,
             'external_id': f'gp-{eid}',
             'title': title[:255],
             'description': (item.get('description') or '')[:500] or None,
-            # Prefer the larger `image` when present — thumbnails are often wide
-            # banners that crop poorly into Discover's 2×3 tile frame.
-            'image_url': item.get('image') or item.get('thumbnail'),
+            'image_url': image_url,
             'claim_url': claim,
             'store_url': claim,
             'worth': (str(item.get('worth')).strip() if item.get('worth') else None),

@@ -255,3 +255,37 @@ def test_collect_remote_offers_keeps_offer_on_another_store(monkeypatch):
     by_source = fg.collect_remote_offers()
 
     assert len(by_source['gamerpower']) == 1
+
+
+def test_gamerpower_steam_offer_uses_portrait_capsule(monkeypatch):
+    """GamerPower ships wide banners; a Steam appid yields real 2x3 cover art."""
+    payload = [
+        {
+            'id': 1,
+            'title': 'Portrait Game',
+            'open_giveaway_url': 'https://store.steampowered.com/app/4242/Portrait_Game/',
+            'platforms': 'PC, Steam',
+            'image': 'https://www.gamerpower.com/offers/wide-banner.jpg',
+            'status': 'active',
+        },
+        {
+            'id': 2,
+            'title': 'Banner Game',
+            'open_giveaway_url': 'https://www.indiegala.com/giveaway/banner-game',
+            'platforms': 'PC, DRM-Free',
+            'image': 'https://www.gamerpower.com/offers/other-banner.jpg',
+            'status': 'active',
+        },
+    ]
+    monkeypatch.setattr(
+        fg,
+        'request_with_backoff',
+        lambda *_a, **_k: SimpleNamespace(json=lambda: payload),
+    )
+
+    offers = {o['title']: o for o in fg.fetch_gamerpower_giveaways()}
+
+    assert offers['Portrait Game']['image_url'] == fg._steam_portrait_capsule_url('4242')
+    # No well-known portrait for other stores — the banner is still better than
+    # nothing, so it stays.
+    assert offers['Banner Game']['image_url'] == 'https://www.gamerpower.com/offers/other-banner.jpg'

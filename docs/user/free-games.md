@@ -31,6 +31,8 @@ Oneirodex never silently redeems DRM. Claim on the store first (A), then Sync ow
 
 Xbox / PlayStation freebies may appear when the aggregator lists them; no special launcher deeplink yet.
 
+GamerPower also reposts offers the official Epic and Steam feeds already carry, decorated — Epic's "Alone With You" arrives as "Alone With You (Epic Games) Giveaway". Those reposts are dropped so a title is listed once per store; a genuine second offer on a *different* store still shows. Tile art comes from the store's portrait key where one exists (Epic tall keys, Steam's 600×900 capsule, including for Steam giveaways routed through GamerPower); other stores fall back to the aggregator's wide banner.
+
 ## Operator flags
 
 | Env | Default | Meaning |
