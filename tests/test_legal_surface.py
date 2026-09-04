@@ -98,11 +98,16 @@ class TestSourceOffer:
             monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
             importlib.reload(config_module)
 
-    def test_templates_receive_the_offer(self, app):
+    def test_templates_receive_the_offer(self, app, db_session):
         """Injected for every template, so both surfaces can render it.
 
         render_template_string, not jinja_env.from_string: only the former runs
         the app's context processors, which is where source_url comes from.
+
+        `db_session` is what builds the schema, and one of those context
+        processors reads global_settings — without it this passed only when an
+        earlier test in the run happened to have built the tables first, and
+        failed against a freshly created database.
         """
         from flask import render_template_string
 
