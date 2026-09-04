@@ -52,8 +52,9 @@ export function resolveErrorDetail(error) {
   return parts.length ? parts.join(' · ') : null
 }
 
-const MOTIF_ROTATE_MS = 900
-const ELLIPSIS_MS = 420
+// Faster animation for visibility during brief loads (user sees motion even in 1-2s loads)
+const MOTIF_ROTATE_MS = 400
+const ELLIPSIS_MS = 150
 
 function LoadingStatus({
   inline,
@@ -112,7 +113,6 @@ function LoadingStatus({
       </p>
     </div>
   )
-}
 
 /**
  * Shared loading / error / empty status for SPA pages.
