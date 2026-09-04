@@ -1,9 +1,16 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './ScreenshotLightbox.css'
 
 /**
  * In-app screenshot viewer.
  * Double-click image or Fullscreen button uses the browser Fullscreen API.
+ *
+ * Rendered through a portal to `document.body`. Inline, it inherited whatever
+ * stacking its host page imposed — on details, `.od-details-page > :not(…)`
+ * lifts every child above the backdrop with `position: relative`, which beat
+ * `.od-lightbox`'s `fixed` on specificity and dropped the viewer into the page
+ * flow at the foot of the article instead of over it.
  */
 export function ScreenshotLightbox({
   urls = [],
@@ -61,7 +68,7 @@ export function ScreenshotLightbox({
     }
   }
 
-  return (
+  const node = (
     <div
       className="od-lightbox"
       role="dialog"
@@ -127,4 +134,7 @@ export function ScreenshotLightbox({
       </div>
     </div>
   )
+
+  if (typeof document === 'undefined') return node
+  return createPortal(node, document.body)
 }

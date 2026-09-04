@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { queueClientCommand } from '../api/clientCommands'
 import { showToast } from '../utils/toast'
 import './OpenPathModal.css'
@@ -98,7 +99,7 @@ export function OpenPathModal({
     }
   }
 
-  return (
+  const node = (
     <div
       className="od-open-path"
       role="dialog"
@@ -158,4 +159,7 @@ export function OpenPathModal({
       </div>
     </div>
   )
+
+  if (typeof document === 'undefined') return node
+  return createPortal(node, document.body)
 }

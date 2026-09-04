@@ -316,6 +316,29 @@ test('media stage is the only gallery and its still opens the lightbox', async (
   expect(screen.getByRole('heading', { name: /Screenshot 1/i })).toBeInTheDocument()
 })
 
+/**
+ * The viewer must not render inside the article.
+ *
+ * `.od-details-page > :not(.od-details-page__backdrop)` lifts every child of
+ * the page above the backdrop with `position: relative`, and that beat
+ * `.od-lightbox`'s `position: fixed` on specificity — so the "popup" laid
+ * itself out in the page flow at the foot of the article. Portalling to body
+ * puts it out of reach of any host page's stacking rules.
+ */
+test('the screenshot viewer portals out of the details page', async () => {
+  const user = userEvent.setup()
+  renderDetails()
+
+  expect(await screen.findByTitle('Primary trailer')).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Show screenshot 1' }))
+  await user.click(screen.getByRole('button', { name: 'Open screenshot in viewer' }))
+
+  const lightbox = document.querySelector('.od-lightbox')
+  expect(lightbox).toBeTruthy()
+  expect(document.querySelector('.od-details-page').contains(lightbox)).toBe(false)
+  expect(lightbox.parentElement).toBe(document.body)
+})
+
 test('prefers trailers[].embed_url and shows extras from details payload', async () => {
   global.fetch = vi.fn((url) => {
     if (String(url).includes('/details')) {
