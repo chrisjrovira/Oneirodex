@@ -21,6 +21,7 @@
   border: 1px solid var(--od-border);
   background: var(--od-surface);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
 }
 
 .od-lightbox__toolbar {
@@ -78,16 +79,23 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
   min-height: 0;
   flex: 1;
   background: var(--od-bg);
   border-radius: var(--od-radius-md);
 }
 
+/* `min-width: 0` is load-bearing. A flex item's automatic minimum size is its
+ * intrinsic width, so a 1920px screenshot refused to shrink and pushed itself
+ * past the panel's right edge, under the nav button. Sizing from `max-width`
+ * rather than `width: 100%` also stops a small shot being blown up to fill. */
 .od-lightbox__img {
   display: block;
-  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   max-height: min(78vh, 780px);
+  margin-inline: auto;
   object-fit: contain;
   border-radius: var(--od-radius-md);
   background: var(--od-bg);
