@@ -465,6 +465,22 @@ def scan_folder():
 
 
 
+@bp.route('/admin/scan_management', methods=['GET'])
+@login_required
+@admin_required
+def scan_management_admin_alias():
+    """`/admin/scan_management` -> `/scan_management`, query string intact.
+
+    Every other admin destination lives under `/admin/*`, but the rail links
+    the image queue at `/scan_management?active_tab=image_queue`, so an
+    operator who reasons from the pattern (or edits a URL) lands on a 404. The
+    view itself is unchanged and already carries `@admin_required`, so this is
+    a naming inconsistency rather than an access one — the alias just makes the
+    namespace hold. `request.args` is forwarded so `?active_tab=` survives.
+    """
+    return redirect(url_for('main.scan_management', **request.args.to_dict(flat=True)))
+
+
 @bp.route('/scan_management', methods=['GET', 'POST'])
 @login_required
 @admin_required

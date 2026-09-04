@@ -39,11 +39,36 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
+  /* One request per page, shared with the member SPA.
+   *
+   * This module and the SPA's loadingMotifApi.js each cached correctly on
+   * their own, but they are separate bundles with separate module scopes, so
+   * a member page fetched /api/loading-icon twice — once here as part of the
+   * shell, once again when the SPA mounted. The window is the only scope both
+   * can see, so the settings live there and whichever runs first pays for it.
+   */
+  function sharedCache() {
+    try {
+      return window.__odLoadingIcon || null;
+    } catch (err) {
+      return null;
+    }
+  }
+
   function fetchSettings() {
     if (cache) {
       return Promise.resolve(cache);
     }
+    var shared = sharedCache();
+    if (shared) {
+      cache = shared;
+      return Promise.resolve(cache);
+    }
     if (cachePromise) {
+      return cachePromise;
+    }
+    if (window.__odLoadingIconPending) {
+      cachePromise = window.__odLoadingIconPending;
       return cachePromise;
     }
     cachePromise = fetch(ENDPOINT, {
@@ -58,6 +83,11 @@
       })
       .then(function (data) {
         cache = data || {};
+        try {
+          window.__odLoadingIcon = cache;
+        } catch (err) {
+          /* no window cache available; local cache still applies */
+        }
         return cache;
       })
       .catch(function () {
@@ -71,6 +101,11 @@
         };
         return cache;
       });
+    try {
+      window.__odLoadingIconPending = cachePromise;
+    } catch (err) {
+      /* ignore */
+    }
     return cachePromise;
   }
 
