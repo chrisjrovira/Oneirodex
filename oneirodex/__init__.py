@@ -155,7 +155,7 @@ def create_app():
             'enable_new_chrome': bool(app.config.get('ENABLE_NEW_CHROME', True)),
             # AGPL §13 source offer — every template gets it, so member SPA and
             # admin can both surface it without threading it through each view.
-            'source_url': app.config.get('GT_SOURCE_URL', ''),
+            'source_url': app.config.get('ONEIRODEX_SOURCE_URL', ''),
             'app_version': app_version,
             'product_name': PRODUCT_NAME,
         }
@@ -170,7 +170,7 @@ def create_app():
         exempt_endpoints = {
             'setup.setup', 'setup.setup_submit', 'setup.setup_smtp', 'setup.setup_igdb',
             'static', 'favicon', 'site.favicon',
-            'info.healthz', 'info.readyz',
+            'info.pulse', 'info.awake',
         }
         
         # Skip setup checks for API endpoints (they should handle their own authentication)
@@ -179,7 +179,7 @@ def create_app():
             request.endpoint in exempt_endpoints or
             request.endpoint.startswith('apis.') or
             request.path.startswith('/api/') or
-            request.path in ('/healthz', '/readyz')
+            request.path in ('/pulse', '/awake')
         ):
             return
         

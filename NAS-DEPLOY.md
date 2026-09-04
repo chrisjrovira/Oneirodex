@@ -30,7 +30,7 @@ docker compose up -d --build
 docker compose exec app printenv DATABASE_URL DATABASE_HOST
 ```
 
-Expected: `...@db:5432/...` and `DATABASE_HOST=db`. Confirm readiness with `curl -f http://<unraid-ip>:5006/readyz`.
+Expected: `...@db:5432/...` and `DATABASE_HOST=db`. Confirm readiness with `curl -f http://<unraid-ip>:5006/awake`.
 
 ## Frontend (member SPA)
 

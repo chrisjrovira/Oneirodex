@@ -141,7 +141,7 @@ test('the reset button stays unavailable until the phrase matches exactly', asyn
   expect(resetButton).toBeEnabled()
 })
 
-test('the legacy RESET GAMETHECA phrase still unlocks the button', async () => {
+test('the legacy RESET ONEIRODEX phrase still unlocks the button', async () => {
   mockApi()
   const user = userEvent.setup()
   render(<SystemResetPanel />)
@@ -153,7 +153,7 @@ test('the legacy RESET GAMETHECA phrase still unlocks the button', async () => {
   const confirmField = await screen.findByRole('textbox')
   const resetButton = screen.getByRole('button', { name: /reset now/i })
 
-  await user.type(confirmField, 'RESET GAMETHECA')
+  await user.type(confirmField, 'RESET ONEIRODEX')
   expect(resetButton).toBeEnabled()
 })
 

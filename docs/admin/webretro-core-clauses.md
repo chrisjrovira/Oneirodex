@@ -48,7 +48,7 @@ fact, not a conclusion about your install.
 
 ## Questions for a lawyer (if you might host commercially)
 
-Take the full current licence texts, this product’s AGPL source offer (`GT_SOURCE_URL`), and a
+Take the full current licence texts, this product’s AGPL source offer (`ONEIRODEX_SOURCE_URL`), and a
 plain description of *your* deployment. Typical questions:
 
 1. Is a **household Unraid box** used only by family “personal use” / non-commercial under these

@@ -1230,7 +1230,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gametheca-desktop"
+name = "oneirodex-desktop"
 version = "0.1.0"
 dependencies = [
  "keyring",

@@ -98,7 +98,7 @@ Every agent refuses out-of-scope product work: stop, name the correct agent, and
 
 ## Unraid test bed
 
-Ops sections games RO vs library RW; backend keeps Ops/scan honest; QA smokes `/readyz` plus the Ops glance.
+Ops sections games RO vs library RW; backend keeps Ops/scan honest; QA smokes `/awake` plus the Ops glance.
 
 ## Related
 

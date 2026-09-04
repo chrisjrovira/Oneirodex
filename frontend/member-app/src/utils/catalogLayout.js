@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export const CATALOG_LAYOUT_KEY = 'gt.library.layout'
+export const CATALOG_LAYOUT_KEY = 'od.library.layout'
 
 export const CATALOG_LAYOUTS = [
   { id: 'tile', label: 'Tile' },

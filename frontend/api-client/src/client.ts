@@ -10,7 +10,7 @@ export interface OneirodexClientConfig {
 }
 
 /** @deprecated P3b alias — use OneirodexClientConfig. */
-export type GamethecaClientConfig = OneirodexClientConfig
+export type OneirodexClientConfig = OneirodexClientConfig
 
 export class OneirodexApiError extends Error {
   readonly status: number
@@ -28,7 +28,7 @@ export class OneirodexApiError extends Error {
   }
 }
 
-export { OneirodexApiError as GamethecaApiError }
+export { OneirodexApiError as OneirodexApiError }
 
 /** Format value for Authorization header (Bearer gt_…). */
 export function formatBearerAuthorization(token: string): string {

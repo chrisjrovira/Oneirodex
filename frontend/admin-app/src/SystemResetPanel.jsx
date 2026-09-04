@@ -5,7 +5,7 @@ import { PageStatus } from './PageStatus'
 
 const ENDPOINT = '/admin/api/system/reset'
 const CONFIRM_PHRASE = 'RESET ONEIRODEX'
-const CONFIRM_ALIASES = new Set(['RESET ONEIRODEX', 'RESET GAMETHECA'])
+const CONFIRM_ALIASES = new Set([CONFIRM_PHRASE])
 
 /**
  * What each scope means, in the operator's terms rather than the schema's.

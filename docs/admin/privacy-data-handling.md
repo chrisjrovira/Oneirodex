@@ -17,7 +17,7 @@ Related: [members-and-invites.md](members-and-invites.md) · [settings-modules.m
 |---|---|---|
 | Accounts | Username, Argon2 password hash, role, optional email | Emailless accounts use an unroutable `.invalid` placeholder — [members-and-invites.md](members-and-invites.md) |
 | Sessions | Signed session cookie + CSRF token | Same-origin. API tokens are **hashed** (SHA-256); the raw `gt_…` secret is shown once |
-| Library | Game metadata, paths, artwork you stored | Paths point at disks you mounted (`DATA_FOLDER_GAMES`, `GT_LIBRARY_ROOTS`) |
+| Library | Game metadata, paths, artwork you stored | Paths point at disks you mounted (`DATA_FOLDER_GAMES`, `ONEIRODEX_LIBRARY_ROOTS`) |
 | Playtime | Per-user totals and session heartbeats | `share_activity` (default on) controls whether others in the household see it |
 | Presence | Online / away / in-game | Derived from play sessions and companion heartbeats, not a third-party tracker |
 | Chat | Channel messages, reactions, attachments | Household Spaces only. **No Discord** |
@@ -34,7 +34,7 @@ There is no Oneirodex cloud account, no product analytics SaaS, and no Discord.
 |---|---|---|
 | SMTP | You set a mailer | Invite links, optional social/digest mail — only to addresses you or members provided |
 | Steam / GOG / Epic ownership | Member saves a Steam ID, GOG refresh token, or Epic device auth (or household env) | Store account ids and owned-title lists come back. Tokens stay on this host. Unofficial Galaxy / launcher APIs for GOG and Epic |
-| News feeds | `GT_NEWS_FEEDS` (http/https only) | The **server** fetches those URLs; members can hide individual sources |
+| News feeds | `ONEIRODEX_NEWS_FEEDS` (http/https only) | The **server** fetches those URLs; members can hide individual sources |
 | OIDC | `OIDC_ENABLED` | Username / email / groups from *your* IdP (Authentik, etc.) |
 | LiveKit | Voice profile | Room tokens for household voice; media goes to the LiveKit you deployed |
 | GitHub support | `SUPPORT_GITHUB_*` | Report titles/bodies you chose to file upstream |

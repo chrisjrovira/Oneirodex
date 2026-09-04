@@ -80,7 +80,7 @@ fixtures are the only rows in the table.
 To keep the leftovers — when the rows themselves are what you are investigating:
 
 ```bash
-GT_KEEP_TEST_DATA=1 python -m pytest tests/test_whatever.py
+ONEIRODEX_KEEP_TEST_DATA=1 python -m pytest tests/test_whatever.py
 ```
 
 ## Running

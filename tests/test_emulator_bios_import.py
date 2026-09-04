@@ -28,7 +28,7 @@ def bios_app(tmp_path):
     application.config['DATA_FOLDER_GAMES'] = str(tmp_path)
     application.config['BASE_FOLDER_WINDOWS'] = str(tmp_path)
     application.config['BASE_FOLDER_POSIX'] = str(tmp_path)
-    application.config['GT_LIBRARY_ROOTS'] = ''
+    application.config['ONEIRODEX_LIBRARY_ROOTS'] = ''
     return application
 
 

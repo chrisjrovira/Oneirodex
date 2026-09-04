@@ -16,7 +16,7 @@
   {# UIR-1 two-bar chrome — opt-in until pages adopt it. #}
   data-enable-new-chrome="{{ 'true' if enable_new_chrome else 'false' }}"
   data-show-play-status="{{ 'true' if show_play_status else 'false' }}"
-  {# AGPL §13 source offer. Configurable via GT_SOURCE_URL — a modified
+  {# AGPL §13 source offer. Configurable via ONEIRODEX_SOURCE_URL — a modified
      deployment owes its users *its* source, not upstream's. #}
   data-source-url="{{ source_url or '' }}"
   data-app-version="{{ app_version or '' }}"

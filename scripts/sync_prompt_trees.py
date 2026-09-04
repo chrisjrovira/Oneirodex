@@ -72,7 +72,11 @@ def main() -> int:
         print("prompt trees in sync")
         return 0
     count = sync()
-    print(f"mirrored {count} files .cursor/ → .claude/")
+    # ASCII arrow on purpose: a Windows console defaults to cp1252, and the
+    # U+2192 that used to be here raised UnicodeEncodeError *after* the mirror
+    # had already succeeded — so the script exited non-zero on a clean run and
+    # made `--check` look like drift.
+    print(f"mirrored {count} files .cursor/ -> .claude/")
     return 0
 
 

@@ -29,7 +29,7 @@ const SELECTS = [
 ]
 
 /** localStorage: '1' = LHN expanded (default), '0' = collapsed rail. */
-export const FILTERS_VISIBLE_KEY = 'gt.library.filtersVisible'
+export const FILTERS_VISIBLE_KEY = 'od.library.filtersVisible'
 /** Debounce for type-to-search title filter (ms). */
 export const LIBRARY_SEARCH_DEBOUNCE_MS = 300
 

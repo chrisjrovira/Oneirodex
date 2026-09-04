@@ -5,7 +5,7 @@ from the server; this list fills the gap while a vault is still scanning and
 nobody has playtime yet.
 */
 
-export const RECENT_TITLES_KEY = 'gt.palette.recent'
+export const RECENT_TITLES_KEY = 'od.palette.recent'
 export const RECENT_TITLES_MAX = 8
 
 export function normalizeRecentTitle(row) {

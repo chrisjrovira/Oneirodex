@@ -5,7 +5,7 @@ import { createPlaytimeApi } from './playtime.js'
 import { createTokensApi } from './tokens.js'
 import { createUpdatesApi } from './updates.js'
 
-export { formatBearerAuthorization, OneirodexApiError, GamethecaApiError } from './client.js'
+export { formatBearerAuthorization, OneirodexApiError, OneirodexApiError } from './client.js'
 
 export function createOneirodexClient(config: OneirodexClientConfig) {
   const request = createRequester(config)
@@ -21,8 +21,8 @@ export function createOneirodexClient(config: OneirodexClientConfig) {
 }
 
 /** @deprecated P3b alias — use createOneirodexClient. */
-export const createGamethecaClient = createOneirodexClient
+export const createOneirodexClient = createOneirodexClient
 
 export type OneirodexClient = ReturnType<typeof createOneirodexClient>
 /** @deprecated P3b alias — use OneirodexClient. */
-export type GamethecaClient = OneirodexClient
+export type OneirodexClient = OneirodexClient

@@ -110,7 +110,7 @@ class Library(db.Model):
     scan_depth = db.Column(db.Integer, default=1, nullable=False)
     # Last successful scan root (used by refresh-all / scheduled scans)
     last_scan_folder = db.Column(db.String(512), nullable=True)
-    # Incremental watch intent under GT_LIBRARY_WATCH master switch.
+    # Incremental watch intent under ONEIRODEX_LIBRARY_WATCH master switch.
     # null = follow global (watch when env on); False = opt-out; True = prefer watch.
     watch_enabled = db.Column(db.Boolean, nullable=True, default=None)
     # Optional operator grouping (hidden in the table until any library uses it).

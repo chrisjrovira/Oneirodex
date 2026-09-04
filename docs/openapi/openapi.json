@@ -1470,7 +1470,7 @@
     "/api/library_roots": {
       "get": {
         "summary": "List scan locations the folder browser may start from",
-        "description": "Admin only. The games folder and the OS base folder are always present; extras come from GT_LIBRARY_ROOTS. Each root is probed, so a share that is configured but not mounted reports exists=false rather than browsing as an empty folder.",
+        "description": "Admin only. The games folder and the OS base folder are always present; extras come from ONEIRODEX_LIBRARY_ROOTS. Each root is probed, so a share that is configured but not mounted reports exists=false rather than browsing as an empty folder.",
         "security": [
           {
             "bearerAuth": []

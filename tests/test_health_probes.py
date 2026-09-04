@@ -1,8 +1,8 @@
 """Unauthenticated liveness / readiness probes for Docker and Unraid."""
 
 
-def test_healthz_ok(client):
-    response = client.get('/healthz')
+def test_pulse_ok(client):
+    response = client.get('/pulse')
     assert response.status_code == 200
     data = response.get_json()
     assert data['status'] == 'ok'
@@ -10,8 +10,8 @@ def test_healthz_ok(client):
     assert 'version' in data
 
 
-def test_readyz_ok_when_db_up(client, db_session):
-    response = client.get('/readyz')
+def test_awake_ok_when_db_up(client, db_session):
+    response = client.get('/awake')
     assert response.status_code == 200
     data = response.get_json()
     assert data['status'] == 'ok'
@@ -25,5 +25,5 @@ def test_health_probes_skip_setup_redirect(client, monkeypatch):
         'oneirodex.utils.setup.should_redirect_to_setup',
         lambda: True,
     )
-    assert client.get('/healthz').status_code == 200
-    assert client.get('/readyz').status_code == 200
+    assert client.get('/pulse').status_code == 200
+    assert client.get('/awake').status_code == 200

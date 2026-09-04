@@ -69,7 +69,7 @@ def _host_patches(**overrides):
                 'scans_failures_24h': 0,
                 'downloads_open': 0,
             },
-            'readyz': {
+            'awake': {
                 'status': 'ok',
                 'http_status': 200,
                 'checks': {'database': {'ok': True, 'error': None}},
@@ -152,7 +152,7 @@ def test_build_ops_summary_includes_required_keys():
     assert result['host']['load_avg'] == {'1': 0.5, '5': 0.4, '15': 0.3}
     assert result['host']['process'] == {'pid': 42, 'rss_bytes': 1048576}
     assert result['host']['db_ping_ms'] == 1.25
-    assert result['services']['readyz']['status'] == 'ok'
+    assert result['services']['awake']['status'] == 'ok'
     assert result['issues']['overall'] == 'good'
     assert set(result['issues'].keys()) == {'overall', 'items'}
     assert isinstance(result['issues']['items'], list)
@@ -214,7 +214,7 @@ def test_build_ops_summary_host_enrichment_none_when_unavailable():
         'oneirodex.utils.ops_summary._services_snapshot',
         return_value={
             **values['_services_snapshot'],
-            'readyz': None,
+            'awake': None,
         },
     ):
         from oneirodex.utils.ops_summary import build_ops_summary
@@ -224,10 +224,10 @@ def test_build_ops_summary_host_enrichment_none_when_unavailable():
     assert result['host']['load_avg'] is None
     assert result['host']['process'] is None
     assert result['host']['db_ping_ms'] is None
-    assert result['services']['readyz'] is None
+    assert result['services']['awake'] is None
     # Not 'good'. `load_avg`/`process` really are optional enrichment and are
     # ignored, but a missing db_ping is read as "database unreachable" and a
-    # missing readyz as "readiness unknown" — both feed derive_issues now, and
+    # missing awake as "readiness unknown" — both feed derive_issues now, and
     # calling that healthy would be the summary lying about a down database.
     assert result['issues']['overall'] == 'bad'
 
@@ -408,7 +408,7 @@ def test_db_ping_ms_returns_latency():
     assert ms >= 0
 
 
-def test_readyz_pulse_includes_timing_and_checks():
+def test_awake_pulse_includes_timing_and_checks():
     payload = {
         'status': 'ok',
         'probe': 'readiness',
@@ -421,9 +421,9 @@ def test_readyz_pulse_includes_timing_and_checks():
         'oneirodex.utils.ops_summary.build_readiness',
         return_value=(payload, 200),
     ):
-        from oneirodex.utils.ops_summary import _readyz_pulse
+        from oneirodex.utils.ops_summary import _awake_pulse
 
-        result = _readyz_pulse()
+        result = _awake_pulse()
 
     assert result['status'] == 'ok'
     assert result['http_status'] == 200
@@ -432,14 +432,14 @@ def test_readyz_pulse_includes_timing_and_checks():
     assert result['check_ms'] >= 0
 
 
-def test_readyz_pulse_none_when_unavailable():
+def test_awake_pulse_none_when_unavailable():
     with patch(
         'oneirodex.utils.ops_summary.build_readiness',
         side_effect=RuntimeError('no app'),
     ):
-        from oneirodex.utils.ops_summary import _readyz_pulse
+        from oneirodex.utils.ops_summary import _awake_pulse
 
-        assert _readyz_pulse() is None
+        assert _awake_pulse() is None
 
 
 def test_companion_pulse_last_seen_breakdown():

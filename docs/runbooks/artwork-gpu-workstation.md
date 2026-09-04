@@ -63,7 +63,7 @@ docker compose --env-file .env build app
 docker compose --env-file .env up -d --force-recreate --no-deps app
 ```
 
-Compose Manager must point at **`_projects/Oneirodex`** (not the empty `_projects/Gametheca` stub). Drop the `artwork` profile on the NAS when the GPU lives on this workstation.
+Compose Manager must point at **`_projects/Oneirodex`** (not the empty `_projects/Oneirodex` stub). Drop the `artwork` profile on the NAS when the GPU lives on this workstation.
 
 Allow inbound **TCP 7860** on the Windows firewall (Any profile). If the NAS still cannot reach the URL while `127.0.0.1:7860` works on this PC:
 

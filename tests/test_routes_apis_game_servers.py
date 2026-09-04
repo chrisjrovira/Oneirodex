@@ -146,7 +146,7 @@ class TestGameServersApi:
         server = GameServer(
             display_name='Probe Me',
             connect_string='127.0.0.1:9',
-            health_url='http://127.0.0.1/healthz',
+            health_url='http://127.0.0.1/pulse',
         )
         db_session.add(server)
         db_session.commit()

@@ -46,7 +46,7 @@ def test_installed_cores_js_endpoint(client):
     assert res.status_code == 200
     assert res.mimetype == 'application/javascript'
     body = res.get_data(as_text=True)
-    assert body.startswith('var GT_INSTALLED_CORES = ')
+    assert body.startswith('var OD_INSTALLED_CORES = ')
     assert 'nestopia' in body
     assert 'Cache-Control' in res.headers
     assert res.headers['Cache-Control'] == 'private, max-age=300'

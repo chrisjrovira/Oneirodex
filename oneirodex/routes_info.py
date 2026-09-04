@@ -18,17 +18,27 @@ from oneirodex.utils.health_probes import build_liveness, build_readiness
 info_bp = Blueprint('info', __name__)
 
 
-@info_bp.route('/healthz', methods=['GET', 'HEAD'])
-def healthz():
-    """Liveness — process is up (no DB). For Docker/Unraid probes."""
-    # KEEP: probe contract is `{status: 'ok'}` for kube/compose. `api_ok`
-    # would add envelope keys probes do not read, and `status` is data here.
+@info_bp.route('/pulse', methods=['GET', 'HEAD'])
+def pulse():
+    """Liveness — process is up (no DB). For Docker/Unraid probes.
+
+    Named `/pulse` rather than the Kubernetes-style `/healthz`: the trailing
+    `z` carries no meaning outside that convention, and Oneirodex is deployed
+    via Docker/Unraid rather than kube. Any probe that reads the body still
+    gets the same contract, so only the path changed.
+    """
+    # KEEP: probe body is `{status: 'ok'}`. `api_ok` would add envelope keys
+    # probes do not read, and `status` is data here, not an envelope field.
     return jsonify(build_liveness()), 200
 
 
-@info_bp.route('/readyz', methods=['GET', 'HEAD'])
-def readyz():
-    """Readiness — DB reachable + startup init complete (or TESTING)."""
+@info_bp.route('/awake', methods=['GET', 'HEAD'])
+def awake():
+    """Readiness — DB reachable + startup init complete (or TESTING).
+
+    `/awake` for the same reason as `/pulse` above. Still answers 200 when
+    ready and 503 when not, so a healthcheck only needs its URL updated.
+    """
     payload, status = build_readiness()
     return jsonify(payload), status
 

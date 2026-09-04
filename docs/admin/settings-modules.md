@@ -10,7 +10,7 @@ Admin settings use **grouped rows** at `/admin/settings` (one sheet, section hea
 
 **Server logs:** Admin → Ops → Full log (`/admin/ops?open=full-log`). Legacy `/admin/server_logs` redirects.
 
-**Worker caps (scan/turbo):** New installs default scan threads **1**, turbo threads **4**, turbo batch **100**; runtime hard-caps via `GT_SCAN_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_THREAD_CAP` / `GT_IMAGE_DOWNLOAD_BATCH_CAP` — not Compose `SCAN_*` env vars. See [libraries-and-scans.md](libraries-and-scans.md) · [unraid-deploy.md](../runbooks/unraid-deploy.md#cpu--scan-load-unraid-safe-defaults).
+**Worker caps (scan/turbo):** New installs default scan threads **1**, turbo threads **4**, turbo batch **100**; runtime hard-caps via `ONEIRODEX_SCAN_THREAD_CAP` / `ONEIRODEX_IMAGE_DOWNLOAD_THREAD_CAP` / `ONEIRODEX_IMAGE_DOWNLOAD_BATCH_CAP` — not Compose `SCAN_*` env vars. See [libraries-and-scans.md](libraries-and-scans.md) · [unraid-deploy.md](../runbooks/unraid-deploy.md#cpu--scan-load-unraid-safe-defaults).
 
 ## Scan / match policy (W20-4)
 

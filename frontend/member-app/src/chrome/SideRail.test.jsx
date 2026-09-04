@@ -125,13 +125,13 @@ describe('rail groups fold away', () => {
     await user.click(screen.getByRole('button', { name: /^Library$/i }))
 
     expect(screen.queryByRole('link', { name: 'Wishlist' })).toBeNull()
-    expect(window.localStorage.getItem('gt.rail.collapsedGroups')).toContain('library')
+    expect(window.localStorage.getItem('od.rail.collapsedGroups')).toContain('library')
   })
 
   it('a collapsed rail forces every group open', () => {
     // The headings are visually hidden at icon width, so a folded group would
     // be destinations that vanished with no visible control to bring them back.
-    window.localStorage.setItem('gt.rail.collapsedGroups', JSON.stringify(['library']))
+    window.localStorage.setItem('od.rail.collapsedGroups', JSON.stringify(['library']))
     renderRail({ railState: 'collapsed' })
 
     expect(screen.getByRole('link', { name: 'Wishlist' })).toBeInTheDocument()

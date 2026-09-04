@@ -237,15 +237,15 @@ Two steps, in this order:
 
 1. **Mount it** — `fstab` on Linux, autofs on macOS, a UNC path on Windows, a
    bind mount in Docker. Oneirodex does not speak SMB or NFS; the OS does.
-2. **Declare it** — list the mount in `GT_LIBRARY_ROOTS` so the admin folder
+2. **Declare it** — list the mount in `ONEIRODEX_LIBRARY_ROOTS` so the admin folder
    browser and the path allowlist know about it.
 
 ```bash
 # Native: paths on this machine
-GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
 
 # Docker: paths as the CONTAINER sees them, one bind each in docker-compose.yml
-GT_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
 ```
 
 Each location then shows up as a **Scan location** in Admin → Libraries & scans,
@@ -264,7 +264,7 @@ Per-OS mounting recipes, Docker binds, permissions and troubleshooting:
 | `DATABASE_URL` | Postgres URL (`db` host inside Compose) |
 | `SECRET_KEY` | **Required** — container refuses the placeholder |
 | `DATA_FOLDER_GAMES` | Root of on-disk games — **required** (see upgrade note below) |
-| `GT_LIBRARY_ROOTS` | Extra scan locations beyond that one folder — NAS shares, second disks. Pipe-separated, optional `Label=` prefix. Docker: use the *container* path — [remote-scan-locations.md](docs/runbooks/remote-scan-locations.md) |
+| `ONEIRODEX_LIBRARY_ROOTS` | Extra scan locations beyond that one folder — NAS shares, second disks. Pipe-separated, optional `Label=` prefix. Docker: use the *container* path — [remote-scan-locations.md](docs/runbooks/remote-scan-locations.md) |
 | `UPLOAD_FOLDER` | Covers / themes (Compose: `/app/oneirodex/static/library`) |
 | `LIBRARY_HOST_PATH` | Host path mounted to `UPLOAD_FOLDER` in Docker |
 | `ENABLE_LIVEKIT` / `LIVEKIT_*` | Household voice (on by default; needs secrets + profile) |
@@ -426,7 +426,7 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Affero General Public License for more details.
 ```
 
-**Running a modified copy? Set `GT_SOURCE_URL` or `ONEIRODEX_SOURCE_URL` to your fork.** The app surfaces
+**Running a modified copy? Set `ONEIRODEX_SOURCE_URL` or `ONEIRODEX_SOURCE_URL` to your fork.** The app surfaces
 a "Get the source code" link on member **Help** and in the admin footer — that
 is how §13 is actually discharged rather than merely stated here. It defaults to
 this repository (`https://github.com/chrisjrovira/oneirodex`), which is wrong the moment you modify anything, because §13

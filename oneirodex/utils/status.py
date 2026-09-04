@@ -28,7 +28,7 @@ def get_system_info():
         'Current Time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-# Ops rows for GT_LIBRARY_ROOTS entries are keyed with this prefix so the
+# Ops rows for ONEIRODEX_LIBRARY_ROOTS entries are keyed with this prefix so the
 # read-only-is-fine rule that already covers the games mount covers them too.
 LIBRARY_ROOT_KEY_PREFIX = 'LIBRARY_ROOT: '
 

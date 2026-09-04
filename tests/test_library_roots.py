@@ -1,4 +1,4 @@
-"""Extra scan locations (GT_LIBRARY_ROOTS).
+"""Extra scan locations (ONEIRODEX_LIBRARY_ROOTS).
 
 Covers the parser, the resolved picker list, the path allowlist that every
 path-sensitive route funnels through, and the relative-path join that auto and
@@ -92,7 +92,7 @@ class TestLibraryRoots:
 
     def test_colliding_labels_get_distinct_ids(self):
         roots = library_roots(_app('Games=/mnt/one|Games=/mnt/two'))
-        assert [root['id'] for root in roots if root['source'] == 'GT_LIBRARY_ROOTS'] == [
+        assert [root['id'] for root in roots if root['source'] == 'ONEIRODEX_LIBRARY_ROOTS'] == [
             'games-2', 'games-3',
         ]
 

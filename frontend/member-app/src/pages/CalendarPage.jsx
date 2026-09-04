@@ -11,7 +11,7 @@ const BEHIND_OPTIONS = [0, 7, 14, 30, 90]
 // window has been changed from these, so an untouched page shows no count.
 const DEFAULT_AHEAD = 60
 const DEFAULT_BEHIND = 14
-const VIEW_STORAGE_KEY = 'gt.calendar.view'
+const VIEW_STORAGE_KEY = 'od.calendar.view'
 // Agenda is gone (W28). It was List grouped by week — the same rows, the same
 // order, one extra heading between them — so it was a third tab that answered
 // a question List already answered. Month is the only view that shows the data

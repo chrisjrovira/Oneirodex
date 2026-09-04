@@ -39,7 +39,7 @@ Operator-supplied only. There is no download button.
 | **CLI** | `python scripts/import_bios.py --source /path/to/dumps` (preview) then `--apply` |
 | **Volume mount** | Bind a private host folder at `EMULATOR_BIOS_PATH` |
 
-The folder must sit under a library root (`GT_LIBRARY_ROOTS` / `BASE_FOLDER_*`) or be the path named by `BIOS_IMPORT_SOURCE`.
+The folder must sit under a library root (`ONEIRODEX_LIBRARY_ROOTS` / `BASE_FOLDER_*`) or be the path named by `BIOS_IMPORT_SOURCE`.
 
 `GET /api/emulator-bios` includes `import_source` (the configured default) and `missing_markdown`. Preview/apply are `POST /api/emulator-bios/scan` and `POST /api/emulator-bios/install`.
 

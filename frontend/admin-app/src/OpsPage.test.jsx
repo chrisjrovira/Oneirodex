@@ -127,7 +127,7 @@ function mockOpsSummary(overrides = {}) {
         roots: 0,
         pending_libraries: 0,
         debounce_seconds: 3,
-        note: 'Set GT_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
+        note: 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
       },
       companions: {
         online: 1,
@@ -137,7 +137,7 @@ function mockOpsSummary(overrides = {}) {
         last_seen: { newest: new Date().toISOString(), within_1h: 1, within_24h: 2, stale: 1 },
       },
       queues: { scans_active: 1, scans_pending: 0, downloads_open: 0 },
-      readyz: { status: 'ok', http_status: 200, check_ms: 3.1, checks: { db: 'ok' } },
+      awake: { status: 'ok', http_status: 200, check_ms: 3.1, checks: { db: 'ok' } },
     },
     ...overrides,
   }
@@ -265,12 +265,12 @@ test('OpsPage shows library watch off honestly', async () => {
     expect(screen.getAllByText('Library watch').length).toBeGreaterThanOrEqual(2),
   )
   expect(
-    screen.getByText(/Set GT_LIBRARY_WATCH=1 to enable root-folder incremental watch/),
+    screen.getByText(/Set ONEIRODEX_LIBRARY_WATCH=1 to enable root-folder incremental watch/),
   ).toBeInTheDocument()
   const strip = screen.getByLabelText('Key metrics')
   expect(strip).toHaveTextContent(/Library watch/)
   expect(strip).toHaveTextContent(/off/)
-  expect(strip).toHaveTextContent(/GT_LIBRARY_WATCH off/)
+  expect(strip).toHaveTextContent(/ONEIRODEX_LIBRARY_WATCH off/)
 })
 
 test('OpsPage shows library watch running with roots and pending', async () => {
@@ -353,7 +353,7 @@ test('OpsPage splits action and warning folds; category maps to action', async (
               overall: 'warn',
               items: [
                 {
-                  id: 'readyz_down',
+                  id: 'awake_down',
                   severity: 'warn',
                   category: 'action',
                   message: 'Readyz probe failing',

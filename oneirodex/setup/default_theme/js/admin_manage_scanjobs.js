@@ -520,7 +520,7 @@ function isScanQueuedStatus(status) {
     return s === 'queued' || s === 'pending' || s === 'scheduled';
 }
 
-const SCAN_JOB_FILTER_KEY = 'gt.scanJobs.filters';
+const SCAN_JOB_FILTER_KEY = 'od.scanJobs.filters';
 const SCAN_JOB_STATUS_OPTIONS = [
     'Running',
     'Queued',
@@ -3092,7 +3092,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * Populate the "Scan location" pickers from /api/library_roots.
  *
  * The picker only appears once there is a real choice to make: an install that
- * never set GT_LIBRARY_ROOTS has exactly one location, and a select with one
+ * never set ONEIRODEX_LIBRARY_ROOTS has exactly one location, and a select with one
  * option is noise. A location that is configured but not currently mounted
  * still gets listed, marked unavailable — hiding it would turn "the NAS is
  * down" into "my library vanished".

@@ -1,4 +1,4 @@
-"""Optional library root-folder incremental watch (``GT_LIBRARY_WATCH`` / ``ONEIRODEX_LIBRARY_WATCH``).
+"""Optional library root-folder incremental watch (``ONEIRODEX_LIBRARY_WATCH`` / ``ONEIRODEX_LIBRARY_WATCH``).
 
 Default **off**. When enabled, watches each library ``last_scan_folder`` with
 scan-depth–aware event filtering (game-leaf / one level inside only — not deep
@@ -29,7 +29,7 @@ _ROOT_REFRESH_SEC = 60.0
 
 
 def is_library_watch_enabled() -> bool:
-    """True when ``ONEIRODEX_LIBRARY_WATCH`` / ``GT_LIBRARY_WATCH`` is truthy. Default off."""
+    """True when ``ONEIRODEX_LIBRARY_WATCH`` / ``ONEIRODEX_LIBRARY_WATCH`` is truthy. Default off."""
     raw = getenv_product('LIBRARY_WATCH')
     if raw is None or str(raw).strip() == '':
         return False
@@ -61,7 +61,7 @@ def get_library_watch_status() -> dict:
             'debounce_seconds': library_watch_debounce_seconds(),
             'last_event_at': None,
             'last_enqueue_at': None,
-            'note': 'Set GT_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
+            'note': 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
         }
     if ctrl is None:
         return {
@@ -210,7 +210,7 @@ def has_active_or_queued_scan(library_uuid: str, folder_path: str) -> bool:
 def library_should_watch(lib) -> bool:
     """Whether this library participates under the env master switch.
 
-    ``GT_LIBRARY_WATCH`` must be on for any watching (Unraid FUSE safety).
+    ``ONEIRODEX_LIBRARY_WATCH`` must be on for any watching (Unraid FUSE safety).
     Per-library ``watch_enabled``:
       - ``None`` (default) → follow global (watch when env on)
       - ``True`` → watch when env on
@@ -591,7 +591,7 @@ def start_library_watch(app) -> LibraryWatchController | None:
     global _watch_started, _controller
 
     if not is_library_watch_enabled():
-        print('[LIBRARY WATCH] Disabled (GT_LIBRARY_WATCH unset/off)')
+        print('[LIBRARY WATCH] Disabled (ONEIRODEX_LIBRARY_WATCH unset/off)')
         return None
 
     if _watch_started and _controller is not None:
@@ -602,7 +602,7 @@ def start_library_watch(app) -> LibraryWatchController | None:
         import watchdog  # noqa: F401
     except ImportError:
         print(
-            '[LIBRARY WATCH] GT_LIBRARY_WATCH=1 but watchdog is not installed. '
+            '[LIBRARY WATCH] ONEIRODEX_LIBRARY_WATCH=1 but watchdog is not installed. '
             'Add watchdog to requirements and rebuild the image.'
         )
         return None

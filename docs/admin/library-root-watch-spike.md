@@ -5,7 +5,7 @@
 
 ## Today
 
-When `GT_LIBRARY_WATCH=1`, Oneirodex starts a watchdog Observer over each library’s `last_scan_folder` **except** libraries with `watch_enabled=false` (per-library opt-out). Events are scan-depth–aware (game-leaf + one immediate child only — not deep arcade ROM trees), debounced (2–5s, default 3), and **only enqueue** FIFO `ScanJob`s via `scan_queue` (cooperative with `worker_caps`; watcher never runs scan threads itself).
+When `ONEIRODEX_LIBRARY_WATCH=1`, Oneirodex starts a watchdog Observer over each library’s `last_scan_folder` **except** libraries with `watch_enabled=false` (per-library opt-out). Events are scan-depth–aware (game-leaf + one immediate child only — not deep arcade ROM trees), debounced (2–5s, default 3), and **only enqueue** FIFO `ScanJob`s via `scan_queue` (cooperative with `worker_caps`; watcher never runs scan threads itself).
 
 Unset / `0` → no watcher (scan-driven discovery only: manual / scheduled / refresh-all). Per-library `watch_enabled=true` does **not** bypass the env master switch (Unraid FUSE safety).
 
@@ -13,9 +13,9 @@ Unset / `0` → no watcher (scan-driven discovery only: manual / scheduled / ref
 
 | Var | Default | Meaning |
 |---|---|---|
-| `GT_LIBRARY_WATCH` | off | `1` / `true` / `yes` / `on` enables the watcher |
-| `GT_LIBRARY_WATCH_DEBOUNCE_SEC` | `3` | Debounce window; clamped to **2–5** |
-| `GT_LIBRARY_ADD_NOTIFY_DEBOUNCE_SEC` | `5` | Staff digest debounce when titles are identified; clamped **2–30** |
+| `ONEIRODEX_LIBRARY_WATCH` | off | `1` / `true` / `yes` / `on` enables the watcher |
+| `ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC` | `3` | Debounce window; clamped to **2–5** |
+| `ONEIRODEX_LIBRARY_ADD_NOTIFY_DEBOUNCE_SEC` | `5` | Staff digest debounce when titles are identified; clamped **2–30** |
 
 Also documented in `.env.example` and [unraid-deploy.md](../runbooks/unraid-deploy.md#library-root-watch-gt_library_watch--unraid-honesty).
 
@@ -81,7 +81,7 @@ Also logged as a `SystemEvents` row (`event_type=library`). No Discord.
 
 ## Unraid note
 
-Docker volume / FUSE mounts may miss host-side renames unless the watch runs where the mount is visible. Prefer bind-mount honesty notes in the Unraid runbook — Ops. Keep `GT_LIBRARY_WATCH` off unless you accept best-effort events.
+Docker volume / FUSE mounts may miss host-side renames unless the watch runs where the mount is visible. Prefer bind-mount honesty notes in the Unraid runbook — Ops. Keep `ONEIRODEX_LIBRARY_WATCH` off unless you accept best-effort events.
 
 ## Non-goals (still)
 

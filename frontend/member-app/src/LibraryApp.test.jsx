@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
 
 afterEach(() => {
-  window.localStorage.removeItem('gt.library.layout')
+  window.localStorage.removeItem('od.library.layout')
 })
 
 function jsonResponse(body) {
@@ -429,7 +429,7 @@ test('sort defaults do not inflate the filter badge', async () => {
 
 test('new chrome unfurls Tile Rows Grid under the active layout name on the kind bar', async () => {
   const user = userEvent.setup()
-  window.localStorage.removeItem('gt.library.layout')
+  window.localStorage.removeItem('od.library.layout')
   const { container } = renderNewChrome()
   await waitFor(() => expect(screen.getByText('Game A')).toBeInTheDocument())
 
@@ -447,7 +447,7 @@ test('new chrome unfurls Tile Rows Grid under the active layout name on the kind
     'data-layout',
     'rows',
   )
-  expect(window.localStorage.getItem('gt.library.layout')).toBe('rows')
+  expect(window.localStorage.getItem('od.library.layout')).toBe('rows')
   expect(screen.getByRole('button', { name: 'Rows' })).toHaveAttribute(
     'aria-expanded',
     'false',

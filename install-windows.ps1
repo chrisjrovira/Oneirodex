@@ -247,7 +247,7 @@ function Write-EnvFile([string]$DatabaseUrl) {
         '# machine can open. Pipe-separated, optional "Label=" prefix. Prefer UNC',
         '# paths over mapped drive letters - a mapped drive is per-user.',
         '# See docs/runbooks/remote-scan-locations.md',
-        "GT_LIBRARY_ROOTS=$LibraryRoots",
+        "ONEIRODEX_LIBRARY_ROOTS=$LibraryRoots",
         '',
         '# Base folders for path resolution',
         'BASE_FOLDER_WINDOWS=C:\',

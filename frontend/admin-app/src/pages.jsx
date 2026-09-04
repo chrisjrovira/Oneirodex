@@ -41,7 +41,7 @@ import {
   libraryHealthTone,
   na,
   percentHealthTone,
-  readyzTone,
+  awakeTone,
   scansActiveTone,
 } from './opsWidgets'
 
@@ -249,11 +249,11 @@ export function DashboardPage() {
         tone={dbPingTone(host?.db_ping_ms)}
       />
     ),
-    'm-readyz': (
+    'm-awake': (
       <MetricTile
         label="Readyz"
-        value={formatReadyz(services?.readyz)}
-        tone={readyzTone(services?.readyz)}
+        value={formatReadyz(services?.awake)}
+        tone={awakeTone(services?.awake)}
       />
     ),
     'm-companions': (

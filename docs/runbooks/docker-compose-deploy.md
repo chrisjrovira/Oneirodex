@@ -43,7 +43,7 @@ If app loops on `no pg_hba.conf entry … no encryption`, recreate `db` with cur
 
 ### Library root watch (optional Wave 3)
 
-`GT_LIBRARY_WATCH` stays **off by default** (`0` / unset). Compose bind-mounts only forward filesystem events the kernel delivers on that mount:
+`ONEIRODEX_LIBRARY_WATCH` stays **off by default** (`0` / unset). Compose bind-mounts only forward filesystem events the kernel delivers on that mount:
 
 - **Direct host binds** (local disk path → `/storage:ro`) — events may work; still debounce + queue, never assume zero misses.
 - **Unraid `/mnt/user` FUSE / network remounts** — host-side renames and many writes **often never reach** inotify inside the container. Prefer scheduled/manual scan; details: [unraid-deploy.md § Library root watch](unraid-deploy.md#library-root-watch-gt_library_watch--unraid-honesty).
@@ -147,8 +147,8 @@ Feedback loop for local/Unraid tests — use Ops glance + scan progress + logs (
 
 | Check | How | Pass signal |
 |---|---|---|
-| Readiness | `curl -f http://localhost:5006/readyz` | HTTP 200 (DB + init); Compose `healthcheck` uses this |
-| Liveness | `curl -f http://localhost:5006/healthz` | HTTP 200 |
+| Readiness | `curl -f http://localhost:5006/awake` | HTTP 200 (DB + init); Compose `healthcheck` uses this |
+| Liveness | `curl -f http://localhost:5006/pulse` | HTTP 200 |
 | Ops glance | Admin → Ops (`/admin/ops`) → `/admin/api/ops/summary` ~15s | `host` / `library` OK; games RO not a path issue; **Services** (LiveKit · malware · companions · queues · game_servers) |
 | Scan progress | Admin scan jobs **or** Ops `scans.jobs[]` | `folders_success` / `folders_failed` / `total_folders` (+ `current_processing`); aliases `progress` / `errors` OK |
 | Container logs | `docker compose logs -f app` (+ `db` / profile sidecars) | No crash loops |
@@ -169,7 +169,7 @@ Prometheus/Grafana are **not** bundled. Near-realtime ops for operators = Admin 
 
 Default `UVICORN_WORKERS=1` (Compose + `startweb-docker.sh`; override in `.env` / Compose env). Schedulers, SSE fan-out, and in-memory rate limits are **per worker** — keep **1** for single-node household ops until a shared cache lands. Set `UVICORN_WORKERS=2` only when you accept split in-process state.
 
-Scan / turbo image thread counts are **not** Compose env vars — set them under Admin → Server Settings. Unraid-safe defaults (scan **1**, turbo off or ≤4 threads during big libraries): [unraid-deploy.md § CPU / scan load](unraid-deploy.md#cpu--scan-load-unraid-safe-defaults). Keep `GT_LIBRARY_WATCH` off unless you accept best-effort events; watcher bursts should **queue**, not force-parallel.
+Scan / turbo image thread counts are **not** Compose env vars — set them under Admin → Server Settings. Unraid-safe defaults (scan **1**, turbo off or ≤4 threads during big libraries): [unraid-deploy.md § CPU / scan load](unraid-deploy.md#cpu--scan-load-unraid-safe-defaults). Keep `ONEIRODEX_LIBRARY_WATCH` off unless you accept best-effort events; watcher bursts should **queue**, not force-parallel.
 
 `/api/activity/stream` and `/api/events/stream` are handled **natively in ASGI** (not WsgiToAsgi) so a single open EventSource cannot freeze Discover/Admin on the same worker. Flask WSGI fallbacks return **503** (no sync generator). If pages hang with only static + activity-stream 200s in the logs, rebuild/restart so that ASGI path is live — see [admin troubleshooting](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading).
 

@@ -9,7 +9,7 @@ banner (overall stays ``good`` when only info items exist).
 bad→action, warn→warning, info→info.
 
 Mapping intent:
-- **action** — stability/service breakers (path/DB/readyz)
+- **action** — stability/service breakers (path/DB/awake)
 - **warning** — soft signals that may indicate a real problem (scan failures, recent errors)
 - **info** — capacity soft signals (disk full / high %) and companions stale
 """
@@ -32,14 +32,14 @@ def derive_issues(
     scan_failures,
     recent_error_count,
     db_reachable=None,
-    readyz_ok=None,
+    awake_ok=None,
     companions_stale=None,
 ):
     """Build ``issues`` for ops summary.
 
     Action-required (``severity: bad``, ``category: action``): stability /
     service breakers — critical path missing/unreadable, DB unreachable,
-    readyz fail.
+    awake fail.
 
     Warning: soft scan failures, recent errors — may indicate a real problem.
     Info: capacity soft signals (disk % / near-full) and companions stale.
@@ -86,10 +86,10 @@ def derive_issues(
     if db_reachable is False:
         add('db_unreachable', 'bad', 'Database unreachable')
 
-    if readyz_ok is False:
-        add('readyz_fail', 'bad', 'Readiness check failed', href='/readyz')
+    if awake_ok is False:
+        add('awake_fail', 'bad', 'Readiness check failed', href='/awake')
 
-    # Soft scan failures — warning only (hard path/DB/readyz cover ops breakers).
+    # Soft scan failures — warning only (hard path/DB/awake cover ops breakers).
     if scan_failures:
         add(
             'scan_failures',

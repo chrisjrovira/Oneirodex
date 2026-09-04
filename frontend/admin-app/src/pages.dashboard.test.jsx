@@ -48,7 +48,7 @@ function mockSummary(overrides = {}) {
           },
           scans: { active_count: 1, jobs: [{ library: 'Main', progress: 40 }] },
           services: {
-            readyz: { status: 'ok', check_ms: 3 },
+            awake: { status: 'ok', check_ms: 3 },
             companions: {
               online: 1,
               registered: 2,

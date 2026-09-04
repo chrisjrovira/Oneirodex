@@ -10,7 +10,7 @@ export const OPS_METRIC_IDS = [
   'memory',
   'rss',
   'db',
-  'readyz',
+  'awake',
   'companions',
   'disk',
   'watch',

@@ -61,7 +61,7 @@ def get_allowed_base_directories(app):
     """Get allowed base directories from app configuration.
 
     Every path-sensitive route funnels through here, so the extra scan
-    locations declared in ``GT_LIBRARY_ROOTS`` are appended in one place rather
+    locations declared in ``ONEIRODEX_LIBRARY_ROOTS`` are appended in one place rather
     than being threaded through scan, download, delete, storage and export
     individually.
     """

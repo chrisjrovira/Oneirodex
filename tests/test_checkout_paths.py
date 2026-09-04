@@ -1,4 +1,4 @@
-"""Live checkout path is Oneirodex, not the retired Gametheca folder name.
+"""Live checkout path is Oneirodex, not the retired Oneirodex folder name.
 
 Filesystem-only. Package path `oneirodex/` and container names stay.
 """
@@ -6,7 +6,7 @@ Filesystem-only. Package path `oneirodex/` and container names stay.
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-STALE = ('_projects/Gametheca', '_projects\\Gametheca')
+STALE = ('_projects/Oneirodex', '_projects\\Oneirodex')
 
 
 def _live_files():
@@ -36,4 +36,4 @@ def test_operator_docs_checkout_is_oneirodex():
         text = path.read_text(encoding='utf-8', errors='replace')
         if any(needle in text for needle in STALE):
             hits.append(path.relative_to(REPO).as_posix())
-    assert hits == [], f'stale Gametheca checkout path in: {hits}'
+    assert hits == [], f'stale Oneirodex checkout path in: {hits}'

@@ -12,7 +12,7 @@ vi.mock('../api/calendar', () => ({
   fetchCalendar: vi.fn(),
 }))
 
-const VIEW_KEY = 'gt.calendar.view'
+const VIEW_KEY = 'od.calendar.view'
 
 function installLocalStorageMock() {
   const store = new Map()

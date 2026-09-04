@@ -116,17 +116,17 @@ def test_db_unreachable_is_action():
     assert item['category'] == 'action'
 
 
-def test_readyz_fail_is_action():
+def test_awake_fail_is_action():
     result = derive_issues(
         disk_base_percent=10,
         disk_games_percent=10,
         path_problems=[],
         scan_failures=0,
         recent_error_count=0,
-        readyz_ok=False,
+        awake_ok=False,
     )
     assert result['overall'] == 'bad'
-    item = next(i for i in result['items'] if i['id'] == 'readyz_fail')
+    item = next(i for i in result['items'] if i['id'] == 'awake_fail')
     assert item['severity'] == 'bad'
     assert item['category'] == 'action'
 

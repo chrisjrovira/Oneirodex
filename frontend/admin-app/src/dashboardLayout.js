@@ -15,7 +15,7 @@ export const DASHBOARD_METRIC_IDS = [
   'load',
   'rss',
   'db',
-  'readyz',
+  'awake',
   'companions',
 ]
 

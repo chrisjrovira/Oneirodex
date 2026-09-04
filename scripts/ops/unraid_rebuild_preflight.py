@@ -19,7 +19,7 @@ ls -l /mnt/user/infernal-data-streams/_projects/Oneirodex/oneirodex/setup/defaul
 grep -n 'scanJobsDom.js' /mnt/user/infernal-data-streams/_projects/Oneirodex/Dockerfile || echo 'Dockerfile missing scanJobsDom COPY'
 echo '=== live scanjobs asset (before) ==='
 curl -sS -o /dev/null -w 'scanJobsDom=%{http_code}\n' http://127.0.0.1:5006/static/library/themes/default/js/scanJobsDom.js || true
-curl -sS -o /dev/null -w 'healthz=%{http_code}\n' http://127.0.0.1:5006/healthz || true
+curl -sS -o /dev/null -w 'pulse=%{http_code}\n' http://127.0.0.1:5006/pulse || true
 """
 
 

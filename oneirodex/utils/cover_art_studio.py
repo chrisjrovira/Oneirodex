@@ -21,12 +21,12 @@ from oneirodex import db
 from oneirodex.models import Game, Image as GameImage
 
 # Aurora design tokens (match setup/default_theme/css/od-tokens.css)
-GT_BG = (11, 13, 16)
-GT_SURFACE = (20, 24, 32)
-GT_SURFACE_2 = (28, 34, 48)
-GT_TEXT = (242, 244, 248)
-GT_TEXT_MUTED = (196, 204, 216)
-GT_ACCENT = (47, 214, 123)
+OD_BG = (11, 13, 16)
+OD_SURFACE = (20, 24, 32)
+OD_SURFACE_2 = (28, 34, 48)
+OD_TEXT = (242, 244, 248)
+OD_TEXT_MUTED = (196, 204, 216)
+OD_ACCENT = (47, 214, 123)
 
 # Operator title scaling. The slider default used to be 1.0 and the renderer
 # skipped the multiply at 1.0, which is why Art Studio still drew tiny type
@@ -281,8 +281,8 @@ def _title_initials(title: str) -> str:
 def _vertical_gradient(
     width: int,
     height: int,
-    top: tuple[int, int, int] = GT_SURFACE,
-    bottom: tuple[int, int, int] = GT_BG,
+    top: tuple[int, int, int] = OD_SURFACE,
+    bottom: tuple[int, int, int] = OD_BG,
 ) -> Image.Image:
     img = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(img)
@@ -574,7 +574,7 @@ def _maybe_scanlines(
     img.paste(composed.convert('RGB'))
 
 
-def _draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float, accent=GT_ACCENT) -> None:
+def _draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float, accent=OD_ACCENT) -> None:
     """Minimal Oneirodex controller mark (matches oneirodex_mark.svg)."""
     s = scale
     body = [
@@ -588,8 +588,8 @@ def _draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, scale: float, accent
         [cx - 22 * s + 12 * s - 3.5 * s, cy - 3.5 * s, cx - 22 * s + 12 * s + 3.5 * s, cy + 3.5 * s],
         fill=accent,
     )
-    draw.ellipse([cx + 8 * s - 2 * s, cy - 5 * s, cx + 8 * s + 2 * s, cy - 1 * s], fill=GT_TEXT)
-    draw.ellipse([cx + 13 * s - 2 * s, cy, cx + 13 * s + 2 * s, cy + 4 * s], fill=GT_TEXT)
+    draw.ellipse([cx + 8 * s - 2 * s, cy - 5 * s, cx + 8 * s + 2 * s, cy - 1 * s], fill=OD_TEXT)
+    draw.ellipse([cx + 13 * s - 2 * s, cy, cx + 13 * s + 2 * s, cy + 4 * s], fill=OD_TEXT)
     draw.rectangle([cx - 2 * s, cy - 14 * s, cx + 2 * s, cy - 8 * s], fill=accent)
 
 
@@ -636,7 +636,7 @@ def _draw_system_glyph(
             [cx + 10 * s, cy - 18 * s, cx + 26 * s, cy + 18 * s],
             radius=int(6 * s), outline=(90, 200, 255), width=w,
         )
-        draw.rectangle([cx - 8 * s, cy - 14 * s, cx + 8 * s, cy + 14 * s], outline=GT_TEXT, width=max(1, w - 1))
+        draw.rectangle([cx - 8 * s, cy - 14 * s, cx + 8 * s, cy + 14 * s], outline=OD_TEXT, width=max(1, w - 1))
     elif glyph == 'umd':
         draw.ellipse([cx - 18 * s, cy - 18 * s, cx + 18 * s, cy + 18 * s], outline=accent, width=w)
         draw.ellipse([cx - 10 * s, cy - 10 * s, cx + 10 * s, cy + 10 * s], outline=accent, width=max(1, w - 1))
@@ -694,7 +694,7 @@ def _draw_title_motif(
     ghost = _mix_rgb(accent, secondary, 0.5)
     # Large initials watermark (always — readable title treatment anchor)
     draw.text((mx + 2, my + 2), initials, fill=(0, 0, 0), font=mono_font)
-    draw.text((mx, my), initials, fill=_mix_rgb(ghost, GT_TEXT, 0.25), font=mono_font)
+    draw.text((mx, my), initials, fill=_mix_rgb(ghost, OD_TEXT, 0.25), font=mono_font)
 
     cx = width // 2 if variant != 'wide' and variant != 'hero' else int(width * 0.28)
     cy = int(height * (0.30 if variant not in ('wide', 'hero') else 0.48))
@@ -905,7 +905,7 @@ def _draw_title_block(
         else:
             x = (width - tw) // 2
         draw.text((x + 1, y + 1), line, fill=(0, 0, 0), font=title_font)
-        draw.text((x, y), line, fill=GT_TEXT, font=title_font)
+        draw.text((x, y), line, fill=OD_TEXT, font=title_font)
         y += lh + 4
 
     # `line_heights` is ink height (bbox[3]-bbox[1]), which omits the descent —
