@@ -777,7 +777,7 @@ test('breadcrumb is Catalog then primary genre then title', async () => {
   expect(within(crumbs).getByRole('link', { name: 'Game Catalog' })).toHaveAttribute('href', '/library')
   expect(within(crumbs).getByRole('link', { name: 'Platform' })).toHaveAttribute(
     'href',
-    '/discover/hub/genre/Platform',
+    '/library?genre=Platform',
   )
   expect(within(crumbs).getByText('Celeste')).toBeInTheDocument()
 })

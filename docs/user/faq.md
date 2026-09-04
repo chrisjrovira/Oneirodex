@@ -76,7 +76,7 @@ Those blocks are fill-only from Steam `appdetails` when a title was identified t
 Game details → **Extras & DLC**. Rows show honest **on-server** when the vault has the folder; PC libraries pick up common `DLC`/`extras` sidecars on scan — console DLC ingest is deferred. Discover may show **Extras not on the vault** for titles you already play or favourite when a catalogued extra is missing on disk. That row is an acquire hint, not a sale.
 
 **What is a genre hub?**  
-A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront. The **News** shelf’s See all opens the News page (`/news`).
+A Discover **See all** on a genre zone opens `/discover/hub/genre/…` — unplayed, newly added, and loved-here shelves for that genre. **Browse the catalog** is the full filtered list. It is not a store genre storefront. The genre chips and breadcrumb on a game's details page go straight to the filtered catalog rather than the hub, so clicking a genre there gives you every title in it. The **News** shelf’s See all opens the News page (`/news`).
 
 **What is on a game details page besides Play and Download?**  
 A breadcrumb (Catalog or Systems › genre › title), a media stage when a trailer or screenshot exists, capability chips that filter the catalog, **About** when a storyline was stored, and — only if Steam filled them — system requirements and a store-language matrix. ROM region chips stay filename truth. **More from** this developer or publisher lists other vault titles you can already see (hidden when there are fewer than two). No cart, price, or Deck Verified.

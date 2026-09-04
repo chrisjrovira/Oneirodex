@@ -3,7 +3,7 @@ import { detailsRootCrumb, primaryGenreName, taxonomyHref } from './detailsTaxon
 
 describe('taxonomyHref', () => {
   test('genre opens the Discover hub', () => {
-    expect(taxonomyHref('genre', 'Roguelike')).toBe('/discover/hub/genre/Roguelike')
+    expect(taxonomyHref('genre', 'Roguelike')).toBe('/library?genre=Roguelike')
   })
 
   test('modes and perspectives filter the catalog', () => {
