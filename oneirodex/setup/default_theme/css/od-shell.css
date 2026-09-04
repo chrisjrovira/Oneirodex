@@ -477,6 +477,9 @@ body.od-shell-host > #admin-legacy-content[hidden] {
   align-items: center;
   gap: var(--od-space-2);
   width: 100%;
+  /* WCAG 2.2 SC 2.5.8. Measured 112x20 — wide enough, one pixel-row short on
+     height, on a control that repeats in every rail section on every page. */
+  min-height: 24px;
   background: transparent;
   border: 0;
   font: inherit;

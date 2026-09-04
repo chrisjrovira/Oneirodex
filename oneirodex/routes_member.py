@@ -124,6 +124,18 @@ def notifications_page():
     return render_member_spa(title='Notifications')
 
 
+@member_bp.route('/tokens')
+@login_required
+def tokens_page():
+    """Personal access tokens.
+
+    The SPA has had `path="/tokens"` in its route table all along, but no
+    server route rendered the shell for it, so a deep link or a refresh on
+    /tokens returned a hard 404 while every other member route resolved.
+    """
+    return render_member_spa(title='Tokens')
+
+
 @member_bp.route('/members/<int:user_id>')
 @login_required
 def member_profile_page(user_id: int):
