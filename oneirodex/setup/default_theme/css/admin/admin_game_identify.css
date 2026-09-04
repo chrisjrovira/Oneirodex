@@ -173,3 +173,24 @@
     margin-top: 0.75rem;
     color: var(--od-text-muted);
 }
+
+/* Provider links — a grid so nine fields read as one block rather than nine
+   full-width rows the member has to scroll past. */
+.od-identify__provider-urls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 0.75rem 1rem;
+    margin-top: 0.5rem;
+}
+
+.od-identify__provider-url {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.od-identify__provider-url label {
+    font-size: var(--od-font-sm);
+    color: var(--od-text-muted);
+}

@@ -5,7 +5,6 @@
 <link rel="stylesheet" href="{{ 'css/admin/admin_game_identify.css'|theme_asset }}">
 {% endblock %}
 {% block content %}
-{% import 'partials/icons.html' as icons %}
 
 <div id="saveSpinner" class="spinner-overlay" style="display: none;" role="status" aria-live="assertive" aria-busy="true">
     <div class="spinner-container">
@@ -102,11 +101,14 @@
             </div>
         </div>
 
-        <div class="od-adminpage-panel details-section">
-            <button class="btn btn-secondary w-100 mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#gameDetails" aria-expanded="false" aria-controls="gameDetails">
-                Details {{ icons.icon('chevron-down') }}
-            </button>
-            <div class="collapse" id="gameDetails">
+        {# Tabs, not one long scroll. The panels are plain server-rendered
+           markup and every field keeps its name, so this posts to the same
+           handler; the React island in main.jsx only decides which panel is
+           on screen. A hidden panel still submits its inputs. #}
+        <div class="od-adminpage-panel details-section" data-od-tabs>
+            <div data-od-tabs-mount></div>
+
+            <section data-od-tab-panel="about" data-od-tab-label="About" id="od-identify-panel-about">
                 <div class="game_edit-form-group-summary">
                     <label for="summary">Summary</label>
                     {{ form.summary(class="form-control", id="summary") }}
@@ -115,6 +117,37 @@
                     <label for="storyline">Storyline</label>
                     {{ form.storyline(class="form-control", id="storyline") }}
                 </div>
+                <div class="game_edit-form-group-developer" id="developer-container">
+                    <label class="game_edit-form-group-developer-text" for="developer">Developer</label>
+                    <input class="game_edit-form-group-developer-data form-control" type="text" id="developer" name="developer" value="{{ form.developer.data }}">
+                </div>
+
+                <div class="game_edit-form-group-publisher" id="publisher-container">
+                    <label class="game_edit-form-group-publisher-text" for="publisher">Publisher</label>
+                    <input class="game_edit-form-group-publisher-data form-control" type="text" id="publisher" name="publisher" value="{{ form.publisher.data }}">
+                </div>
+            </section>
+
+            <section data-od-tab-panel="release" data-od-tab-label="Release" id="od-identify-panel-release">
+                <div class="game_edit-form-group-status">
+                    <label for="status">Status</label>
+                    {{ form.status(class="form-control", id="status") }}
+                </div>
+                <div class="game_edit-form-group-release-type">
+                    <label for="category">Release type</label>
+                    {{ form.category(class="form-control", id="category") }}
+                </div>
+                <div class="game_edit-form-group-rating">
+                    <label for="aggregated_rating">Aggregated rating</label>
+                    {{ form.aggregated_rating(class="form-control", id="aggregated_rating") }}
+                </div>
+                <div class="game_edit-form-group-release-date">
+                    <label for="first_release_date">First release date</label>
+                    {{ form.first_release_date(class="form-control", id="first_release_date") }}
+                </div>
+            </section>
+
+            <section data-od-tab-panel="links" data-od-tab-label="Links &amp; media" id="od-identify-panel-links">
                 <div class="game_edit-form-group-url">
                     <label for="url">URL</label>
                     {{ form.url(class="form-control", id="url") }}
@@ -139,23 +172,31 @@
                     {% endif %}
                 </div>
 
-                <div class="game_edit-form-group-status">
-                    <label for="status">Status</label>
-                    {{ form.status(class="form-control", id="status") }}
+                {# Provider links. The search buttons above cover six providers,
+                   but only IGDB's URL had anywhere to live — a Steam or GOG
+                   page found during identify had to be thrown away. #}
+                {% if provider_url_fields %}
+                <div class="game_edit-form-group-provider-urls" id="provider-urls-container">
+                    <label>Provider links</label>
+                    <p class="form-text-muted">One per provider. Blank removes the link.</p>
+                    <div class="od-identify__provider-urls">
+                        {% for provider in provider_url_fields %}
+                        <div class="od-identify__provider-url">
+                            <label for="provider_url_{{ provider.key }}">{{ provider.label }}</label>
+                            <input class="form-control"
+                                   type="url"
+                                   id="provider_url_{{ provider.key }}"
+                                   name="provider_url_{{ provider.key }}"
+                                   value="{{ provider.value or '' }}"
+                                   placeholder="https://…">
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="game_edit-form-group-release-type">
-                    <label for="category">Release type</label>
-                    {{ form.category(class="form-control", id="category") }}
-                </div>
-                <div class="game_edit-form-group-rating">
-                    <label for="aggregated_rating">Aggregated rating</label>
-                    {{ form.aggregated_rating(class="form-control", id="aggregated_rating") }}
-                </div>
-                <div class="game_edit-form-group-release-date">
-                    <label for="first_release_date">First release date</label>
-                    {{ form.first_release_date(class="form-control", id="first_release_date") }}
-                </div>
+                {% endif %}
+            </section>
 
+            <section data-od-tab-panel="taxonomy" data-od-tab-label="Taxonomy" id="od-identify-panel-taxonomy">
                 <div class="group-game-details">
                     <div class="game_edit-form-group-genres" id="genres-container">
                         <label>Genres</label>
@@ -207,16 +248,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div class="game_edit-form-group-developer" id="developer-container">
-                    <label class="game_edit-form-group-developer-text" for="developer">Developer</label>
-                    <input class="game_edit-form-group-developer-data form-control" type="text" id="developer" name="developer" value="{{ form.developer.data }}">
-                </div>
-
-                <div class="game_edit-form-group-publisher" id="publisher-container">
-                    <label class="game_edit-form-group-publisher-text" for="publisher">Publisher</label>
-                    <input class="game_edit-form-group-publisher-data form-control" type="text" id="publisher" name="publisher" value="{{ form.publisher.data }}">
-                </div>
-            </div>
+            </section>
         </div>
     </form>
 

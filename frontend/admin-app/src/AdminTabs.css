@@ -1,0 +1,50 @@
+.od-admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--od-border);
+}
+
+.od-admin-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: var(--od-radius-md) var(--od-radius-md) 0 0;
+  background: transparent;
+  color: var(--od-text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.od-admin-tabs__tab:hover {
+  color: var(--od-text);
+  background: color-mix(in srgb, var(--od-text) 6%, transparent);
+}
+
+.od-admin-tabs__tab:focus-visible {
+  outline: 2px solid var(--od-accent);
+  outline-offset: -2px;
+}
+
+.od-admin-tabs__tab.is-active {
+  color: var(--od-accent);
+  border-bottom-color: var(--od-accent);
+}
+
+.od-admin-tabs__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--od-radius-pill);
+  background: var(--od-danger);
+}
+
+/* Bootstrap sets display on some of these containers, which would win over
+   the hidden attribute's UA style and leave every panel on screen at once. */
+[data-od-tab-panel][hidden] {
+  display: none !important;
+}
