@@ -191,3 +191,67 @@ def test_claim_assist_requires_connection(monkeypatch):
     result = fg.claim_assist_for_user(1, offer)
     assert result['ok'] is False
     assert result.get('needs_connect') is True
+
+
+def test_dedupe_title_keys_strip_gamerpower_decoration():
+    """GamerPower's "(Store) Giveaway" suffix must not read as a new title."""
+    assert fg.dedupe_title_keys('Alone With You (Epic Games) Giveaway') & fg.dedupe_title_keys(
+        'Alone With You'
+    )
+    assert fg.dedupe_title_keys("Evan's Remains (Mobile) Giveaway") & fg.dedupe_title_keys(
+        "Evan's Remains"
+    )
+    assert fg.dedupe_title_keys('Superposition [Steam] Giveaway') & fg.dedupe_title_keys(
+        'Superposition'
+    )
+    assert fg.dedupe_title_keys('Some Game - Free PC Giveaway') & fg.dedupe_title_keys('Some Game')
+
+
+def test_dedupe_title_keys_keep_distinct_titles_apart():
+    """Trimming must not fold a sequel or a numbered entry into its base name."""
+    assert not fg.dedupe_title_keys('Portal 2') & fg.dedupe_title_keys('Portal')
+    assert not fg.dedupe_title_keys('Doom Eternal') & fg.dedupe_title_keys('Doom')
+    assert not fg.dedupe_title_keys('Celeste 64') & fg.dedupe_title_keys('Celeste')
+
+
+def test_collect_remote_offers_drops_gamerpower_repost(monkeypatch):
+    monkeypatch.setattr(
+        fg,
+        'fetch_epic_free_games',
+        lambda: [{'store': 'epic', 'title': 'Alone With You'}],
+    )
+    monkeypatch.setattr(fg, 'fetch_steam_free_games', lambda: [])
+    monkeypatch.setattr(
+        fg,
+        'fetch_gamerpower_giveaways',
+        lambda: [
+            {'store': 'epic', 'title': 'Alone With You (Epic Games) Giveaway'},
+            {'store': 'epic', 'title': 'A Different Game (Epic Games) Giveaway'},
+        ],
+    )
+
+    by_source = fg.collect_remote_offers()
+
+    assert [o['title'] for o in by_source['epic']] == ['Alone With You']
+    assert [o['title'] for o in by_source['gamerpower']] == [
+        'A Different Game (Epic Games) Giveaway'
+    ]
+
+
+def test_collect_remote_offers_keeps_offer_on_another_store(monkeypatch):
+    """Same title, different store is a different offer — both must survive."""
+    monkeypatch.setattr(
+        fg,
+        'fetch_epic_free_games',
+        lambda: [{'store': 'epic', 'title': 'Alone With You'}],
+    )
+    monkeypatch.setattr(fg, 'fetch_steam_free_games', lambda: [])
+    monkeypatch.setattr(
+        fg,
+        'fetch_gamerpower_giveaways',
+        lambda: [{'store': 'gog', 'title': 'Alone With You (GOG) Giveaway'}],
+    )
+
+    by_source = fg.collect_remote_offers()
+
+    assert len(by_source['gamerpower']) == 1

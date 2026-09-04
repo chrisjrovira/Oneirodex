@@ -139,6 +139,62 @@ def normalize_store(label: str | None) -> str:
     return 'other'
 
 
+_STORE_WORDS = sorted(
+    set(_GP_PLATFORM_MAP) | (VALID_STORES - {'other'}),
+    key=len,
+    reverse=True,
+)
+_STORE_PAREN_RE = re.compile(
+    r'[\(\[]\s*(?:' + '|'.join(re.escape(w) for w in _STORE_WORDS) + r')'
+    r'(?:\s+(?:store|games|gaming))?\s*[\)\]]',
+    re.IGNORECASE,
+)
+_TRAILING_GIVEAWAY_RE = re.compile(
+    r'(?:\s*[-–—:|]\s*|\s+)'
+    r'(?:free\s+)?(?:pc\s+|steam\s+|game\s+|dlc\s+|beta\s+|key\s+)*'
+    r'giveaway\s*$',
+    re.IGNORECASE,
+)
+
+
+_TRAILING_PAREN_RE = re.compile(r'\s*[\(\[][^\)\]]*[\)\]]\s*$')
+
+
+def dedupe_title_keys(title: str | None) -> set[str]:
+    """Comparison keys that survive GamerPower's title decoration.
+
+    GamerPower republishes offers the official feeds already carry, but with a
+    qualifier and the word giveaway appended: Epic's "Alone With You" arrives
+    as "Alone With You (Epic Games) Giveaway", so matching on the exact title
+    let both through and the member saw the same game twice.
+
+    The qualifier is not always a store — "(Mobile)", "(IndieGala)" and
+    "(DRM-Free)" all show up — so rather than chase that vocabulary, a title
+    gets a second key with its trailing parenthetical removed. Two keys instead
+    of one, because dropping the parenthetical outright would fold a real
+    "(Deluxe Edition)" into the base game; keeping both means the pair still
+    matches when either side carries the suffix, and an offer is only ever
+    dropped when something else in the feed genuinely covers it.
+    """
+    original = (title or '').strip()
+    key = original.lower().replace('’', "'")
+    previous = None
+    while previous != key:
+        previous = key
+        key = _STORE_PAREN_RE.sub(' ', key)
+        key = _TRAILING_GIVEAWAY_RE.sub('', key)
+        key = key.strip(' -–—:|')
+    key = re.sub(r'\s+', ' ', key).strip()
+    # A title that is nothing but decoration keeps its raw form rather than
+    # becoming the empty string, which would match every other stripped title.
+    key = key or original.lower()
+    keys = {key}
+    trimmed = _TRAILING_PAREN_RE.sub('', key).strip()
+    if trimmed:
+        keys.add(trimmed)
+    return keys
+
+
 def claim_links(offer: dict[str, Any], connected_stores: set[str] | frozenset[str] | None = None) -> dict[str, str | None]:
     """HTTPS claim URL plus optional protocol deeplink when store is connected."""
     connected = {str(s).lower() for s in (connected_stores or set())}
@@ -475,11 +531,15 @@ def collect_remote_offers() -> dict[str, list[dict[str, Any]]]:
     official_steam = fetch_steam_free_games()
     gp = fetch_gamerpower_giveaways()
     official_keys = {
-        (o['store'], o['title'].lower()) for o in (official_epic + official_steam)
+        (o['store'], key)
+        for o in (official_epic + official_steam)
+        for key in dedupe_title_keys(o['title'])
     }
     gp_filtered = [
         o for o in gp
-        if (o['store'], o['title'].lower()) not in official_keys
+        if not any(
+            (o['store'], key) in official_keys for key in dedupe_title_keys(o['title'])
+        )
     ]
     return {
         'epic': official_epic,
