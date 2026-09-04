@@ -1338,7 +1338,13 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
     box-shadow: var(--od-shadow-lg);
   }
 
-  [data-rail='open'] .od-rail {
+  /* `expanded`, not `open`. The shell only ever sets data-rail to `expanded`
+     or `collapsed` (App.jsx `data-rail={railState}`), so `[data-rail='open']`
+     matched nothing and the drawer could never be opened on mobile — the
+     hamburger appeared to do nothing. Mapping it to the real state makes the
+     toggle work: expanded slides the drawer in, collapsed slides it out, and
+     the choice persists like it does on desktop. */
+  [data-rail='expanded'] .od-rail {
     transform: translateX(0);
   }
 
