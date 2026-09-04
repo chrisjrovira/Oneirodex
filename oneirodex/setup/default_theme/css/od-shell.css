@@ -1090,9 +1090,13 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
   display: none;
 }
 
-/* The section name, as an eyebrow rather than a heading.
-   The rail already marks which section is active; this is a confirmation for
-   someone arriving by deep link or with the rail collapsed, not a page title. */
+/* The section name. Styled as an eyebrow, but it IS the page heading — it
+   renders as an <h1> (TopBar.jsx / ContextBar.jsx). The page's own h1 is
+   retired under the v2 chrome, so without this a route had no heading at all
+   and heading navigation found nothing. Looking like a label and being a
+   heading are not in conflict: the styling is the eyebrow, the element is the
+   h1. Only one is ever exposed — the `display: none` rule below drops the
+   bar's copy when ContextBar portals its own. */
 .od-topbar__section {
   /* Sits after the toggle/Filters cluster, not between them — it is a label,
      and a label in the middle of a pair of buttons breaks the pair. */
