@@ -48,6 +48,35 @@
     --od-adminpage-max: 1600px;
 }
 
+/* Legacy admin pages fill the window.
+ *
+ * The size modifiers above cap a page at 640-1600px and .container-settings
+ * wraps it in a centred card with its own background and shadow. Inside the
+ * admin shell that read as a floating box with dead rails either side — the
+ * shell already provides the surface and the gutters, so the card was a second
+ * frame around the first.
+ *
+ * Scoped to #admin-legacy-content: React admin pages lay themselves out and a
+ * page that genuinely wants a narrow measure should set it on its own content,
+ * not by shrinking the whole page. The ID also clears the specificity of
+ * `.container-settings.od-adminpage` in admin-components.css without !important.
+ */
+#admin-legacy-content .od-adminpage,
+#admin-legacy-content .container-settings.od-adminpage {
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+    margin-inline: 0;
+}
+
+#admin-legacy-content .container-settings.od-adminpage {
+    margin-block: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
 /* The page shell owns the width, not Bootstrap (W27-D7).
  *
  * Several tab panes still carry Bootstrap's `.container`, which applies its own

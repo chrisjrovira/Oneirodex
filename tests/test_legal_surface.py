@@ -116,16 +116,32 @@ class TestSourceOffer:
         shell = (TEMPLATES / 'site' / 'member_spa.html').read_text(encoding='utf-8')
         assert 'data-source-url' in shell
 
-    def test_admin_renders_the_offer(self):
-        base = (TEMPLATES / 'base_admin.html').read_text(encoding='utf-8')
-        assert 'od-admin-licence' in base
-        assert 'source_url' in base
-        assert 'agpl-3.0' in base.lower()
+    def _help_page_source(self) -> str:
+        return (
+            REPO_ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'HelpPage.jsx'
+        ).read_text(encoding='utf-8')
 
-    def test_admin_offer_is_skipped_when_unset(self):
+    def test_help_renders_the_offer(self):
+        """Help → About is the offer's home.
+
+        It used to be stamped in a footer under every admin screen as well.
+        That footer is gone, so this is now the only surface carrying it and
+        the assertions that guarded the footer live here instead: §13 asks
+        that the offer be reachable, and one findable place satisfies it.
+        """
+        help_page = self._help_page_source()
+        assert 'sourceUrl' in help_page
+        assert 'agpl-3.0' in help_page.lower()
+
+    def test_help_offer_is_skipped_when_unset(self):
         """An offer of source that goes nowhere is worse than none."""
+        help_page = self._help_page_source()
+        assert '{shellConfig.sourceUrl ?' in help_page
+
+    def test_admin_carries_no_licence_footer(self):
+        """Removed by request; asserted so it does not creep back unnoticed."""
         base = (TEMPLATES / 'base_admin.html').read_text(encoding='utf-8')
-        assert '{% if source_url %}' in base
+        assert 'od-admin-licence' not in base
 
 
 # --- L5: provider attribution ---------------------------------------------
