@@ -640,39 +640,30 @@ export function GameDetailsPage() {
       </div>
 
       <div className={`od-details-page__fold${hasMedia ? ' od-details-page__fold--media' : ''}`}>
-        {hasMedia ? (
-          <DetailsMediaStage
-            videoEmbeds={videoEmbeds}
-            shownShots={shownShots}
-            onTheater={setVideoIndex}
-            onFullscreen={setShotIndex}
-            onShotBroken={markShotBroken}
-          />
-        ) : null}
-      <div className="od-details-page__content-grid">
-        {game.summary ? (
-          <section className="od-details-page__section od-details-page__section--summary">
-            <h2>Summary</h2>
-            <p
-              ref={summaryRef}
-              className={`od-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
-            >
-              {game.summary}
-            </p>
-            {summaryOverflows ? (
-              <button
-                type="button"
-                className="od-btn od-details-page__summary-toggle"
-                onClick={() => setSummaryExpanded((open) => !open)}
+        <div className="od-details-page__content-grid">
+          {game.summary ? (
+            <section className="od-details-page__section od-details-page__section--summary">
+              <h2>Summary</h2>
+              <p
+                ref={summaryRef}
+                className={`od-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
               >
-                {summaryExpanded ? 'Show less' : 'Show more'}
-              </button>
-            ) : null}
-          </section>
-        ) : null}
+                {game.summary}
+              </p>
+              {summaryOverflows ? (
+                <button
+                  type="button"
+                  className="od-btn od-details-page__summary-toggle"
+                  onClick={() => setSummaryExpanded((open) => !open)}
+                >
+                  {summaryExpanded ? 'Show less' : 'Show more'}
+                </button>
+              ) : null}
+            </section>
+          ) : null}
 
-        <section className="od-details-page__section od-details-page__section--facts">
-          <h2>Details</h2>
+          <section className="od-details-page__section od-details-page__section--facts">
+            <h2>Details</h2>
           {pathRows.length > 0 ? (
             <div className="od-details-page__paths" aria-label="Admin paths">
               {pathRows.map((row) => (
@@ -763,9 +754,21 @@ export function GameDetailsPage() {
             ) : null}
           </dl>
         </section>
+      </div>
 
-        <div className="od-details-page__flow">
-      {game.storyline ? (
+      {hasMedia ? (
+        <DetailsMediaStage
+          videoEmbeds={videoEmbeds}
+          shownShots={shownShots}
+          onTheater={setVideoIndex}
+          onFullscreen={setShotIndex}
+          onShotBroken={markShotBroken}
+        />
+      ) : null}
+      </div>
+
+      <div className="od-details-page__flow">
+        {game.storyline ? (
         <section className="od-details-page__section">
           <h2>About</h2>
           <p className="od-details-page__about">{game.storyline}</p>
@@ -991,7 +994,7 @@ export function GameDetailsPage() {
             {game.is_admin ? (
               <button
                 type="button"
-                className="od-btn od-btn--secondary"
+                className="od-btn"
                 disabled={cleanupBusy}
                 onClick={() => void handleCleanupOrphans()}
                 title={
@@ -1283,8 +1286,6 @@ export function GameDetailsPage() {
           </p>
         )}
       </section>
-        </div>
-      </div>
       </div>
 
       <ScreenshotLightbox

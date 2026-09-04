@@ -45,22 +45,33 @@
 
 .od-details-page__fold--media {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  gap: var(--od-space-6);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 1.6rem 2rem;
   align-items: start;
   margin-bottom: var(--od-space-5);
 }
 
 .od-details-page__fold--media .od-details-page__content-grid {
   grid-template-columns: 1fr;
+  grid-column: 1;
+  grid-row: 1;
   margin-bottom: 0;
 }
 
-.od-details-page__fold--media .od-details-page__section--summary,
-.od-details-page__fold--media .od-details-page__section--facts,
-.od-details-page__fold--media .od-details-page__flow {
+.od-details-page__fold--media .od-details-page__section--summary {
   grid-column: auto;
   grid-row: auto;
+}
+
+.od-details-page__fold--media .od-details-page__section--facts {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.od-details-page__fold--media .od-details-media {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
 }
 
 .od-details-page__about,
@@ -259,6 +270,9 @@
  * everything after Details lives in `.od-details-page__flow` so it climbs
  * beside the rail rather than waiting for it to finish.
  *
+ * When inside media fold, content-grid becomes single-column with all
+ * sections stacked vertically on the left, media on the right.
+ *
  * `grid-row: 1 / -1` does not work here: -1 is the last *explicit* line, and
  * this grid has no explicit rows. Facts spans the two implicit rows we create
  * (summary + flow), or the single flow row when there is no summary. */
@@ -270,6 +284,11 @@
   margin-bottom: 8px;
 }
 
+.od-details-page__fold--media .od-details-page__content-grid {
+  grid-template-columns: 1fr;
+  gap: 1.6rem;
+}
+
 .od-details-page__section--summary {
   grid-column: 1;
   grid-row: 1;
@@ -279,6 +298,17 @@
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: start;
+}
+
+.od-details-page__fold--media .od-details-page__section--summary {
+  grid-column: 1;
+  grid-row: auto;
+}
+
+.od-details-page__fold--media .od-details-page__section--facts {
+  grid-column: 1;
+  grid-row: auto;
+  align-self: auto;
 }
 
 .od-details-page__flow {
@@ -295,6 +325,11 @@
 
 .od-details-page__content-grid:not(:has(.od-details-page__section--summary)) .od-details-page__section--facts {
   grid-row: 1;
+}
+
+.od-details-page__fold--media .od-details-page__flow {
+  grid-column: auto;
+  grid-row: auto;
 }
 
 /* Gap or margin, not both — the grid (and the flow column) already space
