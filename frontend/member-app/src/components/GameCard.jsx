@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getCsrfToken } from '../api/csrf'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
@@ -87,6 +87,10 @@ export function GameCard({
   const trailerTimer = useRef(0)
   const [isFavorite, setIsFavorite] = useState(Boolean(game.is_favorite))
   const [favoritePending, setFavoritePending] = useState(false)
+  const navigate = useNavigate()
+  // Where the press began — see the click handler on .game-card for why the
+  // click target itself cannot be trusted here.
+  const pressStartedOnControl = useRef(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [status, setStatus] = useState(game.user_status || '')
   const [statusPending, setStatusPending] = useState(false)
@@ -327,6 +331,44 @@ export function GameCard({
         data-overlay-open={menuOpen || statusOpen || playInfoOpen ? 'true' : undefined}
         data-name={game.name}
         data-genres={(game.genres || []).join(', ')}
+        // Recovers the click the cover <a> never receives.
+        //
+        // `.od-tile-preview-hint` is a sibling of the cover link, and on hover
+        // it becomes pointer-events:auto centred over the cover — exactly where
+        // people click. A press then starts on the <img> and ends on the hint,
+        // so the browser dispatches `click` on their nearest common ancestor:
+        // this div, which is OUTSIDE the anchor. The link never fired and
+        // clicking a tile did nothing. Verified by event capture:
+        //   mousedown -> .game-cover, mouseup -> .od-tile-preview-hint,
+        //   click     -> .game-card
+        //
+        // Which element the click RESOLVES to is unreliable for the same
+        // reason, so the decision is made on where the press STARTED. The
+        // cover link is excluded from the control list on purpose: a press
+        // beginning on the cover is exactly the case being repaired, while a
+        // press beginning on Preview / favourite / status / menu / select
+        // belongs to that control and must not navigate.
+        // CAPTURE phase deliberately. The preview hint, the select checkbox and
+        // others call stopPropagation() on pointerdown, so a bubble-phase
+        // listener here never sees their press and the click below would treat
+        // a Preview press as a bare-card click and navigate. Capture runs
+        // before the target's own handler, so it cannot be suppressed.
+        onPointerDownCapture={(event) => {
+          const control = event.target?.closest?.(
+            'a, button, input, select, [role="button"]',
+          )
+          pressStartedOnControl.current =
+            !!control && !control.classList.contains('game-card__cover-link')
+        }}
+        onClick={(event) => {
+          const startedOnControl = pressStartedOnControl.current
+          pressStartedOnControl.current = false
+          if (startedOnControl) return
+          if (event.defaultPrevented) return
+          if (event.button && event.button !== 0) return
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+          navigate(`/game_details/${game.uuid}`)
+        }}
       >
         {selectionEnabled ? (
           <input

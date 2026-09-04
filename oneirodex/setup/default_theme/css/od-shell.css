@@ -131,16 +131,31 @@
   padding-top: calc(
     var(--od-topbar-h) + max(var(--od-stack), var(--od-tile-hover-bleed-y))
   );
-  padding-inline: calc(var(--od-gutter) + var(--od-tile-hover-pad-x));
+  /* Gutter only. This used to be `gutter + hover-pad-x` (~128px per side) to
+     reserve room for the hover enlarge, with the grid pulled back out by a
+     matching negative margin below. That scheme could not work:
+       - the pullback puts the grid OUTSIDE .library-layout, which clips;
+       - `overflow-clip-margin` does not lift that clip. Measured directly:
+         with `overflow: clip` on both axes and a literal 200px clip-margin
+         that computed correctly, the left column was still cut by 93px;
+       - and `overflow-clip-margin-inline`, used originally, is a draft
+         property no browser implements, so it never applied at all.
+     Net effect was 93px of the left column clipped off AND 93px of dead space
+     on the right — the two symptoms were the same bug. At 375px the fixed pad
+     exceeded the viewport and collapsed the grid to width 0.
+     The grid now simply fills its content box. */
+  padding-inline: var(--od-gutter);
   overflow-x: clip;
-  overflow-clip-margin-inline: calc(var(--od-tile-hover-bleed-x) + 8px);
 }
 
 /* Tile / Rows wrap grid only. Catalog Grid shelves use data-library-shelves
    and must not get this pullback — it clipped genre titles under overflow-x. */
 .od-shell__main:has([data-library-grid]) [data-library-grid]:not(.catalog-grid-sections),
 .od-shell > #content:has([data-library-grid]) [data-library-grid]:not(.catalog-grid-sections) {
-  margin-inline: calc(-1 * var(--od-tile-hover-pad-x, 0px));
+  /* No pullback. It existed to undo the hover-reserve padding above, which is
+     gone; keeping it would push the grid back outside the clip and re-cut the
+     left column. See the comment on padding-inline. */
+  margin-inline: 0;
 }
 
 /* Selection toolbar: keep the top-bar reserve, tuck the strip close under it,
