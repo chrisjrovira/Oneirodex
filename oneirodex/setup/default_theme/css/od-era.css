@@ -188,10 +188,20 @@ html[data-era] #admin-legacy-content {
 
 /* Rail stays above the atmosphere. Top bar shares the main grid cell as an
    overlay (see od-shell.css) at z-index 30 so resting chrome still sits over
-   the scroll pane; era used to pin it at 2 and beat the shell rule. */
-html[data-era] .od-rail {
-  position: relative;
-  z-index: 2;
+   the scroll pane; era used to pin it at 2 and beat the shell rule.
+
+   DESKTOP ONLY. Unscoped, this beat the mobile drawer in od-shell.css:
+   `html[data-era] .od-rail` is specificity (0,2,1) against the drawer's plain
+   `.od-rail` (0,1,0), and a media query adds none — so `position: relative`
+   won, the rail stayed in grid flow, and being a grid item it generated an
+   implicit 216px column. At 375px that left `main` just 159px and the library
+   grid 87px wide. The atmosphere this rule stacks against is a desktop
+   concern; below the drawer breakpoint the rail must stay `position: fixed`. */
+@media (min-width: 901px) {
+  html[data-era] .od-rail {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 html[data-era] .od-topbar {

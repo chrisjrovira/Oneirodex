@@ -875,6 +875,19 @@
     border-radius: var(--od-radius-xs, 4px);
     box-shadow: none;
     opacity: 0.85;
+    /* Anchor for the hit-area extension below. */
+    position: relative;
+}
+
+/* WCAG 2.2 SC 2.5.8 (target size, minimum 24x24). The glyph measures 15x12,
+   and it sits on top of cover art where a miss is easy. Extending the hit
+   area with a transparent pseudo-element instead of padding keeps the badge
+   looking identical — growing the button itself would visibly bloat the badge
+   on every tile. -6px vertical and -5px horizontal takes 15x12 to 25x24. */
+.od-badge__dismiss::after {
+    content: '';
+    position: absolute;
+    inset: -6px -5px;
 }
 
 .od-badge--danger { background: rgba(196, 48, 43, 0.95); }

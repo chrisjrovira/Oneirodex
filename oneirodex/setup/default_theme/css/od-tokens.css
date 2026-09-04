@@ -1,4 +1,11 @@
 :root {
+  /* Tell the browser this UI is dark so its OWN widgets follow. Without it the
+     computed color-scheme is "normal" and native chrome renders light against
+     a #0b0d10 ground: scrollbars, form controls, date and colour pickers,
+     autofill backgrounds and validation bubbles. Presets that ship a light
+     palette override this alongside their tokens. */
+  color-scheme: dark;
+
   --od-bg: #0b0d10;
   --od-surface: #141820;
   --od-surface-2: #1c2230;

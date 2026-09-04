@@ -477,6 +477,9 @@ body.od-shell-host > #admin-legacy-content[hidden] {
   align-items: center;
   gap: var(--od-space-2);
   width: 100%;
+  /* WCAG 2.2 SC 2.5.8. Measured 112x20 — wide enough, one pixel-row short on
+     height, on a control that repeats in every rail section on every page. */
+  min-height: 24px;
   background: transparent;
   border: 0;
   font: inherit;
@@ -1087,9 +1090,13 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
   display: none;
 }
 
-/* The section name, as an eyebrow rather than a heading.
-   The rail already marks which section is active; this is a confirmation for
-   someone arriving by deep link or with the rail collapsed, not a page title. */
+/* The section name. Styled as an eyebrow, but it IS the page heading — it
+   renders as an <h1> (TopBar.jsx / ContextBar.jsx). The page's own h1 is
+   retired under the v2 chrome, so without this a route had no heading at all
+   and heading navigation found nothing. Looking like a label and being a
+   heading are not in conflict: the styling is the eyebrow, the element is the
+   h1. Only one is ever exposed — the `display: none` rule below drops the
+   bar's copy when ContextBar portals its own. */
 .od-topbar__section {
   /* Sits after the toggle/Filters cluster, not between them — it is a label,
      and a label in the middle of a pair of buttons breaks the pair. */
@@ -1111,6 +1118,23 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
  * name rather than "DISCOVER  ACTION GAMES". */
 .od-topbar__start:has(.od-topbar__lead .od-topbar__section)
   > .od-topbar__section {
+  display: none;
+}
+
+/* ...and stand down entirely when the PAGE supplies its own heading.
+   A handful of pages (game details, Acquire, VR) render an h1 outside
+   `.od-page-header`, so the v2 retirement rule never touched it and it is
+   still on screen. Once the bar's own title became an h1 those pages had TWO
+   visible h1s, the generic route name ("Game") ahead of the real one
+   ("007 Racing") — worse than before. `display: none` drops this copy from
+   the a11y tree as well, leaving exactly one heading.
+
+   The `:not(.od-page-header > h1)` is load-bearing: retired headings are
+   still in the DOM as `display: none`, so a bare `:has(#main-content h1)`
+   would match on every page and strip the only heading the other 15 routes
+   have. Only a heading the retirement rule did NOT hide counts. */
+.od-shell:has(#main-content h1:not(.od-page-header > h1))
+  .od-topbar__section {
   display: none;
 }
 
@@ -1335,7 +1359,13 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
     box-shadow: var(--od-shadow-lg);
   }
 
-  [data-rail='open'] .od-rail {
+  /* `expanded`, not `open`. The shell only ever sets data-rail to `expanded`
+     or `collapsed` (App.jsx `data-rail={railState}`), so `[data-rail='open']`
+     matched nothing and the drawer could never be opened on mobile — the
+     hamburger appeared to do nothing. Mapping it to the real state makes the
+     toggle work: expanded slides the drawer in, collapsed slides it out, and
+     the choice persists like it does on desktop. */
+  [data-rail='expanded'] .od-rail {
     transform: translateX(0);
   }
 

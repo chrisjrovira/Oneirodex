@@ -156,17 +156,18 @@ export function TopBar({
               than as a third button in the group. */}
           <div id={TOPBAR_TITLE_ID} className="od-topbar__title-slot" />
 
-          {/* The page name, but only when the rail is collapsed, and after the
-              control cluster rather than inside it.
-              UIR-1 removed it from the bar on the grounds that bar two's view
-              switcher named the section; GT-B5 put it back because the rail owns
-              destinations now. Both were right for one rail state each: an
-              expanded rail already shows which entry is active, in words, a few
-              pixels to the left — so the bar's copy is a second answer to a
-              question nothing asked. Collapsed, the rail is a column of icons and
-              the bar is the only place the answer exists. */}
-          {railState === 'collapsed' && pageTitle ? (
-            <span className="od-topbar__section">{pageTitle}</span>
+          {/* The page name. It used to render only on a collapsed rail, on
+              the reasoning that an expanded rail already names the active
+              entry a few pixels to the left. That left the page with NO
+              heading at all: the rail entry is a nav link, and the page's own
+              h1 is retired under the v2 chrome, so `h1..h6` counted ZERO on 15
+              routes. It is the page heading now — always present, so heading
+              navigation works whatever the rail is doing.
+              When ContextBar portals its own title into the lead slot,
+              od-shell.css hides this copy with `display: none`, which removes
+              it from the a11y tree too, so exactly one heading is exposed. */}
+          {pageTitle ? (
+            <h1 className="od-topbar__section">{pageTitle}</h1>
           ) : null}
         </div>
 

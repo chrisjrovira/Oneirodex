@@ -398,7 +398,7 @@ export function ContextBar({
    * table-named one. od-shell.css suppresses the bar's copy when this is
    * present, otherwise a collapsed rail showed both. */
   const titleControl = title ? (
-    <span className="od-topbar__section">{title}</span>
+    <h1 className="od-topbar__section">{title}</h1>
   ) : null
 
   // One bar, not two.

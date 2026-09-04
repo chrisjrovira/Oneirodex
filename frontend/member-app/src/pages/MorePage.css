@@ -1,7 +1,16 @@
 /* Shared hub / “More” page rhythm for member SPA routes. */
 
 .od-more-page {
-  max-width: 72rem;
+  /* No page-level cap. 72rem (1152px) left 241px unused at a 1583px viewport
+     — 17.3% — and the waste grew with the screen (~578px, a third of the
+     width, at 1920). It also applied to pages a reading measure does not suit:
+     /acquire is a ranked results table, /updates a freshness inbox, /trailers
+     a video gallery, /vr a large-tap headset surface. Only 3 of 9 such pages
+     had opted out via a --fill modifier, so the split was incidental rather
+     than considered.
+     Prose stays readable because `.od-more-page__lede` keeps its own 42rem
+     measure — the cap belongs on the text, not on the page. */
+  max-width: 100%;
   width: 100%;
   min-width: 0;
   margin: 0 auto;
