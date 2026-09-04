@@ -12,6 +12,7 @@ import {
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
+
 function makeGames(count) {
   return Array.from({ length: count }, (_, index) => ({
     uuid: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
@@ -130,23 +131,28 @@ test('renders virtualized grid root and visible game tiles', () => {
   expect(within(root).getAllByRole('img').length).toBeLessThanOrEqual(games.length)
 })
 
-test('an open tile menu raises its whole virtual row, not just the card', () => {
-  // Virtual rows are absolutely positioned *and transformed*, and a transform
-  // creates a stacking context — so `.game-card { z-index: 20 }` can only rise
-  // within its own row and the next row paints over the open menu. Raising the
-  // card was the fix that looked right and did nothing; the row is the level
-  // the problem lives at.
-  const css = readFileSync(join(HERE, 'GameGrid.css'), 'utf8')
-
-  expect(css).toMatch(
-    /\.game-library-container\[data-library-virtual\]\s+\.game-library-row:has\(\s*\.game-card\[data-overlay-open='true'\]\s*\)/,
-  )
-
-  // The premise: if rows ever stop being transformed, this rule is no longer
-  // needed and the comment above it becomes misleading.
+test('rows are positioned, not transformed, so cards can stack on their own', () => {
+  // This replaces "an open tile menu raises its whole virtual row". That test
+  // guarded a workaround, and it carried its own expiry note: "if rows ever
+  // stop being transformed, this rule is no longer needed".
+  //
+  // They have. A transform made every row a stacking context, so a card's
+  // z-index could only order it against its row-mates and the fix had to raise
+  // the whole ROW — which raised the three tiles nobody was pointing at, and
+  // they painted over the chrome together. Rows now use `top`, there is no
+  // per-row stacking context, and `.game-card:hover { z-index: 40 }` plus
+  // `.game-card-container:has(.game-card:hover) { z-index: 25 }` in the theme
+  // lift exactly one tile.
   const source = readFileSync(join(HERE, 'GameGrid.jsx'), 'utf8')
-  expect(source).toContain('transform: `translateY(')
   expect(source).toContain("position: 'absolute'")
+  expect(source).toContain('top: `${virtualRow.start')
+  // A transform here would silently restore the stacking context.
+  expect(source).not.toContain('transform: `translateY(')
+
+  // ...and so would a z-index on the row, since rows are still positioned.
+  const css = readFileSync(join(HERE, 'GameGrid.css'), 'utf8')
+  const rowZIndex = /\.game-library-row[^{]*\{[^}]*z-index/
+  expect(css).not.toMatch(rowZIndex)
 })
 
 test('hovered tiles grow from the centre, not an edge', () => {
