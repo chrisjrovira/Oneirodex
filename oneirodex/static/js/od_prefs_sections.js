@@ -1,7 +1,7 @@
 /* Extracted from the matching Jinja template so the page has no inline
  * <script>. Lives under static/js, not a theme copy — no Reset Themes. */
                   (function () {
-                    var KEY = 'gt.prefs.collapsedSections';
+                    var KEY = 'od.prefs.collapsedSections';
                     var panel = document.getElementById('preferencesModal');
                     if (!panel) return;
                     var sections = panel.querySelectorAll('[data-prefs-section]');

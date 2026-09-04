@@ -8,7 +8,7 @@ Quick checks before pinging an admin.
 |---|---|---|
 | Unstyled Discover/Library | Missing frontend build | Admin rebuilds image / `member-app` dist |
 | Spin forever / Discover stuck on Loading while nav works | Old image without ASGI SSE fix, or companion SSE holding the only worker | Ask admin to rebuild from current tree (not restart alone) — [admin troubleshooting](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading). Clear site data if Friends dock was stuck open. |
-| Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/readyz` + logs |
+| Spin forever (API 401/500) | Auth / server error | Hard refresh; re-login; admin check `/awake` + logs |
 | Theme didn’t apply | Server predates the constant-folding fix | Fixed — see [below](#a-new-theme-doesnt-appear-after-reload). On an older build only a server restart applied a theme change. |
 | Font pref changed nothing | Server predates the `fonts.css` fix | Fixed — see [below](#the-font-preference-had-no-effect). On an older build no font choice, including the default, ever reached the page. |
 | Preferences panel is blank / errors | Server predates the room-card picker Jinja fix | Fixed — see [below](#preferences-will-not-open). On an older build the theme picker crashed while rendering. |

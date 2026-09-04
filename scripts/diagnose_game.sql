@@ -1,5 +1,5 @@
 -- Diagnose what is blocking deletion of a specific game.
--- Usage: psql -h <host> -U <user> -d gametheca -v uuid="'3b2a3bcf-d296-47a9-b2d4-cdb9e29b60c8'" -f scripts/diagnose_game.sql
+-- Usage: psql -h <host> -U <user> -d oneirodex -v uuid="'3b2a3bcf-d296-47a9-b2d4-cdb9e29b60c8'" -f scripts/diagnose_game.sql
 
 \set g :uuid
 

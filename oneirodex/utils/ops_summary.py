@@ -389,7 +389,7 @@ def _db_ping_ms():
         return None
 
 
-def _readyz_pulse():
+def _awake_pulse():
     """Reuse readiness probe payload + wall-clock check_ms (no HTTP hop)."""
     try:
         started = perf_counter()
@@ -460,7 +460,7 @@ def _game_servers_pulse():
 
 
 def _library_watch_pulse():
-    """Optional root-folder incremental watch (GT_LIBRARY_WATCH)."""
+    """Optional root-folder incremental watch (ONEIRODEX_LIBRARY_WATCH)."""
     try:
         from oneirodex.utils.library_watch import get_library_watch_status
 
@@ -486,7 +486,7 @@ def _services_snapshot():
         'companions': _companion_pulse(),
         'queues': _queue_pulse(),
         'game_servers': _game_servers_pulse(),
-        'readyz': _readyz_pulse(),
+        'awake': _awake_pulse(),
         'malware_module_enabled': malware_scan_enabled(),
         'library_watch': _library_watch_pulse(),
     }
@@ -540,16 +540,16 @@ def build_ops_summary(app_start_time):
     db_reachable = None
     if host is not None:
         db_reachable = host.get('db_ping_ms') is not None
-    readyz_ok = None
+    awake_ok = None
     companions_stale = None
     if services:
-        readyz = services.get('readyz')
-        if readyz is None:
-            readyz_ok = False
-        elif isinstance(readyz, dict):
-            status = (readyz.get('status') or '').lower()
-            http_status = readyz.get('http_status')
-            readyz_ok = status in ('ok', 'ready', 'pass') or http_status == 200
+        awake = services.get('awake')
+        if awake is None:
+            awake_ok = False
+        elif isinstance(awake, dict):
+            status = (awake.get('status') or '').lower()
+            http_status = awake.get('http_status')
+            awake_ok = status in ('ok', 'ready', 'pass') or http_status == 200
         companions = services.get('companions') or {}
         last_seen = companions.get('last_seen') or {}
         stale = last_seen.get('stale')
@@ -567,7 +567,7 @@ def build_ops_summary(app_start_time):
             scan_failures=scan_failures,
             recent_error_count=recent_error_count,
             db_reachable=db_reachable,
-            readyz_ok=readyz_ok,
+            awake_ok=awake_ok,
             companions_stale=companions_stale,
         ),
         'scans': {

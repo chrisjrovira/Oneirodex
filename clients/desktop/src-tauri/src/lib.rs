@@ -7,7 +7,7 @@ use tauri::Manager;
 use zip::ZipArchive;
 
 /// Service name for OS credential store entries (Windows Credential Manager, etc.).
-const SECURE_STORE_SERVICE: &str = "com.gametheca.desktop";
+const SECURE_STORE_SERVICE: &str = "com.oneirodex.desktop";
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct AppConfig {

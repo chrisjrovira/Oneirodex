@@ -10,7 +10,7 @@ Two jobs, in this order:
 1. **Mount it.** Oneirodex does not speak SMB or NFS. The host does. This is an
    OS-level step and it is the same step you would take for any other app.
 2. **Declare it.** Tell Oneirodex which mounts are libraries, with
-   `GT_LIBRARY_ROOTS` (or `ONEIRODEX_LIBRARY_ROOTS` — the new key wins if both
+   `ONEIRODEX_LIBRARY_ROOTS` (or `ONEIRODEX_LIBRARY_ROOTS` — the new key wins if both
    are set). Until you do, the admin folder browser and the path
    allowlist only know about the single base folder.
 
@@ -20,13 +20,13 @@ Two jobs, in this order:
 
 ---
 
-## `GT_LIBRARY_ROOTS` / `ONEIRODEX_LIBRARY_ROOTS`
+## `ONEIRODEX_LIBRARY_ROOTS` / `ONEIRODEX_LIBRARY_ROOTS`
 
 Pipe-separated list. Each entry is a path, optionally prefixed with a display
 label and `=`:
 
 ```bash
-GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games|/srv/extra
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games|/srv/extra
 ```
 
 | Rule | Detail |
@@ -48,7 +48,7 @@ Declaring a root does three things:
   being mounted is visible rather than silently empty.
 
 `DATA_FOLDER_GAMES` and the OS base folder (`BASE_FOLDER_POSIX` /
-`BASE_FOLDER_WINDOWS`) remain roots without being listed. `GT_LIBRARY_ROOTS`
+`BASE_FOLDER_WINDOWS`) remain roots without being listed. `ONEIRODEX_LIBRARY_ROOTS`
 adds to them; it never replaces them.
 
 ---
@@ -78,14 +78,14 @@ LIBRARY_ROOT_3_HOST_PATH=/mnt/nas/archive
 # Container paths — /storage2, not /mnt/user/roms
 # Compose interpolates both keys; ONEIRODEX_ wins inside the app if both are set.
 ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
-GT_LIBRARY_ROOTS=
+ONEIRODEX_LIBRARY_ROOTS=
 ```
 
 ```bash
 docker compose up -d
 ```
 
-**The most common mistake** is putting the host path in `GT_LIBRARY_ROOTS`. The
+**The most common mistake** is putting the host path in `ONEIRODEX_LIBRARY_ROOTS`. The
 app runs inside the container and sees `/storage2`. A host path there produces a
 root that is configured, listed, and permanently "not mounted".
 
@@ -102,7 +102,7 @@ extra mounting — just another bind:
 ```
 
 Unraid's FUSE layer can miss host-side renames, which matters for
-`GT_LIBRARY_WATCH` — see [unraid-deploy.md](unraid-deploy.md). Manual and
+`ONEIRODEX_LIBRARY_WATCH` — see [unraid-deploy.md](unraid-deploy.md). Manual and
 scheduled scans are unaffected.
 
 ---
@@ -163,7 +163,7 @@ blocks the scan thread indefinitely instead of failing.
 
 ```bash
 # .env
-GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|NAS Games=/mnt/nas/games
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|NAS Games=/mnt/nas/games
 ```
 
 Restart Oneirodex (`./startweb.sh`, or `systemctl restart oneirodex`).
@@ -176,7 +176,7 @@ A share mounted in Finder lands under `/Volumes/<name>` and scans like any local
 folder:
 
 ```bash
-GT_LIBRARY_ROOTS=NAS ROMs=/Volumes/roms
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/Volumes/roms
 ```
 
 **Finder mounts are per-login-session.** They disappear when you log out, and a
@@ -208,7 +208,7 @@ sudo automount -vc
 ```
 
 Store the password in the login keychain rather than in the map file, and point
-`GT_LIBRARY_ROOTS` at the mount point.
+`ONEIRODEX_LIBRARY_ROOTS` at the mount point.
 
 macOS also asks for explicit consent before a background process reads network
 volumes or folders like `~/Documents`. If a scan sees an empty folder that is
@@ -222,7 +222,7 @@ in System Settings → Privacy & Security.
 UNC paths work directly — no drive letter needed:
 
 ```
-GT_LIBRARY_ROOTS=NAS ROMs=\\nas\roms|Archive=E:\archive
+ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=\\nas\roms|Archive=E:\archive
 ```
 
 **Prefer UNC over a mapped drive letter.** A mapped drive belongs to one
@@ -276,8 +276,8 @@ curl -s -b cookies.txt http://localhost:5006/api/library_roots | python -m json.
 | Symptom | Cause | Fix |
 |---|---|---|
 | Root listed as "not mounted" | Nothing is mounted at that path | Mount it on the host; in Docker, add the bind and use the **container** path |
-| Root missing from the picker | Only one location exists — the picker hides itself | Check `GT_LIBRARY_ROOTS` reached the process: Ops → path health |
-| "Access denied — path outside allowed directories" | Scanning a path under no root | Add its root to `GT_LIBRARY_ROOTS` and restart |
+| Root missing from the picker | Only one location exists — the picker hides itself | Check `ONEIRODEX_LIBRARY_ROOTS` reached the process: Ops → path health |
+| "Access denied — path outside allowed directories" | Scanning a path under no root | Add its root to `ONEIRODEX_LIBRARY_ROOTS` and restart |
 | Scan finds zero games in a full folder | Wrong owner on an SMB mount | Set `uid=`/`gid=` to the Oneirodex account and remount |
 | Scan hangs, no progress | Hard NFS mount on an unreachable server | Remount `soft,timeo=100` |
 | Works interactively, empty as a service | Mapped drive (Windows) or Finder mount (macOS) | Use UNC / autofs — both are per-session otherwise |

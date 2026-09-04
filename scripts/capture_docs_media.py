@@ -306,7 +306,7 @@ def main() -> int:
                     src.rename(dest)
                     print("video:", dest)
 
-    for probe in ("healthz", "readyz"):
+    for probe in ("pulse", "awake"):
         try:
             with urllib.request.urlopen(f"{BASE}/{probe}", timeout=5) as resp:
                 (SHOT_DIR / f"{probe}.json").write_text(

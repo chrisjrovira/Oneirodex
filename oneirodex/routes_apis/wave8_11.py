@@ -175,7 +175,7 @@ def emulator_installed_cores_js():
 
     cores = sorted(get_effective_installed_cores())
     # Compact JSON array; names are [a-z0-9_] only from our discovery/allowlist.
-    payload = 'var GT_INSTALLED_CORES = ' + json.dumps(cores) + ';\n'
+    payload = 'var OD_INSTALLED_CORES = ' + json.dumps(cores) + ';\n'
     return Response(
         payload,
         mimetype='application/javascript',

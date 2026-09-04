@@ -64,27 +64,27 @@ class TestSourceOffer:
     def test_config_carries_a_source_url(self):
         from config import Config
 
-        assert Config.GT_SOURCE_URL
-        assert Config.GT_SOURCE_URL.startswith('http')
+        assert Config.ONEIRODEX_SOURCE_URL
+        assert Config.ONEIRODEX_SOURCE_URL.startswith('http')
 
     def test_source_url_is_configurable(self, monkeypatch):
         """A modified deployment owes its users *its* source, not upstream's."""
         monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
-        monkeypatch.setenv('GT_SOURCE_URL', 'https://git.example.com/my/fork')
+        monkeypatch.setenv('ONEIRODEX_SOURCE_URL', 'https://git.example.com/my/fork')
         import importlib
 
         import config as config_module
 
         importlib.reload(config_module)
         try:
-            assert config_module.Config.GT_SOURCE_URL == 'https://git.example.com/my/fork'
+            assert config_module.Config.ONEIRODEX_SOURCE_URL == 'https://git.example.com/my/fork'
         finally:
-            monkeypatch.delenv('GT_SOURCE_URL', raising=False)
+            monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
             monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
             importlib.reload(config_module)
 
     def test_oneirodex_source_url_wins(self, monkeypatch):
-        monkeypatch.setenv('GT_SOURCE_URL', 'https://git.example.com/legacy')
+        monkeypatch.setenv('ONEIRODEX_SOURCE_URL', 'https://git.example.com/legacy')
         monkeypatch.setenv('ONEIRODEX_SOURCE_URL', 'https://git.example.com/new')
         import importlib
 
@@ -92,9 +92,9 @@ class TestSourceOffer:
 
         importlib.reload(config_module)
         try:
-            assert config_module.Config.GT_SOURCE_URL == 'https://git.example.com/new'
+            assert config_module.Config.ONEIRODEX_SOURCE_URL == 'https://git.example.com/new'
         finally:
-            monkeypatch.delenv('GT_SOURCE_URL', raising=False)
+            monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
             monkeypatch.delenv('ONEIRODEX_SOURCE_URL', raising=False)
             importlib.reload(config_module)
 

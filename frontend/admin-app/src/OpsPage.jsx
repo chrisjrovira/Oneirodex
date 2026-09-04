@@ -328,13 +328,13 @@ export function OpsPage() {
           tone={usageTone(host?.db_ping_ms, { warn: 50, bad: 250 })}
         />
       ),
-      'm-readyz': (
+      'm-awake': (
         <MetricTile
           label="Readyz"
-          value={formatReadyz(services?.readyz)}
-          hint={na(services?.readyz?.http_status)}
+          value={formatReadyz(services?.awake)}
+          hint={na(services?.awake?.http_status)}
           tone={booleanTone(
-            services?.readyz == null ? null : services?.readyz?.http_status === 200,
+            services?.awake == null ? null : services?.awake?.http_status === 200,
           )}
         />
       ),
@@ -360,7 +360,7 @@ export function OpsPage() {
           hint={
             services?.library_watch?.enabled
               ? `${services.library_watch.roots ?? 0} roots · ${services.library_watch.pending_libraries ?? 0} pending`
-              : 'GT_LIBRARY_WATCH off'
+              : 'ONEIRODEX_LIBRARY_WATCH off'
           }
         />
       ),
@@ -446,10 +446,10 @@ export function OpsPage() {
                 <tbody>
                   <tr>
                     <td>Readyz</td>
-                    <td>{formatReadyz(services.readyz)}</td>
+                    <td>{formatReadyz(services.awake)}</td>
                     <td>
-                      {services.readyz?.checks
-                        ? Object.entries(services.readyz.checks)
+                      {services.awake?.checks
+                        ? Object.entries(services.awake.checks)
                             .map(
                               ([k, v]) =>
                                 `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`,

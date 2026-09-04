@@ -831,7 +831,7 @@ DATA_FOLDER_GAMES=$GAMES_DIR
 # Extra scan locations: NAS shares, second disks, anything else this machine
 # has mounted. "|"-separated, optional "Label=" prefix. The share must already
 # be mounted here — see docs/runbooks/remote-scan-locations.md
-GT_LIBRARY_ROOTS=$LIBRARY_ROOTS
+ONEIRODEX_LIBRARY_ROOTS=$LIBRARY_ROOTS
 
 # Base folders for path resolution
 BASE_FOLDER_WINDOWS=C:\\

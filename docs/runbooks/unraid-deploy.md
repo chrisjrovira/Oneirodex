@@ -14,7 +14,7 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 
 ### After deploy (every code image)
 
-1. Confirm readiness: `curl -f http://<unraid-ip>:5006/readyz`
+1. Confirm readiness: `curl -f http://<unraid-ip>:5006/awake`
 2. Admin → Themes → **Reset Default Themes** (library volume theme CSS/JS lag the image) — [themes-reset.md](../admin/themes-reset.md)
 3. Confirm the image rebuilt **`frontend/member-app` dist** (`member-app.css` / `.js` in View Source). Reset Themes alone does **not** refresh the SPA bundle
 4. Reload the browser normally; smoke Discover/Library + Admin Ops glance
@@ -107,9 +107,9 @@ To put the app on HTTPS:
 
 Without the optional bind, Admin upload still writes under the library volume at `…/library/bios` on the host. The dedicated appdata folder is for operators who keep firmware separate from covers/themes.
 
-### Library root watch (`GT_LIBRARY_WATCH`) — Unraid honesty
+### Library root watch (`ONEIRODEX_LIBRARY_WATCH`) — Unraid honesty
 
-Wave 3 optional watcher (Backend). **Safe default: off** (`GT_LIBRARY_WATCH=0` / unset). Do not enable until you understand mount-event limits below.
+Wave 3 optional watcher (Backend). **Safe default: off** (`ONEIRODEX_LIBRARY_WATCH=0` / unset). Do not enable until you understand mount-event limits below.
 
 | Mount style | Host path example | What the container sees | Event honesty |
 |---|---|---|---|
@@ -123,7 +123,7 @@ Wave 3 optional watcher (Backend). **Safe default: off** (`GT_LIBRARY_WATCH=0` /
 2. When watch is on, it must see the **same mount** Admin libraries use (`/storage/...`). Watching a different host path than the games bind will miss library-root changes.
 3. Host renames/moves under `/mnt/user/...` may never fire inside the container — treat watch as **best-effort enqueue**, not a substitute for scan jobs.
 4. When the watcher enqueues many paths: prefer **Queue** (`queue_policy=queue`) over **Force parallel** — overlapping full/partial scans pin NAS CPU. See [§ CPU / scan load](#cpu--scan-load-unraid-safe-defaults) and [libraries-and-scans.md](../admin/libraries-and-scans.md#run-a-scan).
-5. Env: `.env.example` / `.env.unraid.example` — `GT_LIBRARY_WATCH=0` (default) and optional `GT_LIBRARY_WATCH_DEBOUNCE_SEC=3`. Details: [library-root-watch-spike.md](../admin/library-root-watch-spike.md). Ops pulse: `services.library_watch`.
+5. Env: `.env.example` / `.env.unraid.example` — `ONEIRODEX_LIBRARY_WATCH=0` (default) and optional `ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC=3`. Details: [library-root-watch-spike.md](../admin/library-root-watch-spike.md). Ops pulse: `services.library_watch`.
 
 ### Console / emulator leaf libraries
 
@@ -196,7 +196,7 @@ Full stack in one shot:
 docker compose --profile livekit --profile clamav --profile challenge up -d --build
 ```
 
-This household’s Unraid `.env` pins `COMPOSE_FILE=docker-compose.yml` so Compose Manager does not merge `docker-compose.override.yml` (NVIDIA `deploy` on `sdnext` fails the whole stack when the driver is not loaded). Product flags that are on in that file still leave **`ENABLE_AI_AUTO_APPLY=false`** and **`ALLOW_HARDLINK_APPLY=false`**. Artwork stays on the Windows 2080 box (`AI_ARTWORK_URL`), not `--profile artwork`. `GT_LIBRARY_WATCH` stays off on `/mnt/user` FUSE.
+This household’s Unraid `.env` pins `COMPOSE_FILE=docker-compose.yml` so Compose Manager does not merge `docker-compose.override.yml` (NVIDIA `deploy` on `sdnext` fails the whole stack when the driver is not loaded). Product flags that are on in that file still leave **`ENABLE_AI_AUTO_APPLY=false`** and **`ALLOW_HARDLINK_APPLY=false`**. Artwork stays on the Windows 2080 box (`AI_ARTWORK_URL`), not `--profile artwork`. `ONEIRODEX_LIBRARY_WATCH` stays off on `/mnt/user` FUSE.
 
 SSO is **Authentik** already installed via Dockerman (`authentik` / `authentik-worker` on `authentik-net`, UI `http://192.168.50.116:9000`). Oneirodex OAuth slug **`oneirodex`**, redirect `http://192.168.50.116:5006/login/oidc/callback`. Env `OIDC_ENABLED=true` is not enough — also set `global_settings.oidc_enabled` (Admin → Integrations → OIDC, or SQL after rebuild). LAN HTTP cookies: `SESSION_COOKIE_SECURE=false`, `TRUSTED_PROXIES=0`. Walkthrough: [oidc-authentik-unraid.md](oidc-authentik-unraid.md) Appendix A.
 
@@ -206,7 +206,7 @@ SSO is **Authentik** already installed via Dockerman (`authentik` / `authentik-w
 
 1. Set a real `SECRET_KEY` and volume paths in `.env`
 2. Start stack; watch logs until Postgres is ready
-3. Confirm healthy: `curl -f http://<unraid-ip>:5006/readyz` (Compose healthcheck uses this; `/healthz` is liveness-only)
+3. Confirm healthy: `curl -f http://<unraid-ip>:5006/awake` (Compose healthcheck uses this; `/pulse` is liveness-only)
 4. Open `http://<unraid-ip>:5006`
 5. Complete setup wizard (admin → SMTP optional → IGDB)
 6. Admin → Themes → **Reset Default Themes** (installs presets; regenerates at `GENERATOR_VERSION` 9)
@@ -273,8 +273,8 @@ Use this loop while Unraid-testing so the team can report status **without Disco
 
 | Check | How | Pass signal |
 |---|---|---|
-| Readiness | `curl -f http://<unraid-ip>:5006/readyz` | HTTP 200 (DB + init) |
-| Liveness | `curl -f http://<unraid-ip>:5006/healthz` | HTTP 200 (process up) |
+| Readiness | `curl -f http://<unraid-ip>:5006/awake` | HTTP 200 (DB + init) |
+| Liveness | `curl -f http://<unraid-ip>:5006/pulse` | HTTP 200 (process up) |
 | Ops glance | Admin → Ops (`/admin/ops`) — polls `/admin/api/ops/summary` ~15s | `host` / `library` OK; `issues` not flagging games RO as bad; disk % stays **Warning / Info** (not Action required); **Services** = LiveKit · malware/ClamAV · companions · queues · game_servers |
 | Scan progress | Admin → Scan jobs **or** Ops `scans.jobs[]` | `status` + `folders_success` / `folders_failed` / `total_folders` (+ `current_processing`); aliases `progress` / `errors` OK |
 | Container logs | `docker compose logs -f app` (and `db` / profile sidecars) | No crash loops; theme sync / `[OK]` lines |
@@ -289,10 +289,10 @@ Scans and image downloads can pin a NAS CPU if parallelism is left high. **There
 |---|---|---|---|
 | `UVICORN_WORKERS` | `.env` / Compose | **1** | SSE/schedulers are per-worker; do not raise on single-node Unraid |
 | Game scan threads | Server Settings | **1** (max **2** on capable hosts) | UI/API already cap at 4; overlapping full scans still freeze the host — one job at a time |
-| Turbo image downloads | Server Settings | Off during first large scan, or threads **≤4**, batch **≤100** | Stored defaults are **4 / 100**; runtime also hard-caps via `GT_IMAGE_*` |
+| Turbo image downloads | Server Settings | Off during first large scan, or threads **≤4**, batch **≤100** | Stored defaults are **4 / 100**; runtime also hard-caps via `OD_IMAGE_*` |
 | ClamAV profile | Compose `--profile clamav` | **Off** until needed | Heuristics + `ENABLE_MALWARE_SCAN` still run without the daemon; defs + on-add scans add CPU/IO |
 | Challenge / TRAWL | `--profile challenge` | Off unless Acquire needs it | Browser pool is heavy; old NAS → `TRAWL_IMAGE=…:baseline` |
-| `GT_LIBRARY_WATCH` | `.env` | **0** (off) | Best-effort root-folder watch; enqueues scans only — see [§ Library root watch](#library-root-watch-gt_library_watch--unraid-honesty) |
+| `ONEIRODEX_LIBRARY_WATCH` | `.env` | **0** (off) | Best-effort root-folder watch; enqueues scans only — see [§ Library root watch](#library-root-watch-gt_library_watch--unraid-honesty) |
 | Watcher burst enqueue | Scan conflict UI / API | **Queue** (not force parallel) | Many path events → FIFO queue; force-parallel stacks jobs and spikes CPU |
 
 After Backend lands harder code caps/defaults: rebuild + recreate **app**, then open Server Settings once and confirm values match the safe row above (existing DB rows may keep old highs until clamped or re-saved).
@@ -310,7 +310,7 @@ Full matrix: [themes-reset.md](../admin/themes-reset.md).
 
 ## Smoke checklist (Style B+C + Systems + Wave 5/6)
 
-0. `curl -f http://<host>:5006/healthz` and `/readyz` both succeed (Unraid Docker health should track `/readyz`)
+0. `curl -f http://<host>:5006/pulse` and `/awake` both succeed (Unraid Docker health should track `/awake`)
 0a. After Jul 27 SSE/pg_hba fixes: `docker compose up -d --force-recreate db` then rebuild/restart **app** from a tree that includes `docker/postgres/pg_hba.conf` + ASGI activity SSE — [container-wont-start §3b](container-wont-start.md#3b-postgres-up-but-pg_hba-rejects-app-no-encryption) · [admin Discover hang](../admin/troubleshooting.md#spa-navigates-but-pagesadmin-hang-discover-stuck-on-loading)
 0b. Admin → Ops (`/admin/ops`): **Services** tile shows LiveKit · malware/ClamAV · companions · queues · game_servers (via `/admin/api/ops/summary`)
 0c. Console trees: leaf libs under `/storage/.../_console-gaming/...` only — not family roots; skip-dir is backup, not a substitute ([§ Console leaf libraries](#console--emulator-leaf-libraries))

@@ -58,9 +58,7 @@ services:
       # here needs a matching bind mount below, otherwise it is a root that
       # browses as an empty folder. See docs/runbooks/remote-scan-locations.md
       #   ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/storage2|Archive=/storage3
-      #   GT_LIBRARY_ROOTS=… still accepted; blank ONEIRODEX_ falls through.
       - ONEIRODEX_LIBRARY_ROOTS=${ONEIRODEX_LIBRARY_ROOTS:-}
-      - GT_LIBRARY_ROOTS=${GT_LIBRARY_ROOTS:-}
       - UPLOAD_FOLDER=/app/oneirodex/static/library
       - SECRET_KEY=${SECRET_KEY}
       - DEV_MODE=${DEV_MODE:-false}
@@ -151,7 +149,7 @@ services:
       - "${LIBRARY_HOST_PATH:-./data/library}:/app/oneirodex/static/library"
       # Extra scan locations (second disk, NAS share, another appdata share).
       # Uncomment one line per location, mount it RO like /storage, and list the
-      # container path in ONEIRODEX_LIBRARY_ROOTS / GT_LIBRARY_ROOTS above. The host side is mounted by
+      # container path in ONEIRODEX_LIBRARY_ROOTS above. The host side is mounted by
       # the host — Docker binds what the kernel already has, it does not speak
       # SMB or NFS itself. See docs/runbooks/remote-scan-locations.md
       # - "${LIBRARY_ROOT_2_HOST_PATH}:/storage2:ro"
@@ -171,8 +169,8 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      # /readyz requires DB + startup init — do not probe login/setup "/"
-      test: ["CMD-SHELL", "curl -f http://localhost:5006/readyz || exit 1"]
+      # /awake requires DB + startup init — do not probe login/setup "/"
+      test: ["CMD-SHELL", "curl -f http://localhost:5006/awake || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -345,8 +343,8 @@ services:
 
   # ---------------------------------------------------------------------------
   # profile: observability — OPTIONAL stub (not enabled; no images required)
-  # Prometheus/Grafana are NOT bundled for 1.0. Prefer Admin → Ops + /healthz
-  # + /readyz. When you add scrape later, uncomment and wire your own config —
+  # Prometheus/Grafana are NOT bundled for 1.0. Prefer Admin → Ops + /pulse
+  # + /awake. When you add scrape later, uncomment and wire your own config —
   # see docs/runbooks/observability-profile.md. Do not enable until /metrics
   # (or an equivalent scrape target) exists and is auth-gated.
   # ---------------------------------------------------------------------------

@@ -23,8 +23,8 @@ Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; d
 | **Integrations** | `admin-integrations.png` | Captured |
 | **Discover** | `discover.png` | **Still owed 2026-09-01** — live Discover stayed on Loading during capture; left prior file untouched |
 | **Admin libraries** | `admin-libraries.png` | Captured — **refresh needed** after W22-1 (unified Libraries & scans tabs · multi-select · force-delete) when `:5006` healthy |
-| **`/readyz` JSON** | `readyz.json` | Captured |
-| **`/healthz` JSON** | `healthz.json` | Captured |
+| **`/awake` JSON** | `awake.json` | Captured |
+| **`/pulse` JSON** | `pulse.json` | Captured |
 | **Product tour video** | `docs/media/video/product-tour.webm` | Captured |
 | **How-to videos (10)** | `docs/media/video/howto/howto-*.webm` | Captured 2026-08-05 — one worked example per section; index + honest gaps in [howto/README.md](../../media/video/howto/README.md) |
 
@@ -72,12 +72,12 @@ Also useful later: Friends companion pop-out, voice lobby with LiveKit secrets.
 
    ```python
    from oneirodex.init_manager import run_complete_startup_initialization
-   run_complete_startup_initialization()      # otherwise /readyz stays 503
+   run_complete_startup_initialization()      # otherwise /awake stays 503
    uvicorn.run(asgi_app, host="127.0.0.1", port=5006)
    ```
 
-   Starting uvicorn alone leaves `initialization.complete = false`, so `/readyz`
-   returns 503 and the captured `readyz.json` records a not-ready box.
+   Starting uvicorn alone leaves `initialization.complete = false`, so `/awake`
+   returns 503 and the captured `awake.json` records a not-ready box.
 7. Capture:
    - `python scripts/capture_docs_media.py` — stills + the product tour
    - `python scripts/capture_howto_videos.py` — one how-to video per section

@@ -2507,7 +2507,7 @@ a.unmatched-dupe-of__title:hover {
     gap: var(--od-space-3);
 }
 
-/* Scan location picker — only rendered when GT_LIBRARY_ROOTS gives the admin
+/* Scan location picker — only rendered when ONEIRODEX_LIBRARY_ROOTS gives the admin
    more than one mounted location to choose between. */
 .od-root-picker {
     display: flex;

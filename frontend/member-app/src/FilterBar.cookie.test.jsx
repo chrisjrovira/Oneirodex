@@ -32,7 +32,7 @@ const initialConfig = {
 
 beforeEach(() => {
   try {
-    window.localStorage?.removeItem('gt.library.filtersVisible')
+    window.localStorage?.removeItem('od.library.filtersVisible')
   } catch {
     /* vitest may omit localStorage */
   }
@@ -41,7 +41,7 @@ beforeEach(() => {
 afterEach(() => {
   document.cookie = 'libraryFilters=; Max-Age=0; path=/'
   try {
-    window.localStorage?.removeItem('gt.library.filtersVisible')
+    window.localStorage?.removeItem('od.library.filtersVisible')
   } catch {
     /* ignore */
   }

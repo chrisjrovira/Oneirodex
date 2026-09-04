@@ -2,7 +2,7 @@
 
 Hand-written TypeScript client for Oneirodex REST endpoints described in `docs/openapi/openapi.json`. No OpenAPI codegen or network-dependent tooling.
 
-`createGamethecaClient` remains a same-factory alias of `createOneirodexClient` for one release.
+`createOneirodexClient` remains a same-factory alias of `createOneirodexClient` for one release.
 
 ## Usage
 

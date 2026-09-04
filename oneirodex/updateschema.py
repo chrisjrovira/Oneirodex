@@ -1136,7 +1136,7 @@ class DatabaseManager:
         CREATE INDEX IF NOT EXISTS ix_games_path_status ON games(path_status);
 
         ALTER TABLE libraries ADD COLUMN IF NOT EXISTS watch_enabled BOOLEAN;
-        -- null = follow GT_LIBRARY_WATCH global; false = opt-out; true = prefer watch
+        -- null = follow ONEIRODEX_LIBRARY_WATCH global; false = opt-out; true = prefer watch
 
         ALTER TABLE libraries ADD COLUMN IF NOT EXISTS group_name VARCHAR(80);
         CREATE INDEX IF NOT EXISTS ix_libraries_group_name ON libraries(group_name);

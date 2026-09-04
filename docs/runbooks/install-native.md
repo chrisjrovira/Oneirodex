@@ -206,7 +206,7 @@ nssm start Oneirodex
 ```
 
 Either way, mapped drive letters are per-user and will not resolve — use UNC
-paths in `GT_LIBRARY_ROOTS`.
+paths in `ONEIRODEX_LIBRARY_ROOTS`.
 
 ---
 

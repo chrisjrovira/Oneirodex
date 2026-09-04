@@ -204,11 +204,11 @@ describe('formatLibraryWatchStatus / detail', () => {
       roots: 0,
       pending_libraries: 0,
       debounce_seconds: 3,
-      note: 'Set GT_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
+      note: 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
     }
     expect(formatLibraryWatchStatus(watch)).toBe('off')
     expect(formatLibraryWatchDetail(watch)).toBe(
-      'Set GT_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
+      'Set ONEIRODEX_LIBRARY_WATCH=1 to enable root-folder incremental watch.',
     )
   })
 
@@ -273,11 +273,11 @@ describe('issueFold', () => {
 describe('partitionIssues + banner', () => {
   test('splits action and soft; banner follows folds', () => {
     const { action, soft } = partitionIssues([
-      { id: 'readyz', category: 'action', severity: 'bad', message: 'down' },
+      { id: 'awake', category: 'action', severity: 'bad', message: 'down' },
       { id: 'disk_games_critical', category: 'warning', severity: 'warn', message: 'full' },
       { id: 'note', category: 'info', severity: 'info', message: 'hint' },
     ])
-    expect(action.map((i) => i.id)).toEqual(['readyz'])
+    expect(action.map((i) => i.id)).toEqual(['awake'])
     expect(soft.map((i) => i.id)).toEqual(['disk_games_critical', 'note'])
     expect(resolveBannerSeverity([...action, ...soft], 'good')).toBe('bad')
     expect(resolveBannerSeverity(soft, 'good')).toBe('warn')

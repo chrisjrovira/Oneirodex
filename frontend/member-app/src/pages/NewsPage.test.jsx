@@ -27,7 +27,7 @@ beforeEach(() => {
   freeGamesApi.fetchFreeGames.mockResolvedValue({ items: [] })
   gamingNewsApi.fetchGamingNews.mockResolvedValue({ items: [] })
   window.location.hash = ''
-  window.localStorage.removeItem('gt.news.layout')
+  window.localStorage.removeItem('od.news.layout')
 })
 
 test('lists announcement cards from API', async () => {
@@ -288,7 +288,7 @@ test('RSS layout renders headline magazine rows instead of cards', async () => {
 
   expect(container.querySelector('.od-news__magazine')).toBeTruthy()
   expect(container.querySelector('.od-news__cards')).toBeNull()
-  expect(window.localStorage.getItem('gt.news.layout')).toBe('rss')
+  expect(window.localStorage.getItem('od.news.layout')).toBe('rss')
 })
 
 test('the Free now tab fills the stage rather than a half column', async () => {

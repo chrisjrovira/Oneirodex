@@ -171,7 +171,7 @@ def test_browse_games_path_status_missing_filter(client, db_session, path_user, 
 
 def test_library_watch_get_put(client, db_session, admin_staff, path_library, monkeypatch):
     admin, _librarian = admin_staff
-    monkeypatch.setenv('GT_LIBRARY_WATCH', '1')
+    monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH', '1')
     _login(client, admin)
 
     get_resp = client.get(f'/api/library/{path_library.uuid}')

@@ -629,7 +629,7 @@ def clear_permission_errors() -> tuple[Dict[str, Any], int]:
 # UI-only guard. A destructive endpoint that any authenticated admin can fire
 # with an empty POST is one stray fetch away from an accident, and "the button
 # asks first" is not a property of the API. Phrase lives in oneirodex.product
-# (RESET ONEIRODEX, with RESET GAMETHECA still accepted).
+# (RESET ONEIRODEX, with RESET ONEIRODEX still accepted).
 
 
 @admin2_bp.route('/admin/api/system/reset', methods=['POST'])
@@ -642,7 +642,7 @@ def system_reset_plan_or_perform():
     emptied, including those reached by cascade — and changes nothing.
 
     ``POST {"scopes": [...], "confirm": "RESET ONEIRODEX"}`` performs it.
-    ``RESET GAMETHECA`` remains accepted so existing runbooks keep working.
+    ``RESET ONEIRODEX`` remains accepted so existing runbooks keep working.
 
     Never deletes files. See oneirodex/utils/system_reset.py.
     """

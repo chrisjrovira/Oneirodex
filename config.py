@@ -18,7 +18,7 @@ def _load_secret_key():
     )
 
 def _parse_library_roots(raw):
-    """Parse GT_LIBRARY_ROOTS at import time so app.config carries the list.
+    """Parse ONEIRODEX_LIBRARY_ROOTS at import time so app.config carries the list.
 
     The parser is imported lazily to keep config.py free of package imports at
     module scope; a failure here must leave the app booting with no extra
@@ -47,7 +47,7 @@ class Config(object):
     # Extra scan locations beyond the single base folder above: NAS shares, a
     # second internal disk, additional Docker binds. Entries are separated by
     # "|" and may carry a display label:
-    #   GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
+    #   ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
     # Mounting the share stays the operator's job — this only tells Oneirodex
     # which mounts are libraries. See docs/runbooks/remote-scan-locations.md.
     LIBRARY_ROOTS = _parse_library_roots(getenv_product('LIBRARY_ROOTS'))
@@ -305,7 +305,7 @@ class Config(object):
     # Configurable precisely because §13 is about *this* deployment: if you
     # modify Oneirodex and run it for others, you owe them **your** source, not
     # upstream's. Point this at your fork before you deploy a modified build.
-    GT_SOURCE_URL = getenv_product(
+    ONEIRODEX_SOURCE_URL = getenv_product(
         'SOURCE_URL', 'https://github.com/chrisjrovira/oneirodex'
     )
 

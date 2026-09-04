@@ -20,11 +20,11 @@ echo '=== build + up (livekit clamav challenge; no artwork) ==='
 docker compose --profile livekit --profile clamav --profile challenge up -d --build
 echo '=== ps ==='
 docker compose --profile livekit --profile clamav --profile challenge ps
-echo '=== wait readyz ==='
+echo '=== wait awake ==='
 ok=0
 for i in $(seq 1 90); do
-  if curl -fsS http://127.0.0.1:5006/readyz >/dev/null 2>&1; then
-    curl -fsS http://127.0.0.1:5006/readyz
+  if curl -fsS http://127.0.0.1:5006/awake >/dev/null 2>&1; then
+    curl -fsS http://127.0.0.1:5006/awake
     echo
     ok=1
     break

@@ -2,7 +2,7 @@
 
 **Audience:** Admins / operators reading Admin → Ops  
 **Endpoint:** `GET /admin/api/ops/summary` (admin session)  
-**UI:** `/admin/ops` and Dashboard poll ~15s (**silent** auto-refresh — no toast spam). On Dashboard, manual refresh is the **reset icon beside Updated** in the status banner (no duplicate footer timestamp). Dashboard widgets are a 12-column board: drag a widget (not its buttons) to move — the tile follows the pointer via transform and commits on release; drag the **bottom-right corner** to resize (~1.85× a cell of travel per step). No grab bar. **Reset layout** sits in the thin top-bar trail as a `od-cbtn` (library-style), beside account. Layout persists in `localStorage` key `od-admin-dashboard-layout-v3` (a key bump also clears sticky bad layouts). Metric tiles fill the row width; panel titles (Host meters, Companions by kind) match metric-label type. A first poll that fails uses the shared status block (Retry) rather than empty host panels. Services table scrolls when the list is long. **Grafana-style observability console** (Member UI + Ops wave Pass A–F): status strip + `issues.items` in **two folds** — **Action required** and **Warning / Info** (empty folds hidden). Banner label/tone follows items: any action-fold item → Action required; else soft items only → Warning / Info; else healthy. Dense metric tiles (load / RSS / db_ping / readyz / companions / **library watch** / **library health**), host meters, services/scans/errors tables. Library watch shows **off** + env note when `GT_LIBRARY_WATCH` is unset (default). Library health shows compact score · grade + top factors (honest **n/a** / “not scored yet” when `library.health` absent or thin); the tile border/value tones by `grade` (`good`/`fair`/`poor`, muted **na** when thin/null); when `grade` is **poor**, the factors list gets a light danger-edged cue; when **fair**, a warn-gold left edge (good/na unmarked). Null metrics render as **n/a** (e.g. `load_avg` on Windows). Backend enrichments: `host.load_avg` · `host.process` · `host.db_ping_ms` · `services.readyz` · `services.library_watch` · `library.health` · companions `by_kind` + `last_seen`.
+**UI:** `/admin/ops` and Dashboard poll ~15s (**silent** auto-refresh — no toast spam). On Dashboard, manual refresh is the **reset icon beside Updated** in the status banner (no duplicate footer timestamp). Dashboard widgets are a 12-column board: drag a widget (not its buttons) to move — the tile follows the pointer via transform and commits on release; drag the **bottom-right corner** to resize (~1.85× a cell of travel per step). No grab bar. **Reset layout** sits in the thin top-bar trail as a `od-cbtn` (library-style), beside account. Layout persists in `localStorage` key `od-admin-dashboard-layout-v3` (a key bump also clears sticky bad layouts). Metric tiles fill the row width; panel titles (Host meters, Companions by kind) match metric-label type. A first poll that fails uses the shared status block (Retry) rather than empty host panels. Services table scrolls when the list is long. **Grafana-style observability console** (Member UI + Ops wave Pass A–F): status strip + `issues.items` in **two folds** — **Action required** and **Warning / Info** (empty folds hidden). Banner label/tone follows items: any action-fold item → Action required; else soft items only → Warning / Info; else healthy. Dense metric tiles (load / RSS / db_ping / awake / companions / **library watch** / **library health**), host meters, services/scans/errors tables. Library watch shows **off** + env note when `ONEIRODEX_LIBRARY_WATCH` is unset (default). Library health shows compact score · grade + top factors (honest **n/a** / “not scored yet” when `library.health` absent or thin); the tile border/value tones by `grade` (`good`/`fair`/`poor`, muted **na** when thin/null); when `grade` is **poor**, the factors list gets a light danger-edged cue; when **fair**, a warn-gold left edge (good/na unmarked). Null metrics render as **n/a** (e.g. `load_avg` on Windows). Backend enrichments: `host.load_avg` · `host.process` · `host.db_ping_ms` · `services.awake` · `services.library_watch` · `library.health` · companions `by_kind` + `last_seen`.
 
 **Server logs:** live on **Ops → Full log** (`/admin/ops?open=full-log`). Bookmarks to `/admin/server_logs` / `/admin/system_logs` redirect there.
 
@@ -24,7 +24,7 @@ Cheap SQL counts on every Ops poll — **not** a filesystem re-scan. Also availa
 
 | Bucket | When |
 |---|---|
-| **Action required** (`bad` / `action`) | Stability or service breakers — critical path missing/unreadable, DB unreachable, readyz fail |
+| **Action required** (`bad` / `action`) | Stability or service breakers — critical path missing/unreadable, DB unreachable, awake fail |
 | **Warning** (`warn` / `warning`) | Soft signals that may indicate a real problem — scan job failures, recent SystemEvents errors |
 | **Info** (`info`) | Capacity soft signals (disk % even ≥95% / near-full) and companions stale |
 
@@ -79,10 +79,10 @@ Built by `oneirodex.utils.ops_summary._services_snapshot`. Brief field map:
 | `companions.last_seen` | Breakdown — `newest` (ISO), `within_1h`, `within_24h`, `stale` (`registered − online`) |
 | `queues` | `scans_active`, `scans_queued` (FIFO Queued), `scans_scheduled` (recurring), `scans_pending` (= queued + scheduled), `scans_failures_24h`, `downloads_open` — honest depths from ScanJob / DownloadRequest |
 | `game_servers` | Household registry pulse — `count`, `reachable`, per-server `display_name` / TCP or HTTP probe |
-| `readyz` | In-process readiness snippet — `status`, `http_status`, `checks` (same shape as `/readyz`), `check_ms`; **`null` when probe fails** |
+| `awake` | In-process readiness snippet — `status`, `http_status`, `checks` (same shape as `/awake`), `check_ms`; **`null` when probe fails** |
 | `malware_module_enabled` | Convenience bool mirroring malware module enable |
 | `jobs[].error_message` | Why a job stopped, or `null`. Added 2026-08-25 — the payload carried counts, current folder, elapsed, ETA and `stalled` and dropped the one field explaining a failure, so Ops could report that a scan failed and never why. Normalised to `null`: `ScanJob` defaults it to an empty string |
-| `library_watch` | Optional root-folder incremental watch (`GT_LIBRARY_WATCH`, default off) — `enabled`, `running`, `roots`, `pending_libraries`, `debounce_seconds`, `last_event_at`, `last_enqueue_at`, `note` |
+| `library_watch` | Optional root-folder incremental watch (`ONEIRODEX_LIBRARY_WATCH`, default off) — `enabled`, `running`, `roots`, `pending_libraries`, `debounce_seconds`, `last_event_at`, `last_enqueue_at`, `note` |
 
 No Discord / webhook sinks — alerts stay in-app SystemEvents / optional SMTP digest.
 
@@ -120,7 +120,7 @@ Two steps, enforced by the API rather than by the UI:
    every table it would empty, including those reached by cascade — and changes
    nothing. This is the default: a call that omits the phrase gets a description
    of the damage, not the damage.
-2. Repeat with `"confirm": "RESET ONEIRODEX"` to perform it. `"RESET GAMETHECA"` still works.
+2. Repeat with `"confirm": "RESET ONEIRODEX"` to perform it. `"RESET ONEIRODEX"` still works.
 
 Tables are emptied in one `TRUNCATE ... RESTART IDENTITY CASCADE`, so the reset
 is a single transaction — it lands whole or not at all, with no half-cleared

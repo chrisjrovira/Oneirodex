@@ -61,7 +61,7 @@ export function parseShellConfig(rootElement) {
     // Two-bar chrome is on unless an operator explicitly sets false.
     enableNewChrome: rootElement.dataset.enableNewChrome !== 'false',
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
-    // AGPL §13 source offer — see config.GT_SOURCE_URL. A modified deployment
+    // AGPL §13 source offer — see config.ONEIRODEX_SOURCE_URL. A modified deployment
     // owes its users *its* source, so this is configuration, not a constant.
     sourceUrl: rootElement.dataset.sourceUrl || '',
     appVersion: rootElement.dataset.appVersion || '',

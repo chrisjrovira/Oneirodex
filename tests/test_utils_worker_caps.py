@@ -17,7 +17,7 @@ from oneirodex.utils.worker_caps import (
 
 
 def test_clamp_scan_threads_respects_cap(monkeypatch):
-    monkeypatch.delenv('GT_SCAN_THREAD_CAP', raising=False)
+    monkeypatch.delenv('ONEIRODEX_SCAN_THREAD_CAP', raising=False)
     monkeypatch.delenv('ONEIRODEX_SCAN_THREAD_CAP', raising=False)
     assert clamp_scan_threads(99) == 4
     assert clamp_scan_threads(1) == 1
@@ -26,19 +26,19 @@ def test_clamp_scan_threads_respects_cap(monkeypatch):
 
 def test_clamp_scan_threads_env_override(monkeypatch):
     monkeypatch.delenv('ONEIRODEX_SCAN_THREAD_CAP', raising=False)
-    monkeypatch.setenv('GT_SCAN_THREAD_CAP', '2')
+    monkeypatch.setenv('ONEIRODEX_SCAN_THREAD_CAP', '2')
     assert clamp_scan_threads(8) == 2
 
 
 def test_clamp_scan_threads_oneirodex_prefix_wins(monkeypatch):
-    monkeypatch.setenv('GT_SCAN_THREAD_CAP', '8')
+    monkeypatch.setenv('ONEIRODEX_SCAN_THREAD_CAP', '8')
     monkeypatch.setenv('ONEIRODEX_SCAN_THREAD_CAP', '2')
     assert clamp_scan_threads(8) == 2
 
 
 def test_clamp_image_threads_and_batch(monkeypatch):
-    monkeypatch.delenv('GT_IMAGE_DOWNLOAD_THREAD_CAP', raising=False)
-    monkeypatch.delenv('GT_IMAGE_DOWNLOAD_BATCH_CAP', raising=False)
+    monkeypatch.delenv('ONEIRODEX_IMAGE_DOWNLOAD_THREAD_CAP', raising=False)
+    monkeypatch.delenv('ONEIRODEX_IMAGE_DOWNLOAD_BATCH_CAP', raising=False)
     monkeypatch.delenv('ONEIRODEX_IMAGE_DOWNLOAD_THREAD_CAP', raising=False)
     monkeypatch.delenv('ONEIRODEX_IMAGE_DOWNLOAD_BATCH_CAP', raising=False)
     assert clamp_image_download_threads(20) == 4

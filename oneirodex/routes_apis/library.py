@@ -261,11 +261,11 @@ def get_library(library_uuid):
 @apis_bp.route('/library/<string:library_uuid>/watch', methods=['GET', 'PUT'])
 @login_required
 def library_watch(library_uuid):
-    """Get or set per-library incremental watch intent under ``GT_LIBRARY_WATCH``.
+    """Get or set per-library incremental watch intent under ``ONEIRODEX_LIBRARY_WATCH``.
 
     PUT body: ``{"watch_enabled": true|false|null}``
       - null / omit on GET-only → follow global when env on
-      - false → opt-out even when ``GT_LIBRARY_WATCH=1``
+      - false → opt-out even when ``ONEIRODEX_LIBRARY_WATCH=1``
       - true → prefer watch (still requires env master switch)
 
     Librarian or admin required for PUT.

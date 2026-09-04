@@ -335,7 +335,7 @@ class LibraryForm(FlaskForm):
     watch_enabled = SelectField(
         'Incremental watch',
         choices=[
-            ('default', 'Follow global (GT_LIBRARY_WATCH)'),
+            ('default', 'Follow global (ONEIRODEX_LIBRARY_WATCH)'),
             ('on', 'Prefer watch when global is on'),
             ('off', 'Opt out (never watch this library)'),
         ],

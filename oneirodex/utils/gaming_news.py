@@ -20,7 +20,7 @@ def feed_urls() -> tuple[str, ...]:
     """Which sites headlines come from.
 
     Was a hardcoded tuple, so a household that did not care for one of these
-    three — or wanted a site of its own — had no say at all. ``GT_NEWS_FEEDS``
+    three — or wanted a site of its own — had no say at all. ``ONEIRODEX_NEWS_FEEDS``
     (or ``ONEIRODEX_NEWS_FEEDS``) replaces the list entirely (comma or pipe
     separated); unset keeps the defaults. Only http(s) entries are accepted:
     this list is fetched by the server, so a `file://` in it would be a read

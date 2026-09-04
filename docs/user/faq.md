@@ -11,7 +11,7 @@ When the member page is scrollable, aurora glass **Jump to top** / **Jump to bot
 ## Sign-in & accounts
 
 **I can’t log in.**  
-Ask an admin to check your invite/whitelist and that the server is up (`/healthz` liveness · `/readyz` ready). SSO only works if Admin → Integrations has OIDC enabled *and* `OIDC_ENABLED=true`. After several failed passwords you may see “Too many login attempts” — wait a few minutes.
+Ask an admin to check your invite/whitelist and that the server is up (`/pulse` liveness · `/awake` ready). SSO only works if Admin → Integrations has OIDC enabled *and* `OIDC_ENABLED=true`. After several failed passwords you may see “Too many login attempts” — wait a few minutes.
 
 **I can’t pair the desktop companion.**  
 Account menu → **API tokens** (`/tokens`). Create with the **Desktop companion** preset, then **Copy secret** (raw `gt_…` only) into Connect. Format is `gt_<prefix>_<secret>` — the secret segment may include `-` / `_`; paste the **full** string (do not stop at the last `-`). Thin seats use the **Thin client** preset (no download). Browser **Copy** writes only the `gt_…` secret; on plain HTTP LAN (common on Unraid), use the Copy fallback or select the secret field and Ctrl+C / ⌘C. See [desktop-companion.md](desktop-companion.md) · [thin-client.md](thin-client.md).
@@ -197,5 +197,5 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 ## Licence
 
 **What licence is Oneirodex?**  
-GNU AGPL v3. Help → About has the licence link. If you run a *modified* copy as a network service, AGPL §13 means you owe your users that modified source — admins set `GT_SOURCE_URL` to their fork so the Help/About source link is honest.
+GNU AGPL v3. Help → About has the licence link. If you run a *modified* copy as a network service, AGPL §13 means you owe your users that modified source — admins set `ONEIRODEX_SOURCE_URL` to their fork so the Help/About source link is honest.
 

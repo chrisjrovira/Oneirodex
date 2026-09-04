@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Admin shell shows the AGPL source offer again when `source_url` is configured.
 
 ### Changed
+- **Probe endpoints renamed — `/healthz` → `/pulse`, `/readyz` → `/awake`.** **Breaking.** The trailing `z` is a Kubernetes convention and Oneirodex ships on Docker/Unraid, so the paths now say what they do. Response bodies, status codes and the `probe` field are unchanged, so a healthcheck only needs its URL updated. Compose is updated; **an existing Unraid container template pointing at `/healthz` or `/readyz` must be repointed or its healthcheck will fail.** Captured samples renamed to `docs/media/screenshots/pulse.json` / `awake.json`.
+- **Legacy `GameTheca` identifiers removed — clean break, no back-compat ([ADR 0003](docs/adr/0003-product-name-oneirodex.md) finished).** **Breaking.**
+  - Env: `ONEIRODEX_*` is the only prefix. The `GT_*` fallback is deleted from `product_env.py`, so **an `.env` still using `GT_*` silently falls back to defaults** — update it before redeploying. `LEGACY_PREFIX` / `NEW_PREFIX` are gone; `product_env.PREFIX` replaces them.
+  - localStorage: `gt.*` keys are now `od.*` (`gt.library.layout` → `od.library.layout`, and 8 more). **Saved layout, filter, rail and palette state resets once** — no migration shim by design.
+  - Danger zone: `RESET GAMETHECA` is no longer accepted. The phrase is `RESET ONEIRODEX`.
+  - Admin Ops dashboard widget ids follow the probe rename, so **a saved Ops layout resets once**.
+  - `product.LEGACY_NAME` is deliberately kept: it is read (never written) to recognise stock themes authored by older versions, not branding.
+  - Historical `CHANGELOG.md` entries and `docs/adr/**` keep the old string on purpose — do not rewrite them, and do not rewrite git history.
 - **Copy pass (member + admin).** One voice rule: playful where nothing is wrong (empty states, first run), plain where something failed (errors, destructive confirms). Catalog empty/error strings rewritten in `i18n.js` **en and es together**; member-facing `api_error` detail rewritten; the scan-lock message is one sentence across **6** sites and no longer says “try again later” (retrying does nothing — waiting for the scan does); image-size refusal names the real **60 megapixel** bound; 11 destructive confirmations front-load the consequence. `Clear` → `Clear filters`; sort labels and `All …` options in sentence case; `Filesize` → `File size`.
 - Catalog edge-column tiles keep covers/badges on hover enlarge (bleed ×1.5 for 1fr stretch + `overflow-clip-margin-inline`). `GENERATOR_VERSION` **28**.
 - Catalog **Grid** is genre shelves at full tile size without clipping headings (no shell hover-pad pullback). **Rows** height follows the tile-size slider (56–144px). `GENERATOR_VERSION` **27**.

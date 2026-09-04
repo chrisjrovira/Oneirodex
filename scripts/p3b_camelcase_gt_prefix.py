@@ -98,19 +98,19 @@ def rewrite_files(dry_run: bool) -> tuple[int, int]:
 def rename_brand_files() -> None:
     moves = [
         (
-            ROOT / 'oneirodex' / 'static' / 'newstyle' / 'gametheca_mark.svg',
+            ROOT / 'oneirodex' / 'static' / 'newstyle' / 'oneirodex_mark.svg',
             ROOT / 'oneirodex' / 'static' / 'newstyle' / 'oneirodex_mark.svg',
         ),
         (
-            ROOT / 'oneirodex' / 'static' / 'newstyle' / 'gametheca_glyph.svg',
+            ROOT / 'oneirodex' / 'static' / 'newstyle' / 'oneirodex_glyph.svg',
             ROOT / 'oneirodex' / 'static' / 'newstyle' / 'oneirodex_glyph.svg',
         ),
         (
-            ROOT / 'docs' / 'assets' / 'readme' / 'gametheca_mark.svg',
+            ROOT / 'docs' / 'assets' / 'readme' / 'oneirodex_mark.svg',
             ROOT / 'docs' / 'assets' / 'readme' / 'oneirodex_mark.svg',
         ),
         (
-            ROOT / 'frontend' / 'api-client' / 'src' / 'gametheca-client.ts',
+            ROOT / 'frontend' / 'api-client' / 'src' / 'oneirodex-client.ts',
             ROOT / 'frontend' / 'api-client' / 'src' / 'oneirodex-client.ts',
         ),
         (

@@ -43,7 +43,7 @@ function tabFromHash() {
 
 // One list, two renderers: the old tab strip and bar two's segmented control
 // must never drift apart into different sets of sections.
-const MUTED_SOURCES_KEY = 'gt.news.mutedSources'
+const MUTED_SOURCES_KEY = 'od.news.mutedSources'
 
 const NEWS_VIEWS = [
   { id: 'all', label: 'All' },
@@ -52,7 +52,7 @@ const NEWS_VIEWS = [
   { id: 'headlines', label: 'Headlines' },
 ]
 
-const LAYOUT_STORAGE_KEY = 'gt.news.layout'
+const LAYOUT_STORAGE_KEY = 'od.news.layout'
 const NEWS_LAYOUTS = [
   { id: 'card', label: 'Card' },
   { id: 'grid', label: 'Grid' },

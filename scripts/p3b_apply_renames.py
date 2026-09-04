@@ -48,7 +48,7 @@ SPECIAL_NAMES = {
     'pytest.ini', 'conftest.py', 'asgi.py', 'config.py', 'product_env.py',
 }
 
-GT_IDENT = re.compile(r'(?<![A-Za-z0-9_])gt-(?=[A-Za-z])')
+ONEIRODEX_IDENT = re.compile(r'(?<![A-Za-z0-9_])gt-(?=[A-Za-z])')
 
 PACKAGE_REPLACEMENTS = [
     (re.compile(r'Oneirodex'), 'Oneirodex'),
@@ -87,7 +87,7 @@ def transform_text(text: str) -> str:
     )
     for pattern, repl in PACKAGE_REPLACEMENTS:
         text = pattern.sub(repl, text)
-    text = GT_IDENT.sub('od-', text)
+    text = ONEIRODEX_IDENT.sub('od-', text)
     return text
 
 

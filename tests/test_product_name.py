@@ -5,7 +5,6 @@ from oneirodex.product import (
     PACKAGE_NAME,
     PRODUCT_NAME,
     PRODUCT_NAME_SAY,
-    RESET_CONFIRM_LEGACY,
     RESET_CONFIRM_PHRASE,
     is_reset_confirm,
 )
@@ -21,10 +20,12 @@ def test_product_name_spelling():
     assert PACKAGE_NAME == 'oneirodex'
 
 
-def test_reset_confirm_accepts_new_and_legacy():
+def test_reset_confirm_accepts_only_the_current_phrase():
+    """The legacy "RESET GAMETHECA" alias was retired with the rest of the
+    legacy naming — a clean break, so it must now be rejected."""
     assert is_reset_confirm(RESET_CONFIRM_PHRASE)
-    assert is_reset_confirm(RESET_CONFIRM_LEGACY)
-    assert is_reset_confirm('RESET GAMETHECA')
+    assert is_reset_confirm('RESET ONEIRODEX')
+    assert not is_reset_confirm('RESET GAMETHECA')
     assert not is_reset_confirm('reset oneirodex')
     assert not is_reset_confirm('RESET ONEIRODEX ')
     assert not is_reset_confirm('')

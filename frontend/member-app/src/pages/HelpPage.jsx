@@ -40,7 +40,7 @@ const FAQ_SECTIONS = [
       'Ownership registers Steam / GOG / Epic / Amazon titles you already own. Live sync when a token is saved (GOG refresh token, Epic device-auth JSON, Amazon Nile/Heroic blob). Never a store download.',
       'Account → API tokens for companion secrets (shown once). Paste the full gt_… string — hyphens/underscores inside are normal. Prefer HTTPS copy; on plain HTTP use Copy or select the secret field + Ctrl/⌘C.',
       'Cover → details: breadcrumb Catalog or Systems › genre › title; trailer/screenshot hook beside the summary; modes and perspectives as catalog chips; About when a storyline exists; store requirements/languages only when Steam filled them; More from this developer in the vault. Trailers, Cheats on RetroArch titles (.cht create/upload), Extras & DLC honesty, multi-disc chips, screenshots, download. Admins: ⋮ → Edit / Open path (companion reveal).',
-      'Site down? Ask admin for /healthz, /readyz, or Ops → Services.',
+      'Site down? Ask admin for /pulse, /awake, or Ops → Services.',
     ],
   },
   {
@@ -238,7 +238,7 @@ const FAQ_SECTIONS = [
     summary: 'Source code, licence, data credits',
     items: [
       'Oneirodex (oh-NY-roh-dex) is free software under the GNU Affero General Public License v3.0. You may run, study, modify and share it.',
-      'Running a modified copy as a network service? AGPL §13 means you owe your users that modified source. Admins set GT_SOURCE_URL to point here at their own fork.',
+      'Running a modified copy as a network service? AGPL §13 means you owe your users that modified source. Admins set ONEIRODEX_SOURCE_URL to point here at their own fork.',
       'The licence covers Oneirodex itself — not the games, ROMs, BIOS or artwork you point it at. The Python package, Docker image, and GitHub repo still use oneirodex until the identifier wave.',
       'Game metadata and artwork come from IGDB (an Amazon company), Giant Bomb, SteamGridDB and store pages, depending on what your admin configured.',
       'Browser play uses WebRetro with libretro emulator cores, provisioned by your admin rather than shipped with Oneirodex. An optional NES Nostalgist host uses those same household cores.',

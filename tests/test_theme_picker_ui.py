@@ -17,7 +17,7 @@ from oneirodex.utils.preset_themes import PRESET_SLUGS, PRESET_THEMES, preset_to
 REPO_ROOT = Path(__file__).resolve().parents[1]
 THEME_SOURCE = REPO_ROOT / 'oneirodex' / 'setup' / 'default_theme'
 FORM_COMPONENTS_CSS = THEME_SOURCE / 'css' / 'form-components.css'
-GT_TOKENS_CSS = THEME_SOURCE / 'css' / 'od-tokens.css'
+OD_TOKENS_CSS = THEME_SOURCE / 'css' / 'od-tokens.css'
 TEMPLATES = REPO_ROOT / 'oneirodex' / 'templates'
 
 
@@ -44,14 +44,14 @@ def swatch_colours() -> dict:
 
 
 def default_accent() -> str:
-    match = re.search(r'--od-accent:\s*([^;]+);', read(GT_TOKENS_CSS))
+    match = re.search(r'--od-accent:\s*([^;]+);', read(OD_TOKENS_CSS))
     assert match, '--od-accent missing from od-tokens.css'
     return match.group(1).strip().lower()
 
 
 def test_od_core_tokens_are_canonical_values():
     """P3b: --od-* is the source of truth (hex), not a circular var() alias."""
-    css = read(GT_TOKENS_CSS)
+    css = read(OD_TOKENS_CSS)
     accent = re.search(r'--od-accent:\s*([^;]+);', css)
     bg = re.search(r'--od-bg:\s*([^;]+);', css)
     assert accent and accent.group(1).strip().startswith('#'), css[:400]

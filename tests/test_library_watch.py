@@ -29,8 +29,8 @@ from oneirodex.utils.library_watch import (
 
 @pytest.fixture(autouse=True)
 def _reset_watch_env(monkeypatch):
-    monkeypatch.delenv('GT_LIBRARY_WATCH', raising=False)
-    monkeypatch.delenv('GT_LIBRARY_WATCH_DEBOUNCE_SEC', raising=False)
+    monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH', raising=False)
+    monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC', raising=False)
     monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH', raising=False)
     monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC', raising=False)
     _reset_library_watch_for_tests()
@@ -70,21 +70,21 @@ class TestEnableDisable:
 
     def test_enabled_truthy(self, monkeypatch):
         for value in ('1', 'true', 'YES', 'on'):
-            monkeypatch.setenv('GT_LIBRARY_WATCH', value)
+            monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH', value)
             assert is_library_watch_enabled() is True
 
     def test_disabled_falsy(self, monkeypatch):
         for value in ('0', 'false', 'no', 'off', ''):
-            monkeypatch.setenv('GT_LIBRARY_WATCH', value)
+            monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH', value)
             assert is_library_watch_enabled() is False
 
     def test_debounce_clamped(self, monkeypatch):
         assert library_watch_debounce_seconds() == 3.0
-        monkeypatch.setenv('GT_LIBRARY_WATCH_DEBOUNCE_SEC', '1')
+        monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC', '1')
         assert library_watch_debounce_seconds() == 2.0
-        monkeypatch.setenv('GT_LIBRARY_WATCH_DEBOUNCE_SEC', '9')
+        monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC', '9')
         assert library_watch_debounce_seconds() == 5.0
-        monkeypatch.setenv('GT_LIBRARY_WATCH_DEBOUNCE_SEC', '2.5')
+        monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH_DEBOUNCE_SEC', '2.5')
         assert library_watch_debounce_seconds() == 2.5
 
     def test_start_noop_when_disabled(self, app):
@@ -332,7 +332,7 @@ class TestEnqueueOnSyntheticEvents:
 class TestPerLibraryWatchOptOut:
     def test_opt_out_excluded_from_watchable(self, app, db_session, sample_library, monkeypatch):
         library, root = sample_library
-        monkeypatch.setenv('GT_LIBRARY_WATCH', '1')
+        monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH', '1')
         # db_session fixture already provides app_context — do not nest another.
         assert library_should_watch(library) is True
         uuids = {row['uuid'] for row in list_watchable_libraries()}
@@ -350,7 +350,7 @@ class TestPerLibraryWatchOptOut:
         self, app, db_session, sample_library, monkeypatch
     ):
         library, _root = sample_library
-        monkeypatch.delenv('GT_LIBRARY_WATCH', raising=False)
+        monkeypatch.delenv('ONEIRODEX_LIBRARY_WATCH', raising=False)
         library.watch_enabled = True
         db_session.commit()
         assert library_should_watch(library) is False
@@ -358,7 +358,7 @@ class TestPerLibraryWatchOptOut:
 
 class TestOpsPulse:
     def test_services_includes_library_watch(self, app, monkeypatch):
-        monkeypatch.setenv('GT_LIBRARY_WATCH', '0')
+        monkeypatch.setenv('ONEIRODEX_LIBRARY_WATCH', '0')
         with app.app_context():
             from oneirodex.utils.ops_summary import _library_watch_pulse
 

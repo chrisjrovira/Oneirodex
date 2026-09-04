@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wait for Unraid app /readyz then print SPA hash + login SSO marker. No secrets."""
+"""Wait for Unraid app /awake then print SPA hash + login SSO marker. No secrets."""
 from __future__ import annotations
 
 import subprocess
@@ -9,13 +9,13 @@ SSH = ["ssh", "-o", "BatchMode=yes", "root@192.168.50.116"]
 SCRIPT = r"""
 set -eu
 for i in $(seq 1 90); do
-  if curl -fsS http://127.0.0.1:5006/readyz >/dev/null 2>&1; then
+  if curl -fsS http://127.0.0.1:5006/awake >/dev/null 2>&1; then
     echo 'READYZ=ok'
     break
   fi
   sleep 2
 done
-curl -fsS http://127.0.0.1:5006/readyz || { echo 'READYZ=fail'; exit 1; }
+curl -fsS http://127.0.0.1:5006/awake || { echo 'READYZ=fail'; exit 1; }
 echo '--- login SSO ---'
 curl -fsS http://127.0.0.1:5006/login | grep -E 'Sign in with SSO|oidc|/login/oidc' | head -n 20 || true
 echo '--- member-app hash ---'

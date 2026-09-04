@@ -7,11 +7,11 @@ scannable the moment the host — or the container — mounts them. What was
 missing was a way to *declare* those mounts, because the folder browser and the
 path allowlist both keyed off a single ``BASE_FOLDER_*``.
 
-``GT_LIBRARY_ROOTS`` / ``ONEIRODEX_LIBRARY_ROOTS`` is that declaration. Entries
+``ONEIRODEX_LIBRARY_ROOTS`` / ``ONEIRODEX_LIBRARY_ROOTS`` is that declaration. Entries
 are separated by ``|`` and each one is an optional ``Label=`` followed by the
 path Oneirodex sees:
 
-    GT_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
+    ONEIRODEX_LIBRARY_ROOTS=NAS ROMs=/mnt/nas/roms|Archive=/mnt/archive/games
 
 The label is cosmetic (it names the root in the admin folder browser); the path
 is what matters. Mounting the share is still the operator's job — see
@@ -70,7 +70,7 @@ def same_path(left: str, right: str) -> bool:
 
 
 def parse_library_roots(raw: str | None) -> list[dict]:
-    """Parse ``GT_LIBRARY_ROOTS`` / ``ONEIRODEX_LIBRARY_ROOTS`` into ``[{'label', 'path'}, …]``.
+    """Parse ``ONEIRODEX_LIBRARY_ROOTS`` / ``ONEIRODEX_LIBRARY_ROOTS`` into ``[{'label', 'path'}, …]``.
 
     Unlabelled entries take the last path segment as their label so the picker
     always has something to show. Blank and over-long entries are dropped
@@ -121,7 +121,7 @@ def library_roots(app=None) -> list[dict]:
     """Every scan location this install exposes, in picker order.
 
     The built-in games folder and the OS base folder come first so an install
-    that never sets ``GT_LIBRARY_ROOTS`` behaves exactly as it did before;
+    that never sets ``ONEIRODEX_LIBRARY_ROOTS`` behaves exactly as it did before;
     declared roots follow in the order they were written. Paths that repeat are
     folded into the first entry that claimed them.
     """
@@ -136,7 +136,7 @@ def library_roots(app=None) -> list[dict]:
         candidates.append({
             'label': root.get('label') or '',
             'path': root.get('path') or '',
-            'source': 'GT_LIBRARY_ROOTS',
+            'source': 'ONEIRODEX_LIBRARY_ROOTS',
         })
 
     roots: list[dict] = []

@@ -5,7 +5,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { RailIcon } from './railIcons'
 import { PRIMARY_GROUP, getMoreGroups, getPrimaryLinks } from './navConfig'
 
-const COLLAPSED_GROUPS_KEY = 'gt.rail.collapsedGroups'
+const COLLAPSED_GROUPS_KEY = 'od.rail.collapsedGroups'
 
 /**
  * Which rail groups the member has folded away, remembered across sessions.

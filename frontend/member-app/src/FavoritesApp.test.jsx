@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { FavoritesApp } from './FavoritesApp'
 
 afterEach(() => {
-  window.localStorage.removeItem('gt.library.layout')
+  window.localStorage.removeItem('od.library.layout')
 })
 
 test('fetches favorite games and renders them with the shared grid', async () => {

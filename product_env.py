@@ -1,9 +1,12 @@
-"""Dual product env names (ADR 0003 phase 3).
+"""Product env names (ADR 0003).
 
-``ONEIRODEX_<SUFFIX>`` wins when set; ``GT_<SUFFIX>`` still works so existing
-``.env`` files and Unraid stacks keep booting. Lives at the repo root so
-``config.py`` can import it without touching the ``oneirodex`` package (that
-import would be circular — ``oneirodex/__init__.py`` loads Config first).
+``ONEIRODEX_<SUFFIX>`` is the only accepted prefix. The legacy ``GT_<SUFFIX>``
+fallback was removed in the clean-break rename — an ``.env`` still using the
+old names must be updated or those settings fall back to their defaults.
+
+Lives at the repo root so ``config.py`` can import it without touching the
+``oneirodex`` package (that import would be circular — ``oneirodex/__init__.py``
+loads Config first).
 """
 
 from __future__ import annotations
@@ -11,20 +14,19 @@ from __future__ import annotations
 import os
 
 
-NEW_PREFIX = 'ONEIRODEX_'
-LEGACY_PREFIX = 'GT_'
+PREFIX = 'ONEIRODEX_'
 
 
 def getenv_product(suffix: str, default: str | None = None) -> str | None:
-    """Read ``ONEIRODEX_<suffix>``, then ``GT_<suffix>``.
+    """Read ``ONEIRODEX_<suffix>``.
 
-    Empty values are skipped so a blank new key cannot hide a real legacy one.
+    An empty or whitespace-only value is treated as unset, so a blank key in a
+    template ``.env`` cannot shadow the default.
     """
     suffix = (suffix or '').lstrip('_')
-    for prefix in (NEW_PREFIX, LEGACY_PREFIX):
-        raw = os.environ.get(prefix + suffix)
-        if raw is not None and str(raw).strip() != '':
-            return raw
+    raw = os.environ.get(PREFIX + suffix)
+    if raw is not None and str(raw).strip() != '':
+        return raw
     return default
 
 
@@ -35,7 +37,7 @@ def getenv_product_int(
     minimum: int = 1,
     maximum: int = 64,
 ) -> int:
-    """Integer env with the same dual-prefix rule as ``getenv_product``."""
+    """Integer env with the same rule as ``getenv_product``, clamped to range."""
     raw = getenv_product(suffix)
     if raw is None:
         return default

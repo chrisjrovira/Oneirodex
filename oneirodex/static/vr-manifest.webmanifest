@@ -1,7 +1,7 @@
 {
-  "name": "GameTheca VR",
+  "name": "Oneirodex VR",
   "short_name": "GT VR",
-  "description": "Headset-friendly GameTheca library browse",
+  "description": "Headset-friendly Oneirodex library browse",
   "start_url": "/vr",
   "scope": "/vr",
   "display": "standalone",
@@ -9,13 +9,13 @@
   "theme_color": "#0b0f14",
   "icons": [
     {
-      "src": "/static/newstyle/gametheca_logo.png",
+      "src": "/static/newstyle/oneirodex_logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/static/newstyle/gametheca_logo.png",
+      "src": "/static/newstyle/oneirodex_logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

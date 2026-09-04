@@ -16,11 +16,11 @@ echo '=== HEAD ==='
 $GIT log -1 --oneline
 echo '=== compose up --build (livekit clamav challenge) ==='
 docker compose --profile livekit --profile clamav --profile challenge up -d --build
-echo '=== readyz ==='
+echo '=== awake ==='
 ok=0
 for i in $(seq 1 90); do
-  if curl -fsS http://127.0.0.1:5006/readyz >/dev/null 2>&1; then
-    curl -fsS http://127.0.0.1:5006/readyz
+  if curl -fsS http://127.0.0.1:5006/awake >/dev/null 2>&1; then
+    curl -fsS http://127.0.0.1:5006/awake
     echo
     ok=1
     break

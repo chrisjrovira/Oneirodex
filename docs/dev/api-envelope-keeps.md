@@ -6,7 +6,7 @@ Eleven remaining hits are **not** leftover sloppiness. Wrapping them would chang
 
 | Keep | Field that collides | If we wrapped it |
 |---|---|---|
-| `GET /healthz` | `status: "ok"` is the **probe contract** (Compose / Unraid / kube) | Envelope would add keys probes ignore, and `status` would stop being the liveness flag |
+| `GET /pulse` | `status: "ok"` is the **probe contract** (Compose / Unraid / kube) | Envelope would add keys probes ignore, and `status` would stop being the liveness flag |
 | Batch favorite / status / freshness / wishlist / library delete | `ok` means **every item succeeded** (partial batches are HTTP 200) | `api_ok` stamps `ok: true` and the SPA would hide the failures |
 | `GET /api/ai/status` | `error` is **why Ollama is unreachable**, on HTTP 200 | `api_ok` **pops** `error`, so the status page would go blank |
 | Hardlink preview | `ok` means **would this link work**, not “did the request work” | A preview of “no” would become “yes” |

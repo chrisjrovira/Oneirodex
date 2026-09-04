@@ -287,9 +287,9 @@ export function percentHealthTone(percent) {
 }
 
 /** Readyz string/object → good | action | warning | info | na. */
-export function readyzTone(readyz) {
-  if (!readyz) return 'na'
-  const status = String(readyz.status || readyz || '').toLowerCase()
+export function awakeTone(awake) {
+  if (!awake) return 'na'
+  const status = String(awake.status || awake || '').toLowerCase()
   if (status === 'ok' || status === 'ready' || status === 'pass') return 'good'
   if (status === 'fail' || status === 'failed' || status === 'error' || status === 'down') {
     return 'action'
@@ -337,15 +337,15 @@ export function formatLoadAvg(loadAvg) {
   return `${na(one)} / ${na(five)} / ${na(fifteen)}`
 }
 
-export function formatReadyz(readyz) {
-  if (!readyz) return 'n/a'
-  const status = readyz.status || 'unknown'
-  const ms = readyz.check_ms != null ? ` · ${readyz.check_ms}ms` : ''
+export function formatReadyz(awake) {
+  if (!awake) return 'n/a'
+  const status = awake.status || 'unknown'
+  const ms = awake.check_ms != null ? ` · ${awake.check_ms}ms` : ''
   return `${status}${ms}`
 }
 
 /**
- * Compact status for services.library_watch (GT_LIBRARY_WATCH, default off).
+ * Compact status for services.library_watch (ONEIRODEX_LIBRARY_WATCH, default off).
  * Honest when disabled — operators should see "off", not a false healthy.
  */
 export function formatLibraryWatchStatus(watch) {
@@ -359,7 +359,7 @@ export function formatLibraryWatchStatus(watch) {
 export function formatLibraryWatchDetail(watch) {
   if (!watch || typeof watch !== 'object') return 'n/a'
   if (!watch.enabled) {
-    return watch.note || 'Set GT_LIBRARY_WATCH=1 to enable.'
+    return watch.note || 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable.'
   }
   const roots = watch.roots ?? 0
   const pending = watch.pending_libraries ?? 0
