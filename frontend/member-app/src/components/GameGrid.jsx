@@ -288,7 +288,13 @@ export function GameGrid({
       style={{
         height: `${virtualizer.getTotalSize()}px`,
         position: 'relative',
-        width: '100%',
+        // No `width` here. The shell pads by the hover bleed and this
+        // container pulls back out with a negative margin-inline; a block only
+        // WIDENS from negative margins when width is auto. Pinning width:100%
+        // resolved against the parent content box instead, so the grid slid
+        // left (clipped) and fell short on the right (dead space) by exactly
+        // the bleed on each side. Rows keep width:100% — they resolve against
+        // this container once it is the right width.
       }}
     >
       {virtualRows.map((virtualRow) => {
