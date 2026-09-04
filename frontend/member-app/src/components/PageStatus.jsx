@@ -113,6 +113,7 @@ function LoadingStatus({
       </p>
     </div>
   )
+}
 
 /**
  * Shared loading / error / empty status for SPA pages.
