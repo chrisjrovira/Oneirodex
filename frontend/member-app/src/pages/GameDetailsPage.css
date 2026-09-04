@@ -251,6 +251,7 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
+  align-items: center;
 }
 
 .od-details-page__section {

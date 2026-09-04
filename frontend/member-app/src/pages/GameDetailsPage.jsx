@@ -994,7 +994,7 @@ export function GameDetailsPage() {
             {game.is_admin ? (
               <button
                 type="button"
-                className="od-btn"
+                className="od-btn od-btn--pill"
                 disabled={cleanupBusy}
                 onClick={() => void handleCleanupOrphans()}
                 title={
