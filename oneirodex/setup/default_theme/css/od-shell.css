@@ -55,11 +55,15 @@
      content pane — see .od-shell__main. */
   height: 100dvh;
   overflow: hidden;
+  /* Allow hovered tiles to overflow the clip boundary. */
+  overflow-clip-margin: 100px;
   /* Positioning context for chrome that floats over the content pane
      (ScrollJump), so it anchors to the locked shell rather than the page. */
   position: relative;
   background: var(--od-bg);
   color: var(--od-text);
+  /* Reduce tile hover scale from 1.25 to 1.06 (15% smaller). */
+  --od-tile-hover-scale: 1.06;
 }
 
 /* Collapsed is a width change only — the rail keeps its items, so no
