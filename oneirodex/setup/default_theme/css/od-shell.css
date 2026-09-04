@@ -62,8 +62,8 @@
   position: relative;
   background: var(--od-bg);
   color: var(--od-text);
-  /* Reduce tile hover scale from 1.25 to 1.06 (15% smaller). */
-  --od-tile-hover-scale: 1.06;
+  /* Tile hover scale: 1.15 provides subtle enlargement without aggressive clipping. */
+  --od-tile-hover-scale: 1.15;
 }
 
 /* Collapsed is a width change only — the rail keeps its items, so no
