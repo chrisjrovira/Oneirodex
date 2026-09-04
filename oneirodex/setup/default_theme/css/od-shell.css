@@ -1121,6 +1121,23 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
   display: none;
 }
 
+/* ...and stand down entirely when the PAGE supplies its own heading.
+   A handful of pages (game details, Acquire, VR) render an h1 outside
+   `.od-page-header`, so the v2 retirement rule never touched it and it is
+   still on screen. Once the bar's own title became an h1 those pages had TWO
+   visible h1s, the generic route name ("Game") ahead of the real one
+   ("007 Racing") — worse than before. `display: none` drops this copy from
+   the a11y tree as well, leaving exactly one heading.
+
+   The `:not(.od-page-header > h1)` is load-bearing: retired headings are
+   still in the DOM as `display: none`, so a bare `:has(#main-content h1)`
+   would match on every page and strip the only heading the other 15 routes
+   have. Only a heading the retirement rule did NOT hide counts. */
+.od-shell:has(#main-content h1:not(.od-page-header > h1))
+  .od-topbar__section {
+  display: none;
+}
+
 /* The portalled title follows Filters, so it needs the same separation from
    the control cluster that the bar's own copy gets from the toggle. */
 .od-topbar__lead .od-topbar__section {

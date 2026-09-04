@@ -86,3 +86,30 @@ describe('the context bar title is the page heading', () => {
     expect(src).not.toMatch(/railState === 'collapsed' && pageTitle/)
   })
 })
+
+
+/**
+ * Exactly one heading, never two.
+ *
+ * Once the bar's title became an h1, the few pages that render their own h1
+ * outside `.od-page-header` (game details, Acquire, VR) had two visible h1s,
+ * with the generic route name ahead of the real one. od-shell.css stands the
+ * bar's copy down for those.
+ */
+describe('the bar heading stands down when the page owns one', () => {
+  const SHELL = readFileSync(
+    join(HERE, '../../../../oneirodex/setup/default_theme/css/od-shell.css'),
+    'utf8',
+  )
+
+  it('suppresses the bar title when main has a heading of its own', () => {
+    expect(SHELL).toMatch(/:has\(#main-content h1[^)]*\)[\s\S]{0,60}\.od-topbar__section/)
+  })
+
+  it('ignores headings the retirement rule already hid', () => {
+    // Retired h1s are display:none but still in the DOM, so a bare
+    // :has(#main-content h1) would match everywhere and strip the only
+    // heading the other 15 routes have. The :not() is what prevents that.
+    expect(SHELL).toMatch(/:not\(\.od-page-header > h1\)/)
+  })
+})
