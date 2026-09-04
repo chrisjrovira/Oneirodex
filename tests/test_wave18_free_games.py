@@ -289,3 +289,108 @@ def test_gamerpower_steam_offer_uses_portrait_capsule(monkeypatch):
     # No well-known portrait for other stores — the banner is still better than
     # nothing, so it stays.
     assert offers['Banner Game']['image_url'] == 'https://www.gamerpower.com/offers/other-banner.jpg'
+
+
+def test_igdb_cover_lookup_memoizes_hits_and_misses(monkeypatch):
+    """One call per distinct title, not one per sync — misses cached too."""
+    fg.clear_cover_cache()
+    calls = []
+
+    def fake_request(url, query):
+        calls.append(query)
+        # The lookup searches on the normalized key, so "Known Game (GOG)
+        # Giveaway" reaches IGDB as `known game` — decoration stripped.
+        if 'known game' in query.lower():
+            return [{'name': 'Known Game', 'cover': {'image_id': 'abc123'}}]
+        return []
+
+    monkeypatch.setattr('oneirodex.utils.igdb_api.make_igdb_api_request', fake_request)
+
+    hit = fg.igdb_cover_for_title('Known Game (GOG) Giveaway')
+    assert hit == 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/abc123.jpg'
+    assert fg.igdb_cover_for_title('Known Game') == hit
+    assert len(calls) == 1
+
+    assert fg.igdb_cover_for_title('Mystery Title') is None
+    assert fg.igdb_cover_for_title('Mystery Title') is None
+    assert len(calls) == 2
+
+    fg.clear_cover_cache()
+
+
+def test_igdb_cover_lookup_survives_provider_failure(monkeypatch):
+    """A cover is decoration; an IGDB outage must not fail the offer sync."""
+    fg.clear_cover_cache()
+
+    def boom(_url, _query):
+        raise RuntimeError('IGDB down')
+
+    monkeypatch.setattr('oneirodex.utils.igdb_api.make_igdb_api_request', boom)
+    assert fg.igdb_cover_for_title('Anything') is None
+    fg.clear_cover_cache()
+
+
+def test_collect_remote_offers_fills_missing_covers(monkeypatch):
+    """Non-Steam giveaways get a looked-up cover; Steam keeps its capsule."""
+    fg.clear_cover_cache()
+    monkeypatch.setattr(fg, 'fetch_epic_free_games', lambda: [])
+    monkeypatch.setattr(fg, 'fetch_steam_free_games', lambda: [])
+    monkeypatch.setattr(
+        fg,
+        'fetch_gamerpower_giveaways',
+        lambda: [
+            {
+                'store': 'gog',
+                'title': 'Banner Only',
+                'image_url': 'https://www.gamerpower.com/wide.jpg',
+                'portrait': False,
+            },
+            {
+                'store': 'steam',
+                'title': 'Has Capsule',
+                'image_url': fg._steam_portrait_capsule_url('99'),
+                'portrait': True,
+            },
+        ],
+    )
+    monkeypatch.setattr(fg, '_cover_lookup_enabled', lambda: True)
+    monkeypatch.setattr(fg, 'igdb_cover_for_title', lambda _t: 'https://igdb/cover.jpg')
+
+    offers = {o['title']: o for o in fg.collect_remote_offers()['gamerpower']}
+
+    assert offers['Banner Only']['image_url'] == 'https://igdb/cover.jpg'
+    assert offers['Has Capsule']['image_url'] == fg._steam_portrait_capsule_url('99')
+    fg.clear_cover_cache()
+
+
+def test_collect_remote_offers_keeps_banner_when_lookup_disabled(monkeypatch):
+    monkeypatch.setattr(fg, 'fetch_epic_free_games', lambda: [])
+    monkeypatch.setattr(fg, 'fetch_steam_free_games', lambda: [])
+    monkeypatch.setattr(
+        fg,
+        'fetch_gamerpower_giveaways',
+        lambda: [
+            {
+                'store': 'gog',
+                'title': 'Banner Only',
+                'image_url': 'https://www.gamerpower.com/wide.jpg',
+                'portrait': False,
+            }
+        ],
+    )
+    monkeypatch.setattr(fg, '_cover_lookup_enabled', lambda: False)
+
+    offers = fg.collect_remote_offers()['gamerpower']
+    assert offers[0]['image_url'] == 'https://www.gamerpower.com/wide.jpg'
+
+
+def test_dedupe_title_keys_keep_a_trailing_title_word():
+    """The giveaway suffix must not eat the title's own last word.
+
+    "game" was once in the qualifier chain, so "Known Game (GOG) Giveaway"
+    normalized to "known" — which would fold it into any other offer starting
+    with that word.
+    """
+    assert fg.dedupe_title_keys('Known Game (GOG) Giveaway') == {'known game'}
+    assert fg.dedupe_title_keys('Skeleton Key Giveaway') == {'skeleton key'}
+    assert not fg.dedupe_title_keys('Known Game Giveaway') & fg.dedupe_title_keys('Known')

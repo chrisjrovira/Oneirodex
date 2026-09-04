@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote, urlparse
@@ -149,9 +150,14 @@ _STORE_PAREN_RE = re.compile(
     r'(?:\s+(?:store|games|gaming))?\s*[\)\]]',
     re.IGNORECASE,
 )
+# The qualifier chain deliberately excludes words that end real titles.
+# `game` was in it once, and "Known Game (GOG) Giveaway" normalized to
+# "known" — the chain ate the title's own last word, which would fold
+# unrelated offers together. `key` would do the same to "Skeleton Key".
+# Failing to strip only costs a missed dedupe; over-stripping loses an offer.
 _TRAILING_GIVEAWAY_RE = re.compile(
     r'(?:\s*[-–—:|]\s*|\s+)'
-    r'(?:free\s+)?(?:pc\s+|steam\s+|game\s+|dlc\s+|beta\s+|key\s+)*'
+    r'(?:free\s+|pc\s+|steam\s+)*'
     r'giveaway\s*$',
     re.IGNORECASE,
 )
@@ -515,14 +521,19 @@ def fetch_gamerpower_giveaways() -> list[dict[str, Any]]:
         # equivalent well-known portrait for them.
         appid = re.search(r'/app/(\d+)', claim)
         image_url = item.get('image') or item.get('thumbnail')
+        portrait = False
         if store == 'steam' and appid:
             image_url = _steam_portrait_capsule_url(appid.group(1))
+            portrait = True
         out.append({
             'store': store,
             'external_id': f'gp-{eid}',
             'title': title[:255],
             'description': (item.get('description') or '')[:500] or None,
             'image_url': image_url,
+            # Consumed by collect_remote_offers, not persisted — says whether
+            # this offer still needs a cover looked up.
+            'portrait': portrait,
             'claim_url': claim,
             'store_url': claim,
             'worth': (str(item.get('worth')).strip() if item.get('worth') else None),
@@ -531,6 +542,73 @@ def fetch_gamerpower_giveaways() -> list[dict[str, Any]]:
             'source': 'gamerpower',
         })
     return out
+
+
+_COVER_TTL_SEC = 30 * 24 * 3600
+_cover_cache: dict[str, tuple[str | None, float]] = {}
+
+
+def _cover_lookup_enabled() -> bool:
+    """False outside an app context — there are no IGDB credentials there."""
+    try:
+        from flask import current_app
+
+        return bool(current_app.config.get('ENABLE_FREE_GAMES_COVER_LOOKUP', True))
+    except RuntimeError:
+        return False
+
+
+def clear_cover_cache() -> None:
+    """Test helper — drop memoized IGDB cover lookups."""
+    _cover_cache.clear()
+
+
+def igdb_cover_for_title(title: str) -> str | None:
+    """A 2×3 IGDB cover for a giveaway title, or None.
+
+    GOG, itch, Humble and IndieGala offers — and Epic ones routed through
+    GamerPower — have no well-known portrait URL the way Steam does, so the
+    only way to get real cover art is to look the title up.
+
+    Memoized for a month and keyed on the *normalized* title, so the 3-hourly
+    sync costs one call per distinct game rather than one per sync, and a miss
+    is cached too — a title IGDB does not know must not be re-asked every time.
+    """
+    keys = sorted(dedupe_title_keys(title))
+    if not keys:
+        return None
+    key = keys[0]
+    hit = _cover_cache.get(key)
+    now = time.monotonic()
+    if hit and now - hit[1] < _COVER_TTL_SEC:
+        return hit[0]
+
+    from oneirodex.utils.igdb_api import make_igdb_api_request
+
+    # `search` is IGDB's fuzzy match; the where-clause keeps rows that can
+    # actually answer the question we are asking.
+    query = (
+        f'search "{key.replace(chr(34), "")}"; '
+        'fields name,cover.image_id; where cover != null; limit 1;'
+    )
+    url = None
+    try:
+        response = make_igdb_api_request('https://api.igdb.com/v4/games', query)
+        if isinstance(response, list) and response:
+            image_id = (response[0].get('cover') or {}).get('image_id')
+            if image_id:
+                url = (
+                    'https://images.igdb.com/igdb/image/upload/'
+                    f't_cover_big_2x/{image_id}.jpg'
+                )
+    except Exception:
+        # A cover is decoration. A provider outage must not fail the sync that
+        # brings in the offers themselves — the banner stays and we retry on
+        # the next TTL window.
+        url = None
+
+    _cover_cache[key] = (url, now)
+    return url
 
 
 def collect_remote_offers() -> dict[str, list[dict[str, Any]]]:
@@ -549,6 +627,14 @@ def collect_remote_offers() -> dict[str, list[dict[str, Any]]]:
             (o['store'], key) in official_keys for key in dedupe_title_keys(o['title'])
         )
     ]
+    if _cover_lookup_enabled():
+        for offer in gp_filtered:
+            if offer.get('portrait'):
+                continue
+            cover = igdb_cover_for_title(offer['title'])
+            if cover:
+                offer['image_url'] = cover
+                offer['portrait'] = True
     return {
         'epic': official_epic,
         'steam': official_steam,

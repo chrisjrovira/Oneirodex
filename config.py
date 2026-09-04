@@ -253,6 +253,13 @@ class Config(object):
     # Wave 18 — free games feed (News + notifications)
     ENABLE_FREE_GAMES = os.getenv('ENABLE_FREE_GAMES', 'true').lower() == 'true'
     FREE_GAMES_POLL_HOURS = float(os.getenv('FREE_GAMES_POLL_HOURS', '3') or '3')
+    # Look a giveaway's cover up on IGDB when the store has no portrait URL of
+    # its own (GOG, itch, Humble, IndieGala, Epic via GamerPower). Results are
+    # memoized for a month, so this is roughly one call per new title. Off
+    # leaves those tiles on the aggregator's wide banner.
+    ENABLE_FREE_GAMES_COVER_LOOKUP = (
+        os.getenv('ENABLE_FREE_GAMES_COVER_LOOKUP', 'true').lower() == 'true'
+    )
     # Discover's on-box recommender. Off means the rebuild daemon never starts;
     # Discover keeps working and the rows that depend on a profile stay empty.
     ENABLE_DISCOVER_ML = os.getenv('ENABLE_DISCOVER_ML', 'true').lower() == 'true'

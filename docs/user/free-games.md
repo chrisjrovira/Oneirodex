@@ -31,7 +31,7 @@ Oneirodex never silently redeems DRM. Claim on the store first (A), then Sync ow
 
 Xbox / PlayStation freebies may appear when the aggregator lists them; no special launcher deeplink yet.
 
-GamerPower also reposts offers the official Epic and Steam feeds already carry, decorated — Epic's "Alone With You" arrives as "Alone With You (Epic Games) Giveaway". Those reposts are dropped so a title is listed once per store; a genuine second offer on a *different* store still shows. Tile art comes from the store's portrait key where one exists (Epic tall keys, Steam's 600×900 capsule, including for Steam giveaways routed through GamerPower); other stores fall back to the aggregator's wide banner.
+GamerPower also reposts offers the official Epic and Steam feeds already carry, decorated — Epic's "Alone With You" arrives as "Alone With You (Epic Games) Giveaway". Those reposts are dropped so a title is listed once per store; a genuine second offer on a *different* store still shows. Tile art comes from the store's portrait key where one exists (Epic tall keys, Steam's 600×900 capsule, including for Steam giveaways routed through GamerPower). GOG, itch, Humble and IndieGala offers — and Epic ones routed through GamerPower — have no such URL, so their cover is looked up on IGDB by title and cached for a month, which is about one call per new title rather than one per sync. A title IGDB does not know keeps the aggregator's wide banner, as does every offer when `ENABLE_FREE_GAMES_COVER_LOOKUP` is off or IGDB credentials are unset.
 
 ## Operator flags
 
@@ -39,6 +39,7 @@ GamerPower also reposts offers the official Epic and Steam feeds already carry, 
 |---|---|---|
 | `ENABLE_FREE_GAMES` | `true` | Poller + API |
 | `FREE_GAMES_POLL_HOURS` | `3` | Refresh interval (1–24) |
+| `ENABLE_FREE_GAMES_COVER_LOOKUP` | `true` | Look a cover up on IGDB when the store has no portrait of its own. Needs IGDB credentials; without them tiles keep the aggregator banner |
 
 Outbound HTTP must reach Epic / Steam / GamerPower from the container host.
 
