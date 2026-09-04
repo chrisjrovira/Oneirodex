@@ -307,12 +307,21 @@ export function GameGrid({
             ref={virtualizer.measureElement}
             style={{
               position: 'absolute',
-              top: 0,
+              // `top`, not `transform: translateY()`.
+              //
+              // A transform makes the row its own stacking context, which
+              // trapped every z-index inside it: `.game-card:hover` could only
+              // order cards WITHIN their row, never lift one above the rows
+              // around it. The workaround was to raise the whole ROW on hover,
+              // so all four tiles in it rose together and painted over the
+              // chrome — the reported "other tiles overlap too".
+              // Positioning with `top` removes the stacking context, so the
+              // card's own z-index does the job and only the hovered tile
+              // moves. measureElement measures height and does not care which
+              // property placed the row.
+              top: `${virtualRow.start - virtualizer.options.scrollMargin}px`,
               left: 0,
               width: '100%',
-              transform: `translateY(${
-                virtualRow.start - virtualizer.options.scrollMargin
-              }px)`,
             }}
           >
             {rowGames.map((game) => (

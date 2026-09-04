@@ -21,7 +21,10 @@ from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.background import run_in_background
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.game_core import get_game_by_uuid
-from oneirodex.utils.game_details_payload import build_game_details_payload
+from oneirodex.utils.game_details_payload import (
+    build_game_details_payload,
+    local_image_on_disk,
+)
 from oneirodex.utils.game_more_from import build_more_from
 from oneirodex.utils.image_kinds import (
     IMAGE_KIND_ORDER,
@@ -773,7 +776,20 @@ def game_screenshots(game_uuid):
     if refusal is not None:
         return refusal
     screenshots = db.session.execute(select(Image).filter_by(game_uuid=game_uuid, image_type='screenshot')).scalars().all()
-    screenshot_urls = [url_for('static', filename=f'library/images/{screenshot.url}') for screenshot in screenshots]
+    # Only rows we can actually serve.
+    #
+    # This listed every row unconditionally — no `is_downloaded` check and no
+    # look at the filesystem — so it happily returned
+    # /static/library/images/<name> for art that is not there. That is how the
+    # 2026-08-31 rename cutover stayed invisible: 36,481 rows said downloaded
+    # while 65 files existed, and this endpoint reported all of them as URLs.
+    # `local_image_on_disk` fails open when UPLOAD_FOLDER is unset, so an
+    # unconfigured instance still shows art rather than hiding all of it.
+    screenshot_urls = [
+        url_for('static', filename=f'library/images/{s.url}')
+        for s in screenshots
+        if getattr(s, 'is_downloaded', False) and s.url and local_image_on_disk(s.url)
+    ]
     return jsonify(screenshot_urls)
 
 

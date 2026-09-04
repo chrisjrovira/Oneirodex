@@ -199,6 +199,34 @@ def _extra_on_server(extra) -> bool:
         return False
 
 
+def local_image_on_disk(raw: str) -> bool:
+    """Is the cached file actually on disk?
+
+    `is_downloaded` is a database flag, and a flag can outlive the file it
+    describes. The 2026-08-31 rename cutover repointed LIBRARY_HOST_PATH at a
+    fresh directory: 36,481 rows still said downloaded, 65 files were actually
+    present, and every page happily emitted /static/library/images/<name> for
+    art that had been left behind at the old path. A details page laid out a
+    1521x598 broken image as its backdrop and nothing anywhere reported a
+    problem, because nothing ever asked the filesystem.
+
+    Fails OPEN: when UPLOAD_FOLDER is not configured we cannot check, and
+    hiding every image because of that would be worse than trusting the flag.
+    """
+    if not raw:
+        return False
+    try:
+        folder = current_app.config.get('UPLOAD_FOLDER') or ''
+    except RuntimeError:
+        folder = os.getenv('UPLOAD_FOLDER') or ''
+    if not folder:
+        return True
+    try:
+        return os.path.exists(os.path.join(folder, 'images', os.path.basename(raw)))
+    except OSError:
+        return False
+
+
 # Image kinds that are wide, title-free art, best first.
 #
 # `hero` and `fanart` are made for this — 16:9 key art with no wordmark burned
@@ -222,7 +250,7 @@ def _servable_image_url(img) -> str | None:
         download_url = f'https:{download_url}'
     if raw.startswith(('http://', 'https://', '/')):
         return raw
-    if bool(getattr(img, 'is_downloaded', False)) and raw:
+    if bool(getattr(img, 'is_downloaded', False)) and raw and local_image_on_disk(raw):
         return url_for('static', filename=f'library/images/{raw}')
     if download_url.startswith(('http://', 'https://')):
         return download_url
@@ -309,7 +337,7 @@ def build_game_details_payload(game, user) -> dict:
             is_downloaded = bool(getattr(img, 'is_downloaded', False))
             if raw.startswith(('http://', 'https://', '/')):
                 screenshots.append(raw)
-            elif is_downloaded and raw:
+            elif is_downloaded and raw and local_image_on_disk(raw):
                 screenshots.append(url_for('static', filename=f'library/images/{raw}'))
             elif download_url.startswith(('http://', 'https://')):
                 # Pending / failed local download — still show remote IGDB art

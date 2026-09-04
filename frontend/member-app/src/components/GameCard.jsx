@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { getCsrfToken } from '../api/csrf'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
@@ -87,10 +87,16 @@ export function GameCard({
   const trailerTimer = useRef(0)
   const [isFavorite, setIsFavorite] = useState(Boolean(game.is_favorite))
   const [favoritePending, setFavoritePending] = useState(false)
-  const navigate = useNavigate()
   // Where the press began — see the click handler on .game-card for why the
   // click target itself cannot be trusted here.
   const pressStartedOnControl = useRef(false)
+  // The cover <a> is the navigation, so the recovery click just fires it.
+  //
+  // This used useNavigate(), which made a Router a hard requirement for every
+  // GameCard. GameCard.test.jsx renders bare on purpose — "a badge does not
+  // [need a router]" — so that broke 27 tests across two suites. Clicking the
+  // anchor keeps the href as the single source of truth and needs no context.
+  const coverLinkRef = useRef(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [status, setStatus] = useState(game.user_status || '')
   const [statusPending, setStatusPending] = useState(false)
@@ -367,7 +373,7 @@ export function GameCard({
           if (event.defaultPrevented) return
           if (event.button && event.button !== 0) return
           if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-          navigate(`/game_details/${game.uuid}`)
+          coverLinkRef.current?.click()
         }}
       >
         {selectionEnabled ? (
@@ -644,7 +650,11 @@ export function GameCard({
 
         {/* The clip lives here now, not on .game-card — the card was clipping
             its own popup menu. See .game-card__cover-link in components.css. */}
-        <a className="game-card__cover-link" href={`/game_details/${game.uuid}`}>
+        <a
+          ref={coverLinkRef}
+          className="game-card__cover-link"
+          href={`/game_details/${game.uuid}`}
+        >
           {/* Nothing to show is drawn, not fetched.
               The old path swapped `src` to default_cover.jpg — a raster with
               the logo and the words baked into it, unreadable below about a
