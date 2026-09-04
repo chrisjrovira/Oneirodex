@@ -30,13 +30,13 @@ function stageItems(videoEmbeds, shownShots) {
 }
 
 /**
- * Compact left-fold media: primary trailer or first shot + thumbs.
- * Theater / Fullscreen expand into the existing lightboxes. Never autoplays.
+ * Compact media stage: primary trailer or first shot + thumbs.
+ * Shots expand into the lightbox; videos use the player's own fullscreen.
+ * Never autoplays.
  */
 export function DetailsMediaStage({
   videoEmbeds,
   shownShots,
-  onTheater,
   onFullscreen,
   onShotBroken,
 }) {
@@ -104,7 +104,7 @@ export function DetailsMediaStage({
             type="button"
             className="od-details-media__still"
             onClick={() => onFullscreen(current.index)}
-            aria-label="Open screenshot fullscreen"
+            aria-label="Open screenshot in viewer"
           >
             <img
               src={current.src}
@@ -138,25 +138,6 @@ export function DetailsMediaStage({
             ))}
           </div>
         ) : null}
-        <div className="od-details-media__actions">
-          {isVideo ? (
-            <button
-              type="button"
-              className="od-btn"
-              onClick={() => onTheater(current.index)}
-            >
-              Theater
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="od-btn"
-              onClick={() => onFullscreen(current.index)}
-            >
-              Fullscreen
-            </button>
-          )}
-        </div>
       </div>
     </div>
   )

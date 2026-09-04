@@ -290,18 +290,30 @@ test('admin ⋮ menu exposes Edit Details / Edit Images', async () => {
   expect(screen.getByLabelText('Admin paths')).toBeInTheDocument()
 })
 
-test('renders trailers, extras, and screenshot fullscreen affordances', async () => {
+/**
+ * The stage is the only gallery.
+ *
+ * There used to be a second Screenshots grid and a second Trailers & videos
+ * list at the foot of the page showing exactly what the stage already shows.
+ * Both are gone, along with the Theater and Fullscreen buttons: clicking the
+ * still opens the lightbox, and a trailer uses the player's own fullscreen.
+ */
+test('media stage is the only gallery and its still opens the lightbox', async () => {
   const user = userEvent.setup()
   renderDetails()
 
-  expect(await screen.findByRole('heading', { name: 'Trailers & videos' })).toBeInTheDocument()
-  expect(screen.getByTitle('Game trailer 1')).toBeInTheDocument()
+  expect(await screen.findByTitle('Primary trailer')).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Extras & DLC' })).toBeInTheDocument()
   expect(screen.getByText(/Extra: artbook/i)).toBeInTheDocument()
 
-  await user.click(screen.getByRole('button', { name: 'Open screenshot 1' }))
+  expect(screen.queryByRole('heading', { name: 'Trailers & videos' })).toBeNull()
+  expect(screen.queryByRole('heading', { name: 'Screenshots' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Theater' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Fullscreen' })).toBeNull()
+
+  await user.click(screen.getByRole('button', { name: 'Show screenshot 1' }))
+  await user.click(screen.getByRole('button', { name: 'Open screenshot in viewer' }))
   expect(screen.getByRole('heading', { name: /Screenshot 1/i })).toBeInTheDocument()
-  expect(screen.getAllByRole('button', { name: 'Fullscreen' }).length).toBeGreaterThanOrEqual(1)
 })
 
 test('prefers trailers[].embed_url and shows extras from details payload', async () => {
@@ -352,11 +364,10 @@ test('prefers trailers[].embed_url and shows extras from details payload', async
 
   renderDetails()
 
-  expect(await screen.findByTitle('Game trailer 1')).toHaveAttribute(
+  expect(await screen.findByTitle('Primary trailer')).toHaveAttribute(
     'src',
     'https://www.youtube.com/embed/abc123DEF',
   )
-  expect(screen.getAllByRole('button', { name: 'Theater' }).length).toBeGreaterThanOrEqual(1)
   expect(screen.getByText('Artbook PDF')).toBeInTheDocument()
   expect(screen.getByText(/On server/i)).toBeInTheDocument()
   expect(screen.queryByText(/Backend extras/i)).toBeNull()
@@ -399,7 +410,7 @@ test('shows youtube_demo_url when no trailers exist', async () => {
     'href',
     'https://youtu.be/demoOnly99',
   )
-  expect(screen.queryByTitle('Game trailer 1')).toBeNull()
+  expect(screen.queryByTitle('Primary trailer')).toBeNull()
 })
 
 /**
@@ -680,20 +691,28 @@ test('admin can remove missing versions via cleanup_orphans', async () => {
   expect(within(versionsSection).getByRole('status')).toHaveTextContent(/Removed 1 missing version/i)
 })
 
-test('later sections sit in the content grid beside the facts rail', async () => {
+/**
+ * Summary and Details read down the left of the fold, media sits to their
+ * right, and everything after that runs full width below — so the flow is a
+ * sibling of the fold, not a third column inside the content grid.
+ */
+test('summary and facts share the fold with the media stage', async () => {
   renderDetails()
 
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
-  const grid = document.querySelector('.od-details-page__content-grid')
+  const fold = document.querySelector('.od-details-page__fold')
+  expect(fold).toBeTruthy()
+  const grid = fold.querySelector('.od-details-page__content-grid')
   expect(grid).toBeTruthy()
   expect(grid.querySelector('.od-details-page__section--summary')).toBeTruthy()
   expect(grid.querySelector('.od-details-page__section--facts')).toBeTruthy()
-  const flow = grid.querySelector('.od-details-page__flow')
+  expect(fold.querySelector('.od-details-media')).toBeTruthy()
+
+  const flow = document.querySelector('.od-details-page__flow')
   expect(flow).toBeTruthy()
+  expect(grid.contains(flow)).toBe(false)
   expect(within(flow).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
   expect(within(flow).getByRole('heading', { name: 'Extras & DLC' })).toBeInTheDocument()
-  expect(within(flow).getByRole('heading', { name: 'Screenshots' })).toBeInTheDocument()
-  expect(within(flow).getByRole('heading', { name: 'Trailers & videos' })).toBeInTheDocument()
 })
 
 test('facts rail stays in the grid when there is no summary', async () => {
@@ -724,7 +743,8 @@ test('facts rail stays in the grid when there is no summary', async () => {
   const grid = document.querySelector('.od-details-page__content-grid')
   expect(grid.querySelector('.od-details-page__section--summary')).toBeNull()
   expect(grid.querySelector('.od-details-page__section--facts')).toBeTruthy()
-  expect(within(grid.querySelector('.od-details-page__flow')).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
+  const flow = document.querySelector('.od-details-page__flow')
+  expect(within(flow).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
 })
 
 test('breadcrumb is Catalog then primary genre then title', async () => {

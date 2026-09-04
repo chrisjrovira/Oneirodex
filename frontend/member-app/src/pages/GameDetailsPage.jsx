@@ -108,7 +108,6 @@ export function GameDetailsPage() {
       return next
     })
   }, [])
-  const [videoIndex, setVideoIndex] = useState(null)
   const [adminMenuOpen, setAdminMenuOpen] = useState(false)
   const [summaryExpanded, setSummaryExpanded] = useState(false)
   // Whether the summary is actually clipped by the 8-line clamp. Measured rather
@@ -760,7 +759,6 @@ export function GameDetailsPage() {
         <DetailsMediaStage
           videoEmbeds={videoEmbeds}
           shownShots={shownShots}
-          onTheater={setVideoIndex}
           onFullscreen={setShotIndex}
           onShotBroken={markShotBroken}
         />
@@ -1223,82 +1221,25 @@ export function GameDetailsPage() {
       <RelatedMediaStrip gameUuid={game.uuid} />
       <DetailsMoreFrom gameUuid={game.uuid} />
 
-      {shownShots.length ? (
+      {/* The stage carries every embedded trailer, so this is only the
+          no-embed case: point at the external video instead. */}
+      {videoEmbeds.length === 0 && demoLink ? (
         <section className="od-details-page__section">
-          <h2>Screenshots</h2>
-          <div className="od-details-page__shots">
-            {shownShots.map((url, index) => (
-              <button
-                key={url}
-                type="button"
-                className="od-details-page__shot"
-                onClick={() => setShotIndex(index)}
-                onDoubleClick={() => setShotIndex(index)}
-                aria-label={`Open screenshot ${index + 1}`}
-                title="Click to open · double-click for fullscreen viewer"
-              >
-                <img
-                  src={url}
-                  alt=""
-                  loading="lazy"
-                  onError={() => markShotBroken(url)}
-                />
-              </button>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="od-details-page__section">
-        <h2>Trailers &amp; videos</h2>
-        {videoEmbeds.length > 0 ? (
-          <div className="od-details-page__videos">
-            {videoEmbeds.map((src, index) => (
-              <div key={src} className="od-details-page__video-card">
-                <iframe
-                  title={`Game trailer ${index + 1}`}
-                  src={src}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                  allowFullScreen
-                />
-                <div className="od-details-page__video-actions">
-                  <button
-                    type="button"
-                    className="od-btn"
-                    onClick={() => setVideoIndex(index)}
-                  >
-                    Theater
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : demoLink ? (
+          <h2>Trailers &amp; videos</h2>
           <p className="od-details-page__muted">
             No embedded trailer yet.{' '}
             <a className="od-btn" href={demoLink.href} target="_blank" rel="noreferrer">
               {demoLink.label}
             </a>
           </p>
-        ) : (
-          <p className="od-details-page__muted">
-            No trailers or videos for this title yet.
-          </p>
-        )}
-      </section>
+        </section>
+      ) : null}
       </div>
 
       <ScreenshotLightbox
         urls={shownShots}
         openIndex={shotIndex}
         onClose={() => setShotIndex(null)}
-      />
-
-      <ScreenshotLightbox
-        mode="videos"
-        videos={videoEmbeds}
-        openIndex={videoIndex}
-        onClose={() => setVideoIndex(null)}
       />
 
       <OpenPathModal

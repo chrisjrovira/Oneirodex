@@ -94,15 +94,6 @@
   cursor: zoom-in;
 }
 
-.od-lightbox__video {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: min(78vh, 780px);
-  border: 0;
-  border-radius: var(--od-radius-md);
-  background: var(--od-bg);
-}
 
 .od-lightbox__nav {
   flex: 0 0 auto;

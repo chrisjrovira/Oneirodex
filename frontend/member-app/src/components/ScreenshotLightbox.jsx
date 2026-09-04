@@ -2,22 +2,19 @@ import { useEffect, useId, useRef, useState } from 'react'
 import './ScreenshotLightbox.css'
 
 /**
- * In-app media viewer — screenshots + video embeds.
+ * In-app screenshot viewer.
  * Double-click image or Fullscreen button uses the browser Fullscreen API.
  */
 export function ScreenshotLightbox({
   urls = [],
   openIndex = null,
   onClose,
-  videos = [],
-  mode = 'screenshots',
 }) {
   const titleId = useId()
   const stageRef = useRef(null)
   const [index, setIndex] = useState(0)
   const [fsError, setFsError] = useState(null)
-  const isVideo = mode === 'videos'
-  const items = isVideo ? videos : urls
+  const items = urls
   const open = openIndex != null && items.length > 0
 
   useEffect(() => {
@@ -78,7 +75,7 @@ export function ScreenshotLightbox({
       >
         <div className="od-lightbox__toolbar">
           <h2 id={titleId} className="od-lightbox__title">
-            {isVideo ? 'Video' : 'Screenshot'} {safeIndex + 1} / {items.length}
+            Screenshot {safeIndex + 1} / {items.length}
           </h2>
           <div className="od-lightbox__toolbar-actions">
             <button
@@ -109,23 +106,13 @@ export function ScreenshotLightbox({
               ‹
             </button>
           ) : null}
-          {isVideo ? (
-            <iframe
-              className="od-lightbox__video"
-              title={`Game trailer ${safeIndex + 1}`}
-              src={current}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen
-            />
-          ) : (
-            <img
-              src={current}
-              alt=""
-              className="od-lightbox__img"
-              onDoubleClick={() => void enterFullscreen()}
-              title="Double-click for fullscreen"
-            />
-          )}
+          <img
+            src={current}
+            alt=""
+            className="od-lightbox__img"
+            onDoubleClick={() => void enterFullscreen()}
+            title="Double-click for fullscreen"
+          />
           {items.length > 1 ? (
             <button
               type="button"

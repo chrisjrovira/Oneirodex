@@ -67,7 +67,7 @@ On **Systems**, scroll to the secondary **Export packs** section (below the plat
 It opens `/systems/catalog` for that console or computer. Counts come from an IGDB `release_dates` cache (main games only), not Wikipedia. An empty table means an admin has not refreshed that platform yet. Windows/Steam libraries are not in the report. Set completeness (DAT missing list) is a separate **Missing** link after a DAT upload.
 
 **Trailers page is empty.**  
-That’s OK (HTTP 200 + CTA) when no trailer metadata is available yet — open a title that has video, or ask an admin to enrich metadata. On **game details**, a trailer or first screenshot leads the fold when media exists; the full **Trailers & videos** section still sits below. Trailers play from `trailers[].embed_url` (or a YouTube demo when no trailers). **Theater** expands the lightbox. Embeds do not autoplay if you asked the OS for reduced motion.
+That’s OK (HTTP 200 + CTA) when no trailer metadata is available yet — open a title that has video, or ask an admin to enrich metadata. On **game details**, a trailer or first screenshot leads the fold when media exists — that stage is the only gallery, so there is no second screenshots or trailers section below it. Trailers play from `trailers[].embed_url` (or a YouTube demo link when there is no embed) and use the player's own fullscreen; clicking a screenshot opens it in the lightbox. Embeds do not autoplay if you asked the OS for reduced motion.
 
 **Why doesn’t every title show system requirements or store languages?**  
 Those blocks are fill-only from Steam `appdetails` when a title was identified that way. ROM-only copies keep filename language chips and do not invent a PC spec sheet.

@@ -73,13 +73,6 @@
   outline-offset: 1px;
 }
 
-.od-details-media__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--od-space-2);
-  margin-inline-start: auto;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .od-details-media__thumb.is-active {
     outline-width: 2px;
