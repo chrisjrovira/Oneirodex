@@ -163,14 +163,10 @@
   max-width: 100%;
   box-sizing: border-box;
   padding: 0 0.75rem 1rem;
-  overflow-x: clip;
-  /* No overflow-clip-margin here. It was `overflow-clip-margin-inline`, a CSS
-     Overflow 4 draft no browser implements, so it never applied. Correcting it
-     to the physical property did not help either — measured on the live app,
-     `overflow: clip` on both axes with a literal 200px clip-margin that
-     computed correctly still left the first column cut by 93px. The grid no
-     longer bleeds outside this box at all (see od-shell.css), so nothing needs
-     to escape the clip. */
+  overflow-x: visible;
+  /* Hovered tiles scale by 1.25x and need room to grow without clipping.
+     The grid no longer bleeds outside this box (see od-shell.css), so tiles
+     can safely overflow on hover. */
   /* Anchor for the collapsed panel's pull handle. */
   position: relative;
 }

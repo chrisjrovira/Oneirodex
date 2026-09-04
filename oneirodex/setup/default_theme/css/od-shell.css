@@ -131,21 +131,11 @@
   padding-top: calc(
     var(--od-topbar-h) + max(var(--od-stack), var(--od-tile-hover-bleed-y))
   );
-  /* Gutter only. This used to be `gutter + hover-pad-x` (~128px per side) to
-     reserve room for the hover enlarge, with the grid pulled back out by a
-     matching negative margin below. That scheme could not work:
-       - the pullback puts the grid OUTSIDE .library-layout, which clips;
-       - `overflow-clip-margin` does not lift that clip. Measured directly:
-         with `overflow: clip` on both axes and a literal 200px clip-margin
-         that computed correctly, the left column was still cut by 93px;
-       - and `overflow-clip-margin-inline`, used originally, is a draft
-         property no browser implements, so it never applied at all.
-     Net effect was 93px of the left column clipped off AND 93px of dead space
-     on the right — the two symptoms were the same bug. At 375px the fixed pad
-     exceeded the viewport and collapsed the grid to width 0.
-     The grid now simply fills its content box. */
+  /* Gutter only. Padding reserves room for hover enlarge on all edges.
+     Hovered tiles scale by 1.25x and need overflow:visible to grow outside
+     their normal bounds without clipping. */
   padding-inline: var(--od-gutter);
-  overflow-x: clip;
+  overflow-x: visible;
 }
 
 /* Tile / Rows wrap grid only. Catalog Grid shelves use data-library-shelves
