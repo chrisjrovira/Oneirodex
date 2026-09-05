@@ -44,14 +44,17 @@ export function computeGridColumns(width, tileMin = 180, gap = 10) {
  *
  * One owner now: the virtualizer's own `gap` option. It puts the space
  * *between* rows and not after the last one, which is what a CSS grid `gap`
- * does and what makes the grid end flush with its final row. Cover is 3:4 and
- * there is no title strip, so a row is exactly the cover height.
+ * does and what makes the grid end flush with its final row.
+ *
+ * Cover is 3:4, so a row is the cover height plus `titleH` — the title strip
+ * is a member preference, and a row that ignored it would leave the estimate
+ * short of the measured height and reopen the drifting-total-size bug above.
  */
-export function estimateGridRowHeight(width, columnCount, gap = 10) {
+export function estimateGridRowHeight(width, columnCount, gap = 10, titleH = 0) {
   const cols = Math.max(1, columnCount)
   const g = Math.max(0, gap)
   const tileWidth = Math.max(1, (Math.max(width, 1) - g * (cols - 1)) / cols)
-  return Math.ceil(tileWidth * (4 / 3))
+  return Math.ceil(tileWidth * (4 / 3) + Math.max(0, titleH))
 }
 
 /**

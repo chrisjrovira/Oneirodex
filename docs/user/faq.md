@@ -40,7 +40,7 @@ Game details lists installs with honest presence: a version marked **Missing on 
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
 **Can I switch Game Catalog off the cover grid?**  
-**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is a title list that scales with the slider, Grid is Steam-like genre shelves (same row chrome as Discover). The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider applies at full size to Tile, Rows, Grid, and Discover.
+**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is a title list that scales with the slider, Grid is Steam-like genre shelves (same row chrome as Discover). The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider applies at full size to Tile, Rows, Grid, and Discover. **Titles** next to it shows or hides the title strip under each cover.
 
 **What are Signals chips?**  
 Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).

@@ -1361,3 +1361,30 @@ a.od-chip:focus {
         transition: none;
     }
 }
+
+/* Tile title strip.
+ *
+ * Height comes from --od-tile-title-h, which the member preference sets to 0
+ * when titles are off. GameGrid reads the same variable for its virtual row
+ * height, so the estimate and the rendered row cannot disagree. Zero height
+ * plus overflow:hidden collapses it without a second rule to hide it. */
+.game-card__title {
+    display: block;
+    height: var(--od-tile-title-h, 0px);
+    overflow: hidden;
+    margin: 0;
+    padding: 0 0.25rem;
+    color: var(--od-text);
+    font-size: var(--od-font-sm);
+    /* Matches the strip height so one line sits centred in it. */
+    line-height: var(--od-tile-title-h, 0px);
+    text-align: center;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.game-card__title:hover,
+.game-card__title:focus-visible {
+    color: var(--od-accent);
+}

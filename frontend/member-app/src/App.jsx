@@ -130,7 +130,13 @@ function LazyPage({ children }) {
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>
 }
 
-function Layout({ shellConfig, tileSize, onTileSizeChange }) {
+function Layout({
+  shellConfig,
+  tileSize,
+  onTileSizeChange,
+  showTileTitles,
+  onShowTileTitlesChange,
+}) {
   const location = useLocation()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
@@ -209,6 +215,8 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
           shellConfig={shellConfig}
           tileSize={tileSize}
           onTileSizeChange={onTileSizeChange}
+          showTileTitles={showTileTitles}
+          onShowTileTitlesChange={onShowTileTitlesChange}
           onOpenCommandPalette={() => setPaletteOpen(true)}
           onToggleRail={toggleRail}
           railState={railState}
@@ -251,20 +259,23 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
 
 export function App({ shellConfig = {} }) {
   const [tileSize, setTileSize] = useState(shellConfig.tileSize || '50')
+  const [showTileTitles, setShowTileTitles] = useState(
+    shellConfig.showTileTitles !== false,
+  )
 
   useEffect(() => {
-    applyTileSizeCssVars(tileSize)
+    applyTileSizeCssVars(tileSize, showTileTitles)
     let timer = 0
     function onResize() {
       window.clearTimeout(timer)
-      timer = window.setTimeout(() => applyTileSizeCssVars(tileSize), 100)
+      timer = window.setTimeout(() => applyTileSizeCssVars(tileSize, showTileTitles), 100)
     }
     window.addEventListener('resize', onResize)
     return () => {
       window.clearTimeout(timer)
       window.removeEventListener('resize', onResize)
     }
-  }, [tileSize])
+  }, [tileSize, showTileTitles])
 
   return (
     <Routes>
@@ -290,6 +301,8 @@ export function App({ shellConfig = {} }) {
             shellConfig={shellConfig}
             tileSize={tileSize}
             onTileSizeChange={setTileSize}
+            showTileTitles={showTileTitles}
+            onShowTileTitlesChange={setShowTileTitles}
           />
         }
       >

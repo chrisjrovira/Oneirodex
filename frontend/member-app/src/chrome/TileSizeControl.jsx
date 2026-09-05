@@ -16,13 +16,13 @@ const PREF_SAVE_DEBOUNCE_MS = 320
  *  drag stops, not wait for the round-trip that persists it. */
 const TILE_RESIZE_SETTLE_MS = 120
 
-export function applyTileSizeCssVars(sizeOrPercent) {
+export function applyTileSizeCssVars(sizeOrPercent, showTitles = true) {
   const isNarrow =
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(max-width: 900px)').matches
   const vars = clampTileVarsForNarrowViewport(
-    tilePercentToCssVars(sizeOrPercent),
+    tilePercentToCssVars(sizeOrPercent, showTitles),
     isNarrow,
   )
   Object.entries(vars).forEach(([key, value]) => {

@@ -39,12 +39,21 @@ export async function savePreferences(partial) {
   return res.json().catch(() => ({}))
 }
 
+/**
+ * Every field the preferences form validates, not just the one being changed.
+ *
+ * `/settings_panel` validates the whole `UserPreferencesForm`, and WTForms
+ * reads an absent checkbox as False. So a save that omits `show_tile_titles` —
+ * dragging the tile-size slider, say — would quietly switch the title strip
+ * off. Anything added to that form has to be carried here too.
+ */
 export function preferencesFromShell(shellConfig = {}, partial = {}) {
   return {
     items_per_page: shellConfig.perPage ?? 20,
     default_sort: shellConfig.defaultSort || 'name',
     default_sort_order: shellConfig.defaultSortOrder || 'asc',
     theme: shellConfig.theme || 'default',
+    show_tile_titles: shellConfig.showTileTitles === false ? 'false' : 'true',
     ...partial,
   }
 }

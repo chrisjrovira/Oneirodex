@@ -687,6 +687,17 @@ export function GameCard({
           <TileHoverTrailer src={trailerSrc} active={trailerArmed} />
         </a>
 
+        {/* Tile title strip. Always rendered, sized by `--od-tile-title-h`,
+            which is 0 when the member has titles off — so the preference is
+            one CSS var rather than a prop threaded to every grid, and the
+            virtualizer reads the same var for its row height. Rows layout has
+            its own title below, so this would be a duplicate there. */}
+        {layout !== 'rows' ? (
+          <a className="game-card__title" href={`/game_details/${game.uuid}`} tabIndex={-1}>
+            {game.name}
+          </a>
+        ) : null}
+
         {layout === 'rows' ? (
           <a className="game-card__row-meta" href={`/game_details/${game.uuid}`}>
             <strong className="game-card__row-title">{game.name}</strong>

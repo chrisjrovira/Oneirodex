@@ -129,6 +129,7 @@ def settings_panel():
         current_user.preferences.icon_pack = form.icon_pack.data or 'outline'
         current_user.preferences.font = form.font.data or 'system-ui'
         current_user.preferences.tile_size = _normalize_tile_percent(form.tile_size.data)
+        current_user.preferences.show_tile_titles = bool(form.show_tile_titles.data)
         current_user.preferences.preferred_game_locale = (
             form.preferred_game_locale.data or 'en-US'
         )
@@ -156,6 +157,7 @@ def settings_panel():
             form.icon_pack.data = getattr(prefs, 'icon_pack', None) or 'outline'
             form.font.data = getattr(prefs, 'font', None) or 'system-ui'
             form.tile_size.data = _normalize_tile_percent(getattr(prefs, 'tile_size', None))
+            form.show_tile_titles.data = bool(getattr(prefs, 'show_tile_titles', True))
             form.preferred_game_locale.data = (
                 getattr(prefs, 'preferred_game_locale', None) or 'en-US'
             )

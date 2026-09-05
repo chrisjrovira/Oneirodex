@@ -45,12 +45,15 @@ function measureScrollMargin(el, scrollEl) {
 
 function measureGridMetrics(el, scrollEl) {
   if (!el) {
-    return { width: 0, tileMin: 180, gap: 10, scrollMargin: 0 }
+    return { width: 0, tileMin: 180, gap: 10, titleH: 0, scrollMargin: 0 }
   }
   const width = el.clientWidth || 0
   const tileMin = readCssPx(el, '--od-tile-min', 180)
   const gap = readCssPx(el, '--od-tile-gap', 10)
-  return { width, tileMin, gap, scrollMargin: measureScrollMargin(el, scrollEl) }
+  // Title strip is a preference, expressed as a CSS var so the grid learns
+  // about it the same way it learns tile size — 0 when the member has it off.
+  const titleH = readCssPx(el, '--od-tile-title-h', 0)
+  return { width, tileMin, gap, titleH, scrollMargin: measureScrollMargin(el, scrollEl) }
 }
 
 function metricsEqual(a, b) {
@@ -58,6 +61,7 @@ function metricsEqual(a, b) {
     a.width === b.width &&
     a.tileMin === b.tileMin &&
     a.gap === b.gap &&
+    a.titleH === b.titleH &&
     a.scrollMargin === b.scrollMargin
   )
 }
@@ -174,7 +178,7 @@ export function GameGrid({
   const rowHeight =
     catalogLayout === 'rows'
       ? catalogRowHeightPx(metrics.tileMin)
-      : estimateGridRowHeight(width, columnCount, metrics.gap)
+      : estimateGridRowHeight(width, columnCount, metrics.gap, metrics.titleH)
   const rows = useMemo(
     () => chunkGamesIntoRows(games, columnCount),
     [games, columnCount],

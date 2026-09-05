@@ -9,9 +9,21 @@ export const TILE_PERCENT_MIN = 0
 export const TILE_PERCENT_MAX = 100
 export const TILE_PERCENT_DEFAULT = 50
 
-/** CSS pixel range for --od-tile-min (slider 0% → 100%). */
-export const TILE_PX_MIN = 120
-export const TILE_PX_MAX = 400
+/**
+ * CSS pixel range for --od-tile-min (slider 0% → 100%).
+ *
+ * Was 120–400, which put the 50% default at 260px — about four covers across a
+ * typical desktop content width, and three in a narrow pane. For a library in
+ * the thousands that is a lot of scrolling to see very little: comparable
+ * poster grids (Jellyfin) default to five or six across and their users
+ * commonly push to eight.
+ *
+ * 110–300 puts the default near 205px, which is six across at ~1300px, while
+ * still reaching four big tiles at 100% and ten dense ones at 0%. The top end
+ * gives up 400px; the default is the number almost everyone actually sees.
+ */
+export const TILE_PX_MIN = 110
+export const TILE_PX_MAX = 300
 
 /** Round to 2 decimal places without leaving trailing-zero float noise. */
 function roundFine(value) {
@@ -54,7 +66,20 @@ export function normalizeTilePercent(value) {
  */
 export const TILE_HOVER_SCALE = 1.25
 
-export function tilePercentToCssVars(percent) {
+/**
+ * Height of the tile title strip, or 0 when the member has titles off.
+ *
+ * Scales gently with tile size — a 110px tile cannot carry the same strip as a
+ * 300px one — but stays a fixed value per size so GameGrid's row estimate and
+ * the rendered row agree exactly.
+ */
+export function tileTitleHeightPx(percent, showTitles) {
+  if (!showTitles) return 0
+  const p = normalizeTilePercent(percent) / 100
+  return Math.round(22 + 8 * p)
+}
+
+export function tilePercentToCssVars(percent, showTitles = true) {
   const p = normalizeTilePercent(percent) / 100
   const minPx = roundFine(TILE_PX_MIN + (TILE_PX_MAX - TILE_PX_MIN) * p)
   const gapPx = roundFine(6 + 10 * p)
@@ -62,6 +87,7 @@ export function tilePercentToCssVars(percent) {
     '--od-tile-min': `${minPx}px`,
     '--od-tile-gap': `${gapPx}px`,
     '--od-tile-hover-scale': String(TILE_HOVER_SCALE),
+    '--od-tile-title-h': `${tileTitleHeightPx(percent, showTitles)}px`,
   }
 }
 

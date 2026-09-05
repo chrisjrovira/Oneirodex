@@ -61,6 +61,9 @@ export function parseShellConfig(rootElement) {
     // Two-bar chrome is on unless an operator explicitly sets false.
     enableNewChrome: rootElement.dataset.enableNewChrome !== 'false',
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
+    // Titles under catalog covers. Absent attribute means an older shell
+    // render, and the strip is the default, so only an explicit false hides it.
+    showTileTitles: rootElement.dataset.showTileTitles !== 'false',
     // AGPL §13 source offer — see config.ONEIRODEX_SOURCE_URL. A modified deployment
     // owes its users *its* source, so this is configuration, not a constant.
     sourceUrl: rootElement.dataset.sourceUrl || '',

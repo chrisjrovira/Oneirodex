@@ -274,6 +274,7 @@ class UserPreferencesForm(FlaskForm):
     icon_pack = SelectField('Icon pack', choices=[('outline', 'Outline')])
     font = SelectField('Font', choices=[('system-ui', 'System UI (default)')])
     tile_size = StringField('Tile size %', default='50')
+    show_tile_titles = BooleanField('Show titles under tiles', default=True)
     preferred_game_locale = SelectField(
         'Preferred game language',
         choices=[

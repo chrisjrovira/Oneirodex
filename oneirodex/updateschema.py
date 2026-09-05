@@ -660,6 +660,13 @@ class DatabaseManager:
         UPDATE user_preferences SET tile_size = '75' WHERE tile_size = 'L';
         UPDATE user_preferences SET tile_size = '100' WHERE tile_size = 'XL';
 
+        -- Title strip under catalog covers. Defaults on, and backfilled so an
+        -- existing member is not silently switched to the plain art wall.
+        ALTER TABLE user_preferences
+        ADD COLUMN IF NOT EXISTS show_tile_titles BOOLEAN DEFAULT TRUE;
+
+        UPDATE user_preferences SET show_tile_titles = TRUE WHERE show_tile_titles IS NULL;
+
         ALTER TABLE user_preferences
         ADD COLUMN IF NOT EXISTS icon_pack VARCHAR(50) DEFAULT 'outline';
 

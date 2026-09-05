@@ -10,6 +10,7 @@ import {
 } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
+import { TileTitlesToggle } from './TileTitlesToggle'
 import { getPageTitle, hasTileSizeControl } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
 
@@ -51,6 +52,8 @@ export function TopBar({
   shellConfig = {},
   tileSize,
   onTileSizeChange,
+  showTileTitles = true,
+  onShowTileTitlesChange,
   onOpenCommandPalette,
   onToggleRail,
   railState = 'expanded',
@@ -203,11 +206,18 @@ export function TopBar({
               preference. See hasTileSizeControl. On those pages the count
               simply leads the group, which is where it used to be anyway. */}
           {showTileSize ? (
-            <TileSizeControl
-              value={tileSize || shellConfig.tileSize || '50'}
-              onChange={onTileSizeChange}
-              shellConfig={shellConfig}
-            />
+            <>
+              <TileSizeControl
+                value={tileSize || shellConfig.tileSize || '50'}
+                onChange={onTileSizeChange}
+                shellConfig={shellConfig}
+              />
+              <TileTitlesToggle
+                value={showTileTitles}
+                onChange={onShowTileTitlesChange}
+                shellConfig={shellConfig}
+              />
+            </>
           ) : null}
 
           {/* Trail slot: how much is here. Still grouped with the control that

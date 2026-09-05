@@ -4,6 +4,7 @@ import {
   TILE_HOVER_SCALE,
   TILE_PX_MAX,
   TILE_PX_MIN,
+  tileTitleHeightPx,
   tilePercentToCssVars,
   tileSizeToCssVars,
 } from './tileSize'
@@ -22,7 +23,7 @@ test('normalizeTilePercent maps legacy letters and clamps', () => {
 test('tilePercentToCssVars scales min width', () => {
   expect(tilePercentToCssVars(0)['--od-tile-min']).toBe(`${TILE_PX_MIN}px`)
   expect(tilePercentToCssVars(100)['--od-tile-min']).toBe(`${TILE_PX_MAX}px`)
-  expect(tilePercentToCssVars(50)['--od-tile-min']).toBe('260px')
+  expect(tilePercentToCssVars(50)['--od-tile-min']).toBe('205px')
 })
 
 test('normalizeTilePercent preserves fractional percent for smooth dragging', () => {
@@ -49,6 +50,9 @@ test('clampTileVarsForNarrowViewport caps large tiles', () => {
     '--od-tile-min': '140px',
     '--od-tile-gap': '6px',
     '--od-tile-hover-scale': String(TILE_HOVER_SCALE),
+    // The clamp shrinks the tile, not the title strip — the strip is a
+    // preference and stays whatever the member chose.
+    '--od-tile-title-h': `${tileTitleHeightPx(100, true)}px`,
   })
 
   // Small tiles keep their size on a narrow viewport — they are already small
@@ -83,4 +87,23 @@ test('narrow viewports keep the same lift', () => {
   // 25% of a 140px tile is ~17px either side — it stays inside its own track,
   // so there is nothing left for the narrow-viewport clamp to protect against.
   expect(clamped['--od-tile-hover-scale']).toBe(String(TILE_HOVER_SCALE))
+})
+
+test('title strip height is zero when titles are off', () => {
+  expect(tileTitleHeightPx(50, false)).toBe(0)
+  expect(tilePercentToCssVars(50, false)['--od-tile-title-h']).toBe('0px')
+})
+
+test('title strip grows with tile size when titles are on', () => {
+  const small = tileTitleHeightPx(0, true)
+  const large = tileTitleHeightPx(100, true)
+  expect(small).toBeGreaterThan(0)
+  expect(large).toBeGreaterThan(small)
+  expect(tilePercentToCssVars(50, true)['--od-tile-title-h']).toBe(
+    `${tileTitleHeightPx(50, true)}px`,
+  )
+})
+
+test('titles default to on so an older caller keeps the strip', () => {
+  expect(parseFloat(tilePercentToCssVars(50)['--od-tile-title-h'])).toBeGreaterThan(0)
 })
