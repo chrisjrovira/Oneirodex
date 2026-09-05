@@ -246,12 +246,111 @@
   outline: none;
 }
 
+/* A column of rows, each row a group. See the JSX comment: one wrapping row
+   let the break points drift with the content, so which buttons ended up
+   together changed per title. */
 .od-details-page__quick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: stretch;
+}
+
+.od-details-page__quick-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
   align-items: center;
+  min-width: 0;
+}
+
+/* A group with nothing in it (no store links, no browser play) must not leave
+   a gap where a row would have been. */
+.od-details-page__quick-row:empty {
+  display: none;
+}
+
+/* ---------- details actions speak the catalog's button language ----------
+ *
+ * These were a scatter of individually-outlined `.od-btn` boxes drawn
+ * straight on the page background — a different object from the catalog
+ * bar's All · Games · Soft titles strip, which is one surfaced pill with
+ * hairline dividers and a filled selection. Same job (pick the thing to do
+ * to this title), so the same shape.
+ *
+ * The store-links row is deliberately excluded: those chips carry brand
+ * colour, which is the one place on this page where per-button colour means
+ * something. `--seg` is opt-in per row for exactly that reason. */
+.od-details-page__quick-row--seg,
+.od-details-page .od-action-bar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-surface-2);
+  overflow: hidden;
+  min-width: 0;
+  /* Content-sized, so a two-button row is a two-button pill rather than a
+     rule running the width of the hero. */
+  align-self: flex-start;
+}
+
+.od-details-page__quick-row--seg > .od-btn,
+.od-details-page__quick-row--seg > .od-pop > .od-btn,
+.od-details-page .od-action-bar > .od-action-bar__btn,
+.od-details-page .od-action-bar > .od-btn {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.od-details-page__quick-row--seg > .od-btn + .od-btn,
+.od-details-page__quick-row--seg > .od-btn + .od-pop > .od-btn,
+.od-details-page__quick-row--seg > .od-pop + .od-btn,
+.od-details-page__quick-row--seg > .od-pop + .od-pop > .od-btn,
+.od-details-page .od-action-bar > .od-action-bar__btn + .od-action-bar__btn,
+.od-details-page .od-action-bar > .od-btn + .od-btn {
+  border-inline-start: 1px solid var(--od-border);
+}
+
+.od-details-page__quick-row--seg > .od-btn:hover:not(:disabled):not([aria-disabled='true']),
+.od-details-page__quick-row--seg > .od-pop > .od-btn:hover:not(:disabled):not([aria-disabled='true']),
+.od-details-page .od-action-bar > .od-action-bar__btn:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--od-border);
+  background: color-mix(in srgb, var(--od-text) 7%, var(--od-surface-2));
+  color: var(--od-text);
+}
+
+/* The primary action is the filled segment — same treatment
+   `.od-seg__item[aria-pressed='true']` has on the catalog bar. */
+.od-details-page__quick-row--seg > .od-btn--primary,
+.od-details-page__quick-row--seg > .od-pop > .od-btn--primary,
+.od-details-page .od-action-bar > .od-action-bar__btn--primary,
+.od-details-page .od-action-bar > .od-btn--primary {
+  background: var(--od-accent);
+  color: var(--od-bg);
+  font-weight: 600;
+}
+
+/* Below the fold the pill stretches rather than sitting content-sized, so a
+   narrow pane gets full-width targets instead of a squeezed strip. */
+@media (max-width: 700px) {
+  .od-details-page__quick-row--seg,
+  .od-details-page .od-action-bar {
+    display: flex;
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .od-details-page__quick-row--seg > .od-btn,
+  .od-details-page__quick-row--seg > .od-pop {
+    flex: 1 1 0;
+    min-width: 0;
+  }
 }
 
 .od-details-page__section {
@@ -352,11 +451,38 @@
   margin-bottom: 1rem;
 }
 
+/* Section heading and the section's own actions on one line. */
+.od-details-page__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--od-space-2, 0.5rem) var(--od-space-3, 0.75rem);
+}
+
+.od-details-page__section-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--od-space-2, 0.5rem);
+}
+
+/* Two columns now that Open path moved to the heading: the path gets the
+   whole rest of the panel, which is the difference between wrapping over two
+   lines and wrapping over six. */
 .od-details-page__path-row {
   display: grid;
-  grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr);
   gap: 0.5rem;
   align-items: start;
+}
+
+/* Below the two-column fold the label stacks above the path rather than
+   eating 7rem of an already narrow pane. */
+@media (max-width: 700px) {
+  .od-details-page__path-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
 }
 
 .od-details-page__path-label {

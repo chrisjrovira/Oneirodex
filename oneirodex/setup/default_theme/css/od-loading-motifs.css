@@ -204,11 +204,38 @@
 }
 
 /* Motion-safe: hold a legible frame rather than freezing mid-transform. */
+/* Reduced motion reduces the motion; it does not switch the indicator off.
+ *
+ * A blanket `animation: none` on every descendant left a completely static
+ * glyph on every loading screen — indistinguishable from a hung page, which is
+ * the one thing a loading indicator exists to rule out. What triggers
+ * vestibular symptoms is large-amplitude movement (spinning platters, sliding
+ * cartridges, sweeping heads); those still stop. A slow opacity breathe has no
+ * motion vector, and says the page is still working.
+ *
+ * Kept in step with the member SPA's own copy in LoadingMotif.css — this file
+ * also dresses the Jinja pages, which never load that bundle. */
+@keyframes od-loading-motif-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .od-loading-motif * {
     animation: none !important;
     transform: none !important;
     opacity: 1;
+  }
+
+  /* Not the picker's specimens — a grid of a dozen breathing swatches is the
+     noise the preview variant exists to avoid, and none of them is progress. */
+  .od-loading-motif:not(.od-loading-motif--preview) {
+    animation: od-loading-motif-breathe 1.8s ease-in-out infinite;
   }
 }
 

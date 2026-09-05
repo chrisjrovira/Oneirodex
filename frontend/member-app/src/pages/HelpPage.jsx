@@ -60,7 +60,7 @@ const FAQ_SECTIONS = [
       'Filters open from the Filters button on the catalog bar (Apply · Clear · Done). Narrow screens use the same popover.',
       'Signals chips: UPDATE · MISSING · NEW · LANG.',
       'MISSING tile badge (top-left) means files were removed from disk - tooltip explains. Filter with the MISSING Signals chip when available.',
-      'Tile size: header or top-nav control. Preferences (sectioned: Library · Look · Language) → items per page (20–1000).',
+      'Tile size: the slider on the top bar. Titles under covers moved to Preferences → Look & density, beside tile size. Preferences (sectioned: Library · Look · Language) also sets items per page (20–1000).',
       'Game Catalog layout: the kind bar ends with the active layout name (Tile · Rows · Grid) — open it to switch. Tile is the cover grid; Rows is a title list that scales with the slider; Grid is Steam-like genre shelves (same Discover row chrome, full tile-size slider). The choice is remembered in this browser. Favorites and News use the same control (News: Card · Grid · RSS).',
       'Trailers empty state is normal without metadata. Details use embeds; YouTube demo when no trailers.',
       'Extras & DLC lists on-server sidecars only - missing folders stay off-server. Discover may show Extras not on the vault for titles you play or favourite.',
@@ -81,7 +81,7 @@ const FAQ_SECTIONS = [
       'Licensed catalog (Catalog on a console tile) counts IGDB regional releases for that system. Empty cache means not fetched yet — not zero games ever made. Windows/Steam libraries are not in that report.',
       'Tile badges use four corners only (occupied corners; no empty reserved slots) with rounded-square chrome. Signals: VR, UPDATE, MISSING, NEW, LANG (vs Preferences → Preferred game language). No OUT/~ / RELEASE on tiles.',
       'Inside a system, accents follow that family; global search keeps default glass.',
-      'Export packs (bottom of Systems): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
+      'Export packs (top of Systems, beside the intro): ES-DE gamelist.xml and Pegasus metadata for other frontends — optional; paths stay portable.',
       'Change themes in Preferences — decade rooms (the place you started) and colour cabinets. Member and admin chrome share the same room scenery as browser play. Theme, icon pack, font and tile size save together. Preferences is the only place a theme is chosen. The change is visible on a normal reload; no hard refresh.',
     ],
   },
@@ -260,135 +260,124 @@ const FAQ_SECTIONS = [
  * unreachable. Order follows first appearance, so it matches reading order
  * down the page.
  */
-const FAQ_GROUPS = FAQ_SECTIONS.reduce((groups, section) => {
-  if (!groups.some((group) => group.id === section.group)) {
-    groups.push({ id: section.group, label: section.group })
-  }
-  return groups
-}, [])
+/* Where the page lands with no deep link. Help is reached by someone who is
+   stuck, and an index of thirteen closed topics answers nothing — the first
+   topic is the one that covers "how do I use this at all", so it is open. */
+const DEFAULT_SECTION_ID = 'getting-started'
+
+function sectionById(id) {
+  return FAQ_SECTIONS.find((section) => section.id === id) || null
+}
 
 
+/* One topic's body: the bullet list, plus the About section's link row. */
+function HelpSectionBody({ section, shellConfig }) {
+  return (
+    <>
+      <ul>
+        {section.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+      {section.links ? (
+        <p className="od-help__links">
+          {section.links
+            // A link whose href comes from config is dropped when that config
+            // is empty rather than rendered dead — an offer of source that
+            // goes nowhere is worse than none.
+            .map((link) => ({
+              ...link,
+              href: link.fromConfig ? shellConfig[link.fromConfig] : link.href,
+            }))
+            .filter((link) => link.href)
+            .map((link) => (
+              <a
+                key={link.key}
+                className="od-help__link"
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {link.label}
+              </a>
+            ))}
+        </p>
+      ) : null}
+    </>
+  )
+}
+
+/**
+ * Cards on top, one reading pane underneath.
+ *
+ * This was thirteen full-width accordions stacked down the page. Every topic
+ * cost a screen of scroll whether or not you wanted it, opening one pushed the
+ * rest below the fold, and the page's own index — the thing you came here to
+ * use — was a bar strip five groups wide that jumped you into the middle of
+ * that stack. The topics are a *menu*: they belong in a grid you can take in
+ * at a glance, and the answer belongs in one place under it that does not move
+ * when you change your mind.
+ *
+ * `readAll` is the escape hatch for the other way people use a help page —
+ * straight through, start to finish — and it is one button whose label states
+ * the state it will move you to, not a permanent Expand/Collapse pair where
+ * one of the two is always a no-op.
+ */
 export function HelpPage({ shellConfig = {} }) {
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const groupOf = (sectionId) =>
-    FAQ_SECTIONS.find((section) => section.id === sectionId)?.group || FAQ_GROUPS[0].id
 
-  const firstSectionOfGroup = (groupId) =>
-    FAQ_SECTIONS.find((section) => section.group === groupId)?.id || FAQ_SECTIONS[0].id
-
-  const [openIds, setOpenIds] = useState(() => {
-    // All sections start collapsed. A deep-link hash is the only opener on
-    // load — otherwise the page is a map of closed topics, not a wall of text.
-    const initial = new Set()
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace(/^#/, '')
-      if (hash && FAQ_SECTIONS.some((s) => s.id === hash)) {
-        initial.add(hash)
-      }
-    }
-    return initial
+  const [activeId, setActiveId] = useState(() => {
+    if (typeof window === 'undefined') return DEFAULT_SECTION_ID
+    const hash = window.location.hash.replace(/^#/, '')
+    return sectionById(hash) ? hash : DEFAULT_SECTION_ID
   })
+  const [readAll, setReadAll] = useState(false)
 
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, '')
-    if (!hash) return
-    if (!FAQ_SECTIONS.some((s) => s.id === hash)) return
-    setOpenIds((current) => {
-      if (current.has(hash)) return current
-      const next = new Set(current)
-      next.add(hash)
-      return next
-    })
-    setActiveSection(hash)
-    const el = document.getElementById(hash)
-    el?.scrollIntoView?.({ block: 'start' })
+    if (!hash || !sectionById(hash)) return
+    setActiveId(hash)
+    // The panel, not the card: a deep link (playHonesty.js sends a blocked
+    // Play to `/help#browser-play`) is asking for the answer, and scrolling to
+    // the card would leave the answer below the fold.
+    document.getElementById('od-help-panel')?.scrollIntoView?.({ block: 'start' })
   }, [])
 
-  // Which topic the strip marks as current. Set by using the strip, and by an
-  // arriving hash, rather than tracked by scroll position: this is a list of
-  // accordions, so "where am I" is decided by the one you opened, not by which
-  // few pixels happen to be under the viewport's midpoint.
-  const [activeSection, setActiveSection] = useState(() => {
-    if (typeof window === 'undefined') return FAQ_SECTIONS[0].id
-    const hash = window.location.hash.replace(/^#/, '')
-    return FAQ_SECTIONS.some((s) => s.id === hash) ? hash : FAQ_SECTIONS[0].id
-  })
-
-  function jumpToSection(id) {
-    if (!FAQ_SECTIONS.some((section) => section.id === id)) return
-    setActiveSection(id)
-    // Opened as well as scrolled to: jumping to a collapsed section would put
-    // its heading under the bar and show nothing underneath it.
-    setOpenIds((current) => {
-      if (current.has(id)) return current
-      const next = new Set(current)
-      next.add(id)
-      return next
-    })
-    document.getElementById(id)?.scrollIntoView?.({ block: 'start' })
+  function selectSection(id) {
+    if (!sectionById(id)) return
+    setActiveId(id)
+    // Choosing a card while reading straight through means "just this one".
+    setReadAll(false)
   }
 
-  function toggle(id) {
-    // Decide from the current value *outside* the updater: a state updater has
-    // to be pure, and React may replay it (it does so deliberately in
-    // StrictMode), so calling setActiveSection from inside one fires it twice
-    // and reads a value the queue may already have moved past.
-    const opening = !openIds.has(id)
-    if (opening) {
-      setActiveSection(id)
-    }
-    setOpenIds((current) => {
-      const next = new Set(current)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }
+  const activeSection = sectionById(activeId) || FAQ_SECTIONS[0]
+  const foldLabel = readAll ? 'Collapse all' : 'Expand all'
 
-  function expandAll() {
-    setOpenIds(new Set(FAQ_SECTIONS.map((s) => s.id)))
-  }
-
-  function collapseAll() {
-    setOpenIds(new Set())
-  }
+  const foldButton = (className) => (
+    <button
+      type="button"
+      className={className}
+      aria-pressed={readAll}
+      onClick={() => setReadAll((on) => !on)}
+    >
+      {foldLabel}
+    </button>
+  )
 
   return (
     <>
     {useNewChrome ? (
         <ContextBar
-          /* One fused `.od-seg` for topic groups *and* Expand/Collapse.
-             Putting groups in `views` and the fold controls in `actions` made
-             two chrome languages on one bar — green seg items next to boxed
-             `od-cbtn`s. They answer one question ("where am I on Help?"), so
-             they share one outline. Labels are the short forms; full headings
-             stay on the sections. */
-          summary={`${openIds.size} of ${FAQ_SECTIONS.length} open`}
+          /* One control on the bar, and it is the only one this page needs.
+             The five group chips it replaces jumped into a stack that no
+             longer exists — the card grid *is* the index now, and it is on
+             the page where a member can see all thirteen topics at once
+             rather than five collapsed names in the chrome. The "N of 13
+             open" read-out went with them: with one pane open at a time the
+             number is always 1, and it was never something to act on. */
           actions={
             <div className="od-seg" role="group" aria-label="Help">
-              {FAQ_GROUPS.map((group) => {
-                const selected = group.id === groupOf(activeSection)
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className={`od-seg__item${selected ? ' is-active' : ''}`}
-                    aria-pressed={selected}
-                    onClick={() => jumpToSection(firstSectionOfGroup(group.id))}
-                  >
-                    {group.label}
-                  </button>
-                )
-              })}
-              <button type="button" className="od-seg__item" onClick={expandAll}>
-                Expand all
-              </button>
-              <button type="button" className="od-seg__item" onClick={collapseAll}>
-                Collapse all
-              </button>
+              {foldButton('od-seg__item')}
             </div>
           }
         />
@@ -408,8 +397,8 @@ export function HelpPage({ shellConfig = {} }) {
         <div className="od-help__hero-copy">
           <h1 className="od-help__hero-title">How Oneirodex works</h1>
           <p className="od-help__hero-lede">
-            Twelve short sections, colour-coded by topic. Open one for detail, or
-            use Expand all in the bar above to read straight through.
+            Pick a topic — the answer opens underneath. Expand all in the bar
+            above reads the whole guide straight through.
           </p>
         </div>
       </header>
@@ -420,113 +409,68 @@ export function HelpPage({ shellConfig = {} }) {
             <h1>Help</h1>
           </div>
           <p className="od-more-page__lede">
-            Short answers for the member library. Expand a section when you need detail.
+            Short answers for the member library. Pick a topic; the answer opens underneath.
           </p>
 
-          <div className="od-help__toolbar">
-            <button type="button" className="od-btn od-btn--ghost" onClick={expandAll}>
-              Expand all
-            </button>
-            <button type="button" className="od-btn od-btn--ghost" onClick={collapseAll}>
-              Collapse all
-            </button>
-          </div>
+          {/* Classic chrome has no bar to put the control in, so it keeps a
+              toolbar — the same single toggle, not a pair. */}
+          <div className="od-help__toolbar">{foldButton('od-btn od-btn--ghost')}</div>
         </>
       )}
 
-      {/* The topic strip lives in bar two under the new chrome; rendering it
-          here as well would be the same control twice on one screen. Classic
-          chrome still needs it in the page, because there is no bar to put it
-          in.
-
-          One control, not a scatter of pills: these were separate bordered
-          chips that wrapped into two or three ragged rows. `od-seg` is the
-          shared segmented control the context bar and the admin tab strips
-          already use. The tone and glyph come from the section itself, so a
-          topic is findable at a glance rather than by re-reading headings. */}
-      {useNewChrome ? null : (
-        <nav className="od-seg od-help__toc" aria-label="Help topics">
-          {FAQ_SECTIONS.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="od-seg__item od-help__toc-chip"
-              data-tone={section.tone}
-            >
-              <span className="od-help__toc-mark" aria-hidden="true">
-                <RailIcon name={section.icon} size={14} />
-              </span>
-              {section.title}
-            </a>
-          ))}
-        </nav>
-      )}
-
-      <div className="od-help__sections">
+      {/* The index. Thirteen cards, each carrying its tone and glyph, so a
+          topic is found by looking rather than by reading every heading in a
+          column. `aria-pressed` rather than a tablist: the panel below is a
+          region of the page that these cards change, and a member can still
+          reach it by scrolling past them. */}
+      <div className="od-help__cards" role="group" aria-label="Help topics">
         {FAQ_SECTIONS.map((section) => {
-          const open = openIds.has(section.id)
+          const selected = !readAll && section.id === activeSection.id
           return (
-            <section
+            <button
               key={section.id}
-              id={section.id}
+              type="button"
               data-tone={section.tone}
-              className={`od-help__section${open ? ' is-open' : ''}`}
+              className={`od-help__card${selected ? ' is-selected' : ''}`}
+              aria-pressed={selected}
+              onClick={() => selectSection(section.id)}
             >
-              <h2>
-                <button
-                  type="button"
-                  className="od-help__section-toggle"
-                  aria-expanded={open}
-                  onClick={() => toggle(section.id)}
-                >
-                  <span className="od-help__section-mark" aria-hidden="true">
-                    <RailIcon name={section.icon} size={18} />
-                  </span>
-                  <span className="od-help__section-copy">
-                    <span className="od-help__section-title">{section.title}</span>
-                    <span className="od-help__section-summary">{section.summary}</span>
-                  </span>
-                  <span className="od-help__chevron" aria-hidden="true">
-                    {open ? '−' : '+'}
-                  </span>
-                </button>
-              </h2>
-              {open ? (
-                <>
-                  <ul>
-                    {section.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  {section.links ? (
-                    <p className="od-help__links">
-                      {section.links
-                        // A link whose href comes from config is dropped when
-                        // that config is empty rather than rendered dead — an
-                        // offer of source that goes nowhere is worse than none.
-                        .map((link) => ({
-                          ...link,
-                          href: link.fromConfig ? shellConfig[link.fromConfig] : link.href,
-                        }))
-                        .filter((link) => link.href)
-                        .map((link) => (
-                          <a
-                            key={link.key}
-                            className="od-help__link"
-                            href={link.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {link.label}
-                          </a>
-                        ))}
-                    </p>
-                  ) : null}
-                </>
-              ) : null}
-            </section>
+              <span className="od-help__card-mark" aria-hidden="true">
+                <RailIcon name={section.icon} size={18} />
+              </span>
+              <span className="od-help__card-copy">
+                <span className="od-help__card-title">{section.title}</span>
+                <span className="od-help__card-summary">{section.summary}</span>
+              </span>
+            </button>
           )
         })}
+      </div>
+
+      {/* The reading pane. One topic, or all of them in order when the fold
+          button is on. The section ids stay on the rendered panels so the
+          existing deep links (`/help#browser-play`) still land somewhere real
+          in both modes. */}
+      <div className="od-help__panel" id="od-help-panel">
+        {(readAll ? FAQ_SECTIONS : [activeSection]).map((section) => (
+          <section
+            key={section.id}
+            id={section.id}
+            data-tone={section.tone}
+            className="od-help__section is-open"
+          >
+            <h2 className="od-help__section-head">
+              <span className="od-help__section-mark" aria-hidden="true">
+                <RailIcon name={section.icon} size={18} />
+              </span>
+              <span className="od-help__section-copy">
+                <span className="od-help__section-title">{section.title}</span>
+                <span className="od-help__section-summary">{section.summary}</span>
+              </span>
+            </h2>
+            <HelpSectionBody section={section} shellConfig={shellConfig} />
+          </section>
+        ))}
       </div>
 
       {/* The source offer, on every render of this page rather than only inside

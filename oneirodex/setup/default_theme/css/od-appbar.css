@@ -502,35 +502,66 @@ a.od-cbtn:focus-visible {
   background: color-mix(in srgb, var(--od-text) 8%, transparent);
 }
 
-/* Context-bar action popovers (New shelf, Request a title): flat at rest and
-   on hover; wash only while the dialog is open (pressed). */
-.od-contextbar__actions .od-pop > .od-cbtn {
-  border: 0;
-  background: transparent;
+/* ---------- the centre slot speaks one button language ----------
+ *
+ * `.od-seg` (Game Catalog's All / Games / Soft titles strip) and `.od-cbtn`
+ * (Wishlist's My requests / Everyone's, Trailers' Filters / More, Discover's
+ * New shelf) sat side by side in the same bar, on the same routes, doing the
+ * same job — pick a view, open a panel — and looked like two different
+ * products. The seg strip filled its selection with the accent; the cbtn
+ * strip drew an accent hairline instead and left the fill transparent, which
+ * on the dark themes is nearly the resting state. "These buttons are also not
+ * the correct coloring styling", reported per page, was always this.
+ *
+ * So the centre slot is segmented, full stop: one outlined pill, hairline
+ * dividers between members, and a selected member that is *filled*. The rules
+ * this replaces were the opposite convention (flat until pressed, then a
+ * faint text wash) and are gone rather than overridden — two conventions
+ * fighting on specificity is what produced the split in the first place.
+ *
+ * Scoped to `.od-topbar__page`. `.od-cbtn` elsewhere — the Filters panel's
+ * Apply / Clear, a modal's actions, the trail count — keeps its own quiet
+ * shape; the bar is what had two languages. */
+.od-topbar__page .od-cbtn,
+.od-topbar__page .od-pop > .od-cbtn {
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text-muted);
   box-shadow: none;
+  font-weight: 400;
 }
 
-.od-contextbar__actions .od-pop > .od-cbtn:hover:not(:disabled):not([aria-disabled='true']) {
-  border: 0;
-  background: transparent;
+.od-topbar__page .od-cbtn:hover:not(:disabled):not([aria-disabled='true']),
+.od-topbar__page .od-pop > .od-cbtn:hover:not(:disabled):not([aria-disabled='true']) {
+  border-color: var(--od-border);
+  background: color-mix(in srgb, var(--od-text) 7%, var(--od-surface-2));
   color: var(--od-text);
 }
 
-.od-contextbar__actions .od-pop > .od-cbtn[aria-expanded='true'],
-.od-contextbar__actions .od-pop > .od-cbtn.is-on {
-  border: 0;
-  background: color-mix(in srgb, var(--od-text) 8%, transparent);
+/* Selected view, or open panel. Same treatment `.od-seg__item[aria-pressed]`
+   has: the accent is the fill and the label inverts onto it, so which one is
+   active is legible across the room rather than at hairline width. */
+.od-topbar__page .od-cbtn.is-on,
+.od-topbar__page .od-cbtn[aria-pressed='true'],
+.od-topbar__page .od-cbtn[aria-expanded='true'],
+.od-topbar__page .od-pop > .od-cbtn.is-on,
+.od-topbar__page .od-pop > .od-cbtn[aria-pressed='true'],
+.od-topbar__page .od-pop > .od-cbtn[aria-expanded='true'] {
+  background: var(--od-accent);
+  border-color: var(--od-accent);
+  color: var(--od-bg);
+  font-weight: 600;
 }
 
-/* Wishlist fused group: Request stays quiet until open (no permanent primary). */
-.od-contextbar__actions .od-cbtn-group > .od-pop > .od-cbtn:hover:not(:disabled):not([aria-disabled='true']) {
-  background: transparent;
-}
-
-.od-contextbar__actions .od-cbtn-group > .od-pop > .od-cbtn[aria-expanded='true'] {
-  background: color-mix(in srgb, var(--od-text) 8%, transparent);
-  position: relative;
-  z-index: 1;
+/* A fused group is one pill: members drop their own side borders and are
+   separated by a single hairline, exactly as `.od-seg__item + .od-seg__item`
+   does. Without this the group drew a 2px seam wherever a filled member met
+   an unfilled one. */
+.od-topbar__page .od-cbtn-group > .od-cbtn + .od-cbtn,
+.od-topbar__page .od-cbtn-group > .od-cbtn + .od-pop > .od-cbtn,
+.od-topbar__page .od-cbtn-group > .od-pop + .od-cbtn,
+.od-topbar__page .od-cbtn-group > .od-pop + .od-pop > .od-cbtn {
+  border-inline-start-color: var(--od-border);
 }
 
 /* The disabled state .od-btn has always had. Its absence was not cosmetic:

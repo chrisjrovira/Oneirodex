@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { afterEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { GameGrid } from './GameGrid'
 import {
@@ -194,12 +195,53 @@ test('rows CSS sizes covers from the tile slider, not a fixed 4.75rem', () => {
   expect(css).not.toMatch(/\[data-layout='rows'\][^{]*\{[^}]*height:\s*4\.75rem/)
 })
 
-test('grid layout renders genre shelves instead of the wrap virtualizer', () => {
-  const games = makeGames(4).map((game, index) => ({
-    ...game,
-    genres: index < 2 ? ['Action'] : ['RPG'],
-  }))
-  render(<GameGrid games={games} layout="grid" showPlayStatus={false} isAdmin={false} />)
+/* Grid no longer renders the page it is handed — it asks which genres the
+   library has and lets each shelf fetch its own titles. jsdom has no
+   IntersectionObserver, so the shelves load eagerly here. */
+function stubGridFetch({ genres = ['Action', 'RPG'], total = 2, bundleFails = false } = {}) {
+  const calls = []
+  const fetchStub = vi.fn((url) => {
+    calls.push(String(url))
+    if (String(url).includes('/api/filters/bundle')) {
+      if (bundleFails) return Promise.resolve({ ok: false, status: 500, json: async () => ({}) })
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ genres: genres.map((name, id) => ({ id, name })) }),
+      })
+    }
+    const genre = new URL(String(url), 'http://localhost').searchParams.get('genre')
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({
+        games: makeGames(total).map((game) => ({
+          ...game,
+          uuid: `${genre}-${game.uuid}`,
+          genres: [genre],
+        })),
+        total,
+        pages: 1,
+        current_page: 1,
+      }),
+    })
+  })
+  vi.stubGlobal('fetch', fetchStub)
+  return { calls }
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+test('grid layout gives every library genre a shelf, not the current page', async () => {
+  // The bug this replaced: Grid shelved whichever 50 of 6,852 games the pager
+  // had handed it, so "Action" meant "the Action titles that happen to be on
+  // page 7". A shelf is a genre now, fetched for itself.
+  const { calls } = stubGridFetch()
+  render(<GameGrid games={makeGames(4)} layout="grid" showPlayStatus={false} isAdmin={false} />)
+
+  expect(await screen.findByText('Action')).toBeInTheDocument()
+  expect(await screen.findByText('RPG')).toBeInTheDocument()
+
   const root = document.querySelector('.catalog-grid-sections')
   expect(root).toHaveAttribute('data-layout', 'grid')
   expect(root).toHaveAttribute('data-library-shelves')
@@ -207,9 +249,53 @@ test('grid layout renders genre shelves instead of the wrap virtualizer', () => 
   expect(root).not.toHaveAttribute('data-library-grid')
   expect(root.style.getPropertyValue('--od-tile-min')).toBe('')
   expect(root.querySelectorAll('.od-shelf').length).toBe(2)
-  expect(screen.getByText('Action')).toBeInTheDocument()
-  expect(screen.getByText('RPG')).toBeInTheDocument()
   expect(document.querySelector('[data-library-virtual]')).toBeNull()
+
+  // Each shelf asked for its own genre, one page, never the pager's page.
+  const browseCalls = calls.filter((url) => url.includes('browse_games'))
+  expect(browseCalls.length).toBe(2)
+  for (const url of browseCalls) {
+    expect(url).toMatch(/[?&]page=1(&|$)/)
+    expect(url).toMatch(/genre=/)
+  }
+})
+
+test('a shelf reports its genre count, which the old pager could never say', async () => {
+  stubGridFetch({ genres: ['Action'], total: 2 })
+  render(<GameGrid games={makeGames(4)} layout="grid" showPlayStatus={false} isAdmin={false} />)
+  expect(await screen.findByText('2 titles')).toBeInTheDocument()
+})
+
+test('grid inherits the catalog bar filters so a shelf means what the page means', async () => {
+  const { calls } = stubGridFetch({ genres: ['Action'] })
+  render(
+    <GameGrid
+      games={makeGames(4)}
+      layout="grid"
+      filters={{ library_platform: 'NES', page: 7, per_page: 50 }}
+      showPlayStatus={false}
+      isAdmin={false}
+    />,
+  )
+  await screen.findByText('Action')
+  const browse = calls.find((url) => url.includes('browse_games'))
+  expect(browse).toMatch(/library_platform=NES/)
+  // The pager's page must not leak into a shelf request.
+  expect(browse).toMatch(/[?&]page=1(&|$)/)
+})
+
+test('grid falls back to grouping the page when the genre list cannot be fetched', async () => {
+  // A degraded Grid beats a blank one.
+  stubGridFetch({ bundleFails: true })
+  const games = makeGames(4).map((game, index) => ({
+    ...game,
+    genres: index < 2 ? ['Action'] : ['RPG'],
+  }))
+  render(<GameGrid games={games} layout="grid" showPlayStatus={false} isAdmin={false} />)
+
+  expect(await screen.findByText('Action')).toBeInTheDocument()
+  expect(screen.getByText('RPG')).toBeInTheDocument()
+  expect(document.querySelectorAll('.od-shelf').length).toBe(2)
 })
 
 test('catalog grid CSS keeps shelves out of the shell tile pullback', () => {

@@ -1095,11 +1095,46 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
   /* Sits after the toggle/Filters cluster, not between them — it is a label,
      and a label in the middle of a pair of buttons breaks the pair. */
   margin-inline-start: var(--od-space-2);
+  /* It is an h1, so Bootstrap's reboot hands it `margin: 0 0 0.5rem`. An
+     asymmetric block margin centres the *margin box* and leaves the text half
+     the bottom margin high — the label rode 4px above the rail toggle, the
+     account button and everything else on the bar's midline. */
+  margin-block: 0;
+  /* Centre the glyphs inside the box the flex row centres, so the label lands
+     on the same midline as the controls whatever `--od-label-size` becomes. */
+  display: inline-flex;
+  align-items: center;
   font-size: var(--od-label-size);
   font-weight: var(--od-label-weight);
   letter-spacing: var(--od-label-tracking);
   text-transform: uppercase;
   color: var(--od-text-muted);
+  white-space: nowrap;
+}
+
+/* Only while the rail is closed.
+ *
+ * An expanded rail already names the active destination a few pixels to the
+ * left, in larger type, with the icon beside it — so the bar repeating it is
+ * the same word twice on one line. Collapsed (or on the mobile drawer, which
+ * is closed until it is pulled) the rail says nothing, and the bar is the only
+ * thing that can name the page. AdminTopNav.jsx has always done exactly this
+ * in markup; this is the member bar catching up.
+ *
+ * Visually hidden, NOT `display: none`: it is the page's h1 (see above), the
+ * page's own heading is retired under the v2 chrome, and dropping it from the
+ * a11y tree would leave a route with no heading at all whenever the rail
+ * happens to be open. Screen readers and heading navigation keep it; the eye
+ * does not get the duplicate. */
+.od-shell[data-rail='expanded'] .od-topbar__section,
+.od-shell[data-rail='open'] .od-topbar__section {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 

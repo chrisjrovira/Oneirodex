@@ -130,13 +130,7 @@ function LazyPage({ children }) {
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>
 }
 
-function Layout({
-  shellConfig,
-  tileSize,
-  onTileSizeChange,
-  showTileTitles,
-  onShowTileTitlesChange,
-}) {
+function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   const location = useLocation()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
@@ -215,8 +209,6 @@ function Layout({
           shellConfig={shellConfig}
           tileSize={tileSize}
           onTileSizeChange={onTileSizeChange}
-          showTileTitles={showTileTitles}
-          onShowTileTitlesChange={onShowTileTitlesChange}
           onOpenCommandPalette={() => setPaletteOpen(true)}
           onToggleRail={toggleRail}
           railState={railState}
@@ -259,9 +251,12 @@ function Layout({
 
 export function App({ shellConfig = {} }) {
   const [tileSize, setTileSize] = useState(shellConfig.tileSize || '50')
-  const [showTileTitles, setShowTileTitles] = useState(
-    shellConfig.showTileTitles !== false,
-  )
+  /* Read once from the shell, not held as state.
+     Nothing in the SPA flips it any more — the control lives in Preferences,
+     which POSTs and reloads — so a setter here would only ever be a setter
+     nobody calls. The value still drives `applyTileSizeCssVars` below, which
+     is what actually sizes the tiles. */
+  const showTileTitles = shellConfig.showTileTitles !== false
 
   useEffect(() => {
     applyTileSizeCssVars(tileSize, showTileTitles)
@@ -301,8 +296,6 @@ export function App({ shellConfig = {} }) {
             shellConfig={shellConfig}
             tileSize={tileSize}
             onTileSizeChange={setTileSize}
-            showTileTitles={showTileTitles}
-            onShowTileTitlesChange={setShowTileTitles}
           />
         }
       >

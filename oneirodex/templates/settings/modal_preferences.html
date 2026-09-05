@@ -140,6 +140,24 @@
                             {% endfor %}
                             <script src="{{ url_for('static', filename='js/od_prefs_tile_size.js') }}"></script>
                         </div>
+                        {# Directly under tile size, because it is the same
+                           question — how much of each tile do I want. The
+                           form has carried this field all along; it was only
+                           ever reachable from a checkbox in the top bar,
+                           which spent permanent bar width on a setting
+                           touched once and then not again. #}
+                        <div class="od-prefs-field od-prefs-field--check">
+                            <div class="form-check">
+                                {{ form.show_tile_titles(class="form-check-input", id="showTileTitles") }}
+                                {{ form.show_tile_titles.label(class="form-check-label", for="showTileTitles") }}
+                            </div>
+                            <p class="od-prefs-hint">
+                                Off gives you the covers alone and a shorter tile.
+                            </p>
+                            {% for error in form.show_tile_titles.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                         {# Admin-only: same POST as Admin → Themes. Fetch (not a
                            nested form submit) so Preferences stays open until
                            reload — the route always redirects to /admin/themes. #}

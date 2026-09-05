@@ -40,7 +40,7 @@ Game details lists installs with honest presence: a version marked **Missing on 
 Preferences → items per page: **20 / 50 / 100 / 200 / 250 / 300 / 400 / 500 / 1000**.
 
 **Can I switch Game Catalog off the cover grid?**  
-**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is a title list that scales with the slider, Grid is Steam-like genre shelves (same row chrome as Discover). The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider applies at full size to Tile, Rows, Grid, and Discover. **Titles** next to it shows or hides the title strip under each cover.
+**Tile / Rows / Grid** in the top bar. Tile is the cover grid, Rows is a title list that scales with the slider, Grid is Steam-like genre shelves (same row chrome as Discover) — one shelf per genre in your library, each fetching its own covers and saying how many titles that genre holds, with **See all** handing the genre to Tile view. Grid has no pager: it used to shelve whichever 50 games the pager had reached, so a genre shelf changed contents every time you turned the page. The choice is remembered in this browser. Favorites uses the same switcher. The tile-size slider applies at full size to Tile, Rows, Grid, and Discover. The title strip under each cover is now a preference — **Preferences → Look & density → Show titles under tiles** — not a checkbox on the bar.
 
 **What are Signals chips?**  
 Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params as the badges; they persist with other filters. VR is a tile badge / More → VR, not a Signals chip. MISSING means files were removed from disk. Tile badges sit in four corners only (occupied corners; rounded-square chrome). No OUT / ~ / RELEASE on tiles or Signals chips (UPDATE alone covers freshness-behind).
@@ -61,7 +61,7 @@ Yes via Game Catalog multi-select (checkbox / long-press / Shift+click · **Sele
 Librarians triage it under Admin → Scan management → Unmatched Folders (and Dupe glance). Each Unmatched row shows a **Why unmatched?** line (and a **Name transform trail** expander when Backend sends peel steps) so they can Identify as game or Mark as Soft title / Emulator / Utility. Bare folders named **UPDATE** / **Updates** stay Unmatched with an update-package why note — they are **not** auto-marked Soft title.
 
 **Where are ES-DE / Pegasus export packs?**  
-On **Systems**, scroll to the secondary **Export packs** section (below the platform grid) — optional downloads of ES-DE `gamelist.xml` and Pegasus metadata for other frontends. Admins also find them under Integrations → Export packs. Paths stay portable (no NAS mount leaks). See [library-and-systems.md](library-and-systems.md).
+On **Systems**, in the **Export packs** note beside the page intro at the top — optional downloads of ES-DE `gamelist.xml` and Pegasus metadata for other frontends. (It used to close the page below the platform grid, which meant scrolling the whole console list to reach two links.) Admins also find them under Integrations → Export packs. Paths stay portable (no NAS mount leaks). See [library-and-systems.md](library-and-systems.md).
 
 **What is Licensed catalog on a Systems tile?**  
 It opens `/systems/catalog` for that console or computer. Counts come from an IGDB `release_dates` cache (main games only), not Wikipedia. An empty table means an admin has not refreshed that platform yet. Windows/Steam libraries are not in the report. Set completeness (DAT missing list) is a separate **Missing** link after a DAT upload.
@@ -182,9 +182,13 @@ No — claim on the store, then sync Ownership for badges. Steam / GOG / Epic / 
 **More → Report issue**. Title required; symptom and logs optional. Start with title, area, and severity. **Context** (deploy / client / URL) and **Logs** stay collapsed until you expand them. Tickets go to admins and sync to GitHub Issues when configured — confirmation shows a ticket id (and GitHub link if synced).
 
 **Where is Help?**  
-**More → Help** — accordion sections start collapsed; use the topic groups, open one section, or **Expand all**. Deep links like `/help#translations` still open that section.
+**More → Help** — a grid of topic cards with one reading pane underneath. The page opens on **Getting started**; picking any card swaps the pane. Deep links like `/help#translations` still land on that topic.
 
-Each section carries a colour and a glyph drawn from the theme's own semantic set (accent · info · success · warning · danger), so a topic can be found at a glance instead of by re-reading twelve identical headings — and a theme or icon pack restyles them along with the rest of the product. In the bar, topic groups and **Expand all** / **Collapse all** share one fused control; Expand comes before Collapse.
+Each card carries a colour and a glyph drawn from the theme's own semantic set (accent · info · success · warning · danger), so a topic can be found at a glance instead of by re-reading thirteen identical headings — and a theme or icon pack restyles them along with the rest of the product.
+
+The bar carries **one** control: **Expand all** puts every topic in the pane in order, to read straight through, and the same button then reads **Collapse all** to go back to one at a time. The five group chips and the "N of 13 open" read-out are gone — the card grid is the index now, and with one pane open the count was always 1.
+
+> Before this the page was thirteen full-width accordions: every topic cost a screen of scroll whether or not you wanted it, and opening one pushed the rest below the fold.
 
 ## Big Picture
 

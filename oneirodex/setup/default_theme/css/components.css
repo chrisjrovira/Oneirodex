@@ -1401,6 +1401,23 @@ a.od-chip:focus {
     color: var(--od-accent);
 }
 
+/* Enlarged, the strip has to carry its own ground.
+ *
+ * A hovered tile scales over the row beneath it, and the caption is the part
+ * that lands on a neighbour's artwork — the strip is transparent, so the text
+ * was reading against someone else's cover rather than against a background of
+ * its own. Painted only while enlarged: at rest the strip sits on the page and
+ * a permanent slab would draw a box under every tile in the grid.
+ *
+ * `color-mix` of two opaque tokens is opaque, which is the point — a theme
+ * whose `--od-surface-2` is itself semi-transparent would otherwise let the
+ * cover below show straight through the fix. */
+.game-card:hover .game-card__title,
+.game-card:focus-within .game-card__title {
+    background: color-mix(in srgb, var(--od-surface-2) 88%, var(--od-bg));
+    border-radius: 0 0 var(--od-radius-md, 8px) var(--od-radius-md, 8px);
+}
+
 /* Titles off: hide it properly, do not merely collapse it.
  *
  * This element is also the tile's accessible name — it replaced a separate

@@ -205,5 +205,10 @@ export function getPageTitle(pathname, options = {}) {
   if (prefixed) return prefixed.label
 
   if (path.startsWith('/game_details')) return 'Game'
+  // A member profile is reached from Friends / Activity / Chat, none of which
+  // is a nav entry pointing at it, so the tables above can never name it — it
+  // was the one route in the SPA that put no heading on the bar at all, and
+  // with the rail collapsed the page had nothing saying where you were.
+  if (path.startsWith('/members')) return 'Member'
   return ''
 }

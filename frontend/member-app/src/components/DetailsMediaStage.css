@@ -48,22 +48,37 @@
   gap: var(--od-space-3);
 }
 
+/* A grid of equal cells, not a wrapping flex row.
+ *
+ * The strip mixes two kinds of thumb — a screenshot, which was a fixed 4.5rem
+ * image inside button padding, and a trailer, which was the words "Trailer 1"
+ * and therefore whatever width that text happened to be. In a flex row that
+ * produced columns that did not line up between rows and a last row that
+ * stopped short at a different place from the one above it. `auto-fill` with
+ * one shared minimum makes every cell the same box, so the columns are
+ * columns; it is also what makes the strip reflow at narrow widths instead of
+ * re-ragging. */
 .od-details-media__thumbs {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   gap: var(--od-space-2);
   min-width: 0;
 }
 
 .od-details-media__thumb {
-  padding: var(--od-space-1) var(--od-space-2);
+  display: grid;
+  place-items: center;
+  /* `.od-btn` is sized for a text control; a thumbnail cell is not one. */
+  min-height: 3.4rem;
+  padding: var(--od-space-1);
   font-size: var(--od-font-xs);
+  overflow: hidden;
 }
 
 .od-details-media__thumb img {
   display: block;
-  width: 4.5rem;
-  height: 2.5rem;
+  width: 100%;
+  height: 2.6rem;
   object-fit: cover;
   border-radius: var(--od-radius-sm);
 }

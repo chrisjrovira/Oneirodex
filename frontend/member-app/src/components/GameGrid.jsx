@@ -78,6 +78,10 @@ export function GameGrid({
   onSelectionToggle,
   activePlatform = '',
   layout = 'tile',
+  // Grid's shelves fetch per genre and inherit the catalog bar's filters, so
+  // "Action" under a platform filter means Action *on that platform*. Tile and
+  // Rows never read this — they render the page they were handed.
+  filters = null,
 }) {
   const catalogLayout = normalizeCatalogLayout(layout)
   const listRef = useRef(null)
@@ -265,6 +269,7 @@ export function GameGrid({
     return (
       <CatalogGridSections
         games={games}
+        filters={filters}
         showPlayStatus={showPlayStatus}
         isAdmin={isAdmin}
         enableDeleteOnDisk={enableDeleteOnDisk}

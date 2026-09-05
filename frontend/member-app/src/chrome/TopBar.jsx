@@ -10,7 +10,6 @@ import {
 } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
-import { TileTitlesToggle } from './TileTitlesToggle'
 import { getPageTitle, hasTileSizeControl } from './navConfig'
 import { openPreferencesModal } from '../api/preferences'
 
@@ -52,8 +51,6 @@ export function TopBar({
   shellConfig = {},
   tileSize,
   onTileSizeChange,
-  showTileTitles = true,
-  onShowTileTitlesChange,
   onOpenCommandPalette,
   onToggleRail,
   railState = 'expanded',
@@ -205,19 +202,19 @@ export function TopBar({
               Notifications, Calendar and the rest doing nothing but saving a
               preference. See hasTileSizeControl. On those pages the count
               simply leads the group, which is where it used to be anyway. */}
+          {/* Titles moved to Preferences → Look & density, beside tile size.
+              It was a labelled checkbox holding permanent width in the bar
+              for a setting a member changes once and then leaves alone, and
+              it sat next to the slider it is not — one is a continuous
+              control you drag while watching the grid, the other is a
+              one-shot preference. The form field it writes was always in
+              `modal_preferences.html`'s form; only the control moved. */}
           {showTileSize ? (
-            <>
-              <TileSizeControl
-                value={tileSize || shellConfig.tileSize || '50'}
-                onChange={onTileSizeChange}
-                shellConfig={shellConfig}
-              />
-              <TileTitlesToggle
-                value={showTileTitles}
-                onChange={onShowTileTitlesChange}
-                shellConfig={shellConfig}
-              />
-            </>
+            <TileSizeControl
+              value={tileSize || shellConfig.tileSize || '50'}
+              onChange={onTileSizeChange}
+              shellConfig={shellConfig}
+            />
           ) : null}
 
           {/* Trail slot: how much is here. Still grouped with the control that

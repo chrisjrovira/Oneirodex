@@ -68,6 +68,9 @@
   right: var(--od-tile-edge, 8px);
   left: auto;
   top: auto;
+  /* Titles off, the checkbox rides above the bottom-right badge stack on the
+     cover. Titles on, it leaves the cover entirely — see the title-strip rule
+     at the foot of this file. */
   bottom: calc(var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) + var(--od-tile-btn-gap, 4px));
   z-index: 16;
   margin: 0;
@@ -112,6 +115,43 @@
   .od-library-selection:not(.od-library-selection--bar) {
     top: 0;
   }
+}
+
+/* Titles on: the checkbox leaves the cover and lives in the title strip.
+ *
+ * On the cover it was a `--od-tile-btn` control — `clamp(24px, tile-min *
+ * 0.155, 40px)`, so 32px at a normal tile size — parked above a badge stack
+ * that is itself anchored at `edge + title-h`. Two chrome objects negotiating
+ * for the same corner by arithmetic: get the arithmetic slightly wrong, or
+ * change the badge height, and the checkbox sits on the NEW / PC badge again.
+ *
+ * The strip is the answer. Badges anchor ABOVE it by definition
+ * (components.css: `.game-card .od-badge-stack--bottom-*`), so a control
+ * inside the strip cannot collide with them however the tokens move — the
+ * overlap stops being a measurement and becomes impossible. Sized off
+ * `--od-tile-title-h` rather than the cover's control scale, so it is the
+ * height of the bar it sits in at every tile size.
+ *
+ * Titles off, none of this applies and the control stays on the cover. */
+[data-od-tile-titles='on'] .game-card-container.is-selectable .od-tile-select {
+  width: calc(var(--od-tile-title-h) - 6px);
+  height: calc(var(--od-tile-title-h) - 6px);
+  right: 3px;
+  bottom: 3px;
+  top: auto;
+  /* Chrome for sitting on artwork; inside the strip it is drawing on a flat
+     surface and both read as grime. */
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+[data-od-tile-titles='on'] .game-card-container.is-selectable .od-tile-select:checked {
+  background-size: calc((var(--od-tile-title-h) - 6px) * 0.62);
+}
+
+/* Keep a long centred title from running under the checkbox. */
+[data-od-tile-titles='on'] .game-card-container.is-selectable .game-card__title {
+  padding-inline-end: var(--od-tile-title-h, 26px);
 }
 
 @media (prefers-reduced-motion: reduce) {

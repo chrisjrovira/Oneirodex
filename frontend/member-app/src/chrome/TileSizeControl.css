@@ -45,7 +45,13 @@
   justify-content: flex-end;
   gap: var(--od-space-2);
   flex: 0 0 auto;
-  width: 6.9rem;
+  /* Half the width it used to reserve.
+     At 6.9rem the open slider reached back across the bar's slack and under
+     the centre slot, so on any page whose view strip is wide the track was
+     drawn over by the buttons sitting on top of it. Half is still a usable
+     drag — the range has ~20 steps over 3.4rem — and it stays inside the
+     slack on every page. */
+  width: 3.45rem;
   height: var(--od-control-h);
   padding-inline-start: var(--od-space-2);
   padding-inline-end: 0;
@@ -115,6 +121,9 @@
  * keyboard user tabs to it and it opens on :focus-within. */
 .od-tile-size__slider {
   width: 0;
+  /* A range input carries a ~129px intrinsic minimum, which would hold the
+     group open at the old width whatever the reserve says. */
+  min-width: 0;
   padding: 0;
   opacity: 0;
   accent-color: var(--od-accent);

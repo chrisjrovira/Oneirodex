@@ -17,10 +17,15 @@
      library and left Discover exactly as it was. Deriving them here is what
      connects the control to these rows.
 
-     1.4 is cover aspect plus the caption strip: it is the ratio the 200/280
-     fallback pair already encoded, so nothing moves at the default size. */
+     Height is the 3:4 cover box PLUS the caption strip, measured rather than
+     guessed. The old flat 1.4 ratio was a single number standing in for both,
+     so it was right at neither setting: with titles on the card came out 12px
+     taller than the item box that holds it, and the caption hung below the
+     row's floor where the scroll bar lives — the reported "title bars painted
+     over" on Discover. `--od-tile-title-h` is 0px when titles are off, which
+     collapses this back to the bare cover. */
   --od-tile-w: var(--od-tile-min, 200px);
-  --od-tile-h: calc(var(--od-tile-w) * 1.4);
+  --od-tile-h: calc(var(--od-tile-w) * 4 / 3 + var(--od-tile-title-h, 0px));
 
   /* How far a hovered tile grows past its box, per side. The track reserves
      this inside its padding box (so overflow does not clip the scale) and
@@ -36,6 +41,14 @@
      under resting covers so News matches Latest Games (0.1rem read as glued). */
   --od-shelf-scrollbar-gap: 0.45rem;
   --od-shelf-scrollbar-lane: 0.35rem;
+}
+
+/* Titles on: drop the lane a further 4px. Correct geometry alone already
+   clears the caption, but a hairline sitting a few pixels under a line of
+   text reads as an underline on the title rather than as the row's scroll
+   bar. Off, there is no caption to clear and the tight gap is right. */
+:root[data-od-tile-titles='on'] .od-shelf {
+  --od-shelf-scrollbar-gap: calc(0.45rem + 4px);
 }
 
 /* Head chrome shares the tile gutter so the accent mark lines up with the
@@ -400,22 +413,16 @@
   z-index: 40;
 }
 
-/* First and last tiles grow inward so enlarge is not sliced by the scrollport. */
-.od-shelf__item:first-child .game-card:hover,
-.od-shelf__item:first-child .game-card:focus-visible,
-.od-shelf__item:first-child .game-card:has(:focus-visible),
-.od-shelf__item:first-child .od-news-card:hover,
-.od-shelf__item:first-child .od-news-card:focus-visible {
-  transform-origin: left center;
-}
-
-.od-shelf__item:last-child .game-card:hover,
-.od-shelf__item:last-child .game-card:focus-visible,
-.od-shelf__item:last-child .game-card:has(:focus-visible),
-.od-shelf__item:last-child .od-news-card:hover,
-.od-shelf__item:last-child .od-news-card:focus-visible {
-  transform-origin: right center;
-}
+/* Every tile grows from its own centre, the first and last included.
+ *
+ * They used to pin to `left center` / `right center` so the enlarge could not
+ * be sliced by the scrollport — from a time when the track had only the page
+ * gutter to grow into. The track now reserves `--od-shelf-bleed-x` per side
+ * (see `padding-inline` above), which is half the growth plus 6px, so nothing
+ * is clipped at either end any more. What the pinning still did was make the
+ * end tiles behave unlike every other tile in the row: they appeared to shove
+ * sideways out of the edge instead of swelling in place. Uniform origin is
+ * the whole point of a row of identical tiles. */
 
 /* ---------- scroll controls ----------
  *

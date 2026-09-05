@@ -61,7 +61,8 @@ opens fully expanded until you change that.
 - Preference: continuous **0–100% slider** (TopNav) — legacy S/M/L/XL values still load and map onto the scale.
 - Affects Library / Favorites / Discover shelves; denser gaps on smaller sizes; grid re-measures with a short debounce so dragging feels smooth instead of snapping between sizes. Range is about **120–400px** (0–100%). **Grid** and **Rows** use that size too — Grid is genre shelves, Rows is a scaling title list, not a denser wrap.
 - **Everything on a tile scales with it** — the corner controls (menu, favourite, play status), the badges, the platform chip and the Preview pill all derive their size from the tile, so a 120% tile and a 30% tile read the same way rather than one being all chrome.
-- Hovering a tile grows it **25%** equally around its resting box (a transform, so the grid does not reflow). There is no accent glow on the enlarge.
+- Hovering a tile grows it **25%** equally around its resting box (a transform, so the grid does not reflow), from the tile's own centre — including the first and last tile in a Discover row, which used to grow sideways out of the row edge. There is no accent glow on the enlarge.
+- **Show titles under tiles** sits directly under the slider here (it was a checkbox on the top bar). Off gives you the covers alone and a shorter tile; the Discover shelves and the catalog grid both re-derive their height from it.
 
 ## Items per page
 

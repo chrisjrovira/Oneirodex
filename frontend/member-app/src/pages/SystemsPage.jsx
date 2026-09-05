@@ -200,11 +200,20 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
 
   return (
     <div className="od-more-page od-systems-page">
-      <p className="od-more-page__lede">
-        Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.{' '}
-        <Link to="/ways-to-play">Ways to Play</Link> lists Browser / Companion / Catalog across the catalog.
-        Console tiles also open a licensed catalog of IGDB regional releases.
-      </p>
+      {/* Lede and Export packs share one band at the top of the page.
+          Exports used to close the page, under every console family, behind a
+          rule — so it was a full-width block a member had to scroll past the
+          whole library to find, and the space beside the three-line lede sat
+          empty on every visit. It is a sidebar note, not a chapter: it goes
+          where the unused width already was. */}
+      <div className="od-systems-page__intro">
+        <p className="od-more-page__lede">
+          Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.{' '}
+          <Link to="/ways-to-play">Ways to Play</Link> lists Browser / Companion / Catalog across the catalog.
+          Console tiles also open a licensed catalog of IGDB regional releases.
+        </p>
+        <ExportPacksSection />
+      </div>
       {groups.map((group) => {
         const folded = collapsedFamilies.has(group.id)
         return (
@@ -313,7 +322,6 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
           </section>
         )
       })}
-      <ExportPacksSection />
     </div>
   )
 }
@@ -324,20 +332,23 @@ function ExportPacksSection() {
       <h2 id="od-systems-exports-title" className="od-systems-group__title">
         Export packs
       </h2>
+      {/* Buttons lead, prose follows. In a narrow column the two downloads are
+          the only actionable part; the paragraph explaining what the files are
+          is small print you read once. */}
+      <div className="od-systems-exports__actions">
+        <a className="od-btn od-btn--sm" href="/api/export/esde">
+          ES-DE gamelist.xml
+        </a>
+        <a className="od-btn od-btn--sm" href="/api/export/pegasus?platform=Library">
+          Pegasus metadata
+        </a>
+      </div>
       <p className="od-systems-exports__lede">
         Optional downloads for other frontends — not required to browse here.{' '}
         <strong>ES-DE</strong> gets a <code>gamelist.xml</code> (EmulationStation Desktop Edition
         style list). <strong>Pegasus</strong> gets a metadata pack for its frontend. File paths stay
         portable under your library roots so home/NAS mounts are not leaked.
       </p>
-      <div className="od-systems-exports__actions">
-        <a className="od-btn" href="/api/export/esde">
-          ES-DE gamelist.xml
-        </a>
-        <a className="od-btn" href="/api/export/pegasus?platform=Library">
-          Pegasus metadata
-        </a>
-      </div>
     </section>
   )
 }

@@ -368,8 +368,110 @@
    NewsPage.css and in NotificationsPage.css as three near-identical copies, so
    which one applied depended on which route chunks had been loaded. */
 
+/* ---------- the topic index ----------
+ *
+ * A grid, because thirteen topics laid out as thirteen full-width rows is a
+ * page of scrolling before you reach the first answer. `auto-fill` with a
+ * 15rem floor gives four columns on a desktop pane, two on a tablet and one
+ * on a phone without a breakpoint per size. */
+.od-help__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+  margin: 0 0 1.25rem;
+}
+
+/* Same panel language as the reading pane below — bordered glass with the
+   section's tone on the leading edge — at card scale. */
+.od-help__card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  background: var(--od-glass-bg, var(--od-surface));
+  border: 1px solid var(--od-glass-border, var(--od-border));
+  border-left: 3px solid color-mix(in srgb, var(--od-help-tone) 55%, transparent);
+  border-radius: var(--od-radius-lg);
+  color: var(--od-text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--od-motion-base) var(--od-motion-ease),
+    background-color var(--od-motion-base) var(--od-motion-ease);
+}
+
+.od-help__card:hover {
+  border-left-color: var(--od-help-tone);
+  background: color-mix(in srgb, var(--od-help-tone) 6%, var(--od-surface));
+}
+
+/* The one whose answer is showing. Tone-tinted rather than accent-filled: a
+   solid accent card would fight the panel underneath, which carries the same
+   tone and is the thing the eye should land on. */
+.od-help__card.is-selected {
+  border-color: color-mix(in srgb, var(--od-help-tone) 55%, var(--od-border));
+  border-left-color: var(--od-help-tone);
+  background: color-mix(in srgb, var(--od-help-tone) 12%, var(--od-surface));
+}
+
+.od-help__card:focus-visible {
+  outline: 2px solid var(--od-focus-ring, var(--od-accent));
+  outline-offset: 2px;
+}
+
+.od-help__card-mark {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--od-radius-md);
+  color: var(--od-help-tone);
+  background: color-mix(in srgb, var(--od-help-tone) 14%, transparent);
+}
+
+.od-help__card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.od-help__card-title {
+  font-weight: 600;
+  font-size: var(--od-font-md);
+  line-height: 1.25;
+}
+
+.od-help__card-summary {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+  line-height: 1.3;
+}
+
+/* ---------- the reading pane ---------- */
+
+.od-help__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* The panel's heading is a heading now, not a button: the card above opened
+   it, so a second control on the same topic would be two ways to do one
+   thing — and clicking a heading that cannot close anything does nothing. */
+.od-help__section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0 0 0.4rem;
+  font-size: var(--od-font-base);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .od-help__section {
+  .od-help__section,
+  .od-help__card {
     transition: none;
   }
 }

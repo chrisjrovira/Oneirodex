@@ -535,7 +535,17 @@ export function GameDetailsPage() {
             variant="full"
             showPresence={false}
           />
+          {/* Three rows, one per question, instead of one flex-wrap blob.
+              As a single wrapping row the break points moved with the content:
+              a title with four store links put "Check updates & DLC" alone on
+              a third line, one with two links left it hanging half-way along
+              the second, and "Add to collection" sat in a gap beside Play. The
+              groups answer different questions — play it · find it elsewhere ·
+              go and look for changes — so each owns a row and wraps inside
+              itself. Narrow panes reflow within a group rather than shuffling
+              buttons between groups. */}
           <div className="od-details-page__quick">
+            <div className="od-details-page__quick-row od-details-page__quick-row--seg">
             {playHref ? (
               <>
                 {Array.isArray(game.emulator_cores) && game.emulator_cores.length > 1 ? (
@@ -579,38 +589,42 @@ export function GameDetailsPage() {
               gameName={game.name}
               variant="inline"
             />
-            <ExternalStoreLinks
-              urls={game.urls}
-              steamUrl={game.steam_url}
-              igdbUrl={game.url_igdb || game.url}
-            />
-            {/* Launch Steam sits second-to-last, immediately before the
-                freshness check.
-                It used to lead the row, right after Play in browser — two
-                "start the game" buttons side by side, one of which only works
-                if you own it on Steam and have the client installed. Grouped
-                with the store links instead, it reads as the last of the
-                "elsewhere" actions, which is what it is: the row now runs
-                play → where else this exists → launch it there → go and look
-                for changes. */}
-            {game.steam_app_id ? (
-              <a className="od-btn" href={`steam://run/${game.steam_app_id}`}>
-                Launch Steam
-              </a>
-            ) : null}
-            <button
-              type="button"
-              className="od-btn"
-              disabled={freshnessBusy}
-              title="Re-read the store listing for a newer version, updates, or DLC"
-              onClick={() => {
-                void handleFreshnessCheck()
-              }}
-            >
-              {/* "Check stores" read like a store-availability lookup; it actually
-                  re-reads the listing for updates/DLC. */}
-              {freshnessBusy ? 'Checking…' : 'Check updates & DLC'}
-            </button>
+            </div>
+
+            <div className="od-details-page__quick-row">
+              <ExternalStoreLinks
+                urls={game.urls}
+                steamUrl={game.steam_url}
+                igdbUrl={game.url_igdb || game.url}
+              />
+              {/* Launch Steam closes the "elsewhere" row.
+                  It used to lead the actions, right after Play in browser —
+                  two "start the game" buttons side by side, one of which only
+                  works if you own it on Steam and have the client installed.
+                  Grouped with the store links it reads as the last of the
+                  elsewhere actions, which is what it is. */}
+              {game.steam_app_id ? (
+                <a className="od-btn" href={`steam://run/${game.steam_app_id}`}>
+                  Launch Steam
+                </a>
+              ) : null}
+            </div>
+
+            <div className="od-details-page__quick-row od-details-page__quick-row--seg">
+              <button
+                type="button"
+                className="od-btn"
+                disabled={freshnessBusy}
+                title="Re-read the store listing for a newer version, updates, or DLC"
+                onClick={() => {
+                  void handleFreshnessCheck()
+                }}
+              >
+                {/* "Check stores" read like a store-availability lookup; it
+                    actually re-reads the listing for updates/DLC. */}
+                {freshnessBusy ? 'Checking…' : 'Check updates & DLC'}
+              </button>
+            </div>
           </div>
           {firmwareBlocked ? (
             <p className="od-details-page__play-honesty" role="status">
@@ -661,8 +675,31 @@ export function GameDetailsPage() {
             </section>
           ) : null}
 
+          {/* Open path rides the section heading, not the path row.
+              A full-height `.od-btn` in the row's third grid column squeezed
+              the path into roughly half the panel, so a normal library path
+              wrapped over six lines inside a box taller than the rest of the
+              facts list — and the button's own column sat mostly empty. The
+              heading line already has unused width, and the action belongs to
+              the section rather than to one line of it. */}
           <section className="od-details-page__section od-details-page__section--facts">
-            <h2>Details</h2>
+            <h2 className="od-details-page__section-head">
+              <span>Details</span>
+              {pathRows.length > 0 ? (
+                <span className="od-details-page__section-actions">
+                  {pathRows.map((row) => (
+                    <button
+                      key={`open-${row.label}-${row.path}`}
+                      type="button"
+                      className="od-btn od-btn--sm od-btn--pill"
+                      onClick={() => setPathModal(row)}
+                    >
+                      {pathRows.length > 1 ? `Open ${row.label.toLowerCase()}` : 'Open path'}
+                    </button>
+                  ))}
+                </span>
+              ) : null}
+            </h2>
           {pathRows.length > 0 ? (
             <div className="od-details-page__paths" aria-label="Admin paths">
               {pathRows.map((row) => (
@@ -671,13 +708,6 @@ export function GameDetailsPage() {
                   <code className="od-details-page__path-value" title={row.path}>
                     {row.path}
                   </code>
-                  <button
-                    type="button"
-                    className="od-btn"
-                    onClick={() => setPathModal(row)}
-                  >
-                    Open path
-                  </button>
                 </div>
               ))}
             </div>

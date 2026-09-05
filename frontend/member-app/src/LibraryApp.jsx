@@ -583,7 +583,15 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     // newest one the title exists on — you are looking at that copy.
     activePlatform: filters.library_platform || '',
     layout,
+    filters,
   }
+
+  /* Grid does not page.
+     Its shelves are genres, each fetching its own covers, so there is no
+     "next 50" to walk — the pager offered 138 pages of genre headings that
+     never added up to a genre. Tile and Rows still page; See all on a shelf
+     hands the genre to Tile, which is the layout built for a long list. */
+  const showPager = layout !== 'grid'
 
   let content
   if (error && !result) {
@@ -599,6 +607,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
     content = (
       <>
           <GameGridSkeleton count={perPage} layout={layout} />
+        {showPager ? (
         <PaginationBar
           page={page}
           pages={1}
@@ -614,6 +623,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
           }}
           t={t}
         />
+        ) : null}
       </>
     )
   } else {
@@ -661,21 +671,23 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
             <GameGrid {...gridProps} />
           )}
         </div>
-        <PaginationBar
-          page={page}
-          pages={pages}
-          perPage={perPage}
-          onPageChange={(nextPage) => {
-            clearSelection()
-            setPage(nextPage)
-          }}
-          onPerPageChange={(nextPerPage) => {
-            clearSelection()
-            setPage(1)
-            setPerPage(nextPerPage)
-          }}
-          t={t}
-        />
+        {showPager ? (
+          <PaginationBar
+            page={page}
+            pages={pages}
+            perPage={perPage}
+            onPageChange={(nextPage) => {
+              clearSelection()
+              setPage(nextPage)
+            }}
+            onPerPageChange={(nextPerPage) => {
+              clearSelection()
+              setPage(1)
+              setPerPage(nextPerPage)
+            }}
+            t={t}
+          />
+        ) : null}
       </>
     )
   }
