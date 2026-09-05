@@ -9,8 +9,6 @@ export interface OneirodexClientConfig {
   fetchImpl?: typeof fetch
 }
 
-/** @deprecated P3b alias — use OneirodexClientConfig. */
-export type OneirodexClientConfig = OneirodexClientConfig
 
 export class OneirodexApiError extends Error {
   readonly status: number
@@ -28,7 +26,6 @@ export class OneirodexApiError extends Error {
   }
 }
 
-export { OneirodexApiError as OneirodexApiError }
 
 /** Format value for Authorization header (Bearer gt_…). */
 export function formatBearerAuthorization(token: string): string {
