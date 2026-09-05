@@ -211,6 +211,17 @@
     height: auto;
     object-fit: cover;
     object-position: center;
+    /* Covers are lazy, so a tile paints its badges before its art arrives. With
+       nothing behind the image that gap read as an empty box, and a screen of
+       them reads as a broken grid rather than a loading one. Favourites already
+       carried this tone; the catalog grid did not. `object-fit: cover` hides it
+       the moment the image paints. */
+    background-color: var(--bg-dark-secondary, var(--od-surface-2));
+    background-image: linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--od-surface-2) 92%, transparent) 0%,
+        color-mix(in srgb, var(--od-bg) 96%, transparent) 100%
+    );
     transition: transform var(--transition-normal), box-shadow var(--transition-normal);
     box-shadow: 0 4px 12px var(--shadow-dark-strong);
     border: 1px solid var(--game-border-gray);
