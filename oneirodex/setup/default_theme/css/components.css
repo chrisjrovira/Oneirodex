@@ -683,6 +683,18 @@
     bottom: 52px;
 }
 
+/* Badges belong on the artwork, not on the title.
+ *
+ * They are offset from `.game-card`'s bottom edge, and the title strip is part
+ * of the card — so with titles on, the bottom stacks sat on top of the text and
+ * a long name showed only the slice between them ("1941: Counter Attack" read
+ * as "41:"). Lifting them by the strip height puts them back on the cover.
+ * `--od-tile-title-h` is 0px when titles are off, so this is inert then. */
+.game-card .od-badge-stack--bottom-left,
+.game-card .od-badge-stack--bottom-right {
+    bottom: calc(var(--od-tile-edge, 8px) + var(--od-tile-title-h, 0px));
+}
+
 /* Badges win true top-left (UPDATE/NEW/VR/MISSING); PLAY is nudged in glass.css when present */
 .od-badge-stack--top-left {
     top: var(--od-tile-edge, 8px);

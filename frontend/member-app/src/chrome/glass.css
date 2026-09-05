@@ -39,10 +39,12 @@
   color: var(--od-text);
 }
 
+/* `--od-tile-title-h` lifts every bottom-anchored tile control clear of the
+   title strip; it is 0px when the member has titles off. */
 .game-card .od-platform-chip {
   position: absolute;
   left: var(--od-tile-edge, 0.35rem);
-  bottom: var(--od-tile-edge, 0.35rem);
+  bottom: calc(var(--od-tile-edge, 0.35rem) + var(--od-tile-title-h, 0px));
   z-index: 2;
   max-width: calc(100% - 2 * var(--od-tile-edge, 0.35rem));
   padding: 0.18rem var(--od-badge-pad-x, 0.4rem);
@@ -94,7 +96,10 @@
 }
 
 .game-card:has(.od-badge-stack--bottom-left) .od-platform-chip {
-  bottom: calc(var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) + var(--od-tile-btn-gap, 4px));
+  bottom: calc(
+    var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) +
+    var(--od-tile-btn-gap, 4px) + var(--od-tile-title-h, 0px)
+  );
 }
 
 /* PLAY is a small bar control under badges — badges win true top-left */
