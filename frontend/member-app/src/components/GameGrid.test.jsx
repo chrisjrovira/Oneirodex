@@ -125,7 +125,7 @@ test('renders virtualized grid root and visible game tiles', () => {
   expect(document.querySelectorAll('.game-library-row').length).toBeGreaterThan(0)
 
   // The virtualizer should mount at least the first row's cards.
-  expect(screen.getByText('Game 1', { selector: '.visually-hidden' })).toBeInTheDocument()
+  expect(screen.getByText('Game 1', { selector: '.game-card__title' })).toBeInTheDocument()
   expect(within(root).getAllByRole('img').length).toBeGreaterThan(0)
   // Not every tile needs to be in the DOM when virtualized.
   expect(within(root).getAllByRole('img').length).toBeLessThanOrEqual(games.length)
