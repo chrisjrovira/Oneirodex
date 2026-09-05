@@ -9,6 +9,9 @@ import { useRowScroll } from './useRowScroll'
 import './DiscoverShelf.css'
 import './CatalogGridSections.css'
 
+/** One retry per genre. See the catch in `loadShelf`. */
+const MAX_SHELF_ATTEMPTS = 2
+
 /**
  * One genre shelf in Catalog Grid — Discover chrome (title mark, arrows,
  * bottom slider) without pin / hide / see-all. Tile size follows the same
@@ -341,21 +344,50 @@ export function CatalogGridSections({
     setRequested(new Set())
   }, [filterKey])
 
+  /* One controller for every in-flight shelf, so a filter change or an unmount
+     cancels them instead of leaving forty orphaned requests to land against a
+     view that has moved on. The ASGI bridge in front of Flask raises on a
+     client disconnect mid-request, so orphaned fetches are not free. */
+  const inFlightRef = useRef(null)
+  const attemptsRef = useRef(new Map())
+  useEffect(() => {
+    const controller = new AbortController()
+    inFlightRef.current = controller
+    attemptsRef.current = new Map()
+    return () => controller.abort()
+  }, [filterKey])
+
   const loadShelf = useCallback(
     (genre) => {
       setRequested((current) => {
         if (current.has(genre)) return current
         const next = new Set(current)
         next.add(genre)
-        fetchShelfGames(filters || {}, genre)
+        fetchShelfGames(filters || {}, genre, { signal: inFlightRef.current?.signal })
           .then((payload) => {
             setShelves((rows) => ({ ...rows, [genre]: payload }))
           })
           .catch((error) => {
             if (error?.name === 'AbortError') return
-            // An empty shelf, not a broken page: one genre failing to answer
-            // must not take the other forty with it.
-            setShelves((rows) => ({ ...rows, [genre]: { games: [], total: 0 } }))
+            /* Retry once, then give up quietly.
+               Writing `{ total: 0 }` on the first failure would hide the
+               shelf, and the route 500s intermittently under the fan-out, so
+               one unlucky request would delete a genre from Grid for the rest
+               of the session. Dropping it from `requested` lets the observer
+               ask again — but only while a retry is left: the observer
+               re-arms on every render, so an endpoint that fails every time
+               would otherwise spin here as fast as React can re-render. */
+            const attempts = (attemptsRef.current.get(genre) || 0) + 1
+            attemptsRef.current.set(genre, attempts)
+            if (attempts >= MAX_SHELF_ATTEMPTS) {
+              setShelves((rows) => ({ ...rows, [genre]: { games: [], total: 0 } }))
+              return
+            }
+            setRequested((pending) => {
+              const retry = new Set(pending)
+              retry.delete(genre)
+              return retry
+            })
           })
         return next
       })

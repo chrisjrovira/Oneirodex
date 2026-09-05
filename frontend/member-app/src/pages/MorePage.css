@@ -45,8 +45,16 @@
   color: var(--od-text);
 }
 
-.od-more-page [role='alert'] button,
-.od-more-page button {
+/* Bare buttons only.
+ *
+ * This is a reset for an unstyled `<button>` sitting in prose, and as an
+ * unqualified selector it also hit every `.od-btn` and `.od-cbtn` on a More
+ * page — member-app.css loads after the theme, so `font: inherit` overwrote
+ * the size those classes set for themselves and a bar button took the font
+ * size of whatever it happened to sit inside. Inside a section heading that
+ * meant an 18px "small" button. A styled button owns its own type. */
+.od-more-page [role='alert'] button:not(.od-btn):not(.od-cbtn),
+.od-more-page button:not(.od-btn):not(.od-cbtn) {
   font: inherit;
 }
 

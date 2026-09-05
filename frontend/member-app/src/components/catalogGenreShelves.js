@@ -1,8 +1,15 @@
 import { fetchBrowseGames } from '../api/browse'
 import { fetchFilterOptions } from '../api/filters'
 
-/** Covers per genre shelf. A shelf is a sample you scroll, not the genre. */
-export const SHELF_SIZE = 30
+/**
+ * Covers per genre shelf. A shelf is a sample you scroll, not the genre.
+ *
+ * 20 because `/browse_games` takes `per_page` from a fixed allowlist
+ * (20 / 50 / 100 / …) — 30 is not on it, and the route does not clamp an
+ * off-list value, it 500s. Asking for 30 and being handed 20 also made the
+ * constant a lie about what the shelf contains.
+ */
+export const SHELF_SIZE = 20
 
 /**
  * Filter keys a genre shelf inherits from the catalog bar.

@@ -466,23 +466,20 @@
   gap: var(--od-space-2, 0.5rem);
 }
 
-/* Two columns now that Open path moved to the heading: the path gets the
-   whole rest of the panel, which is the difference between wrapping over two
-   lines and wrapping over six. */
+/* Label above, path across the full panel.
+ *
+ * The Details section is the narrow column of the content grid — about 350px
+ * on a normal window. Spending 112px of that on the words "Library folder"
+ * left the path 232px to wrap in, which is three lines for a normal library
+ * path; the original three-column version (label, path, button) left it 232px
+ * *and* a mostly empty button column, which is six. The label is two words and
+ * reads perfectly well on its own line; the path is the part that needs room,
+ * so it gets all of it. */
 .od-details-page__path-row {
   display: grid;
-  grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.15rem;
   align-items: start;
-}
-
-/* Below the two-column fold the label stacks above the path rather than
-   eating 7rem of an already narrow pane. */
-@media (max-width: 700px) {
-  .od-details-page__path-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.2rem;
-  }
 }
 
 .od-details-page__path-label {

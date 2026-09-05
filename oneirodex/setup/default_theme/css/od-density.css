@@ -126,8 +126,17 @@
    needing to know densities exist.
    -------------------------------------------------------------------------- */
 
-.od-btn,
-.btn {
+/* `:not(--sm)` is load-bearing. This file loads after od-primitives.css and
+   the selectors tie on specificity, so an unqualified `.od-btn` here silently
+   beat `.od-btn--sm` — the small variant lowers `min-height` on purpose and
+   this put it straight back. Every "small" button in the product was rendering
+   at full control height; the modifier only ever changed the padding and the
+   type size, which reads as "the same button, squeezed" — precisely the
+   failure the `--sm` comment in od-primitives.css says it exists to avoid.
+   The small variant is already density-aware (it derives from
+   `--od-control-h`), so excluding it costs nothing here. */
+.od-btn:not(.od-btn--sm),
+.btn:not(.btn-sm) {
   min-height: var(--od-control-h);
   padding-inline: var(--od-control-pad-x);
 }
