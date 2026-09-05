@@ -164,13 +164,20 @@ def test_ops_summary_reports_no_reason_as_none_not_empty_string(
     assert mine
     assert mine[0]['error_message'] is None
 
+    # A Running job is global state: is_scan_job_running() stays true for
+    # the rest of the session, and every later test whose route refuses to
+    # act during a scan fails for a reason that has nothing to do with it.
+    # The suite only survived this because 'r' sorts before 's'.
+    db_session.delete(job)
+    db_session.commit()
+
 
 def test_library_tools_live_on_scan_management(admin_client):
     """Auto Scan and library maker are tabs of the same page."""
     body = admin_client.get('/scan_management').get_data(as_text=True)
     assert 'id="libraryTools"' in body
     assert 'id="propose-leaf-mount"' in body
-    assert 'gt_admin_library_tools.js' in body
+    assert 'od_admin_library_tools.js' in body
 
 
 def test_library_tools_page_redirects_to_the_scan_tab(admin_client):

@@ -60,7 +60,7 @@ def test_arr_admin_page_shows_enable_toggle_even_when_off():
     html = _read(TEMPLATES / 'arr_module.html')
     assert 'id="arr-enable"' in html
     assert 'id="arr-enable-save"' in html
-    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'gt_admin_arr.js')
+    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'od_admin_arr.js')
     assert '/api/arr/module' in js
     # Enable panel is outside the {% if enabled %} gate
     enable_idx = html.index('id="arr-enable"')
@@ -79,7 +79,7 @@ def test_ai_config_endpoint_and_save_ui():
     assert 'id="ai-enable"' in html
     assert 'id="ai-ollama-url"' in html
     assert 'id="ai-ollama-model"' in html
-    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'gt_admin_ai_assist.js')
+    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'od_admin_ai_assist.js')
     assert '/api/ai/config' in js
     assert 'id="ai-config-test"' in html
 
