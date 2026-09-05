@@ -92,6 +92,11 @@ test('Retry reloads after a failed fetch', async () => {
 test('new chrome moves identity into the bar', async () => {
   renderPage('/systems/catalog?library_platform=NES', { enableNewChrome: true })
   expect(await screen.findByText('1 / 2 titles in cache')).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: 'NES · licensed catalog' })).toBeNull()
-  expect(screen.getByText('NES · licensed catalog')).toBeInTheDocument()
+  // The identity is the bar's own <h1>, not a page header. It was a <span>
+  // until the a11y pass gave every route a real heading (f2723d11); the
+  // check that it is *not* a heading outlived that. Asserting the bar class
+  // keeps the original intent — the name moved into the bar — without
+  // reinstating "this route announces no heading at all".
+  const heading = screen.getByRole('heading', { name: 'NES · licensed catalog' })
+  expect(heading).toHaveClass('od-topbar__section')
 })

@@ -122,9 +122,14 @@ test('new chrome moves identity and actions into the bar', async () => {
   })
 
   expect(await screen.findByText('10 / 12 owned (83%)')).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: 'NES · USA' })).toBeNull()
+  // The identity is the bar's own <h1>, not a page header. It was a <span>
+  // until the a11y pass gave every route a real heading (f2723d11); the
+  // check that it is *not* a heading outlived that. Asserting the bar class
+  // keeps the original intent — the name moved into the bar — without
+  // reinstating "this route announces no heading at all".
+  const heading = screen.getByRole('heading', { name: 'NES · USA' })
+  expect(heading).toHaveClass('od-topbar__section')
   expect(screen.queryByRole('heading', { name: 'Set completion' })).toBeNull()
-  expect(screen.getByText('NES · USA')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Systems' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Browse library' })).toBeInTheDocument()
   expect(screen.queryByRole('link', { name: 'Back to Systems' })).toBeNull()

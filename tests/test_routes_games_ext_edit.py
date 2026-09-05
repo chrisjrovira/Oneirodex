@@ -693,3 +693,85 @@ class TestGameEditDatabaseOperations:
             updated_game = db.session.execute(select(Game).filter_by(uuid=test_game.uuid)).scalars().first()
             assert updated_game.size == new_size
             assert updated_game.nfo_content == 'New NFO'
+
+class TestProviderUrlsThroughTheForm:
+    """The edit form's provider links, end to end through the POST handler.
+
+    utils/game_provider_urls has its own unit tests; this covers the wiring —
+    that the fields reach the route, ride the same commit as the rest of the
+    edit, and leave rows the form does not own alone.
+    """
+
+    def _post(self, client, admin_user, game, form_data):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(admin_user.id)
+            sess['_fresh'] = True
+
+        with patch('oneirodex.routes_games_ext.edit.is_scan_job_running', return_value=False):
+            with patch('oneirodex.routes_games_ext.edit.is_safe_path', return_value=(True, None)):
+                with patch(
+                    'oneirodex.routes_games_ext.edit.get_allowed_base_directories',
+                    return_value=['/allowed'],
+                ):
+                    with patch(
+                        'oneirodex.routes_games_ext.edit.get_folder_size_in_bytes_updates',
+                        return_value=1024,
+                    ):
+                        with patch(
+                            'oneirodex.routes_games_ext.edit.read_first_nfo_content',
+                            return_value='NFO',
+                        ):
+                            return client.post(f'/game_edit/{game.uuid}', data=form_data)
+
+    def _rows(self, game_uuid):
+        from oneirodex.models import GameURL
+
+        return {
+            r.url_type: r.url
+            for r in db.session.execute(
+                select(GameURL).filter_by(game_uuid=game_uuid)
+            ).scalars().all()
+        }
+
+    def test_submitted_provider_links_are_saved(
+        self, client, admin_user, test_game, form_data, db_session
+    ):
+        form_data['provider_url_steam'] = 'https://store.steampowered.com/app/620/'
+        form_data['provider_url_gog'] = 'https://www.gog.com/game/portal_2'
+
+        response = self._post(client, admin_user, test_game, form_data)
+        assert response.status_code in (200, 302)
+
+        rows = self._rows(test_game.uuid)
+        assert rows.get('steam') == 'https://store.steampowered.com/app/620/'
+        assert rows.get('gog') == 'https://www.gog.com/game/portal_2'
+
+    def test_a_non_http_link_is_refused_by_the_route(
+        self, client, admin_user, test_game, form_data, db_session
+    ):
+        """It would otherwise render as a link on the details page."""
+        from oneirodex.models import GameURL
+
+        db_session.add(
+            GameURL(game_uuid=test_game.uuid, url_type='steam', url='https://good.example/')
+        )
+        db_session.commit()
+
+        form_data['provider_url_steam'] = 'javascript:alert(1)'
+        self._post(client, admin_user, test_game, form_data)
+
+        assert self._rows(test_game.uuid).get('steam') == 'https://good.example/'
+
+    def test_links_the_form_does_not_own_survive_a_save(
+        self, client, admin_user, test_game, form_data, db_session
+    ):
+        from oneirodex.models import GameURL
+
+        db_session.add(
+            GameURL(game_uuid=test_game.uuid, url_type='youtube', url='https://youtu.be/keep')
+        )
+        db_session.commit()
+
+        self._post(client, admin_user, test_game, form_data)
+
+        assert self._rows(test_game.uuid).get('youtube') == 'https://youtu.be/keep'

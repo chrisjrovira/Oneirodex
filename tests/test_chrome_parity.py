@@ -181,12 +181,12 @@ def test_lazy_loaded_panels_are_found_by_target_not_by_id():
     would leave the panel permanently empty under the new chrome — with no
     error anywhere to say why.
 
-    The selector lives in `gt_admin_scanjobs_inline.js` (extracted off the
+    The selector lives in `od_admin_scanjobs_inline.js` (extracted off the
     template so CSP can enforce). Pin the JS, not a string that used to sit
     inline in the Jinja.
     """
     markup = _read(SCANJOBS)
-    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'gt_admin_scanjobs_inline.js')
+    js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'od_admin_scanjobs_inline.js')
     assert "getElementById('imageQueue-tab')" not in markup
     assert "getElementById('imageQueue-tab')" not in js
     assert '[data-bs-toggle="tab"][href="#imageQueue"]' in js

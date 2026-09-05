@@ -1400,3 +1400,20 @@ a.od-chip:focus {
 .game-card__title:focus-visible {
     color: var(--od-accent);
 }
+
+/* Titles off: hide it properly, do not merely collapse it.
+ *
+ * This element is also the tile's accessible name — it replaced a separate
+ * visually-hidden span, because having both put the name in the DOM twice.
+ * A `height: 0` box is not reliably announced, so switching titles off with
+ * height alone would quietly cost every tile its name. */
+[data-od-tile-titles='off'] .game-card__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

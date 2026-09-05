@@ -102,6 +102,11 @@ RESET_SCOPES: dict[str, tuple[str, ...]] = {
         'player_perspectives',
         'reference_sets',
         'reference_set_entries',
+        # Cached IGDB release_dates per platform + region, behind the Systems
+        # "Licensed catalog" counts. Catalog scope: it is derived from IGDB and
+        # rebuilt on demand, and leaving it behind meant a wiped catalog still
+        # reported release counts for titles that were gone.
+        'igdb_platform_releases',
         'free_game_offers',
         'download_requests',
         'system_events',

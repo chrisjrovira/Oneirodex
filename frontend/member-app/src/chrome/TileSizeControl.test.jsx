@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { TileSizeControl } from './TileSizeControl'
+import { applyTileSizeCssVars, TileSizeControl } from './TileSizeControl'
 import * as preferencesApi from '../api/preferences'
 
 vi.mock('../api/preferences', async (importOriginal) => ({
@@ -60,4 +60,39 @@ test('unmounting mid-drag still saves the pending tile size', () => {
   // And nothing fires afterwards from the cleared timer.
   vi.runAllTimers()
   expect(preferencesApi.savePreferences).toHaveBeenCalledTimes(1)
+})
+
+
+describe('applyTileSizeCssVars and the title preference', () => {
+  afterEach(() => {
+    delete document.documentElement.dataset.odTileTitles
+  })
+
+  test('a size-only call leaves the title preference alone', () => {
+    // The slider calls this on every drag with just a size. Defaulting to "on"
+    // there put the strip back for anyone who had switched it off.
+    applyTileSizeCssVars(50, false)
+    expect(document.documentElement.dataset.odTileTitles).toBe('off')
+    expect(document.documentElement.style.getPropertyValue('--od-tile-title-h')).toBe('0px')
+
+    applyTileSizeCssVars(80)
+
+    expect(document.documentElement.dataset.odTileTitles).toBe('off')
+    expect(document.documentElement.style.getPropertyValue('--od-tile-title-h')).toBe('0px')
+  })
+
+  test('an explicit flag still wins', () => {
+    applyTileSizeCssVars(50, false)
+    applyTileSizeCssVars(50, true)
+
+    expect(document.documentElement.dataset.odTileTitles).toBe('on')
+    expect(
+      parseFloat(document.documentElement.style.getPropertyValue('--od-tile-title-h')),
+    ).toBeGreaterThan(0)
+  })
+
+  test('titles default on when nothing has been set yet', () => {
+    applyTileSizeCssVars(50)
+    expect(document.documentElement.dataset.odTileTitles).toBe('on')
+  })
 })

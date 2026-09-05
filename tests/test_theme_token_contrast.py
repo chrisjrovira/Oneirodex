@@ -1,4 +1,4 @@
-"""WCAG contrast guarantees for the --gt-* semantic status tokens.
+"""WCAG contrast guarantees for the --od-* semantic status tokens.
 
 The admin stylesheets render status text (scan failed, log level error, server
 resource warnings) directly in --od-success/--od-danger/--od-warning/--od-info.
@@ -54,10 +54,16 @@ def contrast_ratio(foreground, background):
 
 
 def read_source_tokens():
-    """The --gt-* values as declared in the tracked default theme."""
+    """The --od-* values as declared in the tracked default theme.
+
+    The pattern matched `--gt-*` until the legacy-naming rename moved every
+    token to `--od-*`. Nothing matched after that, so this returned an empty
+    dict and every assertion below failed on a missing token rather than on a
+    real contrast result — the ratchet was loud and inert at the same time.
+    """
     with open(SOURCE_TOKENS_CSS, 'r', encoding='utf-8') as fh:
         css = fh.read()
-    return dict(re.findall(r'--(gt-[a-z0-9-]+)\s*:\s*([^;]+);', css))
+    return dict(re.findall(r'--(od-[a-z0-9-]+)\s*:\s*([^;]+);', css))
 
 
 def all_surfaces():

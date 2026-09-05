@@ -322,9 +322,6 @@ export function GameCard({
       onBlurCapture={handleBlurCapture}
       onClickCapture={handleSelectClick}
     >
-      {layout === 'rows' ? null : (
-        <span className="visually-hidden">{game.name}</span>
-      )}
       <div
         className="game-card"
         // Raises the card above its neighbours while a menu is open.
@@ -687,15 +684,16 @@ export function GameCard({
           <TileHoverTrailer src={trailerSrc} active={trailerArmed} />
         </a>
 
-        {/* Tile title strip. Always rendered, sized by `--od-tile-title-h`,
-            which is 0 when the member has titles off — so the preference is
-            one CSS var rather than a prop threaded to every grid, and the
-            virtualizer reads the same var for its row height. Rows layout has
-            its own title below, so this would be a duplicate there. */}
+        {/* The tile's name — visible strip when titles are on, and the
+            card's screen-reader name either way.
+            This replaced a separate `.visually-hidden` span. Both together put
+            the name in the DOM twice, which is noise for a screen reader and
+            broke every `getByText(name)` in the suite. Sized by
+            `--od-tile-title-h` (0 when off) and hidden properly rather than
+            just collapsed — see components.css — so turning titles off never
+            costs the accessible name. Rows layout names itself below. */}
         {layout !== 'rows' ? (
-          <a className="game-card__title" href={`/game_details/${game.uuid}`} tabIndex={-1}>
-            {game.name}
-          </a>
+          <span className="game-card__title">{game.name}</span>
         ) : null}
 
         {layout === 'rows' ? (

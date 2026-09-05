@@ -16,18 +16,30 @@ const PREF_SAVE_DEBOUNCE_MS = 320
  *  drag stops, not wait for the round-trip that persists it. */
 const TILE_RESIZE_SETTLE_MS = 120
 
-export function applyTileSizeCssVars(sizeOrPercent, showTitles = true) {
+export function applyTileSizeCssVars(sizeOrPercent, showTitles) {
+  // Omitted means "leave the title preference alone". The slider calls this on
+  // every drag with only a size; defaulting to `true` there would turn the
+  // strip back on for anyone who had switched it off, which is the same
+  // partial-update clobbering `preferencesFromShell` has to guard against.
+  const titlesOn =
+    showTitles === undefined
+      ? document.documentElement.dataset.odTileTitles !== 'off'
+      : Boolean(showTitles)
   const isNarrow =
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(max-width: 900px)').matches
   const vars = clampTileVarsForNarrowViewport(
-    tilePercentToCssVars(sizeOrPercent, showTitles),
+    tilePercentToCssVars(sizeOrPercent, titlesOn),
     isNarrow,
   )
   Object.entries(vars).forEach(([key, value]) => {
     document.documentElement.style.setProperty(key, value)
   })
+  // A zero-height box is not reliably announced, so titles-off needs the real
+  // visually-hidden treatment rather than just `--od-tile-title-h: 0px`. CSS
+  // cannot branch on a variable's value; it can branch on this.
+  document.documentElement.dataset.odTileTitles = titlesOn ? 'on' : 'off'
 }
 
 export function TileSizeControl({
