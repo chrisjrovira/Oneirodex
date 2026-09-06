@@ -23,7 +23,9 @@ psutil==7.2.2
 tenacity==9.1.4
 email_validator==2.3.0
 uvicorn[standard]==0.51.0
-asgiref==3.12.1
+# WSGI->ASGI bridge for the Flask app (asgi.py). Replaced asgiref's WsgiToAsgi,
+# whose CurrentThreadExecutor turned a client disconnect into a 500 (UID-052).
+a2wsgi==1.10.10
 aiofiles==25.1.0
 zipstream_new==1.1.8
 howlongtobeatpy==1.0.22

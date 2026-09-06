@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { confirmAction } from '../../../shared/confirmDialog'
 import { createToken, listTokens, revokeToken } from '../api/tokens'
 import { PageStatus } from '../components/PageStatus'
 import { copyText } from '../utils/copyText'
@@ -103,7 +104,12 @@ export function TokensPage() {
 
   async function onRevoke(tokenId, tokenName) {
     if (busy) return
-    const ok = window.confirm(`Revoke token “${tokenName}”? Clients using it will stop working.`)
+    const ok = await confirmAction({
+      title: `Revoke token “${tokenName}”?`,
+      body: 'Clients using it will stop working.',
+      confirmLabel: 'Revoke token',
+      cancelLabel: 'Keep it',
+    })
     if (!ok) return
     setBusy(true)
     setError(null)

@@ -4,20 +4,25 @@
 # Tauri bundles for the host it runs on. That is a hard platform constraint, not
 # a configuration gap:
 #
-#   Windows  -> .exe (NSIS) + .msi          buildable on Windows only
+#   Windows  -> .exe (NSIS)                 buildable on Windows only
 #   macOS    -> .dmg + .app                 buildable on macOS only (codesign,
 #                                           hdiutil and the .icns toolchain are
 #                                           Apple-only)
-#   Linux    -> .deb + .rpm + .AppImage     buildable on Linux, or from any host
+#   Linux    -> .deb + .AppImage            buildable on Linux, or from any host
 #                                           via the Docker path below
 #
 # So a Windows box can produce Windows installers directly and Linux ones
 # through Docker, but a .dmg genuinely requires a Mac. There is no cross-compile
 # for it, with or without CI.
 #
-#   ./scripts/build-installers.sh            # bundle for this host
-#   ./scripts/build-installers.sh --linux    # Linux bundles via Docker
-#   ./scripts/build-installers.sh --thin     # thin client config
+# .msi and .rpm are deliberately absent: both reject the pre-release version
+# ("1.0.0-beta") the project currently carries. Add them back to `bundle.targets`
+# in src-tauri/tauri.conf.json when the version becomes a plain X.Y.Z.
+#
+#   ./scripts/build-installers.sh                  # bundle for this host
+#   ./scripts/build-installers.sh --linux          # Linux bundles via Docker
+#   ./scripts/build-installers.sh --thin           # thin client config
+#   ./scripts/build-installers.sh --linux --thin   # thin client, Linux bundles
 #
 set -euo pipefail
 
@@ -31,7 +36,7 @@ for arg in "$@"; do
   case "$arg" in
     --thin)  THIN=1 ;;
     --linux) LINUX_DOCKER=1 ;;
-    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
@@ -53,31 +58,60 @@ require() {
   }
 }
 
+# Copy every bundle matching the given -name predicates into $OUT, and fail if
+# there were none. `find ... -exec cp` exits 0 when nothing matches, so the old
+# version of this script printed "installers in dist-installers" over an empty
+# directory whenever bundling was off — the failure mode it most needed to catch.
+collect() {
+  local label="$1"; shift
+  local before after
+  before="$(find "$OUT" -type f 2>/dev/null | wc -l)"
+  find "$REPO/clients/desktop/src-tauri/target" -type f \( "$@" \) \
+    -path '*bundle*' -exec cp -v {} "$OUT/" \;
+  after="$(find "$OUT" -type f 2>/dev/null | wc -l)"
+  if [ "$before" -eq "$after" ]; then
+    echo "==> no $label bundles were produced" >&2
+    echo "    Check that bundle.active is true in src-tauri/tauri.conf.json" >&2
+    echo "    (and tauri.thin.conf.json for --thin), then re-run." >&2
+    exit 1
+  fi
+  echo "==> $label installers in $OUT"
+}
+
 mkdir -p "$OUT"
 
 if [ "$LINUX_DOCKER" = "1" ]; then
   require docker "install Docker Desktop, or run this script on a Linux host"
-  echo "==> Linux bundles via Docker (deb / rpm / AppImage)"
+  if [ "$THIN" = "1" ]; then
+    BUILD_CMD="npm run tauri:build:thin"
+    echo "==> Linux bundles via Docker — thin client (deb / AppImage)"
+  else
+    BUILD_CMD="npm run tauri:build"
+    echo "==> Linux bundles via Docker — full companion (deb / AppImage)"
+  fi
   # The image needs the GTK/webkit headers Tauri links against; those are the
   # actual reason a Linux bundle cannot be produced natively on Windows.
+  # Node comes from NodeSource: Debian bookworm still ships Node 18, and this
+  # project is Node 20+.
   docker run --rm \
     -v "$REPO":/src \
     -w /src/clients/desktop \
     -e CI=true \
+    -e BUILD_CMD="$BUILD_CMD" \
     rust:1-bookworm \
     bash -lc '
       set -e
       apt-get update -qq
       apt-get install -y -qq --no-install-recommends \
         libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
-        librsvg2-dev patchelf file nodejs npm >/dev/null
+        librsvg2-dev patchelf file curl ca-certificates gnupg >/dev/null
+      curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null
+      apt-get install -y -qq nodejs >/dev/null
+      node --version
       npm ci --no-audit --no-fund
-      npm run tauri:build
+      eval "$BUILD_CMD"
     '
-  find "$REPO/clients/desktop/src-tauri/target" -type f \
-    \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) \
-    -exec cp -v {} "$OUT/" \;
-  echo "==> Linux installers in $OUT"
+  collect "Linux" -name '*.deb' -o -name '*.AppImage'
   exit 0
 fi
 
@@ -98,21 +132,15 @@ fi
 
 case "$OS" in
   windows)
-    find src-tauri/target -type f \( -name '*.exe' -o -name '*.msi' \) \
-      -path '*bundle*' -exec cp -v {} "$OUT/" \;
-    echo "==> Windows installers in $OUT"
+    collect "Windows" -name '*.exe'
     ;;
   macos)
-    find src-tauri/target -type f -name '*.dmg' -exec cp -v {} "$OUT/" \;
-    echo "==> macOS disk image in $OUT"
+    collect "macOS" -name '*.dmg'
     echo "    Unsigned by default — Gatekeeper will warn until it is signed and"
     echo "    notarised with an Apple Developer ID."
     ;;
   linux)
-    find src-tauri/target -type f \
-      \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) \
-      -exec cp -v {} "$OUT/" \;
-    echo "==> Linux installers in $OUT"
+    collect "Linux" -name '*.deb' -o -name '*.AppImage'
     ;;
   *)
     echo "unrecognised host; bundles left under src-tauri/target/*/bundle" >&2

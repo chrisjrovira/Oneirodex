@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { confirmAction } from '../../shared/confirmDialog'
 import { PageStatus } from './PageStatus'
 import { getJson, postJson } from './adminApi'
 import {
@@ -546,11 +547,13 @@ export function DupeGlance({ onOpenPath }) {
   }
 
   async function handleBackfillKindHints() {
-    if (
-      !window.confirm(
-        'Fill in missing kind hints from scan proposals? Only rows with no hint change, and it is safe to re-run.',
-      )
-    ) {
+    const ok = await confirmAction({
+      title: 'Fill in missing kind hints from scan proposals?',
+      body: 'Only rows with no hint change, and it is safe to re-run.',
+      confirmLabel: 'Fill in hints',
+      tone: 'neutral',
+    })
+    if (!ok) {
       return
     }
     setBusy(true)

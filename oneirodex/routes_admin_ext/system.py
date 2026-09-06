@@ -7,10 +7,10 @@ from oneirodex.models import SystemEvents, DiscoverySection, Game, Genre, Librar
 from oneirodex import db
 from oneirodex.platform import LibraryPlatform
 from oneirodex.utils.event_logging import log_system_event
-from oneirodex.utils.discovery_zones import (
-    count_custom_zone_games,
-    describe_zone_config,
-    validate_zone_config,
+from oneirodex.utils.discovery_shelves import (
+    count_custom_shelf_games,
+    describe_shelf_config,
+    validate_shelf_config,
 )
 from sqlalchemy import select, and_, func
 from datetime import datetime
@@ -78,7 +78,7 @@ def discovery_sections() -> str:
 
     # Calculate item counts for each section
     section_counts = {}
-    zone_descriptions = {}
+    shelf_descriptions = {}
 
     for section in sections:
         if section.identifier == 'libraries':
@@ -104,8 +104,8 @@ def discovery_sections() -> str:
                 .join(user_favorites, Game.uuid == user_favorites.c.game_uuid)
             ).scalar()
         elif section.section_type == 'custom':
-            count = count_custom_zone_games(section.config)
-            zone_descriptions[section.id] = describe_zone_config(section.config)
+            count = count_custom_shelf_games(section.config)
+            shelf_descriptions[section.id] = describe_shelf_config(section.config)
         else:
             count = 0
 
@@ -119,7 +119,7 @@ def discovery_sections() -> str:
         'admin/admin_discovery_sections.html',
         sections=sections,
         section_counts=section_counts,
-        zone_descriptions=zone_descriptions,
+        shelf_descriptions=shelf_descriptions,
         libraries=libraries,
         genres=genres,
         platforms=platforms,
@@ -130,16 +130,16 @@ def discovery_sections() -> str:
 @login_required
 @admin_required
 def create_discovery_section() -> tuple[Dict[str, Any], int]:
-    """Create a custom discovery zone (manual game pick list or library/platform/genre filter)."""
+    """Create a custom discovery shelf (manual game pick list or library/platform/genre filter)."""
     try:
         data = request.get_json() or {}
         name = str(data.get('name') or '').strip()
         if not name:
-            return api_error('Zone name is required', code='bad_request')
+            return api_error('Shelf name is required', code='bad_request')
         if len(name) > 50:
-            return api_error('Zone name must be 50 characters or fewer', code='bad_request')
+            return api_error('Shelf name must be 50 characters or fewer', code='bad_request')
 
-        config, error = validate_zone_config(
+        config, error = validate_shelf_config(
             data.get('mode'),
             game_uuids=data.get('game_uuids'),
             filter_type=data.get('filter_type'),
@@ -163,7 +163,7 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
         db.session.commit()
 
         log_system_event(
-            f"Created custom discovery zone '{name}'",
+            f"Created custom discovery shelf '{name}'",
             event_type='admin_action',
             event_level='information',
             audit_user=current_user.id,
@@ -176,15 +176,15 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
                 'identifier': section.identifier,
                 'is_visible': section.is_visible,
                 'section_type': section.section_type,
-                'description': describe_zone_config(section.config),
-                'count': count_custom_zone_games(section.config),
+                'description': describe_shelf_config(section.config),
+                'count': count_custom_shelf_games(section.config),
             },
         }, status=201)
 
     except Exception as e:
         db.session.rollback()
         log_system_event(
-            f"Failed to create discovery zone: {str(e)}",
+            f"Failed to create discovery shelf: {str(e)}",
             event_type='admin_action',
             event_level='error',
             audit_user=current_user.id,
@@ -196,22 +196,22 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
 @login_required
 @admin_required
 def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
-    """Edit a custom discovery zone's name and/or selection."""
+    """Edit a custom discovery shelf's name and/or selection."""
     try:
         section = db.session.get(DiscoverySection, section_id)
         if not section:
-            return api_error('Zone not found', code='not_found')
+            return api_error('Shelf not found', code='not_found')
         if section.section_type != 'custom':
-            return api_error('Only custom zones can be edited', code='bad_request')
+            return api_error('Only custom shelves can be edited', code='bad_request')
 
         data = request.get_json() or {}
         name = str(data.get('name') or '').strip()
         if not name:
-            return api_error('Zone name is required', code='bad_request')
+            return api_error('Shelf name is required', code='bad_request')
         if len(name) > 50:
-            return api_error('Zone name must be 50 characters or fewer', code='bad_request')
+            return api_error('Shelf name must be 50 characters or fewer', code='bad_request')
 
-        config, error = validate_zone_config(
+        config, error = validate_shelf_config(
             data.get('mode'),
             game_uuids=data.get('game_uuids'),
             filter_type=data.get('filter_type'),
@@ -225,7 +225,7 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
         db.session.commit()
 
         log_system_event(
-            f"Updated custom discovery zone '{name}'",
+            f"Updated custom discovery shelf '{name}'",
             event_type='admin_action',
             event_level='information',
             audit_user=current_user.id,
@@ -238,15 +238,15 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
                 'identifier': section.identifier,
                 'is_visible': section.is_visible,
                 'section_type': section.section_type,
-                'description': describe_zone_config(section.config),
-                'count': count_custom_zone_games(section.config),
+                'description': describe_shelf_config(section.config),
+                'count': count_custom_shelf_games(section.config),
             },
         })
 
     except Exception as e:
         db.session.rollback()
         log_system_event(
-            f"Failed to update discovery zone {section_id}: {str(e)}",
+            f"Failed to update discovery shelf {section_id}: {str(e)}",
             event_type='admin_action',
             event_level='error',
             audit_user=current_user.id,
@@ -260,7 +260,7 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
 def update_discovery_section_schedule(section_id: int) -> tuple[Dict[str, Any], int]:
     """Set a shelf's storefront layout and its optional event window (W25-STORE-1).
 
-    Applies to **every** shelf, not just custom zones: running a seed shelf like
+    Applies to **every** shelf, not just custom shelves: running a seed shelf like
     "Upcoming" as a limited-time feature is the whole point of the schedule.
 
     Body: ``layout`` (shelf|hero|carousel), ``starts_at`` / ``ends_at``
@@ -395,31 +395,31 @@ def update_discovery_section_pin(section_id: int) -> tuple[Dict[str, Any], int]:
 @login_required
 @admin_required
 def delete_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
-    """Delete a custom discovery zone. Seed shelves cannot be deleted."""
+    """Delete a custom discovery shelf. Seed shelves cannot be deleted."""
     try:
         section = db.session.get(DiscoverySection, section_id)
         if not section:
-            return api_error('Zone not found', code='not_found')
+            return api_error('Shelf not found', code='not_found')
         if section.section_type != 'custom':
-            return api_error('Only custom zones can be deleted', code='bad_request')
+            return api_error('Only custom shelves can be deleted', code='bad_request')
 
         name = section.name
         db.session.delete(section)
         db.session.commit()
 
         log_system_event(
-            f"Deleted custom discovery zone '{name}'",
+            f"Deleted custom discovery shelf '{name}'",
             event_type='admin_action',
             event_level='information',
             audit_user=current_user.id,
         )
 
-        return api_ok({'message': f"Zone '{name}' deleted"})
+        return api_ok({'message': f"Shelf '{name}' deleted"})
 
     except Exception as e:
         db.session.rollback()
         log_system_event(
-            f"Failed to delete discovery zone {section_id}: {str(e)}",
+            f"Failed to delete discovery shelf {section_id}: {str(e)}",
             event_type='admin_action',
             event_level='error',
             audit_user=current_user.id,

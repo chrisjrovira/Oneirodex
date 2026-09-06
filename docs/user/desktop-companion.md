@@ -79,7 +79,8 @@ The browser cannot open Unraid/host paths. When the companion is Online:
 
 ## Limits (this polish pass)
 
-- **Unsigned only (product stance).** CI ships unsigned `oneirodex-desktop.exe`; Windows code-signing certs will never be pursued ([desktop-code-signing.md](../runbooks/desktop-code-signing.md)).
+- **Unsigned only (product stance).** CI ships unsigned installers for Windows (`.exe`), macOS (`.dmg`, universal) and Linux (`.deb` / `.AppImage`); code-signing certs will never be pursued, so expect a SmartScreen or Gatekeeper warning on first run ([desktop-code-signing.md](../runbooks/desktop-code-signing.md)).
+- **Installing games works best on the platform the game was built for.** The companion restores archived permission bits when it extracts, so a native macOS/Linux build launches; a Windows-authored archive carries no executable bit and holds `.exe` files, which are not launchable on macOS or Linux regardless.
 - Emulator systems that are companion-only still need the mapped core / external app — see [browser-play.md](browser-play.md).
 
 ## Troubleshooting

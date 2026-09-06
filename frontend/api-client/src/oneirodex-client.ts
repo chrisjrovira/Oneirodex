@@ -1,5 +1,6 @@
 import { createRequester, type OneirodexClientConfig } from './client.js'
 import { createBrowseApi } from './browse.js'
+import { createDeviceApi } from './device.js'
 import { createDownloadsApi } from './downloads.js'
 import { createPlaytimeApi } from './playtime.js'
 import { createTokensApi } from './tokens.js'
@@ -17,6 +18,7 @@ export function createOneirodexClient(config: OneirodexClientConfig) {
     browse: createBrowseApi(request),
     updates: createUpdatesApi(request),
     downloads: createDownloadsApi(request),
+    device: createDeviceApi(request),
   }
 }
 

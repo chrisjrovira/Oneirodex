@@ -549,7 +549,6 @@ test('normalizeTransforms ignores malformed steps and keeps order', async () => 
 
 test('DupeGlance Backfill kind hints confirms then posts and shows count', async () => {
   const user = userEvent.setup()
-  const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
   postJson.mockImplementation(async (url) => {
     if (String(url).includes('backfill_suggested_kind')) {
       return { ok: true, scanned: 12, updated: 4, skipped_no_sidecar: 7, skipped_empty_hint: 1 }
@@ -560,30 +559,29 @@ test('DupeGlance Backfill kind hints confirms then posts and shows count', async
   render(<DupeGlance onOpenPath={() => {}} />)
   await screen.findByRole('heading', { name: 'Dupe glance' })
   await user.click(screen.getByRole('button', { name: 'Backfill kind hints' }))
+  // The house dialog, not window.confirm (UID-042) — its named button commits.
+  await user.click(await screen.findByRole('button', { name: 'Fill in hints' }))
 
-  expect(confirmSpy).toHaveBeenCalled()
   await waitFor(() => {
     expect(postJson).toHaveBeenCalledWith('/api/unmatched_folders/backfill_suggested_kind', {})
   })
   expect(
     await screen.findByText(/Kind hints updated 4 of 12 scanned · 7 without proposal/i),
   ).toBeInTheDocument()
-  confirmSpy.mockRestore()
 })
 
 test('DupeGlance Backfill kind hints aborts when confirm is cancelled', async () => {
   const user = userEvent.setup()
-  const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
 
   render(<DupeGlance onOpenPath={() => {}} />)
   await screen.findByRole('heading', { name: 'Dupe glance' })
   await user.click(screen.getByRole('button', { name: 'Backfill kind hints' }))
+  await user.click(await screen.findByRole('button', { name: /^cancel$/i }))
 
   expect(postJson).not.toHaveBeenCalledWith(
     '/api/unmatched_folders/backfill_suggested_kind',
     expect.anything(),
   )
-  confirmSpy.mockRestore()
 })
 
 test('DupeGlance shows side-by-side compare for matched_game Duplicate rows', async () => {

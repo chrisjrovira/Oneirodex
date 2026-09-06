@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!uuid) return;
         if (picked.some((p) => p.uuid === uuid)) return;
         if (picked.length >= ZONE_MAX_GAMES) {
-            zoneModalError.textContent = `A zone holds at most ${ZONE_MAX_GAMES} games.`;
+            zoneModalError.textContent = `A shelf holds at most ${ZONE_MAX_GAMES} games.`;
             zoneModalError.classList.remove('d-none');
             return;
         }
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     addZoneBtn.addEventListener('click', function() {
         resetZoneModal();
-        zoneModalTitle.textContent = 'Add Discovery Zone';
+        zoneModalTitle.textContent = 'Add Discovery Shelf';
         zoneModal.show();
     });
 
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
             resetZoneModal();
             zoneIdInput.value = item.dataset.sectionId;
             zoneNameInput.value = item.dataset.sectionName || '';
-            zoneModalTitle.textContent = 'Edit Discovery Zone';
+            zoneModalTitle.textContent = 'Edit Discovery Shelf';
 
             if (config.mode === 'filter') {
                 setZoneMode('filter');
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const sectionId = this.dataset.sectionId;
             const item = this.closest('.section-item');
             const name = item ? item.dataset.sectionName : 'this zone';
-            if (!confirm(`Delete discovery zone "${name}"? This cannot be undone.`)) return;
+            if (!confirm(`Delete discovery shelf "${name}"? This cannot be undone.`)) return;
 
             fetch(`/admin/api/discovery_sections/${sectionId}`, {
                 method: 'DELETE',
@@ -322,15 +322,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
-                    $.notify('Zone deleted', 'success');
+                    $.notify('Shelf deleted', 'success');
                     if (item) item.remove();
                 } else {
-                    $.notify('Failed to delete zone: ' + (data.error || 'Unknown error'), 'error');
+                    $.notify('Failed to delete shelf: ' + (data.error || 'Unknown error'), 'error');
                 }
             })
             .catch((error) => {
                 console.error('Error:', error);
-                $.notify('Error deleting zone', 'error');
+                $.notify('Error deleting shelf', 'error');
             });
         });
     });
@@ -362,17 +362,17 @@ document.addEventListener('DOMContentLoaded', function() {
         .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
         .then(({ ok, data }) => {
             if (!ok || !data.success) {
-                zoneModalError.textContent = data.error || 'Failed to save zone';
+                zoneModalError.textContent = data.error || 'Failed to save shelf';
                 zoneModalError.classList.remove('d-none');
                 return;
             }
             zoneModal.hide();
-            $.notify(id ? 'Zone updated' : 'Zone created', 'success');
+            $.notify(id ? 'Shelf updated' : 'Shelf created', 'success');
             location.reload();
         })
         .catch((error) => {
             console.error('Error:', error);
-            zoneModalError.textContent = 'Unexpected error saving zone';
+            zoneModalError.textContent = 'Unexpected error saving shelf';
             zoneModalError.classList.remove('d-none');
         });
     });

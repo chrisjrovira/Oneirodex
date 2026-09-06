@@ -130,16 +130,28 @@ describe('download kickoff helper', () => {
   })
 })
 
+/**
+ * Heartbeat goes through @oneirodex/api-client, whose requester reads
+ * `headers.get('content-type')` and `text()` — so the fake has to be shaped
+ * like a real Response, not just `{ ok, json }`.
+ */
+function jsonResponse(body: unknown) {
+  return {
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    text: async () => JSON.stringify(body),
+    json: async () => body,
+  }
+}
+
 describe('client heartbeat helper', () => {
   it('posts heartbeat payload with bearer auth', async () => {
     const auth = createAuthStore()
     auth.setBaseUrl('https://example.com')
     auth.setToken('gt_prefix_secret')
 
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ commands: [] }),
-    })
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ commands: [] }))
     await postClientHeartbeat(auth, {
       deviceId: 'device-1',
       deviceName: 'Test Desktop',
@@ -147,15 +159,10 @@ describe('client heartbeat helper', () => {
       fetchImpl,
     })
 
-    expect(fetchImpl).toHaveBeenCalledWith(
-      'https://example.com/api/client/heartbeat',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: 'Bearer gt_prefix_secret',
-        }),
-      }),
-    )
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('https://example.com/api/client/heartbeat')
+    expect(init.method).toBe('POST')
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer gt_prefix_secret')
   })
 
   it('parses open_path commands that carry an absolute path', async () => {
@@ -163,9 +170,8 @@ describe('client heartbeat helper', () => {
     auth.setBaseUrl('https://example.com')
     auth.setToken('gt_prefix_secret')
 
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse({
         commands: [
           {
             id: 'cmd-1',
@@ -180,7 +186,7 @@ describe('client heartbeat helper', () => {
           },
         ],
       }),
-    })
+    )
     const commands = await postClientHeartbeat(auth, {
       deviceId: 'device-1',
       fetchImpl,

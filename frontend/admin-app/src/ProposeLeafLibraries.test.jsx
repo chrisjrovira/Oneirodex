@@ -39,7 +39,6 @@ describe('ProposeLeafLibraries', () => {
 
   test('propose → multi-select → confirm posts create then scan (never on propose)', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     const fetchMock = vi.fn(async (url, opts) => {
       const href = String(url)
@@ -117,6 +116,9 @@ describe('ProposeLeafLibraries', () => {
     const nesCheckbox = screen.getByRole('checkbox', { name: /select nes roms/i })
     await user.click(nesCheckbox)
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
+    // The house dialog, not window.confirm (UID-042): the named button in it
+    // is what actually commits, so the test has to press it.
+    await user.click(await screen.findByRole('button', { name: /^create library$/i }))
 
     await waitFor(() => {
       expect(
@@ -129,7 +131,6 @@ describe('ProposeLeafLibraries', () => {
       ).toBe(true)
     })
     expect(await screen.findByText(/1 created/i)).toBeInTheDocument()
-    expect(window.confirm).toHaveBeenCalled()
   })
 
   test('soft-degrades when propose API returns 404', async () => {
@@ -213,7 +214,6 @@ describe('ProposeLeafLibraries', () => {
 
   test('confirm cancelled does not create', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     const fetchMock = vi.fn(async (url) => {
       if (String(url).includes(PROPOSE_LEAF_URL)) {
@@ -239,6 +239,7 @@ describe('ProposeLeafLibraries', () => {
     await screen.findByText('NES ROMs')
     await user.click(screen.getByRole('checkbox', { name: /select nes roms/i }))
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
+    await user.click(await screen.findByRole('button', { name: /^cancel$/i }))
 
     expect(
       fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),

@@ -1,10 +1,10 @@
-"""Unit tests for custom Discover zone helpers (no database required)."""
+"""Unit tests for custom Discover shelf helpers (no database required)."""
 
-from oneirodex.utils.discovery_zones import (
+from oneirodex.utils.discovery_shelves import (
     FILTER_TYPES,
     MAX_MANUAL_GAMES,
     normalize_manual_uuids,
-    validate_zone_config,
+    validate_shelf_config,
 )
 
 
@@ -35,8 +35,8 @@ def test_normalize_manual_uuids_unknown_type_returns_empty():
     assert normalize_manual_uuids(42) == []
 
 
-def test_validate_zone_config_filter_rejects_invalid_filter_type():
-    config, error = validate_zone_config(
+def test_validate_shelf_config_filter_rejects_invalid_filter_type():
+    config, error = validate_shelf_config(
         "filter",
         filter_type="invalid",
         filter_value="something",
@@ -45,8 +45,8 @@ def test_validate_zone_config_filter_rejects_invalid_filter_type():
     assert error == f"filter_type must be one of: {', '.join(FILTER_TYPES)}"
 
 
-def test_validate_zone_config_filter_rejects_empty_filter_value():
-    config, error = validate_zone_config(
+def test_validate_shelf_config_filter_rejects_empty_filter_value():
+    config, error = validate_shelf_config(
         "filter",
         filter_type="library",
         filter_value="   ",
@@ -55,8 +55,8 @@ def test_validate_zone_config_filter_rejects_empty_filter_value():
     assert error == "filter_value is required"
 
 
-def test_validate_zone_config_filter_rejects_unknown_platform_before_db():
-    config, error = validate_zone_config(
+def test_validate_shelf_config_filter_rejects_unknown_platform_before_db():
+    config, error = validate_shelf_config(
         "filter",
         filter_type="platform",
         filter_value="NOT_A_REAL_PLATFORM",
@@ -65,8 +65,8 @@ def test_validate_zone_config_filter_rejects_unknown_platform_before_db():
     assert error == 'Unknown platform "NOT_A_REAL_PLATFORM"'
 
 
-def test_validate_zone_config_filter_accepts_valid_platform_without_db():
-    config, error = validate_zone_config(
+def test_validate_shelf_config_filter_accepts_valid_platform_without_db():
+    config, error = validate_shelf_config(
         "filter",
         filter_type="platform",
         filter_value="PCWIN",
@@ -79,7 +79,7 @@ def test_validate_zone_config_filter_accepts_valid_platform_without_db():
     }
 
 
-def test_validate_zone_config_rejects_invalid_mode():
-    config, error = validate_zone_config("curated")
+def test_validate_shelf_config_rejects_invalid_mode():
+    config, error = validate_shelf_config("curated")
     assert config is None
     assert error == 'mode must be "manual" or "filter"'

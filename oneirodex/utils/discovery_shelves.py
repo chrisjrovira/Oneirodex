@@ -1,10 +1,13 @@
 """Shared helpers for custom (admin-curated) Discover shelves.
 
-Naming, because there are now two things called a zone (see UID-059): a "custom
-zone" **here** is one shelf, built from a manual pick list or a simple filter. A
-zone in `discover_zones.py` — one letter apart — is a *page* of shelves, and a
-custom shelf from this module is one of the things such a page can contain. This
-module took the word first and has admin UI copy behind it, so it keeps it.
+Named for what it makes: **one shelf**, built from a manual pick list or a
+simple filter. It was `discovery_zones.py` until 2026-09-06 and called the same
+thing a "custom zone", one letter away from `discover_zones.py`, where a zone is
+a *page* of shelves that a custom shelf from here can appear on (UID-059). Two
+defensible names, unusable together; this module gave the word up because the
+other meaning is the one a member sees in the product.
+
+`section_type='custom'` is unchanged — the rename is names, not stored data.
 
 A DiscoverySection with section_type='custom' stores its game selection in
 its JSON `config` column, either a manual UUID pick list or a simple
@@ -51,14 +54,14 @@ def normalize_manual_uuids(raw: Any) -> list[str]:
     return cleaned
 
 
-def validate_zone_config(
+def validate_shelf_config(
     mode: str,
     *,
     game_uuids: Any = None,
     filter_type: Optional[str] = None,
     filter_value: Optional[str] = None,
 ) -> tuple[Optional[dict], Optional[str]]:
-    """Validate + normalize a custom zone config payload.
+    """Validate + normalize a custom shelf config payload.
 
     Returns (config, error). config is None when error is set.
     """
@@ -103,8 +106,8 @@ def validate_zone_config(
     return None, 'mode must be "manual" or "filter"'
 
 
-def _filter_zone_query(config: dict):
-    """Base (unfiltered by ACL, unlimited) select for a filter-mode zone."""
+def _filter_shelf_query(config: dict):
+    """Base (unfiltered by ACL, unlimited) select for a filter-mode shelf."""
     filter_type = config.get('filter_type')
     filter_value = config.get('filter_value')
     query = select(Game).order_by(Game.date_created.desc())
@@ -123,8 +126,8 @@ def _filter_zone_query(config: dict):
     return None
 
 
-def resolve_custom_zone_games(config: Optional[dict], user, limit: int = 8) -> list:
-    """Resolve a custom zone's `config` into member-visible `Game` rows (ACL-applied)."""
+def resolve_custom_shelf_games(config: Optional[dict], user, limit: int = 8) -> list:
+    """Resolve a custom shelf's `config` into member-visible `Game` rows (ACL-applied)."""
     if not config:
         return []
     mode = config.get('mode')
@@ -141,7 +144,7 @@ def resolve_custom_zone_games(config: Optional[dict], user, limit: int = 8) -> l
         return ordered[:limit] if limit else ordered
 
     if mode == 'filter':
-        query = _filter_zone_query(config)
+        query = _filter_shelf_query(config)
         if query is None:
             return []
         query = apply_game_access_filters(query, user)
@@ -152,7 +155,7 @@ def resolve_custom_zone_games(config: Optional[dict], user, limit: int = 8) -> l
     return []
 
 
-def count_custom_zone_games(config: Optional[dict]) -> int:
+def count_custom_shelf_games(config: Optional[dict]) -> int:
     """Raw (non-ACL) item count for the admin management list."""
     if not config:
         return 0
@@ -167,7 +170,7 @@ def count_custom_zone_games(config: Optional[dict]) -> int:
         ).scalar() or 0
 
     if mode == 'filter':
-        query = _filter_zone_query(config)
+        query = _filter_shelf_query(config)
         if query is None:
             return 0
         return db.session.execute(
@@ -177,10 +180,10 @@ def count_custom_zone_games(config: Optional[dict]) -> int:
     return 0
 
 
-def describe_zone_config(config: Optional[dict]) -> str:
-    """Human-readable one-liner for the admin zone list."""
+def describe_shelf_config(config: Optional[dict]) -> str:
+    """Human-readable one-liner for the admin shelf list."""
     if not config:
-        return 'Custom zone'
+        return 'Custom shelf'
     mode = config.get('mode')
     if mode == 'manual':
         count = len(config.get('game_uuids') or [])
@@ -189,4 +192,4 @@ def describe_zone_config(config: Optional[dict]) -> str:
         filter_type = config.get('filter_type', '?')
         filter_value = config.get('filter_value', '?')
         return f"Filter \u2014 {filter_type}: {filter_value}"
-    return 'Custom zone'
+    return 'Custom shelf'

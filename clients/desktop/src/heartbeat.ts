@@ -1,9 +1,30 @@
-import { formatBearerAuthorization } from '@oneirodex/api-client'
+import {
+  createOneirodexClient,
+  type DeviceKind,
+  type RawCompanionCommand,
+} from '@oneirodex/api-client'
 
 import type { AuthStore } from './auth.js'
 import type { LifecycleAction } from './lifecycle.js'
+import { CLIENT_VERSION } from './version.js'
 
 const DEVICE_ID_STORAGE_KEY = 'oneirodex-device-id'
+
+export type { DeviceKind }
+
+/**
+ * Presence + command transport, typed through `@oneirodex/api-client`.
+ *
+ * Built per call rather than once, because the base URL can change mid-session
+ * (the Server URL field is live) and the token can be rotated from the keyring.
+ */
+function deviceApi(auth: AuthStore, fetchImpl?: typeof fetch) {
+  return createOneirodexClient({
+    baseUrl: auth.getBaseUrl(),
+    getToken: () => auth.getToken(),
+    fetchImpl,
+  }).device
+}
 
 function getOrCreateDeviceId(): string {
   if (typeof localStorage === 'undefined') {
@@ -24,6 +45,12 @@ export interface HeartbeatOptions {
   deviceName?: string
   clientVersion?: string
   deviceId?: string
+  /**
+   * Seat kind reported to the server. The server defaults an omitted kind to
+   * `companion`, so a thin seat that leaves this unset is indistinguishable
+   * from a companion in the Ops device list — always pass it explicitly.
+   */
+  deviceKind?: DeviceKind
   fetchImpl?: typeof fetch
   /** Consecutive failed heartbeats before onUnreachable (default 2). */
   unreachableAfterFailures?: number
@@ -75,24 +102,20 @@ async function postCommandResult(
   auth: AuthStore,
   endpoint: 'ack' | 'nack',
   ids: string[],
-  fetchImpl: typeof fetch,
+  fetchImpl?: typeof fetch,
 ): Promise<void> {
   if (ids.length === 0) {
     return
   }
-  const baseUrl = auth.getBaseUrl()
-  const token = auth.getToken()
-  if (!baseUrl || !token) {
+  if (!auth.getBaseUrl() || !auth.getToken()) {
     return
   }
-  await fetchImpl(`${baseUrl.replace(/\/$/, '')}/api/client/commands/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      Authorization: formatBearerAuthorization(token),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ids }),
-  })
+  const device = deviceApi(auth, fetchImpl)
+  if (endpoint === 'ack') {
+    await device.ackCommands(ids)
+  } else {
+    await device.nackCommands(ids)
+  }
 }
 
 export async function postClientHeartbeat(
@@ -105,26 +128,14 @@ export async function postClientHeartbeat(
     return []
   }
 
-  const fetchImpl = options.fetchImpl ?? fetch
-  const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/api/client/heartbeat`, {
-    method: 'POST',
-    headers: {
-      Authorization: formatBearerAuthorization(token),
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      device_id: options.deviceId ?? getOrCreateDeviceId(),
-      device_name: options.deviceName ?? 'Oneirodex Desktop',
-      client_version: options.clientVersion ?? '0.1.0',
-    }),
+  const data = await deviceApi(auth, options.fetchImpl).heartbeat({
+    device_id: options.deviceId ?? getOrCreateDeviceId(),
+    device_kind: options.deviceKind ?? 'companion',
+    device_name: options.deviceName ?? 'Oneirodex Desktop',
+    client_version: options.clientVersion ?? CLIENT_VERSION,
   })
 
-  if (!response.ok) {
-    throw new Error(`Heartbeat failed (${response.status})`)
-  }
-
-  const data = (await response.json().catch(() => ({}))) as { commands?: unknown }
-  const raw = Array.isArray(data.commands) ? data.commands : []
+  const raw: RawCompanionCommand[] = Array.isArray(data?.commands) ? data.commands : []
   const parsed: CompanionCommand[] = []
   for (const row of raw) {
     if (!row || typeof row !== 'object') {
@@ -194,7 +205,7 @@ export function startClientHeartbeat(
       return
     }
     inFlight = true
-    const fetchImpl = options.fetchImpl ?? fetch
+    const fetchImpl = options.fetchImpl
     void postClientHeartbeat(auth, options)
       .then(async (commands) => {
         failureStreak = 0

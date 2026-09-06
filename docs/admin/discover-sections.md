@@ -7,7 +7,8 @@ Admin → **Discovery Sections Management** (`/admin/discovery_sections`) contro
 ## Built-in vs custom
 
 - **Built-in shelves** (Continue Playing, New Arrivals, Most Favorited, libraries, …) can be **reordered** and **hidden** (visibility toggle) but not deleted.
-- **Custom zones** (`section_type = 'custom'`) are admin-authored shelves, shown with a **Custom** badge. Add one with **+ Add Zone**; edit/delete with the row's pencil/trash icons.
+- **Custom shelves** (`section_type = 'custom'`) are admin-authored, shown with a **Custom** badge. Add one with **+ Add shelf**; edit/delete with the row's pencil/trash icons.
+  - They were called *custom zones* until 2026-09-06. A **zone** now means only one thing — a page of shelves under Discover (`/discover/zone/<slug>`) — and a custom shelf is one of the things a zone can contain. The stored `section_type` is unchanged (UID-059).
 
 ## Latest Games vs New Library Games
 
@@ -366,10 +367,10 @@ the visibility toggle.
 
 ## API
 
-- `POST /admin/api/discovery_sections` — create a custom zone (`section_type=custom`, `mode`, `game_uuids` or `filter_type`/`filter_value`).
-- `PUT /admin/api/discovery_sections/<id>` — rename or reconfigure (mode/filter/list) an existing custom zone.
+- `POST /admin/api/discovery_sections` — create a custom shelf (`section_type=custom`, `mode`, `game_uuids` or `filter_type`/`filter_value`).
+- `PUT /admin/api/discovery_sections/<id>` — rename or reconfigure (mode/filter/list) an existing custom shelf.
 - `PUT /admin/api/discovery_sections/<id>/schedule` — set `starts_at` / `ends_at` (UTC) and/or `layout`.
-- `DELETE /admin/api/discovery_sections/<id>` — remove a custom zone (built-in sections reject delete).
+- `DELETE /admin/api/discovery_sections/<id>` — remove a custom shelf (built-in sections reject delete).
 - Reorder / visibility toggle use the existing discovery-sections endpoints (drag handle, switch).
 - `GET /api/discover/sections` — what members actually receive; already ACL-filtered and schedule-filtered.
 

@@ -85,7 +85,7 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # tighter at rest. od-density.css stopped re-asserting `.od-btn` metrics, which
 # is what made UID-050 possible. A preset still carrying the old copies shows
 # the fused bars and the old fixed-height buttons, so Reset Themes is required.
-GENERATOR_VERSION = 29
+GENERATOR_VERSION = 30
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

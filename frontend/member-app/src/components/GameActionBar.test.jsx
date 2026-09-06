@@ -180,3 +180,42 @@ test('Play via Moonlight copies host hint when remote play configured', async ()
   expect(await screen.findByRole('status')).toHaveTextContent(/Copied Moonlight host/i)
   vi.unstubAllGlobals()
 })
+
+test('a thin seat explains instead of offering lifecycle buttons it cannot finish', () => {
+  render(
+    <GameActionBar
+      gameUuid="abc"
+      gameName="Demo"
+      lifecycleState="downloaded"
+      clientConnected
+      assistPack={null}
+      remotePlay={null}
+      thinSeat
+    />,
+  )
+
+  for (const label of [/Download/i, /Install/i, /^Update$/i, /Uninstall/i]) {
+    expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument()
+  }
+  expect(screen.getByRole('status')).toHaveTextContent(/desktop companion/i)
+})
+
+test('a thin seat keeps Moonlight — streaming is not a local install', () => {
+  render(
+    <GameActionBar
+      gameUuid="abc"
+      gameName="Demo"
+      assistPack={null}
+      remotePlay={{
+        enabled: true,
+        configured: true,
+        moonlight_host: '192.168.1.50',
+        moonlight_port: 47989,
+        copy_hint: 'GPU PC — 192.168.1.50:47989 — App: Steam',
+      }}
+      thinSeat
+    />,
+  )
+
+  expect(screen.getByRole('button', { name: /Play via Moonlight/i })).toBeInTheDocument()
+})

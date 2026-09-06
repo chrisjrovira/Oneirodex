@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { confirmAction } from '../../shared/confirmDialog'
 import { deleteJson } from './adminApi'
 import { DataTable } from './DataTable'
 import './OpenPathModal.css'
@@ -45,7 +46,12 @@ export function OpsLogModal({ open, events = null, loading = false, error = null
   async function handleClear() {
     const count = Array.isArray(events) ? events.length : null
     const scope = count === null ? 'all system events' : count === 1 ? '1 system event' : `all ${count} system events`
-    const ok = window.confirm(`Delete ${scope}? This can't be undone.`)
+    const ok = await confirmAction({
+      title: `Delete ${scope}?`,
+      body: "This can't be undone.",
+      confirmLabel: 'Delete events',
+      cancelLabel: 'Keep them',
+    })
     if (!ok) return
     setClearing(true)
     setClearError(null)

@@ -136,8 +136,6 @@ describe('ScansPage queued jobs', () => {
 
   test('Refresh all while busy opens conflict modal and posts queue_policy', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-
     const fetchMock = vi.fn(async (url, opts) => {
       if (String(url).includes('/api/scan_jobs_status')) {
         return {
@@ -165,6 +163,8 @@ describe('ScansPage queued jobs', () => {
 
     await screen.findByText(/Scanning PCWIN/i)
     await user.click(screen.getByRole('button', { name: /refresh all libraries/i }))
+    // The house dialog, not window.confirm (UID-042) — its named button commits.
+    await user.click(await screen.findByRole('button', { name: /^refresh all$/i }))
     expect(await screen.findByRole('heading', { name: /scan in progress/i })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /queue this scan/i }))
@@ -188,8 +188,6 @@ describe('LibrariesPage refresh all', () => {
 
   test('idle Refresh all posts default queue_policy fields', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-
     const fetchMock = vi.fn(async (url, opts) => {
       if (String(url).includes('/api/get_libraries')) {
         return {
@@ -220,6 +218,8 @@ describe('LibrariesPage refresh all', () => {
 
     expect(await screen.findByText('PCWIN')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /refresh all libraries/i }))
+    // The house dialog, not window.confirm (UID-042) — its named button commits.
+    await user.click(await screen.findByRole('button', { name: /^refresh all$/i }))
     await waitFor(() => {
       const refreshCall = fetchMock.mock.calls.find((c) =>
         String(c[0]).includes('/api/admin/libraries/refresh_all'),

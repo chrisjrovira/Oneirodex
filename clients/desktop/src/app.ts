@@ -307,7 +307,7 @@ async function handleConnect(): Promise<void> {
   setConnectionMode('online')
   heartbeatScheduler?.stop()
   heartbeatScheduler = startClientHeartbeat(auth, {
-    clientVersion: '0.1.0',
+    deviceKind: 'companion',
     unreachableAfterFailures: 2,
     onReachable: () => {
       if (connectionMode !== 'online') {

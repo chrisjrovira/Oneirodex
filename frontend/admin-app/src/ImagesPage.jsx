@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { confirmAction } from '../../shared/confirmDialog'
 import { PageStatus } from './PageStatus'
 import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
@@ -242,9 +243,13 @@ export function ImagesPage({ embedded = false }) {
   }
 
   const removeOne = async (imageId) => {
-    if (!window.confirm(
-      'Remove this image from the queue? The file on disk stays where it is.',
-    )) return
+    const ok = await confirmAction({
+      title: 'Remove this image from the queue?',
+      body: 'The file on disk stays where it is.',
+      confirmLabel: 'Remove from queue',
+      cancelLabel: 'Keep it',
+    })
+    if (!ok) return
     setQueueBusy(`del-${imageId}`)
     try {
       await deleteJson(`/admin/api/delete_image/${imageId}`)

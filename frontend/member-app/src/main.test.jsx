@@ -15,9 +15,9 @@ test('parses Library template data attributes', () => {
   root.dataset.libraryCount = '2'
   root.dataset.gamesCount = '12'
   root.dataset.enableDeleteOnDisk = 'true'
-  root.dataset.currentFilters = '{"genre":"Action"}'
   root.dataset.scanHasRun = '1'
   root.dataset.unmatchedCount = '7'
+  root.dataset.currentFilters = '{"genre":"Action"}'
 
   expect(parseRootConfig(root)).toEqual({
     perPage: 50,
@@ -27,9 +27,9 @@ test('parses Library template data attributes', () => {
     showPlayStatus: false,
     libraryCount: 2,
     gamesCount: 12,
+    enableDeleteOnDisk: true,
     scanHasRun: true,
     unmatchedCount: 7,
-    enableDeleteOnDisk: true,
     locale: 'en',
     currentFilters: { genre: 'Action' },
   })
