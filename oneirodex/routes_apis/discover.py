@@ -5,7 +5,11 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
-from oneirodex.routes_discover import build_discover_feed, build_discover_row
+from oneirodex.routes_discover import (
+    build_discover_feed,
+    build_discover_row,
+    build_discover_zone,
+)
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.discover_hubs import build_genre_hub
 from oneirodex.utils.discover_feed import MAX_MEMBER_PINS
@@ -58,6 +62,25 @@ def discover_row(identifier: str):
             'That Discover row is not available.',
             code='not_found',
             detail=identifier,
+        )
+    return api_ok(payload)
+
+
+# There is deliberately no `/discover/zones` index route. The strip ships with
+# the feed (`/discover/sections`), because it is derived from the shelves that
+# feed actually rendered — a separate endpoint cost a second full assembly and
+# could disagree with the page, which it did: it advertised a zone whose own
+# route then 404'd.
+@apis_bp.route('/discover/zones/<slug>', methods=['GET'])
+@login_required
+def discover_zone(slug: str):
+    """One zone: the feed narrowed to the rows that belong to it."""
+    payload = build_discover_zone(current_user, slug)
+    if payload is None:
+        return api_error(
+            'That Discover zone is not available.',
+            code='not_found',
+            detail=slug,
         )
     return api_ok(payload)
 

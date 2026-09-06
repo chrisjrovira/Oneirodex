@@ -42,6 +42,12 @@
   --od-control-h: 2.25rem;
   --od-control-pad-x: var(--od-space-4);
 
+  /* Buttons size themselves from their own type (see od-primitives.css); this
+     is only the floor. Lower than --od-control-h on purpose: that token has to
+     keep inputs tall enough to type in, and a button was only ever that tall to
+     match them. 1.85rem is ~30px — above the 24px WCAG 2.5.8 target minimum. */
+  --od-btn-h-base: 1.85rem;
+
   /* Lists and tables */
   --od-row-pad-y: var(--od-space-4);
   --od-row-pad-x: var(--od-space-5);
@@ -84,6 +90,8 @@
 
   --od-control-h: 1.85rem;
   --od-control-pad-x: var(--od-space-3);
+  /* ~26px. Still clear of the 24px target minimum. */
+  --od-btn-h-base: 1.6rem;
 
   --od-row-pad-y: var(--od-space-2);
   --od-row-pad-x: var(--od-space-3);
@@ -113,6 +121,7 @@
 @media (max-width: 900px) {
   [data-density='compact'] {
     --od-control-h: 2.4rem;
+    --od-btn-h-base: 2.4rem;
     --od-row-pad-y: var(--od-space-3);
     --od-rail-item-h: 2.4rem;
   }
@@ -126,16 +135,19 @@
    needing to know densities exist.
    -------------------------------------------------------------------------- */
 
-/* `:not(--sm)` is load-bearing. This file loads after od-primitives.css and
-   the selectors tie on specificity, so an unqualified `.od-btn` here silently
-   beat `.od-btn--sm` — the small variant lowers `min-height` on purpose and
-   this put it straight back. Every "small" button in the product was rendering
-   at full control height; the modifier only ever changed the padding and the
-   type size, which reads as "the same button, squeezed" — precisely the
-   failure the `--sm` comment in od-primitives.css says it exists to avoid.
-   The small variant is already density-aware (it derives from
-   `--od-control-h`), so excluding it costs nothing here. */
-.od-btn:not(.od-btn--sm),
+/* `.od-btn` is deliberately absent here now.
+ *
+ * This block used to re-assert `min-height` / `padding-inline` on `.od-btn`,
+ * which tied on specificity with `.od-btn--sm` in od-primitives.css and — being
+ * the later file — silently beat it. That was UID-050: every small button in
+ * the product rendered at full control height, and the `:not(.od-btn--sm)`
+ * guard bolted on to fix it left the same trap armed for the next modifier.
+ *
+ * Buttons are density-aware through `--od-btn-h-base` above instead. A token
+ * set on the density container is inherited, not cascaded against, so a
+ * modifier can lower it by setting `--od-btn-h-min` on the element and there is
+ * no specificity contest to lose. Bootstrap's `.btn` keeps the old mechanism
+ * because it does not read our tokens. */
 .btn:not(.btn-sm) {
   min-height: var(--od-control-h);
   padding-inline: var(--od-control-pad-x);

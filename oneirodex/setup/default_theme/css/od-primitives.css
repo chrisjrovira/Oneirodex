@@ -40,16 +40,41 @@
  * the product already uses, and keeps its own variants; it simply stops being a
  * different size and a different hover from the bar it sits under.
  *
- * `--od-control-h` is density-aware, so this also puts every `.od-btn` on the
- * compact/comfortable/TV scales it was previously ignoring.
- */
+ * Density-awareness now comes from `--od-btn-h-base` rather than
+ * `--od-control-h` — see the box note below.
+ *
+ * The box is font-relative, so a button tracks the type it renders.
+ *
+ * It used to be `min-height: var(--od-control-h)` with `rem` padding: a fixed
+ * box that the text sat inside. Raise the type — a larger theme font, a browser
+ * zoom of text only, a `--od-font-md` button — and the padding did not move, so
+ * the button went from roomy to cramped to clipped without anything in the CSS
+ * changing. `em` padding and a `1lh` content floor make that impossible: the
+ * text and the space around it are the same measurement.
+ *
+ * `--od-btn-h-min` is the density floor, and it is deliberately lower than
+ * `--od-control-h` — that token still sizes inputs and selects, which have to
+ * stay tall enough to type in, but a button has no such requirement and was
+ * only ever that tall to match them. `max()` means the floor governs at normal
+ * type and the content governs once the type outgrows it.
+ *
+ * The default floor clears the 24px WCAG 2.5.8 target minimum at every density
+ * (30px comfortable, 26px compact, 38px on the small-screen touch override).
+ * `--sm` sits below it, as it already did before this change — it is used for
+ * secondary actions inside dense rows, where the spacing exception applies. */
 .od-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--od-space-2);
-  min-height: var(--od-control-h);
-  padding: 0 var(--od-space-4);
+  --od-btn-h-min: var(--od-btn-h-base, 1.85rem);
+  --od-btn-pad-y: 0.32em;
+  --od-btn-pad-x: 0.7em;
+  min-height: max(
+    var(--od-btn-h-min),
+    calc(1lh + 2 * var(--od-btn-pad-y) + 2px)
+  );
+  padding: var(--od-btn-pad-y) var(--od-btn-pad-x);
   border: 1px solid var(--od-border);
   border-radius: var(--od-radius-sm);
   background: transparent;
@@ -77,8 +102,9 @@
    to be the loudest thing on the screen — the setup wizard's next step and a
    full-width empty-state CTA. Opt-in, so nothing inherits it by accident. */
 .od-btn--lg {
+  --od-btn-pad-y: 0.55em;
+  --od-btn-pad-x: 1.1em;
   min-height: 0;
-  padding: var(--od-space-3) var(--od-space-5);
   font-size: var(--od-font-md);
 }
 
@@ -160,12 +186,16 @@
   border-color: transparent;
 }
 
-/* Now that the base carries `min-height`, a small button has to lower it —
-   otherwise `--sm` trimmed the horizontal padding and left the control the
-   same height, which read as "the same button, squeezed". */
+/* Small is a smaller button, not the same button squeezed — it lowers the floor
+   as well as the type. Trimming only the horizontal padding, which is what this
+   modifier used to do, left the control at full height. Both are now expressed against the button's own scale, so
+   the UID-050 cascade fight with od-density.css cannot recur: that file sets
+   tokens rather than re-asserting `min-height`, and a token set here wins by
+   being closer to the element. */
 .od-btn--sm {
-  min-height: calc(var(--od-control-h) - var(--od-space-3));
-  padding: 0 var(--od-space-3);
+  --od-btn-h-min: calc(var(--od-btn-h-base, 1.85rem) - 0.25rem);
+  --od-btn-pad-y: 0.26em;
+  --od-btn-pad-x: 0.55em;
   font-size: var(--od-font-xs);
 }
 

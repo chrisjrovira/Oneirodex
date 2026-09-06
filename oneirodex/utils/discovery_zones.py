@@ -1,4 +1,10 @@
-"""Shared helpers for custom (admin-curated) Discover zones.
+"""Shared helpers for custom (admin-curated) Discover shelves.
+
+Naming, because there are now two things called a zone (see UID-059): a "custom
+zone" **here** is one shelf, built from a manual pick list or a simple filter. A
+zone in `discover_zones.py` — one letter apart — is a *page* of shelves, and a
+custom shelf from this module is one of the things such a page can contain. This
+module took the word first and has admin UI copy behind it, so it keeps it.
 
 A DiscoverySection with section_type='custom' stores its game selection in
 its JSON `config` column, either a manual UUID pick list or a simple

@@ -80,6 +80,20 @@ class RowSpec:
     #: Human sentence for the row subtitle. Required for anything ranked, so an
     #: algorithmic row can always say why it is there.
     reason: Optional[str] = None
+    #: Drop the row entirely when it has nothing, rather than rendering a
+    #: heading over empty space.
+    #:
+    #: Default True, because a row the *system* generates has no claim on the
+    #: page beyond the titles it found: "Friends playing" with no friends and
+    #: "Continue playing" with no progress are not informative, they are twelve
+    #: headings pretending to be a feed. Only four identifiers used to get this
+    #: treatment, hard-coded as ``STOREFRONT_SHELF_IDS`` in routes_discover.py.
+    #:
+    #: A shelf a person curated sets this False — see ``resolve_section``. An
+    #: admin who builds a zone and watches it vanish has been overruled by the
+    #: feed, and the fix for an empty curated zone is to tell them it is empty,
+    #: not to hide it.
+    hide_when_empty: bool = True
 
 
 @dataclass(frozen=True)
@@ -716,8 +730,15 @@ def resolve_section(section: DiscoverySection) -> Optional[ResolvedRow]:
         return ResolvedRow(spec=spec, section=section, selector=selector)
 
     if section.section_type == 'custom':
+        # A person built this one. It stays on the page even when empty, so the
+        # admin who curated it can see that it is empty.
         return ResolvedRow(
-            spec=RowSpec(identifier, family='editorial', priority=0.6),
+            spec=RowSpec(
+                identifier,
+                family='editorial',
+                priority=0.6,
+                hide_when_empty=False,
+            ),
             section=section,
             selector=_custom_zone_selector(section),
             library_filter=_library_filter_for(section),

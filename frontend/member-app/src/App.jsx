@@ -57,6 +57,9 @@ const CollectionsPage = lazy(() =>
 const DiscoverHubPage = lazy(() =>
   import('./pages/DiscoverHubPage').then((m) => ({ default: m.DiscoverHubPage })),
 )
+const DiscoverZonePage = lazy(() =>
+  import('./pages/DiscoverZonePage').then((m) => ({ default: m.DiscoverZonePage })),
+)
 const DiscoverRowPage = lazy(() =>
   import('./pages/DiscoverRowPage').then((m) => ({ default: m.DiscoverRowPage })),
 )
@@ -313,6 +316,20 @@ export function App({ shellConfig = {} }) {
           element={
             <LazyPage>
               <DiscoverHubPage
+                isAdmin={Boolean(shellConfig.isAdmin)}
+                shellConfig={shellConfig}
+              />
+            </LazyPage>
+          }
+        />
+        {/* Before `/discover/:identifier`. React Router picks the more
+            specific static segment either way, but the order also documents
+            the constraint: a row may never be called `zone`. */}
+        <Route
+          path="/discover/zone/:slug"
+          element={
+            <LazyPage>
+              <DiscoverZonePage
                 isAdmin={Boolean(shellConfig.isAdmin)}
                 shellConfig={shellConfig}
               />
