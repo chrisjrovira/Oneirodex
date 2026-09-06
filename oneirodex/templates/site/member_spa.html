@@ -32,6 +32,8 @@
   data-default-sort-order="{{ user_default_sort_order if user_default_sort_order is defined else (prefs.default_sort_order if prefs and prefs.default_sort_order else 'asc') }}"
   data-library-count="{{ library_count if library_count is defined else 0 }}"
   data-games-count="{{ games_count if games_count is defined else 0 }}"
+  data-scan-has-run="{{ '1' if scan_has_run else '0' }}"
+  data-unmatched-count="{{ unmatched_count if unmatched_count is defined else 0 }}"
   data-enable-delete-on-disk="{{ 'true' if enable_delete_game_on_disk else 'false' }}"
   data-current-filters="{{ (filters if filters is defined else {})|tojson|e }}"
 ></div>

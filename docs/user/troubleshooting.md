@@ -58,6 +58,21 @@ themes. The picker now walks `group['items']`.
 There is no workaround on a build from before this fix — the fix is a server
 update.
 
+## The catalog is empty
+
+The empty catalog now tells you *why* it is empty, and the three messages mean
+different things:
+
+| What it says | What it means | What to do |
+|---|---|---|
+| "No libraries yet" | Nothing has been added to scan | Admin → Libraries → add one |
+| "Shelves are up but empty. Nothing's turned up in a scan yet." | A library exists, but no scan has finished | Run a scan (Admin → Libraries → Scan) |
+| "A scan finished and matched nothing." | A scan **ran** and placed nothing — usually the scan path points above or below the game folders | Check the library's scan path; admins also get a count of folders waiting in **Unmatched** |
+
+The third one used to read like the second, so a wrong scan path looked the
+same as not having scanned yet. If you see it, the scan is working and the
+paths are the thing to look at.
+
 ## Downloads
 
 | Symptom | Likely cause | What to try |

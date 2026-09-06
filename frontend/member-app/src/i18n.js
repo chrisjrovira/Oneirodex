@@ -5,6 +5,12 @@ const STRINGS = {
     'No libraries are available.': "Nothing here yet — an admin hasn't added a library.",
     'No games found in your libraries.':
       "Shelves are up but empty. Nothing's turned up in a scan yet.",
+    // A scan *did* finish and matched nothing. Plain voice, not playful: this
+    // is a thing that went wrong and the operator has to act on it.
+    'A scan finished without matching anything.':
+      'A scan finished and matched nothing. Check the scan paths point at game folders.',
+    'A scan finished without matching anything. {count} folders are waiting in Unmatched.':
+      'A scan finished and matched nothing. {count} folders are waiting in Unmatched.',
     'No games match the current filters.':
       'Nothing made it through those filters. Loosen one and try again.',
     'Unable to load games.': "Couldn't load your catalog. Give it another go.",
@@ -67,6 +73,10 @@ const STRINGS = {
       'Todavía no hay nada aquí: un administrador aún no ha agregado una biblioteca.',
     'No games found in your libraries.':
       'Los estantes están listos, pero vacíos. Ningún escaneo ha encontrado nada todavía.',
+    'A scan finished without matching anything.':
+      'Un escaneo terminó sin encontrar coincidencias. Comprueba que las rutas apunten a carpetas de juegos.',
+    'A scan finished without matching anything. {count} folders are waiting in Unmatched.':
+      'Un escaneo terminó sin encontrar coincidencias. {count} carpetas están en Sin coincidencia.',
     'No games match the current filters.':
       'Ningún juego pasó esos filtros. Quita alguno y vuelve a intentarlo.',
     'Unable to load games.': 'No se pudo cargar tu catálogo. Inténtalo de nuevo.',

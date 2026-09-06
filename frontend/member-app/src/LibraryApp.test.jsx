@@ -511,3 +511,56 @@ test('failed first browse uses PageStatus with Retry', async () => {
 
   vi.unstubAllGlobals()
 })
+
+/* Empty-state branches (UID-043).
+ *
+ * Three situations render the same blank grid; before the shell carried
+ * `scanHasRun` the last two were indistinguishable, so an operator whose scan
+ * paths pointed at the wrong folders was told the same cheerful thing as an
+ * operator who simply had not scanned yet. */
+function renderEmpty(config) {
+  global.fetch = vi.fn(() => jsonResponse({ games: [], pages: 1, total: 0 }))
+  return renderLibrary(
+    <LibraryApp
+      initialConfig={{
+        perPage: 20,
+        showPlayStatus: false,
+        isAdmin: false,
+        libraryCount: 1,
+        gamesCount: 0,
+        ...config,
+      }}
+    />,
+  )
+}
+
+test('empty catalog with no scan yet keeps the first-run line', async () => {
+  renderEmpty({ scanHasRun: false })
+  expect(await screen.findByText(/Nothing's turned up in a scan yet/i)).toBeTruthy()
+})
+
+test('empty catalog after a scan reports the scan, not first run', async () => {
+  renderEmpty({ scanHasRun: true, unmatchedCount: 0 })
+  expect(
+    await screen.findByText(/A scan finished and matched nothing/i),
+  ).toBeTruthy()
+  expect(screen.queryByText(/Nothing's turned up in a scan yet/i)).toBeNull()
+})
+
+test('an admin is pointed at the unmatched folders a scan left behind', async () => {
+  renderEmpty({ scanHasRun: true, unmatchedCount: 40, isAdmin: true })
+  expect(await screen.findByText(/40 folders are waiting in Unmatched/i)).toBeTruthy()
+})
+
+test('a member is not pointed at Unmatched, which they cannot open', async () => {
+  renderEmpty({ scanHasRun: true, unmatchedCount: 40, isAdmin: false })
+  expect(
+    await screen.findByText(/A scan finished and matched nothing/i),
+  ).toBeTruthy()
+  expect(screen.queryByText(/Unmatched/i)).toBeNull()
+})
+
+test('no library at all still leads with adding one', async () => {
+  renderEmpty({ libraryCount: 0, scanHasRun: true, isAdmin: true })
+  expect(await screen.findByText(/No libraries yet/i)).toBeTruthy()
+})

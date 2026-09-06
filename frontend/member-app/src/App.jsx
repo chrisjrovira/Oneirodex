@@ -106,6 +106,8 @@ function libraryInitialConfig(shellConfig) {
     showPlayStatus: Boolean(shellConfig.showPlayStatus),
     libraryCount: Number(shellConfig.libraryCount) || 0,
     gamesCount: Number(shellConfig.gamesCount) || 0,
+    scanHasRun: Boolean(shellConfig.scanHasRun),
+    unmatchedCount: Number(shellConfig.unmatchedCount) || 0,
     enableDeleteOnDisk: Boolean(shellConfig.enableDeleteOnDisk),
     locale: shellConfig.locale || 'en',
     currentFilters: shellConfig.currentFilters || {},

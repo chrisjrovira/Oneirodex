@@ -38,6 +38,18 @@ import { CATALOG_LAYOUTS, useCatalogLayout } from './utils/catalogLayout'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
 import { showToast } from './utils/toast'
 
+/**
+ * Why the catalog is empty — three situations, three sentences (UID-043).
+ *
+ * The blank grid used to have two branches, so "no scan has ever run" and "a
+ * scan ran and matched nothing" produced the same line. The shipped copy was
+ * written to be *true* in both cases rather than useful in either, which left
+ * an operator with a misconfigured scan path no hint that anything had gone
+ * wrong. `scanHasRun` and `unmatchedCount` come from the shell payload.
+ *
+ * Voice follows UID-041: playful while nothing is wrong (no library yet,
+ * nothing scanned yet), plain once something has actually failed.
+ */
 function EmptyState({ initialConfig, t }) {
   if (initialConfig.libraryCount === 0) {
     return (
@@ -50,6 +62,23 @@ function EmptyState({ initialConfig, t }) {
   }
 
   if (initialConfig.gamesCount === 0) {
+    // A scan has run and still nothing landed — that is a fault to report, not
+    // an empty shelf to be cheerful about.
+    if (initialConfig.scanHasRun) {
+      const unmatched = initialConfig.unmatchedCount
+      // Unmatched is an admin screen, so only an admin is pointed at it; a
+      // member being told about forty unmatched folders can do nothing with it.
+      return (
+        <p>
+          {initialConfig.isAdmin && unmatched > 0
+            ? t(
+                'A scan finished without matching anything. {count} folders are waiting in Unmatched.',
+                { count: unmatched },
+              )
+            : t('A scan finished without matching anything.')}
+        </p>
+      )
+    }
     return <p>{t('No games found in your libraries.')}</p>
   }
 
