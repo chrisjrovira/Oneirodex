@@ -19,6 +19,9 @@ export function parseRootConfig(rootElement) {
     showPlayStatus: rootElement.dataset.showPlayStatus === 'true',
     libraryCount: Number(rootElement.dataset.libraryCount),
     gamesCount: Number(rootElement.dataset.gamesCount),
+    // Why the catalog is empty, not just that it is (UID-043).
+    scanHasRun: rootElement.dataset.scanHasRun === '1',
+    unmatchedCount: Number(rootElement.dataset.unmatchedCount) || 0,
     enableDeleteOnDisk: rootElement.dataset.enableDeleteOnDisk === 'true',
     locale: rootElement.dataset.locale || 'en',
     currentFilters,
@@ -76,6 +79,8 @@ export function parseShellConfig(rootElement) {
     defaultSortOrder: rootElement.dataset.defaultSortOrder || 'asc',
     libraryCount: Number(rootElement.dataset.libraryCount) || 0,
     gamesCount: Number(rootElement.dataset.gamesCount) || 0,
+    scanHasRun: rootElement.dataset.scanHasRun === '1',
+    unmatchedCount: Number(rootElement.dataset.unmatchedCount) || 0,
     enableDeleteOnDisk: rootElement.dataset.enableDeleteOnDisk === 'true',
     currentFilters,
   }

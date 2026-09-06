@@ -56,6 +56,8 @@ const FAQ_SECTIONS = [
       'One tile per title, not per copy. A game you hold on NES and SNES is one tile; Preview → Available on lists the other systems, and store / trailer marks (Steam / GOG / Epic / YouTube) when the title has them.',
       'A greyed-out Play button still opens: it explains why (missing BIOS, companion-only, catalog-only) instead of sitting dead.',
       'Game Catalog multi-select: checkbox / long-press / Shift+click → Select page · Favorite · Unfavorite · Add to wishlist · Play status · Refresh freshness / Refresh covers (More; librarian+ · max 20) · Clear; Esc clears. Batch toasts report updated/queued / skipped / failed counts.',
+      'Discover is split into zones \u2014 For you \u00b7 New & updated \u00b7 Popular here \u00b7 Elsewhere \u00b7 Curated. The strip above the feed opens each one on its own page; the full feed stays below it. A zone only shows up when it has shelves with something in them.',
+      'Grid and Discover take arrow keys and a controller D-pad: the whole shelf stack is one tab stop, Left/Right move along a shelf, Up/Down between shelves, Home/End jump to the ends of a shelf and Ctrl+Home/End to the ends of the stack. Arrows only move — Enter opens a title and Space toggles its selection.',
       'Kind views on the catalog bar: All · Games · Soft titles · Emulators · Utilities — one at a time (All shows every kind). Tile badges EXP / TOOL stay short; tooltips Soft title / Utility.',
       'Filters open from the Filters button on the catalog bar (Apply · Clear · Done). Narrow screens use the same popover.',
       'Signals chips: UPDATE · MISSING · NEW · LANG.',
@@ -438,9 +440,13 @@ export function HelpPage({ shellConfig = {} }) {
               <span className="od-help__card-mark" aria-hidden="true">
                 <RailIcon name={section.icon} size={18} />
               </span>
+              {/* Title only. The summary is not dropped — it renders in the
+                  reading pane below once the card is opened
+                  (`od-help__section-summary`), which is where it is actually
+                  read. On the card it was fourteen lines of subtext competing
+                  with the fourteen titles that are the index. */}
               <span className="od-help__card-copy">
                 <span className="od-help__card-title">{section.title}</span>
-                <span className="od-help__card-summary">{section.summary}</span>
               </span>
             </button>
           )

@@ -87,8 +87,15 @@
   bottom: var(--od-tile-edge, 8px);
 }
 
+/* `:focus-visible`, not `:focus-within`. Clicking the checkbox to DESELECT
+   leaves focus on it, so a `:focus-within` arm held the control at full opacity
+   after the tile was no longer selected — the checkbox stayed visible and lit
+   until focus moved elsewhere. Clear did not show the fault because it moves
+   focus to the selection bar, which drops `:focus-within` on the tile.
+   `:focus-visible` is false for a mouse click and true for keyboard focus, so
+   the control still cannot be tabbed to invisibly. */
 .game-card-container.is-selectable:hover .od-tile-select,
-.game-card-container.is-selectable:focus-within .od-tile-select,
+.game-card-container.is-selectable:has(.od-tile-select:focus-visible) .od-tile-select,
 .game-card-container.is-selected .od-tile-select,
 .game-library-container.is-selecting .od-tile-select {
   opacity: 1;

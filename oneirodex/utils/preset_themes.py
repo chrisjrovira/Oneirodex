@@ -75,7 +75,17 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # overflow-clip-margin (not extra inline pad / inward origin).
 # Libraries panel: inline filters, page-local games popover, grouping, no
 # rest underlines on seg/cbtn links.
-GENERATOR_VERSION = 28
+# 29: Button language — the bar's "one bar" is broken into separate buttons.
+# `.od-seg` and `.od-cbtn-group` no longer weld their members into a single
+# outlined pill (no outer border, no overflow clip, no -1px fusing margin);
+# each member carries its own border and radius, 2px apart. Every button box
+# (.od-btn, .od-cbtn, .od-seg__item) is now font-relative — `em` padding and a
+# `1lh` content floor over a `--od-btn-h-base` density floor — so a button
+# tracks the type it renders instead of sitting inside a fixed height, and is
+# tighter at rest. od-density.css stopped re-asserting `.od-btn` metrics, which
+# is what made UID-050 possible. A preset still carrying the old copies shows
+# the fused bars and the old fixed-height buttons, so Reset Themes is required.
+GENERATOR_VERSION = 29
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

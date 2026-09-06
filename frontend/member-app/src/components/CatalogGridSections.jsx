@@ -6,6 +6,7 @@ import { GameCard } from './GameCard'
 import { hbarLayout, scrollLeftFromPointer } from './hbarLayout'
 import { isShelfItemFullyVisible } from './shelfItemVisibility'
 import { useRowScroll } from './useRowScroll'
+import { useShelfGridNavigation } from '../hooks/useShelfGridNavigation'
 import './DiscoverShelf.css'
 import './CatalogGridSections.css'
 
@@ -315,6 +316,7 @@ export function CatalogGridSections({
   const [genresFailed, setGenresFailed] = useState(false)
   const [shelves, setShelves] = useState({})
   const [requested, setRequested] = useState(() => new Set())
+  const gridRootRef = useRef(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -412,9 +414,24 @@ export function CatalogGridSections({
     layout: 'tile',
   }
 
+  /* The shelf stack is one grid for the keyboard, so the hook needs the root
+     element — but the root already carries the caller's `listRef` (the shell
+     measures scroll position from it). Fanning one node out to both keeps that
+     contract and avoids asking the caller for a second ref it has no use for. */
+  const setRoot = useCallback(
+    (node) => {
+      gridRootRef.current = node
+      if (typeof listRef === 'function') listRef(node)
+      else if (listRef) listRef.current = node
+    },
+    [listRef],
+  )
+
+  useShelfGridNavigation(gridRootRef)
+
   return (
     <div
-      ref={listRef}
+      ref={setRoot}
       className={`catalog-grid-sections game-library-container${
         selecting ? ' is-selecting' : ''
       }`}

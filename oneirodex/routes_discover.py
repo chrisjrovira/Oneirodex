@@ -25,6 +25,12 @@ from oneirodex.utils.discover_providers import (
     resolve_feed,
     resolve_identifier,
 )
+from oneirodex.utils.discover_zones import (
+    resolve_zone,
+    rows_in_zone,
+    zone_for_row,
+    zone_index,
+)
 from oneirodex.utils.lifecycle import web_lifecycle_fields
 from oneirodex.utils.game_details_payload import browse_trailer_fields
 from oneirodex.utils.play_url import browse_play_fields, library_platform_key
@@ -97,19 +103,31 @@ def serialize_discover_game(
     }
 
 
-# Storefront seed shelves are derived, so an empty one is hidden rather than
-# rendered as a sad empty row (W25-STORE-1).
-STOREFRONT_SHELF_IDS = frozenset({
-    'curated_for_you',
-    'upcoming',
-    'extras_missing',
-    'store_deals',
-})
+# The four-identifier allow-list that used to live here is gone. Hiding an
+# empty row is now `RowSpec.hide_when_empty`, applied in `discover_feed.assemble`
+# — which is where it belongs, because a dropped row should free its slot for a
+# row that missed the cut, and a filter applied after assembly cannot do that.
+# The allow-list also only ever covered the four storefront shelves, so
+# "Friends playing" with no friends still rendered as a heading over nothing.
 
 # How far a row endpoint will page. Guards against a caller asking for an
 # arbitrary offset and making the server walk the whole library to answer.
 MAX_ROW_OFFSET = 2000
 MAX_ROW_LIMIT = 60
+
+# How deep the row endpoint probes when it is trying to report a total.
+#
+# A selector takes a limit and returns rows; there is no count sibling, and
+# adding one would mean writing every row's query twice and keeping the two in
+# step forever. So the total is derived from the selection instead: ask for more
+# than the window, and if the source returns fewer than were asked for, the
+# source is exhausted and the count is exact.
+#
+# 200 is chosen to make that the common case rather than the lucky one — it is
+# five times the row ceiling, so any row on a household-sized library resolves
+# exactly. Past it the endpoint says it does not know rather than guessing,
+# which is the whole point of `total_is_estimate`.
+TOTAL_PROBE = 200
 
 # How long a feed's dedupe record outlives the request that built it. Long
 # enough to cover a browsing session; short enough that a stale arrangement
@@ -223,7 +241,16 @@ def build_discover_feed(user) -> dict:
     already showed — without it the dedupe is undone by the first scroll.
     """
     sections, manifest = _assemble_sections(user)
-    return {'sections': sections, 'feed_token': _store_manifest(user, manifest)}
+    return {
+        'sections': sections,
+        # The zone strip rides along with the feed rather than being a second
+        # endpoint. Two reasons, both learned the hard way: a separate call
+        # meant a second full assembly for a navigation aid, and — worse — the
+        # two could disagree, which is exactly what happened (the strip offered
+        # a zone whose page 404'd). Derived from these sections, it cannot.
+        'zones': zone_index(sections),
+        'feed_token': _store_manifest(user, manifest),
+    }
 
 
 def build_discover_sections(user) -> list[dict]:
@@ -231,7 +258,29 @@ def build_discover_sections(user) -> list[dict]:
     return _assemble_sections(user)[0]
 
 
-def _assemble_sections(user):
+def build_discover_zone(user, slug: str) -> dict | None:
+    """One zone's rows, or None when the slug is unknown or has nothing live.
+
+    Note the second half of that: a zone with no rows left after assembly is
+    *not* an empty page with a heading. It is the same call the feed makes about
+    an empty row, made one level up.
+    """
+    zone = resolve_zone(slug)
+    if zone is None:
+        return None
+    sections, manifest = _assemble_sections(user, zone_slug=zone.slug)
+    if not sections:
+        return None
+    return {
+        'slug': zone.slug,
+        'title': zone.title,
+        'lede': zone.lede,
+        'sections': sections,
+        'feed_token': _store_manifest(user, manifest),
+    }
+
+
+def _assemble_sections(user, zone_slug: str | None = None):
     """Build Discover shelf payloads for the signed-in user.
 
     Rows ship a *window* rather than their whole contents: hydration batches, so
@@ -239,9 +288,17 @@ def _assemble_sections(user):
     of 40 serialized games is megabytes the member has not scrolled to yet. The
     rest of a row arrives from ``/api/discover/rows/<identifier>``.
 
+    ``zone_slug`` narrows the page to one zone. It filters the *resolved* rows
+    and then lets everything downstream run untouched, so a zone page is the
+    feed pipeline with a smaller input rather than a second implementation —
+    ACL, member hide, dedupe, the slot budget and `hide_when_empty` all behave
+    as they do on the main feed, and none of them had to learn what a zone is.
+
     Returns ``(sections, manifest)``.
     """
     rows = resolve_feed(user)
+    if zone_slug is not None:
+        rows = rows_in_zone(rows, zone_slug)
 
     # Rows this member excluded. Applied before selection, not after, so a
     # hidden row costs no query and — more importantly — releases the titles it
@@ -296,9 +353,11 @@ def _assemble_sections(user):
         raw = selected.get(row.identifier, [])
         items = _row_items(row, candidates[:ROW_WINDOW], hydration)
         shipped = next(iter(items.values()))
-        # Honest empty: a storefront shelf with nothing to say is hidden,
-        # not padded. Admin/custom shelves keep their existing behaviour.
-        if not shipped and row.identifier in STOREFRONT_SHELF_IDS:
+        # An article row can hydrate to nothing even when it selected something
+        # (a news item whose article body failed to resolve), which assembly
+        # cannot see — it counts selected rows, not rendered items. Games rows
+        # are already handled upstream by `hide_when_empty`.
+        if not shipped and row.spec.item_kind != 'games' and row.spec.hide_when_empty:
             continue
         section = row.section
         discover_sections.append({
@@ -307,6 +366,11 @@ def _assemble_sections(user):
             'layout': section.layout or 'shelf',
             'item_kind': row.spec.item_kind,
             'reason': row.spec.reason,
+            # Which surface this shelf belongs to. Recorded here, at the one
+            # point where the resolved row and its payload are both in hand, so
+            # the zone strip is a group-by over shelves that actually rendered
+            # rather than a second guess at what will.
+            'zone': zone_for_row(row),
             'is_event': bool(section.starts_at or section.ends_at),
             'ends_at': section.ends_at.isoformat() if section.ends_at else None,
             **items,
@@ -366,8 +430,18 @@ def build_discover_row(user, identifier, *, offset=0, limit=ROW_WINDOW, feed_tok
     # Excluded titles are dropped after selection, so the row is over-fetched by
     # what the exclusion set could remove — otherwise a heavily deduped row
     # returns a short page and looks finished before it is.
-    fetch = offset + limit + 1 + len(excluded)
-    candidates = row.select(user, min(fetch, MAX_ROW_OFFSET + MAX_ROW_LIMIT + ROW_MAX))
+    #
+    # Then raised to TOTAL_PROBE, because the caller needs to know how much is
+    # left and not merely whether anything is. Same single query either way: a
+    # selector's limit becomes a LIMIT, and the feed already runs these at
+    # ROW_MAX + 1.
+    fetch = max(offset + limit + 1 + len(excluded), TOTAL_PROBE)
+    asked = min(fetch, MAX_ROW_OFFSET + MAX_ROW_LIMIT + ROW_MAX)
+    candidates = list(row.select(user, asked))
+    # Short of what was asked for means the source ran out inside the probe, so
+    # what came back is everything there is. Measured before the exclusion pass,
+    # which removes rows without saying anything about how deep the source went.
+    exhausted = len(candidates) < asked
     if excluded:
         candidates = [
             game for game in candidates if getattr(game, 'uuid', None) not in excluded
@@ -389,6 +463,13 @@ def build_discover_row(user, identifier, *, offset=0, limit=ROW_WINDOW, feed_tok
         'limit': limit,
         **_row_items(row, window, hydration),
         'has_more': len(candidates) > offset + limit,
+        # How many items this row holds in total, so a Load more control can say
+        # what is left instead of only that something is. `null` when the probe
+        # hit its ceiling without exhausting the source — the honest answer is
+        # "more than we counted", and a client that gets `null` falls back to
+        # `has_more`, which is what it had before this field existed.
+        'total': len(candidates) if exhausted else None,
+        'total_is_estimate': not exhausted,
         'more_href': _more_href(row),
     }
 
@@ -410,6 +491,19 @@ def discover():
 @discover_bp.route('/discover/hub/genre/<path:genre>')
 @login_required
 def discover_genre_hub(genre):
+    return render_member_spa(title='Discover')
+
+
+@discover_bp.route('/discover/zone/<slug>')
+@login_required
+def discover_zone_page(slug):
+    """SPA shell for a zone.
+
+    Needed as its own route because `/discover/<identifier>` below matches a
+    single segment: without this, `/discover/zone/popular` never reached the
+    SPA at all and Flask 404'd before React Router could route it. The genre hub
+    above has the same shape for the same reason.
+    """
     return render_member_spa(title='Discover')
 
 

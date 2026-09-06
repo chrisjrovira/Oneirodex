@@ -23,7 +23,9 @@ export async function fetchDiscoverSections({ signal } = {}) {
       section.feed_token = feedToken
     }
   }
-  return sections
+  // The zone strip rides along with the feed. It is derived server-side from
+  // these very sections, so it can never offer a zone the page did not render.
+  return { sections, zones: Array.isArray(data.zones) ? data.zones : [] }
 }
 
 /**
@@ -73,7 +75,47 @@ export async function fetchDiscoverRow(
         ? data.items
         : [],
     hasMore: Boolean(data.has_more),
+    // How many the row holds altogether, or null when the server counted to its
+    // probe ceiling without reaching the end. `null` is not 0 and must not
+    // collapse to it — a caller that cannot say how many are left should say
+    // nothing, not "0 more".
+    total: Number.isFinite(data.total) ? Number(data.total) : null,
+    totalIsEstimate: Boolean(data.total_is_estimate),
     moreHref: data.more_href || '',
+  }
+}
+
+/**
+ * One zone: the feed narrowed to the rows that belong to that surface.
+ */
+export async function fetchDiscoverZone(slug, { signal } = {}) {
+  const response = await fetch(`/api/discover/zones/${encodeURIComponent(slug)}`, {
+    credentials: 'same-origin',
+    signal,
+    headers: { Accept: 'application/json' },
+  })
+  if (!response.ok) {
+    throw await errorFromResponse(response, 'discover zone')
+  }
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error('discover zone returned non-JSON (session expired or server error)')
+  }
+  const data = await response.json()
+  const sections = Array.isArray(data.sections) ? data.sections : []
+  // Same dedupe contract as the main feed: rows page against the token this
+  // assembly produced, not the one the main feed produced.
+  const feedToken = data.feed_token || ''
+  if (feedToken) {
+    for (const section of sections) {
+      section.feed_token = feedToken
+    }
+  }
+  return {
+    slug: data.slug || slug,
+    title: data.title || 'Discover',
+    lede: data.lede || '',
+    sections,
   }
 }
 

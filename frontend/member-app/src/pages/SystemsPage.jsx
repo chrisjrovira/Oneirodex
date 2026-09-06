@@ -334,12 +334,21 @@ function ExportPacksSection() {
       </h2>
       {/* Buttons lead, prose follows. In a narrow column the two downloads are
           the only actionable part; the paragraph explaining what the files are
-          is small print you read once. */}
+          is small print you read once.
+
+          Pills, not boxes — same call as Open path on Game details. These are
+          optional exports for other frontends, and a boxed button reads with
+          the same weight as the console tiles below it, which are the reason
+          anyone is on this page. A pill says "secondary, take it or leave it"
+          without shrinking the target. */}
       <div className="od-systems-exports__actions">
-        <a className="od-btn od-btn--sm" href="/api/export/esde">
+        <a className="od-btn od-btn--sm od-btn--pill" href="/api/export/esde">
           ES-DE gamelist.xml
         </a>
-        <a className="od-btn od-btn--sm" href="/api/export/pegasus?platform=Library">
+        <a
+          className="od-btn od-btn--sm od-btn--pill"
+          href="/api/export/pegasus?platform=Library"
+        >
           Pegasus metadata
         </a>
       </div>

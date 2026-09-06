@@ -10,6 +10,10 @@ can thin a row below the point where it is worth showing, which drops it, which
 frees a slot the budget can give to a row that missed the cut. Running them as
 separate passes leaves holes in the feed.
 
+A third rule joins them: a row that selected nothing is dropped unless a person
+curated it (``RowSpec.hide_when_empty``). It belongs here for the same reason —
+the slot it would have wasted goes to a row that has something to show.
+
 Ordering is deliberately **not** re-derived here. Every row reaches this module
 through a ``DiscoverySection`` whose ``display_order`` an admin arranged on the
 Discovery Sections screen, and quietly re-sorting by an internal priority would
@@ -141,6 +145,20 @@ def assemble(
             floor = getattr(row.spec, 'min_fill', 1) or 1
             if len(kept) < floor <= len(candidates):
                 continue
+
+        # An empty row is dropped before it can take a slot. This runs after the
+        # dedupe arm and outside it, because the two exemptions are unrelated:
+        # `continue_playing` and `friends_playing` are exempt from *dedupe* — of
+        # course what you are playing may also be in a chart — but that said
+        # nothing about whether they should render with nothing in them, and
+        # they were the rows most likely to be empty on a household install.
+        #
+        # The floor rule above cannot cover this. It fires only when dedupe did
+        # the thinning (`len(kept) < floor <= len(candidates)`), which is
+        # deliberate: a curated three-game zone must survive. A row that
+        # selected nothing at all never enters that condition.
+        if not kept and getattr(row.spec, 'hide_when_empty', True):
+            continue
 
         claimed = [uuid for uuid in (_uuid(game) for game in kept[:window]) if uuid]
         if not exempt:

@@ -370,24 +370,36 @@
 
 /* ---------- the topic index ----------
  *
- * A grid, because thirteen topics laid out as thirteen full-width rows is a
- * page of scrolling before you reach the first answer. `auto-fill` with a
- * 15rem floor gives four columns on a desktop pane, two on a tablet and one
- * on a phone without a breakpoint per size. */
+ * One row. `auto-fill` with a 15rem floor wrapped the topics over four rows,
+ * which made the index itself a block of page to read before the first answer.
+ * `grid-auto-flow: column` puts every topic on one line and `minmax(0, 1fr)`
+ * makes them share the width equally, so a card is narrow and tall rather than
+ * wide and stacked — the index becomes one glanceable strip.
+ *
+ * The floor is 0, not a min width: these must fit, and a min width would
+ * reintroduce overflow at exactly the pane sizes this is fixing. The phone
+ * breakpoint below goes back to wrapping, because fourteen columns in 375px is
+ * fourteen slivers. */
 .od-help__cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.6rem;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.35rem;
   margin: 0 0 1.25rem;
 }
 
 /* Same panel language as the reading pane below — bordered glass with the
    section's tone on the leading edge — at card scale. */
+/* Column, not row: at one-fourteenth of the pane there is no width for an icon
+   beside the title, so the mark sits above it and the card takes its size in
+   height instead. `align-items: stretch` on the grid already equalises that
+   height across the strip. */
 .od-help__card {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.7rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.55rem 0.5rem;
   text-align: left;
   background: var(--od-glass-bg, var(--od-surface));
   border: 1px solid var(--od-glass-border, var(--od-border));
@@ -438,17 +450,18 @@
   min-width: 0;
 }
 
+/* Wraps freely — a narrow card buys its width back in lines, and `break-word`
+   keeps a long single word ("Troubleshooting") inside the card rather than
+   widening the whole column and unbalancing the strip. */
 .od-help__card-title {
   font-weight: 600;
-  font-size: var(--od-font-md);
-  line-height: 1.25;
+  font-size: var(--od-font-sm);
+  line-height: 1.2;
+  overflow-wrap: break-word;
 }
 
-.od-help__card-summary {
-  font-size: var(--od-font-xs);
-  color: var(--od-text-muted);
-  line-height: 1.3;
-}
+/* `.od-help__card-summary` is deliberately gone. The summary now renders only
+   in the opened reading pane (`.od-help__section-summary`). */
 
 /* ---------- the reading pane ---------- */
 
@@ -467,6 +480,25 @@
   gap: 0.75rem;
   margin: 0 0 0.4rem;
   font-size: var(--od-font-base);
+}
+
+/* Under a phone pane, one row of fourteen is fourteen unreadable slivers, so
+   the index goes back to wrapping — and the card goes back to icon-beside-title,
+   which is the shape that reads at full width. */
+@media (max-width: 700px) {
+  .od-help__cards {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    grid-auto-columns: auto;
+    gap: 0.5rem;
+  }
+
+  .od-help__card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.7rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

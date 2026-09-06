@@ -6,7 +6,12 @@ from oneirodex.models import (
     UserPreference, GlobalSettings, user_game_status
 )
 from oneirodex import db
-from oneirodex.utils.functions import format_size, get_library_count, get_games_count
+from oneirodex.utils.functions import (
+    format_size,
+    get_first_run_state,
+    get_games_count,
+    get_library_count,
+)
 from oneirodex.utils.local_metadata import has_local_metadata, has_local_images
 from oneirodex.utils.auth import admin_required
 from oneirodex.forms import CsrfForm, CsrfProtectForm
@@ -115,10 +120,16 @@ def library():
     # Games are loaded client-side via /api/browse; shell only needs counts + filter seed
     library_data = get_library_count()
     games_count_data = get_games_count()
+    # Counts say the catalog is empty; these say *why*, so the empty state can
+    # tell "nothing has scanned yet" apart from "a scan ran and matched
+    # nothing" (UID-043).
+    first_run = get_first_run_state()
 
     return render_member_spa(
         library_count=library_data,
         games_count=games_count_data,
+        scan_has_run=first_run['scan_has_run'],
+        unmatched_count=first_run['unmatched_count'],
         user_per_page=per_page,
         user_default_sort=sort_by,
         user_default_sort_order=sort_order,

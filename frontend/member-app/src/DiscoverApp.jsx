@@ -4,6 +4,7 @@ import { fetchDiscoverPins, saveDiscoverPins } from './api/discoverPins'
 import { ContextBar } from './chrome/ContextBar'
 import { DiscoverShelf, formatEventEnds, rowItems } from './components/DiscoverShelf'
 import { DiscoverRowSettings } from './components/DiscoverRowSettings'
+import { DiscoverZoneStrip } from './components/DiscoverZoneStrip'
 import { PageStatus } from './components/PageStatus'
 
 /**
@@ -45,6 +46,7 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   // able to list. Kept from the arrangement response, which is derived from
   // `resolve_feed` and therefore always the complete set.
   const [known, setKnown] = useState([])
+  const [zones, setZones] = useState([])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -54,7 +56,8 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
     fetchDiscoverSections({ signal: controller.signal })
       .then((next) => {
         if (cancelled) return
-        setSections(next)
+        setSections(next.sections)
+        setZones(next.zones)
         setLoading(false)
       })
       .catch((err) => {
@@ -96,7 +99,12 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
    */
   const reloadFeed = useCallback(() => {
     return fetchDiscoverSections()
-      .then(setSections)
+      .then((next) => {
+        setSections(next.sections)
+        // Hiding the last shelf in a zone removes that zone from the strip, so
+        // the strip has to be refreshed with the feed, not just once at mount.
+        setZones(next.zones)
+      })
       .catch(() => {
         /* Arrangement already applied locally; a failed refetch is not a rollback. */
       })
@@ -240,6 +248,7 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
   return (
     <>
       {bar}
+      <DiscoverZoneStrip zones={zones} />
       {visible.map((section) => {
         const identifier = String(section.identifier || section.title || 'section')
         return (

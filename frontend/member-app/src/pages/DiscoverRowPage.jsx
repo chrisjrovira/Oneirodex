@@ -74,7 +74,12 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
             }),
           )
         })
-        setRow((current) => ({ ...current, hasMore: page.hasMore }))
+        setRow((current) => ({
+          ...current,
+          hasMore: page.hasMore,
+          total: page.total,
+          totalIsEstimate: page.totalIsEstimate,
+        }))
         setLoadingMore(false)
       })
       .catch((err) => {
@@ -123,6 +128,16 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
 
   const isArticles = row?.itemKind === 'articles'
 
+  /* "Load more (28 left)" when the server counted the row, plain "Load more"
+     when it could not. The count is deliberately the remainder rather than a
+     page number: this view has no pages — it appends — so "page 3 of 139" was
+     describing a control that does not exist, which is how it managed to offer
+     139 of them for 50 items. A remainder cannot drift from what is on screen
+     because it is computed from what is on screen. */
+  const remaining =
+    typeof row?.total === 'number' ? Math.max(0, row.total - games.length) : null
+  const loadMoreLabel = remaining ? `Load more (${remaining} left)` : 'Load more'
+
   return (
     <>
       {bar}
@@ -158,7 +173,7 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
           onClick={loadMore}
           disabled={loadingMore}
         >
-          {loadingMore ? 'Loading…' : 'Load more'}
+          {loadingMore ? 'Loading…' : loadMoreLabel}
         </button>
       ) : null}
     </>

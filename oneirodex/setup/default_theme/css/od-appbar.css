@@ -235,21 +235,43 @@
 
 /* ---------- segmented control (sibling views) ---------- */
 
+/* Not one bar any more.
+ *
+ * This was a single outlined pill — one border round the strip, `overflow:
+ * hidden` to clip the members into it, and hairline dividers welding them
+ * together. It read as one object, so a strip of four views looked like one
+ * wide control rather than four choices, and the selected member had to fight
+ * the shared outline to show it was selected.
+ *
+ * Each member is now its own button with its own border and radius, separated
+ * by 2px. The strip keeps its alignment and its selected-member fill; it just
+ * stops pretending to be a single control. `overflow: hidden` is gone with the
+ * outer border — with nothing to clip to it only cost the members their focus
+ * rings. */
 .od-seg {
   display: inline-flex;
-  border: 1px solid var(--od-border);
-  border-radius: var(--od-radius-sm);
-  overflow: hidden;
-  background: var(--od-surface-2);
+  gap: 2px;
+  background: transparent;
 }
 
 .od-seg__item {
   appearance: none;
-  border: 0;
-  background: transparent;
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-surface-2);
   color: var(--od-text-muted);
   font-size: var(--od-font-sm);
-  padding: 0.35rem 0.75rem;
+  line-height: var(--od-line-tight);
+  /* Matches `.od-cbtn` / `.od-btn` — a view strip and an action button sit on
+     the same bar and must be the same height without either being measured
+     against the other. */
+  --od-btn-pad-y: 0.32em;
+  --od-btn-pad-x: 0.7em;
+  min-height: max(
+    var(--od-btn-h-base, 1.85rem),
+    calc(1lh + 2 * var(--od-btn-pad-y) + 2px)
+  );
+  padding: var(--od-btn-pad-y) var(--od-btn-pad-x);
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
@@ -261,10 +283,6 @@ a.od-seg__item:focus,
 a.od-seg__item:focus-visible,
 button.od-seg__item:hover {
   text-decoration: none;
-}
-
-.od-seg__item + .od-seg__item {
-  border-left: 1px solid var(--od-border);
 }
 
 .od-seg__item:hover {
@@ -283,9 +301,11 @@ button.od-seg__item:hover {
   font-weight: 600;
 }
 
+/* Offset back to positive: the inset ring existed only because the parent
+   clipped an outside one. Nothing clips it now. */
 .od-seg__item:focus-visible {
   outline: 2px solid var(--od-accent);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 /* Each ContextBar owns a host div inside the shared slot so it can guarantee
@@ -320,15 +340,25 @@ button.od-seg__item:hover {
  * are the same control rendered from the same tokens rather than two
  * near-misses that have to be kept in sync by hand.
  */
+/* Same box as `.od-btn` (od-primitives.css), which is the point of this class
+   resolving to that one: font-relative padding and a `1lh` content floor, so a
+   bar button tracks its own type instead of sitting inside a fixed height. */
 .od-cbtn {
   appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--od-space-2);
-  min-height: var(--od-control-h);
+  --od-btn-h-min: var(--od-btn-h-base, 1.85rem);
+  --od-btn-pad-y: 0.32em;
+  --od-btn-pad-x: 0.7em;
+  min-height: max(
+    var(--od-btn-h-min),
+    calc(1lh + 2 * var(--od-btn-pad-y) + 2px)
+  );
   font-size: var(--od-font-sm);
-  padding: 0 var(--od-space-4);
+  line-height: var(--od-line-tight);
+  padding: var(--od-btn-pad-y) var(--od-btn-pad-x);
   border-radius: var(--od-radius-sm);
   border: 1px solid var(--od-border);
   background: transparent;
@@ -553,16 +583,8 @@ a.od-cbtn:focus-visible {
   font-weight: 600;
 }
 
-/* A fused group is one pill: members drop their own side borders and are
-   separated by a single hairline, exactly as `.od-seg__item + .od-seg__item`
-   does. Without this the group drew a 2px seam wherever a filled member met
-   an unfilled one. */
-.od-topbar__page .od-cbtn-group > .od-cbtn + .od-cbtn,
-.od-topbar__page .od-cbtn-group > .od-cbtn + .od-pop > .od-cbtn,
-.od-topbar__page .od-cbtn-group > .od-pop + .od-cbtn,
-.od-topbar__page .od-cbtn-group > .od-pop + .od-pop > .od-cbtn {
-  border-inline-start-color: var(--od-border);
-}
+/* The 2px-seam repair that lived here is deleted, not overridden: it restored
+   a shared edge between fused members, and members are no longer fused. */
 
 /* The disabled state .od-btn has always had. Its absence was not cosmetic:
    Notifications disables "Mark all read" when nothing is unread, Updates
@@ -615,37 +637,29 @@ a.od-cbtn:focus-visible {
  * Apply / Clear / Done in the Filters panel is this shape. The top-bar
  * hamburger + Filters pair is not — that cluster opts out below.
  */
+/* Same break as `.od-seg`: members were fused into one outline by a -1px
+   margin, so a group of buttons read as a single wide control. They are
+   separate buttons 2px apart now. */
 .od-cbtn-group {
   display: inline-flex;
   align-items: stretch;
-  /* Collapse the shared edge instead of drawing it twice. */
-  gap: 0;
+  gap: 2px;
 }
 
 /* Direct `.od-cbtn` or a Popover wrapper (`.od-pop > .od-cbtn`) — Wishlist
    fuses view toggles with a Request popover trigger in one outline. */
+/* Every member keeps its own radius on all four corners — the first/last-child
+   corner rules existed only to round the ends of the fused pill and are gone
+   with it. Direct `.od-cbtn` or a Popover wrapper (`.od-pop > .od-cbtn`). */
 .od-cbtn-group > .od-cbtn,
 .od-cbtn-group > .od-pop > .od-cbtn {
-  border-radius: 0;
-  /* The button to the right owns the shared edge, so only one is painted. */
-  margin-inline-start: -1px;
-}
-
-.od-cbtn-group > .od-cbtn:first-child,
-.od-cbtn-group > .od-pop:first-child > .od-cbtn {
+  border-radius: var(--od-radius-sm);
   margin-inline-start: 0;
-  border-start-start-radius: var(--od-radius-sm);
-  border-end-start-radius: var(--od-radius-sm);
 }
 
-.od-cbtn-group > .od-cbtn:last-child,
-.od-cbtn-group > .od-pop:last-child > .od-cbtn {
-  border-start-end-radius: var(--od-radius-sm);
-  border-end-end-radius: var(--od-radius-sm);
-}
-
-/* A hovered or focused member must paint its edges over its neighbours', or
-   the highlight is clipped on whichever side the next button overlaps. */
+/* Retained for the focus ring only: members no longer overlap, but a 2px gap
+   is narrower than a 2px ring at 2px offset, so a focused member still needs to
+   paint above its neighbours. */
 .od-cbtn-group > .od-cbtn:hover,
 .od-cbtn-group > .od-cbtn:focus-visible,
 .od-cbtn-group > .od-cbtn.is-on,
@@ -674,19 +688,16 @@ a.od-cbtn:focus-visible {
   width: 100%;
 }
 
-/* Hamburger + Filters sit next to each other; they are not one outlined
-   cluster. `.od-cbtn-group` still owns Apply/Clear/Done elsewhere — only this
-   top-bar pair drops the shared edge, the -1px overlap, and the squared inner
-   corners that read as a single box. */
+/* Hamburger + Filters keep a wider gap than the 2px the base group now uses.
+   Not an oversight: 2px says "these are members of one control, pick one", and
+   these two are unrelated actions that merely sit next to each other. The view
+   strips get 2px; this pair stays visibly apart.
+
+   The un-fusing this rule used to do — cancelling the -1px overlap and putting
+   the corner radius back — is deleted, because `.od-cbtn-group` no longer fuses
+   anything and there is nothing left to cancel. */
 .od-cbtn-group.od-topbar__cluster {
   gap: var(--od-space-2);
-}
-
-.od-cbtn-group.od-topbar__cluster > .od-cbtn,
-.od-cbtn-group.od-topbar__cluster > .od-cbtn:first-child,
-.od-cbtn-group.od-topbar__cluster > .od-cbtn:last-child {
-  margin-inline-start: 0;
-  border-radius: var(--od-radius-sm);
 }
 
 /* Active filters must stay visible from the collapsed state. Without this
