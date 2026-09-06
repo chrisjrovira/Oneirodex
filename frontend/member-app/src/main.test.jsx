@@ -16,6 +16,8 @@ test('parses Library template data attributes', () => {
   root.dataset.gamesCount = '12'
   root.dataset.enableDeleteOnDisk = 'true'
   root.dataset.currentFilters = '{"genre":"Action"}'
+  root.dataset.scanHasRun = '1'
+  root.dataset.unmatchedCount = '7'
 
   expect(parseRootConfig(root)).toEqual({
     perPage: 50,
@@ -25,10 +27,27 @@ test('parses Library template data attributes', () => {
     showPlayStatus: false,
     libraryCount: 2,
     gamesCount: 12,
+    scanHasRun: true,
+    unmatchedCount: 7,
     enableDeleteOnDisk: true,
     locale: 'en',
     currentFilters: { genre: 'Action' },
   })
+})
+
+/* The absent case is the one that ships on every page except /library: only
+   the library route supplies these, so every other shell renders the shelf
+   without them. They must read as "no scan yet" rather than as undefined,
+   which would take the empty state down the "a scan ran" branch on a fresh
+   install (UID-043). */
+test('first-run attributes default to not-yet-scanned when absent', () => {
+  const root = document.createElement('div')
+  root.dataset.libraryCount = '1'
+  root.dataset.gamesCount = '0'
+
+  const config = parseRootConfig(root)
+  expect(config.scanHasRun).toBe(false)
+  expect(config.unmatchedCount).toBe(0)
 })
 
 test('parses Favorites template data attributes', () => {
