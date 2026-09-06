@@ -23,13 +23,12 @@ Membership is declared in code because the set of *system* rows is declared in
 code; when zones need to be arranged per install, this registry is the thing
 that grows a `DiscoverySection`-backed override, not a second mechanism.
 
-**Naming, so the next reader is not caught out.** `oneirodex/utils/discovery_zones.py`
-— singular module, plural word, one letter different — is older and unrelated:
-it is the admin's *custom shelf* config, where a "zone" is one row built from a
-manual pick list or a filter. A zone in *this* module is a page of shelves, and
-a custom shelf from that module is one of the things a zone can contain (they
-land in ``curated``). The overlap is a naming accident worth fixing, but
-renaming a shipped admin concept is a bigger change than this one.
+**Naming.** Until 2026-09-06 this module's name was one letter from
+`discovery_zones.py`, which called a single admin-curated shelf a "custom zone"
+(UID-059). That module is now `discovery_shelves.py` and its concept is a
+*shelf* throughout, admin copy included, so "zone" means one thing again: a page
+of shelves. A custom shelf is one of the things a zone can contain — they land
+in ``curated``.
 """
 
 from __future__ import annotations

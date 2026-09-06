@@ -195,13 +195,14 @@ function mockChatFetch({ channels, onArchive, onLeave } = {}) {
 
 test('archive posts to archive API and refreshes room list', async () => {
   const user = userEvent.setup()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
   const fetchMock = mockChatFetch()
   vi.stubGlobal('fetch', fetchMock)
 
   render(<ChatSlideOut defaultOpen viewer={{ isLibrarian: true }} />)
   expect(await screen.findByRole('button', { name: /^archive$/i })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: /^archive$/i }))
+  // The house dialog, not window.confirm (UID-042) — its named button commits.
+  await user.click(await screen.findByRole('button', { name: /^archive room$/i }))
 
   await waitFor(() => {
     expect(
@@ -217,7 +218,6 @@ test('archive posts to archive API and refreshes room list', async () => {
 
 test('archive surfaces 403 error honestly', async () => {
   const user = userEvent.setup()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
   const fetchMock = mockChatFetch({
     onArchive: async () => ({
       ok: false,
@@ -229,12 +229,12 @@ test('archive surfaces 403 error honestly', async () => {
 
   render(<ChatSlideOut defaultOpen viewer={{ userId: 9 }} />)
   await user.click(await screen.findByRole('button', { name: /^archive$/i }))
+  await user.click(await screen.findByRole('button', { name: /^archive room$/i }))
   expect(await screen.findByRole('alert')).toHaveTextContent(/not allowed to archive/i)
 })
 
 test('leave DM posts to leave API and refreshes list', async () => {
   const user = userEvent.setup()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
   const fetchMock = mockChatFetch()
   vi.stubGlobal('fetch', fetchMock)
 
@@ -242,6 +242,8 @@ test('leave DM posts to leave API and refreshes list', async () => {
   await user.click(await screen.findByRole('button', { name: /^alex$/i }))
   expect(await screen.findByRole('button', { name: /^leave$/i })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: /^leave$/i }))
+  // A DM and a channel get different dialog copy, because leaving them differs.
+  await user.click(await screen.findByRole('button', { name: /^leave conversation$/i }))
 
   await waitFor(() => {
     expect(
@@ -257,7 +259,6 @@ test('leave DM posts to leave API and refreshes list', async () => {
 
 test('leave household channel refreshes list and shows muted badge', async () => {
   const user = userEvent.setup()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
   let list = [
     { id: 1, name: 'household', kind: 'channel', slug: 'household', muted: false },
     { id: 2, name: 'Alex', kind: 'dm' },
@@ -292,6 +293,7 @@ test('leave household channel refreshes list and shows muted badge', async () =>
   expect(screen.queryByText('muted')).not.toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: /^leave$/i }))
+  await user.click(await screen.findByRole('button', { name: /^leave room$/i }))
 
   await waitFor(() => {
     expect(

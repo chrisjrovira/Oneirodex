@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { confirmAction } from '../../../shared/confirmDialog'
 import {
   connectAmazon,
   connectEpic,
@@ -32,8 +33,8 @@ const STORES = [
     connect: connectSteam,
     sync: syncSteam,
     disconnect: disconnectSteam,
-    disconnectPrompt:
-      'Disconnect Steam? Your synced ownership is cleared — your games stay put.',
+    disconnectBody:
+      'Your synced ownership is cleared — your games stay put.',
     csvLabel: 'Or import app IDs (CSV, one per line)',
     csvPlaceholder: 'appid\n570\n730',
     csvNoun: 'app IDs',
@@ -53,8 +54,8 @@ const STORES = [
     connect: (id, extras) => connectGog(id, extras),
     sync: syncGog,
     disconnect: disconnectGog,
-    disconnectPrompt:
-      'Disconnect GOG? Your imported ownership is cleared — your games stay put.',
+    disconnectBody:
+      'Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned titles (CSV: product ID or id,name per line)',
     csvPlaceholder: 'product_id,name\n1207658924,The Witcher 3',
     csvNoun: 'GOG titles',
@@ -74,8 +75,8 @@ const STORES = [
     connect: (id, extras) => connectEpic(id, extras),
     sync: syncEpic,
     disconnect: disconnectEpic,
-    disconnectPrompt:
-      'Disconnect Epic? Your imported ownership is cleared — your games stay put.',
+    disconnectBody:
+      'Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned titles (CSV: catalog item ID or id,name per line)',
     csvPlaceholder: 'catalog_item_id,name\nfn,Fortnite',
     csvNoun: 'Epic titles',
@@ -96,8 +97,8 @@ const STORES = [
     connect: (id, extras) => connectAmazon(id, extras),
     sync: syncAmazon,
     disconnect: disconnectAmazon,
-    disconnectPrompt:
-      'Disconnect Amazon? Your imported ownership is cleared — your games stay put.',
+    disconnectBody:
+      'Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned Amazon titles (CSV: product ID or id,name per line)',
     csvNoun: 'Amazon titles',
     canSync: true,
@@ -203,7 +204,13 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
   }
 
   async function handleDisconnect(store) {
-    if (!window.confirm(store.disconnectPrompt)) {
+    const ok = await confirmAction({
+      title: `Disconnect ${store.label}?`,
+      body: store.disconnectBody,
+      confirmLabel: `Disconnect ${store.label}`,
+      cancelLabel: 'Stay connected',
+    })
+    if (!ok) {
       return
     }
     const result = await runAction(`${store.key}:disconnect`, store.key, () =>

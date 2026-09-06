@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { confirmAction } from '../../shared/confirmDialog'
 import { postJsonResult } from './adminApi'
 import {
   buildScanQueueRequestFields,
@@ -47,11 +48,13 @@ export function useLibraryRefreshAll() {
   }, [])
 
   const startRefreshAll = useCallback(async () => {
-    if (
-      !window.confirm(
-        'Refresh all libraries using each library’s last scan folder?',
-      )
-    ) {
+    const ok = await confirmAction({
+      title: 'Refresh all libraries?',
+      body: 'Each library is rescanned using its own last scan folder.',
+      confirmLabel: 'Refresh all',
+      tone: 'neutral',
+    })
+    if (!ok) {
       return
     }
     try {

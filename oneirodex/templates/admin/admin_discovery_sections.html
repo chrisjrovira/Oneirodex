@@ -13,13 +13,13 @@
         <div>
             <h1 class="od-adminpage-title">{{ icons.icon('compass', size=26) }} Discovery Sections</h1>
             <p class="od-adminpage-lede">
-                Drag to reorder, toggle visibility, or add a custom zone (manual game list or library / platform / genre filter).
+                Drag to reorder, toggle visibility, or add a custom shelf (manual game list or library / platform / genre filter).
                 Built-in shelves can be reordered and hidden but not deleted.
             </p>
         </div>
         <div class="od-adminpage-header-actions">
             <button class="btn btn-primary btn-sm" type="button" id="add-zone-btn">
-                {{ icons.icon('plus') }} Add Zone
+                {{ icons.icon('plus') }} Add shelf
             </button>
         </div>
     </div>
@@ -46,7 +46,7 @@
                         {% endif %}
                     </div>
                     {% if section.section_type == 'custom' %}
-                        <span class="section-count">{{ zone_descriptions.get(section.id, 'Custom zone') }}</span>
+                        <span class="section-count">{{ shelf_descriptions.get(section.id, 'Custom shelf') }}</span>
                     {% else %}
                         <span class="section-count">
                             {% if section_counts[section.identifier] > 0 %}
@@ -59,11 +59,11 @@
                     <div class="section-controls">
                         {% if section.section_type == 'custom' %}
                         <button type="button" class="btn btn-sm btn-outline-secondary zone-edit-btn"
-                                data-section-id="{{ section.id }}" title="Edit zone">
+                                data-section-id="{{ section.id }}" title="Edit shelf">
                             {{ icons.icon('edit', title='Edit') }}
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-danger zone-delete-btn"
-                                data-section-id="{{ section.id }}" title="Delete zone">
+                                data-section-id="{{ section.id }}" title="Delete shelf">
                             {{ icons.icon('trash', title='Delete') }}
                         </button>
                         {% endif %}
@@ -85,22 +85,28 @@
     </div>
 </div>
 
-<!-- Add/Edit custom zone modal -->
+<!-- Add/Edit custom shelf modal.
+     The copy says shelf (UID-059); the element ids still say zone on purpose.
+     discovery_sections.js is theme JS served from the library volume, so it
+     only changes on Reset Themes — renaming ids here would break every button
+     on this page for the window between a deploy and that reset, and buys a
+     reader nothing the copy does not already say. -->
+
 <div class="modal fade" id="zoneModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="zoneModalTitle">Add Discovery Zone</h5>
+                <h5 class="modal-title" id="zoneModalTitle">Add Discovery Shelf</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="zoneId">
                 <div class="mb-3">
-                    <label class="form-label" for="zoneName">Zone name</label>
+                    <label class="form-label" for="zoneName">Shelf name</label>
                     <input type="text" class="form-control" id="zoneName" maxlength="50" placeholder="e.g. Staff Picks">
                 </div>
 
-                <div class="mb-3 zone-mode-toggle" role="group" aria-label="Zone selection mode">
+                <div class="mb-3 zone-mode-toggle" role="group" aria-label="Shelf selection mode">
                     <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="zoneMode" id="zoneModeManual" value="manual" checked>
                         <label class="btn btn-outline-secondary" for="zoneModeManual">Manual game list</label>
@@ -120,7 +126,7 @@
                     </div>
                     <div id="zoneGameHits" class="list-group mt-2 d-none" style="max-height:190px;overflow:auto;"></div>
 
-                    <label class="form-label mt-3">In this zone <span class="text-muted" id="zonePickedCount">(0)</span></label>
+                    <label class="form-label mt-3">In this shelf <span class="text-muted" id="zonePickedCount">(0)</span></label>
                     <ul class="list-group mb-2" id="zonePicked"></ul>
                     <div class="form-text">Up to 60 games, shown in the order listed here.</div>
 
@@ -160,7 +166,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="zoneSaveBtn">Save zone</button>
+                <button type="button" class="btn btn-primary" id="zoneSaveBtn">Save shelf</button>
             </div>
         </div>
     </div>

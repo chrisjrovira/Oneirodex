@@ -98,10 +98,13 @@ run that hit a mid-capture 500 wrote *"Internal Server Error"* into
 `screenshot-library.png` and `hero-banner.png` and reported success. Treat a
 non-zero exit as "pixels are stale", never as "done".
 
-**Known local flake:** under Python 3.14 + asgiref, aborting a request mid-flight
-(navigation away, blocked SSE) can kill the WSGI→ASGI bridge with
-`RuntimeError: CurrentThreadExecutor already quit or is broken`, after which the
-worker 500s until restarted. If a run reports skips, restart the app and re-run.
+**Former local flake (fixed 2026-09-06):** under Python 3.14 + asgiref, aborting
+a request mid-flight (navigation away, blocked SSE) could kill the WSGI→ASGI
+bridge with `RuntimeError: CurrentThreadExecutor already quit or is broken`,
+after which the worker 500s until restarted. `asgi.py` now bridges with a2wsgi
+(UID-052), which treats a disconnect as a disconnect. If a run still reports
+skips, restart the app and re-run — and say so, because that would be a new
+fault rather than this one.
 
 **2026-08-05 — capture unblocked and everything above re-shot.** `:5006` had been
 **BLOCKED (env)** since Wave 15; the blocker was that the only `.env` on the box

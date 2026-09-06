@@ -3,8 +3,15 @@ ASGI config for Oneirodex production deployment.
 This file wraps the Flask app to be compatible with ASGI servers like uvicorn
 and provides async file streaming for downloads and static assets.
 
-Static files are served natively (not via WsgiToAsgi) to avoid asgiref
-CurrentThreadExecutor failures under concurrent asset loads.
+The WSGI bridge is a2wsgi, not asgiref. asgiref's ``WsgiToAsgi`` submits the
+call into a ``CurrentThreadExecutor`` that can already be shut down when the
+client goes away mid-request, so a cancelled request died as a 500 the
+operator then had to explain (UID-052). a2wsgi runs the WSGI app on its own
+thread pool and treats ``http.disconnect`` as a disconnect rather than a
+broken executor.
+
+Static assets and SSE still bypass the bridge, but not for that reason: see
+``_handle_static`` and ``_handle_sse``.
 """
 
 from __future__ import annotations
@@ -18,7 +25,7 @@ import uuid
 from pathlib import Path
 
 import aiofiles
-from asgiref.wsgi import WsgiToAsgi
+from a2wsgi import WSGIMiddleware
 
 from oneirodex import create_app, db
 from oneirodex.async_streaming import (
@@ -49,7 +56,7 @@ class LazyASGIApp:
         self._static_root: Path | None = None
 
     async def _ensure_flask(self):
-        """Create Flask + WsgiToAsgi once, safely under concurrent first hits."""
+        """Create Flask + the WSGI bridge once, safely under concurrent first hits."""
         if self._app is not None:
             return
         async with self._init_lock:
@@ -57,7 +64,7 @@ class LazyASGIApp:
                 return
             self._flask_app = create_app()
             self._static_root = Path(self._flask_app.static_folder or '').resolve()
-            self._app = WsgiToAsgi(self._flask_app)
+            self._app = WSGIMiddleware(self._flask_app)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "lifespan":
@@ -69,8 +76,9 @@ class LazyASGIApp:
                 await self._handle_download(scope, receive, send)
                 return
 
-            # Long-lived SSE must not run through WsgiToAsgi — a single sync
-            # stream stalls the worker and freezes Discover/Admin/API fetches.
+            # Long-lived SSE must not run through the WSGI bridge — a single
+            # sync stream holds a bridge thread for the life of the connection
+            # and freezes Discover/Admin/API fetches. True of any bridge.
             sse_key = path.rstrip('/') or '/'
             if sse_key in self._SSE_ROUTES:
                 cfg = self._SSE_ROUTES[sse_key]
@@ -84,8 +92,10 @@ class LazyASGIApp:
                 )
                 return
 
-            # Serve /static/* outside WsgiToAsgi — concurrent CSS/JS through the
-            # bridge triggers "CurrentThreadExecutor already quit or is broken".
+            # Serve /static/* natively. This began as a workaround for the
+            # asgiref bridge failing under concurrent CSS/JS, which a2wsgi has
+            # now retired — it stays because the native path streams with
+            # aiofiles and owns its own cache-control and security headers.
             if path.startswith('/static/'):
                 await self._handle_static(scope, receive, send, path)
                 return
@@ -295,8 +305,9 @@ class LazyASGIApp:
             else b"public, max-age=3600"
         )
 
-        # Static is served here, outside WsgiToAsgi, so Flask's after_request
-        # never sees it — these have to be stamped again rather than inherited.
+        # Static is served here, outside the WSGI bridge, so Flask's
+        # after_request never sees it — these have to be stamped again rather
+        # than inherited.
         # Baseline only, no CSP: webretro.html is a static document whose
         # Emscripten cores would need 'unsafe-eval' anyway.
         headers = [
@@ -736,7 +747,7 @@ class LazyASGIApp:
                 from oneirodex.utils.shutdown import register_shutdown_handlers
 
                 register_shutdown_handlers()
-                # Eager-init Flask so first browser burst does not race WsgiToAsgi setup.
+                # Eager-init Flask so the first browser burst does not race bridge setup.
                 await self._ensure_flask()
                 await send({"type": "lifespan.startup.complete"})
             except Exception as e:

@@ -40,7 +40,7 @@ from oneirodex.models import (
     UserPreference,
     user_favorites,
 )
-from oneirodex.utils.discovery_zones import resolve_custom_zone_games
+from oneirodex.utils.discovery_shelves import resolve_custom_shelf_games
 from oneirodex.utils.library_acl import apply_game_access_filters
 from oneirodex.utils.storefront import build_storefront_shelf
 
@@ -583,7 +583,7 @@ def _library_filter_for(section: DiscoverySection) -> Optional[dict]:
 
 def _custom_zone_selector(section: DiscoverySection) -> Selector:
     def select_zone(user, limit):
-        return resolve_custom_zone_games(section.config, user, limit=limit)
+        return resolve_custom_shelf_games(section.config, user, limit=limit)
 
     return select_zone
 

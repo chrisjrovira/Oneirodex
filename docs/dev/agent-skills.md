@@ -28,7 +28,7 @@ Load the smallest set that covers the turn. Do not follow archive or diary links
 
 | Skill | Use when | Does |
 |---|---|---|
-| **docs-sync** | Finishing a coding task, or the user asks to update docs | Docs matrix + living progress board + README capture; ends with **Docs touched:** |
+| **docs-sync** | Finishing a coding task, or the user asks to update docs | Docs matrix + README capture; ends with **Docs touched:**. The progress board is local-only and no longer a step |
 | **verify-slice** | User says verify / test / smoke, or ship-ready preflight needs evidence | Smallest pytest/vitest + envelope / css-token / button-language ratchets |
 | **wave-continue** | "keep building", "next wave", "until blocked" | implement → verify → docs, looping until a real fork |
 | **ship-ready** | **Only** on explicit commit / ship / push / PR | docs gate, prompt-tree sync, conventional commit, mandatory push |
@@ -48,7 +48,7 @@ Each carries a mission, its owned paths, what it refuses, and an end-of-turn for
 | `agent-backend` | Flask/ASGI, models, APIs, schema, runtime (+ Integrations / Acquire / Play / Social lanes) | SPA visual polish |
 | `agent-desktop` | Tauri companion (`clients/desktop`), install/update, social window | Member SPA redesign |
 | `agent-qa` | Repro, targeted tests, smoke, DoD evidence | Speculative product refactors |
-| `agent-docs` | Docs, changelog, HelpPage, README capture, progress board | Behavior or schema changes |
+| `agent-docs` | Docs, changelog, HelpPage, README capture | Behavior or schema changes |
 | `agent-gamemaster` | Systems · regions · dump forms · art kinds · fandom naming taxonomy | Scrapes, large feature dumps |
 | `agent-ops` | Unraid, Compose, volumes, probes, ops glance | Member SPA redesign |
 | `agent-art` | Brand/logo, cover and theme art direction, loaders, screensaver creative | Flask/Unraid work |

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { confirmAction } from '../../../shared/confirmDialog'
 import { csrfHeaders } from '../api/csrf'
 import { errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from './PageStatus'
@@ -499,7 +500,12 @@ export function ChatPanel({
     const current = channels.find((c) => c.id === activeId)
     if (!current || !canArchiveChannel(current, viewer)) return
     const label = current.name?.replace(/^#/, '') || current.name || 'this room'
-    const ok = window.confirm(`Archive #${label}? It disappears for everyone, not just you.`)
+    const ok = await confirmAction({
+      title: `Archive #${label}?`,
+      body: 'It disappears for everyone, not just you.',
+      confirmLabel: 'Archive room',
+      cancelLabel: 'Keep it',
+    })
     if (!ok) return
     setRoomActionBusy(true)
     showStatus(null)
@@ -535,10 +541,18 @@ export function ChatPanel({
     const isDm = current.kind === 'dm' || current.type === 'dm'
     const leftId = activeId
     const label = current.name?.replace(/^#/, '') || current.name || 'this room'
-    const confirmText = isDm
-      ? `Leave conversation with ${label}? You can open a new DM later.`
-      : `Leave #${label}? This mutes the room (same as Mute). You can unmute later.`
-    if (!window.confirm(confirmText)) return
+    const ok = await confirmAction({
+      title: isDm ? `Leave conversation with ${label}?` : `Leave #${label}?`,
+      body: isDm
+        ? 'You can open a new DM later.'
+        : 'This mutes the room (same as Mute). You can unmute later.',
+      confirmLabel: isDm ? 'Leave conversation' : 'Leave room',
+      cancelLabel: 'Stay',
+      // Leaving is reversible — an unmute or a new DM away — so it does not
+      // get the danger treatment that archiving does.
+      tone: 'neutral',
+    })
+    if (!ok) return
     setRoomActionBusy(true)
     showStatus(null)
     try {

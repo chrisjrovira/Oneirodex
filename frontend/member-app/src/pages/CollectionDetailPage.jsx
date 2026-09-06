@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { confirmAction } from '../../../shared/confirmDialog'
 import { ContextBar } from '../chrome/ContextBar'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -235,9 +236,12 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
     if (!collection?.can_edit || collection.is_system || deleting) {
       return
     }
-    const confirmed = window.confirm(
-      `Delete “${collection.name}”? The games stay in your catalog — only the collection goes.`,
-    )
+    const confirmed = await confirmAction({
+      title: `Delete “${collection.name}”?`,
+      body: 'The games stay in your catalog — only the collection goes.',
+      confirmLabel: 'Delete collection',
+      cancelLabel: 'Keep it',
+    })
     if (!confirmed) {
       return
     }

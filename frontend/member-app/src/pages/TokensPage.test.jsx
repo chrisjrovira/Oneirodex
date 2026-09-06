@@ -209,7 +209,6 @@ test('copy secret shows manual-select guidance when all copy paths fail', async 
 
 test('revokes a token after confirm', async () => {
   const user = userEvent.setup()
-  vi.spyOn(window, 'confirm').mockReturnValue(true)
   tokensApi.revokeToken.mockResolvedValue({ ok: true })
   tokensApi.listTokens
     .mockResolvedValueOnce({
@@ -235,6 +234,8 @@ test('revokes a token after confirm', async () => {
   expect(await screen.findByText('Living room PC')).toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: /revoke/i }))
+  // The house dialog, not window.confirm (UID-042) — its named button commits.
+  await user.click(await screen.findByRole('button', { name: /^revoke token$/i }))
 
   await waitFor(() => {
     expect(tokensApi.revokeToken).toHaveBeenCalledWith(7)

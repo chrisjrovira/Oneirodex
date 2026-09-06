@@ -118,7 +118,7 @@ def sample_discovery_sections(db_session):
 
 @pytest.fixture
 def test_libraries_for_zones(db_session):
-    """Libraries for exercising custom discovery zone filters."""
+    """Libraries for exercising custom discovery shelf filters."""
     libraries = [
         Library(name=f'Zone Library {i}', platform=LibraryPlatform.SNES)
         for i in range(2)
@@ -131,7 +131,7 @@ def test_libraries_for_zones(db_session):
 
 @pytest.fixture
 def test_games_for_zones(db_session, test_libraries_for_zones):
-    """Games for exercising custom discovery zone manual pick lists."""
+    """Games for exercising custom discovery shelf manual pick lists."""
     library = test_libraries_for_zones[0]
     games = [Game(name=f'Zone Game {i}', library_uuid=library.uuid) for i in range(3)]
     for game in games:
@@ -307,7 +307,7 @@ class TestDiscoverySectionsRoute:
 
 
 class TestCustomDiscoveryZones:
-    """Test custom discovery zone create/edit/delete + member-facing rendering."""
+    """Test custom discovery shelf create/edit/delete + member-facing rendering."""
 
     def _login(self, client, user):
         with client.session_transaction() as sess:
@@ -953,13 +953,17 @@ class TestClearSystemLogsAPI:
 class TestSystemIntegrationExtended:
     """Additional integration tests for system functionality."""
     
-    def test_system_logs_with_multiple_filters(self, client, admin_user, sample_system_events):
-        """Test system logs with multiple filters applied."""
+    def test_system_logs_redirects_to_ops_full_log(self, client, admin_user, sample_system_events):
+        """The browse UI moved to Ops (UID-034); the old path is a bookmark redirect.
+
+        This test asserted 200 with filters applied until 2026-09-06 — it had been
+        failing since the page was retired on 2026-09-01, describing a screen that
+        no longer exists. Filtering is exercised where it now lives, on Ops.
+        """
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
-        
-        # Apply multiple filters
+
         yesterday = (datetime.now() - timedelta(days=1)).strftime(DATE_FORMAT)
         params = {
             'event_type': 'admin_action',
@@ -967,12 +971,12 @@ class TestSystemIntegrationExtended:
             'date_from': yesterday,
             'per_page': 10
         }
-        
+
         query_string = '&'.join([f'{k}={v}' for k, v in params.items()])
         response = client.get(f'/admin/system_logs?{query_string}')
-        
-        assert response.status_code == 200
-        # Should only show admin_action events with information level from yesterday onwards
+
+        assert response.status_code == 302
+        assert '/admin/ops' in response.headers['Location']
     
     @patch('oneirodex.routes_admin_ext.system.log_system_event')
     def test_error_handling_with_database_rollback(self, mock_log, client, admin_user, sample_discovery_sections, db_session):

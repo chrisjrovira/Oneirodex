@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { confirmAction } from '../../shared/confirmDialog'
 import { PageStatus } from './PageStatus'
 
 import { DataTable } from './DataTable'
@@ -95,9 +96,12 @@ export function ProposeLeafLibraries({
 
   async function onConfirm() {
     if (!selectedRows.length || confirming) return
-    const ok = window.confirm(
-      `Create ${selectedRows.length} librar${selectedRows.length === 1 ? 'y' : 'ies'} and queue a first scan for each? Nothing has been written yet — this is the step that does it.`,
-    )
+    const ok = await confirmAction({
+      title: `Create ${selectedRows.length} librar${selectedRows.length === 1 ? 'y' : 'ies'} and queue a first scan for each?`,
+      body: 'Nothing has been written yet — this is the step that does it.',
+      confirmLabel: `Create librar${selectedRows.length === 1 ? 'y' : 'ies'}`,
+      tone: 'neutral',
+    })
     if (!ok) return
 
     setConfirming(true)

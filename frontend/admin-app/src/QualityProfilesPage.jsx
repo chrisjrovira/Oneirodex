@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { confirmAction } from '../../shared/confirmDialog'
 import { PageStatus } from './PageStatus'
 import { deleteJson, getJson, postJson, putJson } from './adminApi'
 
@@ -154,9 +155,13 @@ export function QualityProfilesPage() {
   async function deleteProfile() {
     if (!selectedId || profiles.length <= 1 || busy) return
     const selected = profiles.find((p) => p.id === selectedId)
-    if (!window.confirm(
-        `Delete profile “${selected?.name || selectedId}”? Downloads using it fall back to the default.`,
-      )) return
+    const ok = await confirmAction({
+      title: `Delete profile “${selected?.name || selectedId}”?`,
+      body: 'Downloads using it fall back to the default.',
+      confirmLabel: 'Delete profile',
+      cancelLabel: 'Keep it',
+    })
+    if (!ok) return
     setBusy(true)
     setError(null)
     try {

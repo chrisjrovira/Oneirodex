@@ -55,7 +55,6 @@ describe('ImportLeafLibraries', () => {
 
   test('preview → multi-select → confirm posts create then scan (never on preview)', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     const fetchMock = vi.fn(async (url, opts) => {
       const href = String(url)
@@ -136,6 +135,9 @@ describe('ImportLeafLibraries', () => {
 
     await user.click(screen.getByRole('checkbox', { name: /select nintendo switch/i }))
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
+    // The house dialog, not window.confirm (UID-042): the named button in it
+    // is what actually commits, so the test has to press it.
+    await user.click(await screen.findByRole('button', { name: /^create library$/i }))
 
     await waitFor(() => {
       expect(
@@ -148,7 +150,6 @@ describe('ImportLeafLibraries', () => {
       ).toBe(true)
     })
     expect(await screen.findByText(/1 created/i)).toBeInTheDocument()
-    expect(window.confirm).toHaveBeenCalled()
   })
 
   test('soft-degrades when import preview API returns 404', async () => {
@@ -263,7 +264,6 @@ describe('ImportLeafLibraries', () => {
 
   test('confirm cancelled does not create', async () => {
     const user = userEvent.setup()
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
 
     const fetchMock = vi.fn(async (url) => {
       if (String(url).includes(IMPORT_LEAF_PREVIEW_URL)) {
@@ -293,6 +293,7 @@ describe('ImportLeafLibraries', () => {
     await screen.findByText('Nintendo Switch')
     await user.click(screen.getByRole('checkbox', { name: /select nintendo switch/i }))
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
+    await user.click(await screen.findByRole('button', { name: /^cancel$/i }))
 
     expect(
       fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
