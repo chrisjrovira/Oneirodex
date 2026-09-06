@@ -15,3 +15,11 @@ export type { PlaytimeApi } from './playtime.js'
 export type { BrowseApi, SearchOptions } from './browse.js'
 export type { UpdatesApi } from './updates.js'
 export type { DownloadsApi, InitiateDownloadResponse } from './downloads.js'
+export type {
+  ClientCapabilities,
+  DeviceApi,
+  DeviceKind,
+  HeartbeatRequest,
+  HeartbeatResponse,
+  RawCompanionCommand,
+} from './device.js'

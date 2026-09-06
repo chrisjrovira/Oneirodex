@@ -176,3 +176,10 @@ docker-compose.override.yml
 
 # Agent run-skill screenshots (.cursor/skills/run-oneirodex/shot.py)
 .artifacts/
+
+# Desktop installer output (scripts/build-installers.sh). Unsigned binaries,
+# tens of MB each, rebuilt per host — release artifacts, not repo contents.
+dist-installers/
+
+# TypeScript build output (tsc; consumers build from src via workspaces)
+frontend/api-client/dist/

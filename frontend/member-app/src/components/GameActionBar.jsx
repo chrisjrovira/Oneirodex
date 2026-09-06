@@ -4,6 +4,7 @@ import { initiateGameDownload } from '../api/downloads'
 import { fetchRemotePlayStatus } from '../api/remotePlay'
 import { queueClientCommand } from '../api/clientCommands'
 import { honestyApiErrorMessage } from '../utils/playHonesty'
+import { isThinSeat } from '../utils/seatMode'
 import { showToast } from '../utils/toast'
 
 /**
@@ -26,7 +27,10 @@ export function GameActionBar({
   onCommandQueued,
   assistPack: assistPackProp,
   remotePlay: remotePlayProp,
+  /** Override for tests; defaults to the seat this window was opened as. */
+  thinSeat,
 }) {
+  const isThin = thinSeat === undefined ? isThinSeat() : thinSeat
   const [busyAction, setBusyAction] = useState(null)
   const [statusMessage, setStatusMessage] = useState('')
   const [assistPack, setAssistPack] = useState(
@@ -250,6 +254,42 @@ export function GameActionBar({
       : companionDownloadReady
         ? 'Get with companion'
         : 'Install'
+
+  // TC-3 honesty. A thin seat holds a token with no write:download and ships no
+  // install ACL, so Download / Install / Update / Uninstall can never complete
+  // here. Say why once instead of offering four buttons that fail — the same
+  // pattern as the companion-offline copy.
+  if (isThin) {
+    return (
+      <div
+        className={`od-action-bar${compact ? ' od-action-bar--compact' : ''} ${className}`.trim()}
+        role="group"
+        aria-label={`Actions for ${gameName}`}
+        data-lifecycle={lifecycleState}
+        data-seat="thin"
+      >
+        <span className="od-action-bar__status" role="status">
+          Browse &amp; social seat — download, install and update happen on the
+          desktop companion.
+        </span>
+        {remotePlay ? (
+          <button
+            type="button"
+            className="od-action-bar__btn"
+            data-action="remote-play"
+            title={
+              remotePlay.copy_hint
+                ? `Copy for Moonlight: ${remotePlay.copy_hint}`
+                : 'Copy Moonlight host — open Moonlight app to stream'
+            }
+            onClick={onRemotePlayClick}
+          >
+            Play via Moonlight
+          </button>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <div

@@ -6,8 +6,10 @@ Use before tagging a release (example: **v0.1.0**).
 
 - [ ] Root [`VERSION`](../../VERSION) matches intended semver
 - [ ] [`CHANGELOG.md`](../../CHANGELOG.md) has a dated section for this release
-- [ ] `clients/desktop/package.json`, `src-tauri/tauri.conf.json`, `Cargo.toml`
-- [ ] `frontend/member-app`, `frontend/ops-glance`, `frontend/api-client` package versions
+- [ ] `clients/desktop/package.json`, `src-tauri/tauri.conf.json`, **`src-tauri/tauri.thin.conf.json`**, `Cargo.toml` **and `Cargo.lock`** (the lock records the crate's own version; a stale one breaks `--locked` builds)
+- [ ] `frontend/member-app`, `frontend/ops-glance`, `frontend/api-client` package versions **and their lockfiles**
+- [ ] Desktop `client_version` needs no edit — it is injected from `package.json` at build time (`__APP_VERSION__`)
+- [ ] Leaving pre-release (`X.Y.Z-beta` → `X.Y.Z`)? Add `msi` and `rpm` back to `bundle.targets` in both Tauri configs — they are excluded only because pre-release versions break those two bundlers ([desktop-code-signing.md](desktop-code-signing.md))
 - [ ] `docker-compose.yml` image tag (`APP_IMAGE`, preferred Hub `chrisjrovira/oneirodex:X.Y.Z`; local default `oneirodex:1.0.0-beta`)
 - [ ] Root `README.md` and `docs/README.md` version references
 
@@ -30,6 +32,7 @@ pytest tests/test_ops_followons.py tests/test_hardlinks_ai_vr_layouts.py tests/t
 ```
 
 - [ ] CI `ci-tests` workflow green on the release PR / commit
+- [ ] CI `desktop-build` green — six unsigned artifacts (full + thin × Windows / macOS / Linux); the upload fails the job if bundling produced nothing
 - [ ] Docker build: `docker compose build`
 - [ ] Fresh `.env` from `.env.docker.example` starts (`SECRET_KEY` set)
 

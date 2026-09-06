@@ -6,8 +6,27 @@ use std::path::{Path, PathBuf};
 use tauri::Manager;
 use zip::ZipArchive;
 
-/// Service name for OS credential store entries (Windows Credential Manager, etc.).
-const SECURE_STORE_SERVICE: &str = "com.oneirodex.desktop";
+/// Fallback service name for OS credential store entries when the bundle
+/// identifier is unavailable (tests, unbundled dev runs).
+const SECURE_STORE_SERVICE_FALLBACK: &str = "com.oneirodex.desktop";
+
+/// Service name for OS credential store entries (Windows Credential Manager,
+/// macOS Keychain, Secret Service).
+///
+/// This is the app's own bundle identifier, not a constant: the full companion
+/// (`com.oneirodex.desktop`) and the thin client (`com.oneirodex.thin`) ship as
+/// separate apps with separate app-data directories, and they must not share a
+/// credential. They did — both wrote the account `api_token` under the
+/// companion's service — so installing thin on a companion PC overwrote the
+/// companion's token with a thin-preset one that carries no `write:download`,
+/// and Download/Install then failed on scope with nothing to point at.
+fn secure_store_service(app: &tauri::AppHandle) -> String {
+    let identifier = app.config().identifier.trim().to_string();
+    if identifier.is_empty() {
+        return SECURE_STORE_SERVICE_FALLBACK.to_string();
+    }
+    identifier
+}
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct AppConfig {
@@ -124,6 +143,41 @@ fn ensure_path_under_any_root(path: &Path, roots: &[&Path]) -> Result<(), String
     Err("Path is outside allowed app directories".into())
 }
 
+/// Is this file the sort of thing we can hand to `Command::new`?
+///
+/// Windows answers with the `.exe` extension. Unix has no extension to read, so
+/// the executable bit is the only real signal — which is exactly why
+/// `extract_zip_archive` restores it. Shared libraries carry that bit too and
+/// are never an entry point, so they are excluded by extension.
+#[cfg(windows)]
+fn is_launchable_file(path: &Path) -> bool {
+    path.extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))
+}
+
+#[cfg(unix)]
+fn is_launchable_file(path: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+
+    if let Some(ext) = path.extension() {
+        // Executable-bit-carrying files that are never the entry point.
+        for skip in ["so", "dylib", "a", "o", "bundle"] {
+            if ext.eq_ignore_ascii_case(skip) {
+                return false;
+            }
+        }
+    }
+
+    fs::metadata(path)
+        .map(|meta| meta.permissions().mode() & 0o111 != 0)
+        .unwrap_or(false)
+}
+
+#[cfg(not(any(unix, windows)))]
+fn is_launchable_file(_path: &Path) -> bool {
+    false
+}
+
 fn find_likely_exe(dir: &Path, max_depth: u32) -> Option<String> {
     find_likely_exe_inner(dir, 0, max_depth)
 }
@@ -136,13 +190,8 @@ fn find_likely_exe_inner(dir: &Path, depth: u32, max_depth: u32) -> Option<Strin
     let entries = fs::read_dir(dir).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.is_file() {
-            if path
-                .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))
-            {
-                return Some(path.to_string_lossy().into_owned());
-            }
+        if path.is_file() && is_launchable_file(&path) {
+            return Some(path.to_string_lossy().into_owned());
         }
     }
 
@@ -221,13 +270,13 @@ fn save_config(app: tauri::AppHandle, config: AppConfig) -> Result<(), String> {
     fs::write(path, data).map_err(|error| error.to_string())
 }
 
-fn secure_entry(account: &str) -> Result<Entry, String> {
-    Entry::new(SECURE_STORE_SERVICE, account).map_err(|error| error.to_string())
+fn secure_entry(app: &tauri::AppHandle, account: &str) -> Result<Entry, String> {
+    Entry::new(&secure_store_service(app), account).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-fn secure_store_get(account: String) -> Result<Option<String>, String> {
-    let entry = secure_entry(&account)?;
+fn secure_store_get(app: tauri::AppHandle, account: String) -> Result<Option<String>, String> {
+    let entry = secure_entry(&app, &account)?;
     match entry.get_password() {
         Ok(secret) => Ok(Some(secret)),
         Err(keyring::Error::NoEntry) => Ok(None),
@@ -236,14 +285,14 @@ fn secure_store_get(account: String) -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
-fn secure_store_set(account: String, secret: String) -> Result<(), String> {
-    let entry = secure_entry(&account)?;
+fn secure_store_set(app: tauri::AppHandle, account: String, secret: String) -> Result<(), String> {
+    let entry = secure_entry(&app, &account)?;
     entry.set_password(&secret).map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-fn secure_store_delete(account: String) -> Result<(), String> {
-    let entry = secure_entry(&account)?;
+fn secure_store_delete(app: tauri::AppHandle, account: String) -> Result<(), String> {
+    let entry = secure_entry(&app, &account)?;
     match entry.delete_credential() {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),
@@ -373,6 +422,23 @@ fn extract_zip_archive(
 
         let mut out = File::create(&entry_path).map_err(|error| error.to_string())?;
         copy(&mut entry, &mut out).map_err(|error| error.to_string())?;
+
+        // Restore the archived permission bits on unix. Without this every
+        // extracted file lands 0644 and `launch_game` fails with "permission
+        // denied" on the one file that was supposed to be the entry point —
+        // and `find_likely_exe` cannot see it either, because the executable
+        // bit is the only thing that marks an entry point on a platform with
+        // no `.exe` extension. Archives authored on Windows carry no unix mode
+        // at all; those stay 0644, which is correct — a Windows build is not
+        // launchable here regardless.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            if let Some(mode) = entry.unix_mode() {
+                fs::set_permissions(&entry_path, fs::Permissions::from_mode(mode))
+                    .map_err(|error| error.to_string())?;
+            }
+        }
     }
 
     let exe_path = find_likely_exe(&destination, 2);

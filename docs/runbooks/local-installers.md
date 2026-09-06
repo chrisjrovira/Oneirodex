@@ -5,20 +5,30 @@ CI workflow (`.github/workflows/desktop-build.yml`) is a convenience, not a
 requirement.
 
 ```bash
-./scripts/build-installers.sh            # bundle for this host
-./scripts/build-installers.sh --linux    # Linux bundles via Docker
-./scripts/build-installers.sh --thin     # thin-client config
+./scripts/build-installers.sh                  # bundle for this host
+./scripts/build-installers.sh --linux          # Linux bundles via Docker
+./scripts/build-installers.sh --thin           # thin client
+./scripts/build-installers.sh --linux --thin   # thin client, Linux bundles
 ```
 
-Output lands in `dist-installers/`.
+Output lands in `dist-installers/` (gitignored). The script **fails loudly** if a
+build produced no bundles rather than reporting success over an empty directory.
 
 ## What each host can build
 
 | Host | Produces | Notes |
 |---|---|---|
-| Windows | `.exe` (NSIS), `.msi` | Native. Needs Rust + Node 20. |
-| Linux | `.deb`, `.rpm`, `.AppImage` | Native, or from any host with `--linux`. |
+| Windows | `.exe` (NSIS) | Native. Needs Rust + Node 20. |
+| Linux | `.deb`, `.AppImage` | Native, or from any host with `--linux`. |
 | macOS | `.dmg`, `.app` | **Mac required** — see below. |
+
+`.msi` and `.rpm` are not built: both reject the pre-release version string the
+project currently carries (`1.0.0-beta`). They can be added back to
+`bundle.targets` in `clients/desktop/src-tauri/tauri.conf.json` (and
+`tauri.thin.conf.json`) once the version is a plain `X.Y.Z`.
+
+Both flavors bundle under distinct product names (`Oneirodex` vs
+`OneirodexThin`), so full and thin installers can share one output directory.
 
 ## Why macOS needs a Mac
 
@@ -32,19 +42,27 @@ otherwise had.
 If you have no Mac, the options are a macOS runner, a rented build host, or
 shipping Windows and Linux only.
 
+CI builds macOS with `--target universal-apple-darwin` so one disk image serves
+Apple silicon and Intel. Locally, a plain `./scripts/build-installers.sh` on a
+Mac produces a `.dmg` for that Mac's own architecture; add
+`-- --target universal-apple-darwin` to `npm run tauri:build` for a universal one
+(requires `rustup target add x86_64-apple-darwin aarch64-apple-darwin`).
+
 ## Prerequisites
 
 - **Rust** — <https://rustup.rs>
 - **Node 20+**
 - **Windows**: MSVC build tools + WebView2 (present on Windows 11)
 - **Linux/Docker**: the script installs `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`
-  and friends inside the container. Those headers are exactly why a Linux
+  and friends inside the container, and pulls Node 20 from NodeSource (Debian
+  bookworm still ships Node 18). Those webkit headers are exactly why a Linux
   bundle cannot be produced natively on Windows.
 
 ## Signing
 
 Bundles are **unsigned** by default, which matches the project's stance that the
-companion is unsigned unless an operator supplies certificates.
+companion is unsigned unless an operator supplies certificates — see
+[desktop-code-signing.md](desktop-code-signing.md), where that stance is locked.
 
 - Windows: SmartScreen warns on first run.
 - macOS: Gatekeeper blocks until signed *and* notarised with an Apple

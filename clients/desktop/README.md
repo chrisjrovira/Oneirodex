@@ -1,6 +1,6 @@
 # Oneirodex Desktop Companion
 
-Windows-first Tauri client with **two build flavors** against a Oneirodex server:
+Cross-platform Tauri client (Windows · macOS · Linux) with **two build flavors** against a Oneirodex server:
 
 | Flavor | Command | What it does |
 |---|---|---|
@@ -41,10 +41,22 @@ This starts the Vite dev server on port **1420** and opens the Tauri window (ful
 | `npm run dev` | Vite only (browser preview; Tauri invoke calls are no-ops) |
 | `npm run build` | Typecheck + production frontend bundle to `dist/` |
 | `npm run build:thin` | Frontend bundle with `VITE_CLIENT_MODE=thin` |
-| `npm run tauri:build` | Full companion unsigned EXE (requires Rust) |
+| `npm run tauri:build` | Full companion, unsigned installer for this host (requires Rust) |
 | `npm run tauri:build:thin` | Thin flavor via `src-tauri/tauri.thin.conf.json` (connect + library/Friends; no FS lifecycle ACL) |
 
-**Caveat:** both flavors write the same Cargo output path (`src-tauri/target/release/oneirodex-desktop.exe`). Copy/rename (`Oneirodex-full.exe` / `Oneirodex-thin.exe`) before rebuilding the other flavor — [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
+### Installers
+
+Bundling is on, so a build produces a real (unsigned) installer under `src-tauri/target/<target>/release/bundle/`:
+
+| Host | Output |
+|---|---|
+| Windows | `.exe` (NSIS) |
+| macOS | `.app` + `.dmg` |
+| Linux | `.deb` + `.AppImage` |
+
+`.msi` and `.rpm` are excluded while the version is a pre-release (`1.0.0-beta`) — both bundlers reject one. The flavors bundle under distinct product names (`Oneirodex` / `OneirodexThin`), so they no longer overwrite each other; only the **bare** `target/release/oneirodex-desktop[.exe]` path is still shared.
+
+For all three platforms in one go, use [`scripts/build-installers.sh`](../../scripts/build-installers.sh) — [local-installers.md](../../docs/runbooks/local-installers.md).
 
 ## Auth & config persistence
 
@@ -56,6 +68,8 @@ This starts the Vite dev server on port **1420** and opens the Tauri window (ful
    - Windows: `%APPDATA%\com.oneirodex.desktop\config.json` (base URL only) + Windows Credential Manager (`com.oneirodex.desktop` / `api_token`)
    - macOS: `~/Library/Application Support/com.oneirodex.desktop/config.json` + Keychain
    - Linux: `~/.local/share/com.oneirodex.desktop/config.json` + Secret Service
+
+   The credential **service** is the app's own bundle identifier, so the thin client stores under `com.oneirodex.thin` and the two flavors cannot overwrite each other's token. They previously shared the companion's service name, which meant installing thin on a companion PC replaced the companion's token with a thin-preset one that has no `write:download` — and Download/Install then failed on scope. If you had both installed before this change, re-paste the companion token once.
 
 Legacy plaintext `token` fields in `config.json` are migrated into the secure store on next load and scrubbed from the file. `KeychainAdapter` in `src/auth.ts` is wired via `src/keychain.ts` → Tauri `secure_store_*` commands.
 
@@ -96,7 +110,11 @@ Supported states: `not_downloaded`, `downloaded`, `installed`, `update_available
 
 ## Client heartbeat
 
-While connected, the desktop companion POSTs `POST /api/client/heartbeat` every 60 seconds (see `src/heartbeat.ts`). Payload includes optional `device_name`, `client_version`, and a stable `device_id`. The server uses recent heartbeats (5-minute TTL) to set `client_connected: true` on browse/discover/game-details responses so the web UI enables Install/Update/Uninstall actions when the companion is online.
+While connected, the desktop companion POSTs `POST /api/client/heartbeat` every 60 seconds (see `src/heartbeat.ts`, typed through `@oneirodex/api-client`'s `device` API). Payload includes a stable `device_id`, `device_name`, `client_version`, and **`device_kind`** — `companion` here, `thin` from the thin shell. The server defaults an omitted kind to `companion`, so every client sends its own explicitly; otherwise a thin seat is indistinguishable from a companion in the Ops device list.
+
+`client_version` is injected from `package.json` at build time (`__APP_VERSION__` in `vite.config.ts`), not hardcoded — a version bump cannot miss this surface.
+
+The server uses recent heartbeats (5-minute TTL) to set `client_connected: true` on browse/discover/game-details responses so the web UI enables Install/Update/Uninstall actions when the companion is online.
 
 After **two consecutive heartbeat failures**, the UI switches to **Offline**: Download / Update / apply_patch are disabled with an explanation; Play / Install / Uninstall remain available. Queued web commands are nack’d back to `pending` until the companion is reachable again.
 
@@ -120,7 +138,9 @@ clients/desktop/
     download.ts           # Initiate + stream + save archive
     install.ts            # ZIP extract + lifecycle install
     uninstall.ts          # Remove local files + lifecycle
-    heartbeat.ts          # POST /api/client/heartbeat scheduler
+    heartbeat.ts          # POST /api/client/heartbeat scheduler (device_kind aware)
+    version.ts            # __APP_VERSION__ from package.json — reported as client_version
+    thin-app.ts           # Thin shell UI: connect, library/Friends webviews, thin presence
     social-window.ts      # Friends companion webview
     connect.ts            # Connection validation + library preview
     config-store.ts       # Tauri file persistence (base URL; migrates/scrubs plaintext token)
@@ -154,7 +174,11 @@ Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no li
 
 ## Distribution (unsigned only)
 
-**Product stance:** Windows code-signing certificates will never be pursued. Unsigned `oneirodex-desktop.exe` is the supported path (full **or** thin flavor). CI (`.github/workflows/desktop-build.yml`) builds and uploads an unsigned **full** companion artifact — do not set signing secrets. Thin: run `npm run tauri:build:thin` locally and rename before a full rebuild. See [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md).
+**Product stance:** code-signing certificates will never be pursued — on any platform. Unsigned installers are the supported path for both flavors; do not set signing secrets or Apple notarization credentials.
+
+CI (`.github/workflows/desktop-build.yml`) builds and uploads **six** unsigned artifacts — full and thin × Windows / macOS / Linux — named `oneirodex-<flavor>-<platform>`. macOS is built `--target universal-apple-darwin`, so one `.dmg` covers Apple silicon and Intel.
+
+See [desktop-code-signing.md](../../docs/runbooks/desktop-code-signing.md) for the locked stance and [local-installers.md](../../docs/runbooks/local-installers.md) for building without CI.
 
 ## Server prerequisites
 

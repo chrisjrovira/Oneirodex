@@ -15,14 +15,59 @@ import {
   shapeInvalidConnectionResult,
   validateConnection,
 } from './connect.js'
+import { startClientHeartbeat, type HeartbeatScheduler } from './heartbeat.js'
 import { keychainAdapter } from './keychain.js'
 import { joinUrl } from './paths.js'
 import { openSocialCompanionWindow } from './social-window.js'
 
 const LIBRARY_LABEL = 'library'
 
-function joinLibraryUrl(baseUrl: string): string {
-  return joinUrl(baseUrl.trim(), '/')
+let thinPresence: HeartbeatScheduler | undefined
+
+/**
+ * Register this seat as `device_kind=thin`.
+ *
+ * Without it a thin seat never appears in the Ops device list at all — it holds
+ * a token, opens webviews, and is invisible to the operator, which defeats the
+ * one thing `device_kind` was added for (TC-1). Presence needs the optional thin
+ * token (`write:presence`); with no token there is nothing to authenticate with
+ * and the webviews fall back to site login, so we simply stay quiet.
+ *
+ * Install commands are never delivered here: the server gates that on
+ * `device_kind == companion` *and* a download/lifecycle scope, and the thin
+ * preset has neither. No `onCommands` handler is wired for the same reason.
+ */
+function startThinPresence(baseUrl: string, token: string): void {
+  thinPresence?.stop()
+  thinPresence = undefined
+  if (!baseUrl || !token) {
+    return
+  }
+  const auth = createAuthStore({ baseUrl, token })
+  thinPresence = startClientHeartbeat(auth, {
+    deviceKind: 'thin',
+    deviceName: 'Oneirodex Thin',
+    onUnreachable: (error) => {
+      logCompanion('thin', `presence offline: ${error instanceof Error ? error.message : String(error)}`)
+    },
+  })
+}
+
+/**
+ * Library URL for the thin webview, marked as a thin seat.
+ *
+ * The SPA cannot otherwise tell it is inside the thin shell — it is a cookie
+ * session in a plain webview, identical on the wire to a browser tab — so it
+ * would keep offering Install / Update / Uninstall that this seat can never
+ * complete. The marker is latched by `utils/seatMode.js` and survives in-app
+ * navigation from there (TC-3).
+ */
+export function joinLibraryUrl(baseUrl: string): string {
+  const base = baseUrl.trim()
+  if (!base) {
+    return ''
+  }
+  return `${joinUrl(base, '/')}?seat=thin`
 }
 
 async function openLibraryWindow(baseUrl: string): Promise<'opened' | 'focused' | 'browser'> {
@@ -88,6 +133,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
         <li>Opens your household library in a dedicated window</li>
         <li>Friends popup (bottom-right, always-on-top)</li>
         <li>Uses thin device capabilities (no download / install / native play)</li>
+        <li>With a token, reports presence as a <strong>thin</strong> seat so it shows up in Ops</li>
       </ul>
       <p class="hint">Need Install / Update / Play for PC titles? Use the full <strong>Oneirodex</strong> desktop companion.</p>
     </section>
@@ -121,6 +167,7 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
     } catch (error) {
       throw new Error(formatKeychainError(error))
     }
+    startThinPresence(baseUrl, token)
   }
 
   /**
@@ -159,6 +206,10 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
     const fromKeychain = await keychainAdapter.load()
     const token = stored.token || fromKeychain
     if (token) tokenEl.value = normalizeOneirodexToken(token)
+    // Announce the seat on startup, not only after the next Save.
+    if (stored.baseUrl && tokenEl.value) {
+      startThinPresence(normalizeBaseUrl(stored.baseUrl), tokenEl.value)
+    }
   } catch (error) {
     logCompanion('thin', `hydrate failed: ${error instanceof Error ? error.message : String(error)}`)
     // first run / keyring load noise

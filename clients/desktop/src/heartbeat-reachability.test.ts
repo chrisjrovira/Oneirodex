@@ -17,11 +17,25 @@ describe('startClientHeartbeat reachability', () => {
     const onReachable = vi.fn()
     const onUnreachable = vi.fn()
     let fail = true
+    // Shaped like a real Response: the heartbeat goes through
+    // @oneirodex/api-client, which reads content-type and text() on failures.
     const fetchImpl = vi.fn().mockImplementation(async () => {
       if (fail) {
-        return { ok: false, status: 503, json: async () => ({}) }
+        return {
+          ok: false,
+          status: 503,
+          headers: new Headers(),
+          text: async () => '',
+          json: async () => ({}),
+        }
       }
-      return { ok: true, json: async () => ({ commands: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async () => '{"commands":[]}',
+        json: async () => ({ commands: [] }),
+      }
     })
 
     const scheduler = startClientHeartbeat(auth, {
