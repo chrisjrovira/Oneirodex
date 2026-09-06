@@ -11,6 +11,7 @@ from oneirodex.utils.public_origin import (
 )
 from oneirodex.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, InviteForm, UserPasswordForm
 from oneirodex.utils.auth import _authenticate_and_redirect, safe_next_url
+from oneirodex.utils.accounts import is_placeholder_email
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.smtp import send_email, send_password_reset_email, send_invite_email
 from oneirodex.utils.processors import get_global_settings
@@ -93,7 +94,11 @@ def login():
         user = db.session.execute(select(User).filter_by(name=username)).scalar_one_or_none()
 
         if user:
-            if not user.is_email_verified:
+            # Accounts an admin created without an email carry an unroutable
+            # `no-email.invalid` placeholder and are never marked verified —
+            # there is nothing to verify. The activation gate is about real
+            # addresses that have not been confirmed yet, so skip it for them.
+            if not user.is_email_verified and not is_placeholder_email(user.email):
                 flash('Your account is not activated, check your email.', 'warning')
                 log_system_event(f"User {username} attempted to log in with an unverified account.", event_type='login', event_level='warning')
                 record_failure(rate_key)

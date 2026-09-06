@@ -50,7 +50,9 @@ Consequences worth knowing:
 
 - The roster shows **no address** for these accounts, not the placeholder. It is
   never presented as somewhere to write to.
-- They are never marked email-verified — there is nothing to verify.
+- They are never marked email-verified — there is nothing to verify. The login
+  "activate your account" check knows to skip these accounts, so they sign in
+  immediately regardless.
 - **Password reset by email does not work for them.** An admin resets the
   password from **Admin → Users**.
 - Clearing the email field on an existing user in the editor converts them to a

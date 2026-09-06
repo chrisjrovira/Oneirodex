@@ -86,6 +86,43 @@ class TestCreateWithoutEmail:
         ).scalar_one()
         assert created.is_email_verified is False
 
+    def test_emailless_account_can_actually_sign_in(self, client, app, db_session, admin):
+        # `is_email_verified` is False for these accounts, but the login
+        # activation gate must not bounce them — there is no email to check.
+        login(client, admin)
+        payload, response = _create(client)
+        assert response.status_code == 200
+
+        fresh = app.test_client()
+        result = fresh.post('/login', data={
+            'username': payload['username'],
+            'password': payload['password'],
+        })
+        assert result.status_code == 302
+        assert '/login' not in result.headers['Location']
+
+    def test_real_unverified_email_is_still_blocked(self, app, db_session, admin):
+        # The carve-out is for placeholder addresses only: a real address that
+        # has not been confirmed still gets "check your email".
+        suffix = str(uuid4())[:8]
+        pending = User(
+            name=f'pending_{suffix}',
+            email=f'pending_{suffix}@example.com',
+            role='user',
+            user_id=str(uuid4()),
+            is_email_verified=False,
+        )
+        pending.set_password('a good long password')
+        db_session.add(pending)
+        db_session.commit()
+
+        result = app.test_client().post('/login', data={
+            'username': pending.name,
+            'password': 'a good long password',
+        })
+        assert result.status_code == 302
+        assert '/login' in result.headers['Location']
+
     def test_two_emailless_accounts_do_not_collide(self, client, admin):
         login(client, admin)
         first = _create(client)[1]
