@@ -15,6 +15,8 @@ test('parses Library template data attributes', () => {
   root.dataset.libraryCount = '2'
   root.dataset.gamesCount = '12'
   root.dataset.enableDeleteOnDisk = 'true'
+  root.dataset.scanHasRun = '1'
+  root.dataset.unmatchedCount = '7'
   root.dataset.currentFilters = '{"genre":"Action"}'
 
   expect(parseRootConfig(root)).toEqual({
@@ -26,9 +28,23 @@ test('parses Library template data attributes', () => {
     libraryCount: 2,
     gamesCount: 12,
     enableDeleteOnDisk: true,
+    scanHasRun: true,
+    unmatchedCount: 7,
     locale: 'en',
     currentFilters: { genre: 'Action' },
   })
+})
+
+test('a template that says nothing about scans reads as "no scan has run"', () => {
+  // UID-043 branches the empty state three ways off these two, so the absent
+  // case has to be false/0 rather than undefined — an older template, or a
+  // route that does not pass them, must not look like a finished scan.
+  const root = document.createElement('div')
+  root.dataset.perPage = '20'
+
+  const config = parseRootConfig(root)
+  expect(config.scanHasRun).toBe(false)
+  expect(config.unmatchedCount).toBe(0)
 })
 
 test('parses Favorites template data attributes', () => {
