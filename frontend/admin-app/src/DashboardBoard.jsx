@@ -105,13 +105,29 @@ export function DashboardBoard({
   }, [layout, isCustom, storageKey, minsFn])
 
   // Health banner grows with issue folds; default h:2 clips Degraded content.
+  //
+  // The measure (getBoundingClientRect + scrollHeight) and the setLayout write are
+  // deferred into requestAnimationFrame, and the ResizeObserver callback only
+  // *schedules* that rAF rather than measuring+writing inline. The observer watches
+  // .od-dash__body, whose height the write changes, so doing both synchronously in
+  // the callback is a read->write->re-observe loop within one frame — which pins the
+  // main thread when a browser extension (password managers) is also re-measuring on
+  // every DOM mutation. Deps are [visibleKey, minsFn], not [widgets, layout.length]:
+  // `widgets` is a fresh object each parent render (poll tick, ellipsis tick) and
+  // `layout.length` is written by this very effect, so the old deps re-ran it
+  // constantly and re-triggered it off its own output.
   useEffect(() => {
     const board = boardRef.current
     if (!board) return undefined
     const host = board.querySelector('[data-widget="status"] .od-dash__body')
     if (!host) return undefined
 
-    const syncStatusHeight = () => {
+    let raf = 0
+    let disposed = false
+
+    const measureAndCommit = () => {
+      raf = 0
+      if (disposed) return
       const metrics = boardCellMetrics(board)
       const minH = minsFn('status').h
       const need = rowsForContentHeight(host.scrollHeight, metrics.rowPitch, minH)
@@ -122,12 +138,29 @@ export function DashboardBoard({
       })
     }
 
-    syncStatusHeight()
-    if (typeof ResizeObserver === 'undefined') return undefined
-    const observer = new ResizeObserver(syncStatusHeight)
+    const schedule = () => {
+      if (raf) return
+      const req =
+        typeof requestAnimationFrame === 'function'
+          ? requestAnimationFrame
+          : (cb) => setTimeout(cb, 0)
+      raf = req(measureAndCommit)
+    }
+
+    schedule()
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        disposed = true
+      }
+    }
+    const observer = new ResizeObserver(schedule)
     observer.observe(host)
-    return () => observer.disconnect()
-  }, [widgets, layout.length, minsFn])
+    return () => {
+      disposed = true
+      if (raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(raf)
+      observer.disconnect()
+    }
+  }, [visibleKey, minsFn])
 
   const byId = useMemo(() => {
     const map = new Map()

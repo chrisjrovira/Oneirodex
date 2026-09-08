@@ -4,32 +4,41 @@
 {% import 'partials/icons.html' as icons %}
 
 <link rel="stylesheet" href="{{ 'css/admin/admin_help.css'|theme_asset }}">
-
 <script src="{{ url_for('static', filename='js/od_admin_help.js') }}"></script>
 
-<div class="help-content container-settings od-adminpage od-adminpage--xl od-admin-fill">
-    <div class="od-adminpage-header">
-        <div>
-            <h1 class="od-adminpage-title">Oneirodex Administrator Guide</h1>
-            <p class="od-adminpage-lede">Operator reference for libraries, users, scanning, email, and maintenance.</p>
+<div class="help-content od-adminpage od-adminpage--xl od-admin-fill od-adminhelp">
+    <header class="od-adminhelp__hero">
+        <span class="od-adminhelp__hero-mark" aria-hidden="true">{{ icons.icon('help', size=24) }}</span>
+        <div class="od-adminhelp__hero-copy">
+            <h1 class="od-adminhelp__hero-title">Oneirodex Administrator Guide</h1>
+            <p class="od-adminhelp__hero-lede">Operator reference for libraries, users, scanning, email, and maintenance. Jump to a section from the top bar; each panel opens on its own.</p>
         </div>
-    </div>
+    </header>
+
     {# Quick Navigation buttons live in the thin top bar (od_admin_help.js). #}
     <div class="od-admin-fill__body">
-    <div class="admin-section od-adminpage-panel" id="quick-start">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Quick Start Guide</h2>
-        <div class="collapsible-content">
-            <ol class="step-by-step">
+    <div class="od-adminhelp__sections">
+
+    <details class="od-adminhelp__section" data-tone="accent" id="quick-start" open>
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">Quick Start Guide</span>
+                <span class="od-adminhelp__section-summary">Five steps from an empty install to a browsable library.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
+            <ol class="od-adminhelp__steps">
                 <li>Create a new library by going to Library Management in the admin dashboard</li>
                 <li>Select the appropriate platform type (PC, Windows, or specific console) to help IGDB make correct matches</li>
                 <li>Click on "Scan" to begin scanning a folder that's accessible to the application</li>
                 <li>The system will index all folder names or file names and add them to the library</li>
                 <li>Once scanning is complete, your games will be ready to browse and download</li>
             </ol>
-            <div class="note">
+            <div class="od-adminhelp__note">
                 <strong>Note:</strong> Correct platform selection is crucial for accurate game matching with IGDB database.
             </div>
-            <div class="note important">
+            <div class="od-adminhelp__note od-adminhelp__note--important">
                 <strong>Important:</strong> Folder scanning behaviour:
                 <ul>
                     <li>If a folder contains multiple files, they will be automatically zipped during downloading</li>
@@ -39,15 +48,19 @@
                 </ul>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- System Overview -->
-    <div class="admin-section od-adminpage-panel" id="system-overview">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}System Overview</h2>
-        <div class="collapsible-content">
+    <details class="od-adminhelp__section" data-tone="info" id="system-overview">
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">System Overview</span>
+                <span class="od-adminhelp__section-summary">What Oneirodex is and the key features it ships with.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
             <p>Oneirodex is a comprehensive game library management system that allows you to organize, catalog, and share your game collection.</p>
-            
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Key Features</h3>
                 <ul>
                     <li>Multiple library support with platform-specific organization</li>
@@ -58,13 +71,18 @@
                 </ul>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- Library Management -->
-    <div class="admin-section od-adminpage-panel" id="library-management">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Library Management</h2>
-        <div class="collapsible-content">
-            <div class="help-subsection">
+    <details class="od-adminhelp__section" data-tone="info" id="library-management">
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">Library Management</span>
+                <span class="od-adminhelp__section-summary">Creating libraries and resolving unmatched folders.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
+            <div class="od-adminhelp__subsection">
                 <h3>Creating Libraries</h3>
                 <ul>
                     <li>Each library represents a collection of games for a specific platform</li>
@@ -72,8 +90,7 @@
                     <li>Multiple libraries can be created for different platforms or categories</li>
                 </ul>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Unmatched Folders</h3>
                 <p>Unmatched folders are game directories that couldn't be automatically matched with IGDB database entries. These can occur when:</p>
                 <ul>
@@ -84,13 +101,18 @@
                 <p>You can manually identify these games using the "Identify" button in the unmatched folders section, which allows you to search and match with IGDB entries.</p>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- User Management -->
-    <div class="admin-section od-adminpage-panel" id="user-management">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}User Management & Access Control</h2>
-        <div class="collapsible-content">
-            <div class="help-subsection">
+    <details class="od-adminhelp__section" data-tone="success" id="user-management">
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">User Management &amp; Access Control</span>
+                <span class="od-adminhelp__section-summary">Invite system and email whitelist for controlled registration.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
+            <div class="od-adminhelp__subsection">
                 <h3>Invite System</h3>
                 <p>The invite system allows controlled user registration through:</p>
                 <ul>
@@ -100,8 +122,7 @@
                 </ul>
                 <p>Enable or disable the invite system in Server Settings. When enabled, admins can distribute invite tokens to users, allowing them to invite others to join.</p>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Email Whitelist</h3>
                 <p>The email whitelist provides an additional layer of registration control:</p>
                 <ul>
@@ -111,18 +132,22 @@
                 </ul>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- Scanning Section -->
-    <div class="admin-section od-adminpage-panel" id="scanning">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Scanning & Content Management</h2>
-        <div class="collapsible-content">
-            <div class="help-subsection">
+    <details class="od-adminhelp__section" data-tone="warning" id="scanning">
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">Scanning &amp; Content Management</span>
+                <span class="od-adminhelp__section-summary">Corroboration, scan options, updates and extras, best practices.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
+            <div class="od-adminhelp__subsection">
                 <h3>Four-source corroboration</h3>
                 <p>A high-confidence IGDB hit is still checked against Steam / GOG exact title plus unique-exact MobyGames / TheGamesDB when those keys are set. If another catalog has a unique exact title that matches the folder but not IGDB (folder Doom / IGDB Doom 3), the scan writes a Review proposal (<code>match_reason=catalog_disagreement</code>) and does not auto-create the game or peel the name down until it fits. Agreeing catalogs fill store IDs and GameURL rows — never a DRM download.</p>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Scan Management</h3>
                 <ul>
                     <li>Automatic scanning of specified folders for new games</li>
@@ -131,8 +156,7 @@
                     <li>Options to remove missing games during scans</li>
                 </ul>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Content Updates</h3>
                 <p>The system can track and manage:</p>
                 <ul>
@@ -141,8 +165,7 @@
                     <li>Automatic metadata updates from IGDB</li>
                 </ul>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Scanning Best Practices</h3>
                 <ul>
                     <li>Ensure folder names match game titles as closely as possible</li>
@@ -158,9 +181,7 @@
                     </li>
                 </ul>
             </div>
-
-            <!-- Adding new section about Updates and Extras -->
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Scanning for Updates and Extra Content</h3>
                 <p>The scanning process supports detection of game updates and extra content in subfolders:</p>
                 <ul>
@@ -179,18 +200,23 @@
                         </ul>
                     </li>
                 </ul>
-                <div class="note">
+                <div class="od-adminhelp__note">
                     <strong>Configuration:</strong> Enable these features in Server Settings and configure the appropriate folder names
                     for updates and extras scanning.
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- Email Settings -->
-    <div class="admin-section od-adminpage-panel" id="email-settings">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}Email & SMTP Configuration</h2>
-        <div class="collapsible-content">
+    <details class="od-adminhelp__section" data-tone="info" id="email-settings">
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">Email &amp; SMTP Configuration</span>
+                <span class="od-adminhelp__section-summary">What email is used for and the SMTP settings you need.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
             <p>Email functionality is used for:</p>
             <ul>
                 <li>User registration verification</li>
@@ -198,8 +224,7 @@
                 <li>System notifications</li>
                 <li>Newsletter distribution</li>
             </ul>
-            
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>SMTP Settings</h3>
                 <p>Configure your SMTP settings with:</p>
                 <ul>
@@ -210,13 +235,18 @@
                 </ul>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- System Maintenance -->
-    <div class="admin-section od-adminpage-panel" id="maintenance">
-        <h2>{{ icons.icon('chevron-down', extra_class='collapse-icon') }}System Maintenance</h2>
-        <div class="collapsible-content">
-            <div class="help-subsection">
+    <details class="od-adminhelp__section" data-tone="danger" id="maintenance">
+        <summary class="od-adminhelp__section-head">
+            <span class="od-adminhelp__section-mark" aria-hidden="true">{{ icons.icon('chevron-down') }}</span>
+            <span class="od-adminhelp__section-copy">
+                <span class="od-adminhelp__section-title">System Maintenance</span>
+                <span class="od-adminhelp__section-summary">Routine tasks, troubleshooting, and post-setup upkeep.</span>
+            </span>
+        </summary>
+        <div class="od-adminhelp__body">
+            <div class="od-adminhelp__subsection">
                 <h3>Regular Maintenance Tasks</h3>
                 <ul>
                     <li>Monitor system logs for issues</li>
@@ -225,8 +255,7 @@
                     <li>Update IGDB metadata</li>
                 </ul>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Troubleshooting</h3>
                 <ul>
                     <li>Check server logs for detailed error information</li>
@@ -245,8 +274,7 @@
                     <li>Ensure all required services are running</li>
                 </ul>
             </div>
-
-            <div class="help-subsection">
+            <div class="od-adminhelp__subsection">
                 <h3>Post-Setup Maintenance</h3>
                 <ul>
                     <li>Regularly check unmatched folders and resolve them</li>
@@ -257,6 +285,8 @@
                 </ul>
             </div>
         </div>
+    </details>
+
     </div>
     </div>
 </div>

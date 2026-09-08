@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 import { confirmAction } from '../../shared/confirmDialog'
 import { PageStatus } from './PageStatus'
+import { PM_IGNORE } from './formIgnore'
 import { getJson, postJson } from './adminApi'
 import {
   buildDupeCompare,
@@ -386,7 +387,11 @@ function DupeCompare({ row, onOpenPath }) {
  * Compare unmatched / duplicate folders at a glance with fix actions.
  * Open path stays in a modal callback — never navigates to Auto Scan.
  */
-export function DupeGlance({ onOpenPath }) {
+// memo: DupeGlance does its own polling and its only prop is a stable setter, so
+// it must not re-render every time its parent (ScansPage) re-renders on a 4s scan
+// tick — that would re-lay-out its list and note <input> and make a password
+// manager re-scan the subtree each tick.
+export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
   const [rows, setRows] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -826,6 +831,7 @@ export function DupeGlance({ onOpenPath }) {
                           value={row.bad_match_reason || ''}
                           disabled={busy}
                           onChange={(event) => handleBadMatchChange(row, event.target.value)}
+                          {...PM_IGNORE}
                         >
                           <option value="">Not flagged</option>
                           {badMatchReasons.map((reason) => (
@@ -846,6 +852,7 @@ export function DupeGlance({ onOpenPath }) {
                           value={noteText}
                           maxLength={500}
                           onChange={(event) => setNoteText(event.target.value)}
+                          {...PM_IGNORE}
                         />
                         <button
                           type="button"
@@ -945,4 +952,4 @@ export function DupeGlance({ onOpenPath }) {
       ))}
     </section>
   )
-}
+})

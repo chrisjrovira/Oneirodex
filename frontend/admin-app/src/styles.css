@@ -560,7 +560,16 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   margin-bottom: 0.75rem;
 }
 
-.od-admin-input {
+/* The admin field box. `.od-admin-input` is the explicit hook; a bare
+   <select> / <textarea> inside an admin panel or page picks up the same box
+   without every call site repeating the class — the admin parallel of
+   od-primitives.css's .od-input/.od-select/.od-textarea. `:not([class])` lets a
+   control that carries its own class (DataTable filters, .od-select) opt out. */
+.od-admin-input,
+.od-admin-panel select:not([class]),
+.od-admin-panel textarea:not([class]),
+.od-admin-page select:not([class]),
+.od-admin-page textarea:not([class]) {
   display: block;
   width: 100%;
   margin: 0.35rem 0 0.85rem;
@@ -595,6 +604,74 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 
 .od-admin-field .od-admin-input {
   margin-bottom: 0;
+}
+
+/* Admin layout utilities — inline-style sweep.
+ *
+ * These name values that were repeated as one-off `style={{}}` objects across
+ * the page files: a stacked panel's top margin (eight sites), a filter field's
+ * flex basis, a live-region lede with its bottom margin removed, an actions row
+ * aligned to its controls' baseline. Same computed style, declared once, so the
+ * pages stop carrying raw literals that React re-parses on every render. */
+.od-admin-panel--stacked {
+  margin-top: var(--od-space-5);
+}
+
+.od-admin-panel--stacked-below {
+  margin-bottom: var(--od-space-5);
+}
+
+/* A secondary heading that opens a new block within a page (e.g. "Recent"
+   above a list that follows a form). */
+.od-admin-subhead {
+  margin-top: var(--od-space-6);
+  margin-bottom: var(--od-space-3);
+}
+
+/* Panel toolbar: a control strip above the panel body. Base is just the
+   bottom gap; `--row` lays its children out horizontally (the two Refresh
+   toolbars on Libraries and Scans). */
+.od-admin-panel__toolbar {
+  margin-bottom: var(--od-space-4);
+}
+
+.od-admin-panel__toolbar--row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--od-space-4);
+}
+
+.od-admin-lede--tight {
+  margin: var(--od-space-2) 0 0;
+}
+
+.od-admin-lede--flush {
+  margin-bottom: 0;
+}
+
+.od-admin-actions-row--end {
+  align-items: flex-end;
+}
+
+.od-admin-actions-row--flush {
+  margin-top: 0;
+}
+
+.od-admin-field--grow {
+  flex: 1 1 12rem;
+}
+
+.od-admin-field--grow-sm {
+  flex: 1 1 10rem;
+}
+
+.od-admin-field--grow-lg {
+  flex: 1 1 16rem;
+}
+
+.od-admin-field--flush {
+  margin: 0;
 }
 
 .od-art-studio-head {
@@ -658,7 +735,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   background:
     radial-gradient(120% 80% at 12% 0%, color-mix(in srgb, var(--od-accent) 14%, transparent), transparent 55%),
     linear-gradient(165deg, color-mix(in srgb, var(--od-surface) 92%, var(--od-surface-2)), var(--od-surface));
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--od-shadow-lg);
 }
 
 .od-art-studio__stage {
@@ -685,7 +762,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  animation: od-art-hero-in 0.28s ease-out;
+  animation: od-art-hero-in var(--od-motion-slow) ease-out;
 }
 
 .od-art-studio__mode-badge {
@@ -700,7 +777,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   text-transform: uppercase;
   color: var(--od-accent-contrast);
   background: color-mix(in srgb, var(--od-accent) 88%, var(--od-bg));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--od-shadow-md);
 }
 
 .od-art-studio__hero img {
@@ -708,7 +785,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   max-width: min(100%, 400px);
   height: auto;
   border-radius: var(--od-radius-md);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--od-shadow-lg);
 }
 
 .od-art-studio__hero figcaption {
@@ -914,7 +991,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   max-width: 100%;
   height: auto;
   border-radius: var(--od-radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--od-shadow-lg);
 }
 
 .od-art-studio__preview-stack {
@@ -1192,7 +1269,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition: border-color var(--od-motion-fast) var(--od-motion-ease), transform var(--od-motion-fast) var(--od-motion-ease);
 }
 
 .od-stock-picker__card:hover {
@@ -2067,10 +2144,10 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   border: 1px solid var(--od-border);
   background: var(--od-surface);
   color: var(--od-text);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--od-shadow-lg);
   font-size: var(--od-font-md);
   line-height: 1.35;
-  animation: od-toast-in 0.18s ease-out;
+  animation: od-toast-in var(--od-motion-base) ease-out;
 }
 
 .od-toast__text {
@@ -2113,7 +2190,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 .od-toast--out {
   opacity: 0;
   transform: translateY(-0.35rem);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity var(--od-motion-base) var(--od-motion-ease), transform var(--od-motion-base) var(--od-motion-ease);
 }
 
 @keyframes od-toast-in {

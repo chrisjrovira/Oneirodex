@@ -132,7 +132,7 @@ body.od-shell-host .od-admin-main:has(.od-dash),
   pointer-events: none;
   opacity: 0;
   transform: translateY(-0.15rem);
-  transition: opacity 0.12s ease, transform 0.12s ease;
+  transition: opacity var(--od-motion-fast) var(--od-motion-ease), transform var(--od-motion-fast) var(--od-motion-ease);
 }
 
 .od-ops-refresh-wrap:hover .od-ops-refresh-asof,
@@ -579,7 +579,7 @@ body.od-shell-host .od-admin-main:has(.od-dash),
      keeps them usable by keyboard — opacity alone would leave a tabbed-to
      button invisible. */
   opacity: 0.35;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--od-motion-fast) var(--od-motion-ease);
 }
 
 .od-ops-panel:hover .od-ops-panel__move,
@@ -633,7 +633,7 @@ body.od-shell-host .od-admin-main:has(.od-dash),
   height: 100%;
   border-radius: inherit;
   background: var(--od-accent);
-  transition: width 0.25s ease;
+  transition: width var(--od-motion-base) var(--od-motion-ease);
 }
 
 .od-ops-meter--warn .od-ops-meter__fill {

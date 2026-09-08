@@ -234,9 +234,9 @@ export function QualityProfilesPage() {
         active profile scores Arr search hits and extends scan name-clean filters.
       </p>
 
-      <div className="od-admin-panel" style={{ marginBottom: 'var(--od-space-5)' }}>
-        <div className="od-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
-          <label className="od-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
+      <div className="od-admin-panel od-admin-panel--stacked-below">
+        <div className="od-admin-actions-row od-admin-actions-row--end od-admin-actions-row--flush">
+          <label className="od-admin-field od-admin-field--grow od-admin-field--flush">
             Profiles
             <select
               className="od-admin-input"
@@ -268,7 +268,7 @@ export function QualityProfilesPage() {
             Delete
           </button>
         </div>
-        <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
+        <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">
           {status}
         </p>
       </div>
@@ -319,8 +319,8 @@ export function QualityProfilesPage() {
             placeholder="CAM, TS, SAMPLE"
           />
         </label>
-        <div className="od-admin-actions-row" style={{ marginTop: 0 }}>
-          <label className="od-admin-field" style={{ flex: '1 1 10rem' }}>
+        <div className="od-admin-actions-row od-admin-actions-row--flush">
+          <label className="od-admin-field od-admin-field--grow-sm">
             Min size (MB)
             <input
               className="od-admin-input"
@@ -332,7 +332,7 @@ export function QualityProfilesPage() {
               placeholder="optional"
             />
           </label>
-          <label className="od-admin-field" style={{ flex: '1 1 10rem' }}>
+          <label className="od-admin-field od-admin-field--grow-sm">
             Max size (MB)
             <input
               className="od-admin-input"
@@ -363,13 +363,13 @@ export function QualityProfilesPage() {
         </div>
       </form>
 
-      <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+      <div className="od-admin-panel od-admin-panel--stacked">
         <h2 className="od-admin-panel-title">Test title score</h2>
         <p className="od-admin-lede">
           Probe <code>POST /api/quality-profiles/score</code> against the selected profile.
         </p>
-        <div className="od-admin-actions-row" style={{ alignItems: 'flex-end' }}>
-          <label className="od-admin-field" style={{ flex: '1 1 16rem', margin: 0 }}>
+        <div className="od-admin-actions-row od-admin-actions-row--end">
+          <label className="od-admin-field od-admin-field--grow-lg od-admin-field--flush">
             Release title
             <input
               className="od-admin-input"
@@ -384,7 +384,7 @@ export function QualityProfilesPage() {
           </button>
         </div>
         {probeResult ? (
-          <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
+          <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">
             {probeResult.error
               ? probeResult.error
               : `Score ${probeResult.score} · ${probeResult.allowed ? 'allowed' : 'blocked'}${

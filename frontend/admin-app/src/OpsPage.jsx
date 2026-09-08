@@ -649,22 +649,13 @@ export function OpsPage() {
     }
 
     return map
-  }, [
-    severity,
-    issues,
-    host,
-    services,
-    companions,
-    lastSeen,
-    kindRows,
-    library,
-    scans,
-    snapshot,
-    presentDetailIds,
-    systemDetail,
-    recentLogs,
-    openFullLog,
-  ])
+    // `snapshot` subsumes host/library/scans/services/issues/severity/companions/
+    // kindRows/lastSeen — they are all pure `snapshot?.…` reads (see above), so
+    // listing them made this memo recompute on every render even though the data
+    // was identical. The 15s poll re-renders the page; without a tight dep list
+    // that rebuilt every Ops widget and, through DashboardBoard, re-ran a layout
+    // measure + ResizeObserver churn each tick.
+  }, [snapshot, presentDetailIds, systemDetail, recentLogs, openFullLog])
 
   const visibleKey = useMemo(
     () =>

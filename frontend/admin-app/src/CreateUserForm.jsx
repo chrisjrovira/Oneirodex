@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { putJson } from './adminApi'
 import { PageStatus } from './PageStatus'
+import { PM_IGNORE } from './formIgnore'
 
 const ROLES = ['user', 'librarian', 'child', 'admin']
 
@@ -64,7 +65,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
   }
 
   return (
-    <form className="od-admin-panel" onSubmit={handleSubmit}>
+    <form className="od-admin-panel" data-form-type="other" onSubmit={handleSubmit}>
       <h2>{title}</h2>
       <p className="od-admin-lede">
         Creates the account straight away — no invite link required. Give the
@@ -83,6 +84,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
           minLength={3}
           maxLength={64}
           required
+          {...PM_IGNORE}
         />
       </label>
 
@@ -94,6 +96,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           autoComplete="off"
+          {...PM_IGNORE}
         />
       </label>
 
@@ -107,6 +110,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
           autoComplete="new-password"
           minLength={8}
           required
+          {...PM_IGNORE}
         />
       </label>
 
@@ -116,6 +120,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
           className="od-admin-input"
           value={role}
           onChange={(event) => setRole(event.target.value)}
+          {...PM_IGNORE}
         >
           {ROLES.map((option) => (
             <option key={option} value={option}>

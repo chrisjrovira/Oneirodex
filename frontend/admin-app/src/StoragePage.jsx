@@ -243,7 +243,7 @@ export function StoragePage() {
       </div>
 
       {result ? (
-        <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <div className="od-admin-panel od-admin-panel--stacked">
           <h2 className="od-admin-panel-title">
             {resultKind === 'apply' ? 'Apply result' : 'Preview result'}
           </h2>

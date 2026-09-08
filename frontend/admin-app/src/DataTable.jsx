@@ -1,5 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import './DataTable.css'
+import { PM_IGNORE } from './formIgnore'
 
 /**
  * Sortable + filterable admin table (UX-C8).
@@ -159,6 +160,7 @@ export function DataTable({
           value={columnQuery[column.key] || ''}
           list={options.length ? datalistId : undefined}
           autoComplete="off"
+          {...PM_IGNORE}
           onChange={(event) =>
             setColumnQuery((prev) => ({
               ...prev,
@@ -191,6 +193,7 @@ export function DataTable({
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Type to filter…"
               aria-label="Filter table rows"
+              {...PM_IGNORE}
             />
           </label>
           {countVisible ? (
