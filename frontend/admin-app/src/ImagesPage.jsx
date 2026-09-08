@@ -390,7 +390,7 @@ export function ImagesPage({ embedded = false }) {
         </a>
       </div>
 
-      <section className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+      <section className="od-admin-panel od-admin-panel--stacked">
         <h2 className="od-admin-panel-title">Single title</h2>
         <div className="od-images-game-search">
           <label className="od-images-game-search__field">
@@ -452,7 +452,7 @@ export function ImagesPage({ embedded = false }) {
         />
       </section>
 
-      <section className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+      <section className="od-admin-panel od-admin-panel--stacked">
         <h2 className="od-admin-panel-title">Mass image queue</h2>
         <p className="od-admin-lede">
           Filter pending/failed downloads, retry, and batch download. Library / platform / service
@@ -736,7 +736,7 @@ export function ImagesPage({ embedded = false }) {
         )}
       </section>
 
-      <section className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+      <section className="od-admin-panel od-admin-panel--stacked">
         <h2 className="od-admin-panel-title">Missing covers (health)</h2>
         <p className="od-admin-lede">
           From <code>/api/health/library</code> worst list — open picker or generate placeholders in

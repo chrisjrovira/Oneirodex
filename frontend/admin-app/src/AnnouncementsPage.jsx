@@ -97,7 +97,7 @@ export function AnnouncementsPage() {
         </button>
       </form>
 
-      <h2 style={{ marginTop: 'var(--od-space-6)' }}>Recent</h2>
+      <h2 className="od-admin-subhead">Recent</h2>
       <PageStatus loading={!rows} loadingMessage="Loading announcements…" />
       {rows && rows.length === 0 ? (
         <PageStatus emptyMessage="No announcements yet." />

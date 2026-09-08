@@ -266,8 +266,8 @@ export function ExtensionsPage() {
       <PageStatus error={error} />
 
       <form className="od-admin-panel od-ext-add" onSubmit={onAddSubmit}>
-        <div className="od-admin-actions-row" style={{ alignItems: 'flex-end', marginTop: 0 }}>
-          <label className="od-admin-field" style={{ flex: '1 1 12rem', margin: 0 }}>
+        <div className="od-admin-actions-row od-admin-actions-row--end od-admin-actions-row--flush">
+          <label className="od-admin-field od-admin-field--grow od-admin-field--flush">
             Add extension
             <input
               className="od-admin-input"
@@ -284,7 +284,7 @@ export function ExtensionsPage() {
           <button type="submit" className="od-btn" disabled={busy || !normalizeExt(draft)}>
             Add
           </button>
-          <label className="od-admin-field" style={{ flex: '1 1 10rem', margin: 0 }}>
+          <label className="od-admin-field od-admin-field--grow-sm od-admin-field--flush">
             Filter
             <input
               className="od-admin-input"
@@ -297,7 +297,7 @@ export function ExtensionsPage() {
             />
           </label>
         </div>
-        <p className="od-admin-lede" style={{ marginBottom: 0 }} aria-live="polite">
+        <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">
           {items.length
             ? `${items.length} allowed · changes apply immediately to the next scan`
             : 'No extensions yet — add at least one so the scanner knows what counts as a game'}
@@ -346,7 +346,7 @@ export function ExtensionsPage() {
           <section key={section.id} className="od-admin-panel od-ext-group">
             <header className="od-ext-group__head">
               <h2 className="od-admin-panel-title">{section.label}</h2>
-              <p className="od-admin-lede" style={{ marginBottom: 0 }}>
+              <p className="od-admin-lede od-admin-lede--flush">
                 {section.hint}
               </p>
             </header>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { useRailState } from '../../shared/useRailState'
 import { AdminSideRail } from './AdminSideRail'
@@ -25,7 +25,6 @@ import { SETTINGS_CARDS, railDestinations } from './navConfig'
 import './ops.css'
 import {
   DashboardPage,
-  HelpPage,
   HubPage,
   IntegrationsPage,
   LibrariesPage,
@@ -102,10 +101,18 @@ function SettingsSectionPage() {
   )
 }
 
-function RoutedAdminPage() {
-  const { pathname } = useLocation()
-  const kind = resolveAdminPage(pathname)
-
+/**
+ * Map a resolved admin page-kind to its element.
+ *
+ * Hoisted out of the component and consumed through a `useMemo(…, [kind])` in
+ * RoutedAdminPage: `resolveAdminPage` collapses many pathnames onto one kind
+ * (`/admin` and `/admin/dashboard`; the whole `libraries` prefix set; the
+ * `/scan_management…` variants), and without the memo every one of those
+ * same-kind navigations produced a fresh element identity, remounting the entire
+ * page subtree — a full DOM teardown/rebuild that makes a password-manager
+ * extension re-scan the document on each in-app navigation.
+ */
+function renderAdminKind(kind) {
   switch (kind) {
     case 'dashboard':
       return <DashboardPage />
@@ -129,8 +136,10 @@ function RoutedAdminPage() {
       return <ScanMatchSettingsPage />
     case 'extensions':
       return <ExtensionsPage />
-    case 'help':
-      return <HelpPage />
+    // '/admin/help' is a Jinja page (admin_help.html) — App renders chrome only
+    // for it, so there is no SPA element to return here. resolveAdminPage still
+    // maps it to 'help'; it falls through to the default HubPage if the template
+    // is ever switched to data-admin-render="spa".
     case 'plugins':
       return <PluginsPage />
     case 'scans':
@@ -167,6 +176,12 @@ function RoutedAdminPage() {
         />
       )
   }
+}
+
+function RoutedAdminPage() {
+  const { pathname } = useLocation()
+  const kind = resolveAdminPage(pathname)
+  return useMemo(() => renderAdminKind(kind), [kind])
 }
 
 export function App() {

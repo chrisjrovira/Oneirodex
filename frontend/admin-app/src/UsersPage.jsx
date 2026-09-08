@@ -6,6 +6,7 @@ import { CreateUserForm } from './CreateUserForm'
 import { DataTable } from './DataTable'
 import { PageStatus } from './PageStatus'
 import { MetricStrip } from './opsWidgets'
+import { PM_IGNORE } from './formIgnore'
 import { showToast } from './utils/toast'
 
 const ROLES = ['user', 'librarian', 'child', 'admin']
@@ -42,12 +43,17 @@ function UserEditor({ user, onClose, onSaved }) {
   }
 
   return (
-    <form className="od-admin-panel" onSubmit={handleSubmit}>
+    <form className="od-admin-panel" data-form-type="other" onSubmit={handleSubmit}>
       <h2>Edit {user.name}</h2>
       {error ? <PageStatus error={error} /> : null}
-      <label>
+      <label className="od-admin-field">
         Role
-        <select value={role} onChange={(event) => setRole(event.target.value)}>
+        <select
+          className="od-admin-input"
+          value={role}
+          onChange={(event) => setRole(event.target.value)}
+          {...PM_IGNORE}
+        >
           {ROLES.map((item) => (
             <option key={item} value={item}>
               {item}

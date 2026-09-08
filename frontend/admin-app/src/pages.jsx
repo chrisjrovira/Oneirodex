@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { csrfHeaders } from './adminApi'
 import { DataTable } from './DataTable'
@@ -17,7 +17,6 @@ import {
   normalizeScanJobsList,
 } from './scanQueuePolicy'
 import {
-  scanJobsProgressSignature,
   scanJobsStructureSignature,
 } from '../../../oneirodex/setup/default_theme/js/scanJobsDom.js'
 import { useLibraryRefreshAll } from './useLibraryRefreshAll'
@@ -171,7 +170,13 @@ export function DashboardPage() {
 
   const hasErrors = (summary?.recent_errors || []).length > 0
 
-  const widgets = {
+  // Memoised on `summary`: every field below is a pure function of it, so the
+  // object only needs to change when a poll actually lands new data. Without this
+  // it was a fresh literal on every render — every PageStatus ellipsis tick and
+  // every parent re-render rebuilt all ~14 elements and, via DashboardBoard's
+  // effect, re-ran a layout measure + ResizeObserver teardown.
+  const widgets = useMemo(
+    () => ({
     status: (
       <OpsStatusBanner
         severity={severity}
@@ -320,7 +325,9 @@ export function DashboardPage() {
         />
       </section>
     ) : null,
-  }
+    }),
+    [summary],
+  )
 
   return (
     <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s). Drag a widget to move; drag the corner to resize. Reset layout is centred; hover refresh for Updated time.">
@@ -392,7 +399,7 @@ export function LibrariesPage() {
         <a href="#import-leaf">Import CSV/JSON</a>
       </p>
       <div className="od-admin-panel">
-        <div className="od-admin-panel__toolbar" style={{ marginBottom: 'var(--od-space-4)' }}>
+        <div className="od-admin-panel__toolbar">
           <button
             type="button"
             className="od-btn od-btn--accent"
@@ -401,7 +408,7 @@ export function LibrariesPage() {
           >
             {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
           </button>
-          <p className="od-admin-lede" style={{ margin: '0.35rem 0 0' }}>
+          <p className="od-admin-lede od-admin-lede--tight">
             Re-scans each library’s last scan folder. When a scan is already running, choose{' '}
             <strong>Queue</strong> (default) or <strong>Force run now</strong>.
           </p>
@@ -704,13 +711,13 @@ export function IntegrationsPage() {
       </div>
 
       {!inventory && !inventoryError ? (
-        <div className="od-admin-panel od-admin-inventory" style={{ marginTop: 'var(--od-space-5)' }}>
+        <div className="od-admin-panel od-admin-inventory od-admin-panel--stacked">
           <PageStatus loading loadingMessage="Loading provider inventory…" />
         </div>
       ) : null}
 
       {inventory && inventory.length > 0 ? (
-        <div className="od-admin-panel od-admin-inventory" style={{ marginTop: 'var(--od-space-5)' }}>
+        <div className="od-admin-panel od-admin-inventory od-admin-panel--stacked">
           <h2>Provider inventory</h2>
           <p>
             Live status from <code>GET /api/admin/integrations/inventory</code> — every provider
@@ -739,18 +746,18 @@ export function IntegrationsPage() {
       ) : null}
 
       {inventory && inventory.length === 0 && !inventoryError ? (
-        <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <div className="od-admin-panel od-admin-panel--stacked">
           <p>Provider inventory returned no rows — use the cards above.</p>
         </div>
       ) : null}
 
       {inventoryError ? (
-        <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+        <div className="od-admin-panel od-admin-panel--stacked">
           <PageStatus emptyMessage="Provider inventory unavailable — use the cards above." />
         </div>
       ) : null}
 
-      <div className="od-admin-panel" style={{ marginTop: 'var(--od-space-5)' }}>
+      <div className="od-admin-panel od-admin-panel--stacked">
         <p>
           Full Integrations tabs (SMTP · IGDB · community · artwork · ownership · OIDC · indexers)
           still render when Jinja content is present. This React hub is the fallback chrome when the
@@ -816,50 +823,10 @@ export function ThemesPage() {
   )
 }
 
-export function HelpPage() {
-  return (
-    <Page title="Admin help" lede="Ops chrome is a React top bar — no member left nav.">
-      <ul>
-        <li>
-          Dashboard and Ops are an observability console (~15s poll) from{' '}
-          <code>/admin/api/ops/summary</code> — status strip, meters, issues list, services/scans tables.
-        </li>
-        <li>Libraries list comes from <code>/api/get_libraries</code>.</li>
-        <li>Settings rows open module pages (Arr, AI, Themes, Storage, …).</li>
-        <li>
-          Wave 7–11 flags: <code>ENABLE_ARR_MODULE</code>, <code>ENABLE_DEBRID</code>,{' '}
-          <code>ENABLE_GAME_ASSISTS</code>, <code>ENABLE_MOD_TRACKING</code>,{' '}
-          <code>ENABLE_ACTIVITY_FEED</code>, <code>ENABLE_PCDOS_BROWSER</code> (on by default; needs vendored dosbox WASM).
-        </li>
-        <li>
-          Integrations hub lists every provider via{' '}
-          <code>GET /api/admin/integrations/inventory</code> (metadata · artwork · mail · SSO ·
-          voice · acquire · ownership) — not IGDB-only. Cards deep-link classic forms.
-        </li>
-        <li>
-          Export packs (ES-DE <code>gamelist.xml</code> · Pegasus metadata): Admin → Integrations →{' '}
-          <strong>Export packs</strong>, or member Systems secondary section. Endpoints:{' '}
-          <code>/api/export/esde</code>, <code>/api/export/pegasus</code>. Paths stay portable.
-        </li>
-        <li>
-          Plugins registry: <code>GET /api/plugins</code>. Emulator health:{' '}
-          <code>/api/emulator/health</code>.
-        </li>
-        <li>
-          Emulator: BIOS + <code>.cht</code> via <code>/api/emulator/*</code>; WebRetro play bar
-          for cloud save and cheats; companion RetroArch profiles for heavy systems.
-        </li>
-        <li>Themes: Reset Default Themes after image rebuilds that change design tokens.</li>
-        <li>
-          Art studio (<code>/admin/art_studio</code>): placeholders + <strong>Pick &amp; queue</strong>{' '}
-          (<code>#images</code>) for SteamGridDB/IGDB search, mass downloads, and auto-pick via{' '}
-          <code>/admin/api/covers/batch/apply</code>.
-        </li>
-        <li>Member Systems hub lives at <code>/systems</code> with platform skins.</li>
-      </ul>
-    </Page>
-  )
-}
+// The admin Help page is server-rendered (oneirodex/templates/admin/admin_help.html);
+// App.jsx renders chrome only for '/admin/help'. The React stub that used to live
+// here never mounted on that route, so it was removed — see admin_help.html for the
+// live page.
 
 export function PluginsPage() {
   const [plugins, setPlugins] = useState(null)
@@ -931,7 +898,23 @@ export function ScansPage() {
       const data = await getJson('/api/scan_jobs_status', { signal })
       const jobs = normalizeScanJobsList(data)
       const busy = jobs.some((job) => isScanBusyStatus(job?.status))
-      const key = `${scanJobsStructureSignature(jobs, { busy })}::${scanJobsProgressSignature(jobs)}`
+      // scanJobsProgressSignature folds processed / percentage / elapsed / eta —
+      // all of which tick every few seconds while a scan runs, so it re-rendered
+      // the (non-virtualized) job tables + DupeGlance every 4s and made a
+      // password-manager extension re-scan that subtree each tick. Bucket
+      // progress to 5% so a 41%→43% step is a no-op, but a ≥5% step, a stall, a
+      // status change or a structure change still lands. When nothing is busy,
+      // drop progress entirely — the structure signature already covers
+      // status / queue-position / cancellation changes.
+      const progressKey = busy
+        ? jobs
+            .map((job) => {
+              const pct = Number(job?.percentage ?? job?.progress ?? 0) || 0
+              return `${job?.id}:${Math.round(pct / 5)}:${job?.stalled ? 1 : 0}`
+            })
+            .join(',')
+        : ''
+      const key = `${scanJobsStructureSignature(jobs, { busy })}::${progressKey}`
       if (key === jobsSnapshotKeyRef.current && hasSnapshotRef.current) {
         return
       }
@@ -988,7 +971,7 @@ export function ScansPage() {
     <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
       <PageStatus error={error} errorMessage="Unable to load scan status." />
       <div className="od-admin-panel">
-        <div className="od-admin-panel__toolbar" style={{ marginBottom: 'var(--od-space-4)', display: 'flex', gap: 'var(--od-space-4)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="od-admin-panel__toolbar od-admin-panel__toolbar--row">
           <button
             type="button"
             className="od-btn od-btn--accent"

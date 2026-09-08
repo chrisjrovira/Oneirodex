@@ -53,4 +53,13 @@ Member SPA also ships `frontend/member-app` chrome (`glass.css`, TopNav). Built 
 - [ ] Shared package `frontend/design-system`
 - [ ] Command palette island
 - [x] Wire tokens into theme pipeline / member SPA
-- [ ] Wire into React admin SPA (`frontend/admin-app`)
+- [ ] Wire into React admin SPA (`frontend/admin-app`) — partial: consumes the tokens
+  and shares `DataTable` / `PageStatus` / `MetricStrip`, but still lacks the shared
+  primitives (one card / page-header / field). Admin Help moved fully onto the tokens
+  in the member Help language (UID-063, 2026-09-08); a bounded sweep replaced every
+  static inline-`style={{}}` object (23 sites) with `.od-admin-*` utility classes,
+  taught bare `<select>` / `<textarea>` in a panel to inherit the `.od-admin-input`
+  box, and tokenised the motion (`--od-motion-*`) and elevation (`--od-shadow-*`)
+  literals in `styles.css` / `ops.css` (UID-062 pass). Remaining: `.od-art-studio*`
+  / `.od-images-*` / `.od-ext-*` / `.od-scan-*` subsystems, and the
+  `styles.css` / `ops.css` split.
