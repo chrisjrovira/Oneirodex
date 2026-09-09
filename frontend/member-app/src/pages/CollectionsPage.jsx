@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { confirmAction } from '../../../shared/confirmDialog'
+import { useQueryClient } from '@tanstack/react-query'
+import { confirmAction, useResource, useShellConfig } from '@oneirodex/ui'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import { PageStatus } from '../components/PageStatus'
 import './Collections.css'
+
+// Stable identity so the optimistic create / delete writes below target the
+// same cache entry `useResource` reads.
+const COLLECTIONS_QUERY_KEY = ['collections']
 
 function itemCountLabel(collection) {
   const count = Number(collection.item_count)
@@ -14,41 +19,26 @@ function itemCountLabel(collection) {
   return count === 1 ? '1 game' : `${count} games`
 }
 
-export function CollectionsPage({ shellConfig = {} } = {}) {
+export function CollectionsPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [collections, setCollections] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
+  const queryClient = useQueryClient()
+  const {
+    data: collections,
+    loading,
+    error,
+    reload,
+  } = useResource(COLLECTIONS_QUERY_KEY, ({ signal }) =>
+    fetchCollections({ signal }).then((data) =>
+      Array.isArray(data.collections) ? data.collections : [],
+    ),
+  )
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
   const [deletingUuid, setDeletingUuid] = useState(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setCollections(null)
-
-    fetchCollections({ signal: controller.signal })
-      .then((data) => {
-        if (active) {
-          setCollections(Array.isArray(data.collections) ? data.collections : [])
-        }
-      })
-      .catch((requestError) => {
-        if (active && requestError.name !== 'AbortError') {
-          setError(requestError)
-        }
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [retryCount])
 
   async function handleCreate(event) {
     event.preventDefault()
@@ -65,7 +55,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
         description: description.trim(),
         isPublic,
       })
-      setCollections((current) => [created, ...(current || [])])
+      queryClient.setQueryData(COLLECTIONS_QUERY_KEY, (current) => [created, ...(current || [])])
       setName('')
       setDescription('')
       setIsPublic(true)
@@ -92,7 +82,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
     setDeletingUuid(collection.uuid)
     try {
       await deleteCollection(collection.uuid)
-      setCollections((current) =>
+      queryClient.setQueryData(COLLECTIONS_QUERY_KEY, (current) =>
         (current || []).filter((row) => row.uuid !== collection.uuid),
       )
     } catch (deleteError) {
@@ -104,7 +94,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         <ContextBar
           summary={collections ? `${collections.length} shelves` : null}
           actions={
@@ -116,157 +106,154 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
             /* Quiet bar chrome: no primary fill, no icon. Wash only while the
                popover is open (aria-expanded) — see od-appbar contextbar rules. */
             <Popover label="New shelf">
-          <form className="od-collections__form" onSubmit={handleCreate}>
-            <label className="od-collections__field">
-              Name
-              <input
-                type="text"
-                maxLength={120}
-                required
-                placeholder="Cozy co-op nights"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            <label className="od-collections__field">
-              Description
-              <input
-                type="text"
-                maxLength={400}
-                placeholder="Optional"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </label>
-            <label className="od-collections__check">
-              <input
-                type="checkbox"
-                checked={isPublic}
-                onChange={(event) => setIsPublic(event.target.checked)}
-              />
-              Public
-            </label>
-            <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
-              {creating ? 'Creating…' : 'Create shelf'}
-            </button>
-            {createError ? (
-              <PageStatus
-                error={createError}
-                errorMessage={createError.message || 'Unable to create collection.'}
-                className="od-collections__error"
-              />
-            ) : null}
-          </form>
+              <form className="od-collections__form" onSubmit={handleCreate}>
+                <label className="od-collections__field">
+                  Name
+                  <input
+                    type="text"
+                    maxLength={120}
+                    required
+                    placeholder="Cozy co-op nights"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </label>
+                <label className="od-collections__field">
+                  Description
+                  <input
+                    type="text"
+                    maxLength={400}
+                    placeholder="Optional"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                  />
+                </label>
+                <label className="od-collections__check">
+                  <input
+                    type="checkbox"
+                    checked={isPublic}
+                    onChange={(event) => setIsPublic(event.target.checked)}
+                  />
+                  Public
+                </label>
+                <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
+                  {creating ? 'Creating…' : 'Create shelf'}
+                </button>
+                {createError ? (
+                  <PageStatus
+                    error={createError}
+                    errorMessage={createError.message || 'Unable to create collection.'}
+                    className="od-collections__error"
+                  />
+                ) : null}
+              </form>
             </Popover>
           }
         />
       ) : null}
-    <div className="od-more-page od-collections">
-      {useNewChrome ? null : (
-        <>
-        <div className="od-page-header">
-          <h1>Collections</h1>
-        </div>
-        <p className="od-more-page__lede">
-          Curated shelves you and others share across the library.
-        </p>
+      <div className="od-more-page od-collections">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              <h1>Collections</h1>
+            </div>
+            <p className="od-more-page__lede">
+              Curated shelves you and others share across the library.
+            </p>
 
-        <form className="od-collections__form" onSubmit={handleCreate}>
-          <label className="od-collections__field">
-            Name
-            <input
-              type="text"
-              maxLength={120}
-              required
-              placeholder="Cozy co-op nights"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-          <label className="od-collections__field">
-            Description
-            <input
-              type="text"
-              maxLength={400}
-              placeholder="Optional"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </label>
-          <label className="od-collections__check">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(event) => setIsPublic(event.target.checked)}
-            />
-            Public
-          </label>
-          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
-            {creating ? 'Creating…' : 'Create shelf'}
-          </button>
-          {createError ? (
-            <PageStatus
-              error={createError}
-              errorMessage={createError.message || 'Unable to create collection.'}
-              className="od-collections__error"
-            />
-          ) : null}
-        </form>
-        </>
-      )}
+            <form className="od-collections__form" onSubmit={handleCreate}>
+              <label className="od-collections__field">
+                Name
+                <input
+                  type="text"
+                  maxLength={120}
+                  required
+                  placeholder="Cozy co-op nights"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </label>
+              <label className="od-collections__field">
+                Description
+                <input
+                  type="text"
+                  maxLength={400}
+                  placeholder="Optional"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                />
+              </label>
+              <label className="od-collections__check">
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(event) => setIsPublic(event.target.checked)}
+                />
+                Public
+              </label>
+              <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
+                {creating ? 'Creating…' : 'Create shelf'}
+              </button>
+              {createError ? (
+                <PageStatus
+                  error={createError}
+                  errorMessage={createError.message || 'Unable to create collection.'}
+                  className="od-collections__error"
+                />
+              ) : null}
+            </form>
+          </>
+        )}
 
-      <PageStatus
-        loading={!error && !collections}
-        error={error}
-        errorMessage="Unable to load collections."
-        loadingMessage="Loading shelves…"
-        onRetry={() => setRetryCount((n) => n + 1)}
-      />
+        <PageStatus
+          loading={loading}
+          error={error}
+          errorMessage="Unable to load collections."
+          loadingMessage="Loading shelves…"
+          onRetry={reload}
+        />
 
-      {!error && collections && collections.length === 0 ? (
-        <p>
-          {useNewChrome
-            ? 'No collections yet. Create your first one from New shelf above.'
-            : 'No collections yet. Create your first shelf with the form above.'}
-        </p>
-      ) : null}
+        {!error && collections && collections.length === 0 ? (
+          <p>
+            {useNewChrome
+              ? 'No collections yet. Create your first one from New shelf above.'
+              : 'No collections yet. Create your first shelf with the form above.'}
+          </p>
+        ) : null}
 
-      {!error && collections && collections.length > 0 ? (
-        <ul className="od-collections__list">
-          {collections.map((collection) => {
-            const countLabel = itemCountLabel(collection)
-            return (
-              <li key={collection.uuid} className="od-collections__row">
-                <Link
-                  className="od-collections__card"
-                  to={`/collections/${collection.uuid}`}
-                >
-                  <strong>{collection.name}</strong>
-                  <span className="od-collections__card-desc">
-                    {collection.description || 'No description'}
-                  </span>
-                  <span className="od-collections__meta">
-                    {collection.is_public ? 'Public' : 'Private'}
-                    {collection.is_system ? ' · System' : ''}
-                    {countLabel ? ` · ${countLabel}` : ''}
-                  </span>
-                </Link>
-                {collection.can_edit && !collection.is_system ? (
-                  <button
-                    type="button"
-                    className="od-collections__delete"
-                    disabled={deletingUuid === collection.uuid}
-                    onClick={() => handleDelete(collection)}
-                  >
-                    {deletingUuid === collection.uuid ? 'Deleting…' : 'Delete'}
-                  </button>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
-    </div>
+        {!error && collections && collections.length > 0 ? (
+          <ul className="od-collections__list">
+            {collections.map((collection) => {
+              const countLabel = itemCountLabel(collection)
+              return (
+                <li key={collection.uuid} className="od-collections__row">
+                  <Link className="od-collections__card" to={`/collections/${collection.uuid}`}>
+                    <strong>{collection.name}</strong>
+                    <span className="od-collections__card-desc">
+                      {collection.description || 'No description'}
+                    </span>
+                    <span className="od-collections__meta">
+                      {collection.is_public ? 'Public' : 'Private'}
+                      {collection.is_system ? ' · System' : ''}
+                      {countLabel ? ` · ${countLabel}` : ''}
+                    </span>
+                  </Link>
+                  {collection.can_edit && !collection.is_system ? (
+                    <button
+                      type="button"
+                      className="od-collections__delete"
+                      disabled={deletingUuid === collection.uuid}
+                      onClick={() => handleDelete(collection)}
+                    >
+                      {deletingUuid === collection.uuid ? 'Deleting…' : 'Delete'}
+                    </button>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+      </div>
     </>
   )
 }

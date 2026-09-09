@@ -11,6 +11,7 @@ import { LoadingOverlay } from '../components/LoadingOverlay'
 import { showToast } from '../utils/toast'
 import '../components/libraryFilters.css'
 import './TrailersPage.css'
+import { Button, useShellConfig } from '@oneirodex/ui'
 
 const SETTINGS_STORAGE_KEY = 'trailerAutoplaySettings'
 const ATTRACT_RETURN_KEY = 'attractModeReturnUrl'
@@ -385,7 +386,12 @@ function SettingsModal({ settings, onCancel, onSave }) {
   const [draft, setDraft] = useState(settings)
 
   return (
-    <div className="od-trailers__modal-overlay" role="dialog" aria-modal="true" aria-label="Auto-Play Settings">
+    <div
+      className="od-trailers__modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Auto-Play Settings"
+    >
       <div className="od-trailers__modal">
         <h2>Auto-Play Settings</h2>
 
@@ -420,22 +426,23 @@ function SettingsModal({ settings, onCancel, onSave }) {
         <small>Load next video after watching for this long (0 to disable)</small>
 
         <div className="od-trailers__modal-actions">
-          <button type="button" className="od-btn od-btn--ghost" onClick={onCancel}>
+          <Button variant="ghost" onClick={onCancel}>
             Cancel
-          </button>
-          <button type="button" className="od-btn od-btn--accent" onClick={() => onSave(draft)}>
+          </Button>
+          <Button className="od-btn--accent" onClick={() => onSave(draft)}>
             Save
-          </button>
+          </Button>
         </div>
       </div>
     </div>
   )
 }
 
-export function TrailersPage({ shellConfig = {} } = {}) {
+export function TrailersPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [attractMode] = useState(
-    () => new URLSearchParams(window.location.search).has('attract_mode'),
+  const [attractMode] = useState(() =>
+    new URLSearchParams(window.location.search).has('attract_mode'),
   )
   const [options, setOptions] = useState(null)
   const [optionsError, setOptionsError] = useState(null)
@@ -658,7 +665,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         /* Title moved out of the bar and onto the player card (W27-F1) — the
            name belongs to the video you are watching, not to the page. Filters
            join Settings and "Another one" here for the same reason they are
@@ -671,12 +678,7 @@ export function TrailersPage({ shellConfig = {} } = {}) {
              same control. */
           actions={
             <div className="od-cbtn-group" role="group" aria-label="Trailers">
-              <Popover
-                label="Filters"
-                count={activeFilterBadges.length}
-                align="start"
-                chromeless
-              >
+              <Popover label="Filters" count={activeFilterBadges.length} align="start" chromeless>
                 {({ close }) => (
                   <div className="library-filters-stack">
                     <FilterPanel
@@ -721,41 +723,35 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="od-more-page od-trailers">
-      {useNewChrome ? null : (
-        <>
-        <div className="od-page-header">
-          {trailer ? (
-            <a className="od-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
-              <h1>{trailer.game_name}</h1>
-            </a>
-          ) : (
-            <h1>Trailers</h1>
-          )}
+      <div className="od-more-page od-trailers">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              {trailer ? (
+                <a className="od-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
+                  <h1>{trailer.game_name}</h1>
+                </a>
+              ) : (
+                <h1>Trailers</h1>
+              )}
 
-          <div className="od-trailers__actions">
-            {attractMode ? (
-              <>
-                <button type="button" className="od-btn" onClick={exitAttractMode}>
-                  Exit Attract Mode
-                </button>
-                <button type="button" className="od-btn" onClick={openBigPicture}>
-                  Big Picture
-                </button>
-              </>
-            ) : null}
-            <button type="button" className="od-btn" onClick={() => setSettingsOpen(true)}>
-              Settings
-            </button>
-            <button type="button" className="od-btn od-btn--accent" onClick={requestTrailer}>
-              Another one
-            </button>
-          </div>
-        </div>
-        </>
-      )}
+              <div className="od-trailers__actions">
+                {attractMode ? (
+                  <>
+                    <Button onClick={exitAttractMode}>Exit Attract Mode</Button>
+                    <Button onClick={openBigPicture}>Big Picture</Button>
+                  </>
+                ) : null}
+                <Button onClick={() => setSettingsOpen(true)}>Settings</Button>
+                <Button className="od-btn--accent" onClick={requestTrailer}>
+                  Another one
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
 
-      {/* Not rendered under the new chrome (W27-F1): the bar owns the one
+        {/* Not rendered under the new chrome (W27-F1): the bar owns the one
           Filters popover, and a second toggle on the page was the duplication
           the two-bar layout exists to remove.
 
@@ -763,89 +759,88 @@ export function TrailersPage({ shellConfig = {} } = {}) {
           nothing here: `.od-trailers__filters` sets `display: flex`, and an
           author rule always beats the UA stylesheet's `[hidden]`. Both controls
           were showing. */}
-      {useNewChrome ? null : (
-        <div className="od-trailers__filters">
-          <button
-            type="button"
-            className="od-btn od-trailers__filter-toggle"
-            aria-expanded={panelOpen}
-            onClick={() => setPanelOpen((open) => !open)}
-          >
-            Filters
-          </button>
+        {useNewChrome ? null : (
+          <div className="od-trailers__filters">
+            <Button
+              className="od-trailers__filter-toggle"
+              aria-expanded={panelOpen}
+              onClick={() => setPanelOpen((open) => !open)}
+            >
+              Filters
+            </Button>
 
-          {!panelOpen && activeFilterBadges.length > 0 ? (
-            <div className="od-trailers__badges">
-              {activeFilterBadges.map((badge, index) => (
-                <span key={`${index}-${badge}`} className="od-trailers__badge">
-                  {badge}
-                </span>
-              ))}
-            </div>
-          ) : null}
+            {!panelOpen && activeFilterBadges.length > 0 ? (
+              <div className="od-trailers__badges">
+                {activeFilterBadges.map((badge, index) => (
+                  <span key={`${index}-${badge}`} className="od-trailers__badge">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            ) : null}
 
-          {panelOpen ? (
-            <FilterPanel
-              options={options}
-              optionsError={optionsError}
-              filters={filters}
-              onChange={handleFilterChange}
-              onClear={handleClear}
-              onApply={handleApply}
-            />
-          ) : null}
-        </div>
-      )}
+            {panelOpen ? (
+              <FilterPanel
+                options={options}
+                optionsError={optionsError}
+                filters={filters}
+                onChange={handleFilterChange}
+                onClear={handleClear}
+                onApply={handleApply}
+              />
+            ) : null}
+          </div>
+        )}
 
-      <LoadingOverlay
-        active={loading && Boolean(trailer)}
-        delayMs={250}
-        label="Loading random trailer…"
-      />
-
-      {loading && !trailer ? (
-        <PageStatus loading loadingMessage="Loading random trailer…" />
-      ) : null}
-
-      {!loading && error && !trailer ? (
-        <PageStatus
-          error={error}
-          errorMessage="Unable to load trailers."
-          onRetry={requestTrailer}
-          retryLabel="Retry"
+        <LoadingOverlay
+          active={loading && Boolean(trailer)}
+          delayMs={250}
+          label="Loading random trailer…"
         />
-      ) : null}
 
-      {!loading && !error && emptyMessage ? (
-        <p className="od-trailers__empty" role="status">
-          {emptyMessage}
-        </p>
-      ) : null}
+        {loading && !trailer ? (
+          <PageStatus loading loadingMessage="Loading random trailer…" />
+        ) : null}
 
-      {!loading && !error && trailer && !videoId ? (
-        <PageStatus error errorMessage="Invalid video URL format" />
-      ) : null}
+        {!loading && error && !trailer ? (
+          <PageStatus
+            error={error}
+            errorMessage="Unable to load trailers."
+            onRetry={requestTrailer}
+            retryLabel="Retry"
+          />
+        ) : null}
 
-      {trailer && videoId ? (
-        <TrailerPlayer
-          key={videoId}
-          videoId={videoId}
-          skipFirst={settings.skipFirst}
-          settingsRef={settingsRef}
-          onAdvance={requestTrailer}
-          title={useNewChrome ? trailer.game_name : null}
-          gameUuid={trailer.game_uuid}
-        />
-      ) : null}
+        {!loading && !error && emptyMessage ? (
+          <p className="od-trailers__empty" role="status">
+            {emptyMessage}
+          </p>
+        ) : null}
 
-      {settingsOpen ? (
-        <SettingsModal
-          settings={settings}
-          onCancel={() => setSettingsOpen(false)}
-          onSave={handleSaveSettings}
-        />
-      ) : null}
-    </div>
+        {!loading && !error && trailer && !videoId ? (
+          <PageStatus error errorMessage="Invalid video URL format" />
+        ) : null}
+
+        {trailer && videoId ? (
+          <TrailerPlayer
+            key={videoId}
+            videoId={videoId}
+            skipFirst={settings.skipFirst}
+            settingsRef={settingsRef}
+            onAdvance={requestTrailer}
+            title={useNewChrome ? trailer.game_name : null}
+            gameUuid={trailer.game_uuid}
+          />
+        ) : null}
+
+        {settingsOpen ? (
+          <SettingsModal
+            settings={settings}
+            onCancel={() => setSettingsOpen(false)}
+            onSave={handleSaveSettings}
+          />
+        ) : null}
+      </div>
     </>
   )
 }

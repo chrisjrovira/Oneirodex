@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody } from '../api/envelopeError'
+import { useResource, useShellConfig } from '@oneirodex/ui'
+import { fetchSetCompletion } from '../api/systems'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_PREF_ORDER } from '../chrome/regions'
@@ -10,65 +11,28 @@ import './SetCompletionPage.css'
 
 const REGIONS = REGION_PREF_ORDER
 
-async function fetchSetCompletion({ libraryPlatform, region, signal }) {
-  const params = new URLSearchParams({
-    library_platform: libraryPlatform,
-    region,
-  })
-  const response = await fetch(`/api/set-completion?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw errorFromBody(data, response.status, 'set-completion')
-  }
-  return data
-}
-
-export function SetCompletionPage({ shellConfig = {} } = {}) {
+export function SetCompletionPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [searchParams, setSearchParams] = useSearchParams()
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
   const region = (searchParams.get('region') || 'USA').trim().toUpperCase()
 
-  const [report, setReport] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
   const [busyTitle, setBusyTitle] = useState(null)
   const [actionMsg, setActionMsg] = useState(null)
 
-  useEffect(() => {
-    if (!libraryPlatform) {
-      setError(new Error('library_platform query required'))
-      setReport(null)
-      return undefined
-    }
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setReport(null)
-    fetchSetCompletion({
-      libraryPlatform,
-      region,
-      signal: controller.signal,
-    })
-      .then((data) => {
-        if (active) setReport(data)
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') setError(err)
-      })
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [libraryPlatform, region, retryCount])
-
-  const missing = useMemo(
-    () => (Array.isArray(report?.missing) ? report.missing : []),
-    [report],
+  const {
+    data: report,
+    loading,
+    error,
+    reload,
+  } = useResource(
+    ['set-completion', libraryPlatform, region],
+    ({ signal }) => fetchSetCompletion({ libraryPlatform, region, signal }),
+    { enabled: Boolean(libraryPlatform) },
   )
+
+  const missing = useMemo(() => (Array.isArray(report?.missing) ? report.missing : []), [report])
 
   function setRegion(nextRegion) {
     const next = new URLSearchParams(searchParams)
@@ -138,11 +102,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
   const chrome = useNewChrome ? (
     <ContextBar
       title={identity}
-      summary={
-        report
-          ? `${report.owned} / ${report.total} owned (${report.percent}%)`
-          : null
-      }
+      summary={report ? `${report.owned} / ${report.total} owned (${report.percent}%)` : null}
       filterCount={libraryPlatform && region !== 'USA' ? 1 : 0}
       filters={libraryPlatform ? regionSelect : null}
       actions={libraryLinks}
@@ -183,9 +143,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
           )}
           {isMissingSet ? (
             <div role="alert">
-              <p>
-                {`No reference set uploaded for ${libraryPlatform}/${region}.`}
-              </p>
+              <p>{`No reference set uploaded for ${libraryPlatform}/${region}.`}</p>
               {useNewChrome ? null : (
                 <Link className="od-btn" to="/systems">
                   Systems
@@ -196,7 +154,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
             <PageStatus
               error={error}
               errorMessage="Unable to load set completion."
-              onRetry={() => setRetryCount((n) => n + 1)}
+              onRetry={reload}
             />
           )}
         </div>
@@ -216,7 +174,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
               </h1>
             </div>
           )}
-          <PageStatus loading loadingMessage="Loading set completion…" />
+          <PageStatus loading={loading} loadingMessage="Loading set completion…" />
         </div>
       </>
     )

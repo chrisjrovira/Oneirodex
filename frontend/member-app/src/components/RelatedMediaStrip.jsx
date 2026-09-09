@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import './RelatedMediaStrip.css'
 
 /**
@@ -107,11 +107,7 @@ export function RelatedMediaStrip({ gameUuid }) {
       <ul className="od-relmedia__list">
         {shown.map((item) => (
           <li key={item.id}>
-            <button
-              type="button"
-              className="od-relmedia__card"
-              onClick={() => setActive(item)}
-            >
+            <button type="button" className="od-relmedia__card" onClick={() => setActive(item)}>
               {item.cover_url ? (
                 <img
                   className="od-relmedia__art"
@@ -172,9 +168,7 @@ export function RelatedMediaStrip({ gameUuid }) {
                 <p className="od-relmedia__meta">
                   {[active.creator, active.year].filter(Boolean).join(' · ')}
                 </p>
-                {active.summary ? (
-                  <p className="od-relmedia__summary">{active.summary}</p>
-                ) : null}
+                {active.summary ? <p className="od-relmedia__summary">{active.summary}</p> : null}
                 {active.external_url ? (
                   <a
                     className="od-btn od-btn--primary"

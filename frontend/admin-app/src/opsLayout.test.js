@@ -1,10 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { DASHBOARD_COLS } from './dashboardLayout'
-import {
-  OPS_METRIC_IDS,
-  defaultOpsLayout,
-  opsWidgetMins,
-} from './opsLayout'
+import { OPS_METRIC_IDS, defaultOpsLayout, opsWidgetMins } from './opsLayout'
 
 describe('defaultOpsLayout', () => {
   test('metrics fill each row without leftover columns', () => {

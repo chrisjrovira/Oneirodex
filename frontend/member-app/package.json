@@ -3,14 +3,21 @@
   "private": true,
   "version": "1.0.0-beta",
   "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "test": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "npm --prefix ../.. run lint",
+    "format:check": "npm --prefix ../.. run format:check",
     "lint:css": "node ../../scripts/css-token-lint.mjs",
     "lint:css:update": "node ../../scripts/css-token-lint.mjs --update"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.102.8",
     "@tanstack/react-virtual": "^3.14.8",
     "cmdk": "^1.1.1",
     "react": "^19.1.0",

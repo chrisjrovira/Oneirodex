@@ -1,65 +1,30 @@
-/** Shared admin SPA fetch helpers (CSRF + session). */
-
-export function csrfToken() {
-  if (typeof document === 'undefined') {
-    return ''
-  }
-  // base_admin.html always renders the meta tag, so the extra sources below are
-  // belt-and-braces rather than a fix — but they cost nothing and they keep
-  // this agreeing with the member app's lookup instead of quietly differing.
-  const meta = document.querySelector('meta[name="csrf-token"]')
-  if (meta?.content) {
-    return meta.content
-  }
-  const input = document.querySelector('input[name="csrf_token"]')
-  if (input?.value) {
-    return input.value
-  }
-  return document.getElementById('csrf_token')?.textContent || ''
-}
-
 /**
- * Request headers carrying the CSRF token.
+ * Admin SPA fetch helpers — the thin admin wrapper (401 redirect, JSON verbs)
+ * over the shared primitives.
  *
- * Eleven call sites built this inline, three of them in this file. One spelling
- * means one place to change when the header or the token source moves.
+ * The CSRF lookup and the failed-response Error builder moved into
+ * `@oneirodex/ui` in wave B1.2: the member SPA's fallback chain is the superset,
+ * so the admin copy (meta → input → #csrf_token, plus a `data.message`
+ * fallback) is now one of the behaviours that lookup already covers. Re-exported
+ * here under the names admin call sites already use so their imports do not move.
  */
-export function csrfHeaders(extra = {}) {
-  if (typeof window !== 'undefined' && window.CSRFUtils?.getHeaders) {
-    return window.CSRFUtils.getHeaders(extra)
-  }
-  return {
-    'X-CSRFToken': csrfToken(),
-    ...extra,
-  }
-}
+import { getCsrfToken, csrfHeaders, errorFromBody } from '@oneirodex/ui'
+
+/** @deprecated import { getCsrfToken } from '@oneirodex/ui' — kept for admin call sites. */
+export { getCsrfToken as csrfToken, csrfHeaders }
 
 /**
  * Build an Error from a failed admin response.
  *
- * The four helpers below each spelled this out, and all four threw a bare
- * `Error(message)` — so a page could show the sentence but could not branch on
- * whether it was a 403 or a 500. `status` and `error_code` ride along now.
- *
- * @param {object} data    parsed response body (already read by the caller)
- * @param {number} status  HTTP status
- * @param {string} label   fallback label, usually the URL
+ * Was a local copy that threw a bare `Error(message)`; it now delegates to the
+ * shared `errorFromBody`, which keeps `status` / `error_code` / `data` on the
+ * Error and prefers `data.error` then `data.message` for the sentence — the
+ * same shape this copy had. Same signature `(data, status, label)`.
  */
-export function adminError(data, status, label) {
-  const sentence = data?.error || data?.message
-  const error = new Error(
-    typeof sentence === 'string' && sentence.trim() ? sentence : `${label} ${status}`,
-  )
-  error.status = status
-  if (typeof data?.error_code === 'string' && data.error_code) {
-    error.error_code = data.error_code
-  }
-  error.data = data
-  return error
-}
+export const adminError = errorFromBody
 
-export async function getJson(url) {
-  const response = await fetch(url, { credentials: 'same-origin' })
+export async function getJson(url, { signal } = {}) {
+  const response = await fetch(url, { credentials: 'same-origin', signal })
   if (response.status === 401) {
     window.location.href = '/login'
     throw new Error('unauthorized')

@@ -21,7 +21,12 @@ const running = {
 
 describe('scan job poll signatures', () => {
   it('keeps structure stable when only progress ticks', () => {
-    const later = { ...running, folders_success: 8, progress_percentage: 45, current_processing: '/games/two' }
+    const later = {
+      ...running,
+      folders_success: 8,
+      progress_percentage: 45,
+      current_processing: '/games/two',
+    }
     expect(scanJobsStructureSignature([running], { busy: true })).toBe(
       scanJobsStructureSignature([later], { busy: true }),
     )
@@ -62,14 +67,22 @@ describe('scan job poll signatures', () => {
     expect(unmatchedFoldersSignature(left)).not.toBe(unmatchedFoldersSignature(right))
 
     const oneJob = [{ ...running, scan_folder: '/games;/other', library_uuid: 'lib-1' }]
-    const twoJobs = [{ ...running, scan_folder: '/games' }, { ...running, scan_folder: '/other' }]
+    const twoJobs = [
+      { ...running, scan_folder: '/games' },
+      { ...running, scan_folder: '/other' },
+    ]
     expect(scanJobsStructureSignature(oneJob, { busy: true })).not.toBe(
       scanJobsStructureSignature(twoJobs, { busy: true }),
     )
   })
 
   it('keeps a server-reported 0% instead of recomputing it', () => {
-    const stalledAtZero = { ...running, folders_success: 3, folders_failed: 1, progress_percentage: 0 }
+    const stalledAtZero = {
+      ...running,
+      folders_success: 3,
+      folders_failed: 1,
+      progress_percentage: 0,
+    }
     expect(scanJobProgressCounts(stalledAtZero).percentage).toBe(0)
   })
 

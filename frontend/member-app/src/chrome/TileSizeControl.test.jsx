@@ -62,7 +62,6 @@ test('unmounting mid-drag still saves the pending tile size', () => {
   expect(preferencesApi.savePreferences).toHaveBeenCalledTimes(1)
 })
 
-
 describe('applyTileSizeCssVars and the title preference', () => {
   afterEach(() => {
     delete document.documentElement.dataset.odTileTitles

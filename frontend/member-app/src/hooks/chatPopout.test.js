@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import {
-  isPopoutWindow,
-  openChatPopoutWindow,
-  readChatPanelOpen,
-} from './chatPanelApi'
+import { isPopoutWindow, openChatPopoutWindow, readChatPanelOpen } from './chatPanelApi'
 
 /**
  * Chat pop-out (GT-B17 · UID-010).
@@ -45,7 +41,10 @@ describe('openChatPopoutWindow', () => {
 
   test('closes the in-page panel', () => {
     // Two copies of the same conversation side by side is worse than either.
-    vi.stubGlobal('open', vi.fn(() => ({ focus: vi.fn() })))
+    vi.stubGlobal(
+      'open',
+      vi.fn(() => ({ focus: vi.fn() })),
+    )
 
     openChatPopoutWindow()
 
@@ -53,14 +52,24 @@ describe('openChatPopoutWindow', () => {
   })
 
   test('survives a popup blocker returning null', () => {
-    vi.stubGlobal('open', vi.fn(() => null))
+    vi.stubGlobal(
+      'open',
+      vi.fn(() => null),
+    )
 
     expect(() => openChatPopoutWindow()).not.toThrow()
   })
 
   test('survives focus() throwing', () => {
     // Some blockers hand back a window whose focus() throws.
-    vi.stubGlobal('open', vi.fn(() => ({ focus: () => { throw new Error('blocked') } })))
+    vi.stubGlobal(
+      'open',
+      vi.fn(() => ({
+        focus: () => {
+          throw new Error('blocked')
+        },
+      })),
+    )
 
     expect(() => openChatPopoutWindow()).not.toThrow()
   })

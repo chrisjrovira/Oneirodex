@@ -43,7 +43,12 @@ function FaceButtons({ variant }) {
   return (
     <g className="od-sysmotif__buttons">
       {spots.map((spot, i) => (
-        <circle key={spot.cx + '-' + spot.cy} {...spot} r="2" style={{ animationDelay: `${i * 0.14}s` }} />
+        <circle
+          key={spot.cx + '-' + spot.cy}
+          {...spot}
+          r="2"
+          style={{ animationDelay: `${i * 0.14}s` }}
+        />
       ))}
     </g>
   )
@@ -69,8 +74,18 @@ const ARCHETYPES = {
   /** Console deck — power LED pulses, cartridge/disc slot reads. */
   console: (variant) => (
     <svg {...svgProps}>
-      <rect className="od-sysmotif__shell" x="5" y="16" width="38" height="18" rx={2 + (variant % 3)} />
-      <path className="od-sysmotif__vents" d={variant % 2 ? 'M10 21h8M10 25h8M10 29h8' : 'M10 22h6M10 27h6'} />
+      <rect
+        className="od-sysmotif__shell"
+        x="5"
+        y="16"
+        width="38"
+        height="18"
+        rx={2 + (variant % 3)}
+      />
+      <path
+        className="od-sysmotif__vents"
+        d={variant % 2 ? 'M10 21h8M10 25h8M10 29h8' : 'M10 22h6M10 27h6'}
+      />
       <rect className="od-sysmotif__slot" x="24" y="20" width="14" height="4" rx="1" />
       <circle className="od-sysmotif__led" cx="21" cy="30" r="1.6" />
     </svg>
@@ -79,8 +94,22 @@ const ARCHETYPES = {
   /** Handheld — screen refresh line, d-pad, power LED. */
   handheld: (variant) => (
     <svg {...svgProps}>
-      <rect className="od-sysmotif__shell" x="13" y="5" width="22" height="38" rx={variant % 2 ? 5 : 3} />
-      <rect className="od-sysmotif__screen" x="17" y="10" width="14" height={variant % 3 ? 11 : 13} rx="1" />
+      <rect
+        className="od-sysmotif__shell"
+        x="13"
+        y="5"
+        width="22"
+        height="38"
+        rx={variant % 2 ? 5 : 3}
+      />
+      <rect
+        className="od-sysmotif__screen"
+        x="17"
+        y="10"
+        width="14"
+        height={variant % 3 ? 11 : 13}
+        rx="1"
+      />
       <rect className="od-sysmotif__scanline" x="17" y="11" width="14" height="2" />
       <path className="od-sysmotif__dpad" d="M18 30h5M20.5 27.5v5" />
       <circle className="od-sysmotif__led" cx="30" cy="30" r="1.5" />
@@ -126,7 +155,14 @@ const ARCHETYPES = {
     <svg {...svgProps}>
       <path className="od-sysmotif__slot" d="M11 32h26v9H11z" />
       <g className="od-sysmotif__cart">
-        <rect className="od-sysmotif__shell" x="15" y="8" width="18" height="22" rx={variant % 2 ? 3 : 1} />
+        <rect
+          className="od-sysmotif__shell"
+          x="15"
+          y="8"
+          width="18"
+          height="22"
+          rx={variant % 2 ? 3 : 1}
+        />
         <rect className="od-sysmotif__label" x="18" y="11" width="12" height="8" rx="1" />
         <path className="od-sysmotif__pins" d="M18 26h12" />
       </g>

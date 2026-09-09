@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 
 const EMPTY_STATUS = {
   helpers_enabled: false,
@@ -64,8 +64,7 @@ export function StoragePage() {
   }, [])
 
   async function runAction(kind) {
-    const path =
-      kind === 'apply' ? '/api/storage/hardlink/apply' : '/api/storage/hardlink/preview'
+    const path = kind === 'apply' ? '/api/storage/hardlink/apply' : '/api/storage/hardlink/preview'
     if (busy) return
     setBusy(true)
     setActionError(null)
@@ -95,9 +94,8 @@ export function StoragePage() {
     <div className="od-admin-page">
       <h1>Storage / hardlinks</h1>
       <p className="od-admin-lede">
-        Preview same-volume hardlinks. Apply requires{' '}
-        <code>ALLOW_HARDLINK_APPLY=true</code>. Docker read-only games mounts fail writability
-        checks — preview still explains why.
+        Preview same-volume hardlinks. Apply requires <code>ALLOW_HARDLINK_APPLY=true</code>. Docker
+        read-only games mounts fail writability checks — preview still explains why.
       </p>
 
       {/* UID-014. This page's metrics are readiness states, not counts, so the
@@ -156,9 +154,9 @@ export function StoragePage() {
 
       {statusLoaded && !helpersOn ? (
         <div className="od-admin-banner od-admin-banner--warn" role="status">
-          Hardlink helpers are <strong>off</strong>. Set{' '}
-          <code>ENABLE_HARDLINK_HELPERS=true</code> (and restart) before preview or apply will work.
-          Apply also needs <code>ALLOW_HARDLINK_APPLY=true</code> — both stay env-only safety gates.
+          Hardlink helpers are <strong>off</strong>. Set <code>ENABLE_HARDLINK_HELPERS=true</code>{' '}
+          (and restart) before preview or apply will work. Apply also needs{' '}
+          <code>ALLOW_HARDLINK_APPLY=true</code> — both stay env-only safety gates.
         </div>
       ) : null}
 
@@ -259,12 +257,10 @@ export function StoragePage() {
               </strong>
             </li>
             <li>
-              Same volume:{' '}
-              <strong>{result.same_volume ? 'Yes' : 'No'}</strong>
+              Same volume: <strong>{result.same_volume ? 'Yes' : 'No'}</strong>
             </li>
             <li>
-              Bytes estimate:{' '}
-              <strong>{formatBytes(result.bytes_saved_estimate)}</strong>
+              Bytes estimate: <strong>{formatBytes(result.bytes_saved_estimate)}</strong>
             </li>
             {(result.reasons || []).length ? (
               <li>

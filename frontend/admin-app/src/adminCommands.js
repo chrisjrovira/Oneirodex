@@ -1,9 +1,4 @@
-import {
-  ADMIN_NAV,
-  HUB_LINKS,
-  INTEGRATION_CARDS,
-  SETTINGS_GROUPS,
-} from './navConfig'
+import { ADMIN_NAV, HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
 
 /**
  * One flat, searchable index of every admin destination (GT-A7).

@@ -132,7 +132,9 @@ body.od-shell-host .od-admin-main:has(.od-dash),
   pointer-events: none;
   opacity: 0;
   transform: translateY(-0.15rem);
-  transition: opacity var(--od-motion-fast) var(--od-motion-ease), transform var(--od-motion-fast) var(--od-motion-ease);
+  transition:
+    opacity var(--od-motion-fast) var(--od-motion-ease),
+    transform var(--od-motion-fast) var(--od-motion-ease);
 }
 
 .od-ops-refresh-wrap:hover .od-ops-refresh-asof,

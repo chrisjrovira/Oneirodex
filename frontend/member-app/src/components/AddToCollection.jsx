@@ -33,12 +33,7 @@ import './AddToCollection.css'
  * @param {() => void} [props.onAdded] Called after a successful add — the tile
  *   menu uses it to close itself.
  */
-export function AddToCollection({
-  gameUuid,
-  gameName = '',
-  variant = 'menu',
-  onAdded,
-}) {
+export function AddToCollection({ gameUuid, gameName = '', variant = 'menu', onAdded }) {
   const [open, setOpen] = useState(false)
   const [collections, setCollections] = useState(null)
   const [error, setError] = useState(null)
@@ -79,9 +74,7 @@ export function AddToCollection({
     try {
       await addCollectionItem(collection.uuid, gameUuid)
       showToast(
-        gameName
-          ? `${gameName} added to ${collection.name}`
-          : `Added to ${collection.name}`,
+        gameName ? `${gameName} added to ${collection.name}` : `Added to ${collection.name}`,
         'success',
       )
       setOpen(false)
@@ -125,9 +118,7 @@ export function AddToCollection({
           ) : null}
 
           {collections?.length === 0 ? (
-            <p className="od-add-collection__note">
-              No shelves yet — make one from Collections.
-            </p>
+            <p className="od-add-collection__note">No shelves yet — make one from Collections.</p>
           ) : null}
 
           {collections?.map((collection) => (

@@ -28,9 +28,19 @@ test('maps platforms to family accents for Art Studio chrome', () => {
   expect(platformFamily('PC_98')).toBe('pc')
   expect(platformFamily('BBC_MICRO')).toBe('pc')
   for (const id of [
-    'PCE_CD', 'SUPERVISION', 'GX4000', 'ASTROCADE', 'ARCADIA',
-    'CREATIVISION', 'ADVISION', 'STUDIO2', 'ACTIONMAX', 'DAPHNE', 'PINBALL',
-    'CD_I', 'JAGUAR_CD',
+    'PCE_CD',
+    'SUPERVISION',
+    'GX4000',
+    'ASTROCADE',
+    'ARCADIA',
+    'CREATIVISION',
+    'ADVISION',
+    'STUDIO2',
+    'ACTIONMAX',
+    'DAPHNE',
+    'PINBALL',
+    'CD_I',
+    'JAGUAR_CD',
   ]) {
     expect(platformFamily(id)).toBe('atari')
   }

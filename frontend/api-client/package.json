@@ -4,12 +4,17 @@
   "private": true,
   "description": "Minimal typed fetch client for Oneirodex OpenAPI endpoints",
   "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "npm --prefix ../.. run lint",
+    "format:check": "npm --prefix ../.. run format:check"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

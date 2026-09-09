@@ -5,7 +5,6 @@
 
 import { invoke } from '@tauri-apps/api/core'
 
-import type { AuthStore } from './auth.js'
 import { isTauriRuntime } from './config-store.js'
 import { joinUrl } from './paths.js'
 

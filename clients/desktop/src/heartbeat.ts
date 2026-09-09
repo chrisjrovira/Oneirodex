@@ -61,10 +61,7 @@ export interface HeartbeatOptions {
 }
 
 export type CompanionCommandAction =
-  | LifecycleAction
-  | 'apply_patch'
-  | 'apply_mod_pack'
-  | 'open_path'
+  LifecycleAction | 'apply_patch' | 'apply_mod_pack' | 'open_path'
 
 export interface CompanionCommand {
   id: string

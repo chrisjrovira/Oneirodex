@@ -2,11 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { ProposeLeafLibraries } from './ProposeLeafLibraries'
-import {
-  LIBRARY_ADD_URL,
-  LIBRARY_SCAN_URL,
-  PROPOSE_LEAF_URL,
-} from './proposeLeafLibrariesApi'
+import { LIBRARY_ADD_URL, LIBRARY_SCAN_URL, PROPOSE_LEAF_URL } from './proposeLeafLibrariesApi'
 
 const CANDIDATES = [
   {
@@ -98,10 +94,7 @@ describe('ProposeLeafLibraries', () => {
 
     render(<ProposeLeafLibraries />)
 
-    await user.type(
-      screen.getByLabelText(/root path/i),
-      '/storage/games/_console-gaming',
-    )
+    await user.type(screen.getByLabelText(/root path/i), '/storage/games/_console-gaming')
     await user.click(screen.getByRole('button', { name: /^propose$/i }))
 
     expect(await screen.findByText('NES ROMs')).toBeInTheDocument()
@@ -109,9 +102,7 @@ describe('ProposeLeafLibraries', () => {
     expect(screen.getByText(/Nothing is created until you confirm/i)).toBeInTheDocument()
 
     // Propose only — no library create yet
-    expect(
-      fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
-    ).toBe(false)
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL))).toBe(false)
 
     const nesCheckbox = screen.getByRole('checkbox', { name: /select nes roms/i })
     await user.click(nesCheckbox)
@@ -121,14 +112,10 @@ describe('ProposeLeafLibraries', () => {
     await user.click(await screen.findByRole('button', { name: /^create library$/i }))
 
     await waitFor(() => {
-      expect(
-        fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
-      ).toBe(true)
+      expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL))).toBe(true)
     })
     await waitFor(() => {
-      expect(
-        fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_SCAN_URL)),
-      ).toBe(true)
+      expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_SCAN_URL))).toBe(true)
     })
     expect(await screen.findByText(/1 created/i)).toBeInTheDocument()
   })
@@ -148,9 +135,7 @@ describe('ProposeLeafLibraries', () => {
     await user.type(screen.getByLabelText(/root path/i), '/storage/games')
     await user.click(screen.getByRole('button', { name: /^propose$/i }))
 
-    expect(
-      await screen.findByText(/not available on this build yet/i),
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/not available on this build yet/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /confirm create/i })).not.toBeInTheDocument()
   })
 
@@ -175,9 +160,7 @@ describe('ProposeLeafLibraries', () => {
     await user.type(screen.getByLabelText(/root path/i), '/storage/games/_console-gaming')
     await user.click(screen.getByRole('button', { name: /^propose$/i }))
 
-    expect(
-      await screen.findByText(/No leaf candidates under this root/i),
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/No leaf candidates under this root/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /confirm create/i })).not.toBeInTheDocument()
   })
 
@@ -241,9 +224,7 @@ describe('ProposeLeafLibraries', () => {
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
     await user.click(await screen.findByRole('button', { name: /^cancel$/i }))
 
-    expect(
-      fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
-    ).toBe(false)
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL))).toBe(false)
   })
 
   test('shows API error message honestly', async () => {

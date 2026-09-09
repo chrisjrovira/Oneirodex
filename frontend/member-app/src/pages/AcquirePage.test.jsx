@@ -6,6 +6,7 @@ import * as updatesApi from '../api/updates'
 vi.mock('../api/updates', () => ({
   fetchAcquireStatus: vi.fn(),
   searchAcquire: vi.fn(),
+  sendAcquireDownload: vi.fn(),
 }))
 
 vi.mock('../utils/toast', () => ({

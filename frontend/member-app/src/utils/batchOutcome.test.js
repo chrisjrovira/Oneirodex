@@ -1,8 +1,4 @@
-import {
-  batchItemUuids,
-  countBatchItems,
-  summarizeBatchOutcome,
-} from './batchOutcome'
+import { batchItemUuids, countBatchItems, summarizeBatchOutcome } from './batchOutcome'
 
 test('countBatchItems and batchItemUuids handle strings and objects', () => {
   expect(countBatchItems(undefined)).toBe(0)

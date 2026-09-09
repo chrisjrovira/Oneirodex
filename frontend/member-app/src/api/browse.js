@@ -1,9 +1,10 @@
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchBrowseGames(params, { signal } = {}) {
   const qs = new URLSearchParams(
-    Object.entries(params).filter(([, value]) =>
-      value !== undefined && value !== null && value !== ''),
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== null && value !== '',
+    ),
   )
   const response = await fetch(`/browse_games?${qs}`, {
     signal,

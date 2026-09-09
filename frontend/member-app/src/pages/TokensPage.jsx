@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { confirmAction } from '../../../shared/confirmDialog'
+import { Button, confirmAction } from '@oneirodex/ui'
 import { createToken, listTokens, revokeToken } from '../api/tokens'
 import { PageStatus } from '../components/PageStatus'
 import { copyText } from '../utils/copyText'
@@ -159,8 +159,8 @@ export function TokensPage() {
         paste it into the companion Connect screen; it is stored in the OS keyring, not in this UI.
         Format is <code>gt_&lt;prefix&gt;_&lt;secret&gt;</code>. Hyphens and underscores inside the
         secret are normal (URL-safe) — paste the <strong>entire</strong> string; do not stop at the
-        last <code>-</code>. Copy prefers HTTPS; on plain HTTP LAN, use Copy or select the field
-        and Ctrl+C / ⌘C.
+        last <code>-</code>. Copy prefers HTTPS; on plain HTTP LAN, use Copy or select the field and
+        Ctrl+C / ⌘C.
       </p>
 
       {error ? (
@@ -202,10 +202,15 @@ export function TokensPage() {
             }}
           />
           <p className="od-tokens__secret-hint">
-            Includes <code>-</code> / <code>_</code> when present — that is expected, not truncation.
+            Includes <code>-</code> / <code>_</code> when present — that is expected, not
+            truncation.
           </p>
           <div className="od-tokens__secret-actions">
-            <button type="button" className="od-btn od-btn--primary" onClick={() => void copySecret()}>
+            <button
+              type="button"
+              className="od-btn od-btn--primary"
+              onClick={() => void copySecret()}
+            >
               {copyState === 'copied' ? 'Copied' : 'Copy secret'}
             </button>
             <button
@@ -277,13 +282,9 @@ export function TokensPage() {
           <p className="od-tokens__preset-summary">
             Selected scopes: {(presetMeta.scopes || []).join(', ') || '—'}
           </p>
-          <button
-            type="submit"
-            className="od-btn od-btn--primary"
-            disabled={busy || !name.trim()}
-          >
+          <Button type="submit" variant="primary" disabled={busy || !name.trim()}>
             {busy ? 'Working…' : 'Create token'}
-          </button>
+          </Button>
         </form>
       </section>
 
@@ -301,7 +302,9 @@ export function TokensPage() {
                   <span className="od-tokens__scopes">{(row.scopes || []).join(', ')}</span>
                   <span className="od-tokens__meta">
                     Created {formatWhen(row.created_at)}
-                    {row.last_used_at ? ` · Last used ${formatWhen(row.last_used_at)}` : ' · Never used'}
+                    {row.last_used_at
+                      ? ` · Last used ${formatWhen(row.last_used_at)}`
+                      : ' · Never used'}
                   </span>
                 </div>
                 <button

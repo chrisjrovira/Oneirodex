@@ -164,7 +164,9 @@ export async function openSocialCompanionWindow(
   await new Promise<void>((resolve, reject) => {
     webview.once('tauri://created', () => resolve())
     webview.once('tauri://error', (event) => {
-      const message = String((event as { payload?: string }).payload || 'Failed to open friends window')
+      const message = String(
+        (event as { payload?: string }).payload || 'Failed to open friends window',
+      )
       console.error('[friends]', message, event)
       reject(new Error(message))
     })

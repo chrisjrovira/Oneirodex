@@ -75,6 +75,7 @@ jobs:
         # becomes an argument to pytest rather than a comment.
         run: >
           python -m pytest -q
+          --cov=oneirodex --cov-report=term-missing
           tests/test_health_probes.py
           tests/test_asgi_static.py
           tests/test_asgi_bridge.py
@@ -136,6 +137,7 @@ jobs:
           tests/test_sortable_tables.py
           tests/test_button_contract.py
           tests/test_api_envelope_lint.py
+          tests/test_api_error_envelope.py
           tests/test_w20_scan_match_api.py
           tests/test_w34_catalog_corroborate.py
           tests/test_sse_wsgi_fallback.py
@@ -147,6 +149,15 @@ jobs:
           tests/test_updates_scan_and_shelves.py
           tests/test_browser_player.py
           tests/test_nostalgist_pilot.py
+          tests/test_ops_path_problems.py
+          tests/test_utils_ops_issues.py
+          tests/test_utils_ops_network.py
+          tests/test_library_health_pulse.py
+          tests/test_health_igdb_provider.py
+          tests/test_asgi_activity_sse.py
+          tests/test_api_tokens_health_events.py
+          tests/test_ops_followons.py
+          tests/test_library_batch_ops.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
       # the problem then grew from ~699 call sites to 1194 — new routes reached
@@ -154,6 +165,100 @@ jobs:
       # css-token-lint, which took CSS violations from 2365 to 1305.
       - name: Run API envelope lint
         run: python scripts/api_envelope_lint.py
+
+      # Per-file print() baseline (A0.4). No DB; fails only when a file's
+      # print() count climbs above its recorded baseline in scripts/print_lint.py.
+      - name: Run print() ratchet
+        run: python scripts/print_lint.py
+
+  alembic-check:
+    name: Alembic (upgrade + check)
+    # A3.1: the schema is owned by Alembic (ADR 0004). This job proves that a
+    # fresh `alembic upgrade head` applies cleanly and that `alembic check`
+    # finds no drift between the migrations and models.py metadata. The baseline
+    # is kept clean by a named include_object allow-list in alembic/env.py — see
+    # docs/dev/alembic-baseline-notes.md — so any new diff detected here is a
+    # real missing migration and must fail the gate. Runs independently of
+    # pytest-core (no app fixtures needed).
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          # DB name must contain "test" (enforced by conftest.py).
+          POSTGRES_DB: oneirodextest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d oneirodextest"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Must contain "test" in the database name — never point at production.
+      # alembic/env.py resolves DATABASE_URL first, then TEST_DATABASE_URL.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/oneirodextest
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      FLASK_ENV: testing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # requirements-dev.txt pulls in requirements.txt, which pins alembic.
+          pip install -r requirements-dev.txt
+
+      - name: Alembic upgrade head
+        run: python -m alembic upgrade head
+
+      - name: Alembic check (fail hard on any diff)
+        # Baseline is wired clean via the include_object allow-list in
+        # alembic/env.py (docs/dev/alembic-baseline-notes.md). Any new operation
+        # detected here means a migration is missing — let it fail.
+        run: python -m alembic check
+
+  lint:
+    name: Lint & format
+    # B0.2: ESLint flat config (eslint.config.js) + Prettier --check over
+    # frontend/**. The repo root has its own package.json / package-lock.json
+    # holding the shared eslint + prettier toolchain, so this is a root npm ci
+    # (no working-directory override on this job).
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Prettier check
+        run: npm run format:check
 
   member-app-vitest:
     name: Member-app vitest
@@ -170,16 +275,28 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/member-app/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      # B1.1: npm workspaces — the repo-root package-lock.json is the only
+      # lockfile. One root `npm ci` reifies the whole workspace graph
+      # (every frontend/* app + the @oneirodex/ui shared package + the pinned
+      # tsc / eslint / prettier toolchain). This job sets
+      # defaults.run.working-directory to the app dir, so the root install needs
+      # an explicit working-directory: .
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
         run: npm ci
 
       - name: Run vitest
         # package.json "test" is "vitest"; --run exits non-interactively in CI.
+        # Runs from frontend/member-app (job default); npm resolves up to the
+        # workspace root for tsc/vitest.
         run: npm test -- --run
+
+      - name: Typecheck
+        run: npm run typecheck
 
   admin-app-vitest:
     name: Admin-app vitest
@@ -199,15 +316,23 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/admin-app/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      # B1.1: npm workspaces — one root `npm ci` reifies the whole workspace
+      # graph (this app + @oneirodex/ui + the pinned tsc/eslint/prettier
+      # toolchain). This job overrides working-directory, so the root install
+      # needs an explicit one.
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
         run: npm ci
 
       - name: Run vitest
         run: npm test -- --run
+
+      - name: Typecheck
+        run: npm run typecheck
 
       # tests/js holds standalone harnesses for classic theme JS, run under bare
       # node against a hand-rolled micro-DOM. They were in no workflow, so they
@@ -219,6 +344,48 @@ jobs:
       - name: Run CSS token lint
         working-directory: .
         run: node scripts/css-token-lint.mjs
+
+  ops-glance-vitest:
+    name: Ops-glance vitest
+    # ops-glance ships in the Docker image (oneirodex/static/dist/ops-glance) but
+    # had no CI job — OpsApp.test.jsx / AppSmoke.test.jsx gated nothing and a
+    # broken bundle could reach an operator's Admin Ops glance behind a green tick.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend/ops-glance
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # B1.1: npm workspaces — one root `npm ci` reifies the whole workspace
+      # graph (this app + @oneirodex/ui + the pinned tsc/eslint/prettier
+      # toolchain, which `npm run typecheck` and `npm run build`'s `tsc --noEmit`
+      # both need). This job overrides working-directory, so the root install
+      # needs an explicit one.
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
+        run: npm ci
+
+      - name: Run vitest
+        run: npm test -- --run
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build ops-glance bundle
+        # ops-glance is copied into the image at build time; a bundle that fails
+        # to build must not merge.
+        run: npm run build
 
   desktop-vitest:
     name: Desktop vitest
@@ -235,11 +402,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
-          cache-dependency-path: clients/desktop/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      # B1.1: npm workspaces — one root `npm ci` is what wires
+      # clients/desktop's `"@oneirodex/api-client": "*"` workspace dependency
+      # (no `file:` link step needed).
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
         run: npm ci
 
       - name: Run fast desktop vitest slice
@@ -276,11 +447,16 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
-          cache-dependency-path: frontend/api-client/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
+      # B1.1: npm workspaces — one root `npm ci` reifies the whole workspace
+      # graph. This job overrides working-directory, so the root install needs
+      # an explicit one; the Typecheck / vitest steps then run from
+      # frontend/api-client (job default).
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
         run: npm ci
 
       - name: Typecheck

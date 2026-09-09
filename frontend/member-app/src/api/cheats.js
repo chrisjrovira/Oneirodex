@@ -1,8 +1,6 @@
 /** Game library RetroArch `.cht` cheats — list / create / upload / delete. */
 
-import { csrfHeaders } from './csrf'
-import { errorFromBody } from './envelopeError'
-
+import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
 /** Capability-language dialect hints (API values match Backend CHEAT_DIALECTS). */
 export const CHEAT_DIALECTS = Object.freeze([
   { value: 'raw', label: 'Raw' },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { errorFromResponse } from '../api/envelopeError'
+import { fetchLibraryPlatforms } from '../api/systems'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
 import { isNativePcPlatform } from '../chrome/regions'
@@ -26,10 +26,7 @@ function useCollapsedFamilies() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(
-        COLLAPSED_FAMILIES_KEY,
-        JSON.stringify([...collapsed]),
-      )
+      window.localStorage.setItem(COLLAPSED_FAMILIES_KEY, JSON.stringify([...collapsed]))
     } catch {
       // Preference only.
     }
@@ -78,17 +75,6 @@ function SystemMark({ platformValue, family }) {
   )
 }
 
-async function fetchLibraryPlatforms({ signal } = {}) {
-  const response = await fetch('/api/library_platforms?include_completion=1', {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'library_platforms')
-  }
-  return response.json()
-}
-
 const FAMILY_ORDER = ['nintendo', 'sony', 'xbox', 'sega', 'pc', 'atari']
 
 const FAMILY_LABELS = {
@@ -129,7 +115,7 @@ function groupPlatforms(platforms) {
   }))
 }
 
-export function SystemsPage({ shellConfig: _shellConfig } = {}) {
+export function SystemsPage() {
   const [platforms, setPlatforms] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -159,10 +145,7 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
     }
   }, [retryCount])
 
-  const groups = useMemo(
-    () => groupPlatforms(platforms || []),
-    [platforms],
-  )
+  const groups = useMemo(() => groupPlatforms(platforms || []), [platforms])
 
   if (error && !platforms) {
     return (
@@ -208,9 +191,10 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
           where the unused width already was. */}
       <div className="od-systems-page__intro">
         <p className="od-more-page__lede">
-          Browse your library by console or PC. Open a system to filter the grid and apply that era&apos;s chrome.{' '}
-          <Link to="/ways-to-play">Ways to Play</Link> lists Browser / Companion / Catalog across the catalog.
-          Console tiles also open a licensed catalog of IGDB regional releases.
+          Browse your library by console or PC. Open a system to filter the grid and apply that
+          era&apos;s chrome. <Link to="/ways-to-play">Ways to Play</Link> lists Browser / Companion
+          / Catalog across the catalog. Console tiles also open a licensed catalog of IGDB regional
+          releases.
         </p>
         <ExportPacksSection />
       </div>
@@ -261,19 +245,25 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                           <span className="od-systems-tile__count">
                             {count} {count === 1 ? 'game' : 'games'}
                             {modeLabel ? (
-                              <span className={`od-systems-tile__mode od-systems-tile__mode--${platform.play_mode}`}>
+                              <span
+                                className={`od-systems-tile__mode od-systems-tile__mode--${platform.play_mode}`}
+                              >
                                 {modeLabel}
                               </span>
                             ) : null}
                           </span>
                           {completion ? (
                             <span className="od-systems-tile__completion">
-                              {completion.owned} / {completion.total} · {completion.percent}% ({completion.region})
+                              {completion.owned} / {completion.total} · {completion.percent}% (
+                              {completion.region})
                             </span>
                           ) : null}
                           {Array.isArray(platform.set_completion_regions) &&
                           platform.set_completion_regions.length > 1 ? (
-                            <span className="od-systems-tile__regions" aria-label="Set completion by region">
+                            <span
+                              className="od-systems-tile__regions"
+                              aria-label="Set completion by region"
+                            >
                               {platform.set_completion_regions.map((regionRow) => {
                                 const pct = Number(regionRow.percent) || 0
                                 const heat =
@@ -286,7 +276,9 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                                     title={`${regionRow.region}: ${regionRow.owned}/${regionRow.total} (${regionRow.percent}%)`}
                                   >
                                     {regionRow.region}
-                                    <span className="od-systems-tile__region-pct">{regionRow.percent}%</span>
+                                    <span className="od-systems-tile__region-pct">
+                                      {regionRow.percent}%
+                                    </span>
                                   </Link>
                                 )
                               })}
@@ -294,7 +286,7 @@ export function SystemsPage({ shellConfig: _shellConfig } = {}) {
                           ) : null}
                         </span>
                       </Link>
-                      {(!isNativePcPlatform(value) || completion) ? (
+                      {!isNativePcPlatform(value) || completion ? (
                         <div className="od-systems-tile__links">
                           {isNativePcPlatform(value) ? null : (
                             <Link
@@ -345,18 +337,15 @@ function ExportPacksSection() {
         <a className="od-btn od-btn--sm od-btn--pill" href="/api/export/esde">
           ES-DE gamelist.xml
         </a>
-        <a
-          className="od-btn od-btn--sm od-btn--pill"
-          href="/api/export/pegasus?platform=Library"
-        >
+        <a className="od-btn od-btn--sm od-btn--pill" href="/api/export/pegasus?platform=Library">
           Pegasus metadata
         </a>
       </div>
       <p className="od-systems-exports__lede">
-        Optional downloads for other frontends — not required to browse here.{' '}
-        <strong>ES-DE</strong> gets a <code>gamelist.xml</code> (EmulationStation Desktop Edition
-        style list). <strong>Pegasus</strong> gets a metadata pack for its frontend. File paths stay
-        portable under your library roots so home/NAS mounts are not leaked.
+        Optional downloads for other frontends — not required to browse here. <strong>ES-DE</strong>{' '}
+        gets a <code>gamelist.xml</code> (EmulationStation Desktop Edition style list).{' '}
+        <strong>Pegasus</strong> gets a metadata pack for its frontend. File paths stay portable
+        under your library roots so home/NAS mounts are not leaked.
       </p>
     </section>
   )

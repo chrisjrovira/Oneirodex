@@ -1,8 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import {
-  SHELF_FULLY_VISIBLE_RATIO,
-  isShelfItemFullyVisible,
-} from './shelfItemVisibility'
+import { SHELF_FULLY_VISIBLE_RATIO, isShelfItemFullyVisible } from './shelfItemVisibility'
 
 describe('isShelfItemFullyVisible', () => {
   test('accepts a fully intersecting tile', () => {

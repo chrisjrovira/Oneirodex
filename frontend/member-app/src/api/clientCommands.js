@@ -1,5 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 /**
  * Queue Install / Update / Uninstall / Apply patch / Open path for the desktop companion.
  * @param {string} gameUuid

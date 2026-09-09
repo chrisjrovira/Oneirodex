@@ -24,6 +24,8 @@ from oneirodex.utils.steam_metadata import (
     steam_details_to_metadata,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- Steam metadata adapter.
+
 APPDETAILS = {
     'steam_app_id': 620,
     'name': 'Portal 2',

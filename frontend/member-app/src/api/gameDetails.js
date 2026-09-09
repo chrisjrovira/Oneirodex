@@ -1,6 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 export async function fetchGameDetails(gameUuid, { signal } = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/details`, {
     signal,
@@ -35,15 +33,12 @@ export async function fetchGameVersions(gameUuid, { signal } = {}) {
 }
 
 export async function checkGameFreshness(gameUuid) {
-  const response = await fetch(
-    `/api/games/${encodeURIComponent(gameUuid)}/freshness/check`,
-    {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: '{}',
-    },
-  )
+  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/freshness/check`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    body: '{}',
+  })
   if (!response.ok) {
     throw await errorFromResponse(response, 'freshness check')
   }

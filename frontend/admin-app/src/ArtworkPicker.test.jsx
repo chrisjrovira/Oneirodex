@@ -10,7 +10,10 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
         ok: true,
         status: 200,
         json: async () => ({
-          providers: [{ id: 'steamgriddb', enabled: true }, { id: 'igdb', enabled: true }],
+          providers: [
+            { id: 'steamgriddb', enabled: true },
+            { id: 'igdb', enabled: true },
+          ],
         }),
       }
     }
@@ -136,9 +139,11 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
   fireEvent.click(await screen.findByRole('button', { name: /Meta Quest Store/i }))
   fireEvent.click(screen.getByRole('button', { name: 'Search' }))
   expect(await screen.findByRole('button', { name: /Beat Saber/i })).toBeInTheDocument()
-  expect(calls.some((c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=meta_quest'))).toBe(
-    true,
-  )
+  expect(
+    calls.some(
+      (c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=meta_quest'),
+    ),
+  ).toBe(true)
 })
 
 test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
@@ -193,9 +198,11 @@ test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
   expect(
     await screen.findByText(/MOBYGAMES_API_KEY not configured — empty results/i),
   ).toBeInTheDocument()
-  expect(calls.some((c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=mobygames'))).toBe(
-    true,
-  )
+  expect(
+    calls.some(
+      (c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=mobygames'),
+    ),
+  ).toBe(true)
 })
 
 test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
@@ -251,6 +258,8 @@ test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
     await screen.findByText(/THEGAMESDB_API_KEY not configured — empty results/i),
   ).toBeInTheDocument()
   expect(
-    calls.some((c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=thegamesdb')),
+    calls.some(
+      (c) => c.url.includes('/api/search_metadata?') && c.url.includes('source=thegamesdb'),
+    ),
   ).toBe(true)
 })

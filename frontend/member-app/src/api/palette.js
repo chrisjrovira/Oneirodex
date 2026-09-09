@@ -1,4 +1,4 @@
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 /**
  * Empty-state titles for the command palette: recently played + favourited here.

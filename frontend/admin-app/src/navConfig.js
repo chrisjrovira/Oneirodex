@@ -19,24 +19,51 @@ export const SETTINGS_GROUPS = [
     id: 'library',
     title: 'Library & matching',
     items: [
-      { to: '/admin/new_server_settings', title: 'Server settings', blurb: 'Scan threads, download batching, site URL.' },
+      {
+        to: '/admin/new_server_settings',
+        title: 'Server settings',
+        blurb: 'Scan threads, download batching, site URL.',
+      },
       {
         to: '/admin/scan_match',
         title: 'Scan / match policy',
-        blurb: 'Propose-only, dupe/match thresholds, peel profile — soft-degrades if Backend mid-rollout.',
+        blurb:
+          'Propose-only, dupe/match thresholds, peel profile — soft-degrades if Backend mid-rollout.',
       },
-      { to: '/admin/reference_sets', title: 'ROM reference sets', blurb: 'Upload No-Intro/Redump DATs for set completeness.' },
+      {
+        to: '/admin/reference_sets',
+        title: 'ROM reference sets',
+        blurb: 'Upload No-Intro/Redump DATs for set completeness.',
+      },
       { to: '/admin/quality_profiles', title: 'Quality profiles', blurb: 'Release quality rules.' },
-      { to: '/admin/storage', title: 'Storage', blurb: 'Same-volume hardlink preview/apply helpers.', statusKey: 'storage' },
+      {
+        to: '/admin/storage',
+        title: 'Storage',
+        blurb: 'Same-volume hardlink preview/apply helpers.',
+        statusKey: 'storage',
+      },
     ],
   },
   {
     id: 'play',
     title: 'Play & emulation',
     items: [
-      { to: '/admin/emulator_profiles', title: 'Emulators', blurb: 'WebRetro cores, BIOS, NES Nostalgist pilot, cloud saves.' },
-      { to: '/admin/remote_play', title: 'Remote play', blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.' },
-      { to: '/admin/arr', title: 'Arr module', blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).', statusKey: 'arr' },
+      {
+        to: '/admin/emulator_profiles',
+        title: 'Emulators',
+        blurb: 'WebRetro cores, BIOS, NES Nostalgist pilot, cloud saves.',
+      },
+      {
+        to: '/admin/remote_play',
+        title: 'Remote play',
+        blurb: 'BYO Sunshine/Wolf Moonlight host — off by default.',
+      },
+      {
+        to: '/admin/arr',
+        title: 'Arr module',
+        blurb: 'BYO Prowlarr/Jackett + qBittorrent (no bundled indexers).',
+        statusKey: 'arr',
+      },
       {
         // Was an "Export packs" card in Integrations, labelled with the bare
         // tool names (GT-B8). "ES-DE export" and "Pegasus" mean nothing unless
@@ -54,17 +81,34 @@ export const SETTINGS_GROUPS = [
     id: 'presentation',
     title: 'Presentation',
     items: [
-      { to: '/admin/themes', title: 'Themes', blurb: 'Reset default CSS after deploy. Pick a look in Preferences.' },
-      { to: '/admin/art_studio', title: 'Art studio', blurb: 'Placeholders + artwork picker / image queue.' },
+      {
+        to: '/admin/themes',
+        title: 'Themes',
+        blurb: 'Reset default CSS after deploy. Pick a look in Preferences.',
+      },
+      {
+        to: '/admin/art_studio',
+        title: 'Art studio',
+        blurb: 'Placeholders + artwork picker / image queue.',
+      },
       { to: '/admin/detail_layout', title: 'Detail layout', blurb: 'Game details field layout.' },
-      { to: '/admin/attract_mode_settings', title: 'Attract mode', blurb: 'Idle trailer slideshow and filters.' },
+      {
+        to: '/admin/attract_mode_settings',
+        title: 'Attract mode',
+        blurb: 'Idle trailer slideshow and filters.',
+      },
     ],
   },
   {
     id: 'extend',
     title: 'Extend',
     items: [
-      { to: '/admin/ai', title: 'AI assist', blurb: 'AI identification and helpers.', statusKey: 'ai' },
+      {
+        to: '/admin/ai',
+        title: 'AI assist',
+        blurb: 'AI identification and helpers.',
+        statusKey: 'ai',
+      },
       { to: '/admin/plugins', title: 'Plugins', blurb: 'Connector / export / emu registry.' },
     ],
   },
@@ -244,9 +288,7 @@ export function resolveNavSection(pathname) {
  * @param {string} sectionId
  */
 export function railDestinations(sectionId) {
-  return (HUB_LINKS[sectionId] || []).filter(
-    (link) => !PAGE_ACTION_HREFS.has(link.href),
-  )
+  return (HUB_LINKS[sectionId] || []).filter((link) => !PAGE_ACTION_HREFS.has(link.href))
 }
 
 export const HUB_LINKS = {

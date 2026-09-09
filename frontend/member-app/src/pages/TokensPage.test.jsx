@@ -198,10 +198,7 @@ test('copy secret shows manual-select guidance when all copy paths fail', async 
   await user.click(screen.getByRole('button', { name: /copy secret/i }))
 
   expect(await screen.findByRole('alert')).toHaveTextContent(/clipboard unavailable/i)
-  expect(showToast).toHaveBeenCalledWith(
-    expect.stringMatching(/clipboard unavailable/i),
-    'warn',
-  )
+  expect(showToast).toHaveBeenCalledWith(expect.stringMatching(/clipboard unavailable/i), 'warn')
   expect(field).toHaveFocus()
   expect(field.selectionStart).toBe(0)
   expect(field.selectionEnd).toBe(field.value.length)

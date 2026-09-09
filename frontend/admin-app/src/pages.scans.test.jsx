@@ -63,7 +63,6 @@ describe('ScansPage queued jobs', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/Scanning/i)
   })
 
-
   test('a queue with nothing running does not read as idle', async () => {
     // The bug this wording exists for: an orphaned Running job held the queue,
     // and the old readout rendered it as "Running: no · queued 1" — which reads

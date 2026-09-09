@@ -161,9 +161,7 @@ function isSafeExtractionSuffix(after: string): boolean {
   if (/^\s/.test(after)) {
     return true
   }
-  if (
-    /^(?:(?:\.{2,3}|…|Copy(?:ed)?!?|<\/?[a-zA-Z][^>]*>)+)$/i.test(after)
-  ) {
+  if (/^(?:(?:\.{2,3}|…|Copy(?:ed)?!?|<\/?[a-zA-Z][^>]*>)+)$/i.test(after)) {
     return true
   }
   if (/^[.…·•]+$/.test(after)) {

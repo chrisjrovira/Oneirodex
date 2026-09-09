@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
@@ -237,9 +237,9 @@ export function ExtensionsPage() {
     <div className="od-admin-page od-ext-page">
       <h1>File Extensions</h1>
       <p className="od-admin-lede">
-        Extensions used during library scan recognition. Only files matching these suffixes are treated
-        as games when scanning folders — add archives, disc images, or cartridge dumps your libraries
-        actually contain.
+        Extensions used during library scan recognition. Only files matching these suffixes are
+        treated as games when scanning folders — add archives, disc images, or cartridge dumps your
+        libraries actually contain.
       </p>
 
       {/* UID-014. An empty extension list is the state worth shouting about:
@@ -281,9 +281,9 @@ export function ExtensionsPage() {
               spellCheck={false}
             />
           </label>
-          <button type="submit" className="od-btn" disabled={busy || !normalizeExt(draft)}>
+          <Button type="submit" disabled={busy || !normalizeExt(draft)}>
             Add
-          </button>
+          </Button>
           <label className="od-admin-field od-admin-field--grow-sm od-admin-field--flush">
             Filter
             <input
@@ -346,9 +346,7 @@ export function ExtensionsPage() {
           <section key={section.id} className="od-admin-panel od-ext-group">
             <header className="od-ext-group__head">
               <h2 className="od-admin-panel-title">{section.label}</h2>
-              <p className="od-admin-lede od-admin-lede--flush">
-                {section.hint}
-              </p>
+              <p className="od-admin-lede od-admin-lede--flush">{section.hint}</p>
             </header>
             <div className="od-ext-chip-row" role="list">
               {section.rows.map((item) => (

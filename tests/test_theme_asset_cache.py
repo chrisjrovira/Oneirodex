@@ -29,11 +29,11 @@ ROOT = Path(__file__).resolve().parents[1]
 # --------------------------------------------------------------------------
 
 def test_theme_asset_url_carries_a_version(app):
-    from oneirodex.routes import clear_theme_asset_versions
+    from oneirodex.routes_theme import clear_theme_asset_versions
 
     with app.test_request_context('/'):
         clear_theme_asset_versions()
-        from oneirodex.routes import theme_asset_filter
+        from oneirodex.routes_theme import theme_asset_filter
 
         url = theme_asset_filter(None, 'css/base.css')
 
@@ -43,7 +43,7 @@ def test_theme_asset_url_carries_a_version(app):
 
 def test_the_version_changes_when_the_file_does(app, tmp_path):
     """The whole point: same path, new bytes, different URL."""
-    from oneirodex.routes import _theme_asset_version, clear_theme_asset_versions
+    from oneirodex.routes_theme import _theme_asset_version, clear_theme_asset_versions
 
     target = tmp_path / 'base.css'
     target.write_text('a{}', encoding='utf-8')
@@ -65,7 +65,7 @@ def test_versions_are_memoised_until_cleared(app, tmp_path):
     """A page links a few dozen theme assets and this can sit on a network
     path, so the stat is cached — which is exactly why the reset has to clear
     it, and why that clearing is asserted below."""
-    from oneirodex.routes import _theme_asset_version, clear_theme_asset_versions
+    from oneirodex.routes_theme import _theme_asset_version, clear_theme_asset_versions
 
     target = tmp_path / 'x.css'
     target.write_text('a{}', encoding='utf-8')

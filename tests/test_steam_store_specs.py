@@ -7,6 +7,9 @@ from oneirodex.utils.steam_store_specs import (
     store_specs_from_steam_details,
     strip_steam_html,
 )
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- Steam store-spec adapter.
 
 
 def test_strip_steam_html_drops_markup():

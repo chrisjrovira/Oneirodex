@@ -1,9 +1,9 @@
-﻿import { useEffect, useState } from 'react'
-import { fetchMyPlaytime } from '../api/playtime'
+﻿import { fetchMyPlaytime } from '../api/playtime'
 import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './PlaytimePage.css'
+import { useResource, useShellConfig } from '@oneirodex/ui'
 
 function formatDuration(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
@@ -19,39 +19,15 @@ function formatDuration(totalSeconds) {
   return `${s}s`
 }
 
-export function PlaytimePage({ shellConfig = {} } = {}) {
+export function PlaytimePage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setData(null)
-
-    fetchMyPlaytime({ signal: controller.signal })
-      .then((result) => {
-        if (active) {
-          setData(result)
-        }
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') {
-          setError(err)
-        }
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [retryCount])
+  const { data, loading, error, reload } = useResource(['playtime', 'me'], ({ signal }) =>
+    fetchMyPlaytime({ signal }),
+  )
 
   const games = data?.games || []
-  const gameCountLabel =
-    games.length === 1 ? '1 game' : `${games.length} games`
+  const gameCountLabel = games.length === 1 ? '1 game' : `${games.length} games`
 
   return (
     <>
@@ -71,11 +47,11 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
         )}
 
         <PageStatus
-          loading={!error && !data}
+          loading={loading}
           error={error}
           errorMessage="Unable to load playtime."
           loadingMessage="Loading playtime…"
-          onRetry={() => setRetryCount((n) => n + 1)}
+          onRetry={reload}
         />
 
         {!error && data ? (
@@ -107,7 +83,10 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
                 <ul className="od-playtime__list">
                   {games.map((row) => (
                     <li key={row.game_uuid} className="od-playtime__row">
-                      <a className="od-playtime__title-link" href={`/game_details/${row.game_uuid}`}>
+                      <a
+                        className="od-playtime__title-link"
+                        href={`/game_details/${row.game_uuid}`}
+                      >
                         <strong>{row.game_name || row.game_uuid}</strong>
                       </a>
                       <span className="od-playtime__meta">

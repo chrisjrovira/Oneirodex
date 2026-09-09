@@ -5,6 +5,7 @@ import { UpdatesPage } from './UpdatesPage'
 import * as updatesApi from '../api/updates'
 import * as clientCommands from '../api/clientCommands'
 import * as calendarApi from '../api/calendar'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/updates', () => ({
   fetchUpdatesInbox: vi.fn(),
@@ -73,7 +74,9 @@ test('inbox shows apply action and queues companion update pack', async () => {
 
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -91,7 +94,11 @@ test('inbox shows apply action and queues companion update pack', async () => {
     })
   })
   expect(
-    await screen.findByText((_, el) => el?.classList?.contains('od-updates__status') && /queued for companion/i.test(el.textContent || '')),
+    await screen.findByText(
+      (_, el) =>
+        el?.classList?.contains('od-updates__status') &&
+        /queued for companion/i.test(el.textContent || ''),
+    ),
   ).toBeInTheDocument()
 })
 
@@ -121,7 +128,9 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
 
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -142,9 +151,7 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
   // ("Checking library…") or the inbox re-read that follows it ("Refreshing…").
   // The point of the test is that there *is* feedback and the list survives it.
   const tools = refresh.closest('.od-updates__inbox-tools')
-  expect(within(tools).getByRole('status')).toHaveTextContent(
-    /Checking library|Refreshing/i,
-  )
+  expect(within(tools).getByRole('status')).toHaveTextContent(/Checking library|Refreshing/i)
   expect(screen.getByText('Behind Game')).toBeInTheDocument()
 
   resolveInbox({
@@ -169,7 +176,9 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
 test('shows upcoming releases teaser with calendar link', async () => {
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -182,7 +191,9 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <UpdatesPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
@@ -204,9 +215,7 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
 
   const tools = refresh.closest('.od-updates__inbox-tools')
   const stamp = tools.querySelector('.od-updates__refresh-status')
-  expect(
-    stamp.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy()
+  expect(stamp.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
 
 /**
@@ -235,15 +244,15 @@ test('the one refresh control probes the library and refills the inbox', async (
 
   render(
     <MemoryRouter>
-      <UpdatesPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
   const before = updatesApi.fetchUpdatesInbox.mock.calls.length
 
-  await user.click(
-    screen.getByRole('button', { name: 'Check the library against store versions' }),
-  )
+  await user.click(screen.getByRole('button', { name: 'Check the library against store versions' }))
 
   // …and there is no second control that looks like it does the same thing.
   expect(screen.queryByRole('button', { name: /Check library for updates/i })).toBeNull()
@@ -263,7 +272,9 @@ test('store search failure uses PageStatus', async () => {
 
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -271,7 +282,5 @@ test('store search failure uses PageStatus', async () => {
   await user.type(screen.getByLabelText(/Game name/i), 'Hades')
   await user.click(screen.getByRole('button', { name: /^Search$/i }))
 
-  expect(await screen.findByRole('alert')).toHaveTextContent(
-    'Store search failed: upstream down',
-  )
+  expect(await screen.findByRole('alert')).toHaveTextContent('Store search failed: upstream down')
 })

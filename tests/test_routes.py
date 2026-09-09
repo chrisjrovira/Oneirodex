@@ -400,10 +400,10 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect to login
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.os.access')
-    @patch('oneirodex.routes.get_game_names_from_folder')
-    def test_scan_folder_valid_path(self, mock_get_games, mock_access, mock_exists, mock_current_user, 
+    @patch('oneirodex.routes_admin_ext.scan_jobs.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.os.access')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.get_game_names_from_folder')
+    def test_scan_folder_valid_path(self, mock_get_games, mock_access, mock_exists, mock_current_user,
                                    client, app, db_session, admin_user, test_library):
         """Test scan_folder with valid folder path."""
         mock_current_user.is_authenticated = True
@@ -424,7 +424,7 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.os.path.exists')
     def test_scan_folder_invalid_path(self, mock_exists, mock_current_user, client, app, db_session, admin_user, test_library):
         """Test scan_folder with invalid folder path."""
         mock_current_user.is_authenticated = True
@@ -563,7 +563,7 @@ class TestMainBlueprint:
         assert test_scan_job.status == 'Completed'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.run_in_background')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.run_in_background')
     def test_restart_scan_job(self, mock_background, mock_current_user,
                              client, app, db_session, admin_user, test_scan_job):
         """Test restarting a scan job.
@@ -603,7 +603,7 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_edit_game_images(self, mock_is_scan_running, mock_current_user, 
                              client, app, db_session, admin_user, test_game, test_image):
         """Test edit game images route."""
@@ -618,7 +618,7 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_edit_game_images_scan_running(self, mock_is_scan_running, mock_current_user, 
                                           client, app, db_session, admin_user, test_game):
         """Test edit game images when scan is running."""
@@ -633,9 +633,9 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.PILImage.open')
-    @patch('oneirodex.routes.os.path.join')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.PILImage.open')
+    @patch('oneirodex.routes_admin_ext.game_images.os.path.join')
     def test_upload_image_success(self, mock_path_join, mock_pil_open, mock_is_scan_running,
                                  mock_current_user, client, app, db_session, admin_user, test_game,
                                  tmp_path):
@@ -655,8 +655,8 @@ class TestMainBlueprint:
         # so the save raised FileNotFoundError before any assertion ran.
         #
         # Built by concatenation, not `tmp_path / name`: patching
-        # 'oneirodex.routes.os.path.join' replaces os.path.join *globally*
-        # (oneirodex.routes.os is the os module itself), and pathlib joins
+        # 'oneirodex.routes_admin_ext.game_images.os.path.join' replaces os.path.join *globally*
+        # (oneirodex.routes_admin_ext.game_images.os is the os module itself), and pathlib joins
         # through it — so the operator would return the mock's own value here.
         mock_path_join.return_value = str(tmp_path) + '/test_image.jpg'
         
@@ -680,7 +680,7 @@ class TestMainBlueprint:
         assert data['message'] == 'File uploaded successfully'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_upload_image_scan_running(self, mock_is_scan_running, mock_current_user, 
                                       client, app, db_session, admin_user, test_game):
         """Test image upload when scan is running."""
@@ -703,7 +703,7 @@ class TestMainBlueprint:
         assert response.status_code == 403
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_upload_image_no_file(self, mock_is_scan_running, mock_current_user, 
                                  client, app, db_session, admin_user, test_game):
         """Test image upload without file."""
@@ -718,7 +718,7 @@ class TestMainBlueprint:
         assert response.status_code == 400
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_upload_image_invalid_extension(self, mock_is_scan_running, mock_current_user, 
                                            client, app, db_session, admin_user, test_game):
         """Test image upload with invalid file extension."""
@@ -741,9 +741,9 @@ class TestMainBlueprint:
         assert response.status_code == 400
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.os.remove')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.game_images.os.remove')
     def test_delete_image_success(self, mock_remove, mock_exists, mock_is_scan_running, 
                                  mock_current_user, client, app, db_session, admin_user, test_image):
         """Test successful image deletion."""
@@ -764,7 +764,7 @@ class TestMainBlueprint:
         assert data['message'] == 'Image deleted successfully'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_delete_image_scan_running(self, mock_is_scan_running, mock_current_user, 
                                       client, app, db_session, admin_user, test_image):
         """Test image deletion when scan is running."""
@@ -780,7 +780,7 @@ class TestMainBlueprint:
         assert response.status_code == 403
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_delete_image_invalid_request(self, mock_is_scan_running, mock_current_user, 
                                          client, app, db_session, admin_user):
         """Test image deletion with invalid request."""
@@ -921,8 +921,8 @@ class TestMainBlueprint:
         assert data['status'] == 'success'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.run_in_background')
-    @patch('oneirodex.routes.get_game_name_by_uuid')
+    @patch('oneirodex.routes_admin_ext.game_images.run_in_background')
+    @patch('oneirodex.routes_admin_ext.game_images.get_game_name_by_uuid')
     def test_refresh_game_images(self, mock_get_name, mock_background,
                                 mock_current_user, client, app, db_session, admin_user, test_game):
         """Test refreshing game images."""
@@ -938,8 +938,8 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.run_in_background')
-    @patch('oneirodex.routes.get_game_name_by_uuid')
+    @patch('oneirodex.routes_admin_ext.game_images.run_in_background')
+    @patch('oneirodex.routes_admin_ext.game_images.get_game_name_by_uuid')
     def test_refresh_game_images_ajax(self, mock_get_name, mock_background, mock_current_user,
                                      client, app, db_session, admin_user, test_game):
         """Test refreshing game images via AJAX.
@@ -967,8 +967,8 @@ class TestMainBlueprint:
         assert 'message' in data
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.delete_game')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_delete.delete_game')
     def test_delete_game_route(self, mock_delete_game, mock_is_scan_running, mock_current_user, 
                               client, app, db_session, admin_user, test_game):
         """Test deleting a game."""
@@ -988,7 +988,7 @@ class TestMainBlueprint:
         mock_delete_game.assert_called_once_with(test_game.uuid)
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running')
     def test_delete_game_route_scan_running(self, mock_is_scan_running, mock_current_user, 
                                            client, app, db_session, admin_user, test_game):
         """Test deleting a game when scan is running."""
@@ -1008,9 +1008,9 @@ class TestMainBlueprint:
         assert 'A scan is running' in data['message']
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_safe_path', return_value=(True, None))
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.os.remove')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(True, None))
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.remove')
     def test_delete_folder_file(self, mock_remove, mock_exists, mock_safe_path, mock_current_user, 
                                client, app, db_session, admin_user):
         """Test deleting a file via delete_folder route."""
@@ -1022,16 +1022,16 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
         
-        with patch('oneirodex.routes.os.path.isfile', return_value=True):
+        with patch('oneirodex.routes_admin_ext.game_delete.os.path.isfile', return_value=True):
             response = client.post('/delete_folder', 
                                   json={'folder_path': '/test/file.txt'})
             assert response.status_code == 200
             mock_remove.assert_called_once()
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_safe_path', return_value=(True, None))
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.shutil.rmtree')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(True, None))
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.game_delete.shutil.rmtree')
     def test_delete_folder_directory(self, mock_rmtree, mock_exists, mock_safe_path, mock_current_user, 
                                     client, app, db_session, admin_user):
         """Test deleting a directory via delete_folder route."""
@@ -1042,16 +1042,16 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
         
-        with patch('oneirodex.routes.os.path.isfile', return_value=False):
+        with patch('oneirodex.routes_admin_ext.game_delete.os.path.isfile', return_value=False):
             response = client.post('/delete_folder', 
                                   json={'folder_path': '/test/folder'})
             assert response.status_code == 200
             mock_rmtree.assert_called_once()
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.shutil.rmtree')
-    @patch('oneirodex.routes.os.path.exists', return_value=True)
-    @patch('oneirodex.routes.is_safe_path', return_value=(False, 'Access denied'))
+    @patch('oneirodex.routes_admin_ext.game_delete.shutil.rmtree')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.exists', return_value=True)
+    @patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(False, 'Access denied'))
     def test_delete_folder_rejects_unsafe_path(self, mock_safe, mock_exists, mock_rmtree,
                                                mock_current_user, client, app, db_session, admin_user):
         """Test delete_folder denies paths outside allowed base directories."""
@@ -1065,9 +1065,9 @@ class TestMainBlueprint:
         mock_rmtree.assert_not_called()
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.shutil.rmtree')
-    @patch('oneirodex.routes.os.path.exists', return_value=True)
-    @patch('oneirodex.routes.is_safe_path', return_value=(True, None))
+    @patch('oneirodex.routes_admin_ext.game_delete.shutil.rmtree')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.exists', return_value=True)
+    @patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(True, None))
     def test_delete_folder_allows_safe_path(self, mock_safe, mock_exists, mock_rmtree,
                                             mock_current_user, client, app, db_session, admin_user):
         """Test delete_folder proceeds when path is within allowed base directories."""
@@ -1077,7 +1077,7 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
 
-        with patch('oneirodex.routes.os.path.isfile', return_value=False):
+        with patch('oneirodex.routes_admin_ext.game_delete.os.path.isfile', return_value=False):
             response = client.post('/delete_folder', json={'folder_path': '/allowed/game'})
         assert response.status_code == 200
         mock_rmtree.assert_called_once()
@@ -1095,12 +1095,12 @@ class TestMainBlueprint:
         assert response.status_code == 400
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.os.path.isdir')
-    @patch('oneirodex.routes.shutil.rmtree')
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.is_safe_path', return_value=(True, None))
-    @patch('oneirodex.routes.delete_game')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.isdir')
+    @patch('oneirodex.routes_admin_ext.game_delete.shutil.rmtree')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(True, None))
+    @patch('oneirodex.routes_admin_ext.game_delete.delete_game')
     def test_delete_full_game(self, mock_delete_game, mock_safe_path, mock_exists, mock_rmtree, 
                              mock_isdir, mock_is_scan_running, mock_current_user, 
                              client, app, db_session, admin_user, test_game):
@@ -1125,12 +1125,12 @@ class TestMainBlueprint:
         mock_delete_game.assert_called_once_with(test_game.uuid)
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.os.path.isdir')
-    @patch('oneirodex.routes.shutil.rmtree')
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.is_safe_path', return_value=(False, 'Access denied'))
-    @patch('oneirodex.routes.delete_game')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.isdir')
+    @patch('oneirodex.routes_admin_ext.game_delete.shutil.rmtree')
+    @patch('oneirodex.routes_admin_ext.game_delete.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(False, 'Access denied'))
+    @patch('oneirodex.routes_admin_ext.game_delete.delete_game')
     def test_delete_full_game_rejects_unsafe_path(self, mock_delete_game, mock_safe_path, mock_exists,
                                                   mock_rmtree, mock_isdir, mock_is_scan_running,
                                                   mock_current_user, client, app, db_session, admin_user, test_game):
@@ -1155,7 +1155,7 @@ class TestMainBlueprint:
         mock_delete_game.assert_not_called()
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running')
     def test_delete_full_game_scan_running(self, mock_is_scan_running, mock_current_user, 
                                           client, app, db_session, admin_user, test_game):
         """Test delete_full_game when scan is running."""
@@ -1174,7 +1174,7 @@ class TestMainBlueprint:
         assert data['success'] == False
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running')
     def test_delete_full_game_no_uuid(self, mock_is_scan_running, mock_current_user, 
                                      client, app, db_session, admin_user):
         """Test delete_full_game without game UUID."""
@@ -1223,7 +1223,7 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
 
-        with patch('oneirodex.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes_admin_ext.library_delete.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             response = client.post(f'/delete_full_library/{test_library.uuid}')
 
@@ -1260,7 +1260,7 @@ class TestMainBlueprint:
         """Test verify_file template global with existing file."""
         with app.app_context():
             verify_file = app.jinja_env.globals['verify_file']
-            with patch('oneirodex.routes.os.path.exists', return_value=True):
+            with patch('oneirodex.routes_theme.os.path.exists', return_value=True):
                 result = verify_file('/test/path')
                 assert result == True
 
@@ -1268,8 +1268,8 @@ class TestMainBlueprint:
         """Test verify_file template global with non-existing file."""
         with app.app_context():
             verify_file = app.jinja_env.globals['verify_file']
-            with patch('oneirodex.routes.os.path.exists', return_value=False):
-                with patch('oneirodex.routes.os.access', return_value=False):
+            with patch('oneirodex.routes_theme.os.path.exists', return_value=False):
+                with patch('oneirodex.routes_theme.os.access', return_value=False):
                     result = verify_file('/test/path')
                     assert result == False
 
@@ -1277,8 +1277,8 @@ class TestMainBlueprint:
         """Test verify_file template global with accessible file."""
         with app.app_context():
             verify_file = app.jinja_env.globals['verify_file']
-            with patch('oneirodex.routes.os.path.exists', return_value=False):
-                with patch('oneirodex.routes.os.access', return_value=True):
+            with patch('oneirodex.routes_theme.os.path.exists', return_value=False):
+                with patch('oneirodex.routes_theme.os.access', return_value=True):
                     result = verify_file('/test/path')
                     assert result == True
 
@@ -1292,8 +1292,8 @@ class TestErrorHandling:
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         
-        with patch('oneirodex.routes.is_scan_job_running', return_value=False):
-            with patch('oneirodex.routes.PILImage.open', side_effect=IOError("Invalid image")):
+        with patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running', return_value=False):
+            with patch('oneirodex.routes_admin_ext.game_images.PILImage.open', side_effect=IOError("Invalid image")):
                 test_file = FileStorage(
                     stream=BytesIO(b'invalid image data'),
                     filename='test.jpg',
@@ -1314,7 +1314,7 @@ class TestErrorHandling:
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         
-        with patch('oneirodex.routes.is_scan_job_running', return_value=False):
+        with patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running', return_value=False):
             with client.session_transaction() as sess:
                 sess['_user_id'] = str(admin_user.id)
             
@@ -1328,10 +1328,10 @@ class TestErrorHandling:
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         
-        with patch('oneirodex.routes.is_safe_path', return_value=(True, None)):
-            with patch('oneirodex.routes.os.path.exists', return_value=True):
-                with patch('oneirodex.routes.os.path.isfile', return_value=True):
-                    with patch('oneirodex.routes.os.remove', side_effect=PermissionError("Permission denied")):
+        with patch('oneirodex.routes_admin_ext.game_delete.is_safe_path', return_value=(True, None)):
+            with patch('oneirodex.routes_admin_ext.game_delete.os.path.exists', return_value=True):
+                with patch('oneirodex.routes_admin_ext.game_delete.os.path.isfile', return_value=True):
+                    with patch('oneirodex.routes_admin_ext.game_delete.os.remove', side_effect=PermissionError("Permission denied")):
                         with client.session_transaction() as sess:
                             sess['_user_id'] = str(admin_user.id)
                         
@@ -1347,8 +1347,8 @@ class TestErrorHandling:
 
         game_uuid = test_game.uuid
 
-        with patch('oneirodex.routes.is_scan_job_running', return_value=False):
-            with patch('oneirodex.routes.os.path.isdir', return_value=False):
+        with patch('oneirodex.routes_admin_ext.game_delete.is_scan_job_running', return_value=False):
+            with patch('oneirodex.routes_admin_ext.game_delete.os.path.isdir', return_value=False):
                 with client.session_transaction() as sess:
                     sess['_user_id'] = str(admin_user.id)
 

@@ -24,7 +24,9 @@
   text-decoration: none;
   font-size: var(--od-font-sm);
   font-weight: 600;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .od-store-link:hover,

@@ -96,9 +96,7 @@ test('stageE labels map sources and match modes', () => {
   expect(stageESourceLabel('mobygames')).toBe('MobyGames')
   expect(stageESourceLabel('tgdb')).toBe('TheGamesDB')
   expect(stageEMatchModeLabel('moby_exact_ambiguous')).toBe('Ambiguous')
-  expect(stageEChipSources([
-    { source: 'mobygames' },
-    { source: 'moby' },
-    { source: 'thegamesdb' },
-  ])).toEqual(['MobyGames', 'TheGamesDB'])
+  expect(
+    stageEChipSources([{ source: 'mobygames' }, { source: 'moby' }, { source: 'thegamesdb' }]),
+  ).toEqual(['MobyGames', 'TheGamesDB'])
 })

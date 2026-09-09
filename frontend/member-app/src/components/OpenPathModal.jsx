@@ -107,10 +107,7 @@ export function OpenPathModal({
       aria-labelledby={titleId}
       onClick={onClose}
     >
-      <div
-        className="od-open-path__panel"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="od-open-path__panel" onClick={(event) => event.stopPropagation()}>
         <div className="od-open-path__toolbar">
           <h2 id={titleId} className="od-open-path__title">
             {label}
@@ -134,7 +131,11 @@ export function OpenPathModal({
           <code>{path}</code>
         </p>
         <div className="od-open-path__actions">
-          <button type="button" className="od-btn od-btn--primary" onClick={() => void handleCopy()}>
+          <button
+            type="button"
+            className="od-btn od-btn--primary"
+            onClick={() => void handleCopy()}
+          >
             Copy path
           </button>
           <button

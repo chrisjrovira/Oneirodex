@@ -134,9 +134,7 @@ test('Install click queues companion command', async () => {
   await waitFor(() => {
     expect(clientCommands.queueClientCommand).toHaveBeenCalledWith('abc', 'install')
   })
-  expect(await screen.findByRole('status')).toHaveTextContent(
-    'Install queued for companion',
-  )
+  expect(await screen.findByRole('status')).toHaveTextContent('Install queued for companion')
 })
 
 test('Assists button shows when pack has toggles', () => {

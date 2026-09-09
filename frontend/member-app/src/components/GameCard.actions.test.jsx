@@ -117,11 +117,7 @@ test('popup exposes navigation actions and gates admin actions', async () => {
 
 test('popup ignores javascript: IGDB urls', async () => {
   const user = userEvent.setup()
-  renderCard(<GameCard
-      game={{ ...game, url: 'javascript:alert(1)' }}
-      isAdmin={false}
-    />,
-  )
+  renderCard(<GameCard game={{ ...game, url: 'javascript:alert(1)' }} isAdmin={false} />)
   await user.click(screen.getByRole('button', { name: /open actions for archery kings vr/i }))
   expect(screen.queryByRole('link', { name: 'Open catalog page' })).toBeNull()
 })

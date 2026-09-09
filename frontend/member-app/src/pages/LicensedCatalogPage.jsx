@@ -1,56 +1,28 @@
-import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody } from '../api/envelopeError'
+import { useResource, useShellConfig } from '@oneirodex/ui'
+import { fetchLicensedCatalog } from '../api/systems'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_LABELS } from '../chrome/regions'
 import { PageStatus } from '../components/PageStatus'
 import './SystemsPage.css'
 import './SetCompletionPage.css'
 
-async function fetchLicensedCatalog({ libraryPlatform, signal }) {
-  const params = new URLSearchParams({ library_platform: libraryPlatform })
-  const response = await fetch(`/api/licensed-catalog?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw errorFromBody(data, response.status, 'licensed-catalog')
-  }
-  return data
-}
-
-export function LicensedCatalogPage({ shellConfig = {} } = {}) {
+export function LicensedCatalogPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [searchParams] = useSearchParams()
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
 
-  const [report, setReport] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
-
-  useEffect(() => {
-    if (!libraryPlatform) {
-      setError(new Error('library_platform query required'))
-      setReport(null)
-      return undefined
-    }
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setReport(null)
-    fetchLicensedCatalog({ libraryPlatform, signal: controller.signal })
-      .then((data) => {
-        if (active) setReport(data)
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') setError(err)
-      })
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [libraryPlatform, retryCount])
+  const {
+    data: report,
+    loading,
+    error,
+    reload,
+  } = useResource(
+    ['licensed-catalog', libraryPlatform],
+    ({ signal }) => fetchLicensedCatalog({ libraryPlatform, signal }),
+    { enabled: Boolean(libraryPlatform) },
+  )
 
   const identity = libraryPlatform ? `${libraryPlatform} · licensed catalog` : 'Licensed catalog'
   const libraryLinks = libraryPlatform ? (
@@ -102,8 +74,8 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
             </div>
           )}
           <p className="od-more-page__lede">
-            Open this page from a Systems tile. It shows IGDB regional release
-            counts for that console or computer — not Wikipedia, and not a DAT.
+            Open this page from a Systems tile. It shows IGDB regional release counts for that
+            console or computer — not Wikipedia, and not a DAT.
           </p>
           {useNewChrome ? null : libraryLinks}
         </div>
@@ -124,7 +96,7 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
           <PageStatus
             error={error}
             errorMessage="Unable to load licensed catalog."
-            onRetry={() => setRetryCount((n) => n + 1)}
+            onRetry={reload}
           />
         </div>
       </>
@@ -141,7 +113,7 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
               <h1>{libraryPlatform} · licensed catalog</h1>
             </div>
           )}
-          <PageStatus loading loadingMessage="Loading licensed catalog…" />
+          <PageStatus loading={loading} loadingMessage="Loading licensed catalog…" />
         </div>
       </>
     )
@@ -178,8 +150,7 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
             {rows.map((row) => {
               const code = row.region_code
               const label = row.label || REGION_LABELS[code] || code
-              const source =
-                row.source === 'dat_only' ? 'DAT only' : 'IGDB'
+              const source = row.source === 'dat_only' ? 'DAT only' : 'IGDB'
               return (
                 <tr key={code}>
                   <th scope="row">

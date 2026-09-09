@@ -13,7 +13,6 @@ import {
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
-
 function makeGames(count) {
   return Array.from({ length: count }, (_, index) => ({
     uuid: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
@@ -111,10 +110,7 @@ test('findScrollParent finds the scrolling ancestor, not the window', () => {
 
 test('chunkGamesIntoRows groups by column count', () => {
   const games = makeGames(5)
-  expect(chunkGamesIntoRows(games, 3)).toEqual([
-    games.slice(0, 3),
-    games.slice(3, 5),
-  ])
+  expect(chunkGamesIntoRows(games, 3)).toEqual([games.slice(0, 3), games.slice(3, 5)])
 })
 
 test('renders virtualized grid root and visible game tiles', () => {

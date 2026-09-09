@@ -12,6 +12,9 @@ from types import SimpleNamespace
 from oneirodex.utils.game_core import is_propose_only_scan
 from oneirodex.utils.match_proposal import build_match_proposal
 from oneirodex.routes_admin_ext.settings import DEFAULT_SETTINGS, FIELD_MAPPINGS
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- propose-only library scan pass.
 
 
 class TestIsProposeOnlyScan:

@@ -7,7 +7,7 @@ from oneirodex.forms import ThemeUploadForm
 from oneirodex.utils.themes import ThemeManager
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.preset_themes import install_preset_themes
-from oneirodex.routes import clear_theme_asset_versions
+from oneirodex.routes_theme import clear_theme_asset_versions
 from oneirodex.utils.icon_themes import get_icon_pack
 import json
 import os

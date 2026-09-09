@@ -137,7 +137,8 @@
   padding: var(--od-space-3) var(--od-space-4);
   border: 1px solid transparent;
   border-radius: var(--od-radius-md);
-  transition: background-color var(--od-motion-fast) var(--od-motion-ease),
+  transition:
+    background-color var(--od-motion-fast) var(--od-motion-ease),
     border-color var(--od-motion-fast) var(--od-motion-ease);
 }
 

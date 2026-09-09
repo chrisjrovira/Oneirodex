@@ -60,8 +60,7 @@ export function renderAssistOverlay(
   // Escaped, like every other innerHTML site in this client: `pack` is server
   // data, and this runs inside a Tauri webview with IPC reach.
   root.innerHTML =
-    `<h3>${escapeHtml(pack.title)}</h3>` +
-    `<p class="muted">${escapeHtml(pack.policy)}</p>`
+    `<h3>${escapeHtml(pack.title)}</h3>` + `<p class="muted">${escapeHtml(pack.policy)}</p>`
   const list = document.createElement('ul')
   for (const toggle of pack.toggles) {
     const item = document.createElement('li')

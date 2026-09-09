@@ -3,6 +3,9 @@ from datetime import datetime, timezone
 
 from oneirodex.models import ScanJob
 from oneirodex.utils.scanning import bump_scan_job_progress
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan progress counter updates.
 
 
 def test_bump_scan_job_progress_increments_without_clobber(app, db_session):

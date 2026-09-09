@@ -288,6 +288,7 @@ Scans and image downloads can pin a NAS CPU if parallelism is left high. **There
 | Knob | Where | Unraid-safe default | Notes |
 |---|---|---|---|
 | `UVICORN_WORKERS` | `.env` / Compose | **1** | SSE/schedulers are per-worker; do not raise on single-node Unraid |
+| `ONEIRODEX_ENABLE_BACKGROUND_WORKERS` | `.env` / Compose | **true** | Schedulers (scan, library-watch, free-games, discover-ML, ownership, email-digest) start from the ASGI lifespan handler, not `create_app()`. Leave **true** on a single-node box; set `false` only for a web-only process that must not run them |
 | Game scan threads | Server Settings | **1** (max **2** on capable hosts) | UI/API already cap at 4; overlapping full scans still freeze the host — one job at a time |
 | Turbo image downloads | Server Settings | Off during first large scan, or threads **≤4**, batch **≤100** | Stored defaults are **4 / 100**; runtime also hard-caps via `OD_IMAGE_*` |
 | ClamAV profile | Compose `--profile clamav` | **Off** until needed | Heuristics + `ENABLE_MALWARE_SCAN` still run without the daemon; defs + on-add scans add CPU/IO |

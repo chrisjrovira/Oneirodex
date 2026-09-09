@@ -97,12 +97,7 @@ export function NewsCard({ item }) {
 
   if (external) {
     return (
-      <a
-        className="od-news-card"
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a className="od-news-card" href={href} target="_blank" rel="noopener noreferrer">
         {body}
       </a>
     )

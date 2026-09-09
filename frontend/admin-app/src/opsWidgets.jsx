@@ -99,7 +99,10 @@ export function OpsIssuesList({ items }) {
   return (
     <div className="od-ops-issues-folds">
       {action.length ? (
-        <section className="od-ops-issues-fold od-ops-issues-fold--action" aria-label="Action required">
+        <section
+          className="od-ops-issues-fold od-ops-issues-fold--action"
+          aria-label="Action required"
+        >
           <h2 className="od-ops-issues-fold__title">Action required</h2>
           <ul className="od-ops-issues">
             <OpsIssueRows items={action} toneFallback="bad" />
@@ -107,7 +110,10 @@ export function OpsIssuesList({ items }) {
         </section>
       ) : null}
       {soft.length ? (
-        <section className="od-ops-issues-fold od-ops-issues-fold--soft" aria-label="Warning / Info">
+        <section
+          className="od-ops-issues-fold od-ops-issues-fold--soft"
+          aria-label="Warning / Info"
+        >
           <h2 className="od-ops-issues-fold__title">Warning / Info</h2>
           <ul className="od-ops-issues">
             <OpsIssueRows items={soft} toneFallback="warn" />
@@ -152,9 +158,7 @@ export function OpsStatusBanner({
         {asOf || onRefresh ? (
           <div className="od-ops-status__trail">
             {asOf ? (
-              <span className="od-ops-status__asof">
-                Updated {new Date(asOf).toLocaleString()}
-              </span>
+              <span className="od-ops-status__asof">Updated {new Date(asOf).toLocaleString()}</span>
             ) : null}
             {onRefresh ? (
               <button
@@ -206,9 +210,11 @@ export function booleanTone(ok) {
 }
 
 export function MeterBar({ label, percent, detail }) {
-  const pct = percent == null || !Number.isFinite(Number(percent)) ? null : Math.max(0, Math.min(100, Number(percent)))
-  const tone =
-    pct == null ? 'na' : pct >= 95 ? 'bad' : pct >= 85 ? 'warn' : 'good'
+  const pct =
+    percent == null || !Number.isFinite(Number(percent))
+      ? null
+      : Math.max(0, Math.min(100, Number(percent)))
+  const tone = pct == null ? 'na' : pct >= 95 ? 'bad' : pct >= 85 ? 'warn' : 'good'
   return (
     <div className={`od-ops-meter od-ops-meter--${tone}`}>
       <div className="od-ops-meter__label">
@@ -223,15 +229,7 @@ export function MeterBar({ label, percent, detail }) {
   )
 }
 
-const METRIC_TONES = new Set([
-  'good',
-  'fair',
-  'poor',
-  'na',
-  'action',
-  'warning',
-  'info',
-])
+const METRIC_TONES = new Set(['good', 'fair', 'poor', 'na', 'action', 'warning', 'info'])
 
 export function MetricTile({ label, value, hint, tone }) {
   const toneClass = METRIC_TONES.has(tone) ? ` od-ops-metric--${tone}` : ''
@@ -417,19 +415,21 @@ export function normalizeLibraryHealth(health) {
 
   let factors = Array.isArray(health.factors) ? health.factors : null
   if (!factors && Array.isArray(health.top_issues)) {
-    factors = health.top_issues.map((issue) => {
-      if (!issue || typeof issue !== 'object') return null
-      const id = issue.id || issue.code || null
-      const label = issue.label || issue.code || issue.id || null
-      if (!id && !label) return null
-      return {
-        id: id || label,
-        label: label || id,
-        count: issue.count ?? null,
-        weight: issue.weight ?? issue.severity ?? null,
-        deduction: issue.deduction ?? null,
-      }
-    }).filter(Boolean)
+    factors = health.top_issues
+      .map((issue) => {
+        if (!issue || typeof issue !== 'object') return null
+        const id = issue.id || issue.code || null
+        const label = issue.label || issue.code || issue.id || null
+        if (!id && !label) return null
+        return {
+          id: id || label,
+          label: label || id,
+          count: issue.count ?? null,
+          weight: issue.weight ?? issue.severity ?? null,
+          deduction: issue.deduction ?? null,
+        }
+      })
+      .filter(Boolean)
   } else if (factors) {
     factors = factors
       .map((f) => {
@@ -449,10 +449,7 @@ export function normalizeLibraryHealth(health) {
   }
 
   const thin = Boolean(
-    health.thin ||
-      health.sample_thin ||
-      health.count === 0 ||
-      health.games === 0,
+    health.thin || health.sample_thin || health.count === 0 || health.games === 0,
   )
   if (!hasScore && !gradeRaw && !(factors && factors.length) && !thin) return null
 
@@ -504,7 +501,8 @@ export function formatLibraryHealthScore(health) {
 export function formatLibraryHealthValue(health) {
   const n = normalizeLibraryHealth(health)
   if (!n) return 'n/a'
-  const score = n.score != null && Number.isFinite(Number(n.score)) ? String(Math.round(Number(n.score))) : null
+  const score =
+    n.score != null && Number.isFinite(Number(n.score)) ? String(Math.round(Number(n.score))) : null
   if (score && n.grade) return `${score} · ${n.grade}`
   if (score) return score
   if (n.grade) return n.grade
@@ -516,7 +514,12 @@ export function formatLibraryHealthHint(health, limit = 2) {
   const n = normalizeLibraryHealth(health)
   if (!n) return 'not scored yet'
   const tops = topLibraryHealthFactors(health, limit)
-    .map((f) => (f?.label != null && String(f.label).trim()) || (f?.id != null && String(f.id).trim()) || '')
+    .map(
+      (f) =>
+        (f?.label != null && String(f.label).trim()) ||
+        (f?.id != null && String(f.id).trim()) ||
+        '',
+    )
     .filter(Boolean)
   if (tops.length) return tops.join(' · ')
   if (n.thin) return n.note || 'sample thin'

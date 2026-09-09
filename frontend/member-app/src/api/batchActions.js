@@ -1,5 +1,4 @@
-import { errorFromBody } from './envelopeError'
-import { csrfHeaders } from './csrf'
+import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
 import { toggleFavorite as defaultToggleFavorite } from './userActions.js'
 
 async function postJson(url, body) {
@@ -247,9 +246,7 @@ export async function batchRefreshImages(uuids) {
   }
 
   if (list.length > BATCH_REFRESH_IMAGES_MAX) {
-    const error = new Error(
-      `Select at most ${BATCH_REFRESH_IMAGES_MAX} titles to refresh covers`,
-    )
+    const error = new Error(`Select at most ${BATCH_REFRESH_IMAGES_MAX} titles to refresh covers`)
     error.status = 400
     error.limit = BATCH_REFRESH_IMAGES_MAX
     error.requested = list.length

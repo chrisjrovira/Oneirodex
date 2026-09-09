@@ -1,6 +1,6 @@
 // Toasts on every mutation (GT-B25).
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 import { csrfHeaders } from './adminApi'
@@ -118,9 +118,7 @@ export function SupportInboxPage() {
             filterable: false,
             render: (t) =>
               t.status === 'open' ? (
-                <button type="button" className="od-btn" onClick={() => void resolve(t.id)}>
-                  Resolve
-                </button>
+                <Button onClick={() => void resolve(t.id)}>Resolve</Button>
               ) : null,
           },
         ]}

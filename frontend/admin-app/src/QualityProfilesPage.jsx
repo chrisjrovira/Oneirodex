@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
-import { PageStatus } from './PageStatus'
+import { Button, confirmAction } from '@oneirodex/ui'
+import { PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson, putJson } from './adminApi'
 
 const EMPTY_FORM = {
@@ -91,13 +91,12 @@ export function QualityProfilesPage() {
 
   useEffect(() => {
     let cancelled = false
-    reload()
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load')
-          setStatus(err.message || 'Failed to load')
-        }
-      })
+    reload().catch((err) => {
+      if (!cancelled) {
+        setError(err.message || 'Failed to load')
+        setStatus(err.message || 'Failed to load')
+      }
+    })
     return () => {
       cancelled = true
     }
@@ -253,12 +252,17 @@ export function QualityProfilesPage() {
               ))}
             </select>
           </label>
-          <button type="button" className="od-btn" onClick={setActive} disabled={!selectedId || busy}>
+          <button
+            type="button"
+            className="od-btn"
+            onClick={setActive}
+            disabled={!selectedId || busy}
+          >
             Set active
           </button>
-          <button type="button" className="od-btn" onClick={createProfile} disabled={busy}>
+          <Button onClick={createProfile} disabled={busy}>
             New
-          </button>
+          </Button>
           <button
             type="button"
             className="od-btn"
@@ -354,9 +358,9 @@ export function QualityProfilesPage() {
           Prefer repack / proper in titles
         </label>
         <div className="od-admin-actions-row">
-          <button type="submit" className="od-btn" disabled={!selectedId || busy}>
+          <Button type="submit" disabled={!selectedId || busy}>
             Save profile
-          </button>
+          </Button>
           <a className="od-btn" href="/admin/settings">
             Back to settings
           </a>
@@ -379,7 +383,12 @@ export function QualityProfilesPage() {
               aria-label="Test release title"
             />
           </label>
-          <button type="button" className="od-btn" onClick={runScoreProbe} disabled={!probeTitle.trim() || busy}>
+          <button
+            type="button"
+            className="od-btn"
+            onClick={runScoreProbe}
+            disabled={!probeTitle.trim() || busy}
+          >
             Score
           </button>
         </div>

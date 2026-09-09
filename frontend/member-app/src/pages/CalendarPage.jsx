@@ -4,6 +4,7 @@ import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './CalendarPage.css'
+import { useResource, useShellConfig } from '@oneirodex/ui'
 
 const AHEAD_OPTIONS = [30, 60, 90, 180]
 const BEHIND_OPTIONS = [0, 7, 14, 30, 90]
@@ -27,8 +28,8 @@ export function readCalendarView() {
   try {
     const raw = window.localStorage?.getItem(VIEW_STORAGE_KEY)
     // A stored 'agenda' from before the view was retired falls through to
-              // the default rather than selecting a tab that no longer exists.
-              if (raw === 'list' || raw === 'month') return raw
+    // the default rather than selecting a tab that no longer exists.
+    if (raw === 'list' || raw === 'month') return raw
   } catch {
     /* ignore */
   }
@@ -166,9 +167,7 @@ function ListView({ releases, emptyReason }) {
         const dateLabel = formatLocaleDate(item.first_release_date, { fallback: '' })
         return (
           <li key={releaseKey(item, index)} className="od-calendar__row">
-            <time dateTime={item.first_release_date || undefined}>
-              {dateLabel || 'Date TBA'}
-            </time>
+            <time dateTime={item.first_release_date || undefined}>{dateLabel || 'Date TBA'}</time>
             <div className="od-calendar__body">
               <ReleaseTitle item={item} />
               <ReleaseMeta item={item} />
@@ -195,18 +194,9 @@ function DayArt({ releases }) {
         const cover = item?.cover_url
         const key = `${item?.igdb_id || item?.slug || item?.name || 'release'}-${index}`
         return (
-          <span
-            key={key}
-            className="od-calendar__day-art"
-            title={item?.name || undefined}
-          >
+          <span key={key} className="od-calendar__day-art" title={item?.name || undefined}>
             {cover ? (
-              <img
-                className="od-calendar__day-cover"
-                src={cover}
-                alt=""
-                loading="lazy"
-              />
+              <img className="od-calendar__day-cover" src={cover} alt="" loading="lazy" />
             ) : (
               <span
                 className="od-calendar__day-cover od-calendar__day-cover--blank"
@@ -361,11 +351,9 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
   )
 }
 
-export function CalendarPage({ shellConfig = {} }) {
+export function CalendarPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [payload, setPayload] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
   const [daysAhead, setDaysAhead] = useState(DEFAULT_AHEAD)
   const [daysBehind, setDaysBehind] = useState(DEFAULT_BEHIND)
   const [view, setView] = useState(() => readCalendarView())
@@ -373,37 +361,16 @@ export function CalendarPage({ shellConfig = {} }) {
   const [focusYear, setFocusYear] = useState(now.getFullYear())
   const [focusMonth, setFocusMonth] = useState(now.getMonth())
 
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setPayload(null)
-
-    fetchCalendar({
-      signal: controller.signal,
-      daysAhead,
-      daysBehind,
-      limit: 60,
-    })
-      .then((data) => {
-        if (active) {
-          setPayload(data)
-        }
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') {
-          setError(err)
-        }
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [retryCount, daysAhead, daysBehind])
+  const {
+    data: payload,
+    loading,
+    error,
+    reload,
+  } = useResource(['calendar', daysAhead, daysBehind], ({ signal }) =>
+    fetchCalendar({ signal, daysAhead, daysBehind, limit: 60 }),
+  )
 
   const releases = Array.isArray(payload?.releases) ? payload.releases : []
-  const loading = !error && !payload
 
   function selectView(next) {
     setView(next)
@@ -414,7 +381,7 @@ export function CalendarPage({ shellConfig = {} }) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         <ContextBar
           views={VIEWS}
           activeView={view}
@@ -455,98 +422,95 @@ export function CalendarPage({ shellConfig = {} }) {
           filterCount={windowIsDefault ? 0 : 1}
         />
       ) : null}
-    <div
-      className="od-more-page od-calendar od-calendar--fill"
-      data-view={view}
-    >
-      {useNewChrome ? null : (
-        <div className="od-page-header od-calendar__header">
-          <div>
-            <h1>Release calendar</h1>
-            <p className="od-more-page__lede">
-              Upcoming and recent releases from IGDB (metadata only).
-            </p>
-          </div>
-          <div className="od-calendar__controls">
-            <div className="od-calendar__views" role="group" aria-label="Calendar view">
-              {VIEWS.map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={view === id ? 'is-active' : ''}
-                  aria-pressed={view === id}
-                  onClick={() => selectView(id)}
-                >
-                  {label}
-                </button>
-              ))}
+      <div className="od-more-page od-calendar od-calendar--fill" data-view={view}>
+        {useNewChrome ? null : (
+          <div className="od-page-header od-calendar__header">
+            <div>
+              <h1>Release calendar</h1>
+              <p className="od-more-page__lede">
+                Upcoming and recent releases from IGDB (metadata only).
+              </p>
             </div>
-            <div className="od-calendar__window" role="group" aria-label="Calendar window">
-              <label>
-                Ahead
-                <select
-                  value={daysAhead}
-                  onChange={(e) => setDaysAhead(Number(e.target.value))}
-                  aria-label="Days ahead"
-                >
-                  {AHEAD_OPTIONS.map((n) => (
-                    <option key={n} value={n}>
-                      {n} days
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Behind
-                <select
-                  value={daysBehind}
-                  onChange={(e) => setDaysBehind(Number(e.target.value))}
-                  aria-label="Days behind"
-                >
-                  {BEHIND_OPTIONS.map((n) => (
-                    <option key={n} value={n}>
-                      {n} days
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div className="od-calendar__controls">
+              <div className="od-calendar__views" role="group" aria-label="Calendar view">
+                {VIEWS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={view === id ? 'is-active' : ''}
+                    aria-pressed={view === id}
+                    onClick={() => selectView(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="od-calendar__window" role="group" aria-label="Calendar window">
+                <label>
+                  Ahead
+                  <select
+                    value={daysAhead}
+                    onChange={(e) => setDaysAhead(Number(e.target.value))}
+                    aria-label="Days ahead"
+                  >
+                    {AHEAD_OPTIONS.map((n) => (
+                      <option key={n} value={n}>
+                        {n} days
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Behind
+                  <select
+                    value={daysBehind}
+                    onChange={(e) => setDaysBehind(Number(e.target.value))}
+                    aria-label="Days behind"
+                  >
+                    {BEHIND_OPTIONS.map((n) => (
+                      <option key={n} value={n}>
+                        {n} days
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <PageStatus
-        loading={loading}
-        error={error}
-        errorMessage="Unable to load calendar."
-        loadingMessage="Loading calendar…"
-        onRetry={() => setRetryCount((n) => n + 1)}
-      />
+        <PageStatus
+          loading={loading}
+          error={error}
+          errorMessage="Unable to load calendar."
+          loadingMessage="Loading calendar…"
+          onRetry={reload}
+        />
 
-      {!error && payload ? (
-        <section className="od-calendar__section" aria-labelledby="calendar-releases-heading">
-          <div className="od-calendar__section-head">
-            <h2 id="calendar-releases-heading">Releases</h2>
-            <span className="od-calendar__count">{payload.count ?? releases.length}</span>
-          </div>
-          {view === 'list' ? (
-            <ListView releases={releases} emptyReason={payload?.empty_reason} />
-          ) : null}
-          {view === 'month' ? (
-            <MonthView
-              releases={releases}
-              emptyReason={payload?.empty_reason}
-              focusYear={focusYear}
-              focusMonth={focusMonth}
-              onFocusChange={(y, m) => {
-                setFocusYear(y)
-                setFocusMonth(m)
-              }}
-            />
-          ) : null}
-        </section>
-      ) : null}
-    </div>
+        {!error && payload ? (
+          <section className="od-calendar__section" aria-labelledby="calendar-releases-heading">
+            <div className="od-calendar__section-head">
+              <h2 id="calendar-releases-heading">Releases</h2>
+              <span className="od-calendar__count">{payload.count ?? releases.length}</span>
+            </div>
+            {view === 'list' ? (
+              <ListView releases={releases} emptyReason={payload?.empty_reason} />
+            ) : null}
+            {view === 'month' ? (
+              <MonthView
+                releases={releases}
+                emptyReason={payload?.empty_reason}
+                focusYear={focusYear}
+                focusMonth={focusMonth}
+                onFocusChange={(y, m) => {
+                  setFocusYear(y)
+                  setFocusMonth(m)
+                }}
+              />
+            ) : null}
+          </section>
+        ) : null}
+      </div>
     </>
   )
 }

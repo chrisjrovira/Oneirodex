@@ -33,7 +33,12 @@ export function MarkXbox(props) {
   return (
     <svg {...base} {...props}>
       <circle cx="14" cy="14" r="9" stroke="currentColor" strokeWidth="2" />
-      <path d="M8 10c3 2 9 2 12 0M8 18c3-2 9-2 12 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M8 10c3 2 9 2 12 0M8 18c3-2 9-2 12 0"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -41,7 +46,13 @@ export function MarkXbox(props) {
 export function MarkSega(props) {
   return (
     <svg {...base} {...props}>
-      <path d="M5 14h18M9 9l-3 5 3 5M19 9l3 5-3 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M5 14h18M9 9l-3 5 3 5M19 9l3 5-3 5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

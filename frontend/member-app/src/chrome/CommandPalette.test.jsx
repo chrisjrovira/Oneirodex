@@ -10,6 +10,7 @@ import {
   isLibrarySearchRoute,
   typeToSearchKey,
 } from './CommandPalette'
+import { ShellHarness } from '../testShell'
 
 const navigateMock = vi.fn()
 
@@ -44,7 +45,9 @@ vi.mock('../api/palette', () => ({
 function renderPalette(shellConfig = {}, props = {}, initialEntries = ['/library']) {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
-      <CommandPalette shellConfig={shellConfig} {...props} />
+      <ShellHarness shell={shellConfig}>
+        <CommandPalette {...props} />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }
@@ -242,7 +245,6 @@ test('admin external command uses location href', async () => {
 
   vi.unstubAllGlobals()
 })
-
 
 describe('type-to-search', () => {
   const key = (k, extra = {}) => ({ key: k, target: document.body, ...extra })

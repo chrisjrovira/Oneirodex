@@ -68,7 +68,11 @@ const STATUS_BASELINE = {
   'pages.jsx': 1,
 }
 
-/** PageStatus is the shared implementation — it is meant to carry these roles. */
+/**
+ * PageStatus is the shared implementation — it is meant to carry these roles.
+ * It moved into `@oneirodex/ui` in wave B1.2, so there is no local file to
+ * exempt any more; the set is kept as a guard in case a copy is ever re-added.
+ */
 const EXEMPT = new Set(['PageStatus.jsx'])
 
 const STATUS_ROLE = /role="(?:status|alert)"/g
@@ -95,9 +99,10 @@ describe('admin status language', () => {
         regressions.push(`${name}: ${count} hand-rolled status sites, baseline ${allowed}`)
       }
     }
-    expect(regressions,
-      `Use PageStatus from './PageStatus' instead of a new role="status"/role="alert" block.\n`
-      + regressions.join('\n'),
+    expect(
+      regressions,
+      `Use PageStatus from '@oneirodex/ui' instead of a new role="status"/role="alert" block.\n` +
+        regressions.join('\n'),
     ).toEqual([])
   })
 
@@ -115,7 +120,7 @@ describe('admin status language', () => {
   })
 
   it('exposes the shared component the baseline is meant to drive toward', async () => {
-    const module = await import('./PageStatus.jsx')
+    const module = await import('@oneirodex/ui')
     expect(typeof module.PageStatus).toBe('function')
     expect(typeof module.resolveErrorMessage).toBe('function')
     expect(typeof module.resolveErrorDetail).toBe('function')

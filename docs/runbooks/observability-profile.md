@@ -15,6 +15,22 @@ Near-realtime operator visibility ships **in-app**:
 
 Do **not** block upgrades or smoke sign-off on Prometheus/Grafana.
 
+## Application logging
+
+The backend configures stdlib `logging` at startup
+(`oneirodex/utils/logging_setup.py`, called from `create_app()`): one console
+handler on **stdout**, so `docker logs` / the Unraid container log show it.
+
+| Env var | Default | Effect |
+|---|---|---|
+| `ONEIRODEX_LOG_LEVEL` | `INFO` | `CRITICAL` / `ERROR` / `WARNING` / `INFO` / `DEBUG`. Anything else falls back to `INFO`. `werkzeug` stays at `INFO` even when this is `DEBUG`. |
+| `ONEIRODEX_LOG_JSON` | unset (`0`) | `1` emits one JSON object per line (`ts`, `level`, `logger`, `msg`, `request_id`, and `method`/`path` in a request) for a log shipper. Unset keeps the human console format. |
+
+Each log line carries a short `request_id` when emitted during a request, so a
+household member's report ("it broke when I hit Scan") can be traced across
+lines. The backend is mid-migration from `print()` to `logging`; a ratchet
+(`scripts/print_lint.py`) keeps the remaining `print()` count from growing.
+
 ## Adding Prometheus later
 
 Repo `docker-compose.yml` keeps a **commented** `# profile: observability` stub (no images pulled by default — avoids broken Compose when you only want `app` + `db`).

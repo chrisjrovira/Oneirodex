@@ -3,7 +3,7 @@
  * @param {{ signal?: AbortSignal }} [options]
  * @returns {Promise<object>}
  */
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchRemotePlayStatus(options = {}) {
   const response = await fetch('/api/remote-play/status', {

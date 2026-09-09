@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 import { CreateUserForm } from './CreateUserForm'
@@ -58,9 +58,9 @@ export function InvitesPage() {
     <div className="od-admin-page">
       <h1>Invites</h1>
       <p className="od-admin-lede">
-        Per-user invite quota and unused tokens. Adjust quota on the classic form if needed.
-        Members can create invites as links without an email address — see their
-        Invites panel. Admins can also skip invites entirely and add a member here.
+        Per-user invite quota and unused tokens. Adjust quota on the classic form if needed. Members
+        can create invites as links without an email address — see their Invites panel. Admins can
+        also skip invites entirely and add a member here.
       </p>
 
       <CreateUserForm
@@ -85,7 +85,13 @@ export function InvitesPage() {
       <MetricStrip
         label="Invites"
         items={[
-          { id: 'members', label: 'Members', value: users.length, hint: 'with a quota', tone: 'info' },
+          {
+            id: 'members',
+            label: 'Members',
+            value: users.length,
+            hint: 'with a quota',
+            tone: 'info',
+          },
           {
             id: 'unused',
             label: 'Unused tokens',

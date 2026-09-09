@@ -1,6 +1,7 @@
-﻿import { render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from './App'
+import { ShellHarness } from './testShell'
 
 vi.mock('./LibraryApp', () => ({ LibraryApp: () => <div>LibraryPage</div> }))
 vi.mock('./DiscoverApp', () => ({ DiscoverApp: () => <div>DiscoverPage</div> }))
@@ -19,17 +20,32 @@ vi.mock('./components/SocialCompanionDock', () => ({
 vi.mock('./components/ChatSlideOut', () => ({
   ChatSlideOut: () => null,
 }))
-vi.mock('./pages/NewsPage', () => ({ NewsPage: () => <div><h1>News</h1></div> }))
-vi.mock('./pages/CollectionsPage', () => ({
-  CollectionsPage: ({ shellConfig }) => <div>CollectionsPage:{shellConfig.tileSize}</div>,
+vi.mock('./pages/NewsPage', () => ({
+  NewsPage: () => (
+    <div>
+      <h1>News</h1>
+    </div>
+  ),
 }))
+// The real lazy page — it reads useShellConfig() itself now, so the mock does
+// too, proving the provider chain reaches a routed page.
+vi.mock('./pages/CollectionsPage', async () => {
+  const { useShellConfig } = await vi.importActual('@oneirodex/ui')
+  return { CollectionsPage: () => <div>CollectionsPage:{useShellConfig().tileSize}</div> }
+})
 
-test('layout exposes skip link and main landmark', () => {
-  render(
-    <MemoryRouter initialEntries={['/library']}>
-      <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
+function renderAt(path, shell) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <ShellHarness shell={shell}>
+        <App />
+      </ShellHarness>
     </MemoryRouter>,
   )
+}
+
+test('layout exposes skip link and main landmark', () => {
+  renderAt('/library', { tileSize: 'M', isAdmin: false })
   const skip = screen.getByRole('link', { name: /skip to main content/i })
   expect(skip).toHaveAttribute('href', '#main-content')
   expect(document.getElementById('main-content')).toBeTruthy()
@@ -37,62 +53,38 @@ test('layout exposes skip link and main landmark', () => {
 })
 
 test('renders library route', () => {
-  render(
-    <MemoryRouter initialEntries={['/library']}>
-      <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
-    </MemoryRouter>,
-  )
+  renderAt('/library', { tileSize: 'M', isAdmin: false })
   expect(screen.getByText('LibraryPage')).toBeInTheDocument()
   // TopNav already labels the Library route — no redundant page H1 here.
   expect(screen.queryByRole('heading', { name: 'Library' })).not.toBeInTheDocument()
 })
 
-test('applies tile size CSS vars from shellConfig', () => {
-  render(
-    <MemoryRouter initialEntries={['/discover']}>
-      <App shellConfig={{ tileSize: 'L', isAdmin: false, sections: [] }} />
-    </MemoryRouter>,
-  )
+test('applies tile size CSS vars from shell config', () => {
+  renderAt('/discover', { tileSize: 'L', isAdmin: false })
   // Legacy L → 75% → 252.5px (110 + 190*0.75)
   expect(document.documentElement.style.getPropertyValue('--od-tile-min')).toBe('252.5px')
   expect(screen.getByText('DiscoverPage')).toBeInTheDocument()
 })
 
 test('renders favorites route with tile size', () => {
-  render(
-    <MemoryRouter initialEntries={['/favorites']}>
-      <App shellConfig={{ tileSize: 'S', isAdmin: false }} />
-    </MemoryRouter>,
-  )
+  renderAt('/favorites', { tileSize: 'S', isAdmin: false })
   expect(screen.getByText('FavoritesPage')).toBeInTheDocument()
   // Legacy S → 25% → 157.5px (110 + 190*0.25)
   expect(document.documentElement.style.getPropertyValue('--od-tile-min')).toBe('157.5px')
 })
 
 test('renders downloads route', async () => {
-  render(
-    <MemoryRouter initialEntries={['/downloads']}>
-      <App shellConfig={{ tileSize: 'XL', isAdmin: false }} />
-    </MemoryRouter>,
-  )
+  renderAt('/downloads', { tileSize: 'XL', isAdmin: false })
   expect(await screen.findByText('DownloadsPage')).toBeInTheDocument()
   expect(document.documentElement.style.getPropertyValue('--od-tile-min')).toBe('300px')
 })
 
 test('renders news more route', async () => {
-  render(
-    <MemoryRouter initialEntries={['/news']}>
-      <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
-    </MemoryRouter>,
-  )
+  renderAt('/news', { tileSize: 'M', isAdmin: false })
   expect(await screen.findByRole('heading', { name: 'News' })).toBeInTheDocument()
 })
 
-test('renders collections route with the real page and forwards shellConfig', async () => {
-  render(
-    <MemoryRouter initialEntries={['/collections']}>
-      <App shellConfig={{ tileSize: 'M', isAdmin: false }} />
-    </MemoryRouter>,
-  )
+test('renders collections route with the real page reading shell config from context', async () => {
+  renderAt('/collections', { tileSize: 'M', isAdmin: false })
   expect(await screen.findByText('CollectionsPage:M')).toBeInTheDocument()
 })

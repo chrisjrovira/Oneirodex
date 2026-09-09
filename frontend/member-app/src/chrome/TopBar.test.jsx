@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { expect, test } from 'vitest'
 
 import { TopBar } from './TopBar'
+import { ShellHarness } from '../testShell'
 
 /**
  * Bar one, reduced to page scope (GT-B2).
@@ -16,7 +17,9 @@ import { TopBar } from './TopBar'
 function renderTopBar(props = {}) {
   return render(
     <MemoryRouter initialEntries={['/library']}>
-      <TopBar shellConfig={{ username: 'ada' }} {...props} />
+      <ShellHarness shell={{ username: 'ada' }}>
+        <TopBar {...props} />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }

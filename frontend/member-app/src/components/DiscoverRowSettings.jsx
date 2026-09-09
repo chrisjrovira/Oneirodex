@@ -138,9 +138,7 @@ export function DiscoverRowSettings({
           })}
         </ul>
 
-        {rest.length === 0 ? (
-          <p className="od-rowsettings__empty">Every row is pinned.</p>
-        ) : null}
+        {rest.length === 0 ? <p className="od-rowsettings__empty">Every row is pinned.</p> : null}
       </section>
     </div>
   )

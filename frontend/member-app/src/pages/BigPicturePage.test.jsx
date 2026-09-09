@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { BigPicturePage } from './BigPicturePage'
 import * as browseApi from '../api/browse'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/browse', () => ({
   fetchBrowseGames: vi.fn(),
@@ -40,7 +41,11 @@ const GAMES = [
 test('shows loading then renders tiles and hero for the first game', async () => {
   browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
 
-  renderPage(<BigPicturePage shellConfig={{}} />)
+  renderPage(
+    <ShellHarness shell={{}}>
+      <BigPicturePage />
+    </ShellHarness>,
+  )
 
   expect(screen.getByText(/Loading games/)).toBeInTheDocument()
 
@@ -60,10 +65,7 @@ test('shows loading then renders tiles and hero for the first game', async () =>
   expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Alpha Game')
   expect(screen.getByText('An alpha adventure.')).toBeInTheDocument()
   expect(screen.getByText('OWNED · 4.2 GB')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute(
-    'href',
-    '/game_details/a1',
-  )
+  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/game_details/a1')
   expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
     'href',
     '/download_game/a1',
@@ -74,7 +76,11 @@ test('arrow keys move the selection and update the hero', async () => {
   const user = userEvent.setup()
   browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
 
-  renderPage(<BigPicturePage shellConfig={{}} />)
+  renderPage(
+    <ShellHarness shell={{}}>
+      <BigPicturePage />
+    </ShellHarness>,
+  )
 
   const alphaTile = await screen.findByRole('option', { name: 'Alpha Game' })
   // The tile existing and the tile holding focus are two different moments.
@@ -91,10 +97,7 @@ test('arrow keys move the selection and update the hero', async () => {
   expect(betaTile).toHaveAttribute('aria-selected', 'true')
   expect(betaTile).toHaveFocus()
   expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Beta Game')
-  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute(
-    'href',
-    '/game_details/b2',
-  )
+  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/game_details/b2')
 
   await user.keyboard('{ArrowLeft}')
   expect(screen.getByRole('option', { name: 'Alpha Game' })).toHaveAttribute(
@@ -106,7 +109,11 @@ test('arrow keys move the selection and update the hero', async () => {
 test('shows empty state when the library has no games', async () => {
   browseApi.fetchBrowseGames.mockResolvedValue({ games: [] })
 
-  renderPage(<BigPicturePage shellConfig={{}} />)
+  renderPage(
+    <ShellHarness shell={{}}>
+      <BigPicturePage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByText('No games in your library yet.')).toBeInTheDocument()
   expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('No games')
@@ -120,7 +127,11 @@ test('shows an error with retry that recovers', async () => {
     .mockRejectedValueOnce(new Error('boom'))
     .mockResolvedValueOnce({ games: GAMES })
 
-  renderPage(<BigPicturePage shellConfig={{}} />)
+  renderPage(
+    <ShellHarness shell={{}}>
+      <BigPicturePage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load Big Picture.')
 
@@ -137,7 +148,11 @@ test('friends companion starts closed (SSE gated)', async () => {
     vi.fn(async () => ({ ok: true, json: async () => ({ friends: [], friend_count: 0 }) })),
   )
 
-  renderPage(<BigPicturePage shellConfig={{}} />)
+  renderPage(
+    <ShellHarness shell={{}}>
+      <BigPicturePage />
+    </ShellHarness>,
+  )
   await screen.findByRole('option', { name: 'Alpha Game' })
 
   expect(screen.getByRole('button', { name: /open friends companion/i })).toBeInTheDocument()

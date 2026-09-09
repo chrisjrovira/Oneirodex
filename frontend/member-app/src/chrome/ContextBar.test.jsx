@@ -18,9 +18,9 @@ describe('SegmentedViews', () => {
 
   it('marks exactly one view pressed', () => {
     render(<SegmentedViews views={VIEWS} active="games" />)
-    const pressed = screen.getAllByRole('button').filter(
-      (b) => b.getAttribute('aria-pressed') === 'true',
-    )
+    const pressed = screen
+      .getAllByRole('button')
+      .filter((b) => b.getAttribute('aria-pressed') === 'true')
     expect(pressed).toHaveLength(1)
     expect(pressed[0]).toHaveTextContent('Games')
   })
@@ -71,16 +71,25 @@ describe('SegmentedViews', () => {
 
 describe('Popover', () => {
   it('starts closed', () => {
-    render(<Popover label="Filters"><p>panel</p></Popover>)
+    render(
+      <Popover label="Filters">
+        <p>panel</p>
+      </Popover>,
+    )
     expect(screen.queryByText('panel')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Filters/ })).toHaveAttribute(
-      'aria-expanded', 'false',
+      'aria-expanded',
+      'false',
     )
   })
 
   it('opens and closes from the trigger', async () => {
     const user = userEvent.setup()
-    render(<Popover label="Filters"><p>panel</p></Popover>)
+    render(
+      <Popover label="Filters">
+        <p>panel</p>
+      </Popover>,
+    )
     const trigger = screen.getByRole('button', { name: /Filters/ })
     await user.click(trigger)
     expect(screen.getByText('panel')).toBeInTheDocument()
@@ -90,7 +99,11 @@ describe('Popover', () => {
 
   it('closes on Escape', async () => {
     const user = userEvent.setup()
-    render(<Popover label="Filters"><p>panel</p></Popover>)
+    render(
+      <Popover label="Filters">
+        <p>panel</p>
+      </Popover>,
+    )
     await user.click(screen.getByRole('button', { name: /Filters/ }))
     await user.keyboard('{Escape}')
     expect(screen.queryByText('panel')).not.toBeInTheDocument()
@@ -101,7 +114,9 @@ describe('Popover', () => {
     render(
       <div>
         <span data-testid="outside">elsewhere</span>
-        <Popover label="Filters"><button type="button">Inside</button></Popover>
+        <Popover label="Filters">
+          <button type="button">Inside</button>
+        </Popover>
       </div>,
     )
     await user.click(screen.getByRole('button', { name: /Filters/ }))
@@ -114,14 +129,22 @@ describe('Popover', () => {
   it('shows a count badge when filters are active', () => {
     // The badge is the only thing that keeps a collapsed popover from hiding
     // why the grid looks empty — the plan calls this out as a real risk.
-    render(<Popover label="Filters" count={3}><p>panel</p></Popover>)
+    render(
+      <Popover label="Filters" count={3}>
+        <p>panel</p>
+      </Popover>,
+    )
     const trigger = screen.getByRole('button', { name: /Filters/ })
     expect(trigger).toHaveTextContent('3')
     expect(trigger).toHaveClass('is-on')
   })
 
   it('shows no badge at zero', () => {
-    render(<Popover label="Filters" count={0}><p>panel</p></Popover>)
+    render(
+      <Popover label="Filters" count={0}>
+        <p>panel</p>
+      </Popover>,
+    )
     const trigger = screen.getByRole('button', { name: /Filters/ })
     expect(trigger).not.toHaveClass('is-on')
     expect(trigger).not.toHaveTextContent('0')

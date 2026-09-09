@@ -14,6 +14,8 @@ from oneirodex.platform import LibraryPlatform
 from oneirodex.utils.client_presence import CLIENT_HEARTBEAT_TTL_SECONDS, user_client_connected
 from oneirodex.utils.lifecycle import web_lifecycle_fields
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- companion heartbeat / presence loop.
+
 
 @pytest.fixture
 def lib(db_session):
@@ -160,7 +162,7 @@ def test_browse_games_sets_client_connected_with_recent_heartbeat(client, app, d
     )
     db_session.commit()
 
-    with patch('oneirodex.routes.get_matched_owned_game_uuids', return_value=set()):
+    with patch('oneirodex.utils.browse_query.get_matched_owned_game_uuids', return_value=set()):
         response = client.get(f'/browse_games?page=1&per_page=10&library_uuid={lib.uuid}')
 
     assert response.status_code == 200

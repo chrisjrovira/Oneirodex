@@ -118,7 +118,9 @@ test('integrations hub shows grouped cards', async () => {
     )
     expect(screen.getByRole('heading', { name: 'Integrations' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'IGDB' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Artwork & secondary metadata' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Artwork & secondary metadata' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'SMTP' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'OIDC' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'LiveKit' })).toBeInTheDocument()

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { putJson } from './adminApi'
-import { PageStatus } from './PageStatus'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { PM_IGNORE } from './formIgnore'
 
 const ROLES = ['user', 'librarian', 'child', 'admin']
@@ -57,9 +57,9 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
   if (!open) {
     return (
       <div className="od-create-user">
-        <button type="button" className="od-btn od-btn--primary" onClick={() => setOpen(true)}>
+        <Button variant="primary" onClick={() => setOpen(true)}>
           {title}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -68,8 +68,8 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
     <form className="od-admin-panel" data-form-type="other" onSubmit={handleSubmit}>
       <h2>{title}</h2>
       <p className="od-admin-lede">
-        Creates the account straight away — no invite link required. Give the
-        person the username and password yourself. Email is optional.
+        Creates the account straight away — no invite link required. Give the person the username
+        and password yourself. Email is optional.
       </p>
 
       <PageStatus error={error} />
@@ -131,16 +131,16 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
       </label>
 
       <div className="od-admin-actions-row">
-        <button
+        <Button
           type="submit"
-          className="od-btn od-btn--primary"
+          variant="primary"
           disabled={busy || name.trim().length < 3 || password.length < 8}
         >
           {busy ? 'Creating…' : 'Create user'}
-        </button>
-        <button type="button" className="od-btn" onClick={() => setOpen(false)} disabled={busy}>
+        </Button>
+        <Button onClick={() => setOpen(false)} disabled={busy}>
           Close
-        </button>
+        </Button>
       </div>
     </form>
   )

@@ -27,6 +27,11 @@ from oneirodex.models import Library
 from oneirodex.platform import LibraryPlatform
 from oneirodex.utils.background import run_in_background
 
+# Spins real OS threads and joins them with multi-second timeouts; historically
+# a source of cross-file pollution when a leaked worker outlived its test. Kept
+# out of the fast marker-based CI core (`-m "not integration"`).
+pytestmark = pytest.mark.integration
+
 
 def test_worker_gets_its_own_session(app, db_session):
     """The property the whole change exists for."""
@@ -136,7 +141,10 @@ def test_library_deletion_worker_actually_deletes(app, db_session):
     being fixed — and is worth having now that it does not.
     """
     from oneirodex.models import Game
-    from oneirodex.routes import delete_library_background, deletion_progress
+    from oneirodex.routes_admin_ext.library_delete import (
+        delete_library_background,
+        deletion_progress,
+    )
 
     with app.app_context():
         library = Library(name='Doomed Library', platform=LibraryPlatform.PCWIN)

@@ -40,7 +40,6 @@ const LEGACY_MOTIF_ALIASES = {
   scan: 'crt',
 }
 
-
 const MARKUP = {
   // NES / SNES era — the d-pad presses around its axis.
   dpad: (
@@ -48,9 +47,24 @@ const MARKUP = {
       <rect className="od-loading-motif__pad" x="18" y="8" width="12" height="32" rx="2" />
       <rect className="od-loading-motif__pad" x="8" y="18" width="32" height="12" rx="2" />
       <circle className="od-loading-motif__dpad-press" cx="24" cy="13" r="3" />
-      <circle className="od-loading-motif__dpad-press od-loading-motif__dpad-press--r" cx="35" cy="24" r="3" />
-      <circle className="od-loading-motif__dpad-press od-loading-motif__dpad-press--d" cx="24" cy="35" r="3" />
-      <circle className="od-loading-motif__dpad-press od-loading-motif__dpad-press--l" cx="13" cy="24" r="3" />
+      <circle
+        className="od-loading-motif__dpad-press od-loading-motif__dpad-press--r"
+        cx="35"
+        cy="24"
+        r="3"
+      />
+      <circle
+        className="od-loading-motif__dpad-press od-loading-motif__dpad-press--d"
+        cx="24"
+        cy="35"
+        r="3"
+      />
+      <circle
+        className="od-loading-motif__dpad-press od-loading-motif__dpad-press--l"
+        cx="13"
+        cy="24"
+        r="3"
+      />
     </svg>
   ),
   // Disc era — platter spins, tracking head sweeps.
@@ -106,7 +120,9 @@ const MARKUP = {
 }
 
 export function normalizeLoadingMotifId(id) {
-  const text = String(id || '').trim().toLowerCase()
+  const text = String(id || '')
+    .trim()
+    .toLowerCase()
   if (LOADING_MOTIF_IDS.includes(text)) return text
   // Per-system ids (nes, psx, dreamcast, …) are equally valid picks.
   if (SYSTEM_BY_ID.has(text)) return text
@@ -140,20 +156,12 @@ export function pickLoadingMotifId(settings, sessionPick) {
 /**
  * Animated loading glyph. Pass `motifId` to lock; otherwise rotates via settings.
  */
-export function LoadingMotif({
-  motifId = null,
-  size = 'md',
-  className = '',
-  title = 'Loading',
-}) {
+export function LoadingMotif({ motifId = null, size = 'md', className = '', title = 'Loading' }) {
   // 'ring' was the old default and no longer exists in MARKUP — leaving it
   // here would render an empty span for any unrecognised id.
   const id = normalizeLoadingMotifId(motifId) || 'dpad'
-  const sizeClass = size === 'sm'
-    ? 'od-loading-motif--sm'
-    : size === 'lg'
-      ? 'od-loading-motif--lg'
-      : ''
+  const sizeClass =
+    size === 'sm' ? 'od-loading-motif--sm' : size === 'lg' ? 'od-loading-motif--lg' : ''
   return (
     <span
       className={`od-loading-motif ${sizeClass}${className ? ` ${className}` : ''}`.trim()}

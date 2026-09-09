@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import {
   compareToBaseline,
   lintCss,
+  lintJsColorConstants,
   lintJsxInlineStyles,
   readBaseline,
   runLint,
@@ -27,9 +28,7 @@ test('no new design-token violations against the baseline', () => {
 
   // Rendered as file/rule/count so a failure names the offending stylesheet
   // rather than just asserting a number went up.
-  expect(
-    regressions.map((r) => `${r.file} ${r.rule}: ${r.count} > ${r.allowed}`),
-  ).toEqual([])
+  expect(regressions.map((r) => `${r.file} ${r.rule}: ${r.count} > ${r.allowed}`)).toEqual([])
 })
 
 test('lint flags literals in declarations but not in token definitions', () => {
@@ -88,6 +87,33 @@ test('a style built from data is not a token decision', () => {
   const jsx = `<span style={{ background: option.color, width: computed }} />`
 
   expect(lintJsxInlineStyles(jsx, 'Example.jsx')).toEqual([])
+})
+
+/**
+ * The brand table in ExternalStoreLinks and the status table in GameCard carried
+ * raw hex on plain object properties, then handed the value to the DOM as a CSS
+ * custom property — so the value reached the style block as an identifier and
+ * lintJsxInlineStyles skipped it. This rule catches the hex at the source.
+ */
+test('lint flags a hex on a colour key in a JS data constant', () => {
+  const jsx = `
+    const BRANDS = [
+      { id: 'steam', color: '#66c0f4' },
+      { id: 'live', color: brand.color },
+      { id: 'ok', color: 'var(--od-brand-steam)' },
+    ]
+    const DOT = [{ value: 'beaten', color: '#50C878' }]
+  `
+  const found = lintJsColorConstants(jsx, 'Example.jsx').map((f) => `${f.rule}:${f.detail}`)
+
+  expect(found).toEqual(['no-raw-js-color:color: #66c0f4', 'no-raw-js-color:color: #50C878'])
+})
+
+test('lint does not double-count a hex that is already inside a style block', () => {
+  const jsx = `<div style={{ color: '#2fd67b' }} />`
+
+  // lintJsxInlineStyles owns that hex; the JS-constant scan blanks style blocks.
+  expect(lintJsColorConstants(jsx, 'Example.jsx')).toEqual([])
 })
 
 test('inline-style findings report the offending value, not undefined', () => {

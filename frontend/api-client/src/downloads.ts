@@ -42,7 +42,9 @@ export function createDownloadsApi(request: Requester) {
       })
     },
 
-    listGameVersions(gameUuid: string): Promise<{ game_uuid: string; versions: GameVersionItem[] }> {
+    listGameVersions(
+      gameUuid: string,
+    ): Promise<{ game_uuid: string; versions: GameVersionItem[] }> {
       return request(`/api/games/${gameUuid}/versions`)
     },
   }

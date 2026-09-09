@@ -1,7 +1,26 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ShellConfigProvider, ViewerProvider, viewerFromConfig } from '@oneirodex/ui'
 import { App } from './App'
+import { installUnauthorizedRedirect } from './api/http'
 import { GameDetailsApp, parseGameDetailsRootConfig } from './GameDetailsApp'
+
+// Wave B1.3: one QueryClient for the whole member SPA. `useResource`
+// (`@oneirodex/ui`) is the read path that consumes it; pages provide the
+// provider, react-query provides caching + dedupe + refetch. Defaults are
+// deliberately conservative — a 30s freshness window so route revisits do not
+// re-hit the API, a single retry, and no refetch-on-focus (the member app is a
+// long-lived tab, not a dashboard).
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 export function parseRootConfig(rootElement) {
   let currentFilters = {}
@@ -86,6 +105,11 @@ export function parseShellConfig(rootElement) {
   }
 }
 
+// Session expiry -> /login for every member `/api/...` call, in one place
+// (mirrors admin-app's adminApi.js). Safe to call unconditionally: it is a
+// no-op outside the browser and idempotent.
+installUnauthorizedRedirect()
+
 const memberAppRoot = document.getElementById('member-app-root')
 if (memberAppRoot) {
   // UIR-3: mark the document so shared CSS can retire page titles without every
@@ -94,9 +118,20 @@ if (memberAppRoot) {
   if (memberAppRoot.dataset.enableNewChrome !== 'false') {
     document.documentElement.dataset.chrome = 'v2'
   }
+  const shellConfig = parseShellConfig(memberAppRoot)
+  // Wave B1.6: identity + the rest of the bootstrap are provided once here, so
+  // `<App>` and every page read them from `useViewer()` / `useShellConfig()`
+  // instead of the object being threaded down as a prop through 40+ routes.
+  const viewerFromShell = viewerFromConfig(shellConfig)
   createRoot(memberAppRoot).render(
     <BrowserRouter>
-      <App shellConfig={parseShellConfig(memberAppRoot)} />
+      <ViewerProvider value={viewerFromShell}>
+        <ShellConfigProvider value={shellConfig}>
+          <QueryClientProvider client={queryClient}>
+            <App />
+          </QueryClientProvider>
+        </ShellConfigProvider>
+      </ViewerProvider>
     </BrowserRouter>,
   )
 }

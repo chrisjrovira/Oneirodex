@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { csrfHeaders } from '../api/csrf'
-import { errorFromBody } from '../api/envelopeError'
-import { fetchAcquireStatus, searchAcquire } from '../api/updates'
+import { Button } from '@oneirodex/ui'
+import { fetchAcquireStatus, searchAcquire, sendAcquireDownload } from '../api/updates'
 import { PageStatus } from '../components/PageStatus'
 import { showToast } from '../utils/toast'
 
@@ -90,19 +89,10 @@ export function AcquirePage() {
   async function sendHit(hit, provider) {
     setBusy(true)
     try {
-      const response = await fetch('/api/acquire/download', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({
-          url: hit.download_url || hit.magnet || hit.info_url,
-          provider,
-        }),
+      await sendAcquireDownload({
+        url: hit.download_url || hit.magnet || hit.info_url,
+        provider,
       })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw errorFromBody(data, response.status, 'acquire')
-      }
       showToast(`Sent to ${provider}`, 'success')
     } catch (err) {
       showToast(err?.message || 'Send failed', 'error')
@@ -119,13 +109,13 @@ export function AcquirePage() {
         <h1>Acquire</h1>
       </div>
       <p className="od-more-page__lede">
-        BYO acquisition via admin-configured native indexers / hubs / debrid. Oneirodex does not host
-        torrents. Results are ranked by score (seeders, repack/quality cues).
+        BYO acquisition via admin-configured native indexers / hubs / debrid. Oneirodex does not
+        host torrents. Results are ranked by score (seeders, repack/quality cues).
       </p>
       {status ? (
         <p>
-          Arr: {status.arr_enabled ? 'on' : 'off'} · Debrid: {status.debrid_enabled ? 'on' : 'off'} ·
-          Send: {status.can_send ? 'allowed' : 'librarian only'} · Clients:{' '}
+          Arr: {status.arr_enabled ? 'on' : 'off'} · Debrid: {status.debrid_enabled ? 'on' : 'off'}{' '}
+          · Send: {status.can_send ? 'allowed' : 'librarian only'} · Clients:{' '}
           {(status.clients || []).join(', ') || '—'}
         </p>
       ) : null}
@@ -136,9 +126,7 @@ export function AcquirePage() {
           retryLabel="Retry"
         />
       ) : null}
-      {!status && !error ? (
-        <PageStatus loading loadingMessage="Loading Acquire…" />
-      ) : null}
+      {!status && !error ? <PageStatus loading loadingMessage="Loading Acquire…" /> : null}
       {displayWarnings.length > 0 ? (
         <p className="od-more-page__lede" role="status">
           Indexer warnings: {displayWarnings.join(' · ')}
@@ -148,8 +136,8 @@ export function AcquirePage() {
         <p>Enable ENABLE_ARR_MODULE and/or ENABLE_DEBRID to use this page.</p>
       ) : noIndexersReady ? (
         <p role="status">
-          No native indexers or Prowlarr/Jackett hubs are ready yet. Ask an admin to add Torznab/Newznab
-          entries (or enable presets and set API keys) under Admin → Arr.
+          No native indexers or Prowlarr/Jackett hubs are ready yet. Ask an admin to add
+          Torznab/Newznab entries (or enable presets and set API keys) under Admin → Arr.
         </p>
       ) : (
         <form className="od-updates__search-form" onSubmit={onSearch}>
@@ -157,9 +145,9 @@ export function AcquirePage() {
             Search indexers
             <input value={query} onChange={(e) => setQuery(e.target.value)} required />
           </label>
-          <button className="od-btn" type="submit" disabled={busy || !status.arr_enabled}>
+          <Button type="submit" disabled={busy || !status.arr_enabled}>
             {busy ? 'Searching…' : 'Search'}
-          </button>
+          </Button>
         </form>
       )}
       {hits && hits.length === 0 ? <p>No indexer hits.</p> : null}

@@ -42,11 +42,7 @@ export function applyTileSizeCssVars(sizeOrPercent, showTitles) {
   document.documentElement.dataset.odTileTitles = titlesOn ? 'on' : 'off'
 }
 
-export function TileSizeControl({
-  value = TILE_PERCENT_DEFAULT,
-  onChange,
-  shellConfig = {},
-}) {
+export function TileSizeControl({ value = TILE_PERCENT_DEFAULT, onChange, shellConfig = {} }) {
   const percent = normalizeTilePercent(value)
   const saveTimerRef = useRef(0)
   const resizeTimerRef = useRef(0)
@@ -54,9 +50,7 @@ export function TileSizeControl({
 
   async function persist(normalized) {
     try {
-      await savePreferences(
-        preferencesFromShell(shellConfig, { tile_size: String(normalized) }),
-      )
+      await savePreferences(preferencesFromShell(shellConfig, { tile_size: String(normalized) }))
     } catch {
       // Preference persistence is best-effort; CSS vars already applied.
     }
@@ -69,24 +63,27 @@ export function TileSizeControl({
     persistRef.current = persist
   })
 
-  useEffect(() => () => {
-    // Both timers outlive the component, and both do damage unattended.
-    //
-    // `is-tile-resizing` lives on <html>, not on anything React unmounts, so
-    // clearing the timer without removing the class would leave the library
-    // permanently without its tile-size transition. Remove it here.
-    window.clearTimeout(resizeTimerRef.current)
-    document.documentElement.classList.remove('is-tile-resizing')
+  useEffect(
+    () => () => {
+      // Both timers outlive the component, and both do damage unattended.
+      //
+      // `is-tile-resizing` lives on <html>, not on anything React unmounts, so
+      // clearing the timer without removing the class would leave the library
+      // permanently without its tile-size transition. Remove it here.
+      window.clearTimeout(resizeTimerRef.current)
+      document.documentElement.classList.remove('is-tile-resizing')
 
-    // The save is debounced, so unmounting mid-drag (navigating away straight
-    // after moving the slider) still owes one. Dropping it loses the change the
-    // user just made; flushing is safe because `persist` never sets state.
-    window.clearTimeout(saveTimerRef.current)
-    if (pendingSaveRef.current !== null) {
-      void persistRef.current(pendingSaveRef.current)
-      pendingSaveRef.current = null
-    }
-  }, [])
+      // The save is debounced, so unmounting mid-drag (navigating away straight
+      // after moving the slider) still owes one. Dropping it loses the change the
+      // user just made; flushing is safe because `persist` never sets state.
+      window.clearTimeout(saveTimerRef.current)
+      if (pendingSaveRef.current !== null) {
+        void persistRef.current(pendingSaveRef.current)
+        pendingSaveRef.current = null
+      }
+    },
+    [],
+  )
 
   function handleChange(nextPercent) {
     const normalized = normalizeTilePercent(nextPercent)

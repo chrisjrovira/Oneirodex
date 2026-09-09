@@ -1,4 +1,4 @@
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 
 const STORAGE_OPEN = 'od-chat-panel-open'
 /** CustomEvent — TopNav / CommandPalette / deep-link open chat without a full-page takeover. */
@@ -179,8 +179,7 @@ export async function uploadChatAttachment(channelId, file) {
 export function openChatPopoutWindow(channelId) {
   const params = new URLSearchParams({ popout: '1' })
   if (channelId != null) params.set('channel', String(channelId))
-  const features =
-    'width=420,height=760,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
+  const features = 'width=420,height=760,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
   const win = window.open(`/chat?${params.toString()}`, 'od-chat-popout', features)
   if (win) {
     try {

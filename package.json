@@ -1,0 +1,30 @@
+{
+  "name": "oneirodex-repo",
+  "private": true,
+  "type": "module",
+  "description": "Repo-root workspace for the Oneirodex frontend SPAs and clients (lint, format, typecheck, single install).",
+  "workspaces": [
+    "frontend/member-app",
+    "frontend/admin-app",
+    "frontend/ops-glance",
+    "frontend/api-client",
+    "frontend/shared",
+    "clients/desktop"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"frontend/**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,md}\"",
+    "format:check": "prettier --check \"frontend/**/*.{js,jsx,ts,tsx,mjs,cjs,json,css,md}\""
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.70.0"
+  }
+}

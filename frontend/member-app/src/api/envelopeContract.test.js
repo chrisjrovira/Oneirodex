@@ -24,14 +24,8 @@ const API_DIR = path.dirname(fileURLToPath(import.meta.url))
  * short and reasoned — it is the escape hatch that could hollow out the guard.
  */
 const EXEMPT = new Map([
-  [
-    'preferences.js',
-    '/settings_panel renders HTML, so there is no envelope to parse',
-  ],
-  [
-    'discover.js',
-    'guards the content-type after an ok response, not a failed one',
-  ],
+  ['preferences.js', '/settings_panel renders HTML, so there is no envelope to parse'],
+  ['discover.js', 'guards the content-type after an ok response, not a failed one'],
 ])
 
 function sourceFiles() {
@@ -50,13 +44,11 @@ describe('CSRF handling lives in one module', () => {
    */
   test.each(sourceFiles())('%s does not redefine the token lookup', (name) => {
     const source = fs.readFileSync(path.join(API_DIR, name), 'utf8')
-    const local = source.match(
-      /^(?:function|const)\s+(getCsrfToken|csrfToken|csrfHeaders)\b/gm,
-    )
+    const local = source.match(/^(?:function|const)\s+(getCsrfToken|csrfToken|csrfHeaders)\b/gm)
     expect(
       local ?? [],
-      `import { csrfHeaders } from './csrf' instead — the shared chain is the `
-        + `superset, so a local copy can only be narrower`,
+      `import { csrfHeaders } from '@oneirodex/ui' instead — the shared chain is the ` +
+        `superset, so a local copy can only be narrower`,
     ).toEqual([])
   })
 
@@ -123,8 +115,8 @@ describe('CSRF handling lives in one module across src/', () => {
     const source = fs.readFileSync(path.join(SRC_ROOT, rel), 'utf8')
     expect(
       csrfOffendersIn(source),
-      `import { csrfHeaders } from api/csrf.js instead — the shared chain is the `
-        + `superset, so a local copy can only be narrower`,
+      `import { csrfHeaders } from '@oneirodex/ui' instead — the shared chain is the ` +
+        `superset, so a local copy can only be narrower`,
     ).toEqual([])
   })
 })
@@ -152,8 +144,8 @@ describe('api wrappers report failures through the shared envelope helper', () =
     }
     expect(
       offenders,
-      `use \`throw await errorFromResponse(response, '<label>')\` so the backend's `
-        + `sentence and its error_code reach PageStatus`,
+      `use \`throw await errorFromResponse(response, '<label>')\` so the backend's ` +
+        `sentence and its error_code reach PageStatus`,
     ).toEqual([])
   })
 
@@ -182,7 +174,10 @@ describe('api wrappers report failures through the shared envelope helper', () =
       if (!/errorFromResponse\(/.test(source)) {
         return false
       }
-      return !/import \{ errorFromResponse \} from '\.\/envelopeError'/.test(source)
+      // errorFromResponse moved into `@oneirodex/ui` (wave B1.2); it may be
+      // imported on its own or alongside csrfHeaders from the same specifier.
+      const importsHelper = /import\s*\{[^}]*\berrorFromResponse\b[^}]*\}\s*from\s*'@oneirodex\/ui'/
+      return !importsHelper.test(source)
     })
     expect(missing).toEqual([])
   })
@@ -202,9 +197,8 @@ describe('api wrappers report failures through the shared envelope helper', () =
         }
       })
     }
-    expect(
-      offenders,
-      'pass a bare label — errorFromResponse/errorFromBody add the status',
-    ).toEqual([])
+    expect(offenders, 'pass a bare label — errorFromResponse/errorFromBody add the status').toEqual(
+      [],
+    )
   })
 })

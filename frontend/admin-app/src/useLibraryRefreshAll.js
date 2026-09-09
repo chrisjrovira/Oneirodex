@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { postJsonResult } from './adminApi'
 import {
   buildScanQueueRequestFields,
@@ -24,9 +24,7 @@ export function useLibraryRefreshAll() {
 
   const postRefresh = useCallback(async (policy) => {
     // null = operator has not chosen yet (idle path or legacy 409 recovery) → default queue fields.
-    const fields = buildScanQueueRequestFields(
-      policy == null ? undefined : policy,
-    )
+    const fields = buildScanQueueRequestFields(policy == null ? undefined : policy)
     setBusy(true)
     try {
       const { ok, status, data } = await postJsonResult(REFRESH_ALL_URL, fields)

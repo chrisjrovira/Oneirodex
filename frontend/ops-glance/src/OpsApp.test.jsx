@@ -62,7 +62,12 @@ describe('OpsApp', () => {
 
     render(<OpsApp pollMs={15000} />)
 
-    expect(screen.getByRole('status')).toHaveTextContent('Loading operations summary…')
+    // Shared PageStatus (wave B1.2) animates the trailing ellipsis, so the
+    // status reads "Loading operations summary" + " ." / " .." / " ..." — the
+    // same treatment the admin SPA already gave it.
+    const status = screen.getByRole('status')
+    expect(status).toHaveAttribute('aria-live', 'polite')
+    expect(status).toHaveTextContent(/Loading operations summary\s*\.{1,3}/)
     expect(screen.queryByText('Host data unavailable.')).not.toBeInTheDocument()
   })
 

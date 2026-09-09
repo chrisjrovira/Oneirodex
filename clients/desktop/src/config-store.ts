@@ -36,7 +36,7 @@ export async function loadStoredConfig(deps: ConfigStoreDeps = {}): Promise<Stor
   const account = deps.secureAccount ?? SECURE_STORE_ACCOUNT
   const raw = await invokeFn<RawAppConfig>('load_config')
   const baseUrl = raw.base_url ?? ''
-  let token = raw.token ?? null
+  const token = raw.token ?? null
 
   if (token) {
     try {

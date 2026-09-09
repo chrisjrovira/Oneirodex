@@ -26,7 +26,11 @@ export function IconCompass(props) {
   return (
     <svg viewBox="0 0 24 24" {...base} {...props}>
       <circle cx="12" cy="12" r="10" />
-      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" stroke="none" />
+      <polygon
+        points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"
+        fill="currentColor"
+        stroke="none"
+      />
     </svg>
   )
 }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders } from '../api/csrf'
-import { errorFromBody } from '../api/envelopeError'
+import { Button } from '@oneirodex/ui'
+import { csrfHeaders } from '@oneirodex/ui'
+import { errorFromBody } from '@oneirodex/ui'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import {
   mintPartyToken,
@@ -21,14 +22,7 @@ import { showToast } from '../utils/toast'
 import { PageStatus } from './PageStatus'
 import './SocialCompanionDock.css'
 
-function FriendRow({
-  row,
-  gameUuid,
-  onMessage,
-  onInvite,
-  onShare,
-  busyKey,
-}) {
+function FriendRow({ row, gameUuid, onMessage, onInvite, onShare, busyKey }) {
   const user = row.user || {}
   const presence = user.presence || {}
   const status = presence.status || 'offline'
@@ -83,7 +77,11 @@ function FriendRow({
           </button>
         ) : null}
         {presence.game_uuid ? (
-          <Link className="od-social-dock__mini" to={shareGamePath(presence.game_uuid)} title="Open what they’re playing">
+          <Link
+            className="od-social-dock__mini"
+            to={shareGamePath(presence.game_uuid)}
+            title="Open what they’re playing"
+          >
             Join
           </Link>
         ) : null}
@@ -375,9 +373,9 @@ export function SocialCompanionDock({
           autoComplete="off"
           aria-label="Add friend by username"
         />
-        <button type="submit" className="od-btn" disabled={busyKey === 'add'}>
+        <Button type="submit" disabled={busyKey === 'add'}>
           Add
-        </button>
+        </Button>
       </form>
 
       <footer className="od-social-dock__footer">
@@ -398,7 +396,11 @@ export function SocialCompanionDock({
           Activity
         </Link>
         {gameUuid ? (
-          <button type="button" className="od-social-dock__footer-link" onClick={() => void handleShare()}>
+          <button
+            type="button"
+            className="od-social-dock__footer-link"
+            onClick={() => void handleShare()}
+          >
             Copy game
           </button>
         ) : null}
@@ -422,9 +424,13 @@ export function SocialCompanionDock({
           aria-label="Open friends companion"
         >
           Friends
-          {social.onlineCount > 0 ? <span className="od-social-dock__badge">{social.onlineCount}</span> : null}
+          {social.onlineCount > 0 ? (
+            <span className="od-social-dock__badge">{social.onlineCount}</span>
+          ) : null}
           {social.pendingCount > 0 ? (
-            <span className="od-social-dock__badge od-social-dock__badge--pending">{social.pendingCount}</span>
+            <span className="od-social-dock__badge od-social-dock__badge--pending">
+              {social.pendingCount}
+            </span>
           ) : null}
         </button>
       ) : null}

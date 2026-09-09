@@ -1,7 +1,10 @@
 import { invoke } from '@tauri-apps/api/core'
 
+import type { GameVersionItem, InitiateDownloadResponse } from '@oneirodex/api-client'
+
 import type { AuthStore } from './auth.js'
 import type { OneirodexClient } from './api.js'
+import { escapeHtml } from './html.js'
 import { isTauriRuntime } from './config-store.js'
 import {
   loadInstallsFromDisk,
@@ -22,12 +25,6 @@ export interface DownloadProgress {
 }
 
 export type DownloadProgressCallback = (progress: DownloadProgress) => void
-
-interface InitiateDownloadResponse {
-  download_id: number
-  status: string
-  stream_url: string
-}
 
 async function getDownloadsDir(): Promise<string> {
   if (!isTauriRuntime()) {
@@ -266,13 +263,7 @@ export async function pickDownloadVersion(
     if (versions.length <= 1) {
       return { kind: 'base' }
     }
-    const lines = versions.map((v, index) => `${index + 1}. [${v.kind}] ${v.label}`).join('\n')
-    const answer = window.prompt(`Choose download version number:\n${lines}`, '1')
-    if (!answer) {
-      return { kind: 'base' }
-    }
-    const index = Number.parseInt(answer, 10) - 1
-    const chosen = versions[index]
+    const chosen = await promptForDownloadVersion(gameUuid, versions)
     if (!chosen) {
       return { kind: 'base' }
     }
@@ -283,4 +274,131 @@ export async function pickDownloadVersion(
   } catch {
     return { kind: 'base' }
   }
+}
+
+/**
+ * In-DOM version picker. Replaces `window.prompt()`: a synchronous prompt blocks
+ * the Tauri webview event loop, cannot be styled or keyboard-driven, and reads
+ * as a browser artefact in a native window. This renders a small modal overlay
+ * in the same hand-built style as the rest of `app.ts` — a radiogroup of
+ * versions, arrow-key navigation, Enter to confirm, Escape / backdrop to cancel.
+ *
+ * Resolves with the chosen version, or `null` when dismissed or when there is no
+ * DOM to render into (tests, non-webview runs) — callers treat `null` as "use
+ * the base version".
+ */
+export function promptForDownloadVersion(
+  gameUuid: string,
+  versions: GameVersionItem[],
+): Promise<GameVersionItem | null> {
+  if (typeof document === 'undefined' || !document.body || versions.length === 0) {
+    return Promise.resolve(null)
+  }
+
+  return new Promise<GameVersionItem | null>((resolve) => {
+    const defaultIndex = Math.max(
+      versions.findIndex((version) => version.is_default),
+      0,
+    )
+    let selectedIndex = defaultIndex
+    let settled = false
+
+    const overlay = document.createElement('div')
+    overlay.className = 'od-version-overlay'
+    overlay.setAttribute('role', 'dialog')
+    overlay.setAttribute('aria-modal', 'true')
+    overlay.setAttribute('aria-label', 'Choose a version to download')
+
+    const panel = document.createElement('div')
+    panel.className = 'od-version-panel'
+    // Static shell; the one dynamic value (game id) is escaped like every other
+    // innerHTML site in this client — see html.ts.
+    panel.innerHTML =
+      `<h3>Choose a version to download</h3>` + `<p class="muted">${escapeHtml(gameUuid)}</p>`
+
+    const group = document.createElement('div')
+    group.className = 'od-version-list'
+    group.setAttribute('role', 'radiogroup')
+
+    const options: HTMLButtonElement[] = versions.map((version, index) => {
+      const option = document.createElement('button')
+      option.type = 'button'
+      option.className = 'od-version-option'
+      option.setAttribute('role', 'radio')
+      const kindLabel = version.kind ? `[${version.kind}] ` : ''
+      // textContent — never parsed as markup, so server-supplied labels are inert.
+      option.textContent = `${kindLabel}${version.label}`
+      option.addEventListener('click', () => {
+        selectedIndex = index
+        syncSelection()
+      })
+      option.addEventListener('dblclick', () => finish(versions[index] ?? null))
+      return option
+    })
+    for (const option of options) {
+      group.append(option)
+    }
+
+    const actions = document.createElement('div')
+    actions.className = 'od-version-actions'
+    const cancelButton = document.createElement('button')
+    cancelButton.type = 'button'
+    cancelButton.className = 'od-version-cancel'
+    cancelButton.textContent = 'Cancel'
+    cancelButton.addEventListener('click', () => finish(null))
+    const confirmButton = document.createElement('button')
+    confirmButton.type = 'button'
+    confirmButton.className = 'od-version-confirm'
+    confirmButton.textContent = 'Download'
+    confirmButton.addEventListener('click', () => finish(versions[selectedIndex] ?? null))
+    actions.append(cancelButton, confirmButton)
+
+    panel.append(group, actions)
+    overlay.append(panel)
+
+    overlay.addEventListener('mousedown', (event) => {
+      if (event.target === overlay) {
+        finish(null)
+      }
+    })
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        finish(null)
+      } else if (event.key === 'Enter') {
+        event.preventDefault()
+        finish(versions[selectedIndex] ?? null)
+      } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        const delta = event.key === 'ArrowDown' ? 1 : -1
+        selectedIndex = (selectedIndex + delta + versions.length) % versions.length
+        syncSelection()
+        options[selectedIndex]?.focus()
+      }
+    }
+
+    function syncSelection(): void {
+      options.forEach((option, index) => {
+        const active = index === selectedIndex
+        option.setAttribute('aria-checked', active ? 'true' : 'false')
+        option.classList.toggle('is-selected', active)
+        option.tabIndex = active ? 0 : -1
+      })
+    }
+
+    function finish(result: GameVersionItem | null): void {
+      if (settled) {
+        return
+      }
+      settled = true
+      document.removeEventListener('keydown', onKeyDown, true)
+      overlay.remove()
+      resolve(result)
+    }
+
+    document.addEventListener('keydown', onKeyDown, true)
+    document.body.append(overlay)
+    syncSelection()
+    options[selectedIndex]?.focus()
+  })
 }

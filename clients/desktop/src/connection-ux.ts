@@ -24,10 +24,7 @@ export function actionNeedsServer(action: CompanionUiAction): boolean {
 }
 
 /** True when the UI should block a button and explain reconnect. */
-export function isActionBlockedOffline(
-  action: CompanionUiAction,
-  mode: ConnectionMode,
-): boolean {
+export function isActionBlockedOffline(action: CompanionUiAction, mode: ConnectionMode): boolean {
   if (mode === 'online') {
     return false
   }

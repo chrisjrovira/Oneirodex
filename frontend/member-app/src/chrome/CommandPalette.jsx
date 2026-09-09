@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Command } from 'cmdk'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 import { searchGames } from '../api/collections'
 import { fetchPaletteSuggest } from '../api/palette'
 import { openPreferencesModal } from '../api/preferences'
-import {
-  mergeSuggestRecent,
-  readRecentTitles,
-  recordRecentTitle,
-} from '../utils/recentTitles'
+import { mergeSuggestRecent, readRecentTitles, recordRecentTitle } from '../utils/recentTitles'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import { requestOpenSocialCompanion } from '../hooks/socialCompanionApi'
 import { getMoreLinks, getPrimaryLinks } from './navConfig'
@@ -126,12 +123,9 @@ export function typeToSearchKey(event) {
   return !target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
 }
 
-export function CommandPalette({
-  shellConfig = {},
-  open: openProp,
-  onOpenChange,
-  defaultOpen = false,
-}) {
+export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = false }) {
+  const viewer = useViewer()
+  const shellConfig = useShellConfig()
   const navigate = useNavigate()
   const location = useLocation()
   const libraryMode = isLibrarySearchRoute(location.pathname)
@@ -155,7 +149,10 @@ export function CommandPalette({
     [controlled, onOpenChange],
   )
 
-  const commands = useMemo(() => buildPaletteCommands(shellConfig), [shellConfig])
+  const commands = useMemo(
+    () => buildPaletteCommands({ ...shellConfig, isAdmin: viewer.isAdmin }),
+    [shellConfig, viewer.isAdmin],
+  )
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -281,9 +278,7 @@ export function CommandPalette({
   const showSuggest = query.trim().length < 2
   const recentTiles = showSuggest ? suggest.recent : []
   const popularTiles = showSuggest
-    ? suggest.popular.filter(
-        (row) => !recentTiles.some((recent) => recent.uuid === row.uuid),
-      )
+    ? suggest.popular.filter((row) => !recentTiles.some((recent) => recent.uuid === row.uuid))
     : []
 
   function openTitle(hit) {

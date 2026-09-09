@@ -4,6 +4,9 @@ from oneirodex.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from oneirodex.schemas.ownership import ConnectSteamBody
+from oneirodex.utils.validation import validate_body
+
 from oneirodex.utils.store_ownership import (
     connect_amazon_account,
     connect_epic_account,
@@ -51,13 +54,11 @@ def ownership_status():
 
 @apis_bp.route('/ownership/steam', methods=['POST'])
 @login_required
-def connect_steam():
+@validate_body(ConnectSteamBody)
+def connect_steam(body: ConnectSteamBody):
     if not is_ownership_sync_enabled():
         return _feature_disabled_response()
-    data = request.get_json(silent=True) or {}
-    steam_id = (data.get('steam_id') or '').strip()
-    if not steam_id:
-        return api_error('steam_id required', code='bad_request')
+    steam_id = body.steam_id
     try:
         account = connect_steam_account(current_user.id, steam_id)
     except ValueError as exc:

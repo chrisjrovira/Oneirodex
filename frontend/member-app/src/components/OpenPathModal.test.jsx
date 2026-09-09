@@ -39,7 +39,9 @@ test('OpenPathModal copies path and queues companion open_path', async () => {
   expect(within(dialog).getByText(/Duplicate folder/)).toBeInTheDocument()
 
   await user.click(within(dialog).getByRole('button', { name: 'Copy path' }))
-  expect(await within(dialog).findByText(/Path copied to clipboard|Unable to copy path/i)).toBeInTheDocument()
+  expect(
+    await within(dialog).findByText(/Path copied to clipboard|Unable to copy path/i),
+  ).toBeInTheDocument()
 
   await user.click(within(dialog).getByRole('button', { name: 'Open in file explorer' }))
   expect(queueClientCommand).toHaveBeenCalledWith('game-1', 'open_path', {
@@ -53,9 +55,7 @@ test('OpenPathModal falls back when companion offline', async () => {
   const user = userEvent.setup()
   const path = '/mnt/games/foo'
 
-  render(
-    <OpenPathModal open path={path} clientConnected={false} onClose={() => {}} />,
-  )
+  render(<OpenPathModal open path={path} clientConnected={false} onClose={() => {}} />)
 
   const dialog = screen.getByRole('dialog')
   await user.click(within(dialog).getByRole('button', { name: 'Open in file explorer' }))

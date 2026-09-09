@@ -26,7 +26,8 @@ export function DetailsStoreSpecs({ storeSpecs }) {
         <section className="od-details-page__section">
           <h2>System requirements</h2>
           <p className="od-details-page__muted">
-            From the store listing when this title was identified — not invented for ROM-only copies.
+            From the store listing when this title was identified — not invented for ROM-only
+            copies.
           </p>
           <div className="od-details-page__reqs">
             {osRows.map(([key, label]) => {
@@ -57,7 +58,8 @@ export function DetailsStoreSpecs({ storeSpecs }) {
         <section className="od-details-page__section">
           <h2>Store languages</h2>
           <p className="od-details-page__muted">
-            Interface / audio / subtitles from the store listing. ROM region chips above stay filename truth.
+            Interface / audio / subtitles from the store listing. ROM region chips above stay
+            filename truth.
           </p>
           <div className="od-details-page__langs-wrap">
             <table className="od-details-page__langs">

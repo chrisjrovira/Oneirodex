@@ -1,3 +1,22 @@
+"""FROZEN as of the modernization program, wave A3.1 (2026-09).
+
+This module is the pre-Alembic schema builder: idempotent raw
+``ALTER TABLE ... ADD COLUMN IF NOT EXISTS`` / ``CREATE ... IF NOT EXISTS``
+statements run during ``init_manager`` Phase 2.
+
+**Do not add new DDL here.** Alembic now owns forward schema change:
+
+    python -m alembic revision --autogenerate -m "..."
+
+``updateschema.py`` stays only to carry databases that predate Alembic up to
+the baseline revision (``alembic/versions/b9ab856b09ff_*``). After that pass
+runs, ``init_manager`` stamps such a database at the baseline so subsequent
+``alembic upgrade`` calls start from the right place. It is safe to delete this
+module once every supported install is known to be at or past the baseline.
+
+See: ``docs/adr/0004-adopt-alembic.md``, ``docs/dev/alembic-baseline-notes.md``.
+"""
+
 from sqlalchemy import create_engine, text
 from config import Config
 

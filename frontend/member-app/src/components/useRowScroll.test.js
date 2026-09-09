@@ -121,8 +121,14 @@ describe('useRowScroll wheel', () => {
   test('wheel over the slider pans the track', () => {
     const hbar = document.createElement('div')
     viewport.append(hbar)
-    hbar.getBoundingClientRect = () =>
-      ({ left: 0, right: 400, top: 200, bottom: 208, width: 400, height: 8 })
+    hbar.getBoundingClientRect = () => ({
+      left: 0,
+      right: 400,
+      top: 200,
+      bottom: 208,
+      width: 400,
+      height: 8,
+    })
 
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
@@ -150,8 +156,14 @@ describe('useRowScroll wheel', () => {
   test('wheel over the slider pans the track backward', () => {
     const hbar = document.createElement('div')
     viewport.append(hbar)
-    hbar.getBoundingClientRect = () =>
-      ({ left: 0, right: 400, top: 200, bottom: 208, width: 400, height: 8 })
+    hbar.getBoundingClientRect = () => ({
+      left: 0,
+      right: 400,
+      top: 200,
+      bottom: 208,
+      width: 400,
+      height: 8,
+    })
 
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
@@ -180,8 +192,14 @@ describe('useRowScroll wheel', () => {
   test('wheel over the track padding that covers the slider still pans', () => {
     const hbar = document.createElement('div')
     viewport.append(hbar)
-    hbar.getBoundingClientRect = () =>
-      ({ left: 0, right: 400, top: 200, bottom: 208, width: 400, height: 8 })
+    hbar.getBoundingClientRect = () => ({
+      left: 0,
+      right: 400,
+      top: 200,
+      bottom: 208,
+      width: 400,
+      height: 8,
+    })
 
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })

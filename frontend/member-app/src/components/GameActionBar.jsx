@@ -33,12 +33,8 @@ export function GameActionBar({
   const isThin = thinSeat === undefined ? isThinSeat() : thinSeat
   const [busyAction, setBusyAction] = useState(null)
   const [statusMessage, setStatusMessage] = useState('')
-  const [assistPack, setAssistPack] = useState(
-    assistPackProp === undefined ? null : assistPackProp,
-  )
-  const [remotePlay, setRemotePlay] = useState(
-    remotePlayProp === undefined ? null : remotePlayProp,
-  )
+  const [assistPack, setAssistPack] = useState(assistPackProp === undefined ? null : assistPackProp)
+  const [remotePlay, setRemotePlay] = useState(remotePlayProp === undefined ? null : remotePlayProp)
   const downloadUrl = downloadHref || `/download_game/${gameUuid}`
   const updatesUrl = updateHref || `/game_details/${gameUuid}#updates`
   const compact = variant === 'compact'
@@ -269,8 +265,7 @@ export function GameActionBar({
         data-seat="thin"
       >
         <span className="od-action-bar__status" role="status">
-          Browse &amp; social seat — download, install and update happen on the
-          desktop companion.
+          Browse &amp; social seat — download, install and update happen on the desktop companion.
         </span>
         {remotePlay ? (
           <button

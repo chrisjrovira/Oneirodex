@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ContextBar } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import './HelpPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 /**
  * Twelve topics is a strip you scroll, not a switcher you read (W29 human
@@ -247,7 +248,11 @@ const FAQ_SECTIONS = [
     ],
     links: [
       { key: 'source', label: 'Source code (AGPL §13)', href: null, fromConfig: 'sourceUrl' },
-      { key: 'licence', label: 'GNU AGPL v3.0', href: 'https://www.gnu.org/licenses/agpl-3.0.html' },
+      {
+        key: 'licence',
+        label: 'GNU AGPL v3.0',
+        href: 'https://www.gnu.org/licenses/agpl-3.0.html',
+      },
       { key: 'igdb', label: 'IGDB', href: 'https://www.igdb.com/' },
       { key: 'giantbomb', label: 'Giant Bomb', href: 'https://www.giantbomb.com/' },
       { key: 'steamgriddb', label: 'SteamGridDB', href: 'https://www.steamgriddb.com/' },
@@ -270,7 +275,6 @@ const DEFAULT_SECTION_ID = 'getting-started'
 function sectionById(id) {
   return FAQ_SECTIONS.find((section) => section.id === id) || null
 }
-
 
 /* One topic's body: the bullet list, plus the About section's link row. */
 function HelpSectionBody({ section, shellConfig }) {
@@ -325,7 +329,8 @@ function HelpSectionBody({ section, shellConfig }) {
  * the state it will move you to, not a permanent Expand/Collapse pair where
  * one of the two is always a no-op.
  */
-export function HelpPage({ shellConfig = {} }) {
+export function HelpPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
 
   const [activeId, setActiveId] = useState(() => {
@@ -368,7 +373,7 @@ export function HelpPage({ shellConfig = {} }) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         <ContextBar
           /* One control on the bar, and it is the only one this page needs.
              The five group chips it replaces jumped into a stack that no
@@ -384,123 +389,123 @@ export function HelpPage({ shellConfig = {} }) {
           }
         />
       ) : null}
-    <div className="od-more-page od-help">
-      {/* Not `od-page-header`: that block is deliberately collapsed under the
+      <div className="od-more-page od-help">
+        {/* Not `od-page-header`: that block is deliberately collapsed under the
           v2 chrome because the bar already names the page. Help is the one page
           where the name is not the point — a member arrives here stuck, and the
           first thing on screen should say what this page can do for them and
           how it is organised. So it is its own banner, and it says something the
           bar does not. */}
-      {useNewChrome ? (
-      <header className="od-help__hero">
-        <span className="od-help__hero-mark" aria-hidden="true">
-          <RailIcon name="help" size={26} />
-        </span>
-        <div className="od-help__hero-copy">
-          <h1 className="od-help__hero-title">How Oneirodex works</h1>
-          <p className="od-help__hero-lede">
-            Pick a topic — the answer opens underneath. Expand all in the bar
-            above reads the whole guide straight through.
-          </p>
-        </div>
-      </header>
-      ) : null}
-      {useNewChrome ? null : (
-        <>
-          <div className="od-page-header">
-            <h1>Help</h1>
-          </div>
-          <p className="od-more-page__lede">
-            Short answers for the member library. Pick a topic; the answer opens underneath.
-          </p>
+        {useNewChrome ? (
+          <header className="od-help__hero">
+            <span className="od-help__hero-mark" aria-hidden="true">
+              <RailIcon name="help" size={26} />
+            </span>
+            <div className="od-help__hero-copy">
+              <h1 className="od-help__hero-title">How Oneirodex works</h1>
+              <p className="od-help__hero-lede">
+                Pick a topic — the answer opens underneath. Expand all in the bar above reads the
+                whole guide straight through.
+              </p>
+            </div>
+          </header>
+        ) : null}
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              <h1>Help</h1>
+            </div>
+            <p className="od-more-page__lede">
+              Short answers for the member library. Pick a topic; the answer opens underneath.
+            </p>
 
-          {/* Classic chrome has no bar to put the control in, so it keeps a
+            {/* Classic chrome has no bar to put the control in, so it keeps a
               toolbar — the same single toggle, not a pair. */}
-          <div className="od-help__toolbar">{foldButton('od-btn od-btn--ghost')}</div>
-        </>
-      )}
+            <div className="od-help__toolbar">{foldButton('od-btn od-btn--ghost')}</div>
+          </>
+        )}
 
-      {/* The index. Thirteen cards, each carrying its tone and glyph, so a
+        {/* The index. Thirteen cards, each carrying its tone and glyph, so a
           topic is found by looking rather than by reading every heading in a
           column. `aria-pressed` rather than a tablist: the panel below is a
           region of the page that these cards change, and a member can still
           reach it by scrolling past them. */}
-      <div className="od-help__cards" role="group" aria-label="Help topics">
-        {FAQ_SECTIONS.map((section) => {
-          const selected = !readAll && section.id === activeSection.id
-          return (
-            <button
-              key={section.id}
-              type="button"
-              data-tone={section.tone}
-              className={`od-help__card${selected ? ' is-selected' : ''}`}
-              aria-pressed={selected}
-              onClick={() => selectSection(section.id)}
-            >
-              <span className="od-help__card-mark" aria-hidden="true">
-                <RailIcon name={section.icon} size={18} />
-              </span>
-              {/* Title only. The summary is not dropped — it renders in the
+        <div className="od-help__cards" role="group" aria-label="Help topics">
+          {FAQ_SECTIONS.map((section) => {
+            const selected = !readAll && section.id === activeSection.id
+            return (
+              <button
+                key={section.id}
+                type="button"
+                data-tone={section.tone}
+                className={`od-help__card${selected ? ' is-selected' : ''}`}
+                aria-pressed={selected}
+                onClick={() => selectSection(section.id)}
+              >
+                <span className="od-help__card-mark" aria-hidden="true">
+                  <RailIcon name={section.icon} size={18} />
+                </span>
+                {/* Title only. The summary is not dropped — it renders in the
                   reading pane below once the card is opened
                   (`od-help__section-summary`), which is where it is actually
                   read. On the card it was fourteen lines of subtext competing
                   with the fourteen titles that are the index. */}
-              <span className="od-help__card-copy">
-                <span className="od-help__card-title">{section.title}</span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+                <span className="od-help__card-copy">
+                  <span className="od-help__card-title">{section.title}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
-      {/* The reading pane. One topic, or all of them in order when the fold
+        {/* The reading pane. One topic, or all of them in order when the fold
           button is on. The section ids stay on the rendered panels so the
           existing deep links (`/help#browser-play`) still land somewhere real
           in both modes. */}
-      <div className="od-help__panel" id="od-help-panel">
-        {(readAll ? FAQ_SECTIONS : [activeSection]).map((section) => (
-          <section
-            key={section.id}
-            id={section.id}
-            data-tone={section.tone}
-            className="od-help__section is-open"
-          >
-            <h2 className="od-help__section-head">
-              <span className="od-help__section-mark" aria-hidden="true">
-                <RailIcon name={section.icon} size={18} />
-              </span>
-              <span className="od-help__section-copy">
-                <span className="od-help__section-title">{section.title}</span>
-                <span className="od-help__section-summary">{section.summary}</span>
-              </span>
-            </h2>
-            <HelpSectionBody section={section} shellConfig={shellConfig} />
-          </section>
-        ))}
-      </div>
+        <div className="od-help__panel" id="od-help-panel">
+          {(readAll ? FAQ_SECTIONS : [activeSection]).map((section) => (
+            <section
+              key={section.id}
+              id={section.id}
+              data-tone={section.tone}
+              className="od-help__section is-open"
+            >
+              <h2 className="od-help__section-head">
+                <span className="od-help__section-mark" aria-hidden="true">
+                  <RailIcon name={section.icon} size={18} />
+                </span>
+                <span className="od-help__section-copy">
+                  <span className="od-help__section-title">{section.title}</span>
+                  <span className="od-help__section-summary">{section.summary}</span>
+                </span>
+              </h2>
+              <HelpSectionBody section={section} shellConfig={shellConfig} />
+            </section>
+          ))}
+        </div>
 
-      {/* The source offer, on every render of this page rather than only inside
+        {/* The source offer, on every render of this page rather than only inside
           the About section — AGPL §13 wants it reachable, not hunted for. The
           URL is configuration: a modified deployment must point at its own. */}
-      {shellConfig.sourceUrl ? (
-        <p className="od-help__footer">
-          Oneirodex{shellConfig.appVersion ? ` ${shellConfig.appVersion}` : ''} — free software under
-          the{' '}
-          <a
-            href="https://www.gnu.org/licenses/agpl-3.0.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GNU AGPL v3.0
-          </a>
-          .{' '}
-          <a href={shellConfig.sourceUrl} target="_blank" rel="noopener noreferrer">
-            Get the source code
-          </a>
-          .
-        </p>
-      ) : null}
-    </div>
+        {shellConfig.sourceUrl ? (
+          <p className="od-help__footer">
+            Oneirodex{shellConfig.appVersion ? ` ${shellConfig.appVersion}` : ''} — free software
+            under the{' '}
+            <a
+              href="https://www.gnu.org/licenses/agpl-3.0.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GNU AGPL v3.0
+            </a>
+            .{' '}
+            <a href={shellConfig.sourceUrl} target="_blank" rel="noopener noreferrer">
+              Get the source code
+            </a>
+            .
+          </p>
+        ) : null}
+      </div>
     </>
   )
 }

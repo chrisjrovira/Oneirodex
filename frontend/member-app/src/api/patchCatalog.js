@@ -1,6 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 export async function searchPatchCatalog({ gameUuid, q, signal } = {}) {
   const params = new URLSearchParams()
   if (gameUuid) {

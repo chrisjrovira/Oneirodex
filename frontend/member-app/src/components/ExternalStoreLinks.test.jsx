@@ -45,7 +45,9 @@ test('matches new store brand ids from type and url', () => {
     />,
   )
 
-  expect(screen.getByRole('link', { name: 'PlayStation' })).toHaveClass('od-store-link--playstation')
+  expect(screen.getByRole('link', { name: 'PlayStation' })).toHaveClass(
+    'od-store-link--playstation',
+  )
   expect(screen.getByRole('link', { name: 'Xbox' })).toHaveClass('od-store-link--xbox')
   expect(screen.getByRole('link', { name: 'Amazon' })).toHaveClass('od-store-link--amazon')
   expect(screen.getByRole('link', { name: 'Humble' })).toHaveClass('od-store-link--humble')

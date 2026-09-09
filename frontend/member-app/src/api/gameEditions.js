@@ -1,4 +1,4 @@
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 /**
  * Every system this title exists on in the library, with per-core launchers.
@@ -8,10 +8,10 @@ import { errorFromResponse } from './envelopeError'
  * offer a launcher for each core the member could actually play it with.
  */
 export async function fetchGameEditions(gameUuid, { signal } = {}) {
-  const response = await fetch(
-    `/api/games/${encodeURIComponent(gameUuid)}/editions`,
-    { signal, credentials: 'same-origin' },
-  )
+  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/editions`, {
+    signal,
+    credentials: 'same-origin',
+  })
 
   if (!response.ok) {
     throw await errorFromResponse(response, 'game editions')

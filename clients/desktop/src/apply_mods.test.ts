@@ -64,9 +64,23 @@ describe('apply_mods helpers', () => {
 
   it('sorts enabled mods by load order', () => {
     const sorted = sortEnabledMods([
-      { id: 'b', name: 'B', version: '', source_url: 'https://x/b.zip', enabled: true, load_order: 2 },
+      {
+        id: 'b',
+        name: 'B',
+        version: '',
+        source_url: 'https://x/b.zip',
+        enabled: true,
+        load_order: 2,
+      },
       { id: 'a', name: 'A', version: '', source_url: '', enabled: true, load_order: 0 },
-      { id: 'c', name: 'C', version: '', source_url: 'https://x/c.zip', enabled: false, load_order: 1 },
+      {
+        id: 'c',
+        name: 'C',
+        version: '',
+        source_url: 'https://x/c.zip',
+        enabled: false,
+        load_order: 1,
+      },
     ])
     expect(sorted.map((row) => row.id)).toEqual(['b'])
   })
@@ -89,7 +103,9 @@ describe('apply_mods helpers', () => {
       ok: true,
       json: async () => ({
         enabled: true,
-        mods: [{ id: 'm1', name: 'HD', source_url: 'https://x/hd.zip', enabled: true, load_order: 1 }],
+        mods: [
+          { id: 'm1', name: 'HD', source_url: 'https://x/hd.zip', enabled: true, load_order: 1 },
+        ],
       }),
     })) as unknown as typeof fetch
 
@@ -107,7 +123,10 @@ describe('apply_mods helpers', () => {
       ok: true,
       json: async () => ({
         enabled: true,
-        games: [{ game_uuid: 'g1', enabled_count: 2 }, { game_uuid: 'g2', enabled_count: 0 }],
+        games: [
+          { game_uuid: 'g1', enabled_count: 2 },
+          { game_uuid: 'g2', enabled_count: 0 },
+        ],
       }),
     })) as unknown as typeof fetch
 

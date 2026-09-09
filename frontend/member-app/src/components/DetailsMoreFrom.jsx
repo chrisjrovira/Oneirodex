@@ -31,11 +31,7 @@ export function DetailsMoreFrom({ gameUuid }) {
   return (
     <div className="od-details-page__more-from">
       {sections.map((section) => (
-        <DiscoverShelf
-          key={section.identifier}
-          section={section}
-          canPin={false}
-        />
+        <DiscoverShelf key={section.identifier} section={section} canPin={false} />
       ))}
     </div>
   )

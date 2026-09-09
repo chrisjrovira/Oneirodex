@@ -38,17 +38,13 @@ export function batchItemUuids(list) {
 export function summarizeBatchOutcome(outcome, options = {}) {
   const t = options.t || ((s) => s)
   const successList =
-    outcome?.updated !== undefined && outcome?.updated !== null
-      ? outcome.updated
-      : outcome?.queued
+    outcome?.updated !== undefined && outcome?.updated !== null ? outcome.updated : outcome?.queued
   const updated = countBatchItems(successList)
   const skipped = countBatchItems(outcome?.skipped)
   const errors = countBatchItems(outcome?.errors)
   const successVerb = options.successVerb || 'updated'
   const counts = t(`${updated} ${successVerb} · ${skipped} skipped · ${errors} failed`)
-  const message = options.actionLabel
-    ? t(`${options.actionLabel}: ${counts}`)
-    : counts
+  const message = options.actionLabel ? t(`${options.actionLabel}: ${counts}`) : counts
 
   let tone = 'success'
   if (errors > 0 && updated === 0) {

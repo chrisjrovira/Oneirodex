@@ -108,7 +108,11 @@ export function OpenPathModal({ open, path = '', label = 'Path', matchReason = '
           <code>{path}</code>
         </p>
         <div className="od-open-path__actions">
-          <button type="button" className="od-btn od-btn--primary" onClick={() => void handleCopy()}>
+          <button
+            type="button"
+            className="od-btn od-btn--primary"
+            onClick={() => void handleCopy()}
+          >
             Copy path
           </button>
           <button

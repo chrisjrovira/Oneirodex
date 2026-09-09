@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import './MorePage.css'
 import './WaysToPlayPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const PLAY_PATHS = [
   {
@@ -23,15 +24,16 @@ const PLAY_PATHS = [
   },
 ]
 
-export function WaysToPlayPage({ shellConfig = {} } = {}) {
+export function WaysToPlayPage() {
+  const shellConfig = useShellConfig()
   const enableVr = Boolean(shellConfig.enableVr)
 
   return (
     <div className="od-more-page od-ways-to-play">
       <p className="od-more-page__lede">
-        Honest play paths for titles you already own — Browser, Companion, or
-        Catalog. This is not a store verification badge. Systems still browse
-        by console; VR is its own catalog when enabled.
+        Honest play paths for titles you already own — Browser, Companion, or Catalog. This is not a
+        store verification badge. Systems still browse by console; VR is its own catalog when
+        enabled.
       </p>
 
       <section className="od-systems-group">

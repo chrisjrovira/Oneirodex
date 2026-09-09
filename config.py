@@ -1,6 +1,32 @@
 import os, sys
 
+from dotenv import load_dotenv
+
 from product_env import getenv_product
+
+# Populate os.environ from a repo-root .env before Config reads it. This is
+# idempotent: init_manager.py (operator boot) and conftest.py (tests) also call
+# load_dotenv(), and python-dotenv defaults to override=False, so an already-set
+# process env var always wins. Without this, importing Config off a bare
+# ``python -c "from oneirodex import create_app"`` (no .env pre-loaded) ran on
+# defaults only and _load_secret_key() would raise.
+load_dotenv()
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    """Parse a boolean env var.
+
+    Returns ``default`` when the var is unset; otherwise true iff the value is
+    one of ``1 / true / yes / on`` (case-insensitive, surrounding whitespace
+    ignored). Replaces the ~40 near-identical getenv/lower/compare parses that
+    used to fill this file. Each flag keeps its previous effective default: a
+    former ``'true'`` default becomes ``_env_bool('NAME', True)``.
+    """
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {'1', 'true', 'yes', 'on'}
+
 
 def _load_secret_key():
     """Load SECRET_KEY from env. Fail loudly if unset outside of test runs."""
@@ -61,10 +87,10 @@ class Config(object):
 
     # Session/remember-me cookie hardening. Defaults are safe for HTTPS deployments;
     # set SESSION_COOKIE_SECURE=false in .env for local HTTP development only.
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'true').lower() == 'true'
+    SESSION_COOKIE_SECURE = _env_bool('SESSION_COOKIE_SECURE', True)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
-    REMEMBER_COOKIE_SECURE = os.getenv('REMEMBER_COOKIE_SECURE', 'true').lower() == 'true'
+    REMEMBER_COOKIE_SECURE = _env_bool('REMEMBER_COOKIE_SECURE', True)
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = os.getenv('REMEMBER_COOKIE_SAMESITE', 'Lax')
 
@@ -72,8 +98,8 @@ class Config(object):
     # CSP enforces by default. Classic onclick= is gone; WebRetro WASM is a
     # native /static/* document with baseline headers only (no CSP), so Flask
     # pages do not need 'unsafe-eval'. Set CSP_ENFORCE=false to report-only.
-    CSP_ENABLED = os.getenv('CSP_ENABLED', 'true').lower() == 'true'
-    CSP_ENFORCE = os.getenv('CSP_ENFORCE', 'true').lower() == 'true'
+    CSP_ENABLED = _env_bool('CSP_ENABLED', True)
+    CSP_ENFORCE = _env_bool('CSP_ENFORCE', True)
     # Only sent when SESSION_COOKIE_SECURE is on — HSTS on a LAN box reached by
     # IP over plain HTTP is a lockout, not a hardening.
     HSTS_SECONDS = int(os.getenv('HSTS_SECONDS', '31536000') or '31536000')
@@ -97,10 +123,10 @@ class Config(object):
     # Zipstream configuration for streaming ZIP downloads
     ZIPSTREAM_CHUNK_SIZE = int(os.getenv('ZIPSTREAM_CHUNK_SIZE', 65536))  # 64KB chunks for memory efficiency
     ZIPSTREAM_COMPRESSION_LEVEL = int(os.getenv('ZIPSTREAM_COMPRESSION_LEVEL', 0))  # ZIP_STORED for compatibility
-    ZIPSTREAM_ENABLE_ZIP64 = os.getenv('ZIPSTREAM_ENABLE_ZIP64', 'True').lower() == 'true'  # Support large games
+    ZIPSTREAM_ENABLE_ZIP64 = _env_bool('ZIPSTREAM_ENABLE_ZIP64', True)  # Support large games
 
     # Development mode - forces theme files to be recopied on startup (helpful for theme development)
-    DEV_MODE = os.getenv('DEV_MODE', 'false').lower() == 'true'
+    DEV_MODE = _env_bool('DEV_MODE', False)
 
     # Reverse proxy / HTTPS termination — number of trusted proxy hops (0 = disabled).
     # Set to 1 when Oneirodex sits behind a single reverse proxy (nginx, Caddy, Traefik)
@@ -124,18 +150,18 @@ class Config(object):
 
     # Product modules default ON — disable via env, setup wizard, or Admin → Features.
     # Auth (OIDC) stays off by default elsewhere. Destructive auto-apply stays gated.
-    ENABLE_ARR_MODULE = os.getenv('ENABLE_ARR_MODULE', 'true').lower() == 'true'
+    ENABLE_ARR_MODULE = _env_bool('ENABLE_ARR_MODULE', True)
 
     # Emulator save-state sync (WebRetro / companion)
-    ENABLE_EMULATOR_SAVE_SYNC = os.getenv('ENABLE_EMULATOR_SAVE_SYNC', 'true').lower() == 'true'
-    ENCRYPT_EMULATOR_SAVES = os.getenv('ENCRYPT_EMULATOR_SAVES', 'false').lower() == 'true'
+    ENABLE_EMULATOR_SAVE_SYNC = _env_bool('ENABLE_EMULATOR_SAVE_SYNC', True)
+    ENCRYPT_EMULATOR_SAVES = _env_bool('ENCRYPT_EMULATOR_SAVES', False)
     # Optional private BIOS/firmware dir (operator upload or host volume). Never vendor blobs.
     # When unset, bios_root() falls back to static/library/bios.
     EMULATOR_BIOS_PATH = os.getenv('EMULATOR_BIOS_PATH') or None
 
     # Ollama AI assist (suggestions on; silent rename stays off)
-    ENABLE_AI_ASSIST = os.getenv('ENABLE_AI_ASSIST', 'true').lower() == 'true'
-    ENABLE_AI_AUTO_APPLY = os.getenv('ENABLE_AI_AUTO_APPLY', 'false').lower() == 'true'
+    ENABLE_AI_ASSIST = _env_bool('ENABLE_AI_ASSIST', True)
+    ENABLE_AI_AUTO_APPLY = _env_bool('ENABLE_AI_AUTO_APPLY', False)
 
     # Generated cover art (FEAT-D3). Off by default: this is the only feature
     # that talks to an endpoint outside the process, so it stays opt-in and
@@ -144,10 +170,10 @@ class Config(object):
     # FEAT-D1: check version / updates / DLC after a library scan. Opt-in —
     # each check is store HTTP traffic, so a scan must not start doing it
     # without being asked.
-    SCAN_CHECK_FRESHNESS = os.getenv('SCAN_CHECK_FRESHNESS', 'false').lower() == 'true'
+    SCAN_CHECK_FRESHNESS = _env_bool('SCAN_CHECK_FRESHNESS', False)
     SCAN_FRESHNESS_LIMIT = int(os.getenv('SCAN_FRESHNESS_LIMIT', '50'))
 
-    ENABLE_AI_ARTWORK = os.getenv('ENABLE_AI_ARTWORK', 'false').lower() == 'true'
+    ENABLE_AI_ARTWORK = _env_bool('ENABLE_AI_ARTWORK', False)
     AI_ARTWORK_URL = os.getenv('AI_ARTWORK_URL', '')
     AI_ARTWORK_ENGINE = os.getenv('AI_ARTWORK_ENGINE', 'a1111')
     OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434')
@@ -165,7 +191,7 @@ class Config(object):
     # Still not an admin Features toggle, for the original reason: it is a
     # build-out flag, and a switch in the admin UI that only half-changes the
     # layout would be its own lie.
-    ENABLE_NEW_CHROME = os.getenv('ENABLE_NEW_CHROME', 'true').lower() == 'true'
+    ENABLE_NEW_CHROME = _env_bool('ENABLE_NEW_CHROME', True)
 
     # Theme fonts. Empty FONT_PATH means the default under static/library/fonts,
     # which is what a Compose deploy wants (it already persists that volume).
@@ -175,7 +201,7 @@ class Config(object):
     # script nobody knows to run — the picker offered five fonts and shipped
     # none. Runs in the background and never blocks or fails startup. Turn off
     # for air-gapped installs and use scripts/fetch-fonts.py --out instead.
-    FETCH_FONTS_ON_BOOT = os.getenv('FETCH_FONTS_ON_BOOT', 'true').lower() == 'true'
+    FETCH_FONTS_ON_BOOT = _env_bool('FETCH_FONTS_ON_BOOT', True)
 
     # WebRetro cores are provisioned, not vendored — they carry GPL and
     # non-commercial terms that make shipping them in the tree the wrong call.
@@ -183,9 +209,7 @@ class Config(object):
     # scripts/fetch-webretro-cores.sh (which also takes --from-dir for
     # air-gapped installs). Boot says so in the log rather than leaving it to be
     # discovered as "browser play is broken".
-    FETCH_WEBRETRO_CORES_ON_BOOT = os.getenv(
-        'FETCH_WEBRETRO_CORES_ON_BOOT', 'true'
-    ).lower() == 'true'
+    FETCH_WEBRETRO_CORES_ON_BOOT = _env_bool('FETCH_WEBRETRO_CORES_ON_BOOT', True)
 
     # Point at a local firmware collection to have it imported on boot. Existing
     # files are never replaced, so this tops up what is missing and is safe to
@@ -193,9 +217,9 @@ class Config(object):
     BIOS_IMPORT_SOURCE = os.getenv('BIOS_IMPORT_SOURCE', '') or None
 
     # Hardlink helpers on; filesystem apply remains a safety lock
-    ENABLE_HARDLINK_HELPERS = os.getenv('ENABLE_HARDLINK_HELPERS', 'true').lower() == 'true'
-    ALLOW_HARDLINK_APPLY = os.getenv('ALLOW_HARDLINK_APPLY', 'false').lower() == 'true'
-    ENABLE_ARR_HARDLINK_PIPELINE = os.getenv('ENABLE_ARR_HARDLINK_PIPELINE', 'true').lower() == 'true'
+    ENABLE_HARDLINK_HELPERS = _env_bool('ENABLE_HARDLINK_HELPERS', True)
+    ALLOW_HARDLINK_APPLY = _env_bool('ALLOW_HARDLINK_APPLY', False)
+    ENABLE_ARR_HARDLINK_PIPELINE = _env_bool('ENABLE_ARR_HARDLINK_PIPELINE', True)
     # Remote path mapping. The download client usually runs in its own
     # container and reports paths from *its* mounts, which do not exist here.
     # Format: "remote=>local" pairs joined by "|", e.g.
@@ -204,36 +228,36 @@ class Config(object):
     ARR_REMOTE_PATH_MAP = os.getenv('ARR_REMOTE_PATH_MAP', '')
 
     # Mobile / Quest-browser VR catalog
-    ENABLE_VR_BROWSE = os.getenv('ENABLE_VR_BROWSE', 'true').lower() == 'true'
+    ENABLE_VR_BROWSE = _env_bool('ENABLE_VR_BROWSE', True)
 
     # BYO debrid + single-player assists
-    ENABLE_DEBRID = os.getenv('ENABLE_DEBRID', 'true').lower() == 'true'
-    ENABLE_GAME_ASSISTS = os.getenv('ENABLE_GAME_ASSISTS', 'true').lower() == 'true'
+    ENABLE_DEBRID = _env_bool('ENABLE_DEBRID', True)
+    ENABLE_GAME_ASSISTS = _env_bool('ENABLE_GAME_ASSISTS', True)
     REAL_DEBRID_TOKEN = os.getenv('REAL_DEBRID_TOKEN', '')
     ALLDEBRID_API_KEY = os.getenv('ALLDEBRID_API_KEY', '')
     PREMIUMIZE_API_KEY = os.getenv('PREMIUMIZE_API_KEY', '')
     TORBOX_API_KEY = os.getenv('TORBOX_API_KEY', '')
 
     # Browser play / mods / patches — on by default; degrade gracefully if tools missing
-    ENABLE_PCDOS_BROWSER = os.getenv('ENABLE_PCDOS_BROWSER', 'true').lower() == 'true'
-    ENABLE_MOD_TRACKING = os.getenv('ENABLE_MOD_TRACKING', 'true').lower() == 'true'
-    ENABLE_ROM_PATCH_APPLY = os.getenv('ENABLE_ROM_PATCH_APPLY', 'true').lower() == 'true'
+    ENABLE_PCDOS_BROWSER = _env_bool('ENABLE_PCDOS_BROWSER', True)
+    ENABLE_MOD_TRACKING = _env_bool('ENABLE_MOD_TRACKING', True)
+    ENABLE_ROM_PATCH_APPLY = _env_bool('ENABLE_ROM_PATCH_APPLY', True)
     # DAT unique-hash: open zip/7z/rar and hash inner dump when outer archive hash misses.
     # Default ON; set DAT_HASH_INNER_ARCHIVE=0 to skip (scan stays basename/outer-hash only).
-    DAT_HASH_INNER_ARCHIVE = os.getenv('DAT_HASH_INNER_ARCHIVE', 'true').lower() == 'true'
+    DAT_HASH_INNER_ARCHIVE = _env_bool('DAT_HASH_INNER_ARCHIVE', True)
     FLIPS_PATH = os.getenv('FLIPS_PATH', '')
-    ENABLE_PATCH_CATALOG = os.getenv('ENABLE_PATCH_CATALOG', 'true').lower() == 'true'
+    ENABLE_PATCH_CATALOG = _env_bool('ENABLE_PATCH_CATALOG', True)
     PATCH_CATALOG_PATH = os.getenv('PATCH_CATALOG_PATH', '')
-    ENABLE_ROM_AI_TRANSLATE = os.getenv('ENABLE_ROM_AI_TRANSLATE', 'true').lower() == 'true'
+    ENABLE_ROM_AI_TRANSLATE = _env_bool('ENABLE_ROM_AI_TRANSLATE', True)
     RETROARCH_AI_SERVICE_URL = os.getenv('RETROARCH_AI_SERVICE_URL', '')
-    ENABLE_RUFFLE = os.getenv('ENABLE_RUFFLE', 'true').lower() == 'true'
-    ENABLE_ACTIVITY_FEED = os.getenv('ENABLE_ACTIVITY_FEED', 'true').lower() == 'true'
+    ENABLE_RUFFLE = _env_bool('ENABLE_RUFFLE', True)
+    ENABLE_ACTIVITY_FEED = _env_bool('ENABLE_ACTIVITY_FEED', True)
 
     # Household voice (LiveKit) — flag on; UI degrades until LIVEKIT_* configured
-    ENABLE_LIVEKIT = os.getenv('ENABLE_LIVEKIT', 'true').lower() == 'true'
+    ENABLE_LIVEKIT = _env_bool('ENABLE_LIVEKIT', True)
 
     # BYO Sunshine / Wolf remote play (Moonlight) — off by default; operator-owned GPU host
-    ENABLE_REMOTE_PLAY = os.getenv('ENABLE_REMOTE_PLAY', 'false').lower() == 'true'
+    ENABLE_REMOTE_PLAY = _env_bool('ENABLE_REMOTE_PLAY', False)
     SUNSHINE_BASE_URL = os.getenv('SUNSHINE_BASE_URL', '')
     WOLF_BASE_URL = os.getenv('WOLF_BASE_URL', '')
     REMOTE_PLAY_PROVIDER = os.getenv('REMOTE_PLAY_PROVIDER', 'sunshine')
@@ -244,40 +268,38 @@ class Config(object):
     REMOTE_PLAY_HOST_LABEL = os.getenv('REMOTE_PLAY_HOST_LABEL', '')
 
     # Archive / library malware scan (ClamAV when available + filename heuristics)
-    ENABLE_MALWARE_SCAN = os.getenv('ENABLE_MALWARE_SCAN', 'true').lower() == 'true'
+    ENABLE_MALWARE_SCAN = _env_bool('ENABLE_MALWARE_SCAN', True)
     CLAMAV_HOST = os.getenv('CLAMAV_HOST', '127.0.0.1')
     CLAMAV_PORT = int(os.getenv('CLAMAV_PORT', '3310') or '3310')
     CLAMAV_SOCKET = os.getenv('CLAMAV_SOCKET', '')
-    MALWARE_SCAN_BLOCK_ON_HIT = os.getenv('MALWARE_SCAN_BLOCK_ON_HIT', 'true').lower() == 'true'
+    MALWARE_SCAN_BLOCK_ON_HIT = _env_bool('MALWARE_SCAN_BLOCK_ON_HIT', True)
 
     # Wave 18 — free games feed (News + notifications)
-    ENABLE_FREE_GAMES = os.getenv('ENABLE_FREE_GAMES', 'true').lower() == 'true'
+    ENABLE_FREE_GAMES = _env_bool('ENABLE_FREE_GAMES', True)
     FREE_GAMES_POLL_HOURS = float(os.getenv('FREE_GAMES_POLL_HOURS', '3') or '3')
     # Look a giveaway's cover up on IGDB when the store has no portrait URL of
     # its own (GOG, itch, Humble, IndieGala, Epic via GamerPower). Results are
     # memoized for a month, so this is roughly one call per new title. Off
     # leaves those tiles on the aggregator's wide banner.
-    ENABLE_FREE_GAMES_COVER_LOOKUP = (
-        os.getenv('ENABLE_FREE_GAMES_COVER_LOOKUP', 'true').lower() == 'true'
-    )
+    ENABLE_FREE_GAMES_COVER_LOOKUP = _env_bool('ENABLE_FREE_GAMES_COVER_LOOKUP', True)
     # Discover's on-box recommender. Off means the rebuild daemon never starts;
     # Discover keeps working and the rows that depend on a profile stay empty.
-    ENABLE_DISCOVER_ML = os.getenv('ENABLE_DISCOVER_ML', 'true').lower() == 'true'
+    ENABLE_DISCOVER_ML = _env_bool('ENABLE_DISCOVER_ML', True)
     DISCOVER_ML_REBUILD_HOURS = float(
         os.getenv('DISCOVER_ML_REBUILD_HOURS', '24') or '24'
     )
 
     # Batched email digest (mentions / DMs / free games) — needs admin SMTP
-    ENABLE_EMAIL_DIGEST = os.getenv('ENABLE_EMAIL_DIGEST', 'true').lower() == 'true'
+    ENABLE_EMAIL_DIGEST = _env_bool('ENABLE_EMAIL_DIGEST', True)
     EMAIL_DIGEST_INTERVAL_HOURS = float(os.getenv('EMAIL_DIGEST_INTERVAL_HOURS', '24') or '24')
 
     # Auth rate limit (in-process; single-container default)
-    ENABLE_LOGIN_RATE_LIMIT = os.getenv('ENABLE_LOGIN_RATE_LIMIT', 'true').lower() == 'true'
+    ENABLE_LOGIN_RATE_LIMIT = _env_bool('ENABLE_LOGIN_RATE_LIMIT', True)
     LOGIN_RATE_LIMIT_ATTEMPTS = int(os.getenv('LOGIN_RATE_LIMIT_ATTEMPTS', '10') or '10')
     LOGIN_RATE_LIMIT_WINDOW_SECONDS = float(os.getenv('LOGIN_RATE_LIMIT_WINDOW_SECONDS', '300') or '300')
 
     # BYO challenge / captcha solver sidecar (FlareSolverr-compatible TRAWL) — opt-in only.
-    ENABLE_CHALLENGE_SOLVER = os.getenv('ENABLE_CHALLENGE_SOLVER', 'false').lower() == 'true'
+    ENABLE_CHALLENGE_SOLVER = _env_bool('ENABLE_CHALLENGE_SOLVER', False)
     CHALLENGE_SOLVER_URL = os.getenv('CHALLENGE_SOLVER_URL', '')
     CHALLENGE_SOLVER_PROVIDER = os.getenv('CHALLENGE_SOLVER_PROVIDER', 'flaresolverr_compat')
     CHALLENGE_SOLVER_TIMEOUT_MS = int(os.getenv('CHALLENGE_SOLVER_TIMEOUT_MS', '60000') or '60000')
@@ -286,7 +308,7 @@ class Config(object):
     CHALLENGE_TOKEN_API_KEY = os.getenv('CHALLENGE_TOKEN_API_KEY', '')
 
     # Ambient lighting bridge (Hyperion.ng / Home Assistant) — opt-in only.
-    ENABLE_AMBIENT_LIGHTING = os.getenv('ENABLE_AMBIENT_LIGHTING', 'false').lower() == 'true'
+    ENABLE_AMBIENT_LIGHTING = _env_bool('ENABLE_AMBIENT_LIGHTING', False)
     LIGHTING_PROVIDER = os.getenv('LIGHTING_PROVIDER', 'off')
     HYPERION_URL = os.getenv('HYPERION_URL', '')
     HYPERION_TOKEN = os.getenv('HYPERION_TOKEN', '')
@@ -300,10 +322,10 @@ class Config(object):
 
     # Homelab SSRF policy — *arr / Ollama / connector URLs may target RFC1918 hosts.
     # Cloud metadata (169.254.169.254) stays blocked. Default on for Unraid/NAS installs.
-    ALLOW_PRIVATE_LAN_URLS = os.getenv('ALLOW_PRIVATE_LAN_URLS', 'true').lower() == 'true'
+    ALLOW_PRIVATE_LAN_URLS = _env_bool('ALLOW_PRIVATE_LAN_URLS', True)
 
     # When true (default), OIDC JIT updates never overwrite an existing user's role.
-    OIDC_LOCK_ROLES = os.getenv('OIDC_LOCK_ROLES', 'true').lower() == 'true'
+    OIDC_LOCK_ROLES = _env_bool('OIDC_LOCK_ROLES', True)
 
     # AGPL §13: a user interacting with this over a network must be offered the
     # Corresponding Source. README states the obligation; this is what actually
@@ -339,3 +361,50 @@ class Config(object):
     # Flask-Babel / i18n
     BABEL_DEFAULT_LOCALE = os.getenv('BABEL_DEFAULT_LOCALE', 'en')
     BABEL_SUPPORTED_LOCALES = ['en', 'es']
+
+
+class ProdConfig(Config):
+    """Explicit production profile — what create_app() selects outside pytest.
+
+    Config already holds production-safe values; this names the profile so the
+    selection in create_app() is symmetric and any future prod-only override
+    has an obvious home.
+    """
+
+    DEBUG = False
+    TESTING = False
+
+
+class TestConfig(Config):
+    """Test profile. create_app() selects this automatically under pytest.
+
+    Carries what conftest.py's ``app`` fixture and oneirodex/__init__.py's
+    pytest branch used to set on the instance *after* construction (wave
+    A2.6):
+
+    * ``TESTING`` / CSRF off so the test client skips token plumbing.
+    * ``SERVER_NAME`` / ``APPLICATION_ROOT`` / ``PREFERRED_URL_SCHEME`` so
+      ``url_for(..., _external=True)`` works outside a request context — Flask
+      raises "Unable to build URLs outside an active request without
+      SERVER_NAME" otherwise. A real ``SERVER_NAME`` in ``Config`` would start
+      rejecting requests whose Host header does not match, which is why it
+      lives here and not there.
+    * the test database URI, taken explicitly from ``TEST_DATABASE_URL`` (with
+      the ``DATABASE_URL`` override conftest also sets as a fallback).
+    """
+
+    TESTING = True
+    DEBUG = False
+    WTF_CSRF_ENABLED = False
+    SERVER_NAME = 'localhost'
+    APPLICATION_ROOT = '/'
+    PREFERRED_URL_SCHEME = 'http'
+    # Stable across app instances within a run — matches the value conftest
+    # used to force on the instance. _load_secret_key() would otherwise hand
+    # each create_app() a fresh ephemeral key.
+    SECRET_KEY = 'test-secret-key'
+    SQLALCHEMY_DATABASE_URI = (
+        os.getenv('TEST_DATABASE_URL')
+        or os.getenv('DATABASE_URL')
+        or Config.SQLALCHEMY_DATABASE_URI
+    )

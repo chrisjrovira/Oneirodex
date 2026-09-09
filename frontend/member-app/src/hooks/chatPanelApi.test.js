@@ -31,7 +31,9 @@ test('canLeaveChannel requires an active room id', () => {
 test('normalizeAttachments and isImageAttachment feature-detect payload shapes', () => {
   expect(isImageAttachment({ content_type: 'image/png', filename: 'a.png' })).toBe(true)
   expect(isImageAttachment({ filename: 'notes.txt', content_type: 'text/plain' })).toBe(false)
-  expect(normalizeAttachments([{ id: 1, url: '/a.png', filename: 'a.png', mime: 'image/png' }])).toEqual([
+  expect(
+    normalizeAttachments([{ id: 1, url: '/a.png', filename: 'a.png', mime: 'image/png' }]),
+  ).toEqual([
     {
       id: 1,
       url: '/a.png',

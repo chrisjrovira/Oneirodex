@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { SideRail } from './SideRail'
 import { railIconPaths } from './railIcons'
 import { getMoreGroups, getMoreLinks, getPrimaryLinks } from './navConfig'
+import { ShellHarness } from '../testShell'
 
 /**
  * The rail's whole justification is that nothing is hidden (GT-B2).
@@ -17,10 +18,12 @@ import { getMoreGroups, getMoreLinks, getPrimaryLinks } from './navConfig'
  * than against a hand-written list that could drift with it.
  */
 
-function renderRail(props = {}) {
+function renderRail({ shell = {}, ...props } = {}) {
   return render(
     <MemoryRouter initialEntries={['/library']}>
-      <SideRail shellConfig={{ showTrailers: true, showHelp: true, enableVr: true }} {...props} />
+      <ShellHarness shell={{ showTrailers: true, showHelp: true, enableVr: true, ...shell }}>
+        <SideRail {...props} />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }
@@ -76,11 +79,11 @@ test('panel destinations call back instead of routing', () => {
 })
 
 test('admin entry appears only for admins', () => {
-  const plain = renderRail({ shellConfig: {} })
+  const plain = renderRail({ shell: {} })
   expect(plain.container.querySelector('a[href="/admin/dashboard"]')).toBeNull()
   plain.unmount()
 
-  const admin = renderRail({ shellConfig: { isAdmin: true } })
+  const admin = renderRail({ shell: { isAdmin: true } })
   expect(admin.container.querySelector('a[href="/admin/dashboard"]')).toBeTruthy()
 })
 
@@ -99,10 +102,12 @@ describe('rail groups fold away', () => {
    * part of it. The group heading was already there doing nothing, so it became
    * the control rather than adding one beside it.
    */
-  function renderRail(props = {}) {
+  function renderRail({ shell = {}, ...props } = {}) {
     return render(
       <MemoryRouter>
-        <SideRail shellConfig={{ showTrailers: true, showHelp: true }} {...props} />
+        <ShellHarness shell={{ showTrailers: true, showHelp: true, ...shell }}>
+          <SideRail {...props} />
+        </ShellHarness>
       </MemoryRouter>,
     )
   }

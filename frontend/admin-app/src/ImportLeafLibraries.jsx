@@ -1,12 +1,9 @@
 import { useMemo, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
-import { PageStatus } from './PageStatus'
+import { confirmAction } from '@oneirodex/ui'
+import { PageStatus } from '@oneirodex/ui'
 
 import { DataTable } from './DataTable'
-import {
-  confirmCreateSelected,
-  fetchImportLeafLibrariesPreview,
-} from './proposeLeafLibrariesApi'
+import { confirmCreateSelected, fetchImportLeafLibrariesPreview } from './proposeLeafLibrariesApi'
 import './ProposeLeafLibraries.css'
 
 /**
@@ -39,8 +36,7 @@ export function ImportLeafLibraries({
     [candidates, selected],
   )
 
-  const canPreview =
-    inputMode === 'file' ? Boolean(file) : Boolean(String(pasteText || '').trim())
+  const canPreview = inputMode === 'file' ? Boolean(file) : Boolean(String(pasteText || '').trim())
 
   async function onPreview(event) {
     event?.preventDefault?.()
@@ -133,9 +129,7 @@ export function ImportLeafLibraries({
         `Done: ${outcome.created} created, ${outcome.scanned} scan(s) queued, ${outcome.failed} failed.`,
       )
       if (outcome.created > 0) {
-        const failedPaths = new Set(
-          outcome.results.filter((r) => !r.ok).map((r) => r.path),
-        )
+        const failedPaths = new Set(outcome.results.filter((r) => !r.ok).map((r) => r.path))
         const kept = candidates.filter((c) => failedPaths.has(c.path) || !selected.has(c.id))
         const keptSelected = new Set(kept.filter((c) => selected.has(c.id)).map((c) => c.id))
         setCandidates(kept)
@@ -308,11 +302,7 @@ export function ImportLeafLibraries({
                 key: 'path',
                 label: 'Path',
                 render: (row) =>
-                  row.path ? (
-                    <code className="od-propose-leaf__path">{row.path}</code>
-                  ) : (
-                    '—'
-                  ),
+                  row.path ? <code className="od-propose-leaf__path">{row.path}</code> : '—',
               },
               { key: 'message', label: 'Message' },
             ]}
@@ -379,9 +369,7 @@ export function ImportLeafLibraries({
               {
                 key: 'path',
                 label: 'Path',
-                render: (row) => (
-                  <code className="od-propose-leaf__path">{row.path}</code>
-                ),
+                render: (row) => <code className="od-propose-leaf__path">{row.path}</code>,
               },
               {
                 key: 'reason',

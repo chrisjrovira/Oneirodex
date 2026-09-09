@@ -101,21 +101,13 @@ def app():
             "This could result in tests running against production database."
         )
     
-    # Create app - it will now use the overridden DATABASE_URL (which is TEST_DATABASE_URL)
+    # Create app. Under pytest, create_app() auto-selects config.TestConfig,
+    # which carries TESTING, WTF_CSRF_ENABLED=False, SERVER_NAME='localhost',
+    # APPLICATION_ROOT, PREFERRED_URL_SCHEME, a stable SECRET_KEY, and the
+    # TEST_DATABASE_URL URI — the post-construction instance mutations that
+    # used to live here (wave A2.6).
     app = create_app()
-    app.config['TESTING'] = True
-    app.config['SECRET_KEY'] = 'test-secret-key'
-    app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
-    # url_for(..., _external=True) derives the host from the request when one is
-    # active. Tests that build URLs outside a request context have none, and
-    # Flask raises "Unable to build URLs outside an active request without
-    # SERVER_NAME". Production never needs this because every such call is
-    # in-request — so set it here rather than in config.py, where a real value
-    # would start rejecting requests whose Host header does not match.
-    app.config['SERVER_NAME'] = 'localhost'
-    app.config['APPLICATION_ROOT'] = '/'
-    app.config['PREFERRED_URL_SCHEME'] = 'http'
-    
+
     # Double-check that the app is using test database
     actual_db_uri = app.config['SQLALCHEMY_DATABASE_URI']
     if actual_db_uri != test_db_url:

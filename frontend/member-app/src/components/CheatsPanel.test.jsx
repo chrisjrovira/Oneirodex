@@ -58,7 +58,9 @@ test('create form posts name, dialect, and code rows', async () => {
       ],
     })
 
-  renderPanel({ playHref: '/static/vendor/webretro/webretro.html?guid=x&core=nestopia&cheat_surface=retroarch' })
+  renderPanel({
+    playHref: '/static/vendor/webretro/webretro.html?guid=x&core=nestopia&cheat_surface=retroarch',
+  })
 
   expect(await screen.findByRole('heading', { name: 'Cheats' })).toBeInTheDocument()
   expect(screen.getByText(/create one or upload/i)).toBeInTheDocument()

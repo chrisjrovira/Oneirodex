@@ -85,9 +85,7 @@ test('the check sees an unclassed button and ignores a classed one', () => {
     '<button\n  type="button"\n  disabled={busy}\n>C</button>',
   ].join('\n')
 
-  const hits = [...probe.matchAll(BUTTON_TAG)].filter(
-    (match) => !match[1].includes('className'),
-  )
+  const hits = [...probe.matchAll(BUTTON_TAG)].filter((match) => !match[1].includes('className'))
 
   expect(hits).toHaveLength(2)
 })

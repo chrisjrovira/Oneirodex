@@ -177,7 +177,9 @@ const PLATFORM_ROOMS = {
 }
 
 export function roomIdForPlatform(platformId) {
-  const key = String(platformId || '').trim().toUpperCase()
+  const key = String(platformId || '')
+    .trim()
+    .toUpperCase()
   return PLATFORM_ROOMS[key] || DEFAULT_ROOM
 }
 
@@ -186,7 +188,9 @@ export function roomForPlatform(platformId) {
 }
 
 export function isLcdPlatform(platformId) {
-  const key = String(platformId || '').trim().toUpperCase()
+  const key = String(platformId || '')
+    .trim()
+    .toUpperCase()
   return Boolean(LCD_PLATFORMS[key])
 }
 

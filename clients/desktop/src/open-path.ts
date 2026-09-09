@@ -40,7 +40,9 @@ export function isAbsoluteOsPath(path: string): boolean {
  * Reject empty, relative, traversal-only, null/control chars, and overlong paths
  * before handing off to the native reveal command.
  */
-export function validateRevealPath(raw: string): { ok: true; path: string } | { ok: false; error: string } {
+export function validateRevealPath(
+  raw: string,
+): { ok: true; path: string } | { ok: false; error: string } {
   if (typeof raw !== 'string') {
     return { ok: false, error: 'Path must be a string' }
   }

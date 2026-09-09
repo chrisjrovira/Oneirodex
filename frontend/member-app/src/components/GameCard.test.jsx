@@ -48,15 +48,13 @@ test('renders L and VR badges via BadgeStack when flags set', () => {
 
 test('places hamburger and favorite together in the top-right stack', () => {
   render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
-  expect(screen.getByRole('button', { name: /open actions for archery kings vr/i })).toHaveAttribute(
-    'data-chrome-anchor',
-    'top-right',
-  )
+  expect(
+    screen.getByRole('button', { name: /open actions for archery kings vr/i }),
+  ).toHaveAttribute('data-chrome-anchor', 'top-right')
   // Favorite now sits directly under the hamburger (same top-right corner).
-  expect(screen.getByRole('button', { name: /add archery kings vr to favorites/i })).toHaveAttribute(
-    'data-chrome-anchor',
-    'top-right',
-  )
+  expect(
+    screen.getByRole('button', { name: /add archery kings vr to favorites/i }),
+  ).toHaveAttribute('data-chrome-anchor', 'top-right')
 })
 
 test('play status joins the top-right chrome stack; NEW stays top-left', () => {
@@ -275,9 +273,7 @@ function stubMatchMedia(reduced) {
 test('a missing trailer URL keeps the cover only', () => {
   vi.useFakeTimers()
   stubMatchMedia(false)
-  const { container } = render(
-    <GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />,
-  )
+  const { container } = render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
   fireEvent.pointerEnter(container.querySelector('.game-card-container'))
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)

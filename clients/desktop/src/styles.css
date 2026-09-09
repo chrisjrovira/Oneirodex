@@ -165,3 +165,71 @@ button:disabled {
 .lifecycle-list .install-path code {
   font-size: 0.8em;
 }
+
+/* In-DOM download-version picker (replaces window.prompt). */
+.od-version-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(6, 10, 15, 0.72);
+  z-index: 1000;
+}
+
+.od-version-panel {
+  width: min(420px, 100%);
+  padding: 1.1rem 1.25rem 1.25rem;
+  border: 1px solid #243041;
+  border-radius: 12px;
+  background: #151b24;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.od-version-panel h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.od-version-panel .muted {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.od-version-list {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
+.od-version-option {
+  width: 100%;
+  text-align: left;
+  font-weight: 500;
+  background: #10161f;
+  border: 1px solid #243041;
+  color: inherit;
+}
+
+.od-version-option:hover:not(:disabled) {
+  border-color: #3b82f6;
+}
+
+.od-version-option.is-selected {
+  border-color: #3b82f6;
+  background: #16233a;
+}
+
+.od-version-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.od-version-cancel {
+  background: #1f2937;
+}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 import { fetchDiscoverSections } from './api/discover'
 import { fetchDiscoverPins, saveDiscoverPins } from './api/discoverPins'
 import { ContextBar } from './chrome/ContextBar'
@@ -26,14 +27,13 @@ export function arrangeDiscoverSections(sections, { pins = [], hidden = [] } = {
     if (pinIndex.has(String(section.identifier || ''))) pinned.push(section)
     else rest.push(section)
   }
-  pinned.sort(
-    (a, b) =>
-      pinIndex.get(String(a.identifier)) - pinIndex.get(String(b.identifier)),
-  )
+  pinned.sort((a, b) => pinIndex.get(String(a.identifier)) - pinIndex.get(String(b.identifier)))
   return pinned.concat(rest)
 }
 
-export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
+export function DiscoverApp() {
+  const { isAdmin } = useViewer()
+  const shellConfig = useShellConfig()
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -271,7 +271,9 @@ export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
 
 /** "free_this_week" → "Free this week". Only used for a row we cannot name. */
 export function prettifyIdentifier(identifier) {
-  const words = String(identifier || '').replace(/[_:-]+/g, ' ').trim()
+  const words = String(identifier || '')
+    .replace(/[_:-]+/g, ' ')
+    .trim()
   if (!words) return 'Row'
   return words.charAt(0).toUpperCase() + words.slice(1)
 }

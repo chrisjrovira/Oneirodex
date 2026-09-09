@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
-import { PageStatus } from './PageStatus'
+import { Button, confirmAction } from '@oneirodex/ui'
+import { PageStatus } from '@oneirodex/ui'
 import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
 import { DataTable } from './DataTable'
@@ -184,10 +184,7 @@ export function ImagesPage({ embedded = false }) {
     }
   }, [gameQuery])
 
-  const groups = useMemo(
-    () => (groupToggle ? groupByGame(images) : null),
-    [groupToggle, images],
-  )
+  const groups = useMemo(() => (groupToggle ? groupByGame(images) : null), [groupToggle, images])
 
   const downloadBatch = async (size) => {
     setQueueBusy(`batch-${size}`)
@@ -313,12 +310,16 @@ export function ImagesPage({ embedded = false }) {
       const failed = result.failed ?? 0
       setQueueMsg(
         `Auto-pick finished — applied ${applied}, failed ${failed}` +
-          (result.policy ? ` · policy ${Array.isArray(result.policy) ? result.policy.join('→') : result.policy}` : ''),
+          (result.policy
+            ? ` · policy ${Array.isArray(result.policy) ? result.policy.join('→') : result.policy}`
+            : ''),
       )
       if (failed && result.results?.length) {
         const firstFail = result.results.find((r) => r.status === 'failed')
         if (firstFail?.error) {
-          setQueueError(`Sample failure (${firstFail.name || firstFail.game_uuid}): ${firstFail.error}`)
+          setQueueError(
+            `Sample failure (${firstFail.name || firstFail.game_uuid}): ${firstFail.error}`,
+          )
         }
       }
       await loadQueue()
@@ -344,7 +345,11 @@ export function ImagesPage({ embedded = false }) {
         platform: platformFilter || undefined,
         service: serviceFilter || undefined,
       })
-      const games = Array.isArray(result.games) ? result.games : Array.isArray(result.results) ? result.results : []
+      const games = Array.isArray(result.games)
+        ? result.games
+        : Array.isArray(result.results)
+          ? result.results
+          : []
       const withHits = games.filter((g) => (g.candidates || []).length > 0).length
       setQueueMsg(
         `Mass cover search — ${games.length} title(s), ${withHits} with candidates` +
@@ -408,14 +413,8 @@ export function ImagesPage({ embedded = false }) {
               placeholder="Type a title…"
             />
           </label>
-          <button type="button" className="od-btn" onClick={searchGames}>
-            Find
-          </button>
-          {gameUuid ? (
-            <button type="button" className="od-btn" onClick={() => syncGameParam('', '')}>
-              Clear target
-            </button>
-          ) : null}
+          <Button onClick={searchGames}>Find</Button>
+          {gameUuid ? <Button onClick={() => syncGameParam('', '')}>Clear target</Button> : null}
           {gameUuid ? (
             <a className="od-btn" href={`/edit_game_images/${encodeURIComponent(gameUuid)}`}>
               Classic edit images
@@ -606,7 +605,12 @@ export function ImagesPage({ embedded = false }) {
           >
             {queueBusy === 'generate' ? 'Generating…' : 'Generate artwork'}
           </button>
-          <button type="button" className="od-btn" disabled={Boolean(queueBusy)} onClick={loadQueue}>
+          <button
+            type="button"
+            className="od-btn"
+            disabled={Boolean(queueBusy)}
+            onClick={loadQueue}
+          >
             Refresh
           </button>
         </div>
@@ -624,8 +628,7 @@ export function ImagesPage({ embedded = false }) {
                 <div key={group.uuid || group.name} className="od-images-group">
                   <div className="od-images-group__head">
                     <div>
-                      <strong>{group.name}</strong>{' '}
-                      <code className="od-mono">{group.uuid}</code>
+                      <strong>{group.name}</strong> <code className="od-mono">{group.uuid}</code>
                       {failed ? (
                         <span className="od-badge od-badge--danger">{failed} failed</span>
                       ) : null}
@@ -686,8 +689,7 @@ export function ImagesPage({ embedded = false }) {
               {
                 key: 'status',
                 label: 'Status',
-                value: (image) =>
-                  image.status || (image.is_downloaded ? 'downloaded' : 'pending'),
+                value: (image) => image.status || (image.is_downloaded ? 'downloaded' : 'pending'),
               },
               {
                 key: 'failure',
@@ -701,8 +703,7 @@ export function ImagesPage({ embedded = false }) {
                 sortable: false,
                 filterable: false,
                 render: (image) => {
-                  const status =
-                    image.status || (image.is_downloaded ? 'downloaded' : 'pending')
+                  const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending')
                   return (
                     <span className="od-images-row__actions">
                       {status === 'pending' || status === 'failed' || image.file_missing ? (

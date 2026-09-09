@@ -1,6 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 export async function fetchUpdatesInbox({ signal, limit = 100 } = {}) {
   const response = await fetch(`/api/updates/inbox?limit=${limit}`, {
     signal,
@@ -89,4 +87,17 @@ export async function searchAcquire(q, { signal } = {}) {
     throw await errorFromResponse(response, 'acquire/search')
   }
   return response.json()
+}
+
+export async function sendAcquireDownload({ url, provider } = {}) {
+  const response = await fetch('/api/acquire/download', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ url, provider }),
+  })
+  if (!response.ok) {
+    throw await errorFromResponse(response, 'acquire')
+  }
+  return response.json().catch(() => ({}))
 }

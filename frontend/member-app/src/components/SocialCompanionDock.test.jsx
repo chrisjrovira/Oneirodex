@@ -35,7 +35,12 @@ beforeEach(() => {
       if (url.includes('/api/social/status')) {
         return {
           ok: true,
-          json: async () => ({ friend_count: 1, pending_incoming: 0, now_playing: [], presence: [] }),
+          json: async () => ({
+            friend_count: 1,
+            pending_incoming: 0,
+            now_playing: [],
+            presence: [],
+          }),
         }
       }
       return { ok: false, json: async () => ({}) }
@@ -158,7 +163,12 @@ test('failed friends load uses PageStatus with Retry', async () => {
       if (url.includes('/api/social/status')) {
         return {
           ok: true,
-          json: async () => ({ friend_count: 1, pending_incoming: 0, now_playing: [], presence: [] }),
+          json: async () => ({
+            friend_count: 1,
+            pending_incoming: 0,
+            now_playing: [],
+            presence: [],
+          }),
         }
       }
       return { ok: false, json: async () => ({}) }

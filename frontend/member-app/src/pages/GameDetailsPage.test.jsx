@@ -48,8 +48,20 @@ beforeEach(() => {
         json: () =>
           Promise.resolve({
             versions: [
-              { kind: 'base', id: 1, uuid: detailsPayload.uuid, label: 'Base game', is_default: true },
-              { kind: 'extra', id: 2, uuid: 'extra-1', label: 'Extra: artbook', extra_kind: 'manual' },
+              {
+                kind: 'base',
+                id: 1,
+                uuid: detailsPayload.uuid,
+                label: 'Base game',
+                is_default: true,
+              },
+              {
+                kind: 'extra',
+                id: 2,
+                uuid: 'extra-1',
+                label: 'Extra: artbook',
+                extra_kind: 'manual',
+              },
             ],
           }),
       })
@@ -275,7 +287,9 @@ test('admin ⋮ menu exposes Edit Details / Edit Images', async () => {
   expect(coverWrap).toBeTruthy()
   const adminBtn = within(coverWrap).getByRole('button', { name: 'Admin actions' })
   expect(adminBtn).toHaveAttribute('data-chrome-anchor', 'top-right')
-  expect(container.querySelector('.od-details-page__hero-main .od-details-page__admin-menu')).toBeNull()
+  expect(
+    container.querySelector('.od-details-page__hero-main .od-details-page__admin-menu'),
+  ).toBeNull()
   await user.click(adminBtn)
   expect(within(coverWrap).getByRole('menuitem', { name: 'Edit Details' })).toHaveAttribute(
     'href',
@@ -364,7 +378,8 @@ test('prefers trailers[].embed_url and shows extras from details payload', async
                 type: 'manual',
                 extra_kind: 'manual',
                 on_server: true,
-                download_url: '/download_other/extra/11111111-1111-4111-8111-111111111111/extra-payload',
+                download_url:
+                  '/download_other/extra/11111111-1111-4111-8111-111111111111/extra-payload',
               },
             ],
           }),
@@ -515,9 +530,7 @@ test('versions: base has no Download; a downloadable update does; missing hides 
   expect(downloadButtons).toHaveLength(1)
   // …and it is the one attached to the update, which is what makes this a test
   // of the rule rather than of the count.
-  expect(
-    downloadButtons[0].closest('li')?.textContent,
-  ).toMatch(/patch-1\.03\.bin/)
+  expect(downloadButtons[0].closest('li')?.textContent).toMatch(/patch-1\.03\.bin/)
   expect(within(versionsSection).getByText(/Missing on disk/i)).toBeInTheDocument()
   expect(within(versionsSection).getByText(/Update: gone\.bin/i)).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Remove missing versions/i })).toBeNull()
@@ -634,7 +647,9 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
 
   renderDetails()
   expect(await screen.findByRole('heading', { name: 'Versions' })).toBeInTheDocument()
-  await user.click(within(document.getElementById('updates')).getByRole('button', { name: 'Download' }))
+  await user.click(
+    within(document.getElementById('updates')).getByRole('button', { name: 'Download' }),
+  )
   await waitFor(() => {
     expect(initiateGameDownload).toHaveBeenCalledWith(detailsPayload.uuid, {
       kind: 'update',
@@ -702,7 +717,9 @@ test('admin can remove missing versions via cleanup_orphans', async () => {
 
   renderDetails()
 
-  expect(await screen.findByRole('button', { name: /Remove missing versions/i })).toBeInTheDocument()
+  expect(
+    await screen.findByRole('button', { name: /Remove missing versions/i }),
+  ).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: /Remove missing versions/i }))
   await waitFor(() => {
     expect(global.fetch).toHaveBeenCalledWith(
@@ -711,7 +728,9 @@ test('admin can remove missing versions via cleanup_orphans', async () => {
     )
   })
   const versionsSection = document.getElementById('updates')
-  expect(within(versionsSection).getByRole('status')).toHaveTextContent(/Removed 1 missing version/i)
+  expect(within(versionsSection).getByRole('status')).toHaveTextContent(
+    /Removed 1 missing version/i,
+  )
 })
 
 /**
@@ -752,7 +771,13 @@ test('facts rail stays in the grid when there is no summary', async () => {
         json: () =>
           Promise.resolve({
             versions: [
-              { kind: 'base', id: 1, uuid: detailsPayload.uuid, label: 'Base game', is_default: true },
+              {
+                kind: 'base',
+                id: 1,
+                uuid: detailsPayload.uuid,
+                label: 'Base game',
+                is_default: true,
+              },
             ],
           }),
       })
@@ -774,7 +799,10 @@ test('breadcrumb is Catalog then primary genre then title', async () => {
   renderDetails()
 
   const crumbs = await screen.findByRole('navigation', { name: 'Breadcrumb' })
-  expect(within(crumbs).getByRole('link', { name: 'Game Catalog' })).toHaveAttribute('href', '/library')
+  expect(within(crumbs).getByRole('link', { name: 'Game Catalog' })).toHaveAttribute(
+    'href',
+    '/library',
+  )
   expect(within(crumbs).getByRole('link', { name: 'Platform' })).toHaveAttribute(
     'href',
     '/library?genre=Platform',
@@ -818,9 +846,7 @@ test('renders About, capability chips, and store specs when present', async () =
             themes: ['Action'],
             store_specs: {
               system_requirements: { windows: { minimum: 'Windows 7' } },
-              languages: [
-                { name: 'English', interface: true, audio: true, subtitles: true },
-              ],
+              languages: [{ name: 'English', interface: true, audio: true, subtitles: true }],
             },
           }),
       })
@@ -860,4 +886,3 @@ test('media stage sits beside the summary when trailers exist', async () => {
   expect(document.querySelector('.od-details-page__fold--media')).toBeTruthy()
   expect(document.querySelector('.od-details-page__content-grid')).toBeTruthy()
 })
-

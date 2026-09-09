@@ -42,7 +42,9 @@ test('collapses Libraries / Auto / Manual into Libraries and Scan unfurls', () =
 
   const seg = document.querySelector(`#${ADMIN_TOPBAR_SLOT_ID} .od-seg`)
   expect(seg?.dataset.odUnfurlReady).toBe('1')
-  const triggers = Array.from(seg.querySelectorAll(':scope > .od-seg__unfurl-anchor > .od-seg__item'))
+  const triggers = Array.from(
+    seg.querySelectorAll(':scope > .od-seg__unfurl-anchor > .od-seg__item'),
+  )
   expect(triggers.map((el) => el.textContent)).toEqual(['Libraries', 'Scan'])
   expect(seg.querySelector(':scope > a.od-seg__item[href="#libraryTools"]')?.textContent).toBe(
     'Library tools',
@@ -84,6 +86,8 @@ test('restores the Jinja segment on unmount so a remount rebuilds it', () => {
     </MemoryRouter>,
   )
   expect(seg.dataset.odUnfurlReady).toBe('1')
-  const triggers = Array.from(seg.querySelectorAll(':scope > .od-seg__unfurl-anchor > .od-seg__item'))
+  const triggers = Array.from(
+    seg.querySelectorAll(':scope > .od-seg__unfurl-anchor > .od-seg__item'),
+  )
   expect(triggers.map((el) => el.textContent)).toEqual(['Libraries', 'Scan'])
 })

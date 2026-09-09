@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { csrfHeaders } from '../api/csrf'
-import { errorFromBody } from '../api/envelopeError'
+import { Button } from '@oneirodex/ui'
+import { csrfHeaders } from '@oneirodex/ui'
+import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 
 /**
@@ -198,9 +199,9 @@ export function SpaceRail({
           placeholder="Paste invite code"
           autoComplete="off"
         />
-        <button type="submit" className="od-btn" disabled={joinBusy || !inviteToken.trim()}>
+        <Button type="submit" disabled={joinBusy || !inviteToken.trim()}>
           {joinBusy ? 'Joining…' : 'Join'}
-        </button>
+        </Button>
         {joinMsg ? (
           <p className="od-space-rail__hint" role="status">
             {joinMsg}

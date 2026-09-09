@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { CollectionDetailPage } from './CollectionDetailPage'
 import { CollectionsPage } from './CollectionsPage'
 import * as collectionsApi from '../api/collections'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/collections', () => ({
   fetchCollections: vi.fn(),
@@ -20,7 +21,9 @@ vi.mock('../api/collections', () => ({
 function renderPage() {
   return render(
     <MemoryRouter>
-      <CollectionsPage />
+      <ShellHarness>
+        <CollectionsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }
@@ -31,7 +34,11 @@ function renderDetailPage(uuid = 'abc-123', shellConfig = {}) {
       <Routes>
         <Route
           path="/collections/:collectionUuid"
-          element={<CollectionDetailPage shellConfig={shellConfig} />}
+          element={
+            <ShellHarness shell={shellConfig}>
+              <CollectionDetailPage />
+            </ShellHarness>
+          }
         />
       </Routes>
     </MemoryRouter>,
@@ -273,9 +280,7 @@ test('detail page searches and adds a picked game', async () => {
     can_edit: true,
     items: [],
   })
-  collectionsApi.searchGames.mockResolvedValue([
-    { id: 9, uuid: 'game-9', name: 'Celeste' },
-  ])
+  collectionsApi.searchGames.mockResolvedValue([{ id: 9, uuid: 'game-9', name: 'Celeste' }])
   collectionsApi.addCollectionItem.mockResolvedValue({
     id: 11,
     game_uuid: 'game-9',
@@ -302,7 +307,9 @@ test('new chrome puts the create form behind one button', async () => {
 
   render(
     <MemoryRouter>
-      <CollectionsPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <CollectionsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   await screen.findByText(/No collections yet/)
@@ -323,7 +330,9 @@ test('the empty state points at the control that actually exists', async () => {
   collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
   render(
     <MemoryRouter>
-      <CollectionsPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <CollectionsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   expect(await screen.findByText(/from New shelf above/)).toBeInTheDocument()

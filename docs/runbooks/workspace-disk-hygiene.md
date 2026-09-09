@@ -24,7 +24,7 @@ A full clone can balloon past **1 GB** from regenerable caches while the **shipp
 | Path | Approx | Rebuild |
 |---|---|---|
 | `clients/desktop/src-tauri/target/` | ~0.5–1 GB | `cd clients/desktop && npm ci && npm run tauri:dev` (or `tauri:build`) |
-| `**/node_modules/` | hundreds of MB | `npm ci` in `frontend/member-app`, `admin-app`, `ops-glance`, `clients/desktop` |
+| `**/node_modules/` | hundreds of MB | one `npm ci` at the repo root — npm workspaces install every SPA + `clients/desktop` from the single root `package-lock.json` |
 | `**/__pycache__/`, `*.py[cod]`, `.pytest_cache/`, `.ruff_cache/`, `.mypy_cache/` | small | next pytest / import |
 | Host `oneirodex/static/dist/` | if present | Docker build or local `npm run build` in each frontend app |
 | Vitest/Vite caches under `node_modules/.vite/` | tiny | next `npm test` / `vite` |
@@ -74,12 +74,13 @@ Get-ChildItem -Recurse -Directory -Filter __pycache__ -ErrorAction SilentlyConti
 pip install -r requirements.txt   # or use existing venv
 pytest -q                         # or project’s usual subset
 
-# SPAs
-cd frontend/member-app && npm ci && npm test && npm run build
-cd ../admin-app && npm ci && npm test && npm run build
+# SPAs (npm workspaces — one root install, then per-app scripts)
+npm ci                                   # at the repo root; installs every workspace
+npm run build --workspace=member-app && npm test --workspace=member-app -- --run
+npm run build --workspace=admin-app  && npm test --workspace=admin-app  -- --run
 
 # Desktop companion
-cd clients/desktop && npm ci && npm test && npm run tauri:dev
+npm test --workspace=oneirodex-desktop && cd clients/desktop && npm run tauri:dev
 ```
 
 ## Related

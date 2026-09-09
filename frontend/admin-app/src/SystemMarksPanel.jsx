@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
 
@@ -126,7 +126,9 @@ export function SystemMarksPanel() {
   useEffect(() => {
     if (!selectedTheme || !labPlatform) return undefined
     let cancelled = false
-    getJson(`${LAB_URL}?theme=${encodeURIComponent(selectedTheme)}&platform=${encodeURIComponent(labPlatform)}`)
+    getJson(
+      `${LAB_URL}?theme=${encodeURIComponent(selectedTheme)}&platform=${encodeURIComponent(labPlatform)}`,
+    )
       .then((spec) => {
         if (cancelled) return
         const prompt = String(spec.prompt || '')
@@ -239,20 +241,24 @@ export function SystemMarksPanel() {
   }, [selectedTheme, labPlatform, labPrompt, loadCatalog])
 
   const selected = items.find((row) => row.theme === selectedTheme) || null
-  const previewSrc = labUrl && (labExists || labBust)
-    ? `${labUrl}${labUrl.includes('?') ? '&' : '?'}v=${labBust || '1'}`
-    : ''
+  const previewSrc =
+    labUrl && (labExists || labBust)
+      ? `${labUrl}${labUrl.includes('?') ? '&' : '?'}v=${labBust || '1'}`
+      : ''
 
   return (
-    <section className="od-system-marks" aria-label="Systems hub marks" data-testid="system-marks-panel">
+    <section
+      className="od-system-marks"
+      aria-label="Systems hub marks"
+      data-testid="system-marks-panel"
+    >
       <div className="od-stock-picker__head">
         <div>
           <h2 className="od-admin-panel-title">Systems hub marks</h2>
           <p className="od-admin-lede">
-            Full-color AI art per library platform × theme (256 WebP). The lab
-            below generates <strong>one</strong> pair so you can judge quality
-            before a batch. Idempotent fills skip existing files unless you
-            force. Needs <code>ENABLE_AI_ARTWORK</code> and{' '}
+            Full-color AI art per library platform × theme (256 WebP). The lab below generates{' '}
+            <strong>one</strong> pair so you can judge quality before a batch. Idempotent fills skip
+            existing files unless you force. Needs <code>ENABLE_AI_ARTWORK</code> and{' '}
             <code>AI_ARTWORK_URL</code>.
           </p>
         </div>
@@ -318,12 +324,15 @@ export function SystemMarksPanel() {
             })}
           </div>
 
-          <section className="od-system-marks-lab" data-testid="system-marks-lab" aria-label="System mark lab">
+          <section
+            className="od-system-marks-lab"
+            data-testid="system-marks-lab"
+            aria-label="System mark lab"
+          >
             <h3 className="od-admin-panel-title">Lab — one mark</h3>
             <p className="od-admin-lede">
-              Pick a theme (list above) and a platform, edit the prompt if you
-              want, then generate. The attempt log stays on this page so a
-              watching session can see what you tried.
+              Pick a theme (list above) and a platform, edit the prompt if you want, then generate.
+              The attempt log stays on this page so a watching session can see what you tried.
             </p>
             <div className="od-system-marks-lab__grid">
               <label className="od-system-marks-lab__field">

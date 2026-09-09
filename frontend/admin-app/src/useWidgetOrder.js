@@ -97,7 +97,6 @@ export function mergeVisibleOrder(preferred, visibleOrder, knownIds) {
   return merged
 }
 
-
 function readStored(key) {
   try {
     const raw = window.localStorage.getItem(key)

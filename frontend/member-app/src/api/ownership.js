@@ -1,11 +1,7 @@
-import { csrfHeaders, getCsrfToken } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
-
+import { csrfHeaders, errorFromResponse, getCsrfToken } from '@oneirodex/ui'
 async function mutate(url, label, { method = 'POST', json, body } = {}) {
-  const headers = json === undefined
-    ? csrfHeaders()
-    : csrfHeaders({ 'Content-Type': 'application/json' })
+  const headers =
+    json === undefined ? csrfHeaders() : csrfHeaders({ 'Content-Type': 'application/json' })
 
   const response = await fetch(url, {
     method,

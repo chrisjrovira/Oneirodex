@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from './adminApi'
 
 const ARTWORK_PROVIDERS = [
@@ -24,12 +24,7 @@ const IDENTIFY_CHIP_IDS = new Set([
  * Identify chips: GET /api/search_metadata/sources + GET /api/search_metadata?source=
  * Logo/hero: GET /api/providers/steamgriddb/search + POST /api/games/:uuid/artwork/steamgriddb.
  */
-export function ArtworkPicker({
-  gameUuid,
-  gameName = '',
-  onApplied,
-  compact = false,
-}) {
+export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = false }) {
   const [provider, setProvider] = useState('steamgriddb')
   const [imageType, setImageType] = useState('cover')
   const [query, setQuery] = useState(gameName || '')
@@ -94,12 +89,7 @@ export function ArtworkPicker({
       setError('Enter a search title or select a game.')
       return
     }
-    if (
-      !identifyMode &&
-      providersMeta &&
-      enabledMap[provider] === false &&
-      imageType !== 'cover'
-    ) {
+    if (!identifyMode && providersMeta && enabledMap[provider] === false && imageType !== 'cover') {
       setError(`${providerMeta.label} is not configured.`)
       setResults([])
       return
@@ -116,7 +106,11 @@ export function ArtworkPicker({
           source: identifySource,
         })
         const data = await getJson(`/api/search_metadata?${qs}`)
-        const hits = Array.isArray(data.results) ? data.results : Array.isArray(data.games) ? data.games : []
+        const hits = Array.isArray(data.results)
+          ? data.results
+          : Array.isArray(data.games)
+            ? data.games
+            : []
         const softNote = typeof data.note === 'string' ? data.note.trim() : ''
         rows = hits
           .map((hit, idx) => ({
@@ -245,13 +239,11 @@ export function ArtworkPicker({
 
   return (
     <div className={`od-artwork-picker${compact ? ' od-artwork-picker--compact' : ''}`}>
-      {!compact ? (
-        <h2 className="od-admin-panel-title">Artwork search</h2>
-      ) : null}
+      {!compact ? <h2 className="od-admin-panel-title">Artwork search</h2> : null}
       <p className="od-admin-lede">
-        Search SteamGridDB / IGDB / Giant Bomb and apply cover, logo, or hero. Identify chips
-        (Meta Quest / Epic / itch / Giant Bomb / MobyGames / TheGamesDB) use metadata sources — apply
-        only when a cover URL is present. Artwork only — never downloads games.
+        Search SteamGridDB / IGDB / Giant Bomb and apply cover, logo, or hero. Identify chips (Meta
+        Quest / Epic / itch / Giant Bomb / MobyGames / TheGamesDB) use metadata sources — apply only
+        when a cover URL is present. Artwork only — never downloads games.
       </p>
 
       {!gameUuid ? (
@@ -273,7 +265,11 @@ export function ArtworkPicker({
       ) : null}
 
       {identifySources.length ? (
-        <div className="od-artwork-picker__chips" role="group" aria-label="Identify metadata sources">
+        <div
+          className="od-artwork-picker__chips"
+          role="group"
+          aria-label="Identify metadata sources"
+        >
           <span className="od-artwork-picker__chips-label">Identify</span>
           {identifySources.map((src) => {
             const active = identifySource === src.id
@@ -385,9 +381,7 @@ export function ArtworkPicker({
                 ) : (
                   <span className="od-artwork-picker__thumb od-artwork-picker__thumb--empty" />
                 )}
-                <span className="od-artwork-picker__caption">
-                  {applying ? 'Applying…' : label}
-                </span>
+                <span className="od-artwork-picker__caption">{applying ? 'Applying…' : label}</span>
               </button>
             </div>
           )

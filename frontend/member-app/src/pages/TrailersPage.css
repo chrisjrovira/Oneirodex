@@ -122,14 +122,13 @@
   flex-direction: column;
   width: 100%;
   padding: 0.9rem 0.9rem 0;
-  border-radius: var(--od-crt-cabinet-radius) var(--od-crt-cabinet-radius)
-    var(--od-crt-foot-radius) var(--od-crt-foot-radius);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--od-surface) 88%, var(--od-bg)) 0%,
-      color-mix(in srgb, var(--od-bg) 82%, var(--od-surface)) 100%
-    );
+  border-radius: var(--od-crt-cabinet-radius) var(--od-crt-cabinet-radius) var(--od-crt-foot-radius)
+    var(--od-crt-foot-radius);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--od-surface) 88%, var(--od-bg)) 0%,
+    color-mix(in srgb, var(--od-bg) 82%, var(--od-surface)) 100%
+  );
   border: 1px solid color-mix(in srgb, var(--od-accent) 26%, var(--od-border));
   box-shadow:
     0 18px 40px var(--od-crt-shadow),

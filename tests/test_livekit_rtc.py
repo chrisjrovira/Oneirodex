@@ -11,6 +11,8 @@ from oneirodex.utils.livekit_rtc import (
     user_may_join_room,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- LiveKit RTC token / room adapter.
+
 
 def test_normalize_room_name_opaque():
     assert normalize_room_name('household:lobby') == 'household:lobby'

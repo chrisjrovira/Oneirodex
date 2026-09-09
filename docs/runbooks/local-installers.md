@@ -18,7 +18,7 @@ build produced no bundles rather than reporting success over an empty directory.
 
 | Host | Produces | Notes |
 |---|---|---|
-| Windows | `.exe` (NSIS) | Native. Needs Rust + Node 20. |
+| Windows | `.exe` (NSIS) | Native. Needs Rust + Node 22. |
 | Linux | `.deb`, `.AppImage` | Native, or from any host with `--linux`. |
 | macOS | `.dmg`, `.app` | **Mac required** — see below. |
 
@@ -51,10 +51,10 @@ Mac produces a `.dmg` for that Mac's own architecture; add
 ## Prerequisites
 
 - **Rust** — <https://rustup.rs>
-- **Node 20+**
+- **Node 22** (pinned in `.nvmrc`; every `package.json` sets `engines: ">=22 <23"`)
 - **Windows**: MSVC build tools + WebView2 (present on Windows 11)
 - **Linux/Docker**: the script installs `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`
-  and friends inside the container, and pulls Node 20 from NodeSource (Debian
+  and friends inside the container, and pulls Node from NodeSource (Debian
   bookworm still ships Node 18). Those webkit headers are exactly why a Linux
   bundle cannot be produced natively on Windows.
 

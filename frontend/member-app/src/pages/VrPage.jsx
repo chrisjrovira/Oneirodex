@@ -5,7 +5,7 @@ import './VrPage.css'
 
 const PER_PAGE = 48
 
-export function VrPage({ shellConfig: _shellConfig } = {}) {
+export function VrPage() {
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(null)
   const [page, setPage] = useState(1)
@@ -83,8 +83,8 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
         <h1>VR Library</h1>
       </div>
       <p className="od-more-page__lede">
-        Large-tap browse for headset browsers. Install as a PWA from the browser menu. Browse
-        only — no downloads.
+        Large-tap browse for headset browsers. Install as a PWA from the browser menu. Browse only —
+        no downloads.
       </p>
 
       <PageStatus
@@ -95,9 +95,7 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
         onRetry={() => setRetryCount((n) => n + 1)}
       />
 
-      {!error && catalog ? (
-        <p className="od-vr__status">{catalog.total || 0} games</p>
-      ) : null}
+      {!error && catalog ? <p className="od-vr__status">{catalog.total || 0} games</p> : null}
 
       {!error && catalog && games.length === 0 ? (
         <p>No games are available for VR browsing yet.</p>
@@ -122,7 +120,12 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
 
       {!error && catalog && catalog.pages > 1 ? (
         <nav className="od-vr__pager" aria-label="Catalog pages">
-          <button type="button" className="od-cbtn" disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>
+          <button
+            type="button"
+            className="od-cbtn"
+            disabled={page <= 1}
+            onClick={() => setPage((n) => n - 1)}
+          >
             Previous
           </button>
           <span>
@@ -141,11 +144,7 @@ export function VrPage({ shellConfig: _shellConfig } = {}) {
 
       {selectedUuid ? (
         <div className="od-vr__detail">
-          <button
-            type="button"
-            className="od-vr__back"
-            onClick={() => setSelectedUuid(null)}
-          >
+          <button type="button" className="od-vr__back" onClick={() => setSelectedUuid(null)}>
             Back
           </button>
 

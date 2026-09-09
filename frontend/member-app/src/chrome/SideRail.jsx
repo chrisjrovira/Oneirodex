@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 
 import { RailIcon } from './railIcons'
 import { PRIMARY_GROUP, getMoreGroups, getPrimaryLinks } from './navConfig'
@@ -27,10 +27,7 @@ function useCollapsedGroups() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(
-        COLLAPSED_GROUPS_KEY,
-        JSON.stringify([...collapsed]),
-      )
+      window.localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify([...collapsed]))
     } catch {
       // Preference only — the rail works either way.
     }
@@ -60,20 +57,14 @@ function useCollapsedGroups() {
  * legacy Jinja pages render the same rail from the same source (the UIR-4
  * pattern). This component contributes no CSS of its own.
  */
-export function SideRail({
-  shellConfig = {},
-  railState = 'expanded',
-  onNavigate,
-  onCloseDrawer,
-  footer = null,
-}) {
+export function SideRail({ railState = 'expanded', onNavigate, onCloseDrawer, footer = null }) {
+  const { isAdmin } = useViewer()
   const {
-    isAdmin = false,
     showTrailers = false,
     showHelp = false,
     enableVr = false,
     enableActivity = true,
-  } = shellConfig
+  } = useShellConfig()
 
   const primary = getPrimaryLinks()
   const groups = getMoreGroups({ showTrailers, showHelp, enableVr, enableActivity })
@@ -101,7 +92,6 @@ export function SideRail({
   }
 
   function renderLink(link) {
-
     // Action entries (Chat, Friends) open panels rather than routing. They are
     // still destinations from the member's point of view, so they belong in the
     // rail next to the routed ones rather than in a separate control.
@@ -136,9 +126,7 @@ export function SideRail({
       <li key={link.id}>
         <NavLink
           to={link.to}
-          className={({ isActive }) =>
-            isActive ? 'od-rail__link is-active' : 'od-rail__link'
-          }
+          className={({ isActive }) => (isActive ? 'od-rail__link is-active' : 'od-rail__link')}
           data-rail-item={link.id}
           aria-expanded={link.id === 'library' ? !filtersHidden : undefined}
           onClick={link.id === 'library' ? onLibraryClick : onCloseDrawer}
@@ -188,24 +176,26 @@ export function SideRail({
               <span>{PRIMARY_GROUP.label}</span>
             </button>
           </li>
-          {primaryFolded ? null : primary.map((link) => (
-            <li key={link.id} className="od-rail__item">
-              <ul className="od-rail__list">{renderLink(link)}</ul>
-              {/* Slot for the active section's own controls (GT-B4).
+          {primaryFolded
+            ? null
+            : primary.map((link) => (
+                <li key={link.id} className="od-rail__item">
+                  <ul className="od-rail__list">{renderLink(link)}</ul>
+                  {/* Slot for the active section's own controls (GT-B4).
                   Library filters used to be a second 17.5rem aside next to the
                   rail — two left-hand panels, which is what read as broken.
                   LibraryApp portals its FilterBar in here instead, so filters
                   live under the destination they belong to and the content pane
                   gets the width back. A portal rather than props: the shell
                   should not have to know what a filter is. */}
-              {link.id === 'library' ? (
-                <div
-                  id="od-rail-slot"
-                  className={`od-rail__slot${filtersHidden ? ' is-hidden' : ''}`}
-                />
-              ) : null}
-            </li>
-          ))}
+                  {link.id === 'library' ? (
+                    <div
+                      id="od-rail-slot"
+                      className={`od-rail__slot${filtersHidden ? ' is-hidden' : ''}`}
+                    />
+                  ) : null}
+                </li>
+              ))}
         </ul>
 
         {groups.map((group) => {
@@ -258,9 +248,7 @@ export function SideRail({
           floating over the content pane: the rail already has the space, and
           floating it meant a control permanently sitting on top of the thing it
           scrolls. */}
-      {footer ? (
-        <div className="od-rail__footer od-rail__footer--controls">{footer}</div>
-      ) : null}
+      {footer ? <div className="od-rail__footer od-rail__footer--controls">{footer}</div> : null}
     </div>
   )
 }

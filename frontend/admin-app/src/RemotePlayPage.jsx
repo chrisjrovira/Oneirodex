@@ -3,7 +3,7 @@
 // it has scrolled away — and invisible when the save happens from the bottom
 // of a long form.
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { showToast } from './utils/toast'
 
 const EMPTY = {
@@ -111,10 +111,7 @@ export function RemotePlayPage() {
           </label>
           <label className="od-admin-field">
             Primary provider
-            <select
-              value={form.provider}
-              onChange={(e) => updateField('provider', e.target.value)}
-            >
+            <select value={form.provider} onChange={(e) => updateField('provider', e.target.value)}>
               <option value="sunshine">Sunshine (single session)</option>
               <option value="wolf">Wolf (multi-user)</option>
             </select>
@@ -174,13 +171,13 @@ export function RemotePlayPage() {
             />
           </label>
           <p className="od-admin-hint">
-            LAN URLs require <code>ALLOW_PRIVATE_LAN_URLS=true</code>. Oneirodex only stores connection
-            hints — it does not run Sunshine/Wolf in the app container.
+            LAN URLs require <code>ALLOW_PRIVATE_LAN_URLS=true</code>. Oneirodex only stores
+            connection hints — it does not run Sunshine/Wolf in the app container.
           </p>
           <div className="od-admin-actions-row">
-            <button type="submit" className="od-btn" disabled={busy}>
+            <Button type="submit" disabled={busy}>
               {busy ? 'Saving…' : 'Save settings'}
-            </button>
+            </Button>
             <a className="od-btn od-btn--ghost" href="/admin/settings">
               Settings hub
             </a>

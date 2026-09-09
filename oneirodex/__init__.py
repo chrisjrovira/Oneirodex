@@ -17,6 +17,9 @@ from oneirodex.utils.security_headers import apply_security_headers
 from oneirodex.utils.icon_themes import icon_pack_css_url, icon_pack_previews_css_url
 from oneirodex.product import PRODUCT_NAME
 from oneirodex.utils.preset_themes import era_for_theme, theme_picker_groups
+import logging
+
+logger = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -26,12 +29,28 @@ app_start_time = datetime.now()
 app_version = '1.0.0-beta'
 
 
-def create_app():
+def create_app(config_object=None):
+    """Build the Flask app.
+
+    ``config_object`` defaults to :class:`config.Config` (production), or
+    :class:`config.TestConfig` when running under pytest. Pass an explicit
+    class to override — scripts and the ASGI entrypoint rely on the default.
+    """
     app = Flask(__name__)
-    app.config.from_object(Config)
-    
+    if config_object is None:
+        if 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ:
+            from config import TestConfig
+            config_object = TestConfig
+        else:
+            config_object = Config
+    app.config.from_object(config_object)
+
+    # Wire stdlib logging before anything else logs. Level from
+    # ONEIRODEX_LOG_LEVEL (default INFO), JSON via ONEIRODEX_LOG_JSON=1.
+    from oneirodex.utils.logging_setup import configure_logging
+    configure_logging(app)
+
     # SAFETY CHECK: Prevent production database access during tests
-    import sys
     if 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ:
         # We are running in pytest - ensure we're using test database
         test_db_url = os.getenv('TEST_DATABASE_URL')
@@ -40,11 +59,11 @@ def create_app():
         # If DATABASE_URL was not properly overridden in conftest.py
         if production_db_url and test_db_url and production_db_url != test_db_url:
             if 'oneirodex' in production_db_url and 'test' not in production_db_url:
-                print(f"🚨 CRITICAL: Tests attempting to use production database: {production_db_url}")
-                print(f"🛡️  BLOCKING: Forcing test database: {test_db_url}")
+                logger.error(f"🚨 CRITICAL: Tests attempting to use production database: {production_db_url}")
+                logger.warning(f"🛡️  BLOCKING: Forcing test database: {test_db_url}")
                 app.config['SQLALCHEMY_DATABASE_URI'] = test_db_url
         
-        print(f"🧪 PYTEST MODE: Using database: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
+        logger.info(f"🧪 PYTEST MODE: Using database: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
     
     csrf.init_app(app)
     apply_proxy_fix(app)
@@ -62,9 +81,9 @@ def create_app():
         auth_part = netloc_parts[0].replace(parsed_uri.password, '********')
         masked_netloc = f"{auth_part}@{netloc_parts[1]}" if len(netloc_parts) > 1 else auth_part
         masked_uri = urlunparse(parsed_uri._replace(netloc=masked_netloc))
-        print(f"Attempting to connect to PostgreSQL with URI: {masked_uri}")
+        logger.info(f"Attempting to connect to PostgreSQL with URI: {masked_uri}")
     else:
-        print(f"Attempting to connect to PostgreSQL with URI: {raw_db_uri}")
+        logger.info(f"Attempting to connect to PostgreSQL with URI: {raw_db_uri}")
     # --- END: Print masked PostgreSQL connection string ---
 
     parsed_url = urlparse(app.config['SQLALCHEMY_DATABASE_URI'])
@@ -73,6 +92,10 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'login.login'
     cache.init_app(app)
+
+    from werkzeug.exceptions import HTTPException
+    from oneirodex.utils.api_response import api_error
+    from oneirodex.utils.error_envelope import http_error_code, wants_json_error
 
     @app.errorhandler(413)
     def request_entity_too_large(error):
@@ -85,21 +108,68 @@ def create_app():
         page the caller could not read. API callers now get the envelope.
         """
         from flask import flash, redirect, request
-        from oneirodex.utils.api_response import api_error
 
         limit_mb = app.config.get('MAX_UPLOAD_MB', 0)
         message = f'The file you tried to upload is too large. Maximum size is {limit_mb}MB.'
 
-        wants_json = (
-            request.path.startswith('/api/')
-            or request.accept_mimetypes.best == 'application/json'
-            or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        )
-        if wants_json:
+        if wants_json_error(request):
             return api_error(message, code='payload_too_large')
 
         flash(message, 'error')
         return redirect(request.url)
+
+    @app.errorhandler(HTTPException)
+    def _http_exception_envelope(error):
+        """Render any 4xx/5xx as the JSON envelope for API / XHR callers.
+
+        Flask answers every HTTPException with an HTML page. For an ``/api/``
+        caller that is an unreadable body with the wrong content type, and the
+        SPA's shared error surface (``PageStatus``) has nothing to branch on.
+        HTML routes keep Flask's default page. The status code is preserved
+        exactly — only the body shape changes.
+        """
+        from flask import request
+
+        if not wants_json_error(request):
+            return error.get_response()
+
+        return api_error(
+            error.description or error.name or 'Request failed',
+            code=http_error_code(error.code),
+            status=error.code or 500,
+        )
+
+    @app.errorhandler(Exception)
+    def _uncaught_exception_envelope(error):
+        """Last resort: an uncaught error in an ``/api/`` route must not reach
+        the browser as an HTML 500 with no envelope — the one crash path
+        ``utils/api_response.py`` did not already cover.
+
+        The client message is fixed text. ``str(error)`` routinely carries
+        filesystem paths, SQL fragments, or upstream secrets, and this is the
+        same "no secrets in ``detail``" rule the rest of the codebase follows.
+        The real exception is logged server-side with a traceback.
+        """
+        from flask import request
+
+        # A registered HTTPException handler already wins the dispatch, but keep
+        # the guard so a future Flask internals change can't route an abort()
+        # through the generic 500 message.
+        if isinstance(error, HTTPException):
+            return _http_exception_envelope(error)
+
+        app.logger.exception(
+            'Unhandled exception during %s %s', request.method, request.path
+        )
+
+        if not wants_json_error(request):
+            raise error
+
+        return api_error(
+            'Something went wrong on our end. The error has been logged.',
+            code='internal',
+            status=500,
+        )
 
     @app.context_processor
     def inject_current_theme():
@@ -128,6 +198,11 @@ def create_app():
     @app.template_filter('theme_picker_groups')
     def theme_picker_groups_filter(choices):
         return theme_picker_groups(choices)
+
+    # Theme-asset Jinja helpers (verify_file global; dist_asset / avatar_url /
+    # theme_asset filters). App-level, extracted from routes.py in wave A2.1e.
+    from oneirodex.routes_theme import register_theme_helpers
+    register_theme_helpers(app)
 
     @app.context_processor
     def inject_feature_flags():
@@ -233,65 +308,9 @@ def create_app():
     csrf.exempt(client_api.client_commands_ack)
     csrf.exempt(client_api.client_commands_nack)
 
-    with app.app_context():
-        # Database initialization is handled by the InitializationManager before workers start
-        # Worker processes skip initialization entirely since it's already done
-        if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ and
-            os.getenv('ONEIRODEX_INITIALIZATION_COMPLETE') != 'true'):
-            # This should only happen in development or if initialization wasn't run
-            print("⚠️  Initialization not completed - this may cause issues")
-
-        if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ):
-            # Reclaim scans orphaned by whatever ended the last process.
-            #
-            # InitializationManager already does this, but only on the operator
-            # path (startweb*.sh runs it once before workers). Anything else —
-            # a dev server, a respawned worker, a container whose entrypoint was
-            # bypassed — booted straight past it, leaving 'Running' rows that no
-            # thread was working on. is_scan_busy() then reported busy and every
-            # new scan queued behind a ghost for STALE_RUNNING_SECONDS (6h),
-            # which is what "scanning is broken" looked like from the admin UI.
-            #
-            # Safe to run in every process, including multi-worker: the sweep
-            # only reclaims jobs whose owning process is provably gone, so a
-            # sibling worker's live scan is left alone.
-            try:
-                from oneirodex.utils.scan_queue import reclaim_stale_busy_jobs
-                reclaimed = reclaim_stale_busy_jobs()
-                if reclaimed:
-                    print(f"[SCAN QUEUE] Reclaimed {reclaimed} orphaned scan job(s) at startup")
-            except Exception as exc:
-                print(f"[SCAN QUEUE] Startup reclaim failed: {exc}")
-
-            try:
-                from oneirodex.utils.scan_scheduler import start_scan_scheduler
-                start_scan_scheduler(app)
-            except Exception as exc:
-                print(f"[SCAN SCHEDULER] Could not start: {exc}")
-            try:
-                from oneirodex.utils.library_watch import start_library_watch
-                start_library_watch(app)
-            except Exception as exc:
-                print(f"[LIBRARY WATCH] Could not start: {exc}")
-            try:
-                from oneirodex.utils.free_games_poller import start_free_games_scheduler
-                start_free_games_scheduler(app)
-
-                from oneirodex.utils.discover_ml.job import start_discover_ml_scheduler
-                start_discover_ml_scheduler(app)
-            except Exception as exc:
-                print(f"[FREE GAMES] Could not start: {exc}")
-            try:
-                # Linked store accounts synced once at link time and then went
-                # stale (GT-B27) — the live call existed, nothing re-ran it.
-                from oneirodex.utils.ownership_poller import start_ownership_scheduler
-                start_ownership_scheduler(app)
-            except Exception as exc:
-                print(f"[OWNERSHIP] Could not start: {exc}")
-            try:
-                from oneirodex.utils.email_digest_scheduler import start_email_digest_scheduler
-                start_email_digest_scheduler(app)
-            except Exception as exc:
-                print(f"[EMAIL DIGEST] Could not start: {exc}")
+    # Background schedulers are no longer started here — that made app
+    # construction spawn threads for every script that just wanted a configured
+    # app, with no shutdown path. They now start from the ASGI lifespan handler
+    # in asgi.py via oneirodex.background.start_background_workers(app).
 
     return app

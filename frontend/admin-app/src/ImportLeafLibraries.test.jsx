@@ -129,9 +129,7 @@ describe('ImportLeafLibraries', () => {
     expect(screen.getByText(/Nothing is created until you confirm/i)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /row errors/i })).toBeInTheDocument()
 
-    expect(
-      fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
-    ).toBe(false)
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL))).toBe(false)
 
     await user.click(screen.getByRole('checkbox', { name: /select nintendo switch/i }))
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
@@ -140,14 +138,10 @@ describe('ImportLeafLibraries', () => {
     await user.click(await screen.findByRole('button', { name: /^create library$/i }))
 
     await waitFor(() => {
-      expect(
-        fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
-      ).toBe(true)
+      expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL))).toBe(true)
     })
     await waitFor(() => {
-      expect(
-        fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_SCAN_URL)),
-      ).toBe(true)
+      expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_SCAN_URL))).toBe(true)
     })
     expect(await screen.findByText(/1 created/i)).toBeInTheDocument()
   })
@@ -167,9 +161,7 @@ describe('ImportLeafLibraries', () => {
     setPasteValue(/json text/i, '[{"path":"/x","platform":"NES"}]')
     await user.click(screen.getByRole('button', { name: /^preview$/i }))
 
-    expect(
-      await screen.findByText(/not available on this build yet/i),
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/not available on this build yet/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /confirm create/i })).not.toBeInTheDocument()
   })
 
@@ -251,10 +243,7 @@ describe('ImportLeafLibraries', () => {
     )
 
     render(<ImportLeafLibraries />)
-    setPasteValue(
-      /json text/i,
-      '[{"path":"/storage/games/NINTENDO","platform":"SWITCH"}]',
-    )
+    setPasteValue(/json text/i, '[{"path":"/storage/games/NINTENDO","platform":"SWITCH"}]')
     await user.click(screen.getByRole('button', { name: /^preview$/i }))
 
     expect(await screen.findByRole('heading', { name: /row errors/i })).toBeInTheDocument()
@@ -285,18 +274,13 @@ describe('ImportLeafLibraries', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<ImportLeafLibraries />)
-    setPasteValue(
-      /json text/i,
-      '[{"path":"/storage/games/Switch","platform":"SWITCH"}]',
-    )
+    setPasteValue(/json text/i, '[{"path":"/storage/games/Switch","platform":"SWITCH"}]')
     await user.click(screen.getByRole('button', { name: /^preview$/i }))
     await screen.findByText('Nintendo Switch')
     await user.click(screen.getByRole('checkbox', { name: /select nintendo switch/i }))
     await user.click(screen.getByRole('button', { name: /confirm create \(1\)/i }))
     await user.click(await screen.findByRole('button', { name: /^cancel$/i }))
 
-    expect(
-      fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL)),
-    ).toBe(false)
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes(LIBRARY_ADD_URL))).toBe(false)
   })
 })

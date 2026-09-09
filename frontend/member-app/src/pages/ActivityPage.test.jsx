@@ -6,6 +6,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { ActivityPage } from './ActivityPage'
+import { ShellHarness } from '../testShell'
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -58,7 +59,9 @@ afterEach(() => {
 test('activity page renders friends, feed chrome, and voice lobby', async () => {
   render(
     <MemoryRouter>
-      <ActivityPage />
+      <ShellHarness>
+        <ActivityPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -84,7 +87,9 @@ test('new chrome turns the friends-only checkbox into a view switch', async () =
 
   render(
     <MemoryRouter>
-      <ActivityPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <ActivityPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   await waitFor(() => expect(fetch).toHaveBeenCalled())
@@ -98,8 +103,6 @@ test('new chrome turns the friends-only checkbox into a view switch', async () =
   await user.click(screen.getByRole('button', { name: 'Friends only' }))
   // The switch must actually re-query, or it is decoration.
   await waitFor(() =>
-    expect(
-      fetch.mock.calls.some(([u]) => String(u).includes('friends_only=1')),
-    ).toBe(true),
+    expect(fetch.mock.calls.some(([u]) => String(u).includes('friends_only=1'))).toBe(true),
   )
 })

@@ -17,6 +17,8 @@ import pytest
 
 from oneirodex.utils import game_core
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan metadata enrichment cascade.
+
 
 class FakeLibrary:
     def __init__(self, platform):

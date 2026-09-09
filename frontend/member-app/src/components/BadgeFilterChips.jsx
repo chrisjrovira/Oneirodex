@@ -57,12 +57,7 @@ export function toggleBadgeFilter(filters, param, onApply, cleanFilters) {
   onApply(cleanFilters(next))
 }
 
-export function BadgeFilterChips({
-  filters,
-  onApply,
-  cleanFilters,
-  t = (key) => key,
-}) {
+export function BadgeFilterChips({ filters, onApply, cleanFilters, t = (key) => key }) {
   return (
     <div className="od-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
       {BADGE_FILTER_CHIPS.map((chip) => {

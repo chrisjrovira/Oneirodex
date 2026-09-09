@@ -1,8 +1,4 @@
-import {
-  isStackableTone,
-  planToastStack,
-  stackSummaryMessage,
-} from '../../../shared/toastStack'
+import { isStackableTone, planToastStack, stackSummaryMessage } from '@oneirodex/ui'
 
 /**
  * Lightweight aurora toast — mirrors member-app showToast (top-right, dismissible).
