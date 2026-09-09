@@ -178,14 +178,26 @@ class TestJSONEncodedDict:
         result = json_type.process_bind_param(None, None)
         assert result is None
     
-    def test_process_bind_param_invalid_data(self):
-        """Test serializing invalid data returns None."""
+    def test_process_bind_param_invalid_data(self, caplog):
+        """Non-serialisable data is logged at ERROR and re-raised.
+
+        The previous behaviour swallowed the error and bound ``None``, so a
+        failed write looked like a successful one. A serialisation failure now
+        surfaces instead of silently persisting NULL over the caller's data.
+        """
+        import logging
+
         json_type = JSONEncodedDict()
         # Create an object that can't be JSON serialized
         invalid_data = set([1, 2, 3])
-        result = json_type.process_bind_param(invalid_data, None)
-        assert result is None
-    
+        with caplog.at_level(logging.ERROR, logger="oneirodex.models._base"):
+            with pytest.raises(TypeError):
+                json_type.process_bind_param(invalid_data, None)
+        assert any(
+            "could not serialise" in r.getMessage() and r.levelno == logging.ERROR
+            for r in caplog.records
+        )
+
     def test_process_result_value_valid_json(self):
         """Test deserializing valid JSON string."""
         json_type = JSONEncodedDict()
