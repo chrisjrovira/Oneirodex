@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import {
   PEEL_PROFILES,
   SAFE_VARIANT_KEYS,
@@ -234,9 +234,9 @@ export function ScanMatchSettingsPage() {
           ) : null}
 
           <div className="od-admin-actions-row">
-            <button type="submit" className="od-btn" disabled={!canSave}>
+            <Button type="submit" disabled={!canSave}>
               {busy ? 'Saving…' : 'Save settings'}
-            </button>
+            </Button>
             <a className="od-btn od-btn--ghost" href="/admin/settings">
               Settings hub
             </a>

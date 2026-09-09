@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import { Button } from '@oneirodex/ui'
 import { SCAN_CONFLICT_COPY, SCAN_QUEUE_POLICY } from './scanQueuePolicy'
 import './ScanConflictModal.css'
 
@@ -55,32 +56,31 @@ export function ScanConflictModal({
         </div>
         <p className="od-scan-conflict__lede">{lede}</p>
         <div className="od-scan-conflict__choices">
-          <button
+          <Button
             ref={queueRef}
-            type="button"
-            className="od-btn od-btn--primary od-scan-conflict__choice"
+            variant="primary"
+            className="od-scan-conflict__choice"
             disabled={busy}
             onClick={() => onChoose?.(SCAN_QUEUE_POLICY.QUEUE)}
           >
             {SCAN_CONFLICT_COPY.queueLabel}
-          </button>
+          </Button>
           <p className="od-scan-conflict__hint">{SCAN_CONFLICT_COPY.queueHint}</p>
-          <button
-            type="button"
-            className="od-btn od-scan-conflict__choice od-scan-conflict__choice--force"
+          <Button
+            className="od-scan-conflict__choice od-scan-conflict__choice--force"
             disabled={busy}
             onClick={() => onChoose?.(SCAN_QUEUE_POLICY.FORCE)}
           >
             {SCAN_CONFLICT_COPY.forceLabel}
-          </button>
+          </Button>
           <p className="od-scan-conflict__warn" role="note">
             {SCAN_CONFLICT_COPY.forceWarning}
           </p>
         </div>
         <div className="od-scan-conflict__actions">
-          <button type="button" className="od-btn" disabled={busy} onClick={onClose}>
+          <Button disabled={busy} onClick={onClose}>
             {SCAN_CONFLICT_COPY.cancelLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

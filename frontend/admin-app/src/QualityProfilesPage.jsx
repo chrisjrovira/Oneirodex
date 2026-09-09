@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { Button, confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson, putJson } from './adminApi'
 
@@ -260,9 +260,9 @@ export function QualityProfilesPage() {
           >
             Set active
           </button>
-          <button type="button" className="od-btn" onClick={createProfile} disabled={busy}>
+          <Button onClick={createProfile} disabled={busy}>
             New
-          </button>
+          </Button>
           <button
             type="button"
             className="od-btn"
@@ -358,9 +358,9 @@ export function QualityProfilesPage() {
           Prefer repack / proper in titles
         </label>
         <div className="od-admin-actions-row">
-          <button type="submit" className="od-btn" disabled={!selectedId || busy}>
+          <Button type="submit" disabled={!selectedId || busy}>
             Save profile
-          </button>
+          </Button>
           <a className="od-btn" href="/admin/settings">
             Back to settings
           </a>

@@ -4,7 +4,7 @@ import { getJson, putJson } from './adminApi'
 import { AdminPageActions } from './AdminPageActions'
 import { CreateUserForm } from './CreateUserForm'
 import { DataTable } from './DataTable'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { MetricStrip } from './opsWidgets'
 import { PM_IGNORE } from './formIgnore'
 import { showToast } from './utils/toast'
@@ -62,12 +62,12 @@ function UserEditor({ user, onClose, onSaved }) {
         </select>
       </label>
       <div className="od-admin-actions-row">
-        <button type="submit" className="od-btn" disabled={busy}>
+        <Button type="submit" disabled={busy}>
           Save
-        </button>
-        <button type="button" className="od-btn" onClick={onClose} disabled={busy}>
+        </Button>
+        <Button onClick={onClose} disabled={busy}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   )
@@ -183,11 +183,7 @@ export function UsersPage() {
               label: 'Actions',
               sortable: false,
               filterable: false,
-              render: (u) => (
-                <button type="button" className="od-btn" onClick={() => setEditing(u)}>
-                  Edit
-                </button>
-              ),
+              render: (u) => <Button onClick={() => setEditing(u)}>Edit</Button>,
             },
           ]}
           rows={users}

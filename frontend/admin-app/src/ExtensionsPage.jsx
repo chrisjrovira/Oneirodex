@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
@@ -281,9 +281,9 @@ export function ExtensionsPage() {
               spellCheck={false}
             />
           </label>
-          <button type="submit" className="od-btn" disabled={busy || !normalizeExt(draft)}>
+          <Button type="submit" disabled={busy || !normalizeExt(draft)}>
             Add
-          </button>
+          </Button>
           <label className="od-admin-field od-admin-field--grow-sm od-admin-field--flush">
             Filter
             <input

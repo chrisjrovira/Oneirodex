@@ -2,7 +2,7 @@
 // which is easy to miss when the triggering control has scrolled away.
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { csrfHeaders, csrfToken, postJson } from './adminApi'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
 import './OpenPathModal.css'
@@ -162,9 +162,7 @@ function FirmwareMissingDialog({ open, markdown, onClose }) {
           >
             Copy markdown
           </button>
-          <button type="button" className="od-btn" onClick={onClose}>
-            Close
-          </button>
+          <Button onClick={onClose}>Close</Button>
         </div>
         {copied ? <p className="od-open-path__status">Copied to clipboard</p> : null}
       </div>

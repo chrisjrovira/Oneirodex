@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { ImagesPage } from './ImagesPage'
 import { StockPicker } from './StockPicker'
 import { SystemMarksPanel } from './SystemMarksPanel'
@@ -717,18 +717,11 @@ export function ArtStudioPage() {
                     Download ZIP
                   </a>
                 ) : (
-                  <button type="button" className="od-btn" disabled>
-                    Download ZIP
-                  </button>
+                  <Button disabled>Download ZIP</Button>
                 )}
-                <button
-                  type="button"
-                  className="od-btn"
-                  disabled={!packId || busy === 'apply-fallback'}
-                  onClick={applyFallback}
-                >
+                <Button disabled={!packId || busy === 'apply-fallback'} onClick={applyFallback}>
                   Set as fallback
-                </button>
+                </Button>
               </div>
 
               <label className="od-art-studio__uuid-field">

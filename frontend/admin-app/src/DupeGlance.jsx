@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { Button, confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 import { PM_IGNORE } from './formIgnore'
 import { getJson, postJson } from './adminApi'
@@ -674,9 +674,9 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
               </button>
             ))}
           </div>
-          <button type="button" className="od-btn" onClick={() => void load()} disabled={loading}>
+          <Button onClick={() => void load()} disabled={loading}>
             Refresh
-          </button>
+          </Button>
           <button
             type="button"
             className="od-btn od-btn--primary"
