@@ -92,7 +92,7 @@ if [ "$LINUX_DOCKER" = "1" ]; then
   # The image needs the GTK/webkit headers Tauri links against; those are the
   # actual reason a Linux bundle cannot be produced natively on Windows.
   # Node comes from NodeSource: Debian bookworm still ships Node 18, and this
-  # project is Node 20+.
+  # project is Node 22+.
   docker run --rm \
     -v "$REPO":/src \
     -w /src/clients/desktop \
@@ -105,7 +105,7 @@ if [ "$LINUX_DOCKER" = "1" ]; then
       apt-get install -y -qq --no-install-recommends \
         libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
         librsvg2-dev patchelf file curl ca-certificates gnupg >/dev/null
-      curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null
+      curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
       apt-get install -y -qq nodejs >/dev/null
       node --version
       npm ci --no-audit --no-fund
@@ -119,7 +119,7 @@ OS="$(host_os)"
 echo "==> host: $OS"
 
 require cargo "install Rust: https://rustup.rs"
-require npm   "install Node 20+"
+require npm   "install Node 22+"
 
 cd "$DESKTOP"
 npm ci --no-audit --no-fund

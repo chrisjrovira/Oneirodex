@@ -13,6 +13,8 @@
     "build:thin": "tsc --noEmit && vite build --mode thin",
     "preview": "vite preview",
     "test": "vitest run",
+    "lint": "npm --prefix ../.. run lint",
+    "format:check": "npm --prefix ../.. run format:check",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",

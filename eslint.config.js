@@ -23,8 +23,9 @@ export default [
   {
     // Build output, vendored code, and trees other seats own. `eslint .` from
     // the repo root would otherwise reach into the Python package and the
-    // clients/ workspaces. clients/** is linted from the Desktop track, not
-    // here — this seat owns frontend/** only.
+    // clients/ workspaces. The Desktop track lints `clients/desktop/**/*.ts`
+    // via the appended block near the end of this file; everything else under
+    // `clients/` stays out (the Rust/Tauri crate, the VR client).
     ignores: [
       '**/dist/**',
       '**/build/**',
@@ -33,7 +34,8 @@ export default [
       '**/*.min.js',
       'oneirodex/**',
       'scripts/**',
-      'clients/**',
+      'clients/quest/**',
+      'clients/desktop/src-tauri/**',
       // Standalone node harnesses for the classic (Jinja) theme JS. CI runs
       // them with `node` directly; they are not part of any SPA and predate
       // this seat's scope.
@@ -109,6 +111,29 @@ export default [
 
   {
     files: ['frontend/api-client/**/*.{test,spec}.ts'],
+    languageOptions: { globals: { ...TEST_GLOBALS } },
+  },
+
+  // --- Desktop track (clients/desktop) --------------------------------------
+  // Appended by the Desktop seat (wave C3.7-client / ci-wishlist [B0.2]).
+  // Mirrors the frontend/api-client block: typescript-eslint's non-type-checked
+  // recommended set over the Tauri companion's TS. Same rule tweaks so the two
+  // TS surfaces lint identically.
+  ...tseslint.config({
+    files: ['clients/desktop/**/*.{ts,tsx}'],
+    extends: [tseslint.configs.recommended],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-undef': 'off',
+    },
+  }),
+
+  {
+    files: ['clients/desktop/**/*.{test,spec}.ts'],
     languageOptions: { globals: { ...TEST_GLOBALS } },
   },
 
