@@ -19,8 +19,10 @@ import '../pages/ChatPage.css'
 const FIXED_REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉', '👀']
 const POLL_MS = 8000
 const MAX_ATTACHMENTS_PER_MESSAGE = 5
-const ATTACH_ACCEPT = '.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.pdf,image/png,image/jpeg,image/webp,image/gif,text/plain,text/csv,application/pdf'
-const ATTACH_HINT_UNAVAILABLE = 'File attach isn’t available yet — uploads land when the server enables them.'
+const ATTACH_ACCEPT =
+  '.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.pdf,image/png,image/jpeg,image/webp,image/gif,text/plain,text/csv,application/pdf'
+const ATTACH_HINT_UNAVAILABLE =
+  'File attach isn’t available yet — uploads land when the server enables them.'
 const ATTACH_HINT_CHILD = 'Child accounts can’t upload attachments.'
 
 function ReactionLabel({ item }) {
@@ -189,10 +191,12 @@ export function ChatPanel({
       const response = await fetch('/api/chat/emoji', { credentials: 'same-origin' })
       if (!response.ok) return
       const data = await response.json()
-      const fixed = (Array.isArray(data.fixed) ? data.fixed : FIXED_REACTION_EMOJIS).map((emoji) => ({
-        emoji,
-        label: emoji,
-      }))
+      const fixed = (Array.isArray(data.fixed) ? data.fixed : FIXED_REACTION_EMOJIS).map(
+        (emoji) => ({
+          emoji,
+          label: emoji,
+        }),
+      )
       const custom = (Array.isArray(data.custom) ? data.custom : []).map((row) => ({
         emoji: row.emoji || `:${row.slug}:`,
         label: row.label || row.slug,
@@ -466,9 +470,7 @@ export function ChatPanel({
     const data = await response.json().catch(() => ({}))
     setMessages((prev) =>
       prev.map((m) =>
-        m.id === messageId
-          ? { ...m, reactions: data.reactions || {}, mine: data.mine || [] }
-          : m,
+        m.id === messageId ? { ...m, reactions: data.reactions || {}, mine: data.mine || [] } : m,
       ),
     )
   }
@@ -605,8 +607,7 @@ export function ChatPanel({
   const dmChannels = channels.filter((c) => c.kind === 'dm' || c.type === 'dm')
   const showArchive = canArchiveChannel(active, viewer)
   const showLeave = canLeaveChannel(active)
-  const attachDisabled =
-    !activeId || attachAvailable === false || attachBusy || viewerIsChild
+  const attachDisabled = !activeId || attachAvailable === false || attachBusy || viewerIsChild
   const canSend =
     Boolean(activeId) && (Boolean(body.trim()) || pendingAttachments.length > 0) && !attachBusy
   const attachHint = viewerIsChild
@@ -718,7 +719,10 @@ export function ChatPanel({
                             {ch.name?.replace(/^#/, '') || ch.name}
                           </span>
                           {ch.unread ? (
-                            <span className="od-chat-channel__unread" aria-label={`${ch.unread} unread`}>
+                            <span
+                              className="od-chat-channel__unread"
+                              aria-label={`${ch.unread} unread`}
+                            >
                               {ch.unread > 99 ? '99+' : ch.unread}
                             </span>
                           ) : null}
@@ -746,7 +750,10 @@ export function ChatPanel({
                           </span>
                           <span className="od-chat-channel__name">{ch.name}</span>
                           {ch.unread ? (
-                            <span className="od-chat-channel__unread" aria-label={`${ch.unread} unread`}>
+                            <span
+                              className="od-chat-channel__unread"
+                              aria-label={`${ch.unread} unread`}
+                            >
                               {ch.unread > 99 ? '99+' : ch.unread}
                             </span>
                           ) : null}
@@ -787,12 +794,18 @@ export function ChatPanel({
                 autoComplete="off"
                 disabled={creatingRoom}
               />
-              <button className="od-btn" type="submit" disabled={creatingRoom || !newRoomName.trim()}>
+              <button
+                className="od-btn"
+                type="submit"
+                disabled={creatingRoom || !newRoomName.trim()}
+              >
                 Add
               </button>
             </form>
           ) : (
-            <p className="od-chat-create-hint">Ask a household member to create a room (child accounts cannot).</p>
+            <p className="od-chat-create-hint">
+              Ask a household member to create a room (child accounts cannot).
+            </p>
           )}
         </aside>
 
@@ -873,7 +886,12 @@ export function ChatPanel({
                 </button>
               ) : null}
               {onClose ? (
-                <button type="button" className="od-chat-icon-btn" aria-label="Close chat" onClick={onClose}>
+                <button
+                  type="button"
+                  className="od-chat-icon-btn"
+                  aria-label="Close chat"
+                  onClick={onClose}
+                >
                   ×
                 </button>
               ) : null}
@@ -909,15 +927,18 @@ export function ChatPanel({
               />
               {!voiceChannel ? (
                 <p className="od-chat-voice__hint">
-                  This is the shared household lobby, not this conversation. Pick a voice
-                  channel in a space to talk there instead.
+                  This is the shared household lobby, not this conversation. Pick a voice channel in
+                  a space to talk there instead.
                 </p>
               ) : null}
             </div>
           ) : null}
 
           {msg ? (
-            <p className={`od-chat-status${msgIsError ? ' is-error' : ''}`} role={msgIsError ? 'alert' : 'status'}>
+            <p
+              className={`od-chat-status${msgIsError ? ' is-error' : ''}`}
+              role={msgIsError ? 'alert' : 'status'}
+            >
               {msg}
             </p>
           ) : null}
@@ -954,7 +975,11 @@ export function ChatPanel({
                     ) : null}
                     <MessageAttachments attachments={m.attachments} />
                     <div className="od-chat-msg__actions">
-                      <button type="button" className="od-cbtn od-cbtn--ghost od-btn--sm" onClick={() => setReplyTo(m)}>
+                      <button
+                        type="button"
+                        className="od-cbtn od-cbtn--ghost od-btn--sm"
+                        onClick={() => setReplyTo(m)}
+                      >
                         Reply
                       </button>
                       {reactionItems.map((item) => {
@@ -1025,7 +1050,12 @@ export function ChatPanel({
           ) : null}
 
           {showEmojiPicker ? (
-            <div id={emojiPickerId} className="od-chat-emoji-picker" role="listbox" aria-label="Emoji">
+            <div
+              id={emojiPickerId}
+              className="od-chat-emoji-picker"
+              role="listbox"
+              aria-label="Emoji"
+            >
               {reactionItems.map((item) => (
                 <button
                   key={item.emoji}

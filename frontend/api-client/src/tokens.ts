@@ -1,9 +1,5 @@
 import type { Requester } from './client.js'
-import type {
-  CreateTokenRequest,
-  CreateTokenResponse,
-  ListTokensResponse,
-} from './types.js'
+import type { CreateTokenRequest, CreateTokenResponse, ListTokensResponse } from './types.js'
 
 export function createTokensApi(request: Requester) {
   return {

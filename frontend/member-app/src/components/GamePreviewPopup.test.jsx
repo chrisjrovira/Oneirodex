@@ -218,7 +218,6 @@ test('renders nothing without a game', () => {
   expect(container).toBeEmptyDOMElement()
 })
 
-
 test('lists every system the title is held on, current copy marked', async () => {
   // The grid renders one tile per library row, so two copies of a game read as
   // two unrelated games. This section is the only place they are one title.
@@ -313,11 +312,10 @@ test('editionBlockerText names the blocker a member can act on', () => {
   expect(editionBlockerText({ play_blocker: 'catalog_only' })).toMatch(/Catalog/)
   expect(editionBlockerText({ play_blocker: 'no_browser_core' })).toMatch(/browser core/)
   // Firmware wins over the generic blocker: it is the specific, fixable one.
-  expect(
-    editionBlockerText({ firmware_missing: true, play_blocker: 'no_browser_core' }),
-  ).toMatch(/firmware/i)
+  expect(editionBlockerText({ firmware_missing: true, play_blocker: 'no_browser_core' })).toMatch(
+    /firmware/i,
+  )
 })
-
 
 test('the systems count counts systems, not copies', () => {
   // Two copies in two PC libraries is one system. "2 systems" would send a
@@ -334,19 +332,20 @@ test('the systems count counts systems, not copies', () => {
 
 test('mergePreviewTags prefers editions tags and dedupes browse genres', () => {
   expect(
-    mergePreviewTags(['Puzzle', 'Adventure'], [
-      { label: 'Co-op', kind: 'mode' },
-      { label: 'puzzle', kind: 'genre' },
-    ]),
+    mergePreviewTags(
+      ['Puzzle', 'Adventure'],
+      [
+        { label: 'Co-op', kind: 'mode' },
+        { label: 'puzzle', kind: 'genre' },
+      ],
+    ),
   ).toEqual(['Co-op', 'puzzle', 'Adventure'])
 })
 
 test('friendsSentence names household members without a store crowd', () => {
   expect(friendsSentence([])).toBeNull()
   expect(friendsSentence([{ name: 'Alex' }])).toBe('Alex in this house')
-  expect(friendsSentence([{ name: 'Alex' }, { name: 'Sam' }])).toBe(
-    'Alex and Sam in this house',
-  )
+  expect(friendsSentence([{ name: 'Alex' }, { name: 'Sam' }])).toBe('Alex and Sam in this house')
 })
 
 test('shows the shelf reason, extra tags, and household friends from editions', async () => {

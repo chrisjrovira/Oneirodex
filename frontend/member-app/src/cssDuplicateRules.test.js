@@ -38,11 +38,7 @@ const REPO_ROOT = join(HERE, '../../..')
  * is: `cssCodeSplit` puts each page's CSS in its own chunk, so two definitions
  * in one app resolve by load order — i.e. by the user's navigation history.
  */
-const SCAN_ROOTS = [
-  'frontend/member-app/src',
-  'frontend/admin-app/src',
-  'frontend/ops-glance/src',
-]
+const SCAN_ROOTS = ['frontend/member-app/src', 'frontend/admin-app/src', 'frontend/ops-glance/src']
 
 /**
  * The Jinja theme tree gets a ratchet instead of a hard rule.
@@ -73,12 +69,7 @@ const THEME_DUPLICATE_BUDGET = 85
  * is a defect either way. Adding a file here is a claim that it is a layer, and
  * should be as hard to justify as adding to ALLOWED above.
  */
-const OVERRIDE_LAYERS = [
-  'od-bootstrap-bridge.css',
-  'od-density.css',
-  'od-shell.css',
-  'od-era.css',
-]
+const OVERRIDE_LAYERS = ['od-bootstrap-bridge.css', 'od-density.css', 'od-shell.css', 'od-era.css']
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'vendor', '__pycache__', '.git'])
 
@@ -117,9 +108,7 @@ function definedClasses(css) {
   const names = new Set()
   // A class is defined when it is a complete simple selector, not a descendant
   // prefix (`.od-pop__panel--bare .menu`) or a :has() override.
-  for (const m of withoutComments.matchAll(
-    /^(\.[a-zA-Z][a-zA-Z0-9_-]*)\s*(?=,|\{)/gm,
-  )) {
+  for (const m of withoutComments.matchAll(/^(\.[a-zA-Z][a-zA-Z0-9_-]*)\s*(?=,|\{)/gm)) {
     names.add(m[1])
   }
   return names

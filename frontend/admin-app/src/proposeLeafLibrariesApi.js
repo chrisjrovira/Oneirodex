@@ -293,8 +293,15 @@ export async function createLibraryFromCandidate(candidate) {
 export async function findLibraryUuidByName(name) {
   const data = await getJson(GET_LIBRARIES_URL)
   const rows = Array.isArray(data) ? data : data.libraries || []
-  const want = String(name || '').trim().toLowerCase()
-  const hit = rows.find((row) => String(row.name || '').trim().toLowerCase() === want)
+  const want = String(name || '')
+    .trim()
+    .toLowerCase()
+  const hit = rows.find(
+    (row) =>
+      String(row.name || '')
+        .trim()
+        .toLowerCase() === want,
+  )
   return hit?.uuid || null
 }
 

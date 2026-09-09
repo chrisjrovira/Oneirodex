@@ -66,7 +66,9 @@ describe('normalizeLibraryHealth / formatters', () => {
       thin: true,
       games: 0,
       note: 'No games cataloged — score withheld.',
-      factors: [{ id: 'unmatched', label: 'Unmatched folders', count: 2, weight: 20, deduction: 0 }],
+      factors: [
+        { id: 'unmatched', label: 'Unmatched folders', count: 2, weight: 20, deduction: 0 },
+      ],
     }
     expect(formatLibraryHealthValue(health)).toBe('n/a')
     expect(formatLibraryHealthHint(health)).toBe('Unmatched folders')

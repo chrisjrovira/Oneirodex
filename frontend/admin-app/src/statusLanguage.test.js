@@ -95,9 +95,10 @@ describe('admin status language', () => {
         regressions.push(`${name}: ${count} hand-rolled status sites, baseline ${allowed}`)
       }
     }
-    expect(regressions,
-      `Use PageStatus from './PageStatus' instead of a new role="status"/role="alert" block.\n`
-      + regressions.join('\n'),
+    expect(
+      regressions,
+      `Use PageStatus from './PageStatus' instead of a new role="status"/role="alert" block.\n` +
+        regressions.join('\n'),
     ).toEqual([])
   })
 

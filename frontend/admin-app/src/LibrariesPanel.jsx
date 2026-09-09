@@ -28,13 +28,18 @@ function groupLabel(lib) {
  * Thin-bar “N libraries” control beside account. The menu shows total games
  * with unmatched in parentheses, and a platform filter that drives the table.
  */
-function LibrariesTrailSummary({ libraryCount, totalGames, totalUnmatched, platforms, platformFilter, onPlatformFilter }) {
+function LibrariesTrailSummary({
+  libraryCount,
+  totalGames,
+  totalUnmatched,
+  platforms,
+  platformFilter,
+  onPlatformFilter,
+}) {
   const [open, setOpen] = useState(false)
   const [needle, setNeedle] = useState('')
   const [trailHost, setTrailHost] = useState(() =>
-    typeof document !== 'undefined'
-      ? document.getElementById(ADMIN_TOPBAR_TRAIL_ID)
-      : null,
+    typeof document !== 'undefined' ? document.getElementById(ADMIN_TOPBAR_TRAIL_ID) : null,
   )
   const rootRef = useRef(null)
   const panelId = useId()
@@ -67,8 +72,7 @@ function LibrariesTrailSummary({ libraryCount, totalGames, totalUnmatched, platf
 
   const label = libraryCount === 1 ? '1 library' : `${libraryCount} libraries`
   const gamesLabel = totalGames === 1 ? '1 game' : `${totalGames} games`
-  const unmatchedLabel =
-    totalUnmatched === 1 ? '1 unmatched' : `${totalUnmatched} unmatched`
+  const unmatchedLabel = totalUnmatched === 1 ? '1 unmatched' : `${totalUnmatched} unmatched`
 
   const control = (
     <div className="od-pop od-libraries-trail" data-align="end" ref={rootRef}>
@@ -134,19 +138,14 @@ function LibrariesTrailSummary({ libraryCount, totalGames, totalUnmatched, platf
                       platformFilter === row.platform ? ' is-active' : ''
                     }`}
                     onClick={() => {
-                      onPlatformFilter(
-                        platformFilter === row.platform ? '' : row.platform,
-                      )
+                      onPlatformFilter(platformFilter === row.platform ? '' : row.platform)
                       setOpen(false)
                     }}
                   >
                     <span className="od-libraries-trail__name">{row.platform}</span>
                     <span className="od-libraries-trail__n">
                       {row.games}
-                      <span className="od-libraries-trail__n-unmatched">
-                        {' '}
-                        ({row.unmatched})
-                      </span>
+                      <span className="od-libraries-trail__n-unmatched"> ({row.unmatched})</span>
                     </span>
                   </button>
                 </li>
@@ -229,17 +228,13 @@ function GroupDialog({ targets, existingNames, onClose, onSave, busy }) {
         if (!busy) onClose?.()
       }}
     >
-      <div
-        className="od-libraries-group__panel"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="od-libraries-group__panel" onClick={(event) => event.stopPropagation()}>
         <h2 id={titleId} className="od-libraries-group__title">
           {heading}
         </h2>
         <p className="od-libraries-group__lede">
-          Libraries that share a group name sit together. Clear the name to
-          ungroup. The Group column only appears when at least one library is
-          grouped.
+          Libraries that share a group name sit together. Clear the name to ungroup. The Group
+          column only appears when at least one library is grouped.
         </p>
         <label className="od-libraries-group__field">
           <span>Group name</span>
@@ -267,12 +262,7 @@ function GroupDialog({ targets, existingNames, onClose, onSave, busy }) {
             Cancel
           </button>
           {anyGroupedTargets ? (
-            <button
-              type="button"
-              className="od-cbtn"
-              disabled={busy}
-              onClick={() => onSave('')}
-            >
+            <button type="button" className="od-cbtn" disabled={busy} onClick={() => onSave('')}>
               Ungroup
             </button>
           ) : null}
@@ -302,13 +292,7 @@ export function LibrariesPanel({ panelEl = null }) {
   const [platformFilter, setPlatformFilter] = useState('')
   const [groupTargets, setGroupTargets] = useState(null)
   const [groupBusy, setGroupBusy] = useState(false)
-  const {
-    conflictOpen,
-    busyKey,
-    startScan,
-    onConflictChoose,
-    onConflictClose,
-  } = useLibraryScan()
+  const { conflictOpen, busyKey, startScan, onConflictChoose, onConflictClose } = useLibraryScan()
 
   const reload = useCallback(() => {
     setError(null)
@@ -347,8 +331,7 @@ export function LibrariesPanel({ panelEl = null }) {
   }, [rows, reload])
 
   const editUrlTemplate =
-    panelEl?.getAttribute('data-edit-url-template') ||
-    '/admin/library/__UUID__/edit'
+    panelEl?.getAttribute('data-edit-url-template') || '/admin/library/__UUID__/edit'
 
   const toggleOne = useCallback((uuid, on) => {
     setSelected((prev) => {
@@ -398,10 +381,7 @@ export function LibrariesPanel({ panelEl = null }) {
       showToast(data?.error || data?.message || 'Batch scan failed.', 'error')
       return
     }
-    showToast(
-      data?.message || `Queued scan for ${selectedList.length} libraries.`,
-      'success',
-    )
+    showToast(data?.message || `Queued scan for ${selectedList.length} libraries.`, 'success')
   }, [selectedList])
 
   const saveGroup = useCallback(
@@ -450,7 +430,10 @@ export function LibrariesPanel({ panelEl = null }) {
     const wanted = platformFilter.trim().toLowerCase()
     if (!wanted) return rows
     return rows.filter(
-      (lib) => String(lib.platform || '').trim().toLowerCase() === wanted,
+      (lib) =>
+        String(lib.platform || '')
+          .trim()
+          .toLowerCase() === wanted,
     )
   }, [platformFilter, rows])
 
@@ -480,7 +463,11 @@ export function LibrariesPanel({ panelEl = null }) {
 
   const actionButtons = useCallback(
     (lib) => (
-      <div className="od-cbtn-group od-libraries-actions" role="group" aria-label={`${lib.name} actions`}>
+      <div
+        className="od-cbtn-group od-libraries-actions"
+        role="group"
+        aria-label={`${lib.name} actions`}
+      >
         <button
           type="button"
           className="od-cbtn"
@@ -500,10 +487,7 @@ export function LibrariesPanel({ panelEl = null }) {
         >
           {busyKey === lib.uuid ? '…' : 'Scan'}
         </button>
-        <a
-          className="od-cbtn"
-          href={editUrlTemplate.replace('__UUID__', lib.uuid)}
-        >
+        <a className="od-cbtn" href={editUrlTemplate.replace('__UUID__', lib.uuid)}>
           Edit
         </a>
         <button
@@ -513,11 +497,7 @@ export function LibrariesPanel({ panelEl = null }) {
         >
           Delete
         </button>
-        <button
-          type="button"
-          className="od-cbtn"
-          onClick={() => setGroupTargets([lib])}
-        >
+        <button type="button" className="od-cbtn" onClick={() => setGroupTargets([lib])}>
           Group
         </button>
       </div>

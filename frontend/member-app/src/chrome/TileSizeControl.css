@@ -147,7 +147,6 @@
   display: none;
 }
 
-
 /* The only focus ring in the group, and it belongs to the control that actually
    takes focus. Matches `.od-cbtn:focus-visible` rather than inventing a second
    treatment. */

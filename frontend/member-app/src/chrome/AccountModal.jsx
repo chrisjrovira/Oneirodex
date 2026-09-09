@@ -80,7 +80,10 @@ function messageOf(error, fallback) {
 function Note({ tone, children }) {
   if (!children) return null
   return (
-    <p className={`od-acct__note od-acct__note--${tone}`} role={tone === 'error' ? 'alert' : 'status'}>
+    <p
+      className={`od-acct__note od-acct__note--${tone}`}
+      role={tone === 'error' ? 'alert' : 'status'}
+    >
       {children}
     </p>
   )
@@ -101,11 +104,7 @@ function ProfilePanel({ summary }) {
 
   return (
     <div className="od-acct__avatar-row">
-      <img
-        className="od-acct__avatar"
-        src={avatarSrc(summary, summary.avatar_path)}
-        alt=""
-      />
+      <img className="od-acct__avatar" src={avatarSrc(summary, summary.avatar_path)} alt="" />
       <div className="od-acct__avatar-meta">
         <p className="od-acct__row-title">{summary.username}</p>
         <p className="od-acct__row-sub">{summary.role}</p>
@@ -200,8 +199,8 @@ function AvatarPanel({ summary, onUpdated }) {
             Choose image
           </label>
           <p className="od-acct__hint">
-            PNG, JPEG, GIF or WebP, up to 5MB. Square crops best — anything else
-            is centred and cropped for you.
+            PNG, JPEG, GIF or WebP, up to 5MB. Square crops best — anything else is centred and
+            cropped for you.
           </p>
           {file ? <p className="od-acct__hint">{file.name}</p> : null}
         </div>
@@ -223,9 +222,7 @@ function AvatarPanel({ summary, onUpdated }) {
           review — the tile you clicked is exactly what you get. */}
       {stock.length > 0 ? (
         <>
-          <p className="od-acct__label od-acct__label--follow">
-            Or pick one
-          </p>
+          <p className="od-acct__label od-acct__label--follow">Or pick one</p>
           <ul className="od-acct__stock">
             {stock.map((entry) => {
               const selected = summary?.avatar_path === entry.path
@@ -458,9 +455,7 @@ function InvitesPanel() {
             <li key={invite.token} className="od-acct__row">
               <div className="od-acct__row-main">
                 <p className="od-acct__row-title">{invite.email || 'Link invite'}</p>
-                <p
-                  className={`od-acct__row-sub${invite.expired ? ' od-acct__row-sub--warn' : ''}`}
-                >
+                <p className={`od-acct__row-sub${invite.expired ? ' od-acct__row-sub--warn' : ''}`}>
                   {invite.expired
                     ? `Expired ${formatWhen(invite.expires_at)}`
                     : `Expires ${formatWhen(invite.expires_at)}`}
@@ -578,7 +573,11 @@ function TokensPanel() {
         </label>
 
         <div className="od-acct__actions">
-          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy || !name.trim()}>
+          <button
+            type="submit"
+            className="od-cbtn od-cbtn--primary"
+            disabled={busy || !name.trim()}
+          >
             {busy ? 'Creating…' : 'Create token'}
           </button>
         </div>

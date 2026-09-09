@@ -1,8 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
-import {
-  SCAN_CONFLICT_COPY,
-  SCAN_QUEUE_POLICY,
-} from './scanQueuePolicy'
+import { SCAN_CONFLICT_COPY, SCAN_QUEUE_POLICY } from './scanQueuePolicy'
 import './ScanConflictModal.css'
 
 /**
@@ -41,10 +38,7 @@ export function ScanConflictModal({
         if (!busy) onClose?.()
       }}
     >
-      <div
-        className="od-scan-conflict__panel"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="od-scan-conflict__panel" onClick={(event) => event.stopPropagation()}>
         <div className="od-scan-conflict__toolbar">
           <h2 id={titleId} className="od-scan-conflict__title">
             {title}

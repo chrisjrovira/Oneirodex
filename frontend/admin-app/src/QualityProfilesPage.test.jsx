@@ -159,9 +159,7 @@ test('QualityProfilesPage creates a profile', async () => {
 
 test('App route /admin/quality_profiles mounts Quality Profiles UI', async () => {
   const originalFetch = global.fetch
-  global.fetch = mockFetch([
-    ['/api/quality-profiles', async () => jsonOk(SAMPLE_STORE)],
-  ])
+  global.fetch = mockFetch([['/api/quality-profiles', async () => jsonOk(SAMPLE_STORE)]])
   try {
     render(
       <MemoryRouter initialEntries={['/admin/quality_profiles']}>

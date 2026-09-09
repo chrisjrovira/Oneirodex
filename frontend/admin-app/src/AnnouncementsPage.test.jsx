@@ -55,9 +55,7 @@ test('a failed load is announced assertively', async () => {
 })
 
 test('lists what it loaded', async () => {
-  mockList([
-    { id: 1, title: 'Server maintenance', body: 'Sunday 02:00', published: true },
-  ])
+  mockList([{ id: 1, title: 'Server maintenance', body: 'Sunday 02:00', published: true }])
   render(<AnnouncementsPage />)
 
   await waitFor(() => {

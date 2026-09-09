@@ -56,9 +56,7 @@ export function PaginationBar({
               {option}
             </option>
           ))}
-          {!PER_PAGE_OPTIONS.includes(perPage) && (
-            <option value={perPage}>{perPage}</option>
-          )}
+          {!PER_PAGE_OPTIONS.includes(perPage) && <option value={perPage}>{perPage}</option>}
         </select>
         <span className="od-pagination__label">{t('Per page')}</span>
       </label>

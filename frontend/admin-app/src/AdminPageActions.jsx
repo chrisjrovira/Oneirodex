@@ -17,11 +17,7 @@ export const ADMIN_TOPBAR_TITLE_SLOT_ID = 'od-admin-topbar-title'
  * `slot="title"` portals into `#od-admin-topbar-title` (left, after rail toggle).
  * Falls back to the inline row in tests and any host without the bar.
  */
-export function AdminPageActions({
-  children,
-  label = 'Page actions',
-  slot = 'page',
-}) {
+export function AdminPageActions({ children, label = 'Page actions', slot = 'page' }) {
   const [host, setHost] = useState(null)
   const slotId =
     slot === 'trail'

@@ -91,13 +91,12 @@ export function QualityProfilesPage() {
 
   useEffect(() => {
     let cancelled = false
-    reload()
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load')
-          setStatus(err.message || 'Failed to load')
-        }
-      })
+    reload().catch((err) => {
+      if (!cancelled) {
+        setError(err.message || 'Failed to load')
+        setStatus(err.message || 'Failed to load')
+      }
+    })
     return () => {
       cancelled = true
     }
@@ -253,7 +252,12 @@ export function QualityProfilesPage() {
               ))}
             </select>
           </label>
-          <button type="button" className="od-btn" onClick={setActive} disabled={!selectedId || busy}>
+          <button
+            type="button"
+            className="od-btn"
+            onClick={setActive}
+            disabled={!selectedId || busy}
+          >
             Set active
           </button>
           <button type="button" className="od-btn" onClick={createProfile} disabled={busy}>
@@ -379,7 +383,12 @@ export function QualityProfilesPage() {
               aria-label="Test release title"
             />
           </label>
-          <button type="button" className="od-btn" onClick={runScoreProbe} disabled={!probeTitle.trim() || busy}>
+          <button
+            type="button"
+            className="od-btn"
+            onClick={runScoreProbe}
+            disabled={!probeTitle.trim() || busy}
+          >
             Score
           </button>
         </div>

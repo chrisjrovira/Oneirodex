@@ -248,9 +248,7 @@ export function DataTable({
             {sorted.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="od-table__empty">
-                  {filterActive
-                    ? `No rows match “${query.trim() || 'filters'}”.`
-                    : emptyMessage}
+                  {filterActive ? `No rows match “${query.trim() || 'filters'}”.` : emptyMessage}
                 </td>
               </tr>
             ) : (

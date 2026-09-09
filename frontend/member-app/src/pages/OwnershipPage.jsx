@@ -33,8 +33,7 @@ const STORES = [
     connect: connectSteam,
     sync: syncSteam,
     disconnect: disconnectSteam,
-    disconnectBody:
-      'Your synced ownership is cleared — your games stay put.',
+    disconnectBody: 'Your synced ownership is cleared — your games stay put.',
     csvLabel: 'Or import app IDs (CSV, one per line)',
     csvPlaceholder: 'appid\n570\n730',
     csvNoun: 'app IDs',
@@ -54,8 +53,7 @@ const STORES = [
     connect: (id, extras) => connectGog(id, extras),
     sync: syncGog,
     disconnect: disconnectGog,
-    disconnectBody:
-      'Your imported ownership is cleared — your games stay put.',
+    disconnectBody: 'Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned titles (CSV: product ID or id,name per line)',
     csvPlaceholder: 'product_id,name\n1207658924,The Witcher 3',
     csvNoun: 'GOG titles',
@@ -75,8 +73,7 @@ const STORES = [
     connect: (id, extras) => connectEpic(id, extras),
     sync: syncEpic,
     disconnect: disconnectEpic,
-    disconnectBody:
-      'Your imported ownership is cleared — your games stay put.',
+    disconnectBody: 'Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned titles (CSV: catalog item ID or id,name per line)',
     csvPlaceholder: 'catalog_item_id,name\nfn,Fortnite',
     csvNoun: 'Epic titles',
@@ -89,16 +86,14 @@ const STORES = [
     fieldLabel: 'Amazon user ID or note (optional)',
     fieldPlaceholder: 'Optional label for your Amazon link',
     tokenLabel: 'Nile / Heroic token JSON',
-    tokenPlaceholder:
-      '{"refresh_token":"…","device_serial":"…"} or paste Heroic/Nile user.json',
+    tokenPlaceholder: '{"refresh_token":"…","device_serial":"…"} or paste Heroic/Nile user.json',
     tokenKind: 'textarea',
     numericField: false,
     saveLabel: 'Save Amazon link',
     connect: (id, extras) => connectAmazon(id, extras),
     sync: syncAmazon,
     disconnect: disconnectAmazon,
-    disconnectBody:
-      'Your imported ownership is cleared — your games stay put.',
+    disconnectBody: 'Your imported ownership is cleared — your games stay put.',
     csvLabel: 'Import owned Amazon titles (CSV: product ID or id,name per line)',
     csvNoun: 'Amazon titles',
     canSync: true,
@@ -213,9 +208,7 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
     if (!ok) {
       return
     }
-    const result = await runAction(`${store.key}:disconnect`, store.key, () =>
-      store.disconnect(),
-    )
+    const result = await runAction(`${store.key}:disconnect`, store.key, () => store.disconnect())
     if (result) {
       setAccountDrafts((current) => ({ ...current, [store.key]: '' }))
       setTokenDrafts((current) => ({ ...current, [store.key]: '' }))
@@ -283,246 +276,250 @@ export function OwnershipPage({ shellConfig = {} } = {}) {
 
   return (
     <>
-    {useNewChrome ? (
-      /* One store at a time, chosen from bar two.
+      {useNewChrome ? (
+        /* One store at a time, chosen from bar two.
          The page stacked a full connect/import panel for every store, so the
          owned-titles summary — the thing you came to read — sat above three
          long forms you were not using. The stores become views; the summary
          stays put and the chosen store's card opens under it. */
-      <ContextBar
-        views={STORES.map((store) => ({ id: store.key, label: store.label }))}
-        activeView={activeStore || ''}
-        onSelectView={(id) => setActiveStore((current) => (current === id ? null : id))}
-        summary={
-          summary && enabled
-            ? `${summary.total_owned ?? 0} owned · ${summary.total_matched ?? 0} matched`
-            : null
-        }
-      />
-    ) : null}
-    <div className="od-more-page od-ownership">
-      {useNewChrome ? null : (
-        <>
-          <div className="od-page-header">
-            <h1>Store Ownership</h1>
-          </div>
-          <p className="od-more-page__lede">
-            Link store accounts and import owned-title lists to show which library games you
-            also own elsewhere. Register-only sync — Oneirodex never downloads games or DRM
-            from stores.
-          </p>
-        </>
-      )}
+        <ContextBar
+          views={STORES.map((store) => ({ id: store.key, label: store.label }))}
+          activeView={activeStore || ''}
+          onSelectView={(id) => setActiveStore((current) => (current === id ? null : id))}
+          summary={
+            summary && enabled
+              ? `${summary.total_owned ?? 0} owned · ${summary.total_matched ?? 0} matched`
+              : null
+          }
+        />
+      ) : null}
+      <div className="od-more-page od-ownership">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              <h1>Store Ownership</h1>
+            </div>
+            <p className="od-more-page__lede">
+              Link store accounts and import owned-title lists to show which library games you also
+              own elsewhere. Register-only sync — Oneirodex never downloads games or DRM from
+              stores.
+            </p>
+          </>
+        )}
 
-      {/* Floating, so the panel below does not jump when the fetch resolves.
+        {/* Floating, so the panel below does not jump when the fetch resolves.
           delayMs=0 — this is the initial load, so the page would otherwise sit
           blank with nothing explaining why. */}
-      <LoadingOverlay active={!summary} label="Loading ownership status…" delayMs={0} />
+        <LoadingOverlay active={!summary} label="Loading ownership status…" delayMs={0} />
 
-      <div className="od-ownership__status" aria-live="polite">
-
-        {summary && !enabled ? (
-          <p className="od-ownership__empty">
-            Store ownership sync is disabled by your administrator.
-          </p>
-        ) : null}
-
-        {summary && enabled && (summary.total_owned ?? 0) === 0 ? (
-          <p className="od-ownership__empty">
-            No owned titles synced yet. Connect a store or import a CSV below.
-          </p>
-        ) : null}
-
-        {summary && enabled ? (
-          <article className="od-ownership__card">
-            <header className="od-ownership__card-head">
-              <div className="od-ownership__card-title">
-                <strong>Owned titles</strong>
-                <span className="od-ownership__pill">register-only</span>
-              </div>
-              <span className="od-ownership__card-counts">
-                {summary.total_owned ?? 0} synced · {summary.total_matched ?? 0} matched
-              </span>
-            </header>
-            <ul className="od-ownership__store-grid">
-              {STORES.map((store) => {
-                const state = stores[store.key] || {}
-                const connected = !!state.connected
-                const owned = state.owned_count ?? 0
-                const matched = state.matched_count ?? 0
-                return (
-                  <li
-                    key={store.key}
-                    className="od-ownership__store-row"
-                    data-connected={connected ? '1' : '0'}
-                  >
-                    <span className="od-ownership__store-label">{store.label}</span>
-                    <span className="od-ownership__store-state">
-                      {connected ? 'connected' : 'not connected'}
-                    </span>
-                    <span className="od-ownership__store-counts">
-                      {owned} titles · {matched} matched
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-            <p className="od-ownership__card-note">
-              {summary.has_steam_api_key
-                ? 'Steam API key configured'
-                : 'Steam: no API key — use CSV import'}
-              {' · '}
-              GOG / Epic / Amazon: live register when a token is saved — no store downloads
+        <div className="od-ownership__status" aria-live="polite">
+          {summary && !enabled ? (
+            <p className="od-ownership__empty">
+              Store ownership sync is disabled by your administrator.
             </p>
-          </article>
-        ) : null}
-      </div>
+          ) : null}
 
-      {summary && enabled && !useNewChrome ? (
-        <p className="od-ownership__meta">
-          Pick a store above to connect it or import a list.
-        </p>
-      ) : null}
+          {summary && enabled && (summary.total_owned ?? 0) === 0 ? (
+            <p className="od-ownership__empty">
+              No owned titles synced yet. Connect a store or import a CSV below.
+            </p>
+          ) : null}
 
-      {summary && enabled && useNewChrome && !selectedStore ? (
-        <p className="od-ownership__hint">
-          Choose a store in the bar above to link it or import a list.
-        </p>
-      ) : null}
-
-      {summary && enabled
-        ? (useNewChrome ? (selectedStore ? [selectedStore] : []) : STORES).map((store) => {
-            const state = stores[store.key] || {}
-            const message = messages[store.key]
-            const busy = busyAction?.startsWith(`${store.key}:`)
-            return (
-              <section key={store.key} className="od-ownership__section">
-                <h2>{store.label}</h2>
-                <p className="od-ownership__meta">{store.meta}</p>
-
-                {message ? (
-                  <p
-                    className="od-ownership__message"
-                    data-tone={message.tone}
-                    role={message.tone === 'error' ? 'alert' : 'status'}
-                  >
-                    {message.text}
-                  </p>
-                ) : null}
-
-                <form onSubmit={(event) => handleConnect(store, event)}>
-                  <label>
-                    {store.fieldLabel}
-                    <input
-                      type="text"
-                      value={accountDrafts[store.key]}
-                      placeholder={store.fieldPlaceholder}
-                      inputMode={store.numericField ? 'numeric' : undefined}
-                      pattern={store.numericField ? '[0-9]+' : undefined}
-                      onChange={(event) =>
-                        setAccountDrafts((current) => ({
-                          ...current,
-                          [store.key]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-                  {store.tokenKind === 'password' ? (
-                    <label>
-                      {store.tokenLabel}
-                      <input
-                        type="password"
-                        autoComplete="off"
-                        value={tokenDrafts[store.key]}
-                        placeholder={store.tokenPlaceholder}
-                        onChange={(event) =>
-                          setTokenDrafts((current) => ({
-                            ...current,
-                            [store.key]: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                  ) : null}
-                  {store.tokenKind === 'textarea' ? (
-                    <label>
-                      {store.tokenLabel}
-                      <textarea
-                        rows={3}
-                        autoComplete="off"
-                        value={tokenDrafts[store.key]}
-                        placeholder={store.tokenPlaceholder}
-                        onChange={(event) =>
-                          setTokenDrafts((current) => ({
-                            ...current,
-                            [store.key]: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                  ) : null}
-                  {state.has_credential ? (
-                    <p className="od-ownership__meta">A live-sync token is saved for this store.</p>
-                  ) : null}
-                  <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
-                    {busyAction === `${store.key}:connect` ? 'Saving…' : store.saveLabel}
-                  </button>
-                </form>
-
-                <div className="od-ownership__actions">
-                  {store.canSync ? (
-                    <button type="button" className="od-cbtn" disabled={busy} onClick={() => handleSync(store)}>
-                      {busyAction === `${store.key}:sync`
-                        ? `Syncing from ${store.label}…`
-                        : `Sync from ${store.label}`}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="od-cbtn"
-                    disabled={busy || !state.connected}
-                    onClick={() => handleDisconnect(store)}
-                  >
-                    {busyAction === `${store.key}:disconnect`
-                      ? 'Disconnecting…'
-                      : `Disconnect ${store.label}`}
-                  </button>
+          {summary && enabled ? (
+            <article className="od-ownership__card">
+              <header className="od-ownership__card-head">
+                <div className="od-ownership__card-title">
+                  <strong>Owned titles</strong>
+                  <span className="od-ownership__pill">register-only</span>
                 </div>
+                <span className="od-ownership__card-counts">
+                  {summary.total_owned ?? 0} synced · {summary.total_matched ?? 0} matched
+                </span>
+              </header>
+              <ul className="od-ownership__store-grid">
+                {STORES.map((store) => {
+                  const state = stores[store.key] || {}
+                  const connected = !!state.connected
+                  const owned = state.owned_count ?? 0
+                  const matched = state.matched_count ?? 0
+                  return (
+                    <li
+                      key={store.key}
+                      className="od-ownership__store-row"
+                      data-connected={connected ? '1' : '0'}
+                    >
+                      <span className="od-ownership__store-label">{store.label}</span>
+                      <span className="od-ownership__store-state">
+                        {connected ? 'connected' : 'not connected'}
+                      </span>
+                      <span className="od-ownership__store-counts">
+                        {owned} titles · {matched} matched
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="od-ownership__card-note">
+                {summary.has_steam_api_key
+                  ? 'Steam API key configured'
+                  : 'Steam: no API key — use CSV import'}
+                {' · '}
+                GOG / Epic / Amazon: live register when a token is saved — no store downloads
+              </p>
+            </article>
+          ) : null}
+        </div>
 
-                <form onSubmit={(event) => handleCsv(store, event)}>
-                  <label>
-                    {store.csvLabel}
-                    <textarea
-                      rows={4}
-                      value={csvDrafts[store.key]}
-                      placeholder={store.csvPlaceholder}
-                      onChange={(event) =>
-                        setCsvDrafts((current) => ({
-                          ...current,
-                          [store.key]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Or upload a CSV file
-                    <input
-                      type="file"
-                      accept=".csv,text/csv"
-                      ref={(node) => {
-                        fileInputs.current[store.key] = node
-                      }}
-                    />
-                  </label>
-                  <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
-                    {busyAction === `${store.key}:csv` ? 'Importing…' : 'Import CSV'}
-                  </button>
-                </form>
-              </section>
-            )
-          })
-        : null}
-    </div>
+        {summary && enabled && !useNewChrome ? (
+          <p className="od-ownership__meta">Pick a store above to connect it or import a list.</p>
+        ) : null}
+
+        {summary && enabled && useNewChrome && !selectedStore ? (
+          <p className="od-ownership__hint">
+            Choose a store in the bar above to link it or import a list.
+          </p>
+        ) : null}
+
+        {summary && enabled
+          ? (useNewChrome ? (selectedStore ? [selectedStore] : []) : STORES).map((store) => {
+              const state = stores[store.key] || {}
+              const message = messages[store.key]
+              const busy = busyAction?.startsWith(`${store.key}:`)
+              return (
+                <section key={store.key} className="od-ownership__section">
+                  <h2>{store.label}</h2>
+                  <p className="od-ownership__meta">{store.meta}</p>
+
+                  {message ? (
+                    <p
+                      className="od-ownership__message"
+                      data-tone={message.tone}
+                      role={message.tone === 'error' ? 'alert' : 'status'}
+                    >
+                      {message.text}
+                    </p>
+                  ) : null}
+
+                  <form onSubmit={(event) => handleConnect(store, event)}>
+                    <label>
+                      {store.fieldLabel}
+                      <input
+                        type="text"
+                        value={accountDrafts[store.key]}
+                        placeholder={store.fieldPlaceholder}
+                        inputMode={store.numericField ? 'numeric' : undefined}
+                        pattern={store.numericField ? '[0-9]+' : undefined}
+                        onChange={(event) =>
+                          setAccountDrafts((current) => ({
+                            ...current,
+                            [store.key]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    {store.tokenKind === 'password' ? (
+                      <label>
+                        {store.tokenLabel}
+                        <input
+                          type="password"
+                          autoComplete="off"
+                          value={tokenDrafts[store.key]}
+                          placeholder={store.tokenPlaceholder}
+                          onChange={(event) =>
+                            setTokenDrafts((current) => ({
+                              ...current,
+                              [store.key]: event.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                    ) : null}
+                    {store.tokenKind === 'textarea' ? (
+                      <label>
+                        {store.tokenLabel}
+                        <textarea
+                          rows={3}
+                          autoComplete="off"
+                          value={tokenDrafts[store.key]}
+                          placeholder={store.tokenPlaceholder}
+                          onChange={(event) =>
+                            setTokenDrafts((current) => ({
+                              ...current,
+                              [store.key]: event.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                    ) : null}
+                    {state.has_credential ? (
+                      <p className="od-ownership__meta">
+                        A live-sync token is saved for this store.
+                      </p>
+                    ) : null}
+                    <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
+                      {busyAction === `${store.key}:connect` ? 'Saving…' : store.saveLabel}
+                    </button>
+                  </form>
+
+                  <div className="od-ownership__actions">
+                    {store.canSync ? (
+                      <button
+                        type="button"
+                        className="od-cbtn"
+                        disabled={busy}
+                        onClick={() => handleSync(store)}
+                      >
+                        {busyAction === `${store.key}:sync`
+                          ? `Syncing from ${store.label}…`
+                          : `Sync from ${store.label}`}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="od-cbtn"
+                      disabled={busy || !state.connected}
+                      onClick={() => handleDisconnect(store)}
+                    >
+                      {busyAction === `${store.key}:disconnect`
+                        ? 'Disconnecting…'
+                        : `Disconnect ${store.label}`}
+                    </button>
+                  </div>
+
+                  <form onSubmit={(event) => handleCsv(store, event)}>
+                    <label>
+                      {store.csvLabel}
+                      <textarea
+                        rows={4}
+                        value={csvDrafts[store.key]}
+                        placeholder={store.csvPlaceholder}
+                        onChange={(event) =>
+                          setCsvDrafts((current) => ({
+                            ...current,
+                            [store.key]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      Or upload a CSV file
+                      <input
+                        type="file"
+                        accept=".csv,text/csv"
+                        ref={(node) => {
+                          fileInputs.current[store.key] = node
+                        }}
+                      />
+                    </label>
+                    <button type="submit" className="od-cbtn od-cbtn--primary" disabled={busy}>
+                      {busyAction === `${store.key}:csv` ? 'Importing…' : 'Import CSV'}
+                    </button>
+                  </form>
+                </section>
+              )
+            })
+          : null}
+      </div>
     </>
   )
 }

@@ -109,9 +109,10 @@ function CatalogGenreShelf({
         clientWidth: track.clientWidth,
         railWidth: rail.clientWidth,
       })
-      const grab = event.currentTarget === event.target
-        ? 0
-        : event.clientX - rail.getBoundingClientRect().left - layout.leftPx
+      const grab =
+        event.currentTarget === event.target
+          ? 0
+          : event.clientX - rail.getBoundingClientRect().left - layout.leftPx
 
       const scrollFromClientX = (clientX) => {
         const box = rail.getBoundingClientRect()
@@ -175,9 +176,7 @@ function CatalogGenreShelf({
           {/* How many are actually in this genre — the thing the old pager
               could never say, because it counted the whole library. */}
           {total != null ? (
-            <span className="od-shelf__reason">
-              {total === 1 ? '1 title' : `${total} titles`}
-            </span>
+            <span className="od-shelf__reason">{total === 1 ? '1 title' : `${total} titles`}</span>
           ) : null}
         </div>
         {seeAllHref && total != null && total > games.length ? (
@@ -432,9 +431,7 @@ export function CatalogGridSections({
   return (
     <div
       ref={setRoot}
-      className={`catalog-grid-sections game-library-container${
-        selecting ? ' is-selecting' : ''
-      }`}
+      className={`catalog-grid-sections game-library-container${selecting ? ' is-selecting' : ''}`}
       data-library-shelves
       data-layout="grid"
     >

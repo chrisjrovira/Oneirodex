@@ -1,11 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
-import {
-  EmulatorFirmwarePanel,
-  coreLabel,
-  formatBytes,
-} from './EmulatorFirmwarePanel'
+import { EmulatorFirmwarePanel, coreLabel, formatBytes } from './EmulatorFirmwarePanel'
 
 const SUMMARY = {
   files: [{ name: 'scph5501.bin', size: 524288 }],
@@ -170,8 +166,7 @@ const SCAN_PLAN = {
   ],
   missing: [{ name: 'scph5501.bin', blocking: true }],
   conflicts: [{ name: 'saturn_bios.bin', versions: [{ digest: SATURN_A }, { digest: SATURN_B }] }],
-  missing_markdown:
-    '# Firmware still needed\n\n- **PlayStation** — `scph5501.bin`\n',
+  missing_markdown: '# Firmware still needed\n\n- **PlayStation** — `scph5501.bin`\n',
   copy_count: 1,
   already_count: 0,
   conflict_count: 1,
@@ -218,10 +213,7 @@ test('scan posts the folder and opens markdown the operator can copy', async () 
   render(<EmulatorFirmwarePanel />)
   await screen.findByText('PlayStation')
 
-  await userEvent.type(
-    screen.getByLabelText('Firmware collection folder'),
-    'E:\\_bios',
-  )
+  await userEvent.type(screen.getByLabelText('Firmware collection folder'), 'E:\\_bios')
   await userEvent.click(screen.getByRole('button', { name: 'Scan collection' }))
 
   expect(await screen.findByRole('dialog', { name: 'Missing firmware' })).toBeInTheDocument()

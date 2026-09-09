@@ -101,17 +101,13 @@ export function useLibrariesContextbarUnfurl(enabled) {
     if (librariesItem) {
       // Trigger already says "Libraries" — only offer the extra action.
       unfurls.push(
-        makeUnfurl(
-          'Libraries',
-          [{ label: 'Add library', href: addHref, tab: false }],
-          {
-            activeWhen: () =>
-              Boolean(
-                document.querySelector('#librariesPanel.active, #librariesPanel.show') ||
-                  librariesItem.classList.contains('active'),
-              ),
-          },
-        ),
+        makeUnfurl('Libraries', [{ label: 'Add library', href: addHref, tab: false }], {
+          activeWhen: () =>
+            Boolean(
+              document.querySelector('#librariesPanel.active, #librariesPanel.show') ||
+              librariesItem.classList.contains('active'),
+            ),
+        }),
       )
     }
     if (autoItem || manualItem) {
@@ -130,8 +126,8 @@ export function useLibrariesContextbarUnfurl(enabled) {
                 document.querySelector(
                   '#autoScan.active, #autoScan.show, #manualScan.active, #manualScan.show',
                 ) ||
-                  autoItem?.classList.contains('active') ||
-                  manualItem?.classList.contains('active'),
+                autoItem?.classList.contains('active') ||
+                manualItem?.classList.contains('active'),
               ),
           },
         ),

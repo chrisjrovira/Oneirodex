@@ -92,9 +92,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
     setDeletingUuid(collection.uuid)
     try {
       await deleteCollection(collection.uuid)
-      setCollections((current) =>
-        (current || []).filter((row) => row.uuid !== collection.uuid),
-      )
+      setCollections((current) => (current || []).filter((row) => row.uuid !== collection.uuid))
     } catch (deleteError) {
       window.alert(deleteError.message || 'Unable to delete that collection.')
     } finally {
@@ -104,7 +102,7 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         <ContextBar
           summary={collections ? `${collections.length} shelves` : null}
           actions={
@@ -116,157 +114,154 @@ export function CollectionsPage({ shellConfig = {} } = {}) {
             /* Quiet bar chrome: no primary fill, no icon. Wash only while the
                popover is open (aria-expanded) — see od-appbar contextbar rules. */
             <Popover label="New shelf">
-          <form className="od-collections__form" onSubmit={handleCreate}>
-            <label className="od-collections__field">
-              Name
-              <input
-                type="text"
-                maxLength={120}
-                required
-                placeholder="Cozy co-op nights"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            <label className="od-collections__field">
-              Description
-              <input
-                type="text"
-                maxLength={400}
-                placeholder="Optional"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </label>
-            <label className="od-collections__check">
-              <input
-                type="checkbox"
-                checked={isPublic}
-                onChange={(event) => setIsPublic(event.target.checked)}
-              />
-              Public
-            </label>
-            <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
-              {creating ? 'Creating…' : 'Create shelf'}
-            </button>
-            {createError ? (
-              <PageStatus
-                error={createError}
-                errorMessage={createError.message || 'Unable to create collection.'}
-                className="od-collections__error"
-              />
-            ) : null}
-          </form>
+              <form className="od-collections__form" onSubmit={handleCreate}>
+                <label className="od-collections__field">
+                  Name
+                  <input
+                    type="text"
+                    maxLength={120}
+                    required
+                    placeholder="Cozy co-op nights"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
+                </label>
+                <label className="od-collections__field">
+                  Description
+                  <input
+                    type="text"
+                    maxLength={400}
+                    placeholder="Optional"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                  />
+                </label>
+                <label className="od-collections__check">
+                  <input
+                    type="checkbox"
+                    checked={isPublic}
+                    onChange={(event) => setIsPublic(event.target.checked)}
+                  />
+                  Public
+                </label>
+                <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
+                  {creating ? 'Creating…' : 'Create shelf'}
+                </button>
+                {createError ? (
+                  <PageStatus
+                    error={createError}
+                    errorMessage={createError.message || 'Unable to create collection.'}
+                    className="od-collections__error"
+                  />
+                ) : null}
+              </form>
             </Popover>
           }
         />
       ) : null}
-    <div className="od-more-page od-collections">
-      {useNewChrome ? null : (
-        <>
-        <div className="od-page-header">
-          <h1>Collections</h1>
-        </div>
-        <p className="od-more-page__lede">
-          Curated shelves you and others share across the library.
-        </p>
+      <div className="od-more-page od-collections">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              <h1>Collections</h1>
+            </div>
+            <p className="od-more-page__lede">
+              Curated shelves you and others share across the library.
+            </p>
 
-        <form className="od-collections__form" onSubmit={handleCreate}>
-          <label className="od-collections__field">
-            Name
-            <input
-              type="text"
-              maxLength={120}
-              required
-              placeholder="Cozy co-op nights"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-          <label className="od-collections__field">
-            Description
-            <input
-              type="text"
-              maxLength={400}
-              placeholder="Optional"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </label>
-          <label className="od-collections__check">
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(event) => setIsPublic(event.target.checked)}
-            />
-            Public
-          </label>
-          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
-            {creating ? 'Creating…' : 'Create shelf'}
-          </button>
-          {createError ? (
-            <PageStatus
-              error={createError}
-              errorMessage={createError.message || 'Unable to create collection.'}
-              className="od-collections__error"
-            />
-          ) : null}
-        </form>
-        </>
-      )}
+            <form className="od-collections__form" onSubmit={handleCreate}>
+              <label className="od-collections__field">
+                Name
+                <input
+                  type="text"
+                  maxLength={120}
+                  required
+                  placeholder="Cozy co-op nights"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </label>
+              <label className="od-collections__field">
+                Description
+                <input
+                  type="text"
+                  maxLength={400}
+                  placeholder="Optional"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                />
+              </label>
+              <label className="od-collections__check">
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(event) => setIsPublic(event.target.checked)}
+                />
+                Public
+              </label>
+              <button type="submit" className="od-cbtn od-cbtn--primary" disabled={creating}>
+                {creating ? 'Creating…' : 'Create shelf'}
+              </button>
+              {createError ? (
+                <PageStatus
+                  error={createError}
+                  errorMessage={createError.message || 'Unable to create collection.'}
+                  className="od-collections__error"
+                />
+              ) : null}
+            </form>
+          </>
+        )}
 
-      <PageStatus
-        loading={!error && !collections}
-        error={error}
-        errorMessage="Unable to load collections."
-        loadingMessage="Loading shelves…"
-        onRetry={() => setRetryCount((n) => n + 1)}
-      />
+        <PageStatus
+          loading={!error && !collections}
+          error={error}
+          errorMessage="Unable to load collections."
+          loadingMessage="Loading shelves…"
+          onRetry={() => setRetryCount((n) => n + 1)}
+        />
 
-      {!error && collections && collections.length === 0 ? (
-        <p>
-          {useNewChrome
-            ? 'No collections yet. Create your first one from New shelf above.'
-            : 'No collections yet. Create your first shelf with the form above.'}
-        </p>
-      ) : null}
+        {!error && collections && collections.length === 0 ? (
+          <p>
+            {useNewChrome
+              ? 'No collections yet. Create your first one from New shelf above.'
+              : 'No collections yet. Create your first shelf with the form above.'}
+          </p>
+        ) : null}
 
-      {!error && collections && collections.length > 0 ? (
-        <ul className="od-collections__list">
-          {collections.map((collection) => {
-            const countLabel = itemCountLabel(collection)
-            return (
-              <li key={collection.uuid} className="od-collections__row">
-                <Link
-                  className="od-collections__card"
-                  to={`/collections/${collection.uuid}`}
-                >
-                  <strong>{collection.name}</strong>
-                  <span className="od-collections__card-desc">
-                    {collection.description || 'No description'}
-                  </span>
-                  <span className="od-collections__meta">
-                    {collection.is_public ? 'Public' : 'Private'}
-                    {collection.is_system ? ' · System' : ''}
-                    {countLabel ? ` · ${countLabel}` : ''}
-                  </span>
-                </Link>
-                {collection.can_edit && !collection.is_system ? (
-                  <button
-                    type="button"
-                    className="od-collections__delete"
-                    disabled={deletingUuid === collection.uuid}
-                    onClick={() => handleDelete(collection)}
-                  >
-                    {deletingUuid === collection.uuid ? 'Deleting…' : 'Delete'}
-                  </button>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
-    </div>
+        {!error && collections && collections.length > 0 ? (
+          <ul className="od-collections__list">
+            {collections.map((collection) => {
+              const countLabel = itemCountLabel(collection)
+              return (
+                <li key={collection.uuid} className="od-collections__row">
+                  <Link className="od-collections__card" to={`/collections/${collection.uuid}`}>
+                    <strong>{collection.name}</strong>
+                    <span className="od-collections__card-desc">
+                      {collection.description || 'No description'}
+                    </span>
+                    <span className="od-collections__meta">
+                      {collection.is_public ? 'Public' : 'Private'}
+                      {collection.is_system ? ' · System' : ''}
+                      {countLabel ? ` · ${countLabel}` : ''}
+                    </span>
+                  </Link>
+                  {collection.can_edit && !collection.is_system ? (
+                    <button
+                      type="button"
+                      className="od-collections__delete"
+                      disabled={deletingUuid === collection.uuid}
+                      onClick={() => handleDelete(collection)}
+                    >
+                      {deletingUuid === collection.uuid ? 'Deleting…' : 'Delete'}
+                    </button>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        ) : null}
+      </div>
     </>
   )
 }

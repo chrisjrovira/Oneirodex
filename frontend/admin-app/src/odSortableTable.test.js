@@ -21,17 +21,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 const HERE = dirname(fileURLToPath(import.meta.url))
 
 const SCRIPT = readFileSync(
-  join(
-    HERE,
-    '..',
-    '..',
-    '..',
-    'oneirodex',
-    'setup',
-    'default_theme',
-    'js',
-    'od_sortable_table.js',
-  ),
+  join(HERE, '..', '..', '..', 'oneirodex', 'setup', 'default_theme', 'js', 'od_sortable_table.js'),
   'utf8',
 )
 

@@ -79,7 +79,11 @@
 .od-social-companion-page {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 20% 0%, color-mix(in srgb, var(--od-accent) 18%, transparent), transparent 50%),
+    radial-gradient(
+      ellipse at 20% 0%,
+      color-mix(in srgb, var(--od-accent) 18%, transparent),
+      transparent 50%
+    ),
     var(--od-bg);
   color: var(--od-text);
 }

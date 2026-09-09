@@ -73,9 +73,21 @@ export function getMoreGroups(options = {}) {
   const byId = new Map(getMoreLinks(options).map((link) => [link.id, link]))
   const groups = [
     // Group heading only — the primary /library link stays "Game Catalog".
-    { id: 'library', label: 'Library', ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'] },
-    { id: 'social', label: 'Social', ids: ['friends', 'chat', 'notifications', 'activity', 'news'] },
-    { id: 'play', label: 'Play', ids: ['ways-to-play', 'big-picture', 'playtime', 'vr', 'trailers'] },
+    {
+      id: 'library',
+      label: 'Library',
+      ids: ['collections', 'wishlist', 'updates', 'acquire', 'ownership', 'calendar'],
+    },
+    {
+      id: 'social',
+      label: 'Social',
+      ids: ['friends', 'chat', 'notifications', 'activity', 'news'],
+    },
+    {
+      id: 'play',
+      label: 'Play',
+      ids: ['ways-to-play', 'big-picture', 'playtime', 'vr', 'trailers'],
+    },
     { id: 'support', label: 'Support', ids: ['report', 'help'] },
   ]
 
@@ -117,9 +129,7 @@ export const TILE_SIZE_PATHS = ['/discover', '/library', '/favorites']
 export function hasTileSizeControl(pathname) {
   const path = (pathname || '/').replace(/\/+$/, '') || '/'
   if (path.startsWith('/discover/hub')) return false
-  return TILE_SIZE_PATHS.some(
-    (base) => path === base || path.startsWith(`${base}/`),
-  )
+  return TILE_SIZE_PATHS.some((base) => path === base || path.startsWith(`${base}/`))
 }
 
 const SECTION_HOME = {

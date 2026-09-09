@@ -36,29 +36,26 @@ export function BrowserPlayerPilot() {
     void load()
   }, [load])
 
-  const onToggle = useCallback(
-    async (event) => {
-      const next = event.target.checked
-      setBusy(true)
-      setError(null)
-      try {
-        const saved = await putJson(ENDPOINT, { nostalgist_nes_pilot: next })
-        setPilot(Boolean(saved.nostalgist_nes_pilot))
-        showToast(
-          next
-            ? 'NES Play will use the Nostalgist host (no save bar yet).'
-            : 'NES Play uses the WebRetro room.',
-          'success',
-        )
-      } catch (err) {
-        setError(err)
-        showToast(err.message || 'Could not save browser player settings.', 'error')
-      } finally {
-        setBusy(false)
-      }
-    },
-    [],
-  )
+  const onToggle = useCallback(async (event) => {
+    const next = event.target.checked
+    setBusy(true)
+    setError(null)
+    try {
+      const saved = await putJson(ENDPOINT, { nostalgist_nes_pilot: next })
+      setPilot(Boolean(saved.nostalgist_nes_pilot))
+      showToast(
+        next
+          ? 'NES Play will use the Nostalgist host (no save bar yet).'
+          : 'NES Play uses the WebRetro room.',
+        'success',
+      )
+    } catch (err) {
+      setError(err)
+      showToast(err.message || 'Could not save browser player settings.', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }, [])
 
   return (
     <section className="od-adminpage-panel" aria-labelledby="od-browser-player-heading">
@@ -66,9 +63,8 @@ export function BrowserPlayerPilot() {
         Browser play engine
       </h2>
       <p className="od-adminpage-lede">
-        Play uses WebRetro. The NES Nostalgist host is optional, off by default,
-        and still loads household cores and ROMs from this box. It does not yet
-        have Save / Load / Rewind.
+        Play uses WebRetro. The NES Nostalgist host is optional, off by default, and still loads
+        household cores and ROMs from this box. It does not yet have Save / Load / Rewind.
       </p>
       <PageStatus
         loading={loading}

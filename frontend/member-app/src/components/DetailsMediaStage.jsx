@@ -34,16 +34,8 @@ function stageItems(videoEmbeds, shownShots) {
  * Shots expand into the lightbox; videos use the player's own fullscreen.
  * Never autoplays.
  */
-export function DetailsMediaStage({
-  videoEmbeds,
-  shownShots,
-  onFullscreen,
-  onShotBroken,
-}) {
-  const items = useMemo(
-    () => stageItems(videoEmbeds, shownShots),
-    [videoEmbeds, shownShots],
-  )
+export function DetailsMediaStage({ videoEmbeds, shownShots, onFullscreen, onShotBroken }) {
+  const items = useMemo(() => stageItems(videoEmbeds, shownShots), [videoEmbeds, shownShots])
   const [selected, setSelected] = useState(0)
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion)
   const [videoArmed, setVideoArmed] = useState(() => !prefersReducedMotion())
@@ -106,11 +98,7 @@ export function DetailsMediaStage({
             onClick={() => onFullscreen(current.index)}
             aria-label="Open screenshot in viewer"
           >
-            <img
-              src={current.src}
-              alt=""
-              onError={() => onShotBroken(current.src)}
-            />
+            <img src={current.src} alt="" onError={() => onShotBroken(current.src)} />
           </button>
         ) : null}
       </div>
@@ -123,7 +111,11 @@ export function DetailsMediaStage({
                 type="button"
                 className={`od-btn od-details-media__thumb${index === selected ? ' is-active' : ''}`}
                 aria-pressed={index === selected}
-                aria-label={item.kind === 'video' ? `Show trailer ${item.index + 1}` : `Show screenshot ${item.index + 1}`}
+                aria-label={
+                  item.kind === 'video'
+                    ? `Show trailer ${item.index + 1}`
+                    : `Show screenshot ${item.index + 1}`
+                }
                 onClick={() => {
                   setSelected(index)
                   if (item.kind === 'video' && reducedMotion) {
@@ -131,7 +123,9 @@ export function DetailsMediaStage({
                   }
                 }}
               >
-                {item.kind === 'video' ? `Trailer ${item.index + 1}` : (
+                {item.kind === 'video' ? (
+                  `Trailer ${item.index + 1}`
+                ) : (
                   <img src={item.src} alt="" onError={() => onShotBroken(item.src)} />
                 )}
               </button>

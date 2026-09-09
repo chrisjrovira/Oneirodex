@@ -19,9 +19,8 @@ export function SystemDangerPage() {
 
       <h1>Danger zone</h1>
       <p className="od-admin-lede">
-        Scoped factory reset for this Oneirodex install. Nothing here deletes
-        game files on disk — only database state you choose. Confirmations are
-        required before anything runs.
+        Scoped factory reset for this Oneirodex install. Nothing here deletes game files on disk —
+        only database state you choose. Confirmations are required before anything runs.
       </p>
 
       <SystemResetPanel />

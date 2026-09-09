@@ -27,9 +27,7 @@ test('no new design-token violations against the baseline', () => {
 
   // Rendered as file/rule/count so a failure names the offending stylesheet
   // rather than just asserting a number went up.
-  expect(
-    regressions.map((r) => `${r.file} ${r.rule}: ${r.count} > ${r.allowed}`),
-  ).toEqual([])
+  expect(regressions.map((r) => `${r.file} ${r.rule}: ${r.count} > ${r.allowed}`)).toEqual([])
 })
 
 test('lint flags literals in declarations but not in token definitions', () => {

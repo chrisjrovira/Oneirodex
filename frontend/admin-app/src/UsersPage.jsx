@@ -123,8 +123,20 @@ export function UsersPage() {
         <MetricStrip
           label="Roster"
           items={[
-            { id: 'total', label: 'Accounts', value: counts.total, hint: 'in household', tone: 'info' },
-            { id: 'admins', label: 'Admins', value: counts.admins, hint: 'full access', tone: 'info' },
+            {
+              id: 'total',
+              label: 'Accounts',
+              value: counts.total,
+              hint: 'in household',
+              tone: 'info',
+            },
+            {
+              id: 'admins',
+              label: 'Admins',
+              value: counts.admins,
+              hint: 'full access',
+              tone: 'info',
+            },
             {
               id: 'inactive',
               label: 'Inactive',
@@ -146,11 +158,7 @@ export function UsersPage() {
       <PageStatus loading={loading} loadingMessage="Loading accounts…" />
 
       {editing ? (
-        <UserEditor
-          user={editing}
-          onClose={() => setEditing(null)}
-          onSaved={load}
-        />
+        <UserEditor user={editing} onClose={() => setEditing(null)} onSaved={load} />
       ) : null}
 
       {!loading && !error && users.length === 0 ? (

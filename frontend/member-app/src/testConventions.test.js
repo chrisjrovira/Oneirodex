@@ -35,9 +35,7 @@ function testFiles(dir) {
 
 test('no test imports user-event inside a test body', () => {
   const offenders = testFiles(SRC).filter((file) =>
-    /await import\(\s*['"]@testing-library\/user-event['"]\s*\)/.test(
-      readFileSync(file, 'utf8'),
-    ),
+    /await import\(\s*['"]@testing-library\/user-event['"]\s*\)/.test(readFileSync(file, 'utf8')),
   )
 
   expect(offenders.map((f) => f.replace(SRC, ''))).toEqual([])

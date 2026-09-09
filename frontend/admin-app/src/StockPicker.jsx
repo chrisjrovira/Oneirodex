@@ -33,12 +33,7 @@ export function normalizeStockCatalog(data) {
       return {
         id,
         label: String(row.label || row.name || row.title || id),
-        kind:
-          row.kind === 'platform'
-            ? 'platform'
-            : row.kind === 'era'
-              ? 'era'
-              : 'stock',
+        kind: row.kind === 'platform' ? 'platform' : row.kind === 'era' ? 'era' : 'stock',
         platform: row.platform ? String(row.platform) : '',
         packId: String(row.pack_id || row.packId || id),
         thumb,
@@ -247,11 +242,7 @@ export function StockPicker({
       </div>
 
       {loading ? (
-        <PageStatus
-          loading
-          loadingMessage="Loading catalog…"
-          className="od-stock-picker__empty"
-        />
+        <PageStatus loading loadingMessage="Loading catalog…" className="od-stock-picker__empty" />
       ) : unavailable ? (
         <div className="od-stock-picker__empty" data-testid="stock-picker-unavailable">
           <p className="od-stock-picker__empty-title">Stock catalog coming online</p>

@@ -102,8 +102,8 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
             </div>
           )}
           <p className="od-more-page__lede">
-            Open this page from a Systems tile. It shows IGDB regional release
-            counts for that console or computer — not Wikipedia, and not a DAT.
+            Open this page from a Systems tile. It shows IGDB regional release counts for that
+            console or computer — not Wikipedia, and not a DAT.
           </p>
           {useNewChrome ? null : libraryLinks}
         </div>
@@ -178,8 +178,7 @@ export function LicensedCatalogPage({ shellConfig = {} } = {}) {
             {rows.map((row) => {
               const code = row.region_code
               const label = row.label || REGION_LABELS[code] || code
-              const source =
-                row.source === 'dat_only' ? 'DAT only' : 'IGDB'
+              const source = row.source === 'dat_only' ? 'DAT only' : 'IGDB'
               return (
                 <tr key={code}>
                   <th scope="row">

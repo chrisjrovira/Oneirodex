@@ -114,15 +114,23 @@ export function ActivityPage({ shellConfig = {} } = {}) {
         })
         source.addEventListener('activity', () => {
           sseLive = true
-          fetchActivity({ friendsOnly }).then(setData).catch(() => {})
-          fetchSocial().then(setSocial).catch(() => {})
+          fetchActivity({ friendsOnly })
+            .then(setData)
+            .catch(() => {})
+          fetchSocial()
+            .then(setSocial)
+            .catch(() => {})
         })
         source.addEventListener('presence', () => {
           sseLive = true
-          fetchSocial().then(setSocial).catch(() => {})
-          fetchFriends().then((friendData) => {
-            setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
-          }).catch(() => {})
+          fetchSocial()
+            .then(setSocial)
+            .catch(() => {})
+          fetchFriends()
+            .then((friendData) => {
+              setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
+            })
+            .catch(() => {})
         })
         source.onerror = () => {
           sseLive = false
@@ -206,124 +214,155 @@ export function ActivityPage({ shellConfig = {} } = {}) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         <ContextBar
           views={ACTIVITY_VIEWS}
           activeView={friendsOnly ? 'friends' : 'all'}
           onSelectView={(id) => setFriendsOnly(id === 'friends')}
         />
       ) : null}
-    <div className="od-more-page od-panels">
-      {useNewChrome ? null : (
-        <>
-        <div className="od-page-header od-panels__full">
-          <h1>Activity</h1>
-        </div>
-        <p className="od-more-page__lede">
-          Friends, presence, and who’s playing — social hangout is on by default for the household.
-        </p>
-        <label className="od-more-page__lede">
-          <input
-            type="checkbox"
-            checked={friendsOnly}
-            onChange={(event) => setFriendsOnly(event.target.checked)}
-          />{' '}
-          Friends only feed
-        </label>
-        </>
-      )}
-
-      {social?.community_chat_url ? (
-        <p>
-          <a
-            className="od-btn"
-            href={social.community_chat_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={social.community_chat_url}
-          >
-            {social.community_chat_label || 'Open community'}
-          </a>
-        </p>
-      ) : null}
-
-      <section>
-        <h2>Friends</h2>
-        <form className="od-updates__search-form" onSubmit={requestFriend}>
-          <label>
-            Add by username
-            <input
-              value={friendName}
-              onChange={(e) => setFriendName(e.target.value)}
-              placeholder="household username"
-              autoComplete="off"
-            />
-          </label>
-          <button className="od-btn" type="submit">
-            Request
-          </button>
-        </form>
-        {friendMsg ? <p role="status">{friendMsg}</p> : null}
-        {friends.length === 0 ? (
-          <PageStatus emptyMessage="No friends yet — add someone by username." />
-        ) : (
-          <ul>
-            {friends.map((row) => (
-              <li key={row.id}>
-                <Link to={`/members/${row.user?.id}`}>
-                  <strong>{row.user?.name}</strong>
-                </Link>{' '}
-                — {row.status}
-                {row.user?.presence?.status
-                  ? ` · ${presenceLabel(row.user.presence.status)}`
-                  : ''}
-                {row.direction === 'incoming' && row.status === 'pending' ? (
-                  <>
-                    {' '}
-                    <button type="button" className="od-btn" onClick={() => void acceptFriend(row.id)}>
-                      Accept
-                    </button>{' '}
-                    <button type="button" className="od-btn" onClick={() => void rejectFriend(row.id)}>
-                      Decline
-                    </button>
-                  </>
-                ) : null}
-                {row.status === 'accepted' ? (
-                  <>
-                    {' '}
-                    <button type="button" className="od-btn" onClick={() => void removeFriend(row.id)}>
-                      Unfriend
-                    </button>
-                  </>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+      <div className="od-more-page od-panels">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header od-panels__full">
+              <h1>Activity</h1>
+            </div>
+            <p className="od-more-page__lede">
+              Friends, presence, and who’s playing — social hangout is on by default for the
+              household.
+            </p>
+            <label className="od-more-page__lede">
+              <input
+                type="checkbox"
+                checked={friendsOnly}
+                onChange={(event) => setFriendsOnly(event.target.checked)}
+              />{' '}
+              Friends only feed
+            </label>
+          </>
         )}
-      </section>
 
-      <VoiceLobby />
-      {error ? (
-        <PageStatus
-          error={error}
-          errorMessage="Unable to load activity."
-          onRetry={reload}
-          retryLabel="Retry"
-        />
-      ) : !data ? (
-        <PageStatus loading loadingMessage="Loading activity…" />
-      ) : data.restricted ? (
-        <p>Activity feed is limited for this account.</p>
-      ) : (
-        <>
-          <section>
-            <h2>Now playing</h2>
-            {(data.now_playing || []).length === 0 ? (
-              <PageStatus emptyMessage="Nobody is playing right now." />
-            ) : (
+        {social?.community_chat_url ? (
+          <p>
+            <a
+              className="od-btn"
+              href={social.community_chat_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={social.community_chat_url}
+            >
+              {social.community_chat_label || 'Open community'}
+            </a>
+          </p>
+        ) : null}
+
+        <section>
+          <h2>Friends</h2>
+          <form className="od-updates__search-form" onSubmit={requestFriend}>
+            <label>
+              Add by username
+              <input
+                value={friendName}
+                onChange={(e) => setFriendName(e.target.value)}
+                placeholder="household username"
+                autoComplete="off"
+              />
+            </label>
+            <button className="od-btn" type="submit">
+              Request
+            </button>
+          </form>
+          {friendMsg ? <p role="status">{friendMsg}</p> : null}
+          {friends.length === 0 ? (
+            <PageStatus emptyMessage="No friends yet — add someone by username." />
+          ) : (
+            <ul>
+              {friends.map((row) => (
+                <li key={row.id}>
+                  <Link to={`/members/${row.user?.id}`}>
+                    <strong>{row.user?.name}</strong>
+                  </Link>{' '}
+                  — {row.status}
+                  {row.user?.presence?.status
+                    ? ` · ${presenceLabel(row.user.presence.status)}`
+                    : ''}
+                  {row.direction === 'incoming' && row.status === 'pending' ? (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="od-btn"
+                        onClick={() => void acceptFriend(row.id)}
+                      >
+                        Accept
+                      </button>{' '}
+                      <button
+                        type="button"
+                        className="od-btn"
+                        onClick={() => void rejectFriend(row.id)}
+                      >
+                        Decline
+                      </button>
+                    </>
+                  ) : null}
+                  {row.status === 'accepted' ? (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="od-btn"
+                        onClick={() => void removeFriend(row.id)}
+                      >
+                        Unfriend
+                      </button>
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <VoiceLobby />
+        {error ? (
+          <PageStatus
+            error={error}
+            errorMessage="Unable to load activity."
+            onRetry={reload}
+            retryLabel="Retry"
+          />
+        ) : !data ? (
+          <PageStatus loading loadingMessage="Loading activity…" />
+        ) : data.restricted ? (
+          <p>Activity feed is limited for this account.</p>
+        ) : (
+          <>
+            <section>
+              <h2>Now playing</h2>
+              {(data.now_playing || []).length === 0 ? (
+                <PageStatus emptyMessage="Nobody is playing right now." />
+              ) : (
+                <ul>
+                  {data.now_playing.map((row) => (
+                    <li key={`np-${row.session_id}`}>
+                      {row.user_id ? (
+                        <Link to={`/members/${row.user_id}`}>
+                          <strong>{row.user}</strong>
+                        </Link>
+                      ) : (
+                        <strong>{row.user}</strong>
+                      )}{' '}
+                      — <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section>
+              <h2>Recent</h2>
               <ul>
-                {data.now_playing.map((row) => (
-                  <li key={`np-${row.session_id}`}>
+                {(data.activity || []).map((row) => (
+                  <li key={row.session_id}>
                     {row.user_id ? (
                       <Link to={`/members/${row.user_id}`}>
                         <strong>{row.user}</strong>
@@ -331,33 +370,15 @@ export function ActivityPage({ shellConfig = {} } = {}) {
                     ) : (
                       <strong>{row.user}</strong>
                     )}{' '}
-                    — <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
+                    played <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
+                    {row.is_playing ? ' (live)' : ''}
                   </li>
                 ))}
               </ul>
-            )}
-          </section>
-          <section>
-            <h2>Recent</h2>
-            <ul>
-              {(data.activity || []).map((row) => (
-                <li key={row.session_id}>
-                  {row.user_id ? (
-                    <Link to={`/members/${row.user_id}`}>
-                      <strong>{row.user}</strong>
-                    </Link>
-                  ) : (
-                    <strong>{row.user}</strong>
-                  )}{' '}
-                  played <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
-                  {row.is_playing ? ' (live)' : ''}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
-    </div>
+            </section>
+          </>
+        )}
+      </div>
     </>
   )
 }

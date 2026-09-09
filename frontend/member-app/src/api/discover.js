@@ -34,10 +34,7 @@ export async function fetchDiscoverSections({ signal } = {}) {
  * Backs both halves of a deep row: the shelf asking for the tiles past its
  * first window, and the row page paging through the whole thing.
  */
-export async function fetchDiscoverRow(
-  identifier,
-  { offset = 0, limit, feedToken, signal } = {},
-) {
+export async function fetchDiscoverRow(identifier, { offset = 0, limit, feedToken, signal } = {}) {
   const params = new URLSearchParams({ offset: String(offset) })
   if (limit) {
     params.set('limit', String(limit))
@@ -45,14 +42,11 @@ export async function fetchDiscoverRow(
   if (feedToken) {
     params.set('feed_token', feedToken)
   }
-  const response = await fetch(
-    `/api/discover/rows/${encodeURIComponent(identifier)}?${params}`,
-    {
-      credentials: 'same-origin',
-      signal,
-      headers: { Accept: 'application/json' },
-    },
-  )
+  const response = await fetch(`/api/discover/rows/${encodeURIComponent(identifier)}?${params}`, {
+    credentials: 'same-origin',
+    signal,
+    headers: { Accept: 'application/json' },
+  })
   if (!response.ok) {
     throw await errorFromResponse(response, 'discover row')
   }
@@ -69,11 +63,7 @@ export async function fetchDiscoverRow(
     limit: Number(data.limit) || 0,
     // Game rows answer with `games`, other kinds with `items`. Normalised to
     // one name here so callers do not repeat the branch.
-    items: Array.isArray(data.games)
-      ? data.games
-      : Array.isArray(data.items)
-        ? data.items
-        : [],
+    items: Array.isArray(data.games) ? data.games : Array.isArray(data.items) ? data.items : [],
     hasMore: Boolean(data.has_more),
     // How many the row holds altogether, or null when the server counted to its
     // probe ceiling without reaching the end. `null` is not 0 and must not
@@ -123,14 +113,11 @@ export async function fetchDiscoverZone(slug, { signal } = {}) {
  * Virtual Discover shelves for one genre (unplayed / newest / loved).
  */
 export async function fetchGenreHub(genre, { signal } = {}) {
-  const response = await fetch(
-    `/api/discover/hubs/genre/${encodeURIComponent(genre)}`,
-    {
-      credentials: 'same-origin',
-      signal,
-      headers: { Accept: 'application/json' },
-    },
-  )
+  const response = await fetch(`/api/discover/hubs/genre/${encodeURIComponent(genre)}`, {
+    credentials: 'same-origin',
+    signal,
+    headers: { Accept: 'application/json' },
+  })
   if (!response.ok) {
     throw await errorFromResponse(response, 'genre hub')
   }

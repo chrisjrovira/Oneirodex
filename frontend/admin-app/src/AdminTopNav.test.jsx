@@ -193,10 +193,7 @@ test('rail marks the active section and expands its hub subsections', () => {
 test('rail settings subsections include every settings row', () => {
   renderRail({ at: '/admin/new_server_settings' })
 
-  expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute(
-    'aria-expanded',
-    'true',
-  )
+  expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute('aria-expanded', 'true')
   expect(screen.getByRole('link', { name: 'All settings' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Server settings' })).toHaveAttribute(
     'href',

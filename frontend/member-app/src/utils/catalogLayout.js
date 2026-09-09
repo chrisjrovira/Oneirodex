@@ -20,10 +20,7 @@ export function catalogRowHeightPx(tileMin) {
   const base = Number(tileMin)
   if (!Number.isFinite(base) || base <= 0) return CATALOG_ROW_HEIGHT
   return Math.round(
-    Math.min(
-      CATALOG_ROW_MAX_PX,
-      Math.max(CATALOG_ROW_MIN_PX, base * CATALOG_ROW_SCALE),
-    ),
+    Math.min(CATALOG_ROW_MAX_PX, Math.max(CATALOG_ROW_MIN_PX, base * CATALOG_ROW_SCALE)),
   )
 }
 

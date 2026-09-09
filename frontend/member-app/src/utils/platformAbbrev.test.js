@@ -58,10 +58,7 @@ describe('editionChipLabels', () => {
   })
 
   it('shows no +N for a title on one system', () => {
-    const chip = editionChipLabels(
-      { library_platform: 'NES', edition_platforms: ['NES'] },
-      '',
-    )
+    const chip = editionChipLabels({ library_platform: 'NES', edition_platforms: ['NES'] }, '')
     expect(chip.extra).toBe(0)
   })
 

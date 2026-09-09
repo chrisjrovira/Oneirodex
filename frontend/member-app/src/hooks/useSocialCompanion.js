@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  fetchFriendsList,
-  fetchSocialStatus,
-} from './socialCompanionApi'
+import { fetchFriendsList, fetchSocialStatus } from './socialCompanionApi'
 
 /**
  * Live friends + presence for the stay-open social companion.
@@ -13,24 +10,27 @@ export function useSocialCompanion({ enabled = true, sseEnabled = false } = {}) 
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(Boolean(enabled))
 
-  const reload = useCallback(async ({ signal } = {}) => {
-    if (!enabled) return
-    try {
-      const [friendData, socialStatus] = await Promise.all([
-        fetchFriendsList({ signal }),
-        fetchSocialStatus({ signal }),
-      ])
-      setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
-      setStatus(socialStatus)
-      setError(null)
-    } catch (err) {
-      if (err?.name !== 'AbortError') {
-        setError(err)
+  const reload = useCallback(
+    async ({ signal } = {}) => {
+      if (!enabled) return
+      try {
+        const [friendData, socialStatus] = await Promise.all([
+          fetchFriendsList({ signal }),
+          fetchSocialStatus({ signal }),
+        ])
+        setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
+        setStatus(socialStatus)
+        setError(null)
+      } catch (err) {
+        if (err?.name !== 'AbortError') {
+          setError(err)
+        }
+      } finally {
+        setLoading(false)
       }
-    } finally {
-      setLoading(false)
-    }
-  }, [enabled])
+    },
+    [enabled],
+  )
 
   useEffect(() => {
     if (!enabled) return undefined
@@ -92,10 +92,7 @@ export function useSocialCompanion({ enabled = true, sseEnabled = false } = {}) 
     }
   }, [enabled, reload, sseEnabled])
 
-  const accepted = useMemo(
-    () => friends.filter((row) => row.status === 'accepted'),
-    [friends],
-  )
+  const accepted = useMemo(() => friends.filter((row) => row.status === 'accepted'), [friends])
   const pendingIncoming = useMemo(
     () => friends.filter((row) => row.direction === 'incoming' && row.status === 'pending'),
     [friends],

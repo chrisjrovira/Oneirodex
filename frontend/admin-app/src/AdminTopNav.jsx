@@ -142,13 +142,13 @@ export function AdminTopNav({ onToggleRail, railState = 'expanded' }) {
               aria-label="Account menu"
               onClick={() => setAccountOpen((open) => !open)}
             >
-              <span className="od-topbar__account-name">
-                {identity.username || 'Account'}
-              </span>
+              <span className="od-topbar__account-name">{identity.username || 'Account'}</span>
               {identity.avatar ? (
                 <img
                   className="od-topbar__account-avatar"
-                  src={identity.avatar.startsWith('/') ? identity.avatar : `/static/${identity.avatar}`}
+                  src={
+                    identity.avatar.startsWith('/') ? identity.avatar : `/static/${identity.avatar}`
+                  }
                   alt=""
                   width={22}
                   height={22}

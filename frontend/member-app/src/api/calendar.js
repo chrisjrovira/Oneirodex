@@ -1,11 +1,6 @@
 ﻿import { errorFromResponse } from './envelopeError'
 
-export async function fetchCalendar({
-  signal,
-  daysAhead = 60,
-  daysBehind = 14,
-  limit = 40,
-} = {}) {
+export async function fetchCalendar({ signal, daysAhead = 60, daysBehind = 14, limit = 40 } = {}) {
   const params = new URLSearchParams({
     days_ahead: String(daysAhead),
     days_behind: String(daysBehind),

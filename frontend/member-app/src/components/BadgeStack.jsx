@@ -1,9 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  capBadges,
-  collectBadgeSignals,
-  layoutBadgesByCorner,
-} from '../utils/badgeSignals'
+import { capBadges, collectBadgeSignals, layoutBadgesByCorner } from '../utils/badgeSignals'
 import {
   clearDismissedBadges,
   dismissBadge,
@@ -68,9 +64,7 @@ export function BadgeStack({
   }
 
   const hasMain = corners.some((c) => c.badges.length > 0 || c.overflow > 0)
-  const dismissed = listDismissedKinds(game?.uuid).filter(
-    (kind) => !PINNED_BADGE_KINDS.has(kind),
-  )
+  const dismissed = listDismissedKinds(game?.uuid).filter((kind) => !PINNED_BADGE_KINDS.has(kind))
   if (!hasMain && !(dismissible && dismissed.length > 0)) {
     return null
   }
@@ -127,9 +121,7 @@ export function BadgeStack({
           }`}
           data-corner={slot.corner}
           data-vr-in-stack={hasVr && slot.corner === 'top-left' ? 'top-left' : undefined}
-          data-missing-in-stack={
-            hasMissing && slot.corner === 'top-left' ? 'top-left' : undefined
-          }
+          data-missing-in-stack={hasMissing && slot.corner === 'top-left' ? 'top-left' : undefined}
         >
           {slot.badges.map((badge) => (
             <span

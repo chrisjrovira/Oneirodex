@@ -56,7 +56,6 @@ describe('page header retirement', () => {
   })
 })
 
-
 /**
  * The other half of the bargain.
  *
@@ -86,7 +85,6 @@ describe('the context bar title is the page heading', () => {
     expect(src).not.toMatch(/railState === 'collapsed' && pageTitle/)
   })
 })
-
 
 /**
  * Exactly one heading, never two.

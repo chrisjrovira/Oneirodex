@@ -273,9 +273,7 @@ test('detail page searches and adds a picked game', async () => {
     can_edit: true,
     items: [],
   })
-  collectionsApi.searchGames.mockResolvedValue([
-    { id: 9, uuid: 'game-9', name: 'Celeste' },
-  ])
+  collectionsApi.searchGames.mockResolvedValue([{ id: 9, uuid: 'game-9', name: 'Celeste' }])
   collectionsApi.addCollectionItem.mockResolvedValue({
     id: 11,
     game_uuid: 'game-9',

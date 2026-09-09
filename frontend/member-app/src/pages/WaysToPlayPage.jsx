@@ -29,9 +29,9 @@ export function WaysToPlayPage({ shellConfig = {} } = {}) {
   return (
     <div className="od-more-page od-ways-to-play">
       <p className="od-more-page__lede">
-        Honest play paths for titles you already own — Browser, Companion, or
-        Catalog. This is not a store verification badge. Systems still browse
-        by console; VR is its own catalog when enabled.
+        Honest play paths for titles you already own — Browser, Companion, or Catalog. This is not a
+        store verification badge. Systems still browse by console; VR is its own catalog when
+        enabled.
       </p>
 
       <section className="od-systems-group">

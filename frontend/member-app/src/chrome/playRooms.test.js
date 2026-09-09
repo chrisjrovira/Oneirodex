@@ -1,11 +1,5 @@
 import { expect, test } from 'vitest'
-import {
-  DEFAULT_ROOM,
-  ROOMS,
-  roomForPlatform,
-  roomIdForPlatform,
-  roomStyle,
-} from './playRooms'
+import { DEFAULT_ROOM, ROOMS, roomForPlatform, roomIdForPlatform, roomStyle } from './playRooms'
 import { familyForPlatform } from './platformSkins'
 
 test('groups by setting, which cuts across brand families', () => {
@@ -32,13 +26,26 @@ test('late-nineties disc generation is the carpet den', () => {
   expect(roomIdForPlatform('PSX')).toBe('carpet_den_late_90s')
   expect(roomIdForPlatform('SEGA_SATURN')).toBe('carpet_den_late_90s')
   expect(roomIdForPlatform('PSX')).not.toBe(roomIdForPlatform('NES'))
-    expect(roomIdForPlatform('NGC')).toBe('media_center_00s')
-    expect(roomIdForPlatform('WII_U')).toBe('media_center_00s')
-    expect(roomIdForPlatform('CD_I')).toBe('carpet_den_late_90s')
+  expect(roomIdForPlatform('NGC')).toBe('media_center_00s')
+  expect(roomIdForPlatform('WII_U')).toBe('media_center_00s')
+  expect(roomIdForPlatform('CD_I')).toBe('carpet_den_late_90s')
 })
 
 test('computers land on the desk', () => {
-  for (const key of ['PCDOS', 'AMIGA', 'VICE_X64SC', 'MSX', 'ZX_SPECTRUM', 'CPC', 'ATARI_ST', 'APPLE_II', 'ATARI_8BIT', 'X68000', 'PC_98', 'BBC_MICRO']) {
+  for (const key of [
+    'PCDOS',
+    'AMIGA',
+    'VICE_X64SC',
+    'MSX',
+    'ZX_SPECTRUM',
+    'CPC',
+    'ATARI_ST',
+    'APPLE_II',
+    'ATARI_8BIT',
+    'X68000',
+    'PC_98',
+    'BBC_MICRO',
+  ]) {
     expect(roomIdForPlatform(key)).toBe('desk')
   }
 })

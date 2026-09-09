@@ -3,10 +3,7 @@ import { confirmAction } from '../../shared/confirmDialog'
 import { PageStatus } from './PageStatus'
 
 import { DataTable } from './DataTable'
-import {
-  confirmCreateSelected,
-  fetchProposeLeafLibraries,
-} from './proposeLeafLibrariesApi'
+import { confirmCreateSelected, fetchProposeLeafLibraries } from './proposeLeafLibrariesApi'
 import './ProposeLeafLibraries.css'
 
 /**
@@ -115,9 +112,7 @@ export function ProposeLeafLibraries({
       )
       if (outcome.created > 0) {
         // Drop successfully created rows from the table so re-confirm is not accidental.
-        const failedPaths = new Set(
-          outcome.results.filter((r) => !r.ok).map((r) => r.path),
-        )
+        const failedPaths = new Set(outcome.results.filter((r) => !r.ok).map((r) => r.path))
         const kept = candidates.filter((c) => failedPaths.has(c.path) || !selected.has(c.id))
         const keptSelected = new Set(kept.filter((c) => selected.has(c.id)).map((c) => c.id))
         setCandidates(kept)
@@ -163,7 +158,8 @@ export function ProposeLeafLibraries({
           </button>
         </div>
         <p className="od-propose-leaf__hint">
-          Absolute path under allowed bases. Propose lists candidates only — create happens on Confirm.
+          Absolute path under allowed bases. Propose lists candidates only — create happens on
+          Confirm.
         </p>
       </form>
 
@@ -210,9 +206,7 @@ export function ProposeLeafLibraries({
               onClick={() => void onConfirm()}
               disabled={confirming || selectedCount === 0}
             >
-              {confirming
-                ? 'Creating…'
-                : `Confirm create (${selectedCount})`}
+              {confirming ? 'Creating…' : `Confirm create (${selectedCount})`}
             </button>
           </div>
 
@@ -257,9 +251,7 @@ export function ProposeLeafLibraries({
               {
                 key: 'path',
                 label: 'Path',
-                render: (row) => (
-                  <code className="od-propose-leaf__path">{row.path}</code>
-                ),
+                render: (row) => <code className="od-propose-leaf__path">{row.path}</code>,
               },
               {
                 key: 'reason',

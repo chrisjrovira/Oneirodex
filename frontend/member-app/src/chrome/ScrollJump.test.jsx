@@ -44,9 +44,7 @@ describe('ScrollJump', () => {
     // in the tree the host is documentElement, which jsdom does not give a
     // scrollTo, so it has to be installed rather than spied.
     document.documentElement.scrollTo = () => {}
-    scrollToSpy = vi
-      .spyOn(document.documentElement, 'scrollTo')
-      .mockImplementation(() => {})
+    scrollToSpy = vi.spyOn(document.documentElement, 'scrollTo').mockImplementation(() => {})
     stubScrollMetrics({ scrollHeight: 400, clientHeight: 800, scrollY: 0 })
   })
 
@@ -109,14 +107,10 @@ describe('ScrollJump', () => {
     })
 
     await user.click(screen.getByRole('button', { name: /jump to top/i }))
-    expect(scrollToSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ top: 0, left: 0 }),
-    )
+    expect(scrollToSpy).toHaveBeenCalledWith(expect.objectContaining({ top: 0, left: 0 }))
 
     await user.click(screen.getByRole('button', { name: /jump to bottom/i }))
-    expect(scrollToSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ top: 1600, left: 0 }),
-    )
+    expect(scrollToSpy).toHaveBeenCalledWith(expect.objectContaining({ top: 1600, left: 0 }))
   })
 
   test('scrolls .od-shell__main when the app shell is present', async () => {

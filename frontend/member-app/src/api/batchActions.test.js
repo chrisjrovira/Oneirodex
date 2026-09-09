@@ -60,7 +60,10 @@ test('batchSetFavorite falls back to toggle when bulk missing', async () => {
 })
 
 test('batchCheckFreshness marks missing route unavailable', async () => {
-  vi.stubGlobal('fetch', vi.fn(() => jsonResponse({}, 404)))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => jsonResponse({}, 404)),
+  )
 
   await expect(batchCheckFreshness(['a'])).rejects.toMatchObject({
     unavailable: true,
@@ -112,7 +115,10 @@ test('batchSetPlayStatus posts status payload', async () => {
 })
 
 test('batchSetPlayStatus marks missing route unavailable', async () => {
-  vi.stubGlobal('fetch', vi.fn(() => jsonResponse({}, 404)))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => jsonResponse({}, 404)),
+  )
 
   await expect(batchSetPlayStatus(['a'], 'unplayed')).rejects.toMatchObject({
     unavailable: true,
@@ -159,7 +165,10 @@ test('batchAddToWishlist posts uuids', async () => {
 })
 
 test('batchAddToWishlist marks missing route unavailable', async () => {
-  vi.stubGlobal('fetch', vi.fn(() => jsonResponse({}, 501)))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => jsonResponse({}, 501)),
+  )
 
   await expect(batchAddToWishlist(['a'])).rejects.toMatchObject({
     unavailable: true,
@@ -195,7 +204,10 @@ test('batchRefreshImages posts uuids and accepts 202 queued payload', async () =
 })
 
 test('batchRefreshImages marks missing route unavailable', async () => {
-  vi.stubGlobal('fetch', vi.fn(() => jsonResponse({}, 404)))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => jsonResponse({}, 404)),
+  )
 
   await expect(batchRefreshImages(['a'])).rejects.toMatchObject({
     unavailable: true,

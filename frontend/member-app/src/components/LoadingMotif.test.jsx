@@ -44,15 +44,13 @@ test('retired ids map forward instead of returning null', () => {
 })
 
 test('pickLoadingMotifId respects lock mode', () => {
-  expect(
-    pickLoadingMotifId({ loading_icon_mode: 'lock', resolved_id: 'crt' }, null),
-  ).toBe('crt')
+  expect(pickLoadingMotifId({ loading_icon_mode: 'lock', resolved_id: 'crt' }, null)).toBe('crt')
 })
 
 test('pickLoadingMotifId reuses session pick when rotating', () => {
-  expect(
-    pickLoadingMotifId({ loading_icon_mode: 'rotate', resolved_id: null }, 'stick'),
-  ).toBe('stick')
+  expect(pickLoadingMotifId({ loading_icon_mode: 'rotate', resolved_id: null }, 'stick')).toBe(
+    'stick',
+  )
 })
 
 test('every catalogue id renders a glyph', () => {

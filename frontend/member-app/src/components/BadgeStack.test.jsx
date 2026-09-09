@@ -20,25 +20,18 @@ function cornerStack(corner) {
 }
 
 test('collectBadgeSignals includes EXP/EMU/TOOL for non-game kinds', () => {
-  expect(
-    collectBadgeSignals({ item_kind: 'experience' }, { now }).map((b) => b.kind),
-  ).toEqual(['EXP'])
-  expect(
-    collectBadgeSignals({ content_kind: 'emulator' }, { now }).map((b) => b.kind),
-  ).toEqual(['EMU'])
-  expect(collectBadgeSignals({ item_kind: 'tool' }, { now }).map((b) => b.kind)).toEqual([
-    'TOOL',
+  expect(collectBadgeSignals({ item_kind: 'experience' }, { now }).map((b) => b.kind)).toEqual([
+    'EXP',
   ])
+  expect(collectBadgeSignals({ content_kind: 'emulator' }, { now }).map((b) => b.kind)).toEqual([
+    'EMU',
+  ])
+  expect(collectBadgeSignals({ item_kind: 'tool' }, { now }).map((b) => b.kind)).toEqual(['TOOL'])
   expect(collectBadgeSignals({ item_kind: 'game' }, { now })).toEqual([])
 })
 
 test('BadgeStack renders EMU badge for emulator kind', () => {
-  render(
-    <BadgeStack
-      game={{ item_kind: 'emulator', name: 'Emulator Fixture' }}
-      now={now}
-    />,
-  )
+  render(<BadgeStack game={{ item_kind: 'emulator', name: 'Emulator Fixture' }} now={now} />)
   expect(screen.getByTitle(/emulator/i)).toHaveTextContent('EMU')
 })
 
@@ -125,10 +118,7 @@ test('layoutBadgesByCorner omits empty corners and pins VR top-left', () => {
 
 test('BadgeStack renders top-left NEW fixture by default', () => {
   render(
-    <BadgeStack
-      game={{ date_identified: '2026-07-20T00:00:00Z', name: 'Fixture' }}
-      now={now}
-    />,
+    <BadgeStack game={{ date_identified: '2026-07-20T00:00:00Z', name: 'Fixture' }} now={now} />,
   )
   expect(cornerStack('top-left')).toBeTruthy()
   expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
@@ -136,11 +126,7 @@ test('BadgeStack renders top-left NEW fixture by default', () => {
 
 test('BadgeStack shifts corner when title collides', () => {
   render(
-    <BadgeStack
-      game={{ date_identified: '2026-07-20T00:00:00Z' }}
-      collidesWithTitle
-      now={now}
-    />,
+    <BadgeStack game={{ date_identified: '2026-07-20T00:00:00Z' }} collidesWithTitle now={now} />,
   )
   expect(cornerStack('bottom-left')).toBeTruthy()
   expect(cornerStack('top-left')).toBeNull()
@@ -196,9 +182,7 @@ test('VR stays top-left even when title collides or platform chip is present', (
 })
 
 test('VR-only stack still anchors top-left', () => {
-  render(
-    <BadgeStack game={{ is_vr: true, name: 'Headset Only' }} now={now} />,
-  )
+  render(<BadgeStack game={{ is_vr: true, name: 'Headset Only' }} now={now} />)
   const stack = cornerStack('top-left')
   expect(stack).toHaveAttribute('data-corner', 'top-left')
   expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
@@ -229,9 +213,7 @@ test('BadgeStack renders MISSING when path is gone', () => {
 })
 
 test('BadgeStack omits MISSING when path is ok', () => {
-  render(
-    <BadgeStack game={{ path_status: 'ok', name: 'Present Title' }} now={now} />,
-  )
+  render(<BadgeStack game={{ path_status: 'ok', name: 'Present Title' }} now={now} />)
   expect(screen.queryByTitle(/removed from disk/i)).toBeNull()
   expect(screen.queryByLabelText(/game badges/i)).toBeNull()
 })

@@ -134,8 +134,7 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
      describing a control that does not exist, which is how it managed to offer
      139 of them for 50 items. A remainder cannot drift from what is on screen
      because it is computed from what is on screen. */
-  const remaining =
-    typeof row?.total === 'number' ? Math.max(0, row.total - games.length) : null
+  const remaining = typeof row?.total === 'number' ? Math.max(0, row.total - games.length) : null
   const loadMoreLabel = remaining ? `Load more (${remaining} left)` : 'Load more'
 
   return (
@@ -167,12 +166,7 @@ export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
         />
       )}
       {row?.hasMore ? (
-        <button
-          type="button"
-          className="od-cbtn"
-          onClick={loadMore}
-          disabled={loadingMore}
-        >
+        <button type="button" className="od-cbtn" onClick={loadMore} disabled={loadingMore}>
           {loadingMore ? 'Loading…' : loadMoreLabel}
         </button>
       ) : null}

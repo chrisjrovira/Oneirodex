@@ -24,7 +24,14 @@ const LOG_COLUMNS = [
 /**
  * Full system-event log overlay on Ops (replaces the separate Server logs page).
  */
-export function OpsLogModal({ open, events = null, loading = false, error = null, onClose, onCleared }) {
+export function OpsLogModal({
+  open,
+  events = null,
+  loading = false,
+  error = null,
+  onClose,
+  onCleared,
+}) {
   const titleId = useId()
   const closeRef = useRef(null)
   const [clearing, setClearing] = useState(false)
@@ -45,7 +52,12 @@ export function OpsLogModal({ open, events = null, loading = false, error = null
 
   async function handleClear() {
     const count = Array.isArray(events) ? events.length : null
-    const scope = count === null ? 'all system events' : count === 1 ? '1 system event' : `all ${count} system events`
+    const scope =
+      count === null
+        ? 'all system events'
+        : count === 1
+          ? '1 system event'
+          : `all ${count} system events`
     const ok = await confirmAction({
       title: `Delete ${scope}?`,
       body: "This can't be undone.",
@@ -73,7 +85,10 @@ export function OpsLogModal({ open, events = null, loading = false, error = null
       aria-labelledby={titleId}
       onClick={onClose}
     >
-      <div className="od-open-path__panel od-ops-log-modal__panel" onClick={(event) => event.stopPropagation()}>
+      <div
+        className="od-open-path__panel od-ops-log-modal__panel"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="od-open-path__toolbar">
           <h2 id={titleId} className="od-open-path__title">
             Full log

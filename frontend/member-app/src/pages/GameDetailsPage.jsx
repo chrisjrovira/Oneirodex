@@ -45,11 +45,7 @@ import {
   isFirmwarePlayBlocked,
 } from '../utils/playHonesty'
 import { recordRecentTitle } from '../utils/recentTitles'
-import {
-  detailsRootCrumb,
-  primaryGenreName,
-  taxonomyHref,
-} from '../utils/detailsTaxonomy'
+import { detailsRootCrumb, primaryGenreName, taxonomyHref } from '../utils/detailsTaxonomy'
 import { showToast } from '../utils/toast'
 import './GameDetailsPage.css'
 
@@ -308,8 +304,7 @@ export function GameDetailsPage() {
     setVersionActionStatus(null)
     try {
       const result = await cleanupOrphanVersions(gameUuid)
-      const removed =
-        Number(result.removed ?? result.removed_count ?? result.count ?? 0) || 0
+      const removed = Number(result.removed ?? result.removed_count ?? result.count ?? 0) || 0
       const message =
         result.message ||
         (removed > 0
@@ -387,11 +382,7 @@ export function GameDetailsPage() {
         <div
           className={`od-details-page__cover-wrap${adminMenuOpen ? ' od-details-page__cover-wrap--menu-open' : ''}`}
         >
-          <img
-            className="od-details-page__cover"
-            src={coverUrl(game.cover_url)}
-            alt=""
-          />
+          <img className="od-details-page__cover" src={coverUrl(game.cover_url)} alt="" />
           <BadgeStack game={game} preferredCorner="top-left" maxVisible={2} />
           {game.is_admin ? (
             <div className="od-details-page__admin-menu" ref={adminMenuRef}>
@@ -523,7 +514,9 @@ export function GameDetailsPage() {
               {game.client_connected ? 'Companion online' : 'Companion offline'}
             </span>
             {game.hltb_main_story != null ? (
-              <span className="chip od-chip">HLTB main {Number(game.hltb_main_story).toFixed(1)}h</span>
+              <span className="chip od-chip">
+                HLTB main {Number(game.hltb_main_story).toFixed(1)}h
+              </span>
             ) : null}
             {game.is_favorite ? <span className="chip od-chip">Favorite</span> : null}
           </div>
@@ -546,49 +539,45 @@ export function GameDetailsPage() {
               buttons between groups. */}
           <div className="od-details-page__quick">
             <div className="od-details-page__quick-row od-details-page__quick-row--seg">
-            {playHref ? (
-              <>
-                {Array.isArray(game.emulator_cores) && game.emulator_cores.length > 1 ? (
-                  <label className="od-details-page__core-picker">
-                    Core{' '}
-                    <select
-                      value={selectedCore || game.emulator_core || game.emulator_cores[0]}
-                      onChange={(event) => setSelectedCore(event.target.value)}
-                    >
-                      {game.emulator_cores.map((core) => (
-                        <option key={core} value={core}>
-                          {core}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : null}
-                <a className="od-btn od-btn--primary" href={playHref}>
+              {playHref ? (
+                <>
+                  {Array.isArray(game.emulator_cores) && game.emulator_cores.length > 1 ? (
+                    <label className="od-details-page__core-picker">
+                      Core{' '}
+                      <select
+                        value={selectedCore || game.emulator_core || game.emulator_cores[0]}
+                        onChange={(event) => setSelectedCore(event.target.value)}
+                      >
+                        {game.emulator_cores.map((core) => (
+                          <option key={core} value={core}>
+                            {core}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  <a className="od-btn od-btn--primary" href={playHref}>
+                    Play in browser
+                  </a>
+                </>
+              ) : firmwareBlocked || game.play_blocker === 'unsupported_archive' ? (
+                <button
+                  type="button"
+                  className="od-btn od-btn--primary"
+                  disabled
+                  title={
+                    firmwareBlocked
+                      ? firmwareMessage
+                      : game.companion_hint ||
+                        'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
+                  }
+                >
                   Play in browser
-                </a>
-              </>
-            ) : firmwareBlocked || game.play_blocker === 'unsupported_archive' ? (
-              <button
-                type="button"
-                className="od-btn od-btn--primary"
-                disabled
-                title={
-                  firmwareBlocked
-                    ? firmwareMessage
-                    : game.companion_hint ||
-                      'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
-                }
-              >
-                Play in browser
-              </button>
-            ) : null}
-            {/* Same control as the tile menu's, at the other place the "where
+                </button>
+              ) : null}
+              {/* Same control as the tile menu's, at the other place the "where
                 does this go" decision gets made. */}
-            <AddToCollection
-              gameUuid={game.uuid}
-              gameName={game.name}
-              variant="inline"
-            />
+              <AddToCollection gameUuid={game.uuid} gameName={game.name} variant="inline" />
             </div>
 
             <div className="od-details-page__quick-row">
@@ -636,8 +625,7 @@ export function GameDetailsPage() {
               {game.is_admin ? (
                 <>
                   {' '}
-                  ·{' '}
-                  <a href={FIRMWARE_ADMIN_HREF}>Admin → Emulators</a>
+                  · <a href={FIRMWARE_ADMIN_HREF}>Admin → Emulators</a>
                 </>
               ) : null}
             </p>
@@ -700,156 +688,408 @@ export function GameDetailsPage() {
                 </span>
               ) : null}
             </h2>
-          {pathRows.length > 0 ? (
-            <div className="od-details-page__paths" aria-label="Admin paths">
-              {pathRows.map((row) => (
-                <div key={`${row.label}-${row.path}`} className="od-details-page__path-row">
-                  <span className="od-details-page__path-label">{row.label}</span>
-                  <code className="od-details-page__path-value" title={row.path}>
-                    {row.path}
-                  </code>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <dl className="od-details-page__facts">
-            {game.rating != null ? (
-              <>
-                <dt>Rating</dt>
-                <dd>
-                  {Number(game.rating).toFixed(0)}
-                  {game.rating_count ? ` (${game.rating_count})` : ''}
-                </dd>
-              </>
+            {pathRows.length > 0 ? (
+              <div className="od-details-page__paths" aria-label="Admin paths">
+                {pathRows.map((row) => (
+                  <div key={`${row.label}-${row.path}`} className="od-details-page__path-row">
+                    <span className="od-details-page__path-label">{row.label}</span>
+                    <code className="od-details-page__path-value" title={row.path}>
+                      {row.path}
+                    </code>
+                  </div>
+                ))}
+              </div>
             ) : null}
-            {game.genres?.length ? (
-              <>
-                <dt>Genres</dt>
-                <dd>
-                  {game.genres.map((name) => (
-                    <TaxonomyChip key={name} kind="genre" name={name} />
-                  ))}
-                </dd>
-              </>
-            ) : null}
-            {game.themes?.length ? (
-              <>
-                <dt>Themes</dt>
-                <dd>
-                  {game.themes.map((name) => (
-                    <TaxonomyChip key={name} kind="theme" name={name} />
-                  ))}
-                </dd>
-              </>
-            ) : null}
-            {game.platforms?.length ? (
-              <>
-                <dt>IGDB platforms</dt>
-                <dd>{game.platforms.join(', ')}</dd>
-              </>
-            ) : null}
-            {game.game_modes?.length ? (
-              <>
-                <dt>Modes</dt>
-                <dd>
-                  {game.game_modes.map((name) => (
-                    <TaxonomyChip key={name} kind="game_mode" name={name} />
-                  ))}
-                </dd>
-              </>
-            ) : null}
-            {game.player_perspectives?.length ? (
-              <>
-                <dt>Perspectives</dt>
-                <dd>
-                  {game.player_perspectives.map((name) => (
-                    <TaxonomyChip key={name} kind="player_perspective" name={name} />
-                  ))}
-                </dd>
-              </>
-            ) : null}
-            <dt>Playtime</dt>
-            <dd>
-              {formatPlaytime(game.playtime?.total_seconds)}
-              {game.playtime?.session_count
-                ? ` · ${game.playtime.session_count} session${game.playtime.session_count === 1 ? '' : 's'}`
-                : ''}
-            </dd>
-            {game.times_downloaded != null ? (
-              <>
-                <dt>Downloads</dt>
-                <dd>{game.times_downloaded}</dd>
-              </>
-            ) : null}
-          </dl>
-        </section>
-      </div>
+            <dl className="od-details-page__facts">
+              {game.rating != null ? (
+                <>
+                  <dt>Rating</dt>
+                  <dd>
+                    {Number(game.rating).toFixed(0)}
+                    {game.rating_count ? ` (${game.rating_count})` : ''}
+                  </dd>
+                </>
+              ) : null}
+              {game.genres?.length ? (
+                <>
+                  <dt>Genres</dt>
+                  <dd>
+                    {game.genres.map((name) => (
+                      <TaxonomyChip key={name} kind="genre" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              {game.themes?.length ? (
+                <>
+                  <dt>Themes</dt>
+                  <dd>
+                    {game.themes.map((name) => (
+                      <TaxonomyChip key={name} kind="theme" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              {game.platforms?.length ? (
+                <>
+                  <dt>IGDB platforms</dt>
+                  <dd>{game.platforms.join(', ')}</dd>
+                </>
+              ) : null}
+              {game.game_modes?.length ? (
+                <>
+                  <dt>Modes</dt>
+                  <dd>
+                    {game.game_modes.map((name) => (
+                      <TaxonomyChip key={name} kind="game_mode" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              {game.player_perspectives?.length ? (
+                <>
+                  <dt>Perspectives</dt>
+                  <dd>
+                    {game.player_perspectives.map((name) => (
+                      <TaxonomyChip key={name} kind="player_perspective" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              <dt>Playtime</dt>
+              <dd>
+                {formatPlaytime(game.playtime?.total_seconds)}
+                {game.playtime?.session_count
+                  ? ` · ${game.playtime.session_count} session${game.playtime.session_count === 1 ? '' : 's'}`
+                  : ''}
+              </dd>
+              {game.times_downloaded != null ? (
+                <>
+                  <dt>Downloads</dt>
+                  <dd>{game.times_downloaded}</dd>
+                </>
+              ) : null}
+            </dl>
+          </section>
+        </div>
 
-      {hasMedia ? (
-        <DetailsMediaStage
-          videoEmbeds={videoEmbeds}
-          shownShots={shownShots}
-          onFullscreen={setShotIndex}
-          onShotBroken={markShotBroken}
-        />
-      ) : null}
+        {hasMedia ? (
+          <DetailsMediaStage
+            videoEmbeds={videoEmbeds}
+            shownShots={shownShots}
+            onFullscreen={setShotIndex}
+            onShotBroken={markShotBroken}
+          />
+        ) : null}
       </div>
 
       <div className="od-details-page__flow">
         {game.storyline ? (
-        <section className="od-details-page__section">
-          <h2>About</h2>
-          <p className="od-details-page__about">{game.storyline}</p>
-        </section>
-      ) : null}
+          <section className="od-details-page__section">
+            <h2>About</h2>
+            <p className="od-details-page__about">{game.storyline}</p>
+          </section>
+        ) : null}
 
-      <DetailsStoreSpecs storeSpecs={game.store_specs} />
+        <DetailsStoreSpecs storeSpecs={game.store_specs} />
 
-      {game.show_translations_block ? (
-        <section className="od-details-page__section" id="translations">
-          <h2>Translations &amp; patches</h2>
-          <p className="od-details-page__muted">
-            {game.needs_translation
-              ? `This ROM may not match your preferred game language (${game.preferred_game_locale || 'en-US'}).`
-              : 'Translation patches available for this title.'}{' '}
-            Always keep a backup of the original ROM. See the in-app{' '}
-            <Link to="/help#translations">Help → Translations</Link> guide
-            {' '}or <code>docs/user/translation-patches.md</code>.
-          </p>
-          {Array.isArray(game.translation_patches) && game.translation_patches.length > 0 ? (
+        {game.show_translations_block ? (
+          <section className="od-details-page__section" id="translations">
+            <h2>Translations &amp; patches</h2>
+            <p className="od-details-page__muted">
+              {game.needs_translation
+                ? `This ROM may not match your preferred game language (${game.preferred_game_locale || 'en-US'}).`
+                : 'Translation patches available for this title.'}{' '}
+              Always keep a backup of the original ROM. See the in-app{' '}
+              <Link to="/help#translations">Help → Translations</Link> guide or{' '}
+              <code>docs/user/translation-patches.md</code>.
+            </p>
+            {Array.isArray(game.translation_patches) && game.translation_patches.length > 0 ? (
+              <ul className="od-details-page__versions">
+                {game.translation_patches.map((patch) => {
+                  const versionKey = `patch:${patch.uuid}`
+                  const applyBusy = busyVersionKey === versionKey
+                  const canApplyPatch =
+                    Boolean(game.client_connected) && Boolean(game.rom_patch_apply_enabled)
+                  return (
+                    <li key={patch.uuid}>
+                      <div className="od-details-page__version-row">
+                        <div>
+                          <strong>{patch.label}</strong>
+                          <span className="od-details-page__muted">
+                            {' '}
+                            · {(patch.patch_format || 'patch').toUpperCase()}
+                            {patch.target_language ? ` · → ${patch.target_language}` : ''}
+                          </span>
+                        </div>
+                        <div className="od-details-page__version-actions">
+                          <a className="od-btn" href={patch.download_url}>
+                            Download patch
+                          </a>
+                          {patch.source_url ? (
+                            <a
+                              className="od-btn"
+                              href={patch.source_url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Guide
+                            </a>
+                          ) : null}
+                          {canApplyPatch ? (
+                            <button
+                              type="button"
+                              className="od-btn"
+                              disabled={Boolean(busyVersionKey)}
+                              onClick={() => {
+                                setBusyVersionKey(versionKey)
+                                setVersionActionStatus(null)
+                                void queueClientCommand(game.uuid, 'apply_patch', {
+                                  kind: 'extra',
+                                  versionUuid: patch.uuid,
+                                })
+                                  .then(() => {
+                                    setVersionActionStatus(
+                                      `${patch.label} queued for companion apply`,
+                                    )
+                                    showToast(
+                                      `${patch.label} queued for companion apply`,
+                                      'success',
+                                    )
+                                  })
+                                  .catch((err) => {
+                                    setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                    showToast(err?.message || 'Queue failed', 'error')
+                                  })
+                                  .finally(() => {
+                                    setBusyVersionKey(null)
+                                  })
+                              }}
+                            >
+                              {applyBusy ? 'Queuing…' : 'Apply with companion'}
+                            </button>
+                          ) : (
+                            <Link className="od-btn" to="/help#translations">
+                              How to apply
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="od-details-page__muted">
+                No patch files in extras yet. Ask a librarian to add a curated <code>.ips</code>/
+                <code>.bps</code>/<code>.ups</code> under the game extras folder, or follow the
+                how-to for applying a patch you already have.
+              </p>
+            )}
+            {game.rom_ai_translate?.show_panel ? (
+              <div className="od-details-page__ai-translate">
+                <h3>Live translate (RetroArch AI)</h3>
+                <p className="od-details-page__muted">
+                  {game.rom_ai_translate.note} Target language hint:{' '}
+                  <code>{game.rom_ai_translate.target_lang || 'en'}</code>
+                  {game.rom_ai_translate.service_url_hint
+                    ? ` · service ${game.rom_ai_translate.service_url_hint}`
+                    : ''}
+                  . Offline dump→rebuild is not available for this system yet.
+                </p>
+                <Link className="od-btn" to="/help#translations">
+                  Setup guide
+                </Link>
+              </div>
+            ) : null}
+            {game.is_admin && game.patch_catalog_enabled ? (
+              <div className="od-details-page__catalog">
+                <h3>Operator catalog</h3>
+                <p className="od-details-page__muted">
+                  Search your local YAML/JSON patch guide catalog (metadata only - no third-party
+                  scrape).
+                </p>
+                <button
+                  type="button"
+                  className="od-btn"
+                  disabled={catalogBusy}
+                  onClick={() => {
+                    setCatalogBusy(true)
+                    setCatalogStatus(null)
+                    void searchPatchCatalog({ gameUuid: game.uuid })
+                      .then((data) => {
+                        setCatalogHits(Array.isArray(data.hits) ? data.hits : [])
+                        setCatalogStatus(
+                          data.hits?.length ? `${data.hits.length} hit(s)` : 'No catalog matches',
+                        )
+                      })
+                      .catch((err) => {
+                        setCatalogHits([])
+                        setCatalogStatus(err?.message || 'Catalog search failed')
+                      })
+                      .finally(() => {
+                        setCatalogBusy(false)
+                      })
+                  }}
+                >
+                  {catalogBusy ? 'Searching…' : 'Search catalog'}
+                </button>
+                {catalogStatus ? (
+                  <p className="od-details-page__muted" role="status">
+                    {catalogStatus}
+                  </p>
+                ) : null}
+                {catalogHits.length > 0 ? (
+                  <ul className="od-details-page__versions">
+                    {catalogHits.map((hit) => (
+                      <li key={hit.id}>
+                        <div className="od-details-page__version-row">
+                          <div>
+                            <strong>{hit.title}</strong>
+                            <span className="od-details-page__muted">
+                              {' '}
+                              · {hit.provider}
+                              {hit.patch_format ? ` · ${hit.patch_format}` : ''}
+                              {hit.target_language ? ` · → ${hit.target_language}` : ''}
+                            </span>
+                            {hit.notes ? (
+                              <p className="od-details-page__muted">{hit.notes}</p>
+                            ) : null}
+                          </div>
+                          <div className="od-details-page__version-actions">
+                            {hit.source_url ? (
+                              <a
+                                className="od-btn"
+                                href={hit.source_url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Open guide
+                              </a>
+                            ) : null}
+                            <button
+                              type="button"
+                              className="od-btn"
+                              disabled={catalogBusy}
+                              onClick={() => {
+                                setCatalogBusy(true)
+                                void attachPatchCatalogGuide({
+                                  game_uuid: game.uuid,
+                                  source_url: hit.source_url,
+                                  notes: hit.notes,
+                                  target_language: hit.target_language,
+                                  patch_format: hit.patch_format,
+                                })
+                                  .then(() => {
+                                    setCatalogStatus('Guide attached to game')
+                                    showToast('Guide attached', 'success')
+                                    setRetryCount((n) => n + 1)
+                                  })
+                                  .catch((err) => {
+                                    setCatalogStatus(err?.message || 'Attach failed')
+                                  })
+                                  .finally(() => {
+                                    setCatalogBusy(false)
+                                  })
+                              }}
+                            >
+                              Attach guide
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {baseAndUpdates.length > 0 ? (
+          <section className="od-details-page__section" id="updates">
+            <div className="od-details-page__section-head">
+              <h2>Versions</h2>
+              {game.is_admin ? (
+                <button
+                  type="button"
+                  className="od-btn od-btn--pill"
+                  disabled={cleanupBusy}
+                  onClick={() => void handleCleanupOrphans()}
+                  title={
+                    hasMissingVersions
+                      ? 'Remove version rows whose files are missing on disk'
+                      : 'Scan and remove orphaned version rows'
+                  }
+                >
+                  {cleanupBusy ? 'Removing…' : 'Remove missing versions'}
+                </button>
+              ) : null}
+            </div>
+            {versionActionStatus ? (
+              <p className="od-details-page__muted" role="status">
+                {versionActionStatus}
+              </p>
+            ) : null}
             <ul className="od-details-page__versions">
-              {game.translation_patches.map((patch) => {
-                const versionKey = `patch:${patch.uuid}`
+              {baseAndUpdates.map((row) => {
+                const versionKey = `${row.kind}:${row.uuid}`
+                const downloadKey = `download:${row.kind}:${row.uuid || 'base'}`
+                const canDownload = isVersionDownloadable(row)
+                const pathMissing = isVersionPathMissing(row)
+                const sizeLabel = formatVersionSize(row.size)
+                const canApply =
+                  Boolean(game.client_connected) && row.kind === 'update' && canDownload
                 const applyBusy = busyVersionKey === versionKey
-                const canApplyPatch =
-                  Boolean(game.client_connected) &&
-                  Boolean(game.rom_patch_apply_enabled)
+                const downloadBusy = busyVersionKey === downloadKey
                 return (
-                  <li key={patch.uuid}>
+                  <li key={`${row.kind}-${row.id || row.uuid}`}>
                     <div className="od-details-page__version-row">
-                      <div>
-                        <strong>{patch.label}</strong>
+                      <div className="od-details-page__version-meta">
+                        <strong>{row.label}</strong>
+                        {row.is_default ? (
+                          <span className="chip od-chip" title="Default download version">
+                            Default
+                          </span>
+                        ) : null}
                         <span className="od-details-page__muted">
                           {' '}
-                          · {(patch.patch_format || 'patch').toUpperCase()}
-                          {patch.target_language ? ` · → ${patch.target_language}` : ''}
+                          · {row.kind}
+                          {sizeLabel ? ` · ${sizeLabel}` : ''}
                         </span>
+                        {pathMissing ? (
+                          <span className="od-details-page__muted od-details-page__version-missing">
+                            {' '}
+                            · Missing on disk
+                          </span>
+                        ) : null}
                       </div>
                       <div className="od-details-page__version-actions">
-                        <a className="od-btn" href={patch.download_url}>
-                          Download patch
-                        </a>
-                        {patch.source_url ? (
-                          <a
+                        {/* Updates get a Download; the base row does not.
+                          Downloading the base game is what the action bar at
+                          the top of the page is for, and it is the *primary*
+                          action there — so this row was a second, quieter copy
+                          of the page's loudest button, sitting under a heading
+                          about versions. Per-update download stays, because
+                          that is the one thing the action bar genuinely cannot
+                          express: "I have the game, I only need patch 1.03". */}
+                        {canDownload && row.kind === 'update' ? (
+                          <button
+                            type="button"
                             className="od-btn"
-                            href={patch.source_url}
-                            target="_blank"
-                            rel="noreferrer"
+                            disabled={Boolean(busyVersionKey)}
+                            onClick={() => {
+                              void handleVersionDownload({
+                                kind: 'update',
+                                versionUuid: row.uuid,
+                                label: row.label,
+                              })
+                            }}
                           >
-                            Guide
-                          </a>
+                            {downloadBusy ? 'Queuing…' : 'Download'}
+                          </button>
                         ) : null}
-                        {canApplyPatch ? (
+                        {canApply ? (
                           <button
                             type="button"
                             className="od-btn"
@@ -857,13 +1097,13 @@ export function GameDetailsPage() {
                             onClick={() => {
                               setBusyVersionKey(versionKey)
                               setVersionActionStatus(null)
-                              void queueClientCommand(game.uuid, 'apply_patch', {
-                                kind: 'extra',
-                                versionUuid: patch.uuid,
+                              void queueClientCommand(game.uuid, 'update', {
+                                kind: row.kind,
+                                versionUuid: row.uuid,
                               })
                                 .then(() => {
-                                  setVersionActionStatus(`${patch.label} queued for companion apply`)
-                                  showToast(`${patch.label} queued for companion apply`, 'success')
+                                  setVersionActionStatus(`${row.label} queued for companion`)
+                                  showToast(`${row.label} queued for companion`, 'success')
                                 })
                                 .catch((err) => {
                                   setVersionActionStatus(err?.message || 'Failed to queue apply')
@@ -876,394 +1116,143 @@ export function GameDetailsPage() {
                           >
                             {applyBusy ? 'Queuing…' : 'Apply with companion'}
                           </button>
-                        ) : (
-                          <Link className="od-btn" to="/help#translations">
-                            How to apply
-                          </Link>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </li>
                 )
               })}
             </ul>
+          </section>
+        ) : null}
+
+        {showsRetroarchCheats(game) ? (
+          <CheatsPanel gameUuid={game.uuid} playHref={playHref} cheatSurface={game.cheat_surface} />
+        ) : null}
+
+        {/* FEAT-D2 — the PC counterpart. Self-gates on cheat_surface, so the two
+          panels can never both render for one title. */}
+        <PcCheatsPanel
+          gameUuid={game.uuid}
+          cheatSurface={game.cheat_surface}
+          canEdit={Boolean(game.can_edit)}
+        />
+
+        <section className="od-details-page__section" id="extras">
+          <h2>Extras &amp; DLC</h2>
+          {extrasModel.loading ? (
+            <p className="od-details-page__muted">Loading extras…</p>
+          ) : extrasModel.rows.length === 0 ? (
+            <p className="od-details-page__muted">No extras or DLC listed for this title yet.</p>
           ) : (
-            <p className="od-details-page__muted">
-              No patch files in extras yet. Ask a librarian to add a curated{' '}
-              <code>.ips</code>/<code>.bps</code>/<code>.ups</code> under the game extras folder,
-              or follow the how-to for applying a patch you already have.
-            </p>
-          )}
-          {game.rom_ai_translate?.show_panel ? (
-            <div className="od-details-page__ai-translate">
-              <h3>Live translate (RetroArch AI)</h3>
-              <p className="od-details-page__muted">
-                {game.rom_ai_translate.note}{' '}
-                Target language hint: <code>{game.rom_ai_translate.target_lang || 'en'}</code>
-                {game.rom_ai_translate.service_url_hint
-                  ? ` · service ${game.rom_ai_translate.service_url_hint}`
-                  : ''}
-                . Offline dump→rebuild is not available for this system yet.
-              </p>
-              <Link className="od-btn" to="/help#translations">
-                Setup guide
-              </Link>
-            </div>
-          ) : null}
-          {game.is_admin && game.patch_catalog_enabled ? (
-            <div className="od-details-page__catalog">
-              <h3>Operator catalog</h3>
-              <p className="od-details-page__muted">
-                Search your local YAML/JSON patch guide catalog (metadata only - no third-party scrape).
-              </p>
-              <button
-                type="button"
-                className="od-btn"
-                disabled={catalogBusy}
-                onClick={() => {
-                  setCatalogBusy(true)
-                  setCatalogStatus(null)
-                  void searchPatchCatalog({ gameUuid: game.uuid })
-                    .then((data) => {
-                      setCatalogHits(Array.isArray(data.hits) ? data.hits : [])
-                      setCatalogStatus(
-                        data.hits?.length
-                          ? `${data.hits.length} hit(s)`
-                          : 'No catalog matches',
-                      )
-                    })
-                    .catch((err) => {
-                      setCatalogHits([])
-                      setCatalogStatus(err?.message || 'Catalog search failed')
-                    })
-                    .finally(() => {
-                      setCatalogBusy(false)
-                    })
-                }}
-              >
-                {catalogBusy ? 'Searching…' : 'Search catalog'}
-              </button>
-              {catalogStatus ? (
-                <p className="od-details-page__muted" role="status">
-                  {catalogStatus}
-                </p>
-              ) : null}
-              {catalogHits.length > 0 ? (
-                <ul className="od-details-page__versions">
-                  {catalogHits.map((hit) => (
-                    <li key={hit.id}>
-                      <div className="od-details-page__version-row">
-                        <div>
-                          <strong>{hit.title}</strong>
-                          <span className="od-details-page__muted">
+            <ul className="od-details-page__versions">
+              {extrasModel.rows.map((row) => {
+                const versionKey = `extra:${row.uuid || row.id}`
+                const applyBusy = busyVersionKey === versionKey
+                const onServer =
+                  row.on_server === true
+                    ? 'On server'
+                    : row.on_server === false
+                      ? 'Not on server'
+                      : null
+                const sizeLabel = formatVersionSize(row.size)
+                const pathMissing = row.path_missing === true || isVersionPathMissing(row)
+                return (
+                  <li key={row.id || row.uuid || row.label}>
+                    <div className="od-details-page__version-row">
+                      <div className="od-details-page__version-meta">
+                        <strong>{row.label}</strong>
+                        <span className="od-details-page__muted">
+                          {' '}
+                          · {row.kind}
+                          {row.kind === 'disc' && row.disc_index != null
+                            ? ` ${row.disc_index}`
+                            : ''}
+                          {sizeLabel ? ` · ${sizeLabel}` : ''}
+                          {onServer ? ` · ${onServer}` : ''}
+                        </span>
+                        {pathMissing ? (
+                          <span className="od-details-page__muted od-details-page__version-missing">
                             {' '}
-                            · {hit.provider}
-                            {hit.patch_format ? ` · ${hit.patch_format}` : ''}
-                            {hit.target_language ? ` · → ${hit.target_language}` : ''}
+                            · Missing on disk
                           </span>
-                          {hit.notes ? (
-                            <p className="od-details-page__muted">{hit.notes}</p>
-                          ) : null}
-                        </div>
-                        <div className="od-details-page__version-actions">
-                          {hit.source_url ? (
-                            <a
-                              className="od-btn"
-                              href={hit.source_url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Open guide
-                            </a>
-                          ) : null}
+                        ) : null}
+                      </div>
+                      <div className="od-details-page__version-actions">
+                        {row.download_url && !pathMissing ? (
                           <button
                             type="button"
                             className="od-btn"
-                            disabled={catalogBusy}
+                            disabled={Boolean(busyVersionKey)}
                             onClick={() => {
-                              setCatalogBusy(true)
-                              void attachPatchCatalogGuide({
-                                game_uuid: game.uuid,
-                                source_url: hit.source_url,
-                                notes: hit.notes,
-                                target_language: hit.target_language,
-                                patch_format: hit.patch_format,
+                              void handleVersionDownload({
+                                kind: 'extra',
+                                versionUuid: row.uuid,
+                                label: row.label,
+                              })
+                            }}
+                          >
+                            {busyVersionKey === `download:extra:${row.uuid || 'base'}`
+                              ? 'Queuing…'
+                              : 'Download'}
+                          </button>
+                        ) : null}
+                        {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
+                          <button
+                            type="button"
+                            className="od-btn"
+                            disabled={Boolean(busyVersionKey)}
+                            onClick={() => {
+                              setBusyVersionKey(versionKey)
+                              setVersionActionStatus(null)
+                              void queueClientCommand(game.uuid, 'update', {
+                                kind: 'extra',
+                                versionUuid: row.uuid,
                               })
                                 .then(() => {
-                                  setCatalogStatus('Guide attached to game')
-                                  showToast('Guide attached', 'success')
-                                  setRetryCount((n) => n + 1)
+                                  setVersionActionStatus(`${row.label} queued for companion`)
+                                  showToast(`${row.label} queued for companion`, 'success')
                                 })
                                 .catch((err) => {
-                                  setCatalogStatus(err?.message || 'Attach failed')
+                                  setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                  showToast(err?.message || 'Queue failed', 'error')
                                 })
                                 .finally(() => {
-                                  setCatalogBusy(false)
+                                  setBusyVersionKey(null)
                                 })
                             }}
                           >
-                            Attach guide
+                            {applyBusy ? 'Queuing…' : 'Apply with companion'}
                           </button>
-                        </div>
+                        ) : null}
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
-      ) : null}
 
-      {baseAndUpdates.length > 0 ? (
-        <section className="od-details-page__section" id="updates">
-          <div className="od-details-page__section-head">
-            <h2>Versions</h2>
-            {game.is_admin ? (
-              <button
-                type="button"
-                className="od-btn od-btn--pill"
-                disabled={cleanupBusy}
-                onClick={() => void handleCleanupOrphans()}
-                title={
-                  hasMissingVersions
-                    ? 'Remove version rows whose files are missing on disk'
-                    : 'Scan and remove orphaned version rows'
-                }
-              >
-                {cleanupBusy ? 'Removing…' : 'Remove missing versions'}
-              </button>
-            ) : null}
-          </div>
-          {versionActionStatus ? (
-            <p className="od-details-page__muted" role="status">
-              {versionActionStatus}
-            </p>
-          ) : null}
-          <ul className="od-details-page__versions">
-            {baseAndUpdates.map((row) => {
-              const versionKey = `${row.kind}:${row.uuid}`
-              const downloadKey = `download:${row.kind}:${row.uuid || 'base'}`
-              const canDownload = isVersionDownloadable(row)
-              const pathMissing = isVersionPathMissing(row)
-              const sizeLabel = formatVersionSize(row.size)
-              const canApply =
-                Boolean(game.client_connected) && row.kind === 'update' && canDownload
-              const applyBusy = busyVersionKey === versionKey
-              const downloadBusy = busyVersionKey === downloadKey
-              return (
-                <li key={`${row.kind}-${row.id || row.uuid}`}>
-                  <div className="od-details-page__version-row">
-                    <div className="od-details-page__version-meta">
-                      <strong>{row.label}</strong>
-                      {row.is_default ? (
-                        <span className="chip od-chip" title="Default download version">
-                          Default
-                        </span>
-                      ) : null}
-                      <span className="od-details-page__muted">
-                        {' '}
-                        · {row.kind}
-                        {sizeLabel ? ` · ${sizeLabel}` : ''}
-                      </span>
-                      {pathMissing ? (
-                        <span className="od-details-page__muted od-details-page__version-missing">
-                          {' '}
-                          · Missing on disk
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="od-details-page__version-actions">
-                      {/* Updates get a Download; the base row does not.
-                          Downloading the base game is what the action bar at
-                          the top of the page is for, and it is the *primary*
-                          action there — so this row was a second, quieter copy
-                          of the page's loudest button, sitting under a heading
-                          about versions. Per-update download stays, because
-                          that is the one thing the action bar genuinely cannot
-                          express: "I have the game, I only need patch 1.03". */}
-                      {canDownload && row.kind === 'update' ? (
-                        <button
-                          type="button"
-                          className="od-btn"
-                          disabled={Boolean(busyVersionKey)}
-                          onClick={() => {
-                            void handleVersionDownload({
-                              kind: 'update',
-                              versionUuid: row.uuid,
-                              label: row.label,
-                            })
-                          }}
-                        >
-                          {downloadBusy ? 'Queuing…' : 'Download'}
-                        </button>
-                      ) : null}
-                      {canApply ? (
-                        <button
-                          type="button"
-                          className="od-btn"
-                          disabled={Boolean(busyVersionKey)}
-                          onClick={() => {
-                            setBusyVersionKey(versionKey)
-                            setVersionActionStatus(null)
-                            void queueClientCommand(game.uuid, 'update', {
-                              kind: row.kind,
-                              versionUuid: row.uuid,
-                            })
-                              .then(() => {
-                                setVersionActionStatus(`${row.label} queued for companion`)
-                                showToast(`${row.label} queued for companion`, 'success')
-                              })
-                              .catch((err) => {
-                                setVersionActionStatus(err?.message || 'Failed to queue apply')
-                                showToast(err?.message || 'Queue failed', 'error')
-                              })
-                              .finally(() => {
-                                setBusyVersionKey(null)
-                              })
-                          }}
-                        >
-                          {applyBusy ? 'Queuing…' : 'Apply with companion'}
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      ) : null}
-
-      {showsRetroarchCheats(game) ? (
-        <CheatsPanel
-          gameUuid={game.uuid}
-          playHref={playHref}
-          cheatSurface={game.cheat_surface}
-        />
-      ) : null}
-
-      {/* FEAT-D2 — the PC counterpart. Self-gates on cheat_surface, so the two
-          panels can never both render for one title. */}
-      <PcCheatsPanel
-        gameUuid={game.uuid}
-        cheatSurface={game.cheat_surface}
-        canEdit={Boolean(game.can_edit)}
-      />
-
-      <section className="od-details-page__section" id="extras">
-        <h2>Extras &amp; DLC</h2>
-        {extrasModel.loading ? (
-          <p className="od-details-page__muted">Loading extras…</p>
-        ) : extrasModel.rows.length === 0 ? (
-          <p className="od-details-page__muted">
-            No extras or DLC listed for this title yet.
-          </p>
-        ) : (
-          <ul className="od-details-page__versions">
-            {extrasModel.rows.map((row) => {
-              const versionKey = `extra:${row.uuid || row.id}`
-              const applyBusy = busyVersionKey === versionKey
-              const onServer =
-                row.on_server === true ? 'On server' : row.on_server === false ? 'Not on server' : null
-              const sizeLabel = formatVersionSize(row.size)
-              const pathMissing = row.path_missing === true || isVersionPathMissing(row)
-              return (
-                <li key={row.id || row.uuid || row.label}>
-                  <div className="od-details-page__version-row">
-                    <div className="od-details-page__version-meta">
-                      <strong>{row.label}</strong>
-                      <span className="od-details-page__muted">
-                        {' '}
-                        · {row.kind}
-                        {row.kind === 'disc' && row.disc_index != null
-                          ? ` ${row.disc_index}`
-                          : ''}
-                        {sizeLabel ? ` · ${sizeLabel}` : ''}
-                        {onServer ? ` · ${onServer}` : ''}
-                      </span>
-                      {pathMissing ? (
-                        <span className="od-details-page__muted od-details-page__version-missing">
-                          {' '}
-                          · Missing on disk
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="od-details-page__version-actions">
-                      {row.download_url && !pathMissing ? (
-                        <button
-                          type="button"
-                          className="od-btn"
-                          disabled={Boolean(busyVersionKey)}
-                          onClick={() => {
-                            void handleVersionDownload({
-                              kind: 'extra',
-                              versionUuid: row.uuid,
-                              label: row.label,
-                            })
-                          }}
-                        >
-                          {busyVersionKey === `download:extra:${row.uuid || 'base'}`
-                            ? 'Queuing…'
-                            : 'Download'}
-                        </button>
-                      ) : null}
-                      {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
-                        <button
-                          type="button"
-                          className="od-btn"
-                          disabled={Boolean(busyVersionKey)}
-                          onClick={() => {
-                            setBusyVersionKey(versionKey)
-                            setVersionActionStatus(null)
-                            void queueClientCommand(game.uuid, 'update', {
-                              kind: 'extra',
-                              versionUuid: row.uuid,
-                            })
-                              .then(() => {
-                                setVersionActionStatus(`${row.label} queued for companion`)
-                                showToast(`${row.label} queued for companion`, 'success')
-                              })
-                              .catch((err) => {
-                                setVersionActionStatus(err?.message || 'Failed to queue apply')
-                                showToast(err?.message || 'Queue failed', 'error')
-                              })
-                              .finally(() => {
-                                setBusyVersionKey(null)
-                              })
-                          }}
-                        >
-                          {applyBusy ? 'Queuing…' : 'Apply with companion'}
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
-      {/* Related media sits above screenshots and trailer by request — it is
+        {/* Related media sits above screenshots and trailer by request — it is
           context about the game, so it reads before the gallery. Renders
           nothing when a title has none. */}
-      <RelatedMediaStrip gameUuid={game.uuid} />
-      <DetailsMoreFrom gameUuid={game.uuid} />
+        <RelatedMediaStrip gameUuid={game.uuid} />
+        <DetailsMoreFrom gameUuid={game.uuid} />
 
-      {/* The stage carries every embedded trailer, so this is only the
+        {/* The stage carries every embedded trailer, so this is only the
           no-embed case: point at the external video instead. */}
-      {videoEmbeds.length === 0 && demoLink ? (
-        <section className="od-details-page__section">
-          <h2>Trailers &amp; videos</h2>
-          <p className="od-details-page__muted">
-            No embedded trailer yet.{' '}
-            <a className="od-btn" href={demoLink.href} target="_blank" rel="noreferrer">
-              {demoLink.label}
-            </a>
-          </p>
-        </section>
-      ) : null}
+        {videoEmbeds.length === 0 && demoLink ? (
+          <section className="od-details-page__section">
+            <h2>Trailers &amp; videos</h2>
+            <p className="od-details-page__muted">
+              No embedded trailer yet.{' '}
+              <a className="od-btn" href={demoLink.href} target="_blank" rel="noreferrer">
+                {demoLink.label}
+              </a>
+            </p>
+          </section>
+        ) : null}
       </div>
 
       <ScreenshotLightbox

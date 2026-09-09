@@ -106,7 +106,9 @@ test('manufacturer sections fold and remember the choice', async () => {
 
   fireEvent.click(nintendo)
   expect(nintendo).toHaveAttribute('aria-expanded', 'false')
-  expect(screen.queryByRole('link', { name: /Nintendo Entertainment System/i })).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('link', { name: /Nintendo Entertainment System/i }),
+  ).not.toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Sony Playstation/i })).toBeInTheDocument()
   expect(window.localStorage.getItem('od.systems.collapsedFamilies')).toContain('nintendo')
 })

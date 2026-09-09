@@ -47,14 +47,14 @@ function targetIn(cell) {
 }
 
 function readGrid(root) {
-  return Array.from(root.querySelectorAll(SHELF))
-    .map((shelf) => Array.from(shelf.querySelectorAll(CELL))
-      .map(targetIn)
-      .filter(Boolean))
-    // A shelf still loading has a placeholder and no cells. Dropping it here
-    // rather than skipping it during a move means Down never lands on a row
-    // with nowhere to go, and the shelf simply joins the model when it fills.
-    .filter((row) => row.length > 0)
+  return (
+    Array.from(root.querySelectorAll(SHELF))
+      .map((shelf) => Array.from(shelf.querySelectorAll(CELL)).map(targetIn).filter(Boolean))
+      // A shelf still loading has a placeholder and no cells. Dropping it here
+      // rather than skipping it during a move means Down never lands on a row
+      // with nowhere to go, and the shelf simply joins the model when it fills.
+      .filter((row) => row.length > 0)
+  )
 }
 
 function locate(grid, element) {

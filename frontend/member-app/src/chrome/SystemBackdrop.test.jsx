@@ -27,17 +27,13 @@ describe('SystemBackdrop', () => {
 
   it('tags the play room so the backdrop can follow the era setting', () => {
     const { container } = render(<SystemBackdrop platform="SNES" label="Super NES" />)
-    expect(
-      container.querySelector('[data-play-room="teen_bedroom_90s"]'),
-    ).not.toBeNull()
+    expect(container.querySelector('[data-play-room="teen_bedroom_90s"]')).not.toBeNull()
     expect(container.querySelector('.od-system-backdrop__wall')).not.toBeNull()
   })
 
   it('tags the console family so CSS can tint it', () => {
     const { container } = render(<SystemBackdrop platform="PSX" label="PlayStation" />)
-    expect(
-      container.querySelector('[data-backdrop-family="sony"]'),
-    ).not.toBeNull()
+    expect(container.querySelector('[data-backdrop-family="sony"]')).not.toBeNull()
   })
 
   it('is hidden from assistive tech — it is decoration, not content', () => {

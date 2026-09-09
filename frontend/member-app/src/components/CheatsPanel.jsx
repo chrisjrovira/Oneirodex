@@ -1,12 +1,6 @@
 import { useEffect, useId, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  CHEAT_DIALECTS,
-  createCheat,
-  deleteCheat,
-  listCheats,
-  uploadCheat,
-} from '../api/cheats'
+import { CHEAT_DIALECTS, createCheat, deleteCheat, listCheats, uploadCheat } from '../api/cheats'
 import { showsRetroarchCheats } from '../utils/detailsMedia'
 import { showToast } from '../utils/toast'
 import { PageStatus } from './PageStatus'
@@ -27,11 +21,7 @@ function formatSize(bytes) {
  * Game details Cheats panel - create / upload / list / delete `.cht` files.
  * Only mounts when Backend `cheat_surface === 'retroarch'` (Wave 19 GM lock).
  */
-export function CheatsPanel({
-  gameUuid,
-  playHref = null,
-  cheatSurface = 'retroarch',
-}) {
+export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroarch' }) {
   const formId = useId()
   const [cheats, setCheats] = useState([])
   const [loading, setLoading] = useState(true)
@@ -159,7 +149,11 @@ export function CheatsPanel({
   }
 
   return (
-    <section className="od-details-page__section od-cheats-panel" id="cheats" aria-labelledby={`${formId}-heading`}>
+    <section
+      className="od-details-page__section od-cheats-panel"
+      id="cheats"
+      aria-labelledby={`${formId}-heading`}
+    >
       <h2 id={`${formId}-heading`}>Cheats</h2>
       <p className="od-cheats-panel__lede">
         Household RetroArch <code>.cht</code> files for this title. Browser play loads them from the
@@ -168,11 +162,14 @@ export function CheatsPanel({
       </p>
 
       {loading ? (
-        <PageStatus loading inline loadingMessage="Loading cheats…" className="od-cheats-panel__status" />
+        <PageStatus
+          loading
+          inline
+          loadingMessage="Loading cheats…"
+          className="od-cheats-panel__status"
+        />
       ) : null}
-      {error ? (
-        <PageStatus error={error} className="od-cheats-panel__status" />
-      ) : null}
+      {error ? <PageStatus error={error} className="od-cheats-panel__status" /> : null}
       {status ? (
         <p
           className="od-cheats-panel__status"
@@ -322,8 +319,14 @@ export function CheatsPanel({
         </div>
       </form>
 
-      <form className="od-cheats-panel__upload" onSubmit={handleUpload} aria-label="Upload cheat file">
-        <h3>Upload <code>.cht</code></h3>
+      <form
+        className="od-cheats-panel__upload"
+        onSubmit={handleUpload}
+        aria-label="Upload cheat file"
+      >
+        <h3>
+          Upload <code>.cht</code>
+        </h3>
         <label className="od-cheats-panel__field">
           <span>File</span>
           <input

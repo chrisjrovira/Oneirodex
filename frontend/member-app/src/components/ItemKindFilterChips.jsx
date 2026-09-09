@@ -112,12 +112,7 @@ export function toggleItemKindFilter(filters, kind, onApply, cleanFilters) {
   onApply(cleanFilters(next))
 }
 
-export function ItemKindFilterChips({
-  filters,
-  onApply,
-  cleanFilters,
-  t = (key) => key,
-}) {
+export function ItemKindFilterChips({ filters, onApply, cleanFilters, t = (key) => key }) {
   const selected = new Set(parseItemKindFilter(filters.item_kind))
   return (
     <div className="od-badge-filter-chips" role="group" aria-label={t('Kind filters')}>

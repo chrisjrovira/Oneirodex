@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  isDirectVideoUrl,
-  mutedHoverTrailerSrc,
-  prefersReducedMotion,
-} from '../utils/detailsMedia'
+import { isDirectVideoUrl, mutedHoverTrailerSrc, prefersReducedMotion } from '../utils/detailsMedia'
 import './TileHoverTrailer.css'
 
 /** Delay so scanning the grid does not fire a trailer on every tile. */

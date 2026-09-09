@@ -18,8 +18,6 @@ export async function fetchFilterOptions({ signal } = {}) {
     genres: Array.isArray(data.genres) ? data.genres : [],
     themes: Array.isArray(data.themes) ? data.themes : [],
     gameModes: Array.isArray(data.gameModes) ? data.gameModes : [],
-    playerPerspectives: Array.isArray(data.playerPerspectives)
-      ? data.playerPerspectives
-      : [],
+    playerPerspectives: Array.isArray(data.playerPerspectives) ? data.playerPerspectives : [],
   }
 }

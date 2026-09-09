@@ -1,9 +1,5 @@
 import type { Requester } from './client.js'
-import type {
-  PlaySessionResponse,
-  PlaytimeMeResponse,
-  StartPlaySessionRequest,
-} from './types.js'
+import type { PlaySessionResponse, PlaytimeMeResponse, StartPlaySessionRequest } from './types.js'
 
 export function createPlaytimeApi(request: Requester) {
   return {

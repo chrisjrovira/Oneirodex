@@ -3,7 +3,9 @@ export function IssuesList({ issues }) {
   return (
     <section className="ops-panel">
       <h2>Issues</h2>
-      {items.length === 0 ? <p>No active issues.</p> : (
+      {items.length === 0 ? (
+        <p>No active issues.</p>
+      ) : (
         <ul>
           {items.map((issue) => (
             <li key={issue.id} className={`ops-issue--${issue.severity}`}>

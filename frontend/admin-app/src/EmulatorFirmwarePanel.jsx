@@ -314,7 +314,13 @@ export function EmulatorFirmwarePanel() {
   const missing = cores.length - ready
   const working = Boolean(busy)
   const busyLabel =
-    busy === 'scan' ? 'Scanning…' : busy === 'install' ? 'Installing…' : busy === 'upload' ? 'Uploading…' : null
+    busy === 'scan'
+      ? 'Scanning…'
+      : busy === 'install'
+        ? 'Installing…'
+        : busy === 'upload'
+          ? 'Uploading…'
+          : null
 
   return (
     <section className="od-adminpage-panel" aria-labelledby="od-firmware-heading">
@@ -322,9 +328,9 @@ export function EmulatorFirmwarePanel() {
         Firmware / BIOS
       </h2>
       <p className="od-adminpage-lede">
-        Some cores need system files you legally own. Upload one file, scan a folder
-        of dumps you already have, or mount them at <code>EMULATOR_BIOS_PATH</code>.
-        Oneirodex never downloads BIOS for you.
+        Some cores need system files you legally own. Upload one file, scan a folder of dumps you
+        already have, or mount them at <code>EMULATOR_BIOS_PATH</code>. Oneirodex never downloads
+        BIOS for you.
       </p>
 
       {!loading && cores.length > 0 ? (
@@ -358,11 +364,10 @@ export function EmulatorFirmwarePanel() {
 
       <h3 className="od-section-head__title">Install from a collection</h3>
       <p className="od-adminpage-lede">
-        Point at a folder on this server. Subfolders are searched too. Matching
-        names are offered for every system the service supports; if two dumps share
-        a filename, pick which one that system should use. Cores read one file per
-        name from the firmware root, so a shared filename is one dump for every
-        system that uses it.
+        Point at a folder on this server. Subfolders are searched too. Matching names are offered
+        for every system the service supports; if two dumps share a filename, pick which one that
+        system should use. Cores read one file per name from the firmware root, so a shared filename
+        is one dump for every system that uses it.
       </p>
       <label className="od-adminpage-lede" htmlFor="od-firmware-source">
         Firmware collection folder
@@ -446,15 +451,13 @@ export function EmulatorFirmwarePanel() {
           <h3 className="od-section-head__title">Matching dumps in the collection</h3>
           {(plan.matches || []).length === 0 ? (
             <p className="od-empty">
-              No filenames this service asks for were in that folder. The missing
-              report lists what to add.
+              No filenames this service asks for were in that folder. The missing report lists what
+              to add.
             </p>
           ) : (
             <ul className="od-list">
               {(plan.matches || []).map((match) => {
-                const systems = (match.systems || [])
-                  .map((row) => row.label)
-                  .join(', ')
+                const systems = (match.systems || []).map((row) => row.label).join(', ')
                 const included = !skipped.has(match.name)
                 const versions = match.versions || []
                 const conflict = versions.filter((row) => row.digest).length > 1
@@ -477,9 +480,7 @@ export function EmulatorFirmwarePanel() {
                       Install <code>{match.name}</code>
                       {match.already ? ' (already on the volume)' : ''}
                     </label>
-                    {systems ? (
-                      <p className="od-error__detail">Systems: {systems}</p>
-                    ) : null}
+                    {systems ? <p className="od-error__detail">Systems: {systems}</p> : null}
                     {match.note ? <p className="od-error__detail">{match.note}</p> : null}
                     {conflict ? (
                       <fieldset>
@@ -500,7 +501,8 @@ export function EmulatorFirmwarePanel() {
                                   setSelections((prev) => ({ ...prev, [match.name]: choice }))
                                 }}
                               />{' '}
-                              {formatBytes(version.size)} · {version.digest ? version.digest.slice(0, 12) : 'single copy'}
+                              {formatBytes(version.size)} ·{' '}
+                              {version.digest ? version.digest.slice(0, 12) : 'single copy'}
                               {version.count > 1 ? ` · ${version.count} copies` : ''}
                               {version.paths?.length
                                 ? ` · ${(version.paths || []).join(', ')}`
@@ -553,10 +555,9 @@ export function EmulatorFirmwarePanel() {
           <h3 className="od-section-head__title">Files on volume</h3>
           {files.length === 0 ? (
             <p className="od-empty">
-              No firmware found on the volume. Cores that need it will stay
-              unavailable for browser play. Files in subfolders are listed here
-              too — if you copied a set in and see nothing, check the path the
-              volume is actually mounted at.
+              No firmware found on the volume. Cores that need it will stay unavailable for browser
+              play. Files in subfolders are listed here too — if you copied a set in and see
+              nothing, check the path the volume is actually mounted at.
             </p>
           ) : (
             <ul className="od-list">

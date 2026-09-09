@@ -22,12 +22,12 @@ await client.playtime.startSession({ game_uuid: '…' })
 
 ## Covered endpoints
 
-| Module | OpenAPI path | Notes |
-|---|---|---|
-| `tokens` | `GET/POST /api/tokens`, `DELETE /api/tokens/{id}` | Personal API tokens |
+| Module     | OpenAPI path                                                                                                                                 | Notes                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `tokens`   | `GET/POST /api/tokens`, `DELETE /api/tokens/{id}`                                                                                            | Personal API tokens                                                         |
 | `playtime` | `POST /api/playtime/sessions`, `POST /api/playtime/sessions/{id}/heartbeat`, `POST /api/playtime/sessions/{id}/stop`, `GET /api/playtime/me` | Session tracking; any authenticated API token (no extra scope beyond login) |
-| `browse` | `GET /api/search`, `GET /api/collections` | Search + collection listing |
-| `updates` | `GET /api/updates/inbox` | Freshness inbox |
+| `browse`   | `GET /api/search`, `GET /api/collections`                                                                                                    | Search + collection listing                                                 |
+| `updates`  | `GET /api/updates/inbox`                                                                                                                     | Freshness inbox                                                             |
 
 ## Auth
 

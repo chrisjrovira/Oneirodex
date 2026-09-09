@@ -29,18 +29,13 @@ test('lists dense playtime rows with duration meta', async () => {
   expect(await screen.findByText('Hades')).toBeInTheDocument()
   expect(screen.getByLabelText('Playtime summary')).toHaveTextContent(/1h 01m/)
   expect(screen.getByText(/2 sessions/)).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: /Hades/i })).toHaveAttribute(
-    'href',
-    '/game_details/abc',
-  )
+  expect(screen.getByRole('link', { name: /Hades/i })).toHaveAttribute('href', '/game_details/abc')
 })
 
 test('shows honest empty state', async () => {
   playtimeApi.fetchMyPlaytime.mockResolvedValue({ total_seconds: 0, games: [] })
   render(<PlaytimePage />)
-  expect(
-    await screen.findByText(/No playtime recorded yet/i),
-  ).toBeInTheDocument()
+  expect(await screen.findByText(/No playtime recorded yet/i)).toBeInTheDocument()
 })
 
 test('Retry reloads after error', async () => {

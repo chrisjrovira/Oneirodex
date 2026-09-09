@@ -15,9 +15,7 @@ const ROWS = [
 ]
 
 function renderTable(props = {}) {
-  return render(
-    <DataTable columns={COLUMNS} rows={ROWS} getRowKey={(r) => r.id} {...props} />,
-  )
+  return render(<DataTable columns={COLUMNS} rows={ROWS} getRowKey={(r) => r.id} {...props} />)
 }
 
 function bodyNames() {
@@ -184,8 +182,8 @@ test('column filters offer typeahead values from the rows', () => {
   const input = screen.getByLabelText('Filter Name')
   const listId = input.getAttribute('list')
   expect(listId).toBeTruthy()
-  const options = [...document.getElementById(listId).querySelectorAll('option')].map(
-    (node) => node.getAttribute('value'),
+  const options = [...document.getElementById(listId).querySelectorAll('option')].map((node) =>
+    node.getAttribute('value'),
   )
   expect(options).toEqual(['Zelda', 'Astro', 'Mario'])
 })

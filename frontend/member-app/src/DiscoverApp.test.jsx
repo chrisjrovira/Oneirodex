@@ -149,9 +149,7 @@ test('shows Loading Discover while sections fetch', async () => {
         ok: true,
         headers: {
           get(name) {
-            return String(name).toLowerCase() === 'content-type'
-              ? 'application/json'
-              : null
+            return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
           },
         },
         json: async () => ({ ok: true, pins: [], max_pins: 3, available: [] }),
@@ -241,7 +239,6 @@ test('an article row is not dropped for having no games key', async () => {
   expect(await screen.findByRole('heading', { name: 'News' })).toBeInTheDocument()
   expect(screen.queryByText(/No Discover shelves/i)).not.toBeInTheDocument()
 })
-
 
 test('a member can pin a row to the top of their feed', async () => {
   mockDiscoverFetch(

@@ -42,12 +42,7 @@ export const BADGE_CORNER_PREFERENCE = {
 }
 
 /** Corner visit order when preferred is taken or unavailable. */
-export const BADGE_CORNER_FALLBACK = [
-  'top-left',
-  'bottom-left',
-  'bottom-right',
-  'top-right',
-]
+export const BADGE_CORNER_FALLBACK = ['top-left', 'bottom-left', 'bottom-right', 'top-right']
 
 /**
  * True when browse/details payload marks the title as removed from disk.
@@ -61,7 +56,9 @@ export function isPathMissing(game) {
   if (game.path_missing === true || game.path_missing === 1 || game.path_missing === '1') {
     return true
   }
-  const status = String(game.path_status || '').trim().toLowerCase()
+  const status = String(game.path_status || '')
+    .trim()
+    .toLowerCase()
   return status === 'missing'
 }
 
@@ -134,9 +131,7 @@ export function collectBadgeSignals(game, options = {}) {
   }
 
   const identified =
-    parseDate(game.date_identified) ||
-    parseDate(game.date_created) ||
-    parseDate(game.created_at)
+    parseDate(game.date_identified) || parseDate(game.date_created) || parseDate(game.created_at)
   if (isWithinDays(identified, newWindow, now)) {
     badges.push({
       kind: 'NEW',
@@ -236,9 +231,7 @@ export function capBadges(badges, maxVisible = 2) {
  */
 export function availableBadgeCorners(options = {}) {
   const { hasPlatformChip = false } = options
-  return BADGE_CORNER_FALLBACK.filter(
-    (corner) => !(hasPlatformChip && corner === 'bottom-left'),
-  )
+  return BADGE_CORNER_FALLBACK.filter((corner) => !(hasPlatformChip && corner === 'bottom-left'))
 }
 
 /**
@@ -263,11 +256,7 @@ export function availableBadgeCorners(options = {}) {
  * }}
  */
 export function layoutBadgesByCorner(badges, options = {}) {
-  const {
-    hasPlatformChip = false,
-    collidesWithTitle = false,
-    maxPerCorner = 2,
-  } = options
+  const { hasPlatformChip = false, collidesWithTitle = false, maxPerCorner = 2 } = options
 
   const corners = availableBadgeCorners({ hasPlatformChip })
   /** @type {Map<string, ReturnType<typeof collectBadgeSignals>>} */
@@ -321,11 +310,7 @@ export function layoutBadgesByCorner(badges, options = {}) {
   }
 
   if (overflow > 0) {
-    overflowAt =
-      corners.find((c) => room(c)) ||
-      [...buckets.keys()][0] ||
-      corners[0] ||
-      null
+    overflowAt = corners.find((c) => room(c)) || [...buckets.keys()][0] || corners[0] || null
     if (overflowAt && !buckets.has(overflowAt)) {
       buckets.set(overflowAt, [])
     }
@@ -362,7 +347,11 @@ export function layoutBadgesByCorner(badges, options = {}) {
  * @param {boolean} [collidesWithTitle]
  * @param {{ hasVr?: boolean, hasMissing?: boolean, hasPlatformChip?: boolean }} [options]
  */
-export function resolveBadgeCorner(preferred = 'top-left', collidesWithTitle = false, options = {}) {
+export function resolveBadgeCorner(
+  preferred = 'top-left',
+  collidesWithTitle = false,
+  options = {},
+) {
   const { hasVr = false, hasMissing = false, hasPlatformChip = false } = options
   if (hasVr || hasMissing) {
     return 'top-left'

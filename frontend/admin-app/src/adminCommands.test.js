@@ -95,7 +95,12 @@ describe('filterAdminCommands', () => {
 })
 
 describe('scoreCommand', () => {
-  const command = { label: 'SMTP', section: 'Integrations', blurb: 'Outbound mail.', keywords: 'email mail' }
+  const command = {
+    label: 'SMTP',
+    section: 'Integrations',
+    blurb: 'Outbound mail.',
+    keywords: 'email mail',
+  }
 
   it('scores exact above prefix above keyword', () => {
     expect(scoreCommand(command, 'smtp')).toBeGreaterThan(scoreCommand(command, 'mail'))

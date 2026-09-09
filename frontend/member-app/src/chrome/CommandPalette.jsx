@@ -4,11 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { searchGames } from '../api/collections'
 import { fetchPaletteSuggest } from '../api/palette'
 import { openPreferencesModal } from '../api/preferences'
-import {
-  mergeSuggestRecent,
-  readRecentTitles,
-  recordRecentTitle,
-} from '../utils/recentTitles'
+import { mergeSuggestRecent, readRecentTitles, recordRecentTitle } from '../utils/recentTitles'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import { requestOpenSocialCompanion } from '../hooks/socialCompanionApi'
 import { getMoreLinks, getPrimaryLinks } from './navConfig'
@@ -281,9 +277,7 @@ export function CommandPalette({
   const showSuggest = query.trim().length < 2
   const recentTiles = showSuggest ? suggest.recent : []
   const popularTiles = showSuggest
-    ? suggest.popular.filter(
-        (row) => !recentTiles.some((recent) => recent.uuid === row.uuid),
-      )
+    ? suggest.popular.filter((row) => !recentTiles.some((recent) => recent.uuid === row.uuid))
     : []
 
   function openTitle(hit) {

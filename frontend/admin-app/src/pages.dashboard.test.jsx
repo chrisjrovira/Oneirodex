@@ -128,8 +128,8 @@ test('DashboardPage shows library health tile when library.health present', asyn
   const { container } = render(<DashboardPage />)
   await screen.findByRole('button', { name: 'Refresh dashboard' })
   await waitFor(() => {
-    const health = [...container.querySelectorAll('.od-ops-metric')].find((node) =>
-      node.querySelector('.od-ops-metric__label')?.textContent === 'Library health',
+    const health = [...container.querySelectorAll('.od-ops-metric')].find(
+      (node) => node.querySelector('.od-ops-metric__label')?.textContent === 'Library health',
     )
     expect(health).toBeTruthy()
     expect(health.querySelector('.od-ops-metric__value')).toHaveTextContent('81 · good')

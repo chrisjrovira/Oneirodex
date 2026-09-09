@@ -155,9 +155,7 @@ export function GameGrid({
     }
 
     const mutationObserver =
-      typeof MutationObserver !== 'undefined'
-        ? new MutationObserver(updateTileVars)
-        : null
+      typeof MutationObserver !== 'undefined' ? new MutationObserver(updateTileVars) : null
     mutationObserver?.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['style'],
@@ -177,16 +175,12 @@ export function GameGrid({
 
   const width = metrics.width > 0 ? metrics.width : 960
   const tileMin = metrics.tileMin
-  const columnCount =
-    catalogLayout === 'rows' ? 1 : computeGridColumns(width, tileMin, metrics.gap)
+  const columnCount = catalogLayout === 'rows' ? 1 : computeGridColumns(width, tileMin, metrics.gap)
   const rowHeight =
     catalogLayout === 'rows'
       ? catalogRowHeightPx(metrics.tileMin)
       : estimateGridRowHeight(width, columnCount, metrics.gap, metrics.titleH)
-  const rows = useMemo(
-    () => chunkGamesIntoRows(games, columnCount),
-    [games, columnCount],
-  )
+  const rows = useMemo(() => chunkGamesIntoRows(games, columnCount), [games, columnCount])
 
   /**
    * Virtualise against whatever actually scrolls.

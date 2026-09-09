@@ -33,7 +33,8 @@ function mockFetch(users = [ADA], putOk = true) {
         return {
           ok: putOk,
           status: putOk ? 200 : 400,
-          json: async () => (putOk ? { ok: true, error: null } : { ok: false, error: 'Cannot modify your own role' }),
+          json: async () =>
+            putOk ? { ok: true, error: null } : { ok: false, error: 'Cannot modify your own role' },
         }
       }
       throw new Error(`unexpected fetch ${url} ${init.method || 'GET'}`)

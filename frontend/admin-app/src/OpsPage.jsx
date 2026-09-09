@@ -96,9 +96,7 @@ const SCAN_JOB_COLUMNS = [
       if (job.stalled) {
         return <span className="od-ops-table__muted">No progress reported</span>
       }
-      return (
-        <span className="od-ops-table__muted">{job.current_processing || '—'}</span>
-      )
+      return <span className="od-ops-table__muted">{job.current_processing || '—'}</span>
     },
   },
 ]
@@ -153,7 +151,11 @@ export function OpsPage() {
   const openFullLog = useCallback(() => {
     setFullLogOpen(true)
     if (window.location.hash !== '#full-log') {
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#full-log`)
+      window.history.replaceState(
+        null,
+        '',
+        `${window.location.pathname}${window.location.search}#full-log`,
+      )
     }
   }, [])
 
@@ -247,8 +249,7 @@ export function OpsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const shouldOpen =
-      window.location.hash === '#full-log' || params.get('open') === 'full-log'
+    const shouldOpen = window.location.hash === '#full-log' || params.get('open') === 'full-log'
     if (shouldOpen) openFullLog()
     const onHash = () => {
       if (window.location.hash === '#full-log') openFullLog()
@@ -274,21 +275,14 @@ export function OpsPage() {
   const lastSeen = companions?.last_seen
 
   const presentDetailIds = useMemo(
-    () =>
-      DETAIL_PANEL_IDS.filter(
-        (id) => Object.keys(systemDetail?.[id] || {}).length > 0,
-      ),
+    () => DETAIL_PANEL_IDS.filter((id) => Object.keys(systemDetail?.[id] || {}).length > 0),
     [systemDetail],
   )
 
   const widgets = useMemo(() => {
     const map = {
       status: (
-        <OpsStatusBanner
-          severity={severity}
-          items={issues?.items}
-          ariaLabel="System status"
-        />
+        <OpsStatusBanner severity={severity} items={issues?.items} ariaLabel="System status" />
       ),
       'm-cpu': (
         <MetricTile
@@ -333,9 +327,7 @@ export function OpsPage() {
           label="Readyz"
           value={formatReadyz(services?.awake)}
           hint={na(services?.awake?.http_status)}
-          tone={booleanTone(
-            services?.awake == null ? null : services?.awake?.http_status === 200,
-          )}
+          tone={booleanTone(services?.awake == null ? null : services?.awake?.http_status === 200)}
         />
       ),
       'm-companions': (
@@ -514,8 +506,7 @@ export function OpsPage() {
               <p className="od-ops-panel__lede">
                 Online {companions.online ?? 0} / {companions.registered ?? 0}
                 {' · '}
-                window {companions.window_minutes ?? 3}m
-                {' · '}
+                window {companions.window_minutes ?? 3}m{' · '}
                 newest {lastSeen?.newest ? new Date(lastSeen.newest).toLocaleString() : 'n/a'}
                 {' · '}
                 1h {lastSeen?.within_1h ?? 0} · 24h {lastSeen?.within_24h ?? 0} · stale{' '}
@@ -607,9 +598,7 @@ export function OpsPage() {
     }
 
     for (const id of presentDetailIds) {
-      map[`detail-${id}`] = (
-        <DetailPanel title={DETAIL_PANELS[id]} values={systemDetail[id]} />
-      )
+      map[`detail-${id}`] = <DetailPanel title={DETAIL_PANELS[id]} values={systemDetail[id]} />
     }
 
     if (recentLogs) {
@@ -631,8 +620,7 @@ export function OpsPage() {
               {
                 key: 'timestamp',
                 label: 'When',
-                render: (row) =>
-                  row.timestamp ? new Date(row.timestamp).toLocaleString() : '—',
+                render: (row) => (row.timestamp ? new Date(row.timestamp).toLocaleString() : '—'),
               },
               { key: 'level', label: 'Level' },
               { key: 'type', label: 'Type' },

@@ -60,7 +60,9 @@ test('renders ownership summary after loading', async () => {
   })
   const storeRows = screen.getAllByRole('listitem')
   const steamRow = storeRows.find((row) => /Steam/.test(row.textContent || ''))
-  const gogRow = storeRows.find((row) => /^GOG/.test((row.textContent || '').trim()) || /\bGOG\b/.test(row.textContent || ''))
+  const gogRow = storeRows.find(
+    (row) => /^GOG/.test((row.textContent || '').trim()) || /\bGOG\b/.test(row.textContent || ''),
+  )
   expect(steamRow).toHaveTextContent(/connected/)
   expect(steamRow).toHaveTextContent(/10 titles · 4 matched/)
   expect(gogRow).toHaveTextContent(/not connected/)
@@ -142,9 +144,7 @@ test('sync posts to the steam sync endpoint with the CSRF header', async () => {
     )
   })
 
-  expect(
-    await screen.findByText('Synced 10 titles (4 matched to library).'),
-  ).toBeInTheDocument()
+  expect(await screen.findByText('Synced 10 titles (4 matched to library).')).toBeInTheDocument()
 })
 
 test('csv import posts the pasted rows as JSON', async () => {

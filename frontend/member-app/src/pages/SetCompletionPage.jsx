@@ -65,10 +65,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
     }
   }, [libraryPlatform, region, retryCount])
 
-  const missing = useMemo(
-    () => (Array.isArray(report?.missing) ? report.missing : []),
-    [report],
-  )
+  const missing = useMemo(() => (Array.isArray(report?.missing) ? report.missing : []), [report])
 
   function setRegion(nextRegion) {
     const next = new URLSearchParams(searchParams)
@@ -138,11 +135,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
   const chrome = useNewChrome ? (
     <ContextBar
       title={identity}
-      summary={
-        report
-          ? `${report.owned} / ${report.total} owned (${report.percent}%)`
-          : null
-      }
+      summary={report ? `${report.owned} / ${report.total} owned (${report.percent}%)` : null}
       filterCount={libraryPlatform && region !== 'USA' ? 1 : 0}
       filters={libraryPlatform ? regionSelect : null}
       actions={libraryLinks}
@@ -183,9 +176,7 @@ export function SetCompletionPage({ shellConfig = {} } = {}) {
           )}
           {isMissingSet ? (
             <div role="alert">
-              <p>
-                {`No reference set uploaded for ${libraryPlatform}/${region}.`}
-              </p>
+              <p>{`No reference set uploaded for ${libraryPlatform}/${region}.`}</p>
               {useNewChrome ? null : (
                 <Link className="od-btn" to="/systems">
                   Systems

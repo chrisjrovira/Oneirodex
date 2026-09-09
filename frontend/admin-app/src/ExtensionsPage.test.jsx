@@ -101,7 +101,10 @@ test('ExtensionsPage lists extensions and supports add/remove happy path', async
 test('App route /admin/extensions mounts Extensions UI', async () => {
   const originalFetch = global.fetch
   global.fetch = mockFetch([
-    ['/api/file_types/allowed', async (_url, _init, method) => (method === 'GET' ? jsonOk([]) : null)],
+    [
+      '/api/file_types/allowed',
+      async (_url, _init, method) => (method === 'GET' ? jsonOk([]) : null),
+    ],
   ])
   try {
     render(

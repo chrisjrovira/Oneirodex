@@ -109,7 +109,9 @@ describe('scanQueuePolicy', () => {
       toastForScanStartResponse({ status: 'started', message: 'Scan started.', risk: 'NAS risk' })
         .text,
     ).toMatch(/NAS risk/)
-    expect(toastForScanStartResponse({ status: 'rejected', error: 'Nope' }, false).text).toBe('Nope')
+    expect(toastForScanStartResponse({ status: 'rejected', error: 'Nope' }, false).text).toBe(
+      'Nope',
+    )
     expect(toastForScanStartResponse({ count: 3 }, true).text).toMatch(/Queued · 3/)
     expect(toastToneForScanVariant('warning')).toBe('warn')
     expect(toastToneForScanVariant('info')).toBe('info')

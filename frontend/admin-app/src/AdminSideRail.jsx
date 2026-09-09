@@ -32,10 +32,7 @@ function useCollapsedSections(activeSectionId) {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(
-        COLLAPSED_SECTIONS_KEY,
-        JSON.stringify([...collapsed]),
-      )
+      window.localStorage.setItem(COLLAPSED_SECTIONS_KEY, JSON.stringify([...collapsed]))
     } catch {
       // Preference only — the rail works either way.
     }

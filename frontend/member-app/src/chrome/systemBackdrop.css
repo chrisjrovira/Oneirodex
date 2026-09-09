@@ -18,8 +18,12 @@
 }
 
 @keyframes od-system-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Era-room wallpaper wash — same setting language as play rooms, faint so tiles win. */
@@ -34,10 +38,19 @@
   --od-room-wallpaper: repeating-linear-gradient(90deg, #3a2818 0 13px, #2a1c10 13px 26px);
 }
 .od-system-backdrop[data-play-room='teen_bedroom_90s'] {
-  --od-room-wallpaper: repeating-linear-gradient(180deg, #3a2a48 0 18px, #322440 18px 20px, #2a1c38 20px 38px);
+  --od-room-wallpaper: repeating-linear-gradient(
+    180deg,
+    #3a2a48 0 18px,
+    #322440 18px 20px,
+    #2a1c38 20px 38px
+  );
 }
 .od-system-backdrop[data-play-room='carpet_den_late_90s'] {
-  --od-room-wallpaper: repeating-linear-gradient(90deg, rgba(90, 40, 50, 0.45) 0 22px, rgba(40, 20, 30, 0.25) 22px 44px);
+  --od-room-wallpaper: repeating-linear-gradient(
+    90deg,
+    rgba(90, 40, 50, 0.45) 0 22px,
+    rgba(40, 20, 30, 0.25) 22px 44px
+  );
 }
 .od-system-backdrop[data-play-room='media_center_00s'] {
   --od-room-wallpaper: linear-gradient(180deg, #141c2c, #0a1018);
@@ -46,19 +59,22 @@
   --od-room-wallpaper: radial-gradient(80% 50% at 50% 0%, #3a1028, transparent 60%);
 }
 .od-system-backdrop[data-play-room='desk'] {
-  --od-room-wallpaper: repeating-linear-gradient(0deg, rgba(94, 240, 138, 0.08) 0 1px, transparent 1px 4px);
+  --od-room-wallpaper: repeating-linear-gradient(
+    0deg,
+    rgba(94, 240, 138, 0.08) 0 1px,
+    transparent 1px 4px
+  );
 }
 
 /* Family-tinted wash, anchored top-right so the grid's top-left stays clean. */
 .od-system-backdrop__wash {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(
-      70% 90% at 82% 8%,
-      var(--od-backdrop-tint, rgba(47, 214, 123, 0.5)) 0%,
-      transparent 68%
-    );
+  background: radial-gradient(
+    70% 90% at 82% 8%,
+    var(--od-backdrop-tint, rgba(47, 214, 123, 0.5)) 0%,
+    transparent 68%
+  );
   opacity: 0.16;
 }
 
@@ -109,21 +125,41 @@
 }
 
 /* Family tints — the same accents the platform skin already uses. */
-.od-system-backdrop[data-backdrop-family='nintendo'] { --od-backdrop-tint: #e60012; }
-.od-system-backdrop[data-backdrop-family='sony']     { --od-backdrop-tint: #0070d1; }
-.od-system-backdrop[data-backdrop-family='xbox']     { --od-backdrop-tint: #2fd67b; }
-.od-system-backdrop[data-backdrop-family='sega']     { --od-backdrop-tint: #1c6ecb; }
-.od-system-backdrop[data-backdrop-family='atari']    { --od-backdrop-tint: #d97b2a; }
-.od-system-backdrop[data-backdrop-family='pc']       { --od-backdrop-tint: #8a7bd9; }
+.od-system-backdrop[data-backdrop-family='nintendo'] {
+  --od-backdrop-tint: #e60012;
+}
+.od-system-backdrop[data-backdrop-family='sony'] {
+  --od-backdrop-tint: #0070d1;
+}
+.od-system-backdrop[data-backdrop-family='xbox'] {
+  --od-backdrop-tint: #2fd67b;
+}
+.od-system-backdrop[data-backdrop-family='sega'] {
+  --od-backdrop-tint: #1c6ecb;
+}
+.od-system-backdrop[data-backdrop-family='atari'] {
+  --od-backdrop-tint: #d97b2a;
+}
+.od-system-backdrop[data-backdrop-family='pc'] {
+  --od-backdrop-tint: #8a7bd9;
+}
 
 /* Light themes: the same values look like smog on a pale surface. */
 @media (prefers-color-scheme: light) {
-  .od-system-backdrop__name { opacity: 0.07; }
-  .od-system-backdrop__grid { opacity: 0.25; }
+  .od-system-backdrop__name {
+    opacity: 0.07;
+  }
+  .od-system-backdrop__grid {
+    opacity: 0.25;
+  }
 }
 
-:root[data-theme='light'] .od-system-backdrop__name { opacity: 0.07; }
-:root[data-theme='light'] .od-system-backdrop__grid { opacity: 0.25; }
+:root[data-theme='light'] .od-system-backdrop__name {
+  opacity: 0.07;
+}
+:root[data-theme='light'] .od-system-backdrop__grid {
+  opacity: 0.25;
+}
 
 /* The grid and its chrome must always sit above the backdrop. */
 .library-layout {
@@ -143,5 +179,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .od-system-backdrop { animation: none; }
+  .od-system-backdrop {
+    animation: none;
+  }
 }

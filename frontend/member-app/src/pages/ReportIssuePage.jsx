@@ -6,8 +6,18 @@ import { PageStatus } from '../components/PageStatus'
 import './ReportIssuePage.css'
 
 const AREAS = [
-  'auth', 'library', 'download', 'webretro', 'companion', 'acquire',
-  'social', 'themes', 'admin', 'oidc', 'security', 'other',
+  'auth',
+  'library',
+  'download',
+  'webretro',
+  'companion',
+  'acquire',
+  'social',
+  'themes',
+  'admin',
+  'oidc',
+  'security',
+  'other',
 ]
 
 /**
@@ -121,7 +131,11 @@ export function ReportIssuePage() {
             <legend className="od-report__kind-legend">What are you filing?</legend>
             <div className="od-report__kind-options">
               {[
-                { id: 'issue', label: 'Something is broken', hint: 'It does not work as it should' },
+                {
+                  id: 'issue',
+                  label: 'Something is broken',
+                  hint: 'It does not work as it should',
+                },
                 { id: 'enhancement', label: 'An idea', hint: 'Something new, or better' },
               ].map((option) => (
                 <label
@@ -167,7 +181,9 @@ export function ReportIssuePage() {
               <span>Area</span>
               <select value={area} onChange={(e) => setArea(e.target.value)}>
                 {AREAS.map((a) => (
-                  <option key={a} value={a}>{a}</option>
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
                 ))}
               </select>
             </label>
@@ -175,7 +191,9 @@ export function ReportIssuePage() {
               <span>Severity</span>
               <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
                 {['P0', 'P1', 'P2', 'P3'].map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </label>
@@ -195,7 +213,9 @@ export function ReportIssuePage() {
                   <span>Deploy</span>
                   <select value={deploy} onChange={(e) => setDeploy(e.target.value)}>
                     {['Unraid', 'Compose', 'native', 'other'].map((d) => (
-                      <option key={d} value={d}>{d}</option>
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
                     ))}
                   </select>
                 </label>
@@ -210,7 +230,11 @@ export function ReportIssuePage() {
               </div>
               <label className="od-report__field">
                 <span>URL</span>
-                <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Page where it broke" />
+                <input
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="Page where it broke"
+                />
               </label>
             </div>
           ) : null}

@@ -131,10 +131,7 @@ export function editionChipLabels(game, activePlatform = '') {
   const active = String(activePlatform || '')
   const lead = active && platforms.includes(active) ? active : platforms[0]
   const abbrev = abbreviatePlatform(lead) || lead
-  const full =
-    lead === game?.library_platform
-      ? (game?.library_platform_label || lead)
-      : lead
+  const full = lead === game?.library_platform ? game?.library_platform_label || lead : lead
 
   return { abbrev, full, extra: Math.max(0, platforms.length - 1) }
 }

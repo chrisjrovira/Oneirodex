@@ -4,7 +4,9 @@ export function NetworkPanel({ network }) {
   return (
     <section className="ops-panel">
       <h2>Network</h2>
-      {!network ? <p>Network data unavailable.</p> : (
+      {!network ? (
+        <p>Network data unavailable.</p>
+      ) : (
         <ul>
           <li>Sent: {formatBytes(network.bytes_sent)}</li>
           <li>Received: {formatBytes(network.bytes_recv)}</li>

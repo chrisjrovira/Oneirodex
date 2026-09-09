@@ -261,9 +261,7 @@ test('OpsPage shows library watch off honestly', async () => {
   // — which is a scheduling detail, not the behaviour under test. That is what
   // failed on CI and passed locally: the count found the Services row and not
   // yet the tile.
-  await waitFor(() =>
-    expect(screen.getAllByText('Library watch').length).toBeGreaterThanOrEqual(2),
-  )
+  await waitFor(() => expect(screen.getAllByText('Library watch').length).toBeGreaterThanOrEqual(2))
   expect(
     screen.getByText(/Set ONEIRODEX_LIBRARY_WATCH=1 to enable root-folder incremental watch/),
   ).toBeInTheDocument()
@@ -560,7 +558,7 @@ test('OpsPage Full log opens a modal instead of navigating away', async () => {
   await user.click(fullLog)
 
   expect(await screen.findByRole('dialog', { name: 'Full log' })).toBeInTheDocument()
-  expect(global.fetch.mock.calls.some(([url]) => String(url).includes('/admin/api/ops/logs?limit=200'))).toBe(
-    true,
-  )
+  expect(
+    global.fetch.mock.calls.some(([url]) => String(url).includes('/admin/api/ops/logs?limit=200')),
+  ).toBe(true)
 })

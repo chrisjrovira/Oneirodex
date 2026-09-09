@@ -30,12 +30,8 @@
   /* How far a hovered tile grows past its box, per side. The track reserves
      this inside its padding box (so overflow does not clip the scale) and
      takes it back with negative margin so the row rhythm stays tight. */
-  --od-shelf-bleed: calc(
-    var(--od-tile-h) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 + 6px
-  );
-  --od-shelf-bleed-x: calc(
-    var(--od-tile-w) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 + 6px
-  );
+  --od-shelf-bleed: calc(var(--od-tile-h) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 + 6px);
+  --od-shelf-bleed-x: calc(var(--od-tile-w) * (var(--od-tile-hover-scale, 1.25) - 1) / 2 + 6px);
 
   /* Custom bar sits in the track's bottom hover bleed, with a clear air gap
      under resting covers so News matches Latest Games (0.1rem read as glued). */
@@ -302,8 +298,7 @@
   /* Resting tile bottom sits `bleed` above the scroller foot; park the bar
      `gap` below that line so every row shares the same air under covers. */
   bottom: calc(
-    var(--od-shelf-bleed, 0px) - var(--od-shelf-scrollbar-lane) -
-      var(--od-shelf-scrollbar-gap)
+    var(--od-shelf-bleed, 0px) - var(--od-shelf-scrollbar-lane) - var(--od-shelf-scrollbar-gap)
   );
   height: var(--od-shelf-scrollbar-lane);
   border-radius: var(--od-radius-pill);

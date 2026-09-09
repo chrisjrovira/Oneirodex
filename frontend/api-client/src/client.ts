@@ -9,23 +9,19 @@ export interface OneirodexClientConfig {
   fetchImpl?: typeof fetch
 }
 
-
 export class OneirodexApiError extends Error {
   readonly status: number
   readonly body: ApiError | string | null
 
   constructor(status: number, body: ApiError | string | null) {
     const message =
-      typeof body === 'object' && body && 'error' in body
-        ? body.error
-        : `HTTP ${status}`
+      typeof body === 'object' && body && 'error' in body ? body.error : `HTTP ${status}`
     super(message)
     this.name = 'OneirodexApiError'
     this.status = status
     this.body = body
   }
 }
-
 
 /** Format value for Authorization header (Bearer gt_…). */
 export function formatBearerAuthorization(token: string): string {
@@ -60,10 +56,7 @@ async function parseErrorBody(response: Response): Promise<ApiError | string | n
 export function createRequester(config: OneirodexClientConfig) {
   const fetchImpl = config.fetchImpl ?? fetch
 
-  return async function request<T>(
-    path: string,
-    init: RequestInit = {},
-  ): Promise<T> {
+  return async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const headers = new Headers(init.headers)
     if (!headers.has('Accept')) {
       headers.set('Accept', 'application/json')
