@@ -11,12 +11,21 @@ from werkzeug.exceptions import Forbidden
 
 
 @pytest.fixture
-def error_app(app):
+def error_app(app, monkeypatch):
     """The test app with throwaway routes that fail in known ways.
 
     Routes are added before the first request, which Flask allows. The ``app``
     fixture is function-scoped, so endpoint names never collide across tests.
+
+    ``check_setup_status`` (a ``before_request`` hook) 302-redirects every
+    non-``/api/`` path to ``/setup`` whenever the run's shared test DB has no
+    configured install at that moment — which other test modules routinely
+    leave it in. Pin the setup gate off so ``/_test_boom_html`` actually
+    reaches its handler and this module tests the error path, not setup flow.
     """
+    monkeypatch.setattr(
+        'oneirodex.utils.setup.should_redirect_to_setup', lambda: False
+    )
 
     @app.route('/api/_test_boom')
     def _boom():
