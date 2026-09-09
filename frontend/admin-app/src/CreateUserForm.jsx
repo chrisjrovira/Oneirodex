@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { putJson } from './adminApi'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { PM_IGNORE } from './formIgnore'
 
 const ROLES = ['user', 'librarian', 'child', 'admin']

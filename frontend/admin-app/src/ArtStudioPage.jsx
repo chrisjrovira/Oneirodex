@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { ImagesPage } from './ImagesPage'
 import { StockPicker } from './StockPicker'
 import { SystemMarksPanel } from './SystemMarksPanel'

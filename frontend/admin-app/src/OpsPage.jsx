@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 
 import { DashboardBoard } from './DashboardBoard'
 import { DataTable } from './DataTable'

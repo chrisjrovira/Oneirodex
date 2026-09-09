@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { confirmAction } from '@oneirodex/ui'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 
 import { DataTable } from './DataTable'
 import { confirmCreateSelected, fetchProposeLeafLibraries } from './proposeLeafLibrariesApi'

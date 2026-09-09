@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import {
   PEEL_PROFILES,
   SAFE_VARIANT_KEYS,
