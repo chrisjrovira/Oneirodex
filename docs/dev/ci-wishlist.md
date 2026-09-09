@@ -101,3 +101,51 @@ directly — they append a line here.
   `postgresql://postgres:postgres@localhost:5432/oneirodextest`; `alembic`
   reads it via the same resolution the app uses. Runs independently of
   `pytest-core` (no app fixtures needed).
+- [B1.1] npm workspaces landed on `chore/modz-fe-w1`. The repo root
+  (`package.json` `workspaces` array) is now the single install point and
+  `package-lock.json` at the root is the **only** lockfile — the per-app
+  `frontend/member-app/package-lock.json`, `frontend/admin-app/...`,
+  `frontend/ops-glance/...`, `frontend/api-client/...` and
+  `clients/desktop/package-lock.json` are deleted. Every `ci-tests.yml` job that
+  still names a per-app lockfile or runs a per-app `npm ci` needs updating:
+  - `member-app-vitest`, `admin-app-vitest`, `ops-glance-vitest`: each has
+    `actions/setup-node` with `cache-dependency-path: frontend/<app>/package-lock.json`
+    (now gone) and two install steps — `Install repo-root toolchain (tsc)`
+    (`npm ci`, `working-directory: .`) followed by `Install dependencies`
+    (`npm ci` in the app dir, no override). Change: set
+    `cache-dependency-path: package-lock.json`, keep the single root
+    `npm ci` (`working-directory: .` — it now installs the whole workspace
+    graph including the app), and **delete the second per-app `npm ci` step**.
+    The `Run vitest` / `Typecheck` / `Build ops-glance bundle` steps keep their
+    `defaults.run.working-directory: frontend/<app>` and run unchanged (or
+    switch to `npm run <script> --workspace=<app>` from the root — either
+    works). The `working-directory: .` steps that already exist
+    (`Run classic theme JS harnesses`, `Run CSS token lint`) are unaffected.
+  - `api-client-vitest`: `cache-dependency-path: frontend/api-client/package-lock.json`
+    → `package-lock.json`; the `Install dependencies` step (`npm ci` under
+    `defaults.run.working-directory: frontend/api-client`) must become a root
+    `npm ci` (add `working-directory: .`). `Typecheck` (`npm run build`) and
+    `Run vitest` (`npm test`) then run from the app dir as now, or via
+    `--workspace=@oneirodex/api-client` from the root.
+  - `desktop-vitest`: `cache-dependency-path: clients/desktop/package-lock.json`
+    → `package-lock.json`; `Install dependencies` (`npm ci` under
+    `defaults.run.working-directory: clients/desktop`) → root `npm ci`
+    (`working-directory: .`). The `@oneirodex/api-client` dep is now `"*"`
+    (workspace resolution) instead of a `file:` link, so the root install is
+    what wires it. `Run fast desktop vitest slice` (`npx vitest run …`) runs
+    unchanged from the app dir.
+  - `lint` job: `cache-dependency-path: package-lock.json` and the plain
+    `npm ci` are already correct — the root lock is now the only one. No change
+    beyond confirming it still resolves (it will; same file, now workspace-aware).
+  - Note for whoever applies this on a Windows/NAS checkout: npm workspace
+    installs reify workspace packages as symlinks/junctions into
+    `node_modules/`, which fail with `EPERM` on the SMB-mounted `Z:` worktree
+    (both `fs.symlink` and junction). CI runners (Linux) and the Docker
+    `frontend-build` stage (alpine) are unaffected. Local verification of this
+    wave must run on a Linux checkout or in CI.
+  - Optional follow-up (not required): the Docker `frontend-build` stage now
+    runs one root `npm ci`, which also installs `clients/desktop`'s
+    `@tauri-apps/cli` (a throwaway cost — that stage is discarded, only
+    `oneirodex/static/dist/*` is copied forward). If build time there matters,
+    scope it with
+    `npm ci --workspace=member-app --workspace=admin-app --workspace=ops-glance --include-workspace-root`.

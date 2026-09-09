@@ -33,9 +33,7 @@ export function createLibraryApi(request: Requester) {
 
     /** Read the per-library freshness-watch flag (`GET /api/library/{uuid}/watch`). */
     getWatch(libraryUuid: string): Promise<LibraryWatchState> {
-      return request<LibraryWatchState>(
-        `/api/library/${encodeURIComponent(libraryUuid)}/watch`,
-      )
+      return request<LibraryWatchState>(`/api/library/${encodeURIComponent(libraryUuid)}/watch`)
     },
 
     /**

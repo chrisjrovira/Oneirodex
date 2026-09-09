@@ -45,10 +45,9 @@ export function createCollectionsApi(request: Requester) {
 
     /** One collection with its items (`GET /api/collections/{uuid}`). */
     get(collectionUuid: string, signal?: AbortSignal): Promise<CollectionDetail> {
-      return request<CollectionDetail>(
-        `/api/collections/${encodeURIComponent(collectionUuid)}`,
-        { signal },
-      )
+      return request<CollectionDetail>(`/api/collections/${encodeURIComponent(collectionUuid)}`, {
+        signal,
+      })
     },
 
     /** Rename / re-describe / toggle visibility (`PATCH /api/collections/{uuid}`). */

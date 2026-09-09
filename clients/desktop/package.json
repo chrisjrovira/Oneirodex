@@ -21,7 +21,7 @@
     "tauri:build:thin": "tauri build --config src-tauri/tauri.thin.conf.json"
   },
   "dependencies": {
-    "@oneirodex/api-client": "file:../../frontend/api-client",
+    "@oneirodex/api-client": "*",
     "@tauri-apps/api": "^2.5.0"
   },
   "devDependencies": {

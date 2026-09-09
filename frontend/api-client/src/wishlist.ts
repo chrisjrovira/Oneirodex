@@ -61,7 +61,9 @@ export function createWishlistApi(request: Requester) {
 
     /** Cancel an own pending request (`DELETE /api/requests/{id}`). */
     cancelRequest(requestId: number): Promise<{ ok: boolean; id: number }> {
-      return request<{ ok: boolean; id: number }>(`/api/requests/${requestId}`, { method: 'DELETE' })
+      return request<{ ok: boolean; id: number }>(`/api/requests/${requestId}`, {
+        method: 'DELETE',
+      })
     },
 
     /**
