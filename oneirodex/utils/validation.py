@@ -1,0 +1,139 @@
+"""Declarative JSON request validation for API routes (wave A2.4).
+
+Why this exists
+---------------
+324 API routes hand-roll the same three lines::
+
+    data = request.get_json(silent=True) or {}
+    if not data.get('name'):
+        return api_error('A name is required', code='bad_request')
+
+Every one picks its own message, its own ``error_code`` and its own idea of
+what "missing" means (``None``? ``''``? whitespace? wrong type?). The SPA
+cannot render a shared field-error state against that.
+
+``@validate_body(Model)`` replaces the boilerplate with a pydantic model. On a
+bad body it returns **one** shape — ``api_error('Invalid request.',
+code='unprocessable', detail={field: message})`` (HTTP 422) — and on a good
+body it hands the parsed, typed model to the view as the ``body`` keyword
+argument::
+
+    @apis_bp.route('/collections', methods=['POST'])
+    @login_required
+    @validate_body(CreateCollectionBody)
+    def create_collection(body: CreateCollectionBody):
+        name = body.name[:120]
+        ...
+
+Decorator order
+---------------
+``@validate_body`` must sit **innermost** — directly above ``def`` and below
+every auth decorator (``@login_required`` / ``@librarian_required`` / ...).
+Decorators apply bottom-up, so at call time auth runs first and validation
+second: an unauthenticated caller is refused before the body is even looked at.
+A ``@validate_body`` route with no auth decorator above it is a bug.
+
+Malformed / absent body
+-----------------------
+``request.get_json(silent=True)`` returns ``None`` for a missing body, a body
+that is not JSON, or a syntactically broken body. All three are treated the
+same: validate ``{}`` against the model. A model with required fields then
+yields a 422 naming those fields; a model whose fields are all optional
+accepts it. A body that parses to JSON but is not an object (``[]``, ``"x"``,
+``5``) also lands as a 422, not a 500.
+
+Security
+--------
+``detail`` carries only ``{field: message}`` built from pydantic's own short
+messages ("Field required", "Input should be a valid string", "Extra inputs
+are not permitted", ...). The offending ``input`` value, pydantic's help
+``url`` and any ``ctx`` object are dropped, so no request data, stack frame or
+filesystem path can ride out in the envelope — the same rule
+``oneirodex/utils/api_response.py`` documents for ``detail``.
+"""
+
+from __future__ import annotations
+
+import functools
+from typing import Any, Callable
+
+from pydantic import BaseModel, ValidationError
+
+from oneirodex.utils.api_response import api_error
+
+try:  # pragma: no cover - trivial import shim
+    from flask import request
+except Exception:  # pragma: no cover
+    request = None  # type: ignore[assignment]
+
+__all__ = ['validate_body', 'format_validation_errors']
+
+
+def _loc_to_field(loc: tuple[Any, ...]) -> str:
+    """Turn a pydantic error ``loc`` tuple into a dotted field name.
+
+    ``('name',)`` -> ``'name'``
+    ``('items', 0, 'id')`` -> ``'items[0].id'``
+    ``()`` (whole-body error) -> ``'__root__'``
+    """
+    parts: list[str] = []
+    for entry in loc:
+        if isinstance(entry, int):
+            parts.append(f'[{entry}]')
+        elif parts:
+            parts.append(f'.{entry}')
+        else:
+            parts.append(str(entry))
+    field = ''.join(parts).lstrip('.')
+    return field or '__root__'
+
+
+def format_validation_errors(exc: ValidationError) -> dict[str, Any]:
+    """Compact ``{field: message}`` (or ``{field: [messages]}``) for the client.
+
+    Deliberately omits ``input``, ``url`` and ``ctx`` from every entry: those
+    are the parts that can echo request data or environment detail back to the
+    browser.
+    """
+    out: dict[str, Any] = {}
+    for err in exc.errors():
+        field = _loc_to_field(tuple(err.get('loc') or ()))
+        message = str(err.get('msg') or 'Invalid value')
+        if field in out:
+            existing = out[field]
+            if isinstance(existing, list):
+                existing.append(message)
+            else:
+                out[field] = [existing, message]
+        else:
+            out[field] = message
+    return out
+
+
+def validate_body(model: type[BaseModel]) -> Callable:
+    """Validate the JSON request body against ``model`` before the view runs.
+
+    On success the parsed model instance is injected as the ``body`` keyword
+    argument. On :class:`pydantic.ValidationError` the request never reaches
+    the view — it gets ``api_error('Invalid request.', code='unprocessable',
+    detail=...)`` with HTTP 422.
+    """
+
+    def decorator(view: Callable) -> Callable:
+        @functools.wraps(view)
+        def wrapper(*args: Any, **kwargs: Any):
+            payload = request.get_json(silent=True) if request is not None else None
+            try:
+                validated = model.model_validate(payload if payload is not None else {})
+            except ValidationError as exc:
+                return api_error(
+                    'Invalid request.',
+                    code='unprocessable',
+                    detail=format_validation_errors(exc),
+                )
+            kwargs['body'] = validated
+            return view(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
