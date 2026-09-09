@@ -15,11 +15,16 @@ Use before tagging a release (example: **v0.1.0**).
 
 ## CI (PR gate)
 
-GitHub Actions [`.github/workflows/ci-tests.yml`](../../.github/workflows/ci-tests.yml) runs on PRs and pushes to `main` / `master` / `feature/**` (and similar):
+GitHub Actions [`.github/workflows/ci-tests.yml`](../../.github/workflows/ci-tests.yml) runs on PRs and pushes to `main` / `master` / `feature/**` (and similar). Toolchain is pinned: Python **3.12** (`.python-version`) and Node **22** (`.nvmrc`, `engines: ">=22 <23"` in every `package.json`).
 
 - **Pytest core** (Python 3.12 + Postgres service): health probes, ASGI static, ops summary/routes, security suite, RBAC unit — not the full `tests/` tree.
 - **Member-app vitest** (`frontend/member-app`): `npm ci` + `npm test -- --run`.
+- **Admin-app vitest** (`frontend/admin-app`): `npm test -- --run`, plus classic theme JS harnesses and CSS token lint.
+- **Ops-glance vitest** (`frontend/ops-glance`): `npm test -- --run` **and `npm run build`** — the glance ships in the Docker image, so a broken bundle fails the gate.
+- **API client vitest** (`frontend/api-client`): typecheck (`npm run build`) + `npm test`.
 - **Desktop vitest** (`clients/desktop`): fast slice — `keychain` / `config-store` / `connection-ux`.
+
+Dependency bumps arrive weekly via Dependabot ([`.github/dependabot.yml`](../../.github/dependabot.yml)) — `pip`, `npm` per app, and `github-actions`, with minor/patch grouped into one PR per ecosystem.
 
 Full pytest remains **local / release** (see [local-postgres-pytest.md](local-postgres-pytest.md)). Confirm the core CI job is green before tagging; still run a broader local slice below.
 

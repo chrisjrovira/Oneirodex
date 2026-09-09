@@ -4,6 +4,9 @@
   "private": true,
   "description": "Minimal typed fetch client for Oneirodex OpenAPI endpoints",
   "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
