@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createRequest, deleteRequest, fetchRequests, resolveRequest } from '../api/wishlist'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './WishlistPage.css'
-import { useShellConfig } from '@oneirodex/ui'
+import { useResource, useResourceMutation, useShellConfig } from '@oneirodex/ui'
+
+const WISHLIST_QUERY_KEY = ['wishlist']
 
 const RESOLVE_ACTIONS = [
   { status: 'approved', label: 'Approve' },
@@ -16,9 +18,6 @@ export function WishlistPage() {
   const shellConfig = useShellConfig()
   const isLibrarian = Boolean(shellConfig.isLibrarian ?? shellConfig.isAdmin)
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [requests, setRequests] = useState(null)
-  const [error, setError] = useState(null)
-  const [reloadCount, setReloadCount] = useState(0)
   const [showAll, setShowAll] = useState(false)
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
@@ -33,33 +32,29 @@ export function WishlistPage() {
 
   const all = isLibrarian && showAll
 
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setRequests(null)
+  const {
+    data: requests,
+    loading,
+    error,
+    reload,
+  } = useResource(['wishlist', { all }], ({ signal }) =>
+    fetchRequests({ all, signal }).then((data) =>
+      Array.isArray(data.requests) ? data.requests : [],
+    ),
+  )
 
-    fetchRequests({ all, signal: controller.signal })
-      .then((data) => {
-        if (active) {
-          setRequests(Array.isArray(data.requests) ? data.requests : [])
-        }
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') {
-          setError(err)
-        }
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [reloadCount, all])
-
-  function refetch() {
-    setReloadCount((n) => n + 1)
-  }
+  // Each write refetches the list — `invalidateQueries(['wishlist'])` matches
+  // both the `{ all: false }` and `{ all: true }` views, which is exactly the
+  // old `reloadCount` bump.
+  const createMutation = useResourceMutation((vars) => createRequest(vars), {
+    invalidate: [WISHLIST_QUERY_KEY],
+  })
+  const cancelMutation = useResourceMutation((id) => deleteRequest(id), {
+    invalidate: [WISHLIST_QUERY_KEY],
+  })
+  const resolveMutation = useResourceMutation(({ id, status }) => resolveRequest(id, { status }), {
+    invalidate: [WISHLIST_QUERY_KEY],
+  })
 
   /**
    * @param {SubmitEvent} event
@@ -77,10 +72,9 @@ export function WishlistPage() {
     setSubmitting(true)
     setCreateError(null)
     try {
-      await createRequest({ title: trimmed, notes: notes.trim() })
+      await createMutation.mutateAsync({ title: trimmed, notes: notes.trim() })
       setTitle('')
       setNotes('')
-      refetch()
       onDone?.()
     } catch (err) {
       setCreateError(err)
@@ -93,8 +87,7 @@ export function WishlistPage() {
     setBusyId(id)
     setActionError(null)
     try {
-      await deleteRequest(id)
-      refetch()
+      await cancelMutation.mutateAsync(id)
     } catch (err) {
       setActionError(err)
     } finally {
@@ -106,8 +99,7 @@ export function WishlistPage() {
     setBusyId(id)
     setActionError(null)
     try {
-      await resolveRequest(id, { status })
-      refetch()
+      await resolveMutation.mutateAsync({ id, status })
     } catch (err) {
       setActionError(err)
     } finally {
@@ -247,11 +239,11 @@ export function WishlistPage() {
         ) : null}
 
         <PageStatus
-          loading={!error && !requests}
+          loading={loading}
           error={error}
           errorMessage="Unable to load wishlist."
           loadingMessage="Loading requests…"
-          onRetry={refetch}
+          onRetry={reload}
         />
 
         {!error && requests && requests.length === 0 ? (

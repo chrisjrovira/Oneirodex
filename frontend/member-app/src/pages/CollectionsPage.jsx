@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { confirmAction, useShellConfig } from '@oneirodex/ui'
+import { useQueryClient } from '@tanstack/react-query'
+import { confirmAction, useResource, useShellConfig } from '@oneirodex/ui'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import { PageStatus } from '../components/PageStatus'
 import './Collections.css'
+
+// Stable identity so the optimistic create / delete writes below target the
+// same cache entry `useResource` reads.
+const COLLECTIONS_QUERY_KEY = ['collections']
 
 function itemCountLabel(collection) {
   const count = Number(collection.item_count)
@@ -17,39 +22,23 @@ function itemCountLabel(collection) {
 export function CollectionsPage() {
   const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [collections, setCollections] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
+  const queryClient = useQueryClient()
+  const {
+    data: collections,
+    loading,
+    error,
+    reload,
+  } = useResource(COLLECTIONS_QUERY_KEY, ({ signal }) =>
+    fetchCollections({ signal }).then((data) =>
+      Array.isArray(data.collections) ? data.collections : [],
+    ),
+  )
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
   const [deletingUuid, setDeletingUuid] = useState(null)
-
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setCollections(null)
-
-    fetchCollections({ signal: controller.signal })
-      .then((data) => {
-        if (active) {
-          setCollections(Array.isArray(data.collections) ? data.collections : [])
-        }
-      })
-      .catch((requestError) => {
-        if (active && requestError.name !== 'AbortError') {
-          setError(requestError)
-        }
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [retryCount])
 
   async function handleCreate(event) {
     event.preventDefault()
@@ -66,7 +55,7 @@ export function CollectionsPage() {
         description: description.trim(),
         isPublic,
       })
-      setCollections((current) => [created, ...(current || [])])
+      queryClient.setQueryData(COLLECTIONS_QUERY_KEY, (current) => [created, ...(current || [])])
       setName('')
       setDescription('')
       setIsPublic(true)
@@ -93,7 +82,9 @@ export function CollectionsPage() {
     setDeletingUuid(collection.uuid)
     try {
       await deleteCollection(collection.uuid)
-      setCollections((current) => (current || []).filter((row) => row.uuid !== collection.uuid))
+      queryClient.setQueryData(COLLECTIONS_QUERY_KEY, (current) =>
+        (current || []).filter((row) => row.uuid !== collection.uuid),
+      )
     } catch (deleteError) {
       window.alert(deleteError.message || 'Unable to delete that collection.')
     } finally {
@@ -215,11 +206,11 @@ export function CollectionsPage() {
         )}
 
         <PageStatus
-          loading={!error && !collections}
+          loading={loading}
           error={error}
           errorMessage="Unable to load collections."
           loadingMessage="Loading shelves…"
-          onRetry={() => setRetryCount((n) => n + 1)}
+          onRetry={reload}
         />
 
         {!error && collections && collections.length === 0 ? (
