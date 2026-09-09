@@ -4,7 +4,7 @@ import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './CalendarPage.css'
-import { useShellConfig } from '@oneirodex/ui'
+import { useResource, useShellConfig } from '@oneirodex/ui'
 
 const AHEAD_OPTIONS = [30, 60, 90, 180]
 const BEHIND_OPTIONS = [0, 7, 14, 30, 90]
@@ -354,9 +354,6 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
 export function CalendarPage() {
   const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [payload, setPayload] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
   const [daysAhead, setDaysAhead] = useState(DEFAULT_AHEAD)
   const [daysBehind, setDaysBehind] = useState(DEFAULT_BEHIND)
   const [view, setView] = useState(() => readCalendarView())
@@ -364,37 +361,16 @@ export function CalendarPage() {
   const [focusYear, setFocusYear] = useState(now.getFullYear())
   const [focusMonth, setFocusMonth] = useState(now.getMonth())
 
-  useEffect(() => {
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setPayload(null)
-
-    fetchCalendar({
-      signal: controller.signal,
-      daysAhead,
-      daysBehind,
-      limit: 60,
-    })
-      .then((data) => {
-        if (active) {
-          setPayload(data)
-        }
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') {
-          setError(err)
-        }
-      })
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [retryCount, daysAhead, daysBehind])
+  const {
+    data: payload,
+    loading,
+    error,
+    reload,
+  } = useResource(['calendar', daysAhead, daysBehind], ({ signal }) =>
+    fetchCalendar({ signal, daysAhead, daysBehind, limit: 60 }),
+  )
 
   const releases = Array.isArray(payload?.releases) ? payload.releases : []
-  const loading = !error && !payload
 
   function selectView(next) {
     setView(next)
@@ -508,7 +484,7 @@ export function CalendarPage() {
           error={error}
           errorMessage="Unable to load calendar."
           loadingMessage="Loading calendar…"
-          onRetry={() => setRetryCount((n) => n + 1)}
+          onRetry={reload}
         />
 
         {!error && payload ? (

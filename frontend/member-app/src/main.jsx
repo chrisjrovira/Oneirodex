@@ -1,9 +1,26 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ShellConfigProvider, ViewerProvider, viewerFromConfig } from '@oneirodex/ui'
 import { App } from './App'
 import { installUnauthorizedRedirect } from './api/http'
 import { GameDetailsApp, parseGameDetailsRootConfig } from './GameDetailsApp'
+
+// Wave B1.3: one QueryClient for the whole member SPA. `useResource`
+// (`@oneirodex/ui`) is the read path that consumes it; pages provide the
+// provider, react-query provides caching + dedupe + refetch. Defaults are
+// deliberately conservative — a 30s freshness window so route revisits do not
+// re-hit the API, a single retry, and no refetch-on-focus (the member app is a
+// long-lived tab, not a dashboard).
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 export function parseRootConfig(rootElement) {
   let currentFilters = {}
@@ -110,7 +127,9 @@ if (memberAppRoot) {
     <BrowserRouter>
       <ViewerProvider value={viewerFromShell}>
         <ShellConfigProvider value={shellConfig}>
-          <App />
+          <QueryClientProvider client={queryClient}>
+            <App />
+          </QueryClientProvider>
         </ShellConfigProvider>
       </ViewerProvider>
     </BrowserRouter>,

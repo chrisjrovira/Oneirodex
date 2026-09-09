@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useShellConfig } from '@oneirodex/ui'
+import { useResource, useShellConfig } from '@oneirodex/ui'
 import { fetchSetCompletion } from '../api/systems'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
@@ -18,38 +18,19 @@ export function SetCompletionPage() {
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
   const region = (searchParams.get('region') || 'USA').trim().toUpperCase()
 
-  const [report, setReport] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
   const [busyTitle, setBusyTitle] = useState(null)
   const [actionMsg, setActionMsg] = useState(null)
 
-  useEffect(() => {
-    if (!libraryPlatform) {
-      setError(new Error('library_platform query required'))
-      setReport(null)
-      return undefined
-    }
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setReport(null)
-    fetchSetCompletion({
-      libraryPlatform,
-      region,
-      signal: controller.signal,
-    })
-      .then((data) => {
-        if (active) setReport(data)
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') setError(err)
-      })
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [libraryPlatform, region, retryCount])
+  const {
+    data: report,
+    loading,
+    error,
+    reload,
+  } = useResource(
+    ['set-completion', libraryPlatform, region],
+    ({ signal }) => fetchSetCompletion({ libraryPlatform, region, signal }),
+    { enabled: Boolean(libraryPlatform) },
+  )
 
   const missing = useMemo(() => (Array.isArray(report?.missing) ? report.missing : []), [report])
 
@@ -173,7 +154,7 @@ export function SetCompletionPage() {
             <PageStatus
               error={error}
               errorMessage="Unable to load set completion."
-              onRetry={() => setRetryCount((n) => n + 1)}
+              onRetry={reload}
             />
           )}
         </div>
@@ -193,7 +174,7 @@ export function SetCompletionPage() {
               </h1>
             </div>
           )}
-          <PageStatus loading loadingMessage="Loading set completion…" />
+          <PageStatus loading={loading} loadingMessage="Loading set completion…" />
         </div>
       </>
     )
