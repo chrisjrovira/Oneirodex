@@ -101,9 +101,7 @@ export function useResourceMutation(mutationFn, opts = {}) {
     mutationFn,
     onSuccess: async (data, variables, context) => {
       if (invalidate.length > 0) {
-        await Promise.all(
-          invalidate.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-        )
+        await Promise.all(invalidate.map((queryKey) => queryClient.invalidateQueries({ queryKey })))
       }
       return onSuccess?.(data, variables, context)
     },

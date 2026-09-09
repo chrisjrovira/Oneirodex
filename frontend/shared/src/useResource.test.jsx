@@ -63,10 +63,7 @@ test('surfaces the thrown Error, keeping status / error_code for PageStatus', as
 })
 
 test('reload refetches the resource', async () => {
-  const fetcher = vi
-    .fn()
-    .mockResolvedValueOnce({ n: 1 })
-    .mockResolvedValueOnce({ n: 2 })
+  const fetcher = vi.fn().mockResolvedValueOnce({ n: 1 }).mockResolvedValueOnce({ n: 2 })
   function Host() {
     return <Probe resource={useResource(['probe-reload'], fetcher)} />
   }
@@ -93,7 +90,10 @@ test('the disabled resource never calls its fetcher and never reports loading', 
 })
 
 test('useResourceMutation invalidates the keys it is given', async () => {
-  const readFetcher = vi.fn().mockResolvedValueOnce({ v: 'before' }).mockResolvedValueOnce({ v: 'after' })
+  const readFetcher = vi
+    .fn()
+    .mockResolvedValueOnce({ v: 'before' })
+    .mockResolvedValueOnce({ v: 'after' })
   const writeFn = vi.fn().mockResolvedValue({ ok: true })
 
   function Host() {
