@@ -23,6 +23,21 @@ Import after theme base.css or use as a reference when migrating React islands /
   --od-family-xbox: #2fd67b;
   --od-family-sega: #1a66ff;
   --od-family-atari: #f5a623;
+  /* Brand marks for external store / social / catalog links (ExternalStoreLinks).
+     Not themed — each is the brand's own colour. Full set in od-tokens.css:
+     --od-brand-steam / -gog / -epic / -playstation / -xbox / -amazon / -humble /
+     -itch / -ea / -ubisoft / -fandom / -igdb / -youtube / -wikipedia / -official /
+     -facebook / -x / -twitch / -instagram / -reddit / -android / -apple / -unknown */
+  --od-brand-steam: #66c0f4;
+  --od-brand-playstation: #0070d1;
+  --od-brand-xbox: #107c10;
+  /* Play-status indicator colours (GameCard status dot + dropdown). Semantic. */
+  --od-status-unplayed: #808080;
+  --od-status-unfinished: #4A90E2;
+  --od-status-beaten: #50C878;
+  --od-status-completed: #FFD700;
+  --od-status-wont-play: #DC3545;
+  --od-status-none: #808080;
   --od-border: rgba(255, 255, 255, 0.12);
   --od-focus-ring: color-mix(in srgb, var(--od-accent) 70%, white);
   --od-tile-min: 180px;
@@ -40,6 +55,10 @@ Import after theme base.css or use as a reference when migrating React islands /
 ```
 
 Member SPA also ships `frontend/member-app` chrome (`glass.css`, TopNav). Built **`member-app.css`** must be linked in the SPA shell.
+
+## css-token-lint ratchet
+
+`scripts/css-token-lint.mjs` enforces "*defining* a token may use a literal; *using* a value must go through one" across `.css`, JSX `style={{}}` blocks, **and** — since wave B1.5 — hex literals on colour-ish keys (`color` / `background` / `backgroundColor` / `borderColor` / `fill` / `stroke`) in `.js` / `.jsx` object and array literals. That last rule (`no-raw-js-color`) closed the blind spot where a brand/status table carried raw hex on a plain object property and then handed it to the DOM as a CSS custom property, so the style-block scan skipped it. Repoint such constants to `var(--od-brand-*)` / `var(--od-status-*)`. Baseline `scripts/css-token-lint.baseline.json` stays `{}`.
 
 ## Command palette (planned)
 
