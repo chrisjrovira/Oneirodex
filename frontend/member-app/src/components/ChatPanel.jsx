@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { Button } from '@oneirodex/ui'
 import { confirmAction } from '@oneirodex/ui'
 import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromResponse } from '@oneirodex/ui'
@@ -649,9 +650,9 @@ export function ChatPanel({
                   placeholder="Search messages"
                   autoComplete="off"
                 />
-                <button className="od-btn od-btn--secondary" type="submit">
+                <Button className="od-btn--secondary" type="submit">
                   Go
-                </button>
+                </Button>
               </form>
               <form className="od-chat-tool-form" onSubmit={openDm}>
                 <label className="od-chat-sr-only" htmlFor="od-chat-dm">
@@ -664,9 +665,9 @@ export function ChatPanel({
                   placeholder="DM username"
                   autoComplete="off"
                 />
-                <button className="od-btn od-btn--secondary" type="submit">
+                <Button className="od-btn--secondary" type="submit">
                   Open
-                </button>
+                </Button>
               </form>
             </div>
           ) : null}
@@ -1124,9 +1125,9 @@ export function ChatPanel({
                 }
               }}
             />
-            <button className="od-btn od-btn--primary" type="submit" disabled={!canSend}>
+            <Button variant="primary" type="submit" disabled={!canSend}>
               Send
-            </button>
+            </Button>
           </form>
         </section>
       </div>

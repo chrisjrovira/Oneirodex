@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Button } from '@oneirodex/ui'
 import { submitSupportTicket } from '../api/support'
 import { PageStatus } from '../components/PageStatus'
 import './ReportIssuePage.css'
@@ -254,9 +255,9 @@ export function ReportIssuePage() {
         </details>
 
         <div className="od-report__actions">
-          <button className="od-btn" type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy}>
             {busy ? 'Sending…' : 'Submit ticket'}
-          </button>
+          </Button>
           <Link className="od-report__help-link" to="/help">
             Help FAQ
           </Link>

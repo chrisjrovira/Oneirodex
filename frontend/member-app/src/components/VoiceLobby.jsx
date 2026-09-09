@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from '@oneirodex/ui'
 import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
@@ -122,9 +123,9 @@ export function VoiceLobby({
         />{' '}
         Spectator (listen only — no mic/camera publish)
       </label>
-      <button type="button" className="od-btn" disabled={busy} onClick={() => void joinLobby()}>
+      <Button disabled={busy} onClick={() => void joinLobby()}>
         {busy ? 'Connecting…' : screenshare ? 'Get voice + screenshare token' : 'Get voice token'}
-      </button>
+      </Button>
       {error ? <PageStatus error={error} /> : null}
       {tokenInfo ? (
         <p>

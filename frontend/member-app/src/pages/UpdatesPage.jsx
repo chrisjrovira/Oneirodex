@@ -14,7 +14,7 @@ import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { showToast } from '../utils/toast'
 import { PageStatus } from '../components/PageStatus'
 import '../styles/panelGrid.css'
-import { useShellConfig } from '@oneirodex/ui'
+import { Button, useShellConfig } from '@oneirodex/ui'
 
 const INBOX_POLL_MS = 50000
 
@@ -429,9 +429,9 @@ export function UpdatesPage() {
                 <option value="gog">GOG</option>
               </select>
             </label>
-            <button className="od-btn" type="submit" disabled={searching}>
+            <Button type="submit" disabled={searching}>
               {searching ? 'Searching…' : 'Search'}
-            </button>
+            </Button>
           </form>
           {searchError ? (
             <PageStatus

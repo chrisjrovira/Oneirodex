@@ -11,12 +11,18 @@ The following were **out of scope for B1.2** and are tracked here.
 
 ## Primitives — wave B1.2b
 
-Not started this wave by instruction. Build in `src/` with their own CSS (or a
-shared theme block), repoint consumers, keep `buttonLanguage.test.js` /
-`statusLanguage.test.js` green.
+Build in `src/` with their own CSS (or a shared theme block), repoint
+consumers, keep `buttonLanguage.test.js` / `statusLanguage.test.js` green.
 
-- `<Button>` — one element for `.od-btn` / `.od-btn--primary` / `--danger` /
-  `--sm`. ~27 button-language call sites across member + admin.
+- ~~`<Button>`~~ — **done, wave B1.2b.** `src/Button.jsx` in `@oneirodex/ui`:
+  `forwardRef`, `variant` (`default`/`primary`/`danger`/`ghost` → existing
+  `.od-btn--*`), `size` (`sm`/`md`), `type` defaults to `"button"`, `className`
+  merged after the computed classes, everything else passed through. No new CSS.
+  `src/Button.test.jsx` covers it. Clear-cut call sites migrated across member +
+  admin (~40 sites); the tail left as `<button className="od-btn …">` is the
+  complex-conditional-class / icon-slot / anchor-styled-as-button cases plus
+  `GameDetailsPage` / `NewsPage` link-heavy blocks — safe to convert
+  incrementally.
 - `<Modal>` — the backdrop + focus-trap + `Esc` + body-scroll-lock shell that
   `confirmDialog`, `OpenPathModal`, `AccountModal`, `ChatSlideOut` each re-implement.
 - `<DataTable>` — admin's sortable table (`odSortableTable`) + the member list

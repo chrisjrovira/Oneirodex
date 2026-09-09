@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CHEAT_DIALECTS, createCheat, deleteCheat, listCheats, uploadCheat } from '../api/cheats'
 import { showsRetroarchCheats } from '../utils/detailsMedia'
+import { Button } from '@oneirodex/ui'
 import { showToast } from '../utils/toast'
 import { PageStatus } from './PageStatus'
 import './CheatsPanel.css'
@@ -313,9 +314,9 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
           >
             Add code row
           </button>
-          <button type="submit" className="od-btn od-btn--primary" disabled={busy}>
+          <Button type="submit" variant="primary" disabled={busy}>
             {busy ? 'Saving…' : 'Save cheat'}
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -340,9 +341,9 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
           />
         </label>
         <div className="od-cheats-panel__actions">
-          <button type="submit" className="od-btn" disabled={busy || !uploadFile}>
+          <Button type="submit" disabled={busy || !uploadFile}>
             {busy ? 'Uploading…' : 'Upload'}
-          </button>
+          </Button>
         </div>
       </form>
     </section>

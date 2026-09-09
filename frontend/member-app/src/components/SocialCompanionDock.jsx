@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Button } from '@oneirodex/ui'
 import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from '@oneirodex/ui'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
@@ -372,9 +373,9 @@ export function SocialCompanionDock({
           autoComplete="off"
           aria-label="Add friend by username"
         />
-        <button type="submit" className="od-btn" disabled={busyKey === 'add'}>
+        <Button type="submit" disabled={busyKey === 'add'}>
           Add
-        </button>
+        </Button>
       </form>
 
       <footer className="od-social-dock__footer">
