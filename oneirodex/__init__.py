@@ -188,6 +188,11 @@ def create_app():
     def theme_picker_groups_filter(choices):
         return theme_picker_groups(choices)
 
+    # Theme-asset Jinja helpers (verify_file global; dist_asset / avatar_url /
+    # theme_asset filters). App-level, extracted from routes.py in wave A2.1e.
+    from oneirodex.routes_theme import register_theme_helpers
+    register_theme_helpers(app)
+
     @app.context_processor
     def inject_feature_flags():
         return {
