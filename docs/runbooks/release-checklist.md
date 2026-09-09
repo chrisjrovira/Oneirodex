@@ -17,12 +17,15 @@ Use before tagging a release (example: **v0.1.0**).
 
 GitHub Actions [`.github/workflows/ci-tests.yml`](../../.github/workflows/ci-tests.yml) runs on PRs and pushes to `main` / `master` / `feature/**` (and similar). Toolchain is pinned: Python **3.12** (`.python-version`) and Node **22** (`.nvmrc`, `engines: ">=22 <23"` in every `package.json`).
 
-- **Pytest core** (Python 3.12 + Postgres service): health probes, ASGI static, ops summary/routes, security suite, RBAC unit — not the full `tests/` tree.
-- **Member-app vitest** (`frontend/member-app`): `npm ci` + `npm test -- --run`.
-- **Admin-app vitest** (`frontend/admin-app`): `npm test -- --run`, plus classic theme JS harnesses and CSS token lint.
-- **Ops-glance vitest** (`frontend/ops-glance`): `npm test -- --run` **and `npm run build`** — the glance ships in the Docker image, so a broken bundle fails the gate.
+- **Pytest core** (Python 3.12 + Postgres service): health probes, ASGI static, ops summary/routes, security suite, RBAC unit — not the full `tests/` tree. Hand-listed subset (not the `-m "not integration"` marker — that set is currently the whole tree). Also runs `--cov=oneirodex --cov-report=term-missing` (report only, no `--cov-fail-under` yet), the API envelope lint, and the `print()` ratchet (`scripts/print_lint.py`).
+- **Lint & format** (repo root, Node 22): root `npm ci`, then `npm run lint` (ESLint flat config `eslint.config.js`) + `npm run format:check` (Prettier over `frontend/**`).
+- **Member-app vitest** (`frontend/member-app`): `npm ci` + `npm test -- --run` + `npm run typecheck`.
+- **Admin-app vitest** (`frontend/admin-app`): `npm test -- --run` + `npm run typecheck`, plus classic theme JS harnesses and CSS token lint.
+- **Ops-glance vitest** (`frontend/ops-glance`): `npm test -- --run` + `npm run typecheck` **and `npm run build`** — the glance ships in the Docker image, so a broken bundle fails the gate.
 - **API client vitest** (`frontend/api-client`): typecheck (`npm run build`) + `npm test`.
 - **Desktop vitest** (`clients/desktop`): fast slice — `keychain` / `config-store` / `connection-ux`.
+
+The three SPA vitest jobs and `Lint & format` each run a repo-root `npm ci` for the shared `typescript` / `eslint` / `prettier` toolchain (pinned in the root `package.json`); the SPA jobs do it with an explicit `working-directory: .` ahead of their per-app `npm ci`.
 
 Dependency bumps arrive weekly via Dependabot ([`.github/dependabot.yml`](../../.github/dependabot.yml)) — `pip`, `npm` per app, and `github-actions`, with minor/patch grouped into one PR per ecosystem.
 

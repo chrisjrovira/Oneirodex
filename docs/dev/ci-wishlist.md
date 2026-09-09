@@ -7,6 +7,8 @@ directly — they append a line here.
 - [A0.4] Add a step to the `pytest-core` job: `python scripts/print_lint.py`
   (runs alongside `python scripts/api_envelope_lint.py`; no DB needed; fails
   only when a file's `print()` count exceeds its recorded baseline).
+  ✅ applied (`pytest-core` job, step `Run print() ratchet`, immediately after
+  `Run API envelope lint`).
 - [A0.6] Switch the `pytest-core` job from the hand-listed test files to
   `pytest -m "not integration" --cov=oneirodex --cov-report=term-missing --cov-fail-under=20`.
   `pytest-cov` is pinned in `requirements-dev.txt`. The `integration` marker is
@@ -16,12 +18,31 @@ directly — they append a line here.
   integration" --collect-only -q` against the current hand list so nothing that
   was gated silently stops being gated. `--cov-fail-under` is a low
   current-reality floor, not a target; raise it as coverage climbs.
+  ✅ applied (partial — `--cov=oneirodex --cov-report=term-missing` added to the
+  existing hand-list run in `pytest-core`; **no full marker flip**). Collect-only
+  measured on the worktree: `-m "not integration"` selects **4164 tests, only 10
+  deselected** — a single file (`tests/test_background_workers.py`) carries the
+  `integration` marker, so the marker set is essentially the whole `tests/` tree,
+  not a core subset, and is not plausibly runnable inside the 20-min gate (nor
+  does it respect the "needs Unraid-like fixtures / library paths" caveat in this
+  workflow's header). Kept the hand-list and appended 9 previously-ungated
+  ops/health/asgi files (`test_ops_path_problems`, `test_utils_ops_issues`,
+  `test_utils_ops_network`, `test_library_health_pulse`, `test_health_igdb_provider`,
+  `test_asgi_activity_sse`, `test_api_tokens_health_events`, `test_ops_followons`,
+  `test_library_batch_ops`). `--cov-fail-under` omitted for now — set it once CI
+  reports real coverage for this subset.
+  **Done later:** the full `-m "not integration"` flip needs its own wave —
+  it depends on the `integration` marker being applied to the heavy/DB/live-service
+  modules first (currently 1 file), then a timing pass.
 - [B0.2] Add a `lint` job on Node 22: run `npm ci` at the repo root, then
   `npm run lint && npm run format:check`. This runs ESLint (flat config at
   `eslint.config.js`) and Prettier `--check` over `frontend/**`. The repo root
   now has its own `package.json` / `package-lock.json` holding the shared
   eslint + prettier toolchain, so the job needs a root `npm ci` (not a per-app
   one).
+  ✅ applied (new job `lint` / "Lint & format": root `npm ci`, then steps
+  `Run ESLint` = `npm run lint` and `Run Prettier check` = `npm run format:check`;
+  no `working-directory` override so it runs at the repo root).
 - [B0.2] Desktop lint/format wiring is still owed: `clients/desktop` needs the
   Prettier baseline pass, `lint` / `format:check` scripts delegating to the
   repo root, and `clients/desktop/**/*.ts` added to `eslint.config.js`. This is
@@ -32,9 +53,16 @@ directly — they append a line here.
   job). Each SPA gains a `tsconfig.json` (extends repo-root
   `tsconfig.base.json`) and a `typecheck` script; `npm run build` also changes
   to `tsc --noEmit && vite build`.
+  ✅ applied (`Typecheck` = `npm run typecheck` step added to `member-app-vitest`,
+  `admin-app-vitest`, and `ops-glance-vitest`, after each job's `Run vitest`).
 - [B0.3] `tsc` is NOT in the per-SPA `package.json` — it resolves from the
   repo-root `package.json` (`typescript` pinned there). So any CI job that runs
   `npm run typecheck` or `npm run build` for an SPA needs a repo-root
   `npm ci` step first (the same one the `lint` job needs). Alternative: add
   `typescript` to each SPA's own `devDependencies` and regenerate its
   `package-lock.json`.
+  ✅ applied (step `Install repo-root toolchain (tsc)` = `npm ci` with an explicit
+  `working-directory: .` added ahead of the per-app `npm ci` in all three SPA
+  vitest jobs — those jobs set `defaults.run.working-directory` to the app dir,
+  so the root install needs the override. Also covers `ops-glance`'s existing
+  `Build ops-glance bundle` = `npm run build` step, which runs `tsc --noEmit`.)
