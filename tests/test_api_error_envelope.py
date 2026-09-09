@@ -65,8 +65,25 @@ def test_unknown_api_path_is_an_envelope_404(error_app):
     assert body['error_code'] == 'not_found'
 
 
-def test_non_api_route_still_raises_html_error(error_app):
+def test_non_api_route_gets_html_not_the_envelope(error_app):
     # A non-API path with a wildcard Accept header must be left on Flask's
-    # default behaviour — the envelope handlers do not touch it.
+    # default behaviour — the envelope handlers do not touch it. Pin
+    # PROPAGATE_EXCEPTIONS off so this asserts the *response shape* (HTML, not
+    # the JSON envelope) rather than ambient exception-propagation state, which
+    # other test modules in the same process can and do flip.
+    error_app.config['PROPAGATE_EXCEPTIONS'] = False
+    resp = error_app.test_client().get('/_test_boom_html')
+
+    assert resp.status_code == 500
+    assert 'text/html' in resp.content_type
+    body = resp.get_data(as_text=True)
+    assert '"error_code"' not in body  # not the JSON envelope
+    assert 'kaboom' not in body  # Flask's generic 500 page, no leak
+
+
+def test_non_api_route_propagates_when_testing(error_app):
+    # With propagation on (the default under TESTING), an uncaught error on a
+    # non-API route still surfaces to the caller rather than being swallowed.
+    error_app.config['PROPAGATE_EXCEPTIONS'] = True
     with pytest.raises(RuntimeError):
         error_app.test_client().get('/_test_boom_html')
