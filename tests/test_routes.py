@@ -1223,7 +1223,7 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
 
-        with patch('oneirodex.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes_admin_ext.library_delete.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             response = client.post(f'/delete_full_library/{test_library.uuid}')
 

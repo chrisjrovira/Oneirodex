@@ -141,7 +141,10 @@ def test_library_deletion_worker_actually_deletes(app, db_session):
     being fixed — and is worth having now that it does not.
     """
     from oneirodex.models import Game
-    from oneirodex.routes import delete_library_background, deletion_progress
+    from oneirodex.routes_admin_ext.library_delete import (
+        delete_library_background,
+        deletion_progress,
+    )
 
     with app.app_context():
         library = Library(name='Doomed Library', platform=LibraryPlatform.PCWIN)
