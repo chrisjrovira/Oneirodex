@@ -7,7 +7,7 @@ Use before tagging a release (example: **v0.1.0**).
 - [ ] Root [`VERSION`](../../VERSION) matches intended semver
 - [ ] [`CHANGELOG.md`](../../CHANGELOG.md) has a dated section for this release
 - [ ] `clients/desktop/package.json`, `src-tauri/tauri.conf.json`, **`src-tauri/tauri.thin.conf.json`**, `Cargo.toml` **and `Cargo.lock`** (the lock records the crate's own version; a stale one breaks `--locked` builds)
-- [ ] `frontend/member-app`, `frontend/ops-glance`, `frontend/api-client` package versions **and their lockfiles**
+- [ ] `frontend/member-app`, `frontend/admin-app`, `frontend/ops-glance`, `frontend/api-client`, `frontend/shared` package versions (npm workspaces — the single root [`package-lock.json`](../../package-lock.json) is the only lockfile; there are no per-app lockfiles to bump)
 - [ ] Desktop `client_version` needs no edit — it is injected from `package.json` at build time (`__APP_VERSION__`)
 - [ ] Leaving pre-release (`X.Y.Z-beta` → `X.Y.Z`)? Add `msi` and `rpm` back to `bundle.targets` in both Tauri configs — they are excluded only because pre-release versions break those two bundlers ([desktop-code-signing.md](desktop-code-signing.md))
 - [ ] `docker-compose.yml` image tag (`APP_IMAGE`, preferred Hub `chrisjrovira/oneirodex:X.Y.Z`; local default `oneirodex:1.0.0-beta`)

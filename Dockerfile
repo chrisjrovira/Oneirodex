@@ -2,38 +2,39 @@ FROM node:22-alpine AS frontend-build
 
 WORKDIR /build
 
-# Both SPAs import ../../shared/useRailState (GT-B2). It deliberately lives
-# outside either app so the rail hook is not duplicated, which means it is not
-# picked up by the per-app `COPY frontend/<app>/ .` steps below and has to be
-# staged separately — same reason the admin stage stages theme JS further down.
-# Copied once here because member-app and admin-app both resolve it.
-COPY frontend/shared/ frontend/shared/
-
-COPY frontend/member-app/package*.json frontend/member-app/
-WORKDIR /build/frontend/member-app
+# One workspace-aware install for all three SPAs (wave B1.1). The repo-root
+# package.json declares the npm workspaces and the single root package-lock.json
+# is the only lockfile — there is no per-app package-lock.json any more. Copy
+# every workspace manifest first so `npm ci` can validate the graph against the
+# root lock without the sources, then one install for the whole tree.
+COPY package.json package-lock.json ./
+COPY frontend/member-app/package.json frontend/member-app/
+COPY frontend/admin-app/package.json frontend/admin-app/
+COPY frontend/ops-glance/package.json frontend/ops-glance/
+COPY frontend/api-client/package.json frontend/api-client/
+COPY frontend/shared/package.json frontend/shared/
+COPY clients/desktop/package.json clients/desktop/
 RUN npm ci
-COPY frontend/member-app/ .
-RUN mkdir -p ../../oneirodex/static/dist/member-app && npm run build
 
-WORKDIR /build
-COPY frontend/admin-app/package*.json frontend/admin-app/
-WORKDIR /build/frontend/admin-app
-RUN npm ci
-COPY frontend/admin-app/ .
-# admin-app re-exports theme SoT (../../../oneirodex/... from src/); stage needs those files before vite build
-WORKDIR /build
+# App sources plus the shared workspace. frontend/shared is the `@oneirodex/ui`
+# workspace now, but member-app/admin-app still import it by relative path, so it
+# has to be on disk for the vite builds — `COPY frontend/` stages it (and
+# dockerStagedImports.test.js enforces that a COPY covers it).
+COPY frontend/ ./frontend/
+
+# admin-app re-exports theme SoT (../../../oneirodex/... from src/); stage those
+# files before the vite build. dockerStagedImports.test.js enforces this list.
 COPY oneirodex/setup/default_theme/js/stageECandidates.js oneirodex/setup/default_theme/js/
 COPY oneirodex/setup/default_theme/js/unmatchedTriage.js oneirodex/setup/default_theme/js/
 COPY oneirodex/setup/default_theme/js/scanJobsDom.js oneirodex/setup/default_theme/js/
-WORKDIR /build/frontend/admin-app
-RUN mkdir -p ../../oneirodex/static/dist/admin-app && npm run build
 
-WORKDIR /build
-COPY frontend/ops-glance/package*.json frontend/ops-glance/
-WORKDIR /build/frontend/ops-glance
-RUN npm ci
-COPY frontend/ops-glance/ .
-RUN mkdir -p ../../oneirodex/static/dist/ops-glance && npm run build
+# vite writes each bundle to oneirodex/static/dist/<app>/ (outDir is resolved
+# from the app dir in its vite.config); `npm run build` per workspace runs the
+# app's `tsc --noEmit && vite build`.
+RUN mkdir -p oneirodex/static/dist/member-app oneirodex/static/dist/admin-app oneirodex/static/dist/ops-glance \
+    && npm run build --workspace=member-app \
+    && npm run build --workspace=admin-app \
+    && npm run build --workspace=ops-glance
 
 FROM python:3.12-slim
 

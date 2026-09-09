@@ -54,6 +54,10 @@ frontend/**/node_modules/
 # Desktop companion (Tauri) — not part of the server image
 clients/
 **/src-tauri/target/
+# ...but the desktop workspace manifest is needed in the frontend-build stage:
+# the root `npm ci` validates every workspace in the root lockfile, and
+# clients/desktop is one of them. Just the manifest, none of the Tauri sources.
+!clients/desktop/package.json
 
 # Host-built SPA bundles (image builds them in frontend-build stage)
 oneirodex/static/dist/

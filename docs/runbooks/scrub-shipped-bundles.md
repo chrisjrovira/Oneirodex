@@ -7,9 +7,10 @@ Before publishing a Docker image or release tag, confirm Class A / competitive t
 Source scrub alone is not enough — stale `static/dist/**` can still ship competitor strings.
 
 ```bash
-# From repo root — rebuild member + admin SPAs into static/dist
-cd frontend/member-app && npm ci && npm run build
-cd ../admin-app && npm ci && npm run build   # if present / used in image
+# From repo root — one workspace install, then rebuild member + admin SPAs into static/dist
+npm ci
+npm run build --workspace=member-app
+npm run build --workspace=admin-app   # if present / used in image
 ```
 
 Commit or copy rebuilt assets into the image build context as your release process requires. Do not publish an image whose `static/dist` predates the last scrub of `frontend/*/src`.
