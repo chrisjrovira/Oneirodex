@@ -361,3 +361,50 @@ class Config(object):
     # Flask-Babel / i18n
     BABEL_DEFAULT_LOCALE = os.getenv('BABEL_DEFAULT_LOCALE', 'en')
     BABEL_SUPPORTED_LOCALES = ['en', 'es']
+
+
+class ProdConfig(Config):
+    """Explicit production profile — what create_app() selects outside pytest.
+
+    Config already holds production-safe values; this names the profile so the
+    selection in create_app() is symmetric and any future prod-only override
+    has an obvious home.
+    """
+
+    DEBUG = False
+    TESTING = False
+
+
+class TestConfig(Config):
+    """Test profile. create_app() selects this automatically under pytest.
+
+    Carries what conftest.py's ``app`` fixture and oneirodex/__init__.py's
+    pytest branch used to set on the instance *after* construction (wave
+    A2.6):
+
+    * ``TESTING`` / CSRF off so the test client skips token plumbing.
+    * ``SERVER_NAME`` / ``APPLICATION_ROOT`` / ``PREFERRED_URL_SCHEME`` so
+      ``url_for(..., _external=True)`` works outside a request context — Flask
+      raises "Unable to build URLs outside an active request without
+      SERVER_NAME" otherwise. A real ``SERVER_NAME`` in ``Config`` would start
+      rejecting requests whose Host header does not match, which is why it
+      lives here and not there.
+    * the test database URI, taken explicitly from ``TEST_DATABASE_URL`` (with
+      the ``DATABASE_URL`` override conftest also sets as a fallback).
+    """
+
+    TESTING = True
+    DEBUG = False
+    WTF_CSRF_ENABLED = False
+    SERVER_NAME = 'localhost'
+    APPLICATION_ROOT = '/'
+    PREFERRED_URL_SCHEME = 'http'
+    # Stable across app instances within a run — matches the value conftest
+    # used to force on the instance. _load_secret_key() would otherwise hand
+    # each create_app() a fresh ephemeral key.
+    SECRET_KEY = 'test-secret-key'
+    SQLALCHEMY_DATABASE_URI = (
+        os.getenv('TEST_DATABASE_URL')
+        or os.getenv('DATABASE_URL')
+        or Config.SQLALCHEMY_DATABASE_URI
+    )

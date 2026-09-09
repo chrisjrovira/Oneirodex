@@ -29,9 +29,21 @@ app_start_time = datetime.now()
 app_version = '1.0.0-beta'
 
 
-def create_app():
+def create_app(config_object=None):
+    """Build the Flask app.
+
+    ``config_object`` defaults to :class:`config.Config` (production), or
+    :class:`config.TestConfig` when running under pytest. Pass an explicit
+    class to override — scripts and the ASGI entrypoint rely on the default.
+    """
     app = Flask(__name__)
-    app.config.from_object(Config)
+    if config_object is None:
+        if 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ:
+            from config import TestConfig
+            config_object = TestConfig
+        else:
+            config_object = Config
+    app.config.from_object(config_object)
 
     # Wire stdlib logging before anything else logs. Level from
     # ONEIRODEX_LOG_LEVEL (default INFO), JSON via ONEIRODEX_LOG_JSON=1.
@@ -39,7 +51,6 @@ def create_app():
     configure_logging(app)
 
     # SAFETY CHECK: Prevent production database access during tests
-    import sys
     if 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ:
         # We are running in pytest - ensure we're using test database
         test_db_url = os.getenv('TEST_DATABASE_URL')
