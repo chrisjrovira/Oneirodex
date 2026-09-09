@@ -162,7 +162,7 @@ def test_browse_games_sets_client_connected_with_recent_heartbeat(client, app, d
     )
     db_session.commit()
 
-    with patch('oneirodex.routes.get_matched_owned_game_uuids', return_value=set()):
+    with patch('oneirodex.utils.browse_query.get_matched_owned_game_uuids', return_value=set()):
         response = client.get(f'/browse_games?page=1&per_page=10&library_uuid={lib.uuid}')
 
     assert response.status_code == 200
