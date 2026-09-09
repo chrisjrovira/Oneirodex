@@ -1,8 +1,16 @@
 # ADR: Schema migrations before official 1.0
 
 **Date:** 2026-07-27  
-**Status:** Accepted for 1.0 — **defer Alembic**; keep `updateschema.py` + `create_all`  
+**Status:** **Superseded 2026-09** by [ADR 0004 — Adopt Alembic](0004-adopt-alembic.md).
+Originally: Accepted for 1.0 — defer Alembic; keep `updateschema.py` + `create_all`  
 **Owners:** `agent-backend` · `agent-ops` · `maintainer`
+
+> **Superseded (modernization wave A3.1).** Alembic was adopted post-1.0: a
+> squashed baseline revision matches the current Postgres schema,
+> `oneirodex/updateschema.py` is frozen (carries pre-Alembic installs to the
+> baseline only), and `init_manager` stamps existing databases on first boot.
+> The "Follow-ups" below are now done. See ADR 0004 and
+> `docs/dev/alembic-baseline-notes.md`.
 
 ## Context
 
