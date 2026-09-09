@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useShellConfig } from '@oneirodex/ui'
+import { useResource, useShellConfig } from '@oneirodex/ui'
 import { fetchLicensedCatalog } from '../api/systems'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_LABELS } from '../chrome/regions'
@@ -14,32 +13,16 @@ export function LicensedCatalogPage() {
   const [searchParams] = useSearchParams()
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
 
-  const [report, setReport] = useState(null)
-  const [error, setError] = useState(null)
-  const [retryCount, setRetryCount] = useState(0)
-
-  useEffect(() => {
-    if (!libraryPlatform) {
-      setError(new Error('library_platform query required'))
-      setReport(null)
-      return undefined
-    }
-    const controller = new AbortController()
-    let active = true
-    setError(null)
-    setReport(null)
-    fetchLicensedCatalog({ libraryPlatform, signal: controller.signal })
-      .then((data) => {
-        if (active) setReport(data)
-      })
-      .catch((err) => {
-        if (active && err.name !== 'AbortError') setError(err)
-      })
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [libraryPlatform, retryCount])
+  const {
+    data: report,
+    loading,
+    error,
+    reload,
+  } = useResource(
+    ['licensed-catalog', libraryPlatform],
+    ({ signal }) => fetchLicensedCatalog({ libraryPlatform, signal }),
+    { enabled: Boolean(libraryPlatform) },
+  )
 
   const identity = libraryPlatform ? `${libraryPlatform} · licensed catalog` : 'Licensed catalog'
   const libraryLinks = libraryPlatform ? (
@@ -113,7 +96,7 @@ export function LicensedCatalogPage() {
           <PageStatus
             error={error}
             errorMessage="Unable to load licensed catalog."
-            onRetry={() => setRetryCount((n) => n + 1)}
+            onRetry={reload}
           />
         </div>
       </>
@@ -130,7 +113,7 @@ export function LicensedCatalogPage() {
               <h1>{libraryPlatform} · licensed catalog</h1>
             </div>
           )}
-          <PageStatus loading loadingMessage="Loading licensed catalog…" />
+          <PageStatus loading={loading} loadingMessage="Loading licensed catalog…" />
         </div>
       </>
     )
