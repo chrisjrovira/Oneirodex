@@ -95,7 +95,8 @@ directly — they append a line here.
   requirements-dev.txt`, then `python -m alembic upgrade head` followed by
   `python -m alembic check`. The baseline is wired so `alembic check` is
   **clean** (a named `include_object` allow-list in `alembic/env.py` covers the
-  ~20 pre-Alembic indexes not declared on `models.py` — catalogued in
+  ~20 pre-Alembic indexes not declared on the models (`oneirodex/models/`) —
+  catalogued in
   `docs/dev/alembic-baseline-notes.md`), so this job can **fail hard** on any
   new diff. `TEST_DATABASE_URL` must contain `test` (conftest guard) — e.g.
   `postgresql://postgres:postgres@localhost:5432/oneirodextest`; `alembic`

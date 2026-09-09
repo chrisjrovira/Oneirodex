@@ -2,7 +2,6 @@
   "oneirodex/async_streaming.py": 2,
   "oneirodex/init_data.py": 28,
   "oneirodex/init_manager.py": 2,
-  "oneirodex/models.py": 2,
   "oneirodex/routes.py": 50,
   "oneirodex/routes_admin_ext/igdb.py": 3,
   "oneirodex/routes_admin_ext/images.py": 1,
