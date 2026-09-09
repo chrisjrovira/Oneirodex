@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '@oneirodex/ui'
+import { submitSupportTicket } from '../api/support'
 import { PageStatus } from '../components/PageStatus'
 import './ReportIssuePage.css'
 
@@ -65,24 +64,17 @@ export function ReportIssuePage() {
     setError(null)
     setResult(null)
     try {
-      const response = await fetch('/api/support/tickets', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({
-          title,
-          body,
-          kind,
-          area,
-          severity,
-          deploy_hint: deploy,
-          client_hint: client,
-          url_hint: url,
-          logs,
-        }),
+      const data = await submitSupportTicket({
+        title,
+        body,
+        kind,
+        area,
+        severity,
+        deploy_hint: deploy,
+        client_hint: client,
+        url_hint: url,
+        logs,
       })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Submit failed')
       setResult(data.ticket)
       setTitle('')
       setBody('')

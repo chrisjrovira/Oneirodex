@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { csrfHeaders } from './adminApi'
+import { csrfHeaders, getJson } from './adminApi'
 import { DataTable } from './DataTable'
 import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
@@ -41,18 +41,6 @@ import {
   awakeTone,
   scansActiveTone,
 } from './opsWidgets'
-
-async function getJson(url, { signal } = {}) {
-  const response = await fetch(url, { credentials: 'same-origin', signal })
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('unauthorized')
-  }
-  if (!response.ok) {
-    throw new Error(`${url} ${response.status}`)
-  }
-  return response.json()
-}
 
 /**
  * Dashboard glance tables (UX-C8 · W27-C1). Hand-rolled `od-ops-table` blocks

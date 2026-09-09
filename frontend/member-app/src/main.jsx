@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { ShellConfigProvider, ViewerProvider, viewerFromConfig } from '@oneirodex/ui'
 import { App } from './App'
+import { installUnauthorizedRedirect } from './api/http'
 import { GameDetailsApp, parseGameDetailsRootConfig } from './GameDetailsApp'
 
 export function parseRootConfig(rootElement) {
@@ -86,6 +87,11 @@ export function parseShellConfig(rootElement) {
     currentFilters,
   }
 }
+
+// Session expiry -> /login for every member `/api/...` call, in one place
+// (mirrors admin-app's adminApi.js). Safe to call unconditionally: it is a
+// no-op outside the browser and idempotent.
+installUnauthorizedRedirect()
 
 const memberAppRoot = document.getElementById('member-app-root')
 if (memberAppRoot) {

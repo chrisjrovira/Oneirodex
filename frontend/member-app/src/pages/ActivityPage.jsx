@@ -1,45 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders, useShellConfig } from '@oneirodex/ui'
-import { errorFromBody, errorFromResponse } from '@oneirodex/ui'
+import { useShellConfig } from '@oneirodex/ui'
+import {
+  acceptFriend as apiAcceptFriend,
+  fetchActivity,
+  fetchFriends,
+  fetchSocialStatus as fetchSocial,
+  rejectFriend as apiRejectFriend,
+  removeFriend as apiRemoveFriend,
+  requestFriend as apiRequestFriend,
+} from '../api/social'
 import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'
 import { VoiceLobby } from '../components/VoiceLobby'
 import '../styles/panelGrid.css'
-
-async function fetchActivity({ signal, friendsOnly } = {}) {
-  const qs = friendsOnly ? '?friends_only=1' : ''
-  const response = await fetch(`/api/activity${qs}`, {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Activity')
-  }
-  return response.json()
-}
-
-async function fetchSocial({ signal } = {}) {
-  const response = await fetch('/api/social/status', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    return null
-  }
-  return response.json()
-}
-
-async function fetchFriends({ signal } = {}) {
-  const response = await fetch('/api/social/friends', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    return { friends: [] }
-  }
-  return response.json()
-}
 
 function presenceLabel(status) {
   if (status === 'in-game') return 'In game'
@@ -160,14 +134,7 @@ export function ActivityPage() {
     if (!username) return
     setFriendMsg(null)
     try {
-      const response = await fetch('/api/social/friends', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ username }),
-      })
-      const body = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(body, response.status, 'Request failed')
+      const body = await apiRequestFriend(username)
       setFriendName('')
       if (body.existing) {
         setFriendMsg('Already connected or pending')
@@ -184,31 +151,19 @@ export function ActivityPage() {
   }
 
   async function acceptFriend(id) {
-    await fetch(`/api/social/friends/${id}/accept`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders(),
-    })
+    await apiAcceptFriend(id)
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
   }
 
   async function rejectFriend(id) {
-    await fetch(`/api/social/friends/${id}/reject`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders(),
-    })
+    await apiRejectFriend(id)
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
   }
 
   async function removeFriend(id) {
-    await fetch(`/api/social/friends/${id}`, {
-      method: 'DELETE',
-      credentials: 'same-origin',
-      headers: csrfHeaders(),
-    })
+    await apiRemoveFriend(id)
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
   }
