@@ -68,7 +68,9 @@ export function createAccountApi(request: Requester) {
     },
 
     /** Create an invite; `email` is optional (`POST /api/account/invites`). */
-    createInvite(email?: string): Promise<{ ok: boolean; invite: AccountInvite; emailed: boolean }> {
+    createInvite(
+      email?: string,
+    ): Promise<{ ok: boolean; invite: AccountInvite; emailed: boolean }> {
       return request('/api/account/invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,10 +80,9 @@ export function createAccountApi(request: Requester) {
 
     /** Revoke an unused invite (`DELETE /api/account/invites/{token}`). */
     deleteInvite(token: string): Promise<{ ok: boolean }> {
-      return request<{ ok: boolean }>(
-        `/api/account/invites/${encodeURIComponent(token)}`,
-        { method: 'DELETE' },
-      )
+      return request<{ ok: boolean }>(`/api/account/invites/${encodeURIComponent(token)}`, {
+        method: 'DELETE',
+      })
     },
   }
 }

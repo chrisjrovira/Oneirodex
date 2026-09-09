@@ -1,9 +1,4 @@
-import {
-  joinUrl,
-  unwrapResponse,
-  type OneirodexClientConfig,
-  type Requester,
-} from './client.js'
+import { joinUrl, unwrapResponse, type OneirodexClientConfig, type Requester } from './client.js'
 
 /**
  * Same-origin browser transport for the React SPAs (Phase 3, Track B).
