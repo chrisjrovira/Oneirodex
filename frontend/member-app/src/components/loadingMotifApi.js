@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { errorFromResponse } from '../api/envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 import { pickLoadingMotifId } from './LoadingMotif'
 
 let cachedSettings = null

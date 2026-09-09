@@ -1,7 +1,7 @@
-import { isStackableTone, planToastStack, stackSummaryMessage } from '@oneirodex/ui'
+import { isStackableTone, planToastStack, stackSummaryMessage } from './toastStack.js'
 
 /**
- * Lightweight aurora toast — mirrors member-app showToast (top-right, dismissible).
+ * Lightweight aurora toast — no jQuery / Bootstrap notify dependency.
  */
 
 function toastHost() {

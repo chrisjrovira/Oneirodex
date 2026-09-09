@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 
-import { PageStatus, resolveErrorDetail, resolveErrorMessage } from './PageStatus'
+import { PageStatus, resolveErrorDetail, resolveErrorMessage } from './pageStatus.jsx'
 
 test('resolveErrorMessage accepts every shape still in the tree', () => {
   // The backend is mid-migration onto the GT-B1 envelope, so all of these

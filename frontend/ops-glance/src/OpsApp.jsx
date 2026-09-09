@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchOpsSummary } from './api/summary'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { DeepLinks } from './components/DeepLinks'
 import { HostPanel } from './components/HostPanel'
 import { IssuesList } from './components/IssuesList'
@@ -76,6 +76,9 @@ export function OpsApp({ pollMs = 15000 }) {
           onRetry={refresh}
           retryLabel="Retry"
           loadingMessage="Loading operations summary…"
+          // Ops renders its loading line in-flow (no portal / full-page
+          // takeover) — the shared default; `inline` keeps that behaviour.
+          inline
         />
       ) : (
         <>

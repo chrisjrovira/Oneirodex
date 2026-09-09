@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { confirmAction } from '../../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import { PageStatus } from '../components/PageStatus'

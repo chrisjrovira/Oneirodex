@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 
 const EMPTY_STATUS = {
   helpers_enabled: false,

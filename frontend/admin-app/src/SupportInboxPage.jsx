@@ -1,6 +1,6 @@
 // Toasts on every mutation (GT-B25).
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 import { csrfHeaders } from './adminApi'

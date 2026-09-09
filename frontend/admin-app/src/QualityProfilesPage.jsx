@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
-import { PageStatus } from './PageStatus'
+import { confirmAction } from '@oneirodex/ui'
+import { PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson, putJson } from './adminApi'
 
 const EMPTY_FORM = {

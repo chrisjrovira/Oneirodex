@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText'
+import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText.js'
 
 describe('loadingMessageBase', () => {
   test('strips unicode and ascii ellipsis', () => {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { csrfHeaders } from '../api/csrf'
-import { errorFromBody } from '../api/envelopeError'
+import { csrfHeaders } from '@oneirodex/ui'
+import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 
 /**

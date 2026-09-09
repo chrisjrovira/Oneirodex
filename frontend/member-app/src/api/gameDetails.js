@@ -1,6 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 export async function fetchGameDetails(gameUuid, { signal } = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/details`, {
     signal,

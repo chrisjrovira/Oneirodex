@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { DataTable } from './DataTable'
 import { MetricStrip } from './opsWidgets'
 import { CreateUserForm } from './CreateUserForm'

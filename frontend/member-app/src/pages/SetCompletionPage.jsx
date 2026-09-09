@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_PREF_ORDER } from '../chrome/regions'

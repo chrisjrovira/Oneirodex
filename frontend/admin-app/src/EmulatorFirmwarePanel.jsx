@@ -2,7 +2,7 @@
 // which is easy to miss when the triggering control has scrolled away.
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { csrfHeaders, csrfToken, postJson } from './adminApi'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'
 import './OpenPathModal.css'

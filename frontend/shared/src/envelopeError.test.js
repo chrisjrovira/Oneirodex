@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { errorFromBody, errorFromResponse } from './envelopeError'
+import { errorFromBody, errorFromResponse } from './envelopeError.js'
 
 /** Minimal stand-in for a failed fetch Response. */
 function failed(status, body) {

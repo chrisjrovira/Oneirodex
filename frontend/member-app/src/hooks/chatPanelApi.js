@@ -1,4 +1,4 @@
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 
 const STORAGE_OPEN = 'od-chat-panel-open'
 /** CustomEvent — TopNav / CommandPalette / deep-link open chat without a full-page takeover. */

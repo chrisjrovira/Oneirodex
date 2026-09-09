@@ -1,4 +1,4 @@
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchVrCatalog({ signal, page = 1, perPage = 48 } = {}) {
   const params = new URLSearchParams({

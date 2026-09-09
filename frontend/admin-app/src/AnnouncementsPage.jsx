@@ -1,7 +1,7 @@
 // Toasts on every mutation (GT-B25). Outcomes were reported inline only,
 // which is easy to miss when the triggering control has scrolled away.
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
 

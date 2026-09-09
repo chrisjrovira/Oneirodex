@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
 

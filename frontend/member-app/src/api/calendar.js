@@ -1,4 +1,4 @@
-﻿import { errorFromResponse } from './envelopeError'
+﻿import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchCalendar({ signal, daysAhead = 60, daysBehind = 14, limit = 40 } = {}) {
   const params = new URLSearchParams({

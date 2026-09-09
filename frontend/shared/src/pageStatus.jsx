@@ -1,44 +1,51 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText'
+
+import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText.js'
 
 /**
- * Shared loading / error / empty status for admin pages (GT-B33).
+ * Shared loading / error / empty status for SPA pages — `@oneirodex/ui`.
  *
- * The member SPA has had this since GT-A2; admin never did, so fifteen admin
- * files answered "this page is busy" or "this page failed" in at least eight
- * different shapes — `<p>Loading…</p>`, `.od-admin-alert`,
- * `.od-admin-lede[role=status]`, `.od-error`, `.od-adminpage-status`,
- * `.od-admin-banner--warn`, bare `<p role="alert">`, and more. The visual
- * inconsistency was the obvious cost; the quieter one was accessibility, since
- * several of those shapes announced a failure politely or not at all.
+ * Three copies of this had drifted across the SPAs (member `src/components/`,
+ * admin `src/`, ops `src/`). The error-shape readers `resolveErrorMessage` /
+ * `resolveErrorDetail` were byte-identical in all three; the component itself
+ * diverged only in the loading branch:
  *
- * Deliberately the same component API and the same `.od-page-status` classes as
- * the member version, with the CSS now in the shared theme, so the two halves
- * cannot drift. Copying member's file wholesale was the other option and would
- * have produced a second implementation to keep in step — the thing the GT-A4
- * button work and the UIR-4 rail work both went out of their way to avoid.
+ *   - admin / ops: a plain animated "Loading …" line.
+ *   - member: a rotating `LoadingMotif` (console-hardware glyphs), which is
+ *     member-side polish loaded by the member bundle — admin deliberately did
+ *     not pull that dependency in, and ops cannot (its Docker build has no
+ *     Flask theme tree).
  *
- * One deliberate difference: no `LoadingMotif`. The motif system is member-side
- * polish loaded by the member bundle, and an operator waiting on a scan summary
- * is better served by a plain, immediate line than by an animation admin would
- * have to pull in a dependency for.
+ * So the canonical component here is the plain-line flavour, and it takes an
+ * optional `renderLoading` render prop. member-app passes its motif renderer;
+ * admin and ops pass nothing and get the plain line. One implementation, the
+ * deliberate per-app difference expressed as a prop rather than a fork.
+ *
+ * The `.od-page-status` CSS lives in the shared theme
+ * (`oneirodex/setup/default_theme/css/od-primitives.css`), loaded by base.html
+ * and base_admin.html, and on the Jinja Ops shell — so member, admin and the
+ * server-rendered pages all render this from one source. This module imports no
+ * CSS of its own.
  *
  * Precedence is error → loading → empty → children. Error outranks loading so a
  * failed refresh of already-rendered data does not sit spinning forever.
+ *
+ * Error uses role="alert" (assertive) because it is an interruption the user
+ * must act on; loading and empty stay role="status" (polite).
  */
 
 /**
- * Read the human sentence out of a failed request.
+ * Read the human sentence out of a failed request (GT-A2).
  *
- * Accepts every shape still present in the tree while the backend finishes
- * migrating onto the GT-B1 envelope:
+ * Backend is mid-migration onto the GT-B1 envelope, so this deliberately
+ * accepts every legacy shape that still exists in the tree:
  *   { error: 'text' }        — dominant legacy shape
  *   { message: 'text' }      — second legacy shape
  *   { error: { message } }   — defensive; some upstream proxies nest
- *   an Error instance        — thrown by adminApi's fetch wrappers
+ *   an Error instance        — thrown by fetch wrappers on network failure
  *
- * Never surfaces a raw status code as the headline; that goes in the detail.
+ * Never surfaces a raw status code as the headline; that goes in `detail`.
  */
 export function resolveErrorMessage(error, fallback = 'Something went wrong.') {
   if (!error) return fallback
@@ -63,10 +70,10 @@ export function resolveErrorMessage(error, fallback = 'Something went wrong.') {
 
 /** Operator-facing detail line — status code / stable error code, never the headline. */
 export function resolveErrorDetail(error) {
-  // Errors included on purpose: adminApi's `adminError` throws an Error that
-  // carries `status` and `error_code` off the envelope, so bailing on
-  // `instanceof Error` would drop exactly the fields this line exists to show.
-  // A plain Error from a network failure has neither, so it still yields null.
+  // Errors are included on purpose: the fetch wrappers throw Error objects that
+  // carry `status` / `error_code` off the GT-B1 envelope, and bailing on
+  // `instanceof Error` dropped exactly the fields this line exists to show. A
+  // plain Error from a network failure has neither, so it still yields null.
   if (!error || typeof error !== 'object') return null
   const parts = []
   if (error.status != null) parts.push(`HTTP ${error.status}`)
@@ -74,7 +81,7 @@ export function resolveErrorDetail(error) {
   return parts.length ? parts.join(' · ') : null
 }
 
-function AdminLoadingStatus({ inline, className, loadingMessage }) {
+function DefaultLoadingStatus({ inline, className, loadingMessage }) {
   const base = loadingMessageBase(loadingMessage)
   const [tick, setTick] = useState(0)
 
@@ -117,6 +124,7 @@ export function PageStatus({
   children = null,
   className = '',
   inline = false,
+  renderLoading = null,
 }) {
   if (error) {
     const message = errorMessage || resolveErrorMessage(error)
@@ -124,7 +132,6 @@ export function PageStatus({
     return (
       <div
         className={`od-page-status od-page-status--error${className ? ` ${className}` : ''}`}
-        // Assertive: a failure is an interruption the operator has to act on.
         role="alert"
       >
         <div className="od-page-status__body">
@@ -141,9 +148,16 @@ export function PageStatus({
   }
 
   if (loading) {
-    const node = (
-      <AdminLoadingStatus inline={inline} className={className} loadingMessage={loadingMessage} />
-    )
+    const node =
+      typeof renderLoading === 'function' ? (
+        renderLoading({ inline, className, loadingMessage })
+      ) : (
+        <DefaultLoadingStatus
+          inline={inline}
+          className={className}
+          loadingMessage={loadingMessage}
+        />
+      )
     if (inline || typeof document === 'undefined') return node
     return createPortal(node, document.body)
   }

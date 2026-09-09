@@ -3,7 +3,7 @@
 // it has scrolled away — and invisible when the save happens from the bottom
 // of a long form.
 import { useEffect, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { showToast } from './utils/toast'
 
 const EMPTY = {

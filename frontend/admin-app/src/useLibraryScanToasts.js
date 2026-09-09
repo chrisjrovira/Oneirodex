@@ -4,7 +4,7 @@ import {
   groupLibraryScanToasts,
   markLibraryScanToastSeen,
   pickUnseenLibraryScanToasts,
-} from '../../shared/libraryScanNotify'
+} from '@oneirodex/ui'
 import { showToast } from './utils/toast'
 
 const POLL_MS = 45000

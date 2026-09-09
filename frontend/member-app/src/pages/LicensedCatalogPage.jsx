@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_LABELS } from '../chrome/regions'
 import { PageStatus } from '../components/PageStatus'

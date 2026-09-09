@@ -1,6 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 /**
  * How this member has arranged their Discover feed.
  *

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { errorFromResponse } from '../api/envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
 import { isNativePcPlatform } from '../chrome/regions'

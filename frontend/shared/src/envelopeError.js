@@ -17,6 +17,11 @@
  * So: read the body once, prefer the backend's sentence, keep the machine
  * fields on the Error, and fall back to the old developer string only when
  * there is genuinely nothing better to say.
+ *
+ * Consolidated into `@oneirodex/ui` in wave B1.2. The admin SPA's `adminApi.js`
+ * had its own `adminError` with the same shape plus a `data.message` fallback;
+ * that fallback is folded in below (the superset), and `adminApi.js` now
+ * re-exports this as `adminError`.
  */
 
 /**
@@ -33,7 +38,10 @@
  * @returns {Error}
  */
 export function errorFromBody(data, status, fallback) {
-  const sentence = typeof data?.error === 'string' ? data.error.trim() : ''
+  // `error` is the GT-B1 envelope field; `message` is the second legacy shape
+  // still in the tree, and the admin `adminError` copy already fell back to it.
+  const raw = typeof data?.error === 'string' ? data.error : data?.message
+  const sentence = typeof raw === 'string' ? raw.trim() : ''
 
   const error = new Error(sentence || `${fallback} ${status}`)
   error.status = status

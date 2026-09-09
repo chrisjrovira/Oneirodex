@@ -3,5 +3,35 @@
   "private": true,
   "version": "1.0.0-beta",
   "type": "module",
-  "main": "index.js"
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "npm --prefix ../.. run lint",
+    "format:check": "npm --prefix ../.. run format:check"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^4.5.2",
+    "jsdom": "^26.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "vitest": "^3.2.4"
+  }
 }

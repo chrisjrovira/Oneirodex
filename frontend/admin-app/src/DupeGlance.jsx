@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
-import { PageStatus } from './PageStatus'
+import { confirmAction } from '@oneirodex/ui'
+import { PageStatus } from '@oneirodex/ui'
 import { PM_IGNORE } from './formIgnore'
 import { getJson, postJson } from './adminApi'
 import {

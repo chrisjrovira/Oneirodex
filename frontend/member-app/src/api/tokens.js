@@ -1,6 +1,4 @@
-import { csrfHeaders } from './csrf'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 /**
  * @returns {Promise<{
  *   tokens: Array<Record<string, unknown>>,

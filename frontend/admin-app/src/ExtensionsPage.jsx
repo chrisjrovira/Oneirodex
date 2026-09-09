@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson } from './adminApi'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from './utils/toast'

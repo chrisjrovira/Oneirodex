@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useState } from 'react'
 import { getJson, putJson } from './adminApi'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 import { showToast } from './utils/toast'
 
 const ENDPOINT = '/api/browser-player-settings'

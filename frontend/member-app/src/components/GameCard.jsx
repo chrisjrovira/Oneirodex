@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getCsrfToken } from '../api/csrf'
+import { getCsrfToken } from '@oneirodex/ui'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'

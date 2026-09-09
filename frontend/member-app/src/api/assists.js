@@ -4,7 +4,7 @@
  * @param {{ signal?: AbortSignal }} [options]
  * @returns {Promise<{ enabled: boolean, pack: object | null }>}
  */
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchGameAssists(gameUuid, options = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/assists`, {

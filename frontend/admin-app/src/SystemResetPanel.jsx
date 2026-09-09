@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { adminError, csrfHeaders } from './adminApi'
-import { PageStatus } from './PageStatus'
+import { PageStatus } from '@oneirodex/ui'
 
 const ENDPOINT = '/admin/api/system/reset'
 const CONFIRM_PHRASE = 'RESET ONEIRODEX'
