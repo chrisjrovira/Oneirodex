@@ -1,10 +1,10 @@
 # ADR: Defer `@oneirodex/api-client` in member SPA
 
 **Date:** 2026-07-27  
-**Status:** Superseded by [0004](0004-api-client-is-the-requester.md) (2026-09-09)  
+**Status:** Superseded by [0005](0005-api-client-is-the-requester.md) (2026-09-09)  
 **Owners:** `agent-uiux` · `agent-backend` · `maintainer`
 
-> **Superseded by 0004.** The deferral held through 1.0.0-beta. ADR 0004 adopts
+> **Superseded by 0005.** The deferral held through 1.0.0-beta. ADR 0005 adopts
 > one typed client — browser and bearer transports over the real response
 > envelope — for the desktop companion and the SPAs, with the SPAs migrating
 > their `src/api/` layers onto it in Phase 3.

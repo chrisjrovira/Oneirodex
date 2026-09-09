@@ -1,4 +1,4 @@
-# ADR 0004: `@oneirodex/api-client` is the one requester
+# ADR 0005: `@oneirodex/api-client` is the one requester
 
 **Date:** 2026-09-09
 **Status:** Accepted
