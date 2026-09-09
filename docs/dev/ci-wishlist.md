@@ -193,3 +193,15 @@ directly — they append a line here.
   no DB), so the job is fast and can fail hard. The moved tests are no longer
   run by `member-app-vitest` / `admin-app-vitest`, so without this job the
   coverage drops.
+- [B1.3] `@tanstack/react-query` 5.102.8 is now a runtime dependency of
+  `frontend/member-app` (and an **optional** `@oneirodex/ui` peer). No workflow
+  change is required — every JS job already runs one repo-root `npm ci` against
+  the single `package-lock.json`, which now carries `@tanstack/react-query` +
+  `@tanstack/query-core` (2 packages, ~13 kB min / 4.4 kB gzip as its own
+  `useResource-*.js` chunk in the member build). The `shared-vitest` and
+  `member-app-vitest` jobs pick up the new `frontend/shared/src/useResource.test.jsx`
+  (+1 file / +5 tests in shared) automatically. Flag for any **bundle-size
+  watcher**: `member-app.js` gained the react-query runtime; the `shared` and
+  member vitest counts move up by the useResource tests. admin-app / ops-glance
+  are untouched this wave — `useResource` is exported from `@oneirodex/ui` and
+  available to them once they wrap their trees in a `QueryClientProvider`.
