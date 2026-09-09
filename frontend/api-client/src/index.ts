@@ -28,3 +28,40 @@ export type {
   HeartbeatResponse,
   RawCompanionCommand,
 } from './device.js'
+export type {
+  LibraryApi,
+  LibrarySummary,
+  GetLibrariesResponse,
+  LibraryWatchState,
+} from './library.js'
+export type { GameApi, GameDetails, MoreFromResponse, EditionsResponse } from './game.js'
+export type {
+  CollectionsApi,
+  CollectionDetail,
+  ListCollectionsResponse,
+  CreateCollectionRequest,
+  UpdateCollectionRequest,
+} from './collections.js'
+export type {
+  DiscoverApi,
+  DiscoverFeed,
+  DiscoverRow,
+  DiscoverPins,
+  DiscoverRowWindow,
+} from './discover.js'
+export type {
+  AccountApi,
+  AccountSummary,
+  ChangePasswordRequest,
+  AccountInvite,
+  AccountInvitesResponse,
+} from './account.js'
+export type {
+  WishlistApi,
+  GameRequestRow,
+  ListRequestsResponse,
+  CreateRequestBody,
+  BatchWishlistResponse,
+  FavoritesPage,
+  FavoritesOptions,
+} from './wishlist.js'
