@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ShellConfigProvider, ViewerProvider } from '@oneirodex/ui'
 
 /**
@@ -14,11 +16,27 @@ import { ShellConfigProvider, ViewerProvider } from '@oneirodex/ui'
  * `shell` is the ShellConfig value verbatim; the viewer is derived from the
  * same object unless `viewer` overrides it. Pass `router` for pages that also
  * need a Router in scope.
+ *
+ * Wave B1.3: also provides a fresh `QueryClient` per render (retries off, so a
+ * `mockRejectedValueOnce` → `mockResolvedValueOnce` retry test sees the error
+ * rather than react-query silently swallowing it). Pages that adopt
+ * `useResource` need the provider; pages that do not are unaffected.
  */
 export function ShellHarness({ shell = {}, viewer, router = false, initialEntries, children }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      }),
+  )
   const tree = (
     <ViewerProvider value={viewer ?? shell}>
-      <ShellConfigProvider value={shell}>{children}</ShellConfigProvider>
+      <ShellConfigProvider value={shell}>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </ShellConfigProvider>
     </ViewerProvider>
   )
   if (!router) return tree
