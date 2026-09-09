@@ -7,6 +7,18 @@ export interface OneirodexClientConfig {
   getToken: () => string | null | Promise<string | null>
   /** Inject for tests; defaults to global fetch */
   fetchImpl?: typeof fetch
+  /**
+   * Browser transport only: returns the current CSRF token, set as
+   * `X-CSRFToken` on mutating requests. Injected by the caller — the client
+   * never imports a SPA's token store. Ignored by the Bearer transport.
+   */
+  csrfToken?: () => string
+  /**
+   * Browser transport only: called once when a response is `401`, before the
+   * `OneirodexApiError` is thrown. The SPA passes `() => { location.href =
+   * '/login' }`. Ignored by the Bearer transport.
+   */
+  onUnauthorized?: () => void
 }
 
 /** Parsed error body: the full envelope, the legacy `{error}` shape, raw text, or null. */
@@ -61,7 +73,7 @@ export function formatBearerAuthorization(token: string): string {
   return `Bearer ${trimmed}`
 }
 
-function joinUrl(baseUrl: string, path: string): string {
+export function joinUrl(baseUrl: string, path: string): string {
   const base = baseUrl.replace(/\/+$/, '')
   const suffix = path.startsWith('/') ? path : `/${path}`
   return `${base}${suffix}`
@@ -77,6 +89,28 @@ export async function parseErrorBody(response: Response): Promise<ErrorBody> {
   } catch {
     return text
   }
+}
+
+/**
+ * The ok / throw / parse tail shared by every transport: turns a `Response`
+ * into `T`, or throws `OneirodexApiError` carrying the parsed envelope. A
+ * `204` or a non-JSON body resolves to `undefined`.
+ */
+export async function unwrapResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    throw new OneirodexApiError(response.status, await parseErrorBody(response))
+  }
+
+  if (response.status === 204) {
+    return undefined as T
+  }
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    return undefined as T
+  }
+
+  return (await response.json()) as T
 }
 
 export function createRequester(config: OneirodexClientConfig) {
@@ -98,20 +132,7 @@ export function createRequester(config: OneirodexClientConfig) {
       headers,
     })
 
-    if (!response.ok) {
-      throw new OneirodexApiError(response.status, await parseErrorBody(response))
-    }
-
-    if (response.status === 204) {
-      return undefined as T
-    }
-
-    const contentType = response.headers.get('content-type') ?? ''
-    if (!contentType.includes('application/json')) {
-      return undefined as T
-    }
-
-    return (await response.json()) as T
+    return unwrapResponse<T>(response)
   }
 }
 

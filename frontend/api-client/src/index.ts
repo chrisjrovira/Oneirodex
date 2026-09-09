@@ -3,8 +3,10 @@ export {
   formatBearerAuthorization,
   OneirodexApiError,
 } from './oneirodex-client.js'
-export { createRequester } from './client.js'
+export { createRequester, joinUrl, parseErrorBody, unwrapResponse } from './client.js'
 export type { OneirodexClientConfig, Requester, ErrorBody } from './client.js'
+export { createBrowserRequester } from './transport-browser.js'
+export type { BrowserTransportConfig } from './transport-browser.js'
 export type { OneirodexClient } from './oneirodex-client.js'
 export { isApiError } from './types.js'
 export type * from './types.js'
