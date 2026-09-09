@@ -30,22 +30,12 @@ from oneirodex.models import (
     ReleaseGroup, AllowedFileType, GlobalSettings, user_game_status,
     GameUpdate, user_favorites, GameExtra,
 )
-from oneirodex.platform import LibraryPlatform, platforms_for_play_mode
 from oneirodex.utils.game_editions import normalize_title
-from oneirodex.utils.title_grouping import (
-    editions_by_title_key,
-    platform_rank_case,
-    title_key_expr,
-)
-from oneirodex.utils.secondary_scrapers import game_card_flags
-from oneirodex.utils.store_ownership import get_matched_owned_game_uuids, ownership_flags
 from oneirodex.utils.functions import (
     load_scanning_filter_patterns,
-    format_size,
     igdb_platform_id_for,
     normalize_case_sensitive,
 )
-from oneirodex.utils.local_metadata import has_local_metadata, has_local_images
 from oneirodex.utilities import handle_auto_scan, handle_manual_scan, scan_and_add_games
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.background import run_in_background
@@ -60,17 +50,11 @@ from oneirodex.utils.scanning import refresh_images_in_background, is_scan_job_r
 from oneirodex.utils.game_core import delete_game
 from oneirodex.utils.library_roots import resolve_scan_path
 from oneirodex.utils.security import is_safe_path, get_allowed_base_directories
-from oneirodex.utils.cover_url import resolve_game_cover_url
 from oneirodex.utils.unmatched import handle_delete_unmatched
 from oneirodex.utils.processors import get_global_settings
-from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_library
-from oneirodex.utils.lifecycle import web_client_connected, web_lifecycle_fields
-from oneirodex.utils.client_lifecycle import installed_game_uuids, load_lifecycle_map
-from oneirodex.utils.game_details_payload import browse_trailer_fields
-from oneirodex.utils.play_url import browse_play_fields
-from oneirodex.utils.browse_filters import apply_badge_filters
-from oneirodex.utils.browse_pagination import normalize_page_size
-from oneirodex.utils.rom_language import rom_browse_flags
+from oneirodex.utils.library_acl import apply_game_access_filters
+from oneirodex.utils.browse_query import run_browse_query
+from oneirodex.utils.browse_payload import build_browse_payload
 bp = Blueprint('main', __name__)
 
 def get_serializer():
@@ -93,298 +77,15 @@ def inject_settings():
 @bp.route('/browse_games')
 @login_required
 def browse_games():
-    print(f"Route: /browse_games - {current_user.name}")
-    page = request.args.get('page', 1, type=int)
-    per_page = normalize_page_size(request.args.get('per_page', 20, type=int))
-    library_uuid = request.args.get('library_uuid')
-    library_platform = request.args.get('library_platform')
-    igdb_platform = request.args.get('igdb_platform')
-    category = request.args.get('category')
-    genre = request.args.get('genre')
-    rating = request.args.get('rating', type=int)
-    game_mode = request.args.get('game_mode')
-    player_perspective = request.args.get('player_perspective')
-    theme = request.args.get('theme')
-    sort_by = request.args.get('sort_by', 'name')
-    sort_order = request.args.get('sort_order', 'asc')
-    installed_only = request.args.get('installed_only', '').lower() in ('1', 'true', 'yes')
-    query = select(Game).options(
-        joinedload(Game.genres),
-        joinedload(Game.player_perspectives),
-        joinedload(Game.library),
-    )
-    query = apply_game_access_filters(query, current_user)
-    # Get current user ID for favorite status
-    current_user_id = current_user.id if current_user.is_authenticated else None
-    if installed_only:
-        installed = installed_game_uuids(current_user_id)
-        if not installed:
-            return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
-        query = query.filter(Game.uuid.in_(installed))
-    if library_uuid:
-        if not user_can_access_library(current_user, library_uuid):
-            return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
-        query = query.filter(Game.library_uuid == library_uuid)
-    if library_platform:
-        try:
-            platform_enum = LibraryPlatform[library_platform]
-        except KeyError:
-            return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
-        query = query.filter(Game.library.has(Library.platform == platform_enum))
-    play_mode = (request.args.get('play_mode') or '').strip().lower()
-    if play_mode in ('browser', 'companion', 'catalog'):
-        matching = platforms_for_play_mode(play_mode)
-        if not matching:
-            return jsonify({'games': [], 'total': 0, 'pages': 0, 'current_page': page}), 200
-        query = query.filter(Game.library.has(Library.platform.in_(matching)))
-    if igdb_platform:
-        query = query.filter(Game.platforms.any(Platform.name == igdb_platform))
-    if category:
-        query = query.filter(Game.category.has(Category.name == category))
-    if genre:
-        query = query.filter(Game.genres.any(Genre.name == genre))
-    if rating is not None:
-        query = query.filter(Game.rating >= rating)
-    if game_mode:
-        query = query.filter(Game.game_modes.any(GameMode.name == game_mode))
-    if player_perspective:
-        query = query.filter(Game.player_perspectives.any(PlayerPerspective.name == player_perspective))
-    if theme:
-        query = query.filter(Game.themes.any(Theme.name == theme))
-    query = apply_badge_filters(query, request.args, user=current_user)
+    """Library grid for the member SPA.
 
-    # One tile per title, not per row in one library.
-    #
-    # A household keeping Chrono Trigger on SNES, PC and Switch had three
-    # unrelated tiles; the copies are reachable from the preview's "Available
-    # on" list, which is where they belong. Titles pair on the normalised name
-    # because `igdb_id` and `slug` are both unique per row and so cannot be
-    # shared across systems — see utils/title_grouping.
-    #
-    # `DISTINCT ON` picks the representative inside the query, so `db.paginate`
-    # still counts titles rather than rows and every page stays full. Ordering
-    # is (key, recency desc, id): the copy on the latest system the title was
-    # released on wins, and `id` makes the choice deterministic when two copies
-    # sit on equally recent hardware.
-    #
-    # The whereclause is reused rather than the filters re-applied, so the
-    # representative is always chosen from rows the member can actually see and
-    # that match what they filtered — every filter above is a WHERE on Game
-    # (the `.has()` / `.any()` ones are correlated EXISTS, not joins), so this
-    # cannot drift from the query it mirrors. With a system filter active that
-    # is exactly what makes the surviving copy the one on *that* system.
-    platform_of_library = (
-        select(Library.platform)
-        .where(Library.uuid == Game.library_uuid)
-        .scalar_subquery()
-    )
-    grouping_key = title_key_expr(Game.name)
-    hardware_recency = platform_rank_case(platform_of_library)
-
-    representatives = select(Game.id.label('id'))
-    if query.whereclause is not None:
-        representatives = representatives.where(query.whereclause)
-    representatives = (
-        representatives
-        .distinct(grouping_key)
-        .order_by(grouping_key, hardware_recency.desc(), Game.id)
-        .subquery()
-    )
-    query = query.filter(Game.id.in_(select(representatives.c.id)))
-
-    if sort_by == 'name':
-        query = query.order_by(Game.name.asc() if sort_order == 'asc' else Game.name.desc())
-    elif sort_by == 'rating':
-        query = query.order_by(Game.rating.asc() if sort_order == 'asc' else Game.rating.desc())
-    elif sort_by == 'first_release_date':
-        query = query.order_by(Game.first_release_date.asc() if sort_order == 'asc' else Game.first_release_date.desc())
-    elif sort_by == 'size':
-        query = query.order_by(Game.size.asc() if sort_order == 'asc' else Game.size.desc())
-    elif sort_by == 'date_identified':
-        query = query.order_by(Game.date_identified.asc() if sort_order == 'asc' else Game.date_identified.desc())
-
-    # Pagination
-    pagination = db.paginate(query, page=page, per_page=per_page, error_out=False)
-
-    # Which systems each surviving title exists on — one query for the page.
-    #
-    # Deliberately ACL-scoped but *not* filtered by the member's current view.
-    # With a system filter active the browse query can only see that system's
-    # copies, and the badge has to say "NES" plus how many other systems hold
-    # the title — which are exactly the rows that filter excluded. One bulk
-    # lookup keyed on the same grouping expression, so a page of a thousand
-    # tiles costs one round trip rather than a thousand.
-    games = pagination.items
-    edition_platforms_by_key: dict[str, list[str]] = {}
-    page_title_keys = sorted({normalize_title(game.name) for game in games if game.name})
-    if page_title_keys:
-        edition_query = (
-            select(grouping_key.label('title_key'), Library.platform)
-            .select_from(Game)
-            .join(Library, Library.uuid == Game.library_uuid)
-            .where(grouping_key.in_(page_title_keys))
-        )
-        edition_query = apply_game_access_filters(edition_query, current_user)
-        edition_platforms_by_key = editions_by_title_key(
-            (row[0], getattr(row[1], 'name', None))
-            for row in db.session.execute(edition_query).all()
-        )
-
-    # Get all user statuses for games in this page (batch query for performance)
-    game_uuids = [game.uuid for game in games]
-    user_statuses = {}
-    if current_user_id and game_uuids:
-        status_results = db.session.execute(
-            select(user_game_status.c.game_uuid, user_game_status.c.status).where(
-                and_(
-                    user_game_status.c.user_id == current_user_id,
-                    user_game_status.c.game_uuid.in_(game_uuids)
-                )
-            )
-        ).all()
-        user_statuses = {row[0]: row[1] for row in status_results}
-
-    update_counts = {}
-    patch_game_uuids: set[str] = set()
-    if game_uuids:
-        update_results = db.session.execute(
-            select(GameUpdate.game_uuid, func.count())
-            .where(GameUpdate.game_uuid.in_(game_uuids))
-            .group_by(GameUpdate.game_uuid)
-        ).all()
-        update_counts = {row[0]: row[1] for row in update_results}
-        patch_game_uuids = {
-            row[0]
-            for row in db.session.execute(
-                select(GameExtra.game_uuid).where(
-                    GameExtra.game_uuid.in_(game_uuids),
-                    GameExtra.extra_kind == 'translation_patch',
-                ).distinct()
-            ).all()
-        }
-
-    preferred_locale = 'en-US'
-    prefs = getattr(current_user, 'preferences', None) if current_user_id else None
-    if prefs is not None:
-        preferred_locale = getattr(prefs, 'preferred_game_locale', None) or 'en-US'
-
-    settings = db.session.execute(
-        select(GlobalSettings).order_by(GlobalSettings.id).limit(1)
-    ).scalars().first()
-    owned_game_uuids = get_matched_owned_game_uuids(current_user_id) if current_user_id else set()
-    lifecycle_map = load_lifecycle_map(current_user_id)
-    client_connected = web_client_connected(user_id=current_user_id) if current_user_id else False
-
-    favorite_uuids: set[str] = set()
-    covers_by_uuid: dict[str, Image] = {}
-    if game_uuids:
-        cover_rows = db.session.execute(
-            select(Image).where(
-                Image.game_uuid.in_(game_uuids),
-                Image.image_type == 'cover',
-            )
-        ).scalars().all()
-        covers_by_uuid = {row.game_uuid: row for row in cover_rows}
-        if current_user_id:
-            favorite_uuids = {
-                row[0]
-                for row in db.session.execute(
-                    select(user_favorites.c.game_uuid).where(
-                        and_(
-                            user_favorites.c.user_id == current_user_id,
-                            user_favorites.c.game_uuid.in_(game_uuids),
-                        )
-                    )
-                ).all()
-            }
-
-    # Get game data
-    game_data = []
-    for game in games:
-        cover_image = covers_by_uuid.get(game.uuid)
-        cover_url = resolve_game_cover_url(game, cover_image)
-        genres = [genre.name for genre in game.genres]
-        game_size_formatted = format_size(game.size)
-
-        has_local_override = False
-        if settings:
-            if (settings.use_local_metadata and has_local_metadata(game.full_disk_path, settings.local_metadata_filename or 'oneirodex.json')) or \
-               (settings.use_local_images and has_local_images(game.full_disk_path)):
-                has_local_override = True
-
-        # Get user status for this game
-        user_status = user_statuses.get(game.uuid)
-
-        library_platform_key = None
-        library_platform_label = None
-        if game.library is not None and game.library.platform is not None:
-            platform = game.library.platform
-            library_platform_key = getattr(platform, 'name', None) or str(platform)
-            library_platform_label = getattr(platform, 'value', None) or library_platform_key
-
-        edition_platforms = edition_platforms_by_key.get(normalize_title(game.name)) or (
-            [library_platform_key] if library_platform_key else []
-        )
-
-        steam_app_id = getattr(game, 'steam_app_id', None)
-        steam_url = getattr(game, 'steam_url', None) or None
-        if steam_app_id and not steam_url:
-            steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}'
-
-        game_data.append({
-            'id': game.id,
-            'uuid': game.uuid,
-            'name': game.name,
-            'cover_url': cover_url,
-            'summary': game.summary,
-            'url': game.url,
-            'size': game_size_formatted,
-            'genres': genres,
-            'library_uuid': game.library_uuid,
-            'library_platform': library_platform_key,
-            'library_platform_label': library_platform_label,
-            'is_favorite': game.uuid in favorite_uuids,
-            'date_identified': game.date_identified.isoformat() if game.date_identified else None,
-            'date_created': game.date_created.isoformat() if game.date_created else None,
-            'first_release_date': game.first_release_date.isoformat() if game.first_release_date else None,
-            'has_local_override': has_local_override,
-            'user_status': user_status,
-            'freshness_status': game.freshness_status,
-            'freshness_confidence': game.freshness_confidence,
-            'local_version': game.local_version,
-            'steam_app_id': steam_app_id,
-            'steam_url': steam_url,
-            'badge_title_collision': bool(library_platform_key),
-            # Newest hardware first, so the client reads element 0 as "the
-            # latest system this was released on" and never has to rank
-            # anything itself. Always includes this row's own system, so the
-            # count is systems-for-the-title, not systems-besides-this-one.
-            'edition_platforms': edition_platforms,
-            'edition_count': len(edition_platforms),
-            **browse_play_fields(game),
-            **browse_trailer_fields(game),
-            **game_card_flags(game),
-            **rom_browse_flags(
-                game,
-                preferred_locale,
-                has_translation_patch=game.uuid in patch_game_uuids,
-            ),
-            **web_lifecycle_fields(
-                game,
-                updates_count=update_counts.get(game.uuid, 0),
-                user_id=current_user_id,
-                client_connected=client_connected,
-                client_state=lifecycle_map.get(game.uuid),
-            ),
-            **ownership_flags(game.uuid, owned_game_uuids),
-        })
-
-    return jsonify({
-        'games': game_data,
-        'total': pagination.total,
-        'pages': pagination.pages,
-        'current_page': page
-    })
+    Arg parsing, filters and the per-page batch lookups are
+    :func:`oneirodex.utils.browse_query.run_browse_query`; the response body
+    (populated or guaranteed-empty, same shape either way) is
+    :func:`oneirodex.utils.browse_payload.build_browse_payload`.
+    """
+    result = run_browse_query(request.args, current_user)
+    return jsonify(build_browse_payload(result))
 
 
 @bp.route('/scan_manual_folder', methods=['GET', 'POST'])
