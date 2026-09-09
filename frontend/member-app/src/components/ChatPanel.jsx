@@ -479,7 +479,7 @@ export function ChatPanel({
     if (!activeId) return
     const current = channels.find((c) => c.id === activeId)
     if (!current) return
-    const nextMuted = !Boolean(current.muted)
+    const nextMuted = !current.muted
     const response = await fetch(`/api/chat/channels/${activeId}/mute`, {
       method: 'POST',
       credentials: 'same-origin',

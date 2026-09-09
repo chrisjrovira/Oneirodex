@@ -27,7 +27,6 @@ const SCRIPT = readFileSync(
 
 /** Evaluate the classic script against the current jsdom document. */
 function loadScript() {
-  // eslint-disable-next-line no-eval
   ;(0, eval)(SCRIPT)
 }
 

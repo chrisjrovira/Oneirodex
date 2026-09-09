@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest",
+    "lint": "npm --prefix ../.. run lint",
+    "format:check": "npm --prefix ../.. run format:check",
     "lint:css": "node ../../scripts/css-token-lint.mjs",
     "lint:css:update": "node ../../scripts/css-token-lint.mjs --update"
   },
