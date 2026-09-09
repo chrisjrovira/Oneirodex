@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from flask import request
 from flask_login import current_user, login_required
 
@@ -16,6 +18,8 @@ from oneirodex.utils.licensed_catalog import (
 from oneirodex.utils.set_completion import REGION_LABELS, REGION_PREF_ORDER
 
 from . import apis_bp
+
+logger = logging.getLogger(__name__)
 
 
 @apis_bp.route('/licensed-catalog', methods=['GET'])
@@ -58,10 +62,11 @@ def api_licensed_catalog_refresh():
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
     except RuntimeError as exc:
+        logger.warning('Licensed catalog refresh for %s failed: %s', platform, exc)
         return api_error(
             'IGDB did not return a licensed catalog page.',
             code='bad_gateway',
-            detail=str(exc),
+            detail='The upstream catalog request failed. Check the server log.',
         )
     log_system_event(
         (

@@ -17,6 +17,9 @@ from oneirodex.utils.security_headers import apply_security_headers
 from oneirodex.utils.icon_themes import icon_pack_css_url, icon_pack_previews_css_url
 from oneirodex.product import PRODUCT_NAME
 from oneirodex.utils.preset_themes import era_for_theme, theme_picker_groups
+import logging
+
+logger = logging.getLogger(__name__)
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -29,7 +32,12 @@ app_version = '1.0.0-beta'
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    
+
+    # Wire stdlib logging before anything else logs. Level from
+    # ONEIRODEX_LOG_LEVEL (default INFO), JSON via ONEIRODEX_LOG_JSON=1.
+    from oneirodex.utils.logging_setup import configure_logging
+    configure_logging(app)
+
     # SAFETY CHECK: Prevent production database access during tests
     import sys
     if 'pytest' in sys.modules or 'PYTEST_CURRENT_TEST' in os.environ:
@@ -40,11 +48,11 @@ def create_app():
         # If DATABASE_URL was not properly overridden in conftest.py
         if production_db_url and test_db_url and production_db_url != test_db_url:
             if 'oneirodex' in production_db_url and 'test' not in production_db_url:
-                print(f"🚨 CRITICAL: Tests attempting to use production database: {production_db_url}")
-                print(f"🛡️  BLOCKING: Forcing test database: {test_db_url}")
+                logger.error(f"🚨 CRITICAL: Tests attempting to use production database: {production_db_url}")
+                logger.warning(f"🛡️  BLOCKING: Forcing test database: {test_db_url}")
                 app.config['SQLALCHEMY_DATABASE_URI'] = test_db_url
         
-        print(f"🧪 PYTEST MODE: Using database: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
+        logger.info(f"🧪 PYTEST MODE: Using database: {app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET')}")
     
     csrf.init_app(app)
     apply_proxy_fix(app)
@@ -62,9 +70,9 @@ def create_app():
         auth_part = netloc_parts[0].replace(parsed_uri.password, '********')
         masked_netloc = f"{auth_part}@{netloc_parts[1]}" if len(netloc_parts) > 1 else auth_part
         masked_uri = urlunparse(parsed_uri._replace(netloc=masked_netloc))
-        print(f"Attempting to connect to PostgreSQL with URI: {masked_uri}")
+        logger.info(f"Attempting to connect to PostgreSQL with URI: {masked_uri}")
     else:
-        print(f"Attempting to connect to PostgreSQL with URI: {raw_db_uri}")
+        logger.info(f"Attempting to connect to PostgreSQL with URI: {raw_db_uri}")
     # --- END: Print masked PostgreSQL connection string ---
 
     parsed_url = urlparse(app.config['SQLALCHEMY_DATABASE_URI'])
@@ -290,7 +298,7 @@ def create_app():
         if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ and
             os.getenv('ONEIRODEX_INITIALIZATION_COMPLETE') != 'true'):
             # This should only happen in development or if initialization wasn't run
-            print("⚠️  Initialization not completed - this may cause issues")
+            logger.warning("⚠️  Initialization not completed - this may cause issues")
 
         if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ):
             # Reclaim scans orphaned by whatever ended the last process.
@@ -310,20 +318,20 @@ def create_app():
                 from oneirodex.utils.scan_queue import reclaim_stale_busy_jobs
                 reclaimed = reclaim_stale_busy_jobs()
                 if reclaimed:
-                    print(f"[SCAN QUEUE] Reclaimed {reclaimed} orphaned scan job(s) at startup")
+                    logger.info(f"[SCAN QUEUE] Reclaimed {reclaimed} orphaned scan job(s) at startup")
             except Exception as exc:
-                print(f"[SCAN QUEUE] Startup reclaim failed: {exc}")
+                logger.error(f"[SCAN QUEUE] Startup reclaim failed: {exc}")
 
             try:
                 from oneirodex.utils.scan_scheduler import start_scan_scheduler
                 start_scan_scheduler(app)
             except Exception as exc:
-                print(f"[SCAN SCHEDULER] Could not start: {exc}")
+                logger.warning(f"[SCAN SCHEDULER] Could not start: {exc}")
             try:
                 from oneirodex.utils.library_watch import start_library_watch
                 start_library_watch(app)
             except Exception as exc:
-                print(f"[LIBRARY WATCH] Could not start: {exc}")
+                logger.warning(f"[LIBRARY WATCH] Could not start: {exc}")
             try:
                 from oneirodex.utils.free_games_poller import start_free_games_scheduler
                 start_free_games_scheduler(app)
@@ -331,18 +339,18 @@ def create_app():
                 from oneirodex.utils.discover_ml.job import start_discover_ml_scheduler
                 start_discover_ml_scheduler(app)
             except Exception as exc:
-                print(f"[FREE GAMES] Could not start: {exc}")
+                logger.warning(f"[FREE GAMES] Could not start: {exc}")
             try:
                 # Linked store accounts synced once at link time and then went
                 # stale (GT-B27) — the live call existed, nothing re-ran it.
                 from oneirodex.utils.ownership_poller import start_ownership_scheduler
                 start_ownership_scheduler(app)
             except Exception as exc:
-                print(f"[OWNERSHIP] Could not start: {exc}")
+                logger.warning(f"[OWNERSHIP] Could not start: {exc}")
             try:
                 from oneirodex.utils.email_digest_scheduler import start_email_digest_scheduler
                 start_email_digest_scheduler(app)
             except Exception as exc:
-                print(f"[EMAIL DIGEST] Could not start: {exc}")
+                logger.warning(f"[EMAIL DIGEST] Could not start: {exc}")
 
     return app

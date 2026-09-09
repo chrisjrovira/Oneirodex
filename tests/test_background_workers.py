@@ -27,6 +27,11 @@ from oneirodex.models import Library
 from oneirodex.platform import LibraryPlatform
 from oneirodex.utils.background import run_in_background
 
+# Spins real OS threads and joins them with multi-second timeouts; historically
+# a source of cross-file pollution when a leaked worker outlived its test. Kept
+# out of the fast marker-based CI core (`-m "not integration"`).
+pytestmark = pytest.mark.integration
+
 
 def test_worker_gets_its_own_session(app, db_session):
     """The property the whole change exists for."""

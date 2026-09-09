@@ -27,6 +27,9 @@ from oneirodex.utils.worker_caps import (
     iter_chunks,
 )
 from oneirodex.utils.scan_match_settings import resolve_scan_match_policy
+import logging
+
+logger = logging.getLogger(__name__)
 
 SCHEDULE_HOURS = {
     '8_hours': 8,
@@ -51,7 +54,7 @@ def _drain_scan_queue_safe():
         from oneirodex.utils.scan_queue import drain_scan_queue
         drain_scan_queue(current_app._get_current_object())
     except Exception as drain_exc:
-        print(f"[SCAN QUEUE] Drain failed: {drain_exc}")
+        logger.error(f"[SCAN QUEUE] Drain failed: {drain_exc}")
 
 
 def _fail_scan_job_and_drain(job_or_id, error_message):
@@ -68,10 +71,10 @@ def _fail_scan_job_and_drain(job_or_id, error_message):
             try:
                 db.session.commit()
             except SQLAlchemyError as exc:
-                print(f"[SCAN QUEUE] Failed to mark job Failed: {exc}")
+                logger.error(f"[SCAN QUEUE] Failed to mark job Failed: {exc}")
                 db.session.rollback()
     except Exception as exc:
-        print(f"[SCAN QUEUE] fail-and-drain helper error: {exc}")
+        logger.error(f"[SCAN QUEUE] fail-and-drain helper error: {exc}")
     _drain_scan_queue_safe()
 
 
@@ -80,7 +83,7 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
     # Prefer start_or_queue_scan() at call sites so second requests queue instead of dropping.
     # force_parallel=True (admin opt-in) allows overlapping jobs; still respects thread caps.
     if not existing_job and is_scan_job_running() and not force_parallel:
-        print(
+        logger.info(
             "A scan is already in progress. Request dropped at worker entry — "
             "callers should use start_or_queue_scan() so the request is queued."
         )
@@ -104,7 +107,7 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
         if body_job_id:
             scan_job_id = body_job_id
     except Exception as exc:
-        print(f"[SCAN] Unhandled scan failure: {exc}")
+        logger.error(f"[SCAN] Unhandled scan failure: {exc}")
         if not scan_job_id:
             try:
                 stuck = db.session.execute(
@@ -134,13 +137,13 @@ def scan_and_add_games(folder_path, scan_mode='folders', library_uuid=None, remo
                         or 'Scan ended without a terminal status; marked Failed so the queue can drain.'
                     )
                     db.session.commit()
-                    print(
+                    logger.info(
                         f"[SCAN QUEUE] Safety-net Failed for stuck job {leftover.id} "
                         f"(was still {prior})"
                     )
                     _drain_scan_queue_safe()
             except Exception as safety_exc:
-                print(f"[SCAN QUEUE] Safety-net drain failed: {safety_exc}")
+                logger.error(f"[SCAN QUEUE] Safety-net drain failed: {safety_exc}")
 
 
 def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None, remove_missing=False, existing_job=None, download_missing_images=False, force_updates_extras_scan=False, fetch_hltb=False, force_hltb_refetch=False, schedule=None, force_parallel=False):
@@ -181,13 +184,13 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
 
     # Log local metadata settings once at scan start
     if settings_obj:
-        print(f"📋 [LOCAL METADATA] Settings: use_local_metadata={settings_dict['use_local_metadata']}, write_local_metadata={settings_dict['write_local_metadata']}, use_local_images={settings_dict['use_local_images']}")
+        logger.info(f"📋 [LOCAL METADATA] Settings: use_local_metadata={settings_dict['use_local_metadata']}, write_local_metadata={settings_dict['write_local_metadata']}, use_local_images={settings_dict['use_local_images']}")
     
     # Initialize IGDB rate limiter for scanning operations
     igdb_rate_limiter = IGDBRateLimiter()
     
     # Bulk prefetch existing games and unmatched folders for performance
-    print("Prefetching existing games and unmatched folders...")
+    logger.info("Prefetching existing games and unmatched folders...")
     existing_game_paths = set(
         db.session.execute(
             select(Game.full_disk_path).filter_by(library_uuid=library_uuid)
@@ -198,7 +201,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             select(UnmatchedFolder.folder_path).filter_by(library_uuid=library_uuid)
         ).scalars().all()
     )
-    print(f"Prefetched {len(existing_game_paths)} existing games and {len(existing_unmatched_paths)} unmatched folders")
+    logger.info(f"Prefetched {len(existing_game_paths)} existing games and {len(existing_unmatched_paths)} unmatched folders")
     
     # Use existing job or create new one (before library/extension gates so early
     # failures can mark the job Failed instead of leaving it Running forever).
@@ -206,9 +209,9 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         # Re-query the job to ensure it's bound to the current session
         scan_job_entry = db.session.get(ScanJob, existing_job.id)
         if not scan_job_entry:
-            print(f"Existing scan job {existing_job.id} not found.")
+            logger.warning(f"Existing scan job {existing_job.id} not found.")
             return getattr(existing_job, 'id', None)
-        print(f"Using existing scan job: {scan_job_entry.id}")
+        logger.info(f"Using existing scan job: {scan_job_entry.id}")
     else:
         # Local import: scan_queue imports scan_and_add_games from this module,
         # so a module-level import here would close the cycle. Every other
@@ -256,7 +259,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             # missing-library handling below never gets to run because the job
             # it wants to mark Failed could not be inserted in the first place.
             db.session.rollback()
-            print(f"Database error when adding ScanJob: {str(e)}")
+            logger.error(f"Database error when adding ScanJob: {str(e)}")
             return None  # cannot proceed without ScanJob
 
     job_id = scan_job_entry.id
@@ -265,13 +268,13 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
     library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
     if not library:
         error_message = f"Library with UUID {library_uuid} not found."
-        print(error_message)
+        logger.error(error_message)
         scan_job_entry.status = 'Failed'
         scan_job_entry.error_message = error_message
         try:
             db.session.commit()
         except SQLAlchemyError as e:
-            print(f"Database error when updating ScanJob with error: {str(e)}")
+            logger.error(f"Database error when updating ScanJob with error: {str(e)}")
         _drain_scan_queue_safe()
         return job_id
 
@@ -284,17 +287,17 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             "No allowed file types found in database. "
             "Please configure them in the admin panel."
         )
-        print(error_message)
+        logger.error(error_message)
         scan_job_entry.status = 'Failed'
         scan_job_entry.error_message = error_message
         try:
             db.session.commit()
         except SQLAlchemyError as e:
-            print(f"Database error when updating ScanJob with error: {str(e)}")
+            logger.error(f"Database error when updating ScanJob with error: {str(e)}")
         _drain_scan_queue_safe()
         return job_id
 
-    print(
+    logger.info(
         f"Starting auto scan for games in folder: {folder_path} with scan mode: "
         f"{scan_mode} and library UUID: {library_uuid} for platform: {library.platform.name}"
     )
@@ -302,13 +305,13 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
     # Check access perm
     if not os.path.exists(folder_path) or not os.access(folder_path, os.R_OK):
         error_message = f"Cannot access folder at path {folder_path}. Check permissions."
-        print(error_message)
+        logger.error(error_message)
         scan_job_entry.status = 'Failed'
         scan_job_entry.error_message = error_message
         try:
             db.session.commit()
         except SQLAlchemyError as e:
-            print(f"Database error when updating ScanJob with error: {str(e)}")
+            logger.error(f"Database error when updating ScanJob with error: {str(e)}")
         _drain_scan_queue_safe()
         return job_id
 
@@ -335,7 +338,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         scan_job_entry.total_folders = len(game_names_with_paths)
         db.session.commit()
         if not game_names_with_paths:
-            print(f"No games found in folder: {folder_path}")
+            logger.info(f"No games found in folder: {folder_path}")
             scan_job_entry.status = 'Completed'
             scan_job_entry.error_message = "No games found."
             db.session.commit()
@@ -345,7 +348,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         scan_job_entry.status = 'Failed'
         scan_job_entry.error_message = str(e)
         db.session.commit()
-        print(f"Error during pattern loading or game name extraction: {str(e)}")
+        logger.error(f"Error during pattern loading or game name extraction: {str(e)}")
         _drain_scan_queue_safe()
         return job_id
 
@@ -358,17 +361,17 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         # Fast path - check cached sets BEFORE rate limiting
         # But if force_updates_extras_scan or force_hltb_refetch is enabled, we need to process existing games
         if existing_game_paths and full_disk_path in existing_game_paths:
-            print(f"Game already exists (cached): {game_name} at {full_disk_path}")
+            logger.warning(f"Game already exists (cached): {game_name} at {full_disk_path}")
             # Continue processing if:
             # 1. force_updates_extras_scan is enabled AND (updates OR extras scanning is enabled), OR
             # 2. force_hltb_refetch is enabled
             should_process_existing = False
             if force_updates_extras_scan and (enable_game_updates or enable_game_extras):
                 should_process_existing = True
-                print(f"Force mode enabled, checking updates/extras for existing game: {game_name}")
+                logger.info(f"Force mode enabled, checking updates/extras for existing game: {game_name}")
             if force_hltb_refetch:
                 should_process_existing = True
-                print(f"Force HLTB refetch enabled, will update HLTB data for existing game: {game_name}")
+                logger.info(f"Force HLTB refetch enabled, will update HLTB data for existing game: {game_name}")
 
             if not should_process_existing:
                 with app.app_context():
@@ -388,7 +391,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             game_already_exists = False
         
         if existing_unmatched_paths and full_disk_path in existing_unmatched_paths:
-            print(f"Folder already logged as unmatched (cached): {full_disk_path}")
+            logger.info(f"Folder already logged as unmatched (cached): {full_disk_path}")
             return {'game_name': game_name, 'success': False, 'already_unmatched': True}
         
         # Ensure we have a Flask app context for database operations
@@ -400,7 +403,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                     # If game already exists and we're in force mode, skip game processing and go directly to updates/extras
                     if game_already_exists:
                         success = True
-                        print(f"Skipping game processing for existing game in force mode: {game_name}")
+                        logger.warning(f"Skipping game processing for existing game in force mode: {game_name}")
                     else:
                         success = process_game_with_fallback(game_name, full_disk_path, scan_job_id, library_uuid, fetch_hltb=fetch_hltb, settings=settings)
                     
@@ -411,21 +414,21 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                         if enable_game_updates:
                             updates_folder = os.path.join(full_disk_path, update_folder_name)
                             if os.path.exists(updates_folder) and os.path.isdir(updates_folder):
-                                print(f"Updates folder found for game: {game_name}")
+                                logger.info(f"Updates folder found for game: {game_name}")
                                 process_game_updates(game_name, full_disk_path, updates_folder, library_uuid, update_folder_name)
                             else:
-                                print(f"No updates folder found for game: {game_name}")
+                                logger.info(f"No updates folder found for game: {game_name}")
                         else:
-                            print(f"Updates scanning disabled, skipping for game: {game_name}")
+                            logger.warning(f"Updates scanning disabled, skipping for game: {game_name}")
 
                         # Check for extras folder
                         if enable_game_extras:
                             extras_folder = os.path.join(full_disk_path, extras_folder_name)
                             if os.path.exists(extras_folder) and os.path.isdir(extras_folder):
-                                print(f"Extras folder found for game: {game_name}")
+                                logger.info(f"Extras folder found for game: {game_name}")
                                 process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, extras_folder_name)
                             else:
-                                print(f"No extras folder found for game: {game_name}")
+                                logger.info(f"No extras folder found for game: {game_name}")
                             # PC-first: also associate common DLC/extra folder names + sibling DLC sidecars
                             process_pc_dlc_and_extra_roots(
                                 game_name,
@@ -435,7 +438,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                                 update_folder_name=update_folder_name,
                             )
                         else:
-                            print(f"Extras scanning disabled, skipping for game: {game_name}")
+                            logger.warning(f"Extras scanning disabled, skipping for game: {game_name}")
 
                         # Fetch HLTB data for existing games if force_hltb_refetch is enabled
                         if game_already_exists and force_hltb_refetch:
@@ -450,29 +453,29 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                                         select(Game).where(Game.full_disk_path == full_disk_path)
                                     ).scalars().first()
                                     if game_obj:
-                                        print(f"Refetching HLTB data for existing game '{game_name}'...")
+                                        logger.info(f"Refetching HLTB data for existing game '{game_name}'...")
                                         update_game_hltb_sync(game_obj.uuid, game_obj.name)
                                     else:
-                                        print(f"Could not find game in database to refetch HLTB: {game_name}")
+                                        logger.info(f"Could not find game in database to refetch HLTB: {game_name}")
                             except Exception as e:
-                                print(f"Failed to refetch HLTB data for '{game_name}': {e}")
+                                logger.error(f"Failed to refetch HLTB data for '{game_name}': {e}")
                                 # Don't fail the scan if HLTB fetch fails
                     else:
                         result['unmatched'] = True
-                        print(f"[PROCESS INFO] Game '{game_name}' could not be matched to IGDB database or was already unmatched.")
-                        print(f"[PROCESS INFO] Game path: {full_disk_path}")
-                        print("[PROCESS INFO] This is informational, not an error")
+                        logger.info(f"[PROCESS INFO] Game '{game_name}' could not be matched to IGDB database or was already unmatched.")
+                        logger.info(f"[PROCESS INFO] Game path: {full_disk_path}")
+                        logger.error("[PROCESS INFO] This is informational, not an error")
                         
                 finally:
                     igdb_rate_limiter.release()
                     
             except Exception as e:
                 result['error'] = str(e)
-                print(f"[PROCESS EXCEPTION] Exception in process_single_game for '{game_name}': {str(e)}")
-                print(f"[PROCESS EXCEPTION] Game path: {full_disk_path}")
-                print(f"[PROCESS EXCEPTION] Full exception: {repr(e)}")
+                logger.error(f"[PROCESS EXCEPTION] Exception in process_single_game for '{game_name}': {str(e)}")
+                logger.error(f"[PROCESS EXCEPTION] Game path: {full_disk_path}")
+                logger.error(f"[PROCESS EXCEPTION] Full exception: {repr(e)}")
                 import traceback
-                print(f"[PROCESS EXCEPTION] Traceback: {traceback.format_exc()}")
+                logger.error(f"[PROCESS EXCEPTION] Traceback: {traceback.format_exc()}")
                 try:
                     db.session.rollback()
                 except Exception:
@@ -489,7 +492,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
     total_to_process = len(game_names_with_paths)
     if scan_thread_count > 1:
         # Multithreaded processing — bounded queue (chunked submit) + hard thread cap.
-        print(f"Using multithreaded scanning with {scan_thread_count} threads (capped)")
+        logger.info(f"Using multithreaded scanning with {scan_thread_count} threads (capped)")
         processed_count = 0
         app_obj = current_app._get_current_object()
         chunk_size = max(scan_thread_count * 2, scan_thread_count)
@@ -549,16 +552,16 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                                 current_processing=label,
                             )
                             if result.get('unmatched'):
-                                print(f"[SCAN INFO] Game '{result['game_name']}' was unmatched (not an error)")
+                                logger.error(f"[SCAN INFO] Game '{result['game_name']}' was unmatched (not an error)")
                             elif result.get('error'):
                                 error_line = f"Failed to process '{result['game_name']}': {result['error']}"
                                 job_row = db.session.get(ScanJob, scan_job_id)
                                 if job_row:
                                     job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
                                     db.session.commit()
-                                print(f"[SCAN ERROR] {error_line}")
-                                print(f"[SCAN ERROR] Game path: {game_info.get('full_path')}")
-                                print(f"[SCAN ERROR] Full result: {result}")
+                                logger.error(f"[SCAN ERROR] {error_line}")
+                                logger.error(f"[SCAN ERROR] Game path: {game_info.get('full_path')}")
+                                logger.error(f"[SCAN ERROR] Full result: {result}")
 
                     except Exception as e:
                         processed_count += 1
@@ -572,11 +575,11 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                         if job_row:
                             job_row.error_message = (job_row.error_message or "") + f"{error_line}\n"
                             db.session.commit()
-                        print(f"[SCAN EXCEPTION] {error_line}")
-                        print(f"[SCAN EXCEPTION] Game path: {game_info.get('full_path', 'unknown')}")
-                        print(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
+                        logger.error(f"[SCAN EXCEPTION] {error_line}")
+                        logger.error(f"[SCAN EXCEPTION] Game path: {game_info.get('full_path', 'unknown')}")
+                        logger.error(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
                         import traceback
-                        print(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
+                        logger.error(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
 
                     cooperative_yield()
 
@@ -620,7 +623,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                 db.session.commit()
     else:
         # Sequential processing (original behavior)
-        print("Using single-threaded sequential scanning")
+        logger.info("Using single-threaded sequential scanning")
         
         # Progress tracking variables
         processed_count = 0
@@ -648,13 +651,13 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             
             # Fast path - check cached sets BEFORE database queries
             if existing_game_paths and full_disk_path in existing_game_paths:
-                print(f"Game already exists (cached): {game_name} at {full_disk_path}")
+                logger.warning(f"Game already exists (cached): {game_name} at {full_disk_path}")
                 already_exist_count += 1
                 bump_scan_job_progress(
                     scan_job_id, success=True, current_processing=progress_label
                 )
             elif existing_unmatched_paths and full_disk_path in existing_unmatched_paths:
-                print(f"Folder already logged as unmatched (cached): {full_disk_path}")
+                logger.info(f"Folder already logged as unmatched (cached): {full_disk_path}")
                 already_unmatched_count += 1
                 bump_scan_job_progress(
                     scan_job_id, failed=True, current_processing=progress_label
@@ -672,21 +675,21 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                         if enable_game_updates:
                             updates_folder = os.path.join(full_disk_path, update_folder_name)
                             if os.path.exists(updates_folder) and os.path.isdir(updates_folder):
-                                print(f"Updates folder found for game: {game_name}")
+                                logger.info(f"Updates folder found for game: {game_name}")
                                 process_game_updates(game_name, full_disk_path, updates_folder, library_uuid, update_folder_name)
                             else:
-                                print(f"No updates folder found for game: {game_name}")
+                                logger.info(f"No updates folder found for game: {game_name}")
                         else:
-                            print(f"Updates scanning disabled, skipping for game: {game_name}")
+                            logger.warning(f"Updates scanning disabled, skipping for game: {game_name}")
                             
                         # Check for extras folder
                         if enable_game_extras:
                             extras_folder = os.path.join(full_disk_path, extras_folder_name)
                             if os.path.exists(extras_folder) and os.path.isdir(extras_folder):
-                                print(f"Extras folder found for game: {game_name}")
+                                logger.info(f"Extras folder found for game: {game_name}")
                                 process_game_extras(game_name, full_disk_path, extras_folder, library_uuid, extras_folder_name)
                             else:
-                                print(f"No extras folder found for game: {game_name}")
+                                logger.info(f"No extras folder found for game: {game_name}")
                             # PC-first: also associate common DLC/extra folder names + sibling DLC sidecars
                             process_pc_dlc_and_extra_roots(
                                 game_name,
@@ -696,21 +699,21 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                                 update_folder_name=update_folder_name,
                             )
                         else:
-                            print(f"Extras scanning disabled, skipping for game: {game_name}")
+                            logger.warning(f"Extras scanning disabled, skipping for game: {game_name}")
                     else:
                         bump_scan_job_progress(
                             scan_job_id, failed=True, current_processing=progress_label
                         )
-                        print(f"[SCAN INFO] Game '{game_name}' could not be matched to IGDB database or was already unmatched.")
-                        print(f"[SCAN INFO] Game path: {full_disk_path}")
-                        print("[SCAN INFO] This is informational, not an error")
+                        logger.info(f"[SCAN INFO] Game '{game_name}' could not be matched to IGDB database or was already unmatched.")
+                        logger.info(f"[SCAN INFO] Game path: {full_disk_path}")
+                        logger.error("[SCAN INFO] This is informational, not an error")
 
                 except Exception as e:
-                    print(f"[SCAN EXCEPTION] Exception processing game '{game_name}': {str(e)}")
-                    print(f"[SCAN EXCEPTION] Game path: {full_disk_path}")
-                    print(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
+                    logger.error(f"[SCAN EXCEPTION] Exception processing game '{game_name}': {str(e)}")
+                    logger.error(f"[SCAN EXCEPTION] Game path: {full_disk_path}")
+                    logger.error(f"[SCAN EXCEPTION] Full exception: {repr(e)}")
                     import traceback
-                    print(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
+                    logger.error(f"[SCAN EXCEPTION] Traceback: {traceback.format_exc()}")
                     bump_scan_job_progress(
                         scan_job_id, failed=True, current_processing=progress_label
                     )
@@ -723,19 +726,19 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             
             # Log detailed progress every 10 games
             if processed_count % 10 == 0 or processed_count == total_to_process:
-                print(f"Committed: {processed_count}/{total_to_process} games processed")
+                logger.info(f"Committed: {processed_count}/{total_to_process} games processed")
                 
                 elapsed_time = (datetime.now() - scan_start_time).total_seconds()
                 games_per_second = processed_count / elapsed_time if elapsed_time > 0 else 0
                 estimated_remaining = (total_to_process - processed_count) / games_per_second if games_per_second > 0 else 0
                 
-                print(f"Progress: {processed_count}/{total_to_process} games processed")
-                print(f"Speed: {games_per_second:.1f} games/sec")
+                logger.info(f"Progress: {processed_count}/{total_to_process} games processed")
+                logger.info(f"Speed: {games_per_second:.1f} games/sec")
                 if estimated_remaining > 0:
-                    print(f"Estimated time remaining: {estimated_remaining:.0f} seconds")
-                print(f"Skipped (already exist): {already_exist_count}")
-                print(f"New games found: {new_games_count}")
-                print(f"Already unmatched: {already_unmatched_count}")
+                    logger.info(f"Estimated time remaining: {estimated_remaining:.0f} seconds")
+                logger.warning(f"Skipped (already exist): {already_exist_count}")
+                logger.info(f"New games found: {new_games_count}")
+                logger.info(f"Already unmatched: {already_unmatched_count}")
 
     db.session.remove()
     scan_job_entry = db.session.get(ScanJob, scan_job_id)
@@ -753,11 +756,11 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         flush_library_add_digest(library_uuid)
     except Exception as exc:
         # A notification must never fail a completed scan.
-        print(f"Could not flush library-add digest: {exc}")
+        logger.error(f"Could not flush library-add digest: {exc}")
 
     if scan_was_cancelled:
         # Counters already finalized; skip Completed / remove_missing / image pass
-        print(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
+        logger.warning(f"Scan cancelled for folder: {folder_path} with ScanJob ID: {scan_job_id}")
         _drain_scan_queue_safe()
         return scan_job_id
 
@@ -773,11 +776,11 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             scan_job_entry.next_run = compute_next_run(job_schedule)
             scan_job_entry.status = 'Scheduled'
             scan_job_entry.is_enabled = True
-            print(f"Scheduled next scan for {scan_job_entry.next_run} ({job_schedule})")
+            logger.info(f"Scheduled next scan for {scan_job_entry.next_run} ({job_schedule})")
     
     # Persist path_status for every library game (cheap exists per row — not Ops poll).
     # When remove_missing is enabled, also delete rows whose path is gone.
-    print("Refreshing path_status for library games...")
+    logger.info("Refreshing path_status for library games...")
     from oneirodex.utils.library_health import (
         PATH_STATUS_MISSING,
         refresh_game_path_status,
@@ -789,32 +792,32 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         try:
             status = refresh_game_path_status(game)
         except Exception as e:
-            print(f"Error refreshing path_status for {game.name}: {e}")
+            logger.error(f"Error refreshing path_status for {game.name}: {e}")
             continue
         if status != PATH_STATUS_MISSING:
             continue
-        print(f"Game no longer found at path: {game.full_disk_path}")
+        logger.warning(f"Game no longer found at path: {game.full_disk_path}")
         if not remove_missing:
             continue
         try:
             remove_from_lib(game.uuid)
             scan_job_entry.removed_count += 1
-            print(
+            logger.info(
                 f"Removed game {game.name} as it no longer exists at {game.full_disk_path}"
             )
         except Exception as e:
-            print(f"Error removing game {game.name}: {e}")
+            logger.error(f"Error removing game {game.name}: {e}")
 
     # If download_missing_images is enabled, check for and queue missing images
     if download_missing_images:
-        print("🔍 Download missing images option enabled - checking for missing images...")
+        logger.info("🔍 Download missing images option enabled - checking for missing images...")
         try:
             from oneirodex.utils.game_core import process_missing_images_for_scan
             result = process_missing_images_for_scan(library_uuid, current_app._get_current_object())
             
             if result.get('success'):
                 message = f"Missing images scan: {result['message']}"
-                print(message)
+                logger.info(message)
                 
                 # Add to scan job status for user feedback
                 if scan_job_entry.error_message:
@@ -824,12 +827,12 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
                     
             else:
                 error_message = f"Missing images scan failed: {result.get('error', 'Unknown error')}"
-                print(error_message)
+                logger.error(error_message)
                 scan_job_entry.error_message += f" | {error_message}"
                 
         except Exception as e:
             error_message = f"Error during missing images processing: {str(e)}"
-            print(error_message)
+            logger.error(error_message)
             scan_job_entry.error_message += f" | {error_message}"
 
     try:
@@ -838,9 +841,9 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
             scan_job_entry.error_message = scan_job_entry.error_message[:497] + "..."
         
         db.session.commit()
-        print(f"Scan completed for folder: {folder_path} with ScanJob ID: {scan_job_entry.id}")
+        logger.info(f"Scan completed for folder: {folder_path} with ScanJob ID: {scan_job_entry.id}")
     except SQLAlchemyError as e:
-        print(f"Database error when finalizing ScanJob: {str(e)}")
+        logger.error(f"Database error when finalizing ScanJob: {str(e)}")
 
     # FIFO: promote next Queued scan once this job is no longer Running/Stopping.
     _drain_scan_queue_safe()
@@ -848,8 +851,8 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
 
 
 def handle_auto_scan(auto_form):
-    print("handle_auto_scan: function running.")
-    print(f"Auto-scan form data: {auto_form.data}")
+    logger.info("handle_auto_scan: function running.")
+    logger.info(f"Auto-scan form data: {auto_form.data}")
     library_uuid = auto_form.library_uuid.data
     if auto_form.validate_on_submit():
         from flask import request
@@ -869,13 +872,13 @@ def handle_auto_scan(auto_form):
 
         library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
         if not library:
-            print("Selected library does not exist. Please select a valid library.")
+            logger.warning("Selected library does not exist. Please select a valid library.")
             flash('Selected library does not exist. Please select a valid library.', 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
 
         folder_path = (auto_form.folder_path.data or '').strip()
         scan_mode = auto_form.scan_mode.data
-        print(
+        logger.info(
             f"Auto-scan form submitted. Library: {library.name}, Folder: {folder_path}, "
             f"Scan mode: {scan_mode}, Download missing images: {download_missing_images}"
         )
@@ -898,13 +901,13 @@ def handle_auto_scan(auto_form):
 
         is_safe, error_message = is_safe_path(full_path, allowed_bases)
         if not is_safe:
-            print(f"Security error: Auto-scan path validation failed for {full_path}: {error_message}")
+            logger.warning(f"Security error: Auto-scan path validation failed for {full_path}: {error_message}")
             flash(f"Access denied: {error_message}", 'danger')
             return redirect(url_for('main.scan_management', active_tab='auto'))
 
         if not os.path.exists(full_path) or not os.access(full_path, os.R_OK):
             flash(f"Cannot access folder: {full_path}. Please check the path and permissions.", 'danger')
-            print(f"Cannot access folder: {full_path}. Please check the path and permissions.", 'error')
+            logger.warning("Cannot access folder: %s. Check the path and permissions.", full_path)
             session['active_tab'] = 'auto'
             return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='auto'))
 
@@ -937,7 +940,7 @@ def handle_auto_scan(auto_form):
         session['active_tab'] = 'auto'
     else:
         flash(f"Auto-scan form validation failed: {auto_form.errors}", 'danger')
-        print(f"Auto-scan form validation failed: {auto_form.errors}")
+        logger.warning(f"Auto-scan form validation failed: {auto_form.errors}")
     return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='auto'))
 
 
@@ -967,7 +970,7 @@ def handle_manual_scan(manual_form):
 
         # Store library_uuid in session for use in identify page
         session['selected_library_uuid'] = library_uuid
-        print(f"Manual scan: Selected library UUID: {library_uuid}")
+        logger.info(f"Manual scan: Selected library UUID: {library_uuid}")
 
         # Validate folder path security
         allowed_bases = get_allowed_base_directories(current_app)
@@ -983,12 +986,12 @@ def handle_manual_scan(manual_form):
         if root_error:
             flash(f'Service configuration error: {root_error}', 'danger')
             return redirect(url_for('main.scan_management', active_tab='manual'))
-        print(f"Manual scan form submitted. Full path: {full_path}, Library UUID: {library_uuid}")
+        logger.info(f"Manual scan form submitted. Full path: {full_path}, Library UUID: {library_uuid}")
 
         # Security validation: ensure the constructed path is within allowed directories
         is_safe, error_message = is_safe_path(full_path, allowed_bases)
         if not is_safe:
-            print(f"Security error: Manual scan path validation failed for {full_path}: {error_message}")
+            logger.warning(f"Security error: Manual scan path validation failed for {full_path}: {error_message}")
             flash(f"Access denied: {error_message}", 'danger')
             return redirect(url_for('main.scan_management', active_tab='manual'))
 
@@ -1032,11 +1035,11 @@ def handle_manual_scan(manual_form):
         settings = global_settings_row()
 
         if settings and settings.write_local_metadata:
-            print(f"🔍 [PERMISSIONS] Checking write permissions for library path: {full_path}")
+            logger.info(f"🔍 [PERMISSIONS] Checking write permissions for library path: {full_path}")
             all_ok, failed_paths = check_library_write_permissions(full_path)
 
             if not all_ok:
-                print(f"🚫 [PERMISSIONS] Write permission check failed for {len(failed_paths)} path(s)")
+                logger.warning(f"🚫 [PERMISSIONS] Write permission check failed for {len(failed_paths)} path(s)")
                 # Store permission errors in session to show in modal
                 session['permission_check_failed'] = True
                 session['permission_errors'] = failed_paths
@@ -1044,7 +1047,7 @@ def handle_manual_scan(manual_form):
                 flash('Write permission check failed. Please review the permission errors.', 'danger')
                 return redirect(url_for('main.scan_management', active_tab='manual', show_permissions_modal='true'))
 
-        print("Folder exists and can be accessed.")
+        logger.info("Folder exists and can be accessed.")
         insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
         skip_dir_patterns = load_skip_dir_patterns()
         skip_dir_regexes = load_skip_dir_regex_patterns()
@@ -1072,10 +1075,10 @@ def handle_manual_scan(manual_form):
         session['force_updates_extras_scan'] = force_updates_extras_scan
         session['fetch_hltb'] = fetch_hltb
         session['force_hltb_refetch'] = force_hltb_refetch
-        print(f"Found {len(session['game_paths'])} games in the folder.")
+        logger.info(f"Found {len(session['game_paths'])} games in the folder.")
         flash('Manual scan processed for folder: ' + full_path, 'info')
     else:
         flash('Manual scan form validation failed.', 'danger')
 
-    print("Game paths: ", session.get('game_paths', {}))
+    logger.debug("Game paths: %s", session.get('game_paths', {}))
     return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))
