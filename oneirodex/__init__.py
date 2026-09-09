@@ -74,6 +74,10 @@ def create_app():
     login_manager.login_view = 'login.login'
     cache.init_app(app)
 
+    from werkzeug.exceptions import HTTPException
+    from oneirodex.utils.api_response import api_error
+    from oneirodex.utils.error_envelope import http_error_code, wants_json_error
+
     @app.errorhandler(413)
     def request_entity_too_large(error):
         """Handle file upload size limit exceeded errors.
@@ -85,21 +89,68 @@ def create_app():
         page the caller could not read. API callers now get the envelope.
         """
         from flask import flash, redirect, request
-        from oneirodex.utils.api_response import api_error
 
         limit_mb = app.config.get('MAX_UPLOAD_MB', 0)
         message = f'The file you tried to upload is too large. Maximum size is {limit_mb}MB.'
 
-        wants_json = (
-            request.path.startswith('/api/')
-            or request.accept_mimetypes.best == 'application/json'
-            or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        )
-        if wants_json:
+        if wants_json_error(request):
             return api_error(message, code='payload_too_large')
 
         flash(message, 'error')
         return redirect(request.url)
+
+    @app.errorhandler(HTTPException)
+    def _http_exception_envelope(error):
+        """Render any 4xx/5xx as the JSON envelope for API / XHR callers.
+
+        Flask answers every HTTPException with an HTML page. For an ``/api/``
+        caller that is an unreadable body with the wrong content type, and the
+        SPA's shared error surface (``PageStatus``) has nothing to branch on.
+        HTML routes keep Flask's default page. The status code is preserved
+        exactly — only the body shape changes.
+        """
+        from flask import request
+
+        if not wants_json_error(request):
+            return error.get_response()
+
+        return api_error(
+            error.description or error.name or 'Request failed',
+            code=http_error_code(error.code),
+            status=error.code or 500,
+        )
+
+    @app.errorhandler(Exception)
+    def _uncaught_exception_envelope(error):
+        """Last resort: an uncaught error in an ``/api/`` route must not reach
+        the browser as an HTML 500 with no envelope — the one crash path
+        ``utils/api_response.py`` did not already cover.
+
+        The client message is fixed text. ``str(error)`` routinely carries
+        filesystem paths, SQL fragments, or upstream secrets, and this is the
+        same "no secrets in ``detail``" rule the rest of the codebase follows.
+        The real exception is logged server-side with a traceback.
+        """
+        from flask import request
+
+        # A registered HTTPException handler already wins the dispatch, but keep
+        # the guard so a future Flask internals change can't route an abort()
+        # through the generic 500 message.
+        if isinstance(error, HTTPException):
+            return _http_exception_envelope(error)
+
+        app.logger.exception(
+            'Unhandled exception during %s %s', request.method, request.path
+        )
+
+        if not wants_json_error(request):
+            raise error
+
+        return api_error(
+            'Something went wrong on our end. The error has been logged.',
+            code='internal',
+            status=500,
+        )
 
     @app.context_processor
     def inject_current_theme():

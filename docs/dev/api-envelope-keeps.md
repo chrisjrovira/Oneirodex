@@ -16,3 +16,16 @@ Eleven remaining hits are **not** leftover sloppiness. Wrapping them would chang
 Do **not** `--update` the ratchet to hide these. Do **not** wrap them to make the number zero. Zero would be a lie.
 
 New routes still must use `api_ok` / `api_error`. Classic admin JS that needs a body `status` uses `body_status=` on `api_error`.
+
+## The crash path is covered too
+
+`api_ok` / `api_error` only shape responses a route **chooses** to return. An
+uncaught exception, an `abort(404)`, a CSRF rejection — none of those pass through
+a route's return statement, and they used to come back as Flask's HTML error
+page. `create_app` now registers catch-all `HTTPException` / `Exception` handlers
+(`oneirodex/__init__.py`, helpers in `oneirodex/utils/error_envelope.py`) that
+return `api_error(...)` for any request `wants_json_error()` recognises (an
+`/api/` path, `Accept: application/json`, or an XHR header). The HTTP status is
+preserved; only the body shape changes. HTML routes keep Flask's default pages.
+The uncaught-`Exception` message is fixed text — `str(exc)` can carry paths, SQL,
+or secrets — and the real error is logged with a traceback server-side.
