@@ -1223,7 +1223,7 @@ class TestMainBlueprint:
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
 
-        with patch('oneirodex.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes_admin_ext.library_delete.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             response = client.post(f'/delete_full_library/{test_library.uuid}')
 
@@ -1260,7 +1260,7 @@ class TestMainBlueprint:
         """Test verify_file template global with existing file."""
         with app.app_context():
             verify_file = app.jinja_env.globals['verify_file']
-            with patch('oneirodex.routes.os.path.exists', return_value=True):
+            with patch('oneirodex.routes_theme.os.path.exists', return_value=True):
                 result = verify_file('/test/path')
                 assert result == True
 
@@ -1268,8 +1268,8 @@ class TestMainBlueprint:
         """Test verify_file template global with non-existing file."""
         with app.app_context():
             verify_file = app.jinja_env.globals['verify_file']
-            with patch('oneirodex.routes.os.path.exists', return_value=False):
-                with patch('oneirodex.routes.os.access', return_value=False):
+            with patch('oneirodex.routes_theme.os.path.exists', return_value=False):
+                with patch('oneirodex.routes_theme.os.access', return_value=False):
                     result = verify_file('/test/path')
                     assert result == False
 
@@ -1277,8 +1277,8 @@ class TestMainBlueprint:
         """Test verify_file template global with accessible file."""
         with app.app_context():
             verify_file = app.jinja_env.globals['verify_file']
-            with patch('oneirodex.routes.os.path.exists', return_value=False):
-                with patch('oneirodex.routes.os.access', return_value=True):
+            with patch('oneirodex.routes_theme.os.path.exists', return_value=False):
+                with patch('oneirodex.routes_theme.os.access', return_value=True):
                     result = verify_file('/test/path')
                     assert result == True
 

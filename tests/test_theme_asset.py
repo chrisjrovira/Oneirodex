@@ -34,7 +34,7 @@ def test_theme_asset_finds_file_when_cwd_is_not_repo_root(theme_app, tmp_path, m
     fake_user.preferences = MagicMock()
     fake_user.preferences.theme = 'aurora'
 
-    from oneirodex.routes import theme_asset_filter
+    from oneirodex.routes_theme import theme_asset_filter
 
     with theme_app.app_context(), theme_app.test_request_context('/'):
         with patch('flask_login.current_user', fake_user):
@@ -58,7 +58,7 @@ def test_theme_asset_is_not_constant_folded(theme_app):
     only honest check — asserting on the decorator would pass against a filter
     that had been re-marked and still folded.
     """
-    from oneirodex.routes import theme_asset_filter
+    from oneirodex.routes_theme import theme_asset_filter
 
     # The marker is what makes the fold illegal; assert it is still the *reason*
     # rather than a decoration, then prove the behaviour it buys.
@@ -94,7 +94,7 @@ def test_pass_context_makes_the_fold_impossible(theme_app):
     """
     from jinja2 import nodes
 
-    from oneirodex.routes import theme_asset_filter
+    from oneirodex.routes_theme import theme_asset_filter
 
     theme_app.jinja_env.filters['theme_asset'] = theme_asset_filter
     parsed = theme_app.jinja_env.parse("{{ 'css/base.css'|theme_asset }}")
@@ -119,7 +119,7 @@ def test_dist_bundles_are_versioned_so_a_rebuild_is_visible(theme_app):
     dist.mkdir(parents=True)
     (dist / 'member-app.css').write_text('/* built */', encoding='utf-8')
 
-    from oneirodex.routes import dist_asset_filter
+    from oneirodex.routes_theme import dist_asset_filter
 
     with theme_app.app_context(), theme_app.test_request_context('/'):
         url = dist_asset_filter(None, 'member-app/member-app.css')
@@ -133,7 +133,7 @@ def test_dist_asset_is_not_constant_folded(theme_app):
     """Same trap as theme_asset: every call site passes a literal."""
     from jinja2 import nodes
 
-    from oneirodex.routes import dist_asset_filter
+    from oneirodex.routes_theme import dist_asset_filter
 
     theme_app.jinja_env.filters['dist_asset'] = dist_asset_filter
     parsed = theme_app.jinja_env.parse("{{ 'member-app/member-app.css'|dist_asset }}")

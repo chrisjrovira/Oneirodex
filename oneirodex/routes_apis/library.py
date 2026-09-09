@@ -167,7 +167,10 @@ def _cap_error(cap: int):
 
 def _start_library_delete_job(library: Library) -> str:
     """Enqueue background library deletion; returns job_id."""
-    from oneirodex.routes import delete_library_background, deletion_progress
+    from oneirodex.routes_admin_ext.library_delete import (
+        delete_library_background,
+        deletion_progress,
+    )
 
     job_id = str(uuid4())
     deletion_progress[job_id] = {

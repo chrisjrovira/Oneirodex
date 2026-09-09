@@ -251,9 +251,10 @@ class TestBatchDeleteLibraries:
             'oneirodex.routes_apis.library.delete_library_background',
             create=True,
         ):
-            # Patch where used: _start_library_delete_job imports from routes
+            # Patch where used: _start_library_delete_job imports the worker
+            # from routes_admin_ext.library_delete.
             with patch(
-                'oneirodex.routes.delete_library_background'
+                'oneirodex.routes_admin_ext.library_delete.delete_library_background'
             ) as mock_bg:
                 mock_bg.return_value = None
                 resp = client.post(
@@ -277,7 +278,7 @@ class TestBatchDeleteLibraries:
         a = _make_library(db_session, name='A')
         b = _make_library(db_session, name='B')
         _login(client, admin_user)
-        with patch('oneirodex.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes_admin_ext.library_delete.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             resp = client.post(
                 '/api/admin/libraries/batch/delete',
@@ -298,7 +299,7 @@ class TestBatchDeleteLibraries:
     ):
         lib = _make_library(db_session, name='Solo')
         _login(client, admin_user)
-        with patch('oneirodex.routes.delete_library_background') as mock_bg:
+        with patch('oneirodex.routes_admin_ext.library_delete.delete_library_background') as mock_bg:
             mock_bg.return_value = None
             # Wrong confirm without force → 400
             bad = client.post(
