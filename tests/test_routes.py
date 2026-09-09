@@ -400,10 +400,10 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect to login
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.os.access')
-    @patch('oneirodex.routes.get_game_names_from_folder')
-    def test_scan_folder_valid_path(self, mock_get_games, mock_access, mock_exists, mock_current_user, 
+    @patch('oneirodex.routes_admin_ext.scan_jobs.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.os.access')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.get_game_names_from_folder')
+    def test_scan_folder_valid_path(self, mock_get_games, mock_access, mock_exists, mock_current_user,
                                    client, app, db_session, admin_user, test_library):
         """Test scan_folder with valid folder path."""
         mock_current_user.is_authenticated = True
@@ -424,7 +424,7 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.os.path.exists')
     def test_scan_folder_invalid_path(self, mock_exists, mock_current_user, client, app, db_session, admin_user, test_library):
         """Test scan_folder with invalid folder path."""
         mock_current_user.is_authenticated = True
@@ -563,7 +563,7 @@ class TestMainBlueprint:
         assert test_scan_job.status == 'Completed'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.run_in_background')
+    @patch('oneirodex.routes_admin_ext.scan_jobs.run_in_background')
     def test_restart_scan_job(self, mock_background, mock_current_user,
                              client, app, db_session, admin_user, test_scan_job):
         """Test restarting a scan job.
