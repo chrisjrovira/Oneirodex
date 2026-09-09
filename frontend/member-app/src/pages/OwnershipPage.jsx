@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { confirmAction } from '../../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import {
   connectAmazon,
   connectEpic,

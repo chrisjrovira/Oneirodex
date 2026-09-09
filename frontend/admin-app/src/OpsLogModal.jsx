@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { deleteJson } from './adminApi'
 import { DataTable } from './DataTable'
 import './OpenPathModal.css'

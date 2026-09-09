@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest'
-import { confirmAction } from '../../shared/confirmDialog'
+import { confirmAction } from './confirmDialog.js'
 
 afterEach(() => {
   document.body.innerHTML = ''

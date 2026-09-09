@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 import { deleteJson, getJson, postJson, putJson } from './adminApi'
 

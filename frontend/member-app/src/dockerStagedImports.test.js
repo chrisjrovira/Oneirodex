@@ -17,6 +17,13 @@ import { expect, test } from 'vitest'
  * and GT-B2's shared useRailState broke the member-app build exactly this way
  * before its own COPY was added.
  *
+ * Wave B1.2 note: the shared frontend modules moved into the `@oneirodex/ui`
+ * workspace package and every consumer now imports the bare specifier
+ * `@oneirodex/ui`, which npm resolves — so there are no relative escapes into
+ * `frontend/shared/` any more. The remaining known escapes are admin-app's
+ * re-exports of the Jinja theme's DOM helpers under
+ * `oneirodex/setup/default_theme/js/`, still staged by explicit COPYs.
+ *
  * Test files are excluded on purpose: vitest never runs in the image, so a test
  * reaching into the repo is not a packaging concern.
  */
@@ -90,10 +97,11 @@ test('imports escaping an app directory are staged in the Dockerfile', () => {
 })
 
 test('the guard actually sees the known escapes', () => {
-  // A guard that silently matches nothing passes forever. These are the real
-  // cross-directory imports; if both disappear, delete this test with them
-  // rather than leaving it asserting a truth about nothing.
+  // A guard that silently matches nothing passes forever. The real remaining
+  // cross-directory imports are admin-app's re-exports of the Jinja theme DOM
+  // helpers; if those disappear too, delete this test with them rather than
+  // leaving it asserting a truth about nothing.
   const targets = escapingImports().map((e) => e.target)
 
-  expect(targets.some((t) => t.startsWith('frontend/shared/'))).toBe(true)
+  expect(targets.some((t) => t.startsWith('oneirodex/setup/default_theme/'))).toBe(true)
 })

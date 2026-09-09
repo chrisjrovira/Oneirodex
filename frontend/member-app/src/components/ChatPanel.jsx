@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { confirmAction } from '../../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { csrfHeaders } from '../api/csrf'
 import { errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from './PageStatus'

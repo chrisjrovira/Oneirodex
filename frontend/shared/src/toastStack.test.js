@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  MAX_INDIVIDUAL_TOASTS,
-  planToastStack,
-  stackSummaryMessage,
-} from '../../../shared/toastStack'
+import { MAX_INDIVIDUAL_TOASTS, planToastStack, stackSummaryMessage } from './toastStack.js'
 
 describe('planToastStack', () => {
   it('lets five individual toasts through', () => {

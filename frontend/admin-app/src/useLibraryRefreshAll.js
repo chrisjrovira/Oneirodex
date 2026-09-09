@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { postJsonResult } from './adminApi'
 import {
   buildScanQueueRequestFields,

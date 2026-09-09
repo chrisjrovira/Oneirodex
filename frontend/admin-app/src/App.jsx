@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
-import { useRailState } from '../../shared/useRailState'
+import { useRailState } from '@oneirodex/ui'
 import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
 import { useAdminShellFrame } from './useAdminShellFrame'

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { confirmAction } from '../../shared/confirmDialog'
+import { confirmAction } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 
 import { DataTable } from './DataTable'
