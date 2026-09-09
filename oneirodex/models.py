@@ -1,7 +1,6 @@
 # oneirodex/models.py
 from oneirodex import db
 from sqlalchemy import ForeignKey, select
-from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator, TEXT
 from argon2 import PasswordHasher
@@ -696,7 +695,7 @@ class Newsletter(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     sent_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     recipient_count = db.Column(db.Integer, default=0)
-    recipients = db.Column(JSON)
+    recipients = db.Column(db.JSON)
     status = db.Column(db.String(20), default='pending')  # pending, sent, failed
     error_message = db.Column(db.Text, nullable=True)
     
@@ -832,7 +831,7 @@ class UserPreference(db.Model):
         db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False
     )
-    items_per_page = db.Column(db.Integer, default=50)
+    items_per_page = db.Column(db.Integer, default=50, server_default='50')
     default_sort = db.Column(db.String(50), default='name')
     default_sort_order = db.Column(db.String(4), default='asc')
     theme = db.Column(db.String(50), default='default')
