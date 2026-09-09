@@ -76,6 +76,7 @@ jobs:
         run: >
           python -m pytest -q
           --cov=oneirodex --cov-report=term-missing
+          --cov-fail-under=35
           tests/test_health_probes.py
           tests/test_asgi_static.py
           tests/test_asgi_bridge.py
@@ -463,6 +464,44 @@ jobs:
         # The package ships types to the desktop client; tsc is the only thing
         # that catches an export drifting away from its consumer.
         run: npm run build
+
+      - name: Run vitest
+        run: npm test
+
+  shared-vitest:
+    name: Shared vitest
+    # B1.2: @oneirodex/ui (frontend/shared) is a real workspace package with its
+    # own vitest.config.js and 11 contract test files under src/*.test.* (csrf,
+    # envelopeError, pageStatus, confirmDialog, toastStack, libraryScanNotify*,
+    # loadingStatusText, useResource, Button, ViewerContext). They ran only
+    # transitively via the SPA jobs before the B1.2 consolidation moved them
+    # here — without a dedicated job the shared surface gates nothing. Modeled
+    # on api-client-vitest (both are frontend/* workspace packages). No
+    # typecheck step: @oneirodex/ui ships .js, not types.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend/shared
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # B1.1: npm workspaces — one root `npm ci` reifies the whole workspace
+      # graph. This job overrides working-directory, so the root install needs
+      # an explicit one; the vitest step then runs from frontend/shared (job
+      # default).
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
+        run: npm ci
 
       - name: Run vitest
         run: npm test
