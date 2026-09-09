@@ -226,7 +226,7 @@ jobs:
         run: npm run tauri:build${{ matrix.flavor == 'thin' && ':thin' || '' }} ${{ matrix.extra_args }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: oneirodex-${{ matrix.flavor }}-${{ matrix.label }}
           path: ${{ matrix.artifacts }}
