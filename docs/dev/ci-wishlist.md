@@ -216,3 +216,25 @@ directly — they append a line here.
   `buttonLanguage.test.js` stays green because `<Button>` always emits
   `od-btn`. `<Modal>` / `<DataTable>` / `showToast` stay deferred in
   `frontend/shared/TODO.md`.
+  ✅ applied (wave `chore/modz-ci3`, D-owed 3a). New job `shared-vitest` /
+  "Shared vitest" in `ci-tests.yml`, modeled on `api-client-vitest` (both are
+  `frontend/*` workspace packages): Node 22, `cache-dependency-path:
+  package-lock.json`, one `Install workspace (repo-root npm ci)` step
+  (`working-directory: .`), then `Run vitest` = `npm test` from
+  `defaults.run.working-directory: frontend/shared`. No `Typecheck` step —
+  `@oneirodex/ui` has no `build`/`typecheck` script (ships `.js`, not types).
+  Runs all 11 `frontend/shared/src/*.test.*` files; fails hard.
+- [D-owed 3b] `--cov-fail-under=35` applied to the `pytest-core` run (wave
+  `chore/modz-ci3`). PR #33's merged `Pytest (core)` run (GH run
+  `34408794615`) reported `TOTAL … 38%` line coverage for the hand-listed
+  subset. Floor set to `floor(38) - 3 = 35` — a few points of slack so
+  env/flaky coverage variance does not red the gate. Raise it toward the real
+  number as the subset's coverage stabilises; revisit whenever the hand list
+  changes.
+- [D-owed 3c] `integration` markers are applied and ready (commit `bd0c39d7`,
+  32 files tagged — see the A3.1 marker-pass note under [A0.6] above). The
+  `pytest-core` hand-list → `-m "not integration"` flip is available whenever
+  someone wants to spend the CI minutes: `-m "not integration"` currently
+  selects ~3699 tests (nearly the whole tree), so the flip needs its own wave
+  with a CI-time budget review on runner hardware before it lands. Not done in
+  `chore/modz-ci3` by design — 3c is a note only.
