@@ -4,7 +4,7 @@ import { ContextBar, Popover } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './WishlistPage.css'
-import { useResource, useResourceMutation, useShellConfig } from '@oneirodex/ui'
+import { Button, useResource, useResourceMutation, useShellConfig } from '@oneirodex/ui'
 
 const WISHLIST_QUERY_KEY = ['wishlist']
 
@@ -213,9 +213,9 @@ export function WishlistPage() {
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
               />
-              <button type="submit" className="od-btn" disabled={submitting}>
+              <Button type="submit" disabled={submitting}>
                 {submitting ? 'Requesting…' : 'Request'}
-              </button>
+              </Button>
               {createError ? (
                 <PageStatus error={createError} className="od-wishlist__action-error" />
               ) : null}

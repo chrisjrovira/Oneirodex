@@ -205,3 +205,14 @@ directly — they append a line here.
   member vitest counts move up by the useResource tests. admin-app / ops-glance
   are untouched this wave — `useResource` is exported from `@oneirodex/ui` and
   available to them once they wrap their trees in a `QueryClientProvider`.
+- [B1.2b] `<Button>` primitive lands in `@oneirodex/ui`
+  (`frontend/shared/src/Button.jsx` + `Button.test.jsx`). No workflow change:
+  no new dependency (it reuses the existing `.od-btn*` theme classes, no CSS),
+  and `@testing-library/react` + `jest-dom` are already in the root lock. The
+  `shared-vitest` job picks up `Button.test.jsx` automatically (+1 file /
+  +10 tests in shared). Clear-cut `<button className="od-btn …">` call sites
+  across member-app (~18) and admin-app (~22) now render `<Button>`; test
+  counts are unchanged (no per-app test files added or removed) and
+  `buttonLanguage.test.js` stays green because `<Button>` always emits
+  `od-btn`. `<Modal>` / `<DataTable>` / `showToast` stay deferred in
+  `frontend/shared/TODO.md`.

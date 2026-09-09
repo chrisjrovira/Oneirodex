@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useShellConfig } from '@oneirodex/ui'
+import { Button, useShellConfig } from '@oneirodex/ui'
 import {
   acceptFriend as apiAcceptFriend,
   fetchActivity,
@@ -224,9 +224,7 @@ export function ActivityPage() {
                 autoComplete="off"
               />
             </label>
-            <button className="od-btn" type="submit">
-              Request
-            </button>
+            <Button type="submit">Request</Button>
           </form>
           {friendMsg ? <p role="status">{friendMsg}</p> : null}
           {friends.length === 0 ? (

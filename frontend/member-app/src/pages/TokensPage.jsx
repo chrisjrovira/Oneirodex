@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { Button, confirmAction } from '@oneirodex/ui'
 import { createToken, listTokens, revokeToken } from '../api/tokens'
 import { PageStatus } from '../components/PageStatus'
 import { copyText } from '../utils/copyText'
@@ -282,9 +282,9 @@ export function TokensPage() {
           <p className="od-tokens__preset-summary">
             Selected scopes: {(presetMeta.scopes || []).join(', ') || '—'}
           </p>
-          <button type="submit" className="od-btn od-btn--primary" disabled={busy || !name.trim()}>
+          <Button type="submit" variant="primary" disabled={busy || !name.trim()}>
             {busy ? 'Working…' : 'Create token'}
-          </button>
+          </Button>
         </form>
       </section>
 

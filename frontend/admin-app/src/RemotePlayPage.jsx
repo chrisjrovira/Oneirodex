@@ -3,7 +3,7 @@
 // it has scrolled away — and invisible when the save happens from the bottom
 // of a long form.
 import { useEffect, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { showToast } from './utils/toast'
 
 const EMPTY = {
@@ -175,9 +175,9 @@ export function RemotePlayPage() {
             connection hints — it does not run Sunshine/Wolf in the app container.
           </p>
           <div className="od-admin-actions-row">
-            <button type="submit" className="od-btn" disabled={busy}>
+            <Button type="submit" disabled={busy}>
               {busy ? 'Saving…' : 'Save settings'}
-            </button>
+            </Button>
             <a className="od-btn od-btn--ghost" href="/admin/settings">
               Settings hub
             </a>

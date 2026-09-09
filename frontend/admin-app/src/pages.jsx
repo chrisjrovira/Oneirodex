@@ -5,7 +5,7 @@ import { DataTable } from './DataTable'
 import { DupeGlance } from './DupeGlance'
 import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
 import { OpenPathModal } from './OpenPathModal'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { ImportLeafLibraries } from './ImportLeafLibraries'
 import { ProposeLeafLibraries } from './ProposeLeafLibraries'
 import { ScanConflictModal } from './ScanConflictModal'
@@ -785,9 +785,9 @@ export function ThemesPage() {
   return (
     <Page title="Themes" lede="Reset default CSS after a deploy. Pick a look in Preferences.">
       <div className="od-admin-actions-row">
-        <button type="button" className="od-btn" disabled={busy} onClick={resetThemes}>
+        <Button disabled={busy} onClick={resetThemes}>
           Reset Default Themes
-        </button>
+        </Button>
         <a className="od-btn" href="/admin/themes/readme">
           Theme authoring readme
         </a>

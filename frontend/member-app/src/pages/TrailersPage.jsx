@@ -11,7 +11,7 @@ import { LoadingOverlay } from '../components/LoadingOverlay'
 import { showToast } from '../utils/toast'
 import '../components/libraryFilters.css'
 import './TrailersPage.css'
-import { useShellConfig } from '@oneirodex/ui'
+import { Button, useShellConfig } from '@oneirodex/ui'
 
 const SETTINGS_STORAGE_KEY = 'trailerAutoplaySettings'
 const ATTRACT_RETURN_KEY = 'attractModeReturnUrl'
@@ -426,12 +426,12 @@ function SettingsModal({ settings, onCancel, onSave }) {
         <small>Load next video after watching for this long (0 to disable)</small>
 
         <div className="od-trailers__modal-actions">
-          <button type="button" className="od-btn od-btn--ghost" onClick={onCancel}>
+          <Button variant="ghost" onClick={onCancel}>
             Cancel
-          </button>
-          <button type="button" className="od-btn od-btn--accent" onClick={() => onSave(draft)}>
+          </Button>
+          <Button className="od-btn--accent" onClick={() => onSave(draft)}>
             Save
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -738,20 +738,14 @@ export function TrailersPage() {
               <div className="od-trailers__actions">
                 {attractMode ? (
                   <>
-                    <button type="button" className="od-btn" onClick={exitAttractMode}>
-                      Exit Attract Mode
-                    </button>
-                    <button type="button" className="od-btn" onClick={openBigPicture}>
-                      Big Picture
-                    </button>
+                    <Button onClick={exitAttractMode}>Exit Attract Mode</Button>
+                    <Button onClick={openBigPicture}>Big Picture</Button>
                   </>
                 ) : null}
-                <button type="button" className="od-btn" onClick={() => setSettingsOpen(true)}>
-                  Settings
-                </button>
-                <button type="button" className="od-btn od-btn--accent" onClick={requestTrailer}>
+                <Button onClick={() => setSettingsOpen(true)}>Settings</Button>
+                <Button className="od-btn--accent" onClick={requestTrailer}>
                   Another one
-                </button>
+                </Button>
               </div>
             </div>
           </>
@@ -767,14 +761,13 @@ export function TrailersPage() {
           were showing. */}
         {useNewChrome ? null : (
           <div className="od-trailers__filters">
-            <button
-              type="button"
-              className="od-btn od-trailers__filter-toggle"
+            <Button
+              className="od-trailers__filter-toggle"
               aria-expanded={panelOpen}
               onClick={() => setPanelOpen((open) => !open)}
             >
               Filters
-            </button>
+            </Button>
 
             {!panelOpen && activeFilterBadges.length > 0 ? (
               <div className="od-trailers__badges">

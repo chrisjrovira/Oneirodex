@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { Button, confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
@@ -413,14 +413,8 @@ export function ImagesPage({ embedded = false }) {
               placeholder="Type a title…"
             />
           </label>
-          <button type="button" className="od-btn" onClick={searchGames}>
-            Find
-          </button>
-          {gameUuid ? (
-            <button type="button" className="od-btn" onClick={() => syncGameParam('', '')}>
-              Clear target
-            </button>
-          ) : null}
+          <Button onClick={searchGames}>Find</Button>
+          {gameUuid ? <Button onClick={() => syncGameParam('', '')}>Clear target</Button> : null}
           {gameUuid ? (
             <a className="od-btn" href={`/edit_game_images/${encodeURIComponent(gameUuid)}`}>
               Classic edit images

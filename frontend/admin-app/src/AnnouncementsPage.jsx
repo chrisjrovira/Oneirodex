@@ -1,7 +1,7 @@
 // Toasts on every mutation (GT-B25). Outcomes were reported inline only,
 // which is easy to miss when the triggering control has scrolled away.
 import { useEffect, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { Button, PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from './adminApi'
 import { showToast } from './utils/toast'
 
@@ -92,9 +92,9 @@ export function AnnouncementsPage() {
           />{' '}
           Publish immediately
         </label>
-        <button className="od-btn" type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving}>
           {saving ? 'Saving…' : publishNow ? 'Publish announcement' : 'Save draft'}
-        </button>
+        </Button>
       </form>
 
       <h2 className="od-admin-subhead">Recent</h2>

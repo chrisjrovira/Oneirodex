@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Button } from '@oneirodex/ui'
 import { fetchAcquireStatus, searchAcquire, sendAcquireDownload } from '../api/updates'
 import { PageStatus } from '../components/PageStatus'
 import { showToast } from '../utils/toast'
@@ -144,9 +145,9 @@ export function AcquirePage() {
             Search indexers
             <input value={query} onChange={(e) => setQuery(e.target.value)} required />
           </label>
-          <button className="od-btn" type="submit" disabled={busy || !status.arr_enabled}>
+          <Button type="submit" disabled={busy || !status.arr_enabled}>
             {busy ? 'Searching…' : 'Search'}
-          </button>
+          </Button>
         </form>
       )}
       {hits && hits.length === 0 ? <p>No indexer hits.</p> : null}
