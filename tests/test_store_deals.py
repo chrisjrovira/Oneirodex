@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from oneirodex.utils import store_deals
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- store deals / free-games adapter.
 
 
 class _FakeResponse:

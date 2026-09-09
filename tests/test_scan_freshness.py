@@ -16,6 +16,8 @@ from oneirodex.utils.freshness.service import (
     scan_freshness_enabled,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan freshness gate over the library.
+
 
 @pytest.fixture(scope='function', autouse=True)
 def clean(db_session):

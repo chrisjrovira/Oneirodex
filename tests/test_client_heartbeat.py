@@ -14,6 +14,8 @@ from oneirodex.platform import LibraryPlatform
 from oneirodex.utils.client_presence import CLIENT_HEARTBEAT_TTL_SECONDS, user_client_connected
 from oneirodex.utils.lifecycle import web_lifecycle_fields
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- companion heartbeat / presence loop.
+
 
 @pytest.fixture
 def lib(db_session):

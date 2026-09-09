@@ -23,6 +23,8 @@ from oneirodex.utils.scan_queue import (
     start_or_queue_scan,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- library scan queue / worker coordination.
+
 
 @pytest.fixture(autouse=True)
 def _clean_scan_jobs(db_session):

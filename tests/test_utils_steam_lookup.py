@@ -3,6 +3,9 @@
 from unittest.mock import MagicMock, patch
 
 from oneirodex.utils.steam_lookup import fetch_steam_title_by_app_id
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- Steam lookup adapter.
 
 
 @patch('oneirodex.utils.steam_lookup.requests.get')

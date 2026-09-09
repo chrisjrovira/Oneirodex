@@ -12,6 +12,8 @@ from oneirodex.utils.smtp import (
     send_email, send_password_reset_email, send_invite_email
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- SMTP send path (smtplib / sockets).
+
 
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints."""

@@ -20,6 +20,9 @@ from oneirodex.utils.scan_match_settings import (
     normalize_peel_profile,
     resolve_scan_match_policy,
 )
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan-match settings over the pipeline.
 
 
 def test_core_defaults_match_hardcoded_constants():

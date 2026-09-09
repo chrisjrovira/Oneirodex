@@ -12,6 +12,8 @@ from sqlalchemy import text
 from oneirodex import db
 from oneirodex.models import DiscoverySection, User
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- storefront schedule poller API.
+
 
 @pytest.fixture(scope='function', autouse=True)
 def clean_sections(db_session):

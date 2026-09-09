@@ -26,6 +26,8 @@ from oneirodex.utils.library_watch import (
     start_library_watch,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- filesystem library watcher.
+
 
 @pytest.fixture(autouse=True)
 def _reset_watch_env(monkeypatch):

@@ -15,6 +15,8 @@ from oneirodex.utils.scanning import (
     delete_game_images, is_scan_job_running
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- drives the library scan/identify pipeline.
+
 
 # Helper functions
 def get_or_create_library(db_session, name, platform=LibraryPlatform.PCWIN):

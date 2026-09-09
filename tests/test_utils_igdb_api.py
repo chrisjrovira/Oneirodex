@@ -14,6 +14,8 @@ from oneirodex.utils.igdb_api import (
     IGDBRateLimiter
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- IGDB client incl. a real rate-limiter thread + sleep.
+
 
 def safe_cleanup_database(db_session):
     """Safely clean up database records respecting foreign key constraints.""" 

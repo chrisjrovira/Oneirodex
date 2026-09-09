@@ -19,6 +19,8 @@ from oneirodex.utils.software_identify import (
     upsert_stage_d_custom_game,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- store cascade invoked during scan.
+
 
 @pytest.fixture
 def sample_library(db_session):

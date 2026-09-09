@@ -22,6 +22,8 @@ from oneirodex.utils.cover_art_studio import (
     save_pack,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- PIL cover-art rendering matrix.
+
 
 def test_era_room_scenery_is_distinct():
     """Backup art for a wood den must not look like an arcade floor."""

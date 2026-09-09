@@ -14,6 +14,9 @@ from oneirodex.utils.worker_caps import (
     clamp_scan_threads,
     iter_chunks,
 )
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- background worker cap logic.
 
 
 def test_clamp_scan_threads_respects_cap(monkeypatch):
