@@ -8,7 +8,13 @@ from sqlalchemy import func, select
 
 from oneirodex import db
 from oneirodex.models import Announcement, Game, GameCollection, GameCollectionItem
+from oneirodex.schemas.collections import (
+    AddCollectionItemBody,
+    CreateCollectionBody,
+    ReorderCollectionItemsBody,
+)
 from oneirodex.utils.library_acl import user_can_access_game
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -64,16 +70,13 @@ def list_collections():
 
 @apis_bp.route('/collections', methods=['POST'])
 @login_required
-def create_collection():
-    data = request.get_json(silent=True) or {}
-    name = (data.get('name') or '').strip()
-    if not name:
-        return api_error('A name is required', code='bad_request')
+@validate_body(CreateCollectionBody)
+def create_collection(body: CreateCollectionBody):
     collection = GameCollection(
-        name=name[:120],
-        description=(data.get('description') or '')[:4000] or None,
+        name=body.name[:120],
+        description=(body.description or '')[:4000] or None,
         owner_user_id=current_user.id,
-        is_public=bool(data.get('is_public', True)),
+        is_public=bool(body.is_public),
         is_system=False,
     )
     db.session.add(collection)
@@ -176,12 +179,12 @@ def delete_collection(collection_uuid: str):
 
 @apis_bp.route('/collections/<collection_uuid>/items', methods=['POST'])
 @login_required
-def add_collection_item(collection_uuid: str):
+@validate_body(AddCollectionItemBody)
+def add_collection_item(collection_uuid: str, body: AddCollectionItemBody):
     collection, refusal = _editable_collection(collection_uuid)
     if refusal is not None:
         return refusal
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
+    game_uuid = body.game_uuid
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return api_error('Game not found', code='not_found')
@@ -220,16 +223,13 @@ def remove_collection_item(collection_uuid: str, game_uuid: str):
 
 @apis_bp.route('/collections/<collection_uuid>/items/order', methods=['PUT'])
 @login_required
-def reorder_collection_items(collection_uuid: str):
+@validate_body(ReorderCollectionItemsBody)
+def reorder_collection_items(collection_uuid: str, body: ReorderCollectionItemsBody):
     collection, refusal = _editable_collection(collection_uuid)
     if refusal is not None:
         return refusal
 
-    data = request.get_json(silent=True) or {}
-    game_uuids = data.get('game_uuids')
-    if not isinstance(game_uuids, list):
-        return api_error('game_uuids must be a list', code='bad_request')
-    normalized = [str(uuid).strip() for uuid in game_uuids if uuid is not None]
+    normalized = [str(uuid).strip() for uuid in body.game_uuids if uuid is not None]
     if len(normalized) != len(set(normalized)):
         return api_error('game_uuids must list each collection item exactly once', code='bad_request')
     current_uuids = {item.game_uuid for item in collection.items}
