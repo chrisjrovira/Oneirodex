@@ -21,18 +21,22 @@ import {
 
 const DEFAULT_COVER = DEFAULT_COVER_URL
 
+// `color` is a `var(--od-status-*)` reference — canonical values live in
+// oneirodex/setup/default_theme/css/od-tokens.css. It is written into
+// `style={{ background: currentStatus.color }}` on the status dot, so the token
+// resolves at the use site.
 const STATUS_OPTIONS = [
-  { value: 'unplayed', color: '#808080', label: 'Unplayed' },
-  { value: 'unfinished', color: '#4A90E2', label: 'Unfinished' },
-  { value: 'beaten', color: '#50C878', label: 'Beaten' },
-  { value: 'completed', color: '#FFD700', label: 'Completed' },
-  { value: 'null', color: '#DC3545', label: "Won't Play" },
-  { value: '', color: '#808080', label: 'Clear Status' },
+  { value: 'unplayed', color: 'var(--od-status-unplayed)', label: 'Unplayed' },
+  { value: 'unfinished', color: 'var(--od-status-unfinished)', label: 'Unfinished' },
+  { value: 'beaten', color: 'var(--od-status-beaten)', label: 'Beaten' },
+  { value: 'completed', color: 'var(--od-status-completed)', label: 'Completed' },
+  { value: 'null', color: 'var(--od-status-wont-play)', label: "Won't Play" },
+  { value: '', color: 'var(--od-status-none)', label: 'Clear Status' },
 ]
 
 const NO_STATUS = {
   value: '',
-  color: '#808080',
+  color: 'var(--od-status-none)',
   label: 'No Status',
 }
 
