@@ -23,8 +23,8 @@ export { getCsrfToken as csrfToken, csrfHeaders }
  */
 export const adminError = errorFromBody
 
-export async function getJson(url) {
-  const response = await fetch(url, { credentials: 'same-origin' })
+export async function getJson(url, { signal } = {}) {
+  const response = await fetch(url, { credentials: 'same-origin', signal })
   if (response.status === 401) {
     window.location.href = '/login'
     throw new Error('unauthorized')
