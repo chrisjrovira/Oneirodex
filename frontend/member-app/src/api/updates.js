@@ -88,3 +88,16 @@ export async function searchAcquire(q, { signal } = {}) {
   }
   return response.json()
 }
+
+export async function sendAcquireDownload({ url, provider } = {}) {
+  const response = await fetch('/api/acquire/download', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ url, provider }),
+  })
+  if (!response.ok) {
+    throw await errorFromResponse(response, 'acquire')
+  }
+  return response.json().catch(() => ({}))
+}

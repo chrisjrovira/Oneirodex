@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '@oneirodex/ui'
-import { fetchAcquireStatus, searchAcquire } from '../api/updates'
+import { fetchAcquireStatus, searchAcquire, sendAcquireDownload } from '../api/updates'
 import { PageStatus } from '../components/PageStatus'
 import { showToast } from '../utils/toast'
 
@@ -90,19 +88,10 @@ export function AcquirePage() {
   async function sendHit(hit, provider) {
     setBusy(true)
     try {
-      const response = await fetch('/api/acquire/download', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({
-          url: hit.download_url || hit.magnet || hit.info_url,
-          provider,
-        }),
+      await sendAcquireDownload({
+        url: hit.download_url || hit.magnet || hit.info_url,
+        provider,
       })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw errorFromBody(data, response.status, 'acquire')
-      }
       showToast(`Sent to ${provider}`, 'success')
     } catch (err) {
       showToast(err?.message || 'Send failed', 'error')
