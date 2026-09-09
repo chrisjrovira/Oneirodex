@@ -749,6 +749,17 @@ class LazyASGIApp:
                 register_shutdown_handlers()
                 # Eager-init Flask so the first browser burst does not race bridge setup.
                 await self._ensure_flask()
+
+                # Background schedulers live here now, not in create_app().
+                # Wrapped so a scheduler that throws on start can never wedge
+                # lifespan and take the whole server down with it.
+                try:
+                    from oneirodex.background import start_background_workers
+
+                    start_background_workers(self._flask_app)
+                except Exception as e:
+                    print(f"Background workers failed to start: {e}")
+
                 await send({"type": "lifespan.startup.complete"})
             except Exception as e:
                 print(f"Startup failed: {e}")
@@ -757,6 +768,13 @@ class LazyASGIApp:
         elif message["type"] == "lifespan.shutdown":
             try:
                 from oneirodex.utils.shutdown import request_shutdown
+
+                try:
+                    from oneirodex.background import stop_background_workers
+
+                    stop_background_workers()
+                except Exception as e:
+                    print(f"Background workers failed to stop cleanly: {e}")
 
                 request_shutdown()
                 print("🛑 ASGI lifespan shutdown initiated")

@@ -292,65 +292,9 @@ def create_app():
     csrf.exempt(client_api.client_commands_ack)
     csrf.exempt(client_api.client_commands_nack)
 
-    with app.app_context():
-        # Database initialization is handled by the InitializationManager before workers start
-        # Worker processes skip initialization entirely since it's already done
-        if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ and
-            os.getenv('ONEIRODEX_INITIALIZATION_COMPLETE') != 'true'):
-            # This should only happen in development or if initialization wasn't run
-            logger.warning("⚠️  Initialization not completed - this may cause issues")
-
-        if ('pytest' not in sys.modules and 'PYTEST_CURRENT_TEST' not in os.environ):
-            # Reclaim scans orphaned by whatever ended the last process.
-            #
-            # InitializationManager already does this, but only on the operator
-            # path (startweb*.sh runs it once before workers). Anything else —
-            # a dev server, a respawned worker, a container whose entrypoint was
-            # bypassed — booted straight past it, leaving 'Running' rows that no
-            # thread was working on. is_scan_busy() then reported busy and every
-            # new scan queued behind a ghost for STALE_RUNNING_SECONDS (6h),
-            # which is what "scanning is broken" looked like from the admin UI.
-            #
-            # Safe to run in every process, including multi-worker: the sweep
-            # only reclaims jobs whose owning process is provably gone, so a
-            # sibling worker's live scan is left alone.
-            try:
-                from oneirodex.utils.scan_queue import reclaim_stale_busy_jobs
-                reclaimed = reclaim_stale_busy_jobs()
-                if reclaimed:
-                    logger.info(f"[SCAN QUEUE] Reclaimed {reclaimed} orphaned scan job(s) at startup")
-            except Exception as exc:
-                logger.error(f"[SCAN QUEUE] Startup reclaim failed: {exc}")
-
-            try:
-                from oneirodex.utils.scan_scheduler import start_scan_scheduler
-                start_scan_scheduler(app)
-            except Exception as exc:
-                logger.warning(f"[SCAN SCHEDULER] Could not start: {exc}")
-            try:
-                from oneirodex.utils.library_watch import start_library_watch
-                start_library_watch(app)
-            except Exception as exc:
-                logger.warning(f"[LIBRARY WATCH] Could not start: {exc}")
-            try:
-                from oneirodex.utils.free_games_poller import start_free_games_scheduler
-                start_free_games_scheduler(app)
-
-                from oneirodex.utils.discover_ml.job import start_discover_ml_scheduler
-                start_discover_ml_scheduler(app)
-            except Exception as exc:
-                logger.warning(f"[FREE GAMES] Could not start: {exc}")
-            try:
-                # Linked store accounts synced once at link time and then went
-                # stale (GT-B27) — the live call existed, nothing re-ran it.
-                from oneirodex.utils.ownership_poller import start_ownership_scheduler
-                start_ownership_scheduler(app)
-            except Exception as exc:
-                logger.warning(f"[OWNERSHIP] Could not start: {exc}")
-            try:
-                from oneirodex.utils.email_digest_scheduler import start_email_digest_scheduler
-                start_email_digest_scheduler(app)
-            except Exception as exc:
-                logger.warning(f"[EMAIL DIGEST] Could not start: {exc}")
+    # Background schedulers are no longer started here — that made app
+    # construction spawn threads for every script that just wanted a configured
+    # app, with no shutdown path. They now start from the ASGI lifespan handler
+    # in asgi.py via oneirodex.background.start_background_workers(app).
 
     return app
