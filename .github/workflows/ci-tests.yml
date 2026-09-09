@@ -75,6 +75,7 @@ jobs:
         # becomes an argument to pytest rather than a comment.
         run: >
           python -m pytest -q
+          --cov=oneirodex --cov-report=term-missing
           tests/test_health_probes.py
           tests/test_asgi_static.py
           tests/test_asgi_bridge.py
@@ -148,6 +149,15 @@ jobs:
           tests/test_updates_scan_and_shelves.py
           tests/test_browser_player.py
           tests/test_nostalgist_pilot.py
+          tests/test_ops_path_problems.py
+          tests/test_utils_ops_issues.py
+          tests/test_utils_ops_network.py
+          tests/test_library_health_pulse.py
+          tests/test_health_igdb_provider.py
+          tests/test_asgi_activity_sse.py
+          tests/test_api_tokens_health_events.py
+          tests/test_ops_followons.py
+          tests/test_library_batch_ops.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
       # the problem then grew from ~699 call sites to 1194 — new routes reached
@@ -155,6 +165,40 @@ jobs:
       # css-token-lint, which took CSS violations from 2365 to 1305.
       - name: Run API envelope lint
         run: python scripts/api_envelope_lint.py
+
+      # Per-file print() baseline (A0.4). No DB; fails only when a file's
+      # print() count climbs above its recorded baseline in scripts/print_lint.py.
+      - name: Run print() ratchet
+        run: python scripts/print_lint.py
+
+  lint:
+    name: Lint & format
+    # B0.2: ESLint flat config (eslint.config.js) + Prettier --check over
+    # frontend/**. The repo root has its own package.json / package-lock.json
+    # holding the shared eslint + prettier toolchain, so this is a root npm ci
+    # (no working-directory override on this job).
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Prettier check
+        run: npm run format:check
 
   member-app-vitest:
     name: Member-app vitest
@@ -175,12 +219,23 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/member-app/package-lock.json
 
+      # B0.3: `npm run typecheck` runs `tsc`, which resolves from the repo-root
+      # package.json (typescript is pinned there, not in the SPA). This job sets
+      # defaults.run.working-directory to the app dir, so the root install needs
+      # an explicit working-directory: .
+      - name: Install repo-root toolchain (tsc)
+        working-directory: .
+        run: npm ci
+
       - name: Install dependencies
         run: npm ci
 
       - name: Run vitest
         # package.json "test" is "vitest"; --run exits non-interactively in CI.
         run: npm test -- --run
+
+      - name: Typecheck
+        run: npm run typecheck
 
   admin-app-vitest:
     name: Admin-app vitest
@@ -204,11 +259,20 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/admin-app/package-lock.json
 
+      # B0.3: tsc resolves from the repo-root package.json; this job overrides
+      # working-directory, so the root install needs an explicit one.
+      - name: Install repo-root toolchain (tsc)
+        working-directory: .
+        run: npm ci
+
       - name: Install dependencies
         run: npm ci
 
       - name: Run vitest
         run: npm test -- --run
+
+      - name: Typecheck
+        run: npm run typecheck
 
       # tests/js holds standalone harnesses for classic theme JS, run under bare
       # node against a hand-rolled micro-DOM. They were in no workflow, so they
@@ -243,11 +307,21 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/ops-glance/package-lock.json
 
+      # B0.3: tsc (used by `npm run typecheck` and by `npm run build`'s
+      # `tsc --noEmit`) resolves from the repo-root package.json; this job
+      # overrides working-directory, so the root install needs an explicit one.
+      - name: Install repo-root toolchain (tsc)
+        working-directory: .
+        run: npm ci
+
       - name: Install dependencies
         run: npm ci
 
       - name: Run vitest
         run: npm test -- --run
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build ops-glance bundle
         # ops-glance is copied into the image at build time; a bundle that fails
