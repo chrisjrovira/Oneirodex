@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders, useShellConfig } from '@oneirodex/ui'
-import { errorFromResponse } from '@oneirodex/ui'
+import { useShellConfig } from '@oneirodex/ui'
+import {
+  fetchNotificationPreferences,
+  fetchNotifications,
+  markNotificationsRead,
+  saveNotificationPreferences,
+} from '../api/notifications'
 import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'
 import './NotificationsPage.css'
@@ -65,17 +70,7 @@ export function NotificationsPage() {
    * is history and the read rows are the bulk of it.
    */
   function load(view = filter) {
-    const query = view === 'inbox' ? '?unread=1&limit=100' : '?limit=100'
-    return Promise.all([
-      fetch(`/api/notifications${query}`, { credentials: 'same-origin' }).then(async (r) => {
-        if (!r.ok) throw await errorFromResponse(r, 'notifications')
-        return r.json()
-      }),
-      fetch('/api/notifications/preferences', { credentials: 'same-origin' }).then(async (r) => {
-        if (!r.ok) throw await errorFromResponse(r, 'preferences')
-        return r.json()
-      }),
-    ])
+    return Promise.all([fetchNotifications({ view }), fetchNotificationPreferences()])
       .then(([n, p]) => {
         setItems(Array.isArray(n.notifications) ? n.notifications : [])
         setUnread(Number(n.unread_count) || 0)
@@ -96,12 +91,7 @@ export function NotificationsPage() {
     if (busy) return
     setBusy(true)
     try {
-      await fetch('/api/notifications/read', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ all: true }),
-      })
+      await markNotificationsRead({ all: true })
       await load()
     } finally {
       setBusy(false)
@@ -112,12 +102,7 @@ export function NotificationsPage() {
     if (busy || !id) return
     setBusy(true)
     try {
-      await fetch('/api/notifications/read', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ ids: [id] }),
-      })
+      await markNotificationsRead({ ids: [id] })
       await load()
     } finally {
       setBusy(false)
@@ -128,12 +113,7 @@ export function NotificationsPage() {
     if (!prefs) return
     const next = { ...prefs, [key]: !prefs[key] }
     setPrefs(next)
-    await fetch('/api/notifications/preferences', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ [key]: next[key] }),
-    })
+    await saveNotificationPreferences({ [key]: next[key] })
   }
 
   const visible = items.filter((row) => {

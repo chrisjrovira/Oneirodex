@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { errorFromResponse } from '@oneirodex/ui'
+import { fetchMemberProfile } from '../api/social'
 import { PageStatus } from '../components/PageStatus'
 
 function formatDuration(totalSeconds) {
@@ -19,14 +19,7 @@ export function MemberProfilePage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    fetch(`/api/users/${userId}/profile`, {
-      credentials: 'same-origin',
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw await errorFromResponse(response, 'Profile')
-        return response.json()
-      })
+    fetchMemberProfile(userId, { signal: controller.signal })
       .then(setData)
       .catch((err) => {
         if (err.name !== 'AbortError') setError(err)
