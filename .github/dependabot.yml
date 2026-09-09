@@ -1,6 +1,10 @@
 # Dependabot — weekly dependency updates.
-# Minor/patch bumps are grouped into one PR per ecosystem to keep review volume
-# sane; majors still come as individual PRs so they get a real look.
+# Each `directory` entry is grouped so it produces at most one PR per run —
+# minor, patch AND major bumps are bundled together now (npm splits only
+# production vs development deps). This keeps review volume sane; the tradeoff
+# is that a grouped PR can carry a breaking major, so review the grouped PR
+# carefully before merging and split it by hand if a single major needs a
+# closer look.
 version: 2
 updates:
   # --- Python (root requirements*.txt / requirements-dev.txt) ---
@@ -8,77 +12,103 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      python-minor-patch:
+      python-all:
+        patterns:
+          - "*"
         update-types:
           - minor
           - patch
+          - major
 
   # --- Frontend SPAs + shared packages ---
   - package-ecosystem: npm
     directory: "/frontend/member-app"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      npm-minor-patch:
-        update-types:
-          - minor
-          - patch
+      production-dependencies:
+        dependency-type: "production"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
+      development-dependencies:
+        dependency-type: "development"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
 
   - package-ecosystem: npm
     directory: "/frontend/admin-app"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      npm-minor-patch:
-        update-types:
-          - minor
-          - patch
+      production-dependencies:
+        dependency-type: "production"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
+      development-dependencies:
+        dependency-type: "development"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
 
   - package-ecosystem: npm
     directory: "/frontend/ops-glance"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      npm-minor-patch:
-        update-types:
-          - minor
-          - patch
+      production-dependencies:
+        dependency-type: "production"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
+      development-dependencies:
+        dependency-type: "development"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
 
   - package-ecosystem: npm
     directory: "/frontend/api-client"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      npm-minor-patch:
-        update-types:
-          - minor
-          - patch
+      production-dependencies:
+        dependency-type: "production"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
+      development-dependencies:
+        dependency-type: "development"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
 
   - package-ecosystem: npm
     directory: "/clients/desktop"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      npm-minor-patch:
-        update-types:
-          - minor
-          - patch
+      production-dependencies:
+        dependency-type: "production"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
+      development-dependencies:
+        dependency-type: "development"
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
 
   # --- GitHub Actions used by the workflows ---
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
-      actions-minor-patch:
+      actions-all:
+        patterns:
+          - "*"
         update-types:
           - minor
           - patch
+          - major
