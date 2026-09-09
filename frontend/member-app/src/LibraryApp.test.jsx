@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
+import { ShellHarness } from './testShell'
 
 afterEach(() => {
   window.localStorage.removeItem('od.library.layout')
@@ -14,8 +15,12 @@ function jsonResponse(body) {
   })
 }
 
-function renderLibrary(ui, { route = '/library' } = {}) {
-  return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>)
+function renderLibrary(ui, { route = '/library', shell = {} } = {}) {
+  return render(
+    <MemoryRouter initialEntries={[route]}>
+      <ShellHarness shell={shell}>{ui}</ShellHarness>
+    </MemoryRouter>,
+  )
 }
 
 test('page flip replaces cards and does not duplicate grid roots', async () => {
@@ -107,8 +112,8 @@ test('filters fall back in place when no rail slot exists', async () => {
         libraryCount: 1,
         gamesCount: 1,
       }}
-      shellConfig={{ enableNewChrome: false }}
     />,
+    { shell: { enableNewChrome: false } },
   )
 
   // No rail in this tree, so the filters take the in-place fallback rather
@@ -150,8 +155,8 @@ test('filters render into the rail slot when the shell provides one', async () =
         libraryCount: 1,
         gamesCount: 1,
       }}
-      shellConfig={{ enableNewChrome: false }}
     />,
+    { shell: { enableNewChrome: false } },
   )
 
   await waitFor(() => expect(slot.querySelector('.library-filters')).not.toBeNull())
@@ -397,8 +402,8 @@ function renderNewChrome({ total = 3 } = {}) {
         libraryCount: 1,
         gamesCount: total,
       }}
-      shellConfig={{ enableNewChrome: true }}
     />,
+    { shell: { enableNewChrome: true } },
   )
 }
 

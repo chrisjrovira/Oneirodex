@@ -2,12 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { arrangeDiscoverSections, DiscoverApp } from './DiscoverApp'
+import { ShellHarness } from './testShell'
 
 /** Shelves link out, so the tree needs a router even when nothing links yet. */
 function renderDiscover(props = {}) {
   return render(
     <MemoryRouter>
-      <DiscoverApp isAdmin={false} {...props} />
+      <ShellHarness {...props}>
+        <DiscoverApp />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }
