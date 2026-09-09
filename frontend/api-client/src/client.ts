@@ -1,4 +1,4 @@
-import type { ApiError } from './types.js'
+import type { ApiError, ApiErrorEnvelope } from './types.js'
 
 export interface OneirodexClientConfig {
   /** Origin or base URL, e.g. https://host.example (no trailing slash) */
@@ -9,16 +9,42 @@ export interface OneirodexClientConfig {
   fetchImpl?: typeof fetch
 }
 
+/** Parsed error body: the full envelope, the legacy `{error}` shape, raw text, or null. */
+export type ErrorBody = ApiErrorEnvelope | ApiError | string | null
+
+function readEnvelopeError(body: ErrorBody): string | null {
+  if (typeof body === 'object' && body !== null && typeof (body as ApiError).error === 'string') {
+    return (body as ApiError).error
+  }
+  return null
+}
+
+function readEnvelopeCode(body: ErrorBody): string | null {
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    typeof (body as ApiErrorEnvelope).error_code === 'string'
+  ) {
+    return (body as ApiErrorEnvelope).error_code
+  }
+  return null
+}
+
 export class OneirodexApiError extends Error {
   readonly status: number
-  readonly body: ApiError | string | null
+  /**
+   * Stable `snake_case` token from the envelope's `error_code`
+   * (`oneirodex/utils/api_response.py` `ERROR_CODES`), or `null` when the body
+   * carried none (legacy 502s, raw text, non-JSON).
+   */
+  readonly error_code: string | null
+  readonly body: ErrorBody
 
-  constructor(status: number, body: ApiError | string | null) {
-    const message =
-      typeof body === 'object' && body && 'error' in body ? body.error : `HTTP ${status}`
-    super(message)
+  constructor(status: number, body: ErrorBody) {
+    super(readEnvelopeError(body) ?? `HTTP ${status}`)
     this.name = 'OneirodexApiError'
     this.status = status
+    this.error_code = readEnvelopeCode(body)
     this.body = body
   }
 }
@@ -41,13 +67,13 @@ function joinUrl(baseUrl: string, path: string): string {
   return `${base}${suffix}`
 }
 
-async function parseErrorBody(response: Response): Promise<ApiError | string | null> {
+export async function parseErrorBody(response: Response): Promise<ErrorBody> {
   const text = await response.text()
   if (!text) {
     return null
   }
   try {
-    return JSON.parse(text) as ApiError
+    return JSON.parse(text) as ApiErrorEnvelope
   } catch {
     return text
   }
