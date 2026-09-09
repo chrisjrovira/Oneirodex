@@ -234,7 +234,7 @@ class UserPreference(db.Model):
     # Title strip under each catalog cover. On by default: box art alone is a
     # weak identifier across a ROM library, where many titles in a series share
     # one piece of art. Members who want the plain art wall can switch it off.
-    show_tile_titles = db.Column(db.Boolean, default=True, nullable=False)
+    show_tile_titles = db.Column(db.Boolean, default=True, server_default='true', nullable=False)
     notify_friend_requests = db.Column(db.Boolean, default=True, nullable=False)
     notify_activity = db.Column(db.Boolean, default=True, nullable=False)
     notify_mentions = db.Column(db.Boolean, default=True, nullable=False)

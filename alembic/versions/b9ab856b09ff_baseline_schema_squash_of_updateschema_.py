@@ -620,7 +620,7 @@ def upgrade() -> None:
     sa.Column('locale', sa.String(length=10), nullable=True),
     sa.Column('preferred_game_locale', sa.String(length=16), nullable=False),
     sa.Column('tile_size', sa.String(length=8), nullable=False),
-    sa.Column('show_tile_titles', sa.Boolean(), nullable=False),
+    sa.Column('show_tile_titles', sa.Boolean(), server_default='true', nullable=False),
     sa.Column('notify_friend_requests', sa.Boolean(), nullable=False),
     sa.Column('notify_activity', sa.Boolean(), nullable=False),
     sa.Column('notify_mentions', sa.Boolean(), nullable=False),
@@ -1133,11 +1133,15 @@ def upgrade() -> None:
     # Cheap real diff: updateschema set this server-side default; models.py now
     # declares it too (server_default='50'), so it is inside the baseline here.
     op.alter_column('user_preferences', 'items_per_page', server_default='50')
+    # Same story for show_tile_titles (server_default='true'): mirrors the model
+    # so a fresh `alembic upgrade head` DB matches and `alembic check` is clean.
+    op.alter_column('user_preferences', 'show_tile_titles', server_default='true')
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # --- squashed-from-updateschema objects (see upgrade) ---
+    op.alter_column('user_preferences', 'show_tile_titles', server_default=None)
     op.alter_column('user_preferences', 'items_per_page', server_default=None)
     for _kind in ('cover', 'box', 'cart', 'disc', 'logo', 'hero', 'fanart'):
         op.drop_index(f'unique_game_{_kind}_image', table_name='images')
