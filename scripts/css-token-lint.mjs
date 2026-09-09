@@ -56,6 +56,7 @@ const RULES = {
   'no-raw-radius': 'border-radius literal — use var(--od-radius-*)',
   'no-raw-font-size': 'font-size literal — use var(--od-font-*)',
   'no-raw-inline-style': 'literal in a JSX inline style — use var(--gt-*)',
+  'no-raw-js-color': 'hex literal in a JS data constant — use var(--od-brand-*) / var(--od-status-*)',
 }
 
 /**
@@ -103,6 +104,43 @@ export function lintJsxInlineStyles(source, rel) {
         detail: hit[2],
       })
     }
+  }
+  return findings
+}
+
+/**
+ * Hex literals in JS/JSX *data constants* were invisible to this lint.
+ *
+ * The brand table in ExternalStoreLinks and the play-status table in GameCard
+ * carried raw hex on plain object properties -- color: '#66c0f4' -- then handed
+ * the value to the DOM as a CSS custom property (style set to an --od-* var).
+ * Because the value reached the style block as an identifier, not a quoted
+ * literal, lintJsxInlineStyles skipped it by design, and roughly thirty brand
+ * and status colours sat outside any token while the report said none new.
+ *
+ * This catches a quoted hex string assigned to a colour-ish key in an object or
+ * array literal. It deliberately covers only the small set of keys that name a
+ * paint value; anything else in a data object is not a design-token decision.
+ * Inline style blocks are blanked first so a hex there is reported once, by
+ * lintJsxInlineStyles, not twice. As with the other rules only quoted literals
+ * count -- a value read from data (an identifier) is not a token decision.
+ */
+const JS_COLOR_KEY_HEX = new RegExp(
+  String.raw`\b(backgroundColor|borderColor|background|color|fill|stroke)\s*:\s*(['"])(#[0-9a-fA-F]{3,8})\2`,
+  'g',
+)
+
+export function lintJsColorConstants(source, rel) {
+  const findings = []
+  // Keep newlines so line numbers survive; drop everything else in the block.
+  const scrubbed = source.replace(JSX_STYLE_BLOCK, (m) => m.replace(/[^\n]/g, ' '))
+  for (const hit of scrubbed.matchAll(JS_COLOR_KEY_HEX)) {
+    findings.push({
+      file: rel,
+      line: scrubbed.slice(0, hit.index).split('\n').length,
+      rule: 'no-raw-js-color',
+      detail: `${hit[1]}: ${hit[3]}`,
+    })
   }
   return findings
 }
@@ -204,7 +242,7 @@ export function runLint() {
       const source = readFileSync(full, 'utf8')
       const fileFindings = rel.endsWith('.css')
         ? lintCss(source, rel)
-        : lintJsxInlineStyles(source, rel)
+        : [...lintJsxInlineStyles(source, rel), ...lintJsColorConstants(source, rel)]
       if (!fileFindings.length) continue
       findings.push(...fileFindings)
       counts[rel] = fileFindings.reduce((acc, f) => {
@@ -297,6 +335,7 @@ function main() {
     console.error(`  ${RULES['no-raw-radius']}`)
     console.error(`  ${RULES['no-raw-font-size']}`)
     console.error(`  ${RULES['no-raw-inline-style']}`)
+    console.error(`  ${RULES['no-raw-js-color']}`)
     process.exitCode = 1
     return
   }
