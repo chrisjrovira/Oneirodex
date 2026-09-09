@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { errorFromResponse } from '@oneirodex/ui'
+import { fetchLibraryPlatforms } from '../api/systems'
 import { familyForPlatform } from '../chrome/platformSkins'
 import { roomIdForPlatform, roomStyle } from '../chrome/playRooms'
 import { isNativePcPlatform } from '../chrome/regions'
@@ -73,17 +73,6 @@ function SystemMark({ platformValue, family }) {
       onError={() => setFailed(true)}
     />
   )
-}
-
-async function fetchLibraryPlatforms({ signal } = {}) {
-  const response = await fetch('/api/library_platforms?include_completion=1', {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'library_platforms')
-  }
-  return response.json()
 }
 
 const FAMILY_ORDER = ['nintendo', 'sony', 'xbox', 'sega', 'pc', 'atari']

@@ -1,24 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody, useShellConfig } from '@oneirodex/ui'
+import { useShellConfig } from '@oneirodex/ui'
+import { fetchLicensedCatalog } from '../api/systems'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_LABELS } from '../chrome/regions'
 import { PageStatus } from '../components/PageStatus'
 import './SystemsPage.css'
 import './SetCompletionPage.css'
-
-async function fetchLicensedCatalog({ libraryPlatform, signal }) {
-  const params = new URLSearchParams({ library_platform: libraryPlatform })
-  const response = await fetch(`/api/licensed-catalog?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw errorFromBody(data, response.status, 'licensed-catalog')
-  }
-  return data
-}
 
 export function LicensedCatalogPage() {
   const shellConfig = useShellConfig()

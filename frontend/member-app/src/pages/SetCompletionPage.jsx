@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody, useShellConfig } from '@oneirodex/ui'
+import { useShellConfig } from '@oneirodex/ui'
+import { fetchSetCompletion } from '../api/systems'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_PREF_ORDER } from '../chrome/regions'
@@ -9,22 +10,6 @@ import './SystemsPage.css'
 import './SetCompletionPage.css'
 
 const REGIONS = REGION_PREF_ORDER
-
-async function fetchSetCompletion({ libraryPlatform, region, signal }) {
-  const params = new URLSearchParams({
-    library_platform: libraryPlatform,
-    region,
-  })
-  const response = await fetch(`/api/set-completion?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw errorFromBody(data, response.status, 'set-completion')
-  }
-  return data
-}
 
 export function SetCompletionPage() {
   const shellConfig = useShellConfig()
