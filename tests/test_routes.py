@@ -603,7 +603,7 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_edit_game_images(self, mock_is_scan_running, mock_current_user, 
                              client, app, db_session, admin_user, test_game, test_image):
         """Test edit game images route."""
@@ -618,7 +618,7 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_edit_game_images_scan_running(self, mock_is_scan_running, mock_current_user, 
                                           client, app, db_session, admin_user, test_game):
         """Test edit game images when scan is running."""
@@ -633,9 +633,9 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.PILImage.open')
-    @patch('oneirodex.routes.os.path.join')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.PILImage.open')
+    @patch('oneirodex.routes_admin_ext.game_images.os.path.join')
     def test_upload_image_success(self, mock_path_join, mock_pil_open, mock_is_scan_running,
                                  mock_current_user, client, app, db_session, admin_user, test_game,
                                  tmp_path):
@@ -655,8 +655,8 @@ class TestMainBlueprint:
         # so the save raised FileNotFoundError before any assertion ran.
         #
         # Built by concatenation, not `tmp_path / name`: patching
-        # 'oneirodex.routes.os.path.join' replaces os.path.join *globally*
-        # (oneirodex.routes.os is the os module itself), and pathlib joins
+        # 'oneirodex.routes_admin_ext.game_images.os.path.join' replaces os.path.join *globally*
+        # (oneirodex.routes_admin_ext.game_images.os is the os module itself), and pathlib joins
         # through it — so the operator would return the mock's own value here.
         mock_path_join.return_value = str(tmp_path) + '/test_image.jpg'
         
@@ -680,7 +680,7 @@ class TestMainBlueprint:
         assert data['message'] == 'File uploaded successfully'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_upload_image_scan_running(self, mock_is_scan_running, mock_current_user, 
                                       client, app, db_session, admin_user, test_game):
         """Test image upload when scan is running."""
@@ -703,7 +703,7 @@ class TestMainBlueprint:
         assert response.status_code == 403
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_upload_image_no_file(self, mock_is_scan_running, mock_current_user, 
                                  client, app, db_session, admin_user, test_game):
         """Test image upload without file."""
@@ -718,7 +718,7 @@ class TestMainBlueprint:
         assert response.status_code == 400
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_upload_image_invalid_extension(self, mock_is_scan_running, mock_current_user, 
                                            client, app, db_session, admin_user, test_game):
         """Test image upload with invalid file extension."""
@@ -741,9 +741,9 @@ class TestMainBlueprint:
         assert response.status_code == 400
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
-    @patch('oneirodex.routes.os.path.exists')
-    @patch('oneirodex.routes.os.remove')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.os.path.exists')
+    @patch('oneirodex.routes_admin_ext.game_images.os.remove')
     def test_delete_image_success(self, mock_remove, mock_exists, mock_is_scan_running, 
                                  mock_current_user, client, app, db_session, admin_user, test_image):
         """Test successful image deletion."""
@@ -764,7 +764,7 @@ class TestMainBlueprint:
         assert data['message'] == 'Image deleted successfully'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_delete_image_scan_running(self, mock_is_scan_running, mock_current_user, 
                                       client, app, db_session, admin_user, test_image):
         """Test image deletion when scan is running."""
@@ -780,7 +780,7 @@ class TestMainBlueprint:
         assert response.status_code == 403
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.is_scan_job_running')
+    @patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running')
     def test_delete_image_invalid_request(self, mock_is_scan_running, mock_current_user, 
                                          client, app, db_session, admin_user):
         """Test image deletion with invalid request."""
@@ -921,8 +921,8 @@ class TestMainBlueprint:
         assert data['status'] == 'success'
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.run_in_background')
-    @patch('oneirodex.routes.get_game_name_by_uuid')
+    @patch('oneirodex.routes_admin_ext.game_images.run_in_background')
+    @patch('oneirodex.routes_admin_ext.game_images.get_game_name_by_uuid')
     def test_refresh_game_images(self, mock_get_name, mock_background,
                                 mock_current_user, client, app, db_session, admin_user, test_game):
         """Test refreshing game images."""
@@ -938,8 +938,8 @@ class TestMainBlueprint:
         assert response.status_code == 302  # Redirect
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.run_in_background')
-    @patch('oneirodex.routes.get_game_name_by_uuid')
+    @patch('oneirodex.routes_admin_ext.game_images.run_in_background')
+    @patch('oneirodex.routes_admin_ext.game_images.get_game_name_by_uuid')
     def test_refresh_game_images_ajax(self, mock_get_name, mock_background, mock_current_user,
                                      client, app, db_session, admin_user, test_game):
         """Test refreshing game images via AJAX.
@@ -1292,8 +1292,8 @@ class TestErrorHandling:
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         
-        with patch('oneirodex.routes.is_scan_job_running', return_value=False):
-            with patch('oneirodex.routes.PILImage.open', side_effect=IOError("Invalid image")):
+        with patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running', return_value=False):
+            with patch('oneirodex.routes_admin_ext.game_images.PILImage.open', side_effect=IOError("Invalid image")):
                 test_file = FileStorage(
                     stream=BytesIO(b'invalid image data'),
                     filename='test.jpg',
@@ -1314,7 +1314,7 @@ class TestErrorHandling:
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
         
-        with patch('oneirodex.routes.is_scan_job_running', return_value=False):
+        with patch('oneirodex.routes_admin_ext.game_images.is_scan_job_running', return_value=False):
             with client.session_transaction() as sess:
                 sess['_user_id'] = str(admin_user.id)
             
