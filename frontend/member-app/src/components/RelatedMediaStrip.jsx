@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import './RelatedMediaStrip.css'
 
 /**

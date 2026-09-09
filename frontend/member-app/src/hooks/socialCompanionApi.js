@@ -1,5 +1,5 @@
 import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 
 const STORAGE_OPEN = 'od-social-companion-open'
 const STORAGE_PINNED = 'od-social-companion-pinned'

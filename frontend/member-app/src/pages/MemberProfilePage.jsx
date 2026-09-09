@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { errorFromResponse } from '../api/envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 import { PageStatus } from '../components/PageStatus'
 
 function formatDuration(totalSeconds) {

@@ -1,5 +1,4 @@
-import { errorFromBody } from './envelopeError'
-import { csrfHeaders } from '@oneirodex/ui'
+import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
 import { toggleFavorite as defaultToggleFavorite } from './userActions.js'
 
 async function postJson(url, body) {

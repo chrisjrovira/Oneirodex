@@ -1,4 +1,4 @@
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchFilterOptions({ signal } = {}) {
   const response = await fetch('/api/filters/bundle', {

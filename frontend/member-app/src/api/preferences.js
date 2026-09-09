@@ -8,9 +8,7 @@
  * a successful save — keep that contract if you add SPA-side theme saves here.
  */
 
-import { csrfHeaders, getCsrfToken } from '@oneirodex/ui'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse, getCsrfToken } from '@oneirodex/ui'
 export async function savePreferences(partial) {
   const csrf = getCsrfToken()
   const body = new FormData()

@@ -1,4 +1,4 @@
-import { errorFromResponse } from './envelopeError'
+import { errorFromResponse } from '@oneirodex/ui'
 
 export async function fetchDiscoverSections({ signal } = {}) {
   const response = await fetch('/api/discover/sections', {

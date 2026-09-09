@@ -115,7 +115,7 @@ describe('CSRF handling lives in one module across src/', () => {
     const source = fs.readFileSync(path.join(SRC_ROOT, rel), 'utf8')
     expect(
       csrfOffendersIn(source),
-      `import { csrfHeaders } from api/csrf.js instead — the shared chain is the ` +
+      `import { csrfHeaders } from '@oneirodex/ui' instead — the shared chain is the ` +
         `superset, so a local copy can only be narrower`,
     ).toEqual([])
   })
@@ -174,7 +174,10 @@ describe('api wrappers report failures through the shared envelope helper', () =
       if (!/errorFromResponse\(/.test(source)) {
         return false
       }
-      return !/import \{ errorFromResponse \} from '\.\/envelopeError'/.test(source)
+      // errorFromResponse moved into `@oneirodex/ui` (wave B1.2); it may be
+      // imported on its own or alongside csrfHeaders from the same specifier.
+      const importsHelper = /import\s*\{[^}]*\berrorFromResponse\b[^}]*\}\s*from\s*'@oneirodex\/ui'/
+      return !importsHelper.test(source)
     })
     expect(missing).toEqual([])
   })

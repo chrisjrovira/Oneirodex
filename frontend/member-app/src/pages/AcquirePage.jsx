@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import { fetchAcquireStatus, searchAcquire } from '../api/updates'
 import { PageStatus } from '../components/PageStatus'
 import { showToast } from '../utils/toast'

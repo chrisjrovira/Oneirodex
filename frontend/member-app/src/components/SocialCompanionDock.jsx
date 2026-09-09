@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import {
   mintPartyToken,

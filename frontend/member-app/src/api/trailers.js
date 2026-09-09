@@ -1,6 +1,4 @@
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromResponse } from './envelopeError'
-
+import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 export function buildTrailerParams(filters = {}) {
   const params = new URLSearchParams()
   const { library, genres, themes, dateFrom, dateTo } = filters

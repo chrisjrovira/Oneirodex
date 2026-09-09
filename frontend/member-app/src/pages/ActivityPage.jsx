@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody, errorFromResponse } from '../api/envelopeError'
+import { errorFromBody, errorFromResponse } from '@oneirodex/ui'
 import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'
 import { VoiceLobby } from '../components/VoiceLobby'

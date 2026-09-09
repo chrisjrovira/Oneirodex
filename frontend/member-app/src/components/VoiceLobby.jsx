@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '../api/envelopeError'
+import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 
 function partyRoomForGame(gameUuid) {
