@@ -48,6 +48,22 @@ directly — they append a line here.
   repo root, and `clients/desktop/**/*.ts` added to `eslint.config.js`. This is
   the Desktop track's to land — it sits outside the frontend track's file
   scope.
+  ✅ applied (wave C3.7-client). Prettier baseline landed as
+  `chore(fmt): prettier baseline for clients/desktop` over `clients/desktop/src`
+  + the tsconfig / vite / vitest configs. `lint` / `format:check` scripts added
+  to `clients/desktop/package.json` (`npm --prefix ../.. run …`, same shape as
+  `frontend/api-client`). `eslint.config.js` gains an appended
+  `clients/desktop/**/*.{ts,tsx}` block (typescript-eslint recommended, mirrors
+  the `frontend/api-client` block) and a `*.{test,spec}.ts` vitest-globals
+  block; the global `ignores` entry `clients/**` was narrowed to
+  `clients/quest/**` + `clients/desktop/src-tauri/**` so the desktop TS is
+  actually reached. `npx eslint clients/desktop frontend/api-client` is clean
+  (a stale `no-unused-vars` import in `apply_patch.ts` and a `prefer-const`
+  error in `config-store.ts` fixed in the fmt commit). No new workflow job —
+  the existing repo-root `lint` job (`npm run lint` = `eslint .`) now covers
+  `clients/desktop/**/*.ts` via the config change; also bumped the two
+  remaining `node-version: '20'` in `desktop-build.yml` and
+  `setup_20.x` / "Node 20+" in `scripts/build-installers.sh` to `22`.
 - [B0.3] Add `npm run typecheck` to each existing per-SPA vitest job
   (`member-app-vitest`, `admin-app-vitest`, and the new `ops-glance-vitest`
   job). Each SPA gains a `tsconfig.json` (extends repo-root

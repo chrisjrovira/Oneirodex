@@ -19,6 +19,41 @@ export interface ApiError {
   error: string
 }
 
+/**
+ * The failure envelope every route returns via `api_error` in
+ * `oneirodex/utils/api_response.py`: `error` is always a human-readable string,
+ * `error_code` a stable `snake_case` machine token (or `null` for a handful of
+ * legacy 502 paths), `detail` optional structured extra for operators, and
+ * `message` a legacy mirror of `error`.
+ */
+export interface ApiErrorEnvelope {
+  ok: false
+  error: string
+  error_code: string | null
+  detail?: unknown
+  message?: string
+}
+
+/**
+ * The success envelope: the route's payload merged at the top level with
+ * `ok: true` and `error` / `error_code` present-and-null (see `api_ok`).
+ */
+export type ApiOk<T> = T & {
+  ok: true
+  error: null
+  error_code: null
+}
+
+/** Discriminates an `ApiErrorEnvelope` from a success body or arbitrary JSON. */
+export function isApiError(body: unknown): body is ApiErrorEnvelope {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    (body as { ok?: unknown }).ok === false &&
+    typeof (body as { error?: unknown }).error === 'string'
+  )
+}
+
 export interface CreateTokenRequest {
   name: string
   scopes?: ApiTokenScope[]

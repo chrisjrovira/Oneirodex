@@ -29,9 +29,7 @@ describe('apply_patch helpers', () => {
   })
 
   it('resolves stage dir under patches root', () => {
-    expect(resolvePatchStageDir('/appdata/patches/', 'abc-123')).toBe(
-      '/appdata/patches/abc-123',
-    )
+    expect(resolvePatchStageDir('/appdata/patches/', 'abc-123')).toBe('/appdata/patches/abc-123')
   })
 
   it('builds flips CLI args', () => {

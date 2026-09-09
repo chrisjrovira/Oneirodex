@@ -48,7 +48,10 @@ function startThinPresence(baseUrl: string, token: string): void {
     deviceKind: 'thin',
     deviceName: 'Oneirodex Thin',
     onUnreachable: (error) => {
-      logCompanion('thin', `presence offline: ${error instanceof Error ? error.message : String(error)}`)
+      logCompanion(
+        'thin',
+        `presence offline: ${error instanceof Error ? error.message : String(error)}`,
+      )
     },
   })
 }
@@ -98,7 +101,11 @@ async function openLibraryWindow(baseUrl: string): Promise<'opened' | 'focused' 
   await new Promise<void>((resolve, reject) => {
     webview.once('tauri://created', () => resolve())
     webview.once('tauri://error', (event) => {
-      reject(new Error(String((event as { payload?: string }).payload || 'Failed to open library window')))
+      reject(
+        new Error(
+          String((event as { payload?: string }).payload || 'Failed to open library window'),
+        ),
+      )
     })
   })
   return 'opened'
@@ -211,7 +218,10 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
       startThinPresence(normalizeBaseUrl(stored.baseUrl), tokenEl.value)
     }
   } catch (error) {
-    logCompanion('thin', `hydrate failed: ${error instanceof Error ? error.message : String(error)}`)
+    logCompanion(
+      'thin',
+      `hydrate failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
     // first run / keyring load noise
   }
 
@@ -239,11 +249,17 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
         const prepared = await prepareThinCredentials({ requireValidate: true })
         if (!prepared) return
         if (!prepared.token) {
-          setStatus('Paste a thin API token to validate (optional for library/friends site login).', 'error')
+          setStatus(
+            'Paste a thin API token to validate (optional for library/friends site login).',
+            'error',
+          )
           return
         }
         await persistThinConfig(prepared.baseUrl, prepared.token)
-        setStatus('Token validated against the server. Open library or friends when ready.', 'success')
+        setStatus(
+          'Token validated against the server. Open library or friends when ready.',
+          'success',
+        )
       } catch (err) {
         setStatus(err instanceof Error ? err.message : String(err), 'error')
       }
@@ -258,7 +274,9 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
         await persistThinConfig(prepared.baseUrl, prepared.token)
         const result = await openLibraryWindow(prepared.baseUrl)
         setStatus(
-          result === 'focused' ? 'Library window focused.' : 'Library window opened — sign in if prompted.',
+          result === 'focused'
+            ? 'Library window focused.'
+            : 'Library window opened — sign in if prompted.',
           'success',
         )
       } catch (err) {
@@ -275,7 +293,9 @@ export async function mountThinApp(root: HTMLElement): Promise<void> {
         await persistThinConfig(prepared.baseUrl, prepared.token)
         const result = await openSocialCompanionWindow(prepared.baseUrl)
         setStatus(
-          result === 'focused' ? 'Friends window focused.' : 'Friends window opened — sign in if prompted.',
+          result === 'focused'
+            ? 'Friends window focused.'
+            : 'Friends window opened — sign in if prompted.',
           'success',
         )
       } catch (err) {

@@ -22,7 +22,9 @@ interface RawInstallsFile {
   installs?: Record<string, RawInstallRecord>
 }
 
-function toRawInstalls(installs: Record<string, GameInstallRecord>): Record<string, RawInstallRecord> {
+function toRawInstalls(
+  installs: Record<string, GameInstallRecord>,
+): Record<string, RawInstallRecord> {
   return Object.fromEntries(
     Object.entries(installs).map(([gameUuid, record]) => [
       gameUuid,

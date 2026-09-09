@@ -5,11 +5,7 @@
  * uninstall from installed/update_available → downloaded (or cleared)
  */
 
-export type GameLifecycleState =
-  | 'not_downloaded'
-  | 'downloaded'
-  | 'installed'
-  | 'update_available'
+export type GameLifecycleState = 'not_downloaded' | 'downloaded' | 'installed' | 'update_available'
 
 export type LifecycleAction = 'download' | 'install' | 'update' | 'uninstall'
 
@@ -24,10 +20,7 @@ export function isGameLifecycleState(value: string): value is GameLifecycleState
   return (VALID_STATES as readonly string[]).includes(value)
 }
 
-export function canPerformAction(
-  state: GameLifecycleState,
-  action: LifecycleAction,
-): boolean {
+export function canPerformAction(state: GameLifecycleState, action: LifecycleAction): boolean {
   switch (action) {
     case 'download':
       return state === 'not_downloaded'
@@ -114,9 +107,7 @@ export function createLifecycleRegistry(options: LifecycleRegistryOptions = {}) 
   }
 
   const notify = (): void => {
-    void options.onChange?.(
-      [...byUuid.entries()].map(([gameUuid, state]) => ({ gameUuid, state })),
-    )
+    void options.onChange?.([...byUuid.entries()].map(([gameUuid, state]) => ({ gameUuid, state })))
   }
 
   return {

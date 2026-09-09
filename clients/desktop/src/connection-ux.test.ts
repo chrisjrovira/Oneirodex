@@ -47,9 +47,7 @@ describe('connection-ux', () => {
   })
 
   it('prefers the form Server URL over a stale auth base', () => {
-    expect(resolveFriendsBaseUrl('https://new.home', 'https://old.home')).toBe(
-      'https://new.home',
-    )
+    expect(resolveFriendsBaseUrl('https://new.home', 'https://old.home')).toBe('https://new.home')
     expect(resolveFriendsBaseUrl('', 'https://old.home')).toBe('https://old.home')
     expect(resolveFriendsBaseUrl('   ', '')).toBe('')
   })

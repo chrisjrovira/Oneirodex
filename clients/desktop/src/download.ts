@@ -314,8 +314,7 @@ export function promptForDownloadVersion(
     // Static shell; the one dynamic value (game id) is escaped like every other
     // innerHTML site in this client — see html.ts.
     panel.innerHTML =
-      `<h3>Choose a version to download</h3>` +
-      `<p class="muted">${escapeHtml(gameUuid)}</p>`
+      `<h3>Choose a version to download</h3>` + `<p class="muted">${escapeHtml(gameUuid)}</p>`
 
     const group = document.createElement('div')
     group.className = 'od-version-list'
