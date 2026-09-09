@@ -20,6 +20,10 @@ zip = "2.2"
 # OS credential store (Windows Credential Manager / macOS Keychain / Linux Secret Service)
 keyring = { version = "3.6", default-features = false, features = ["windows-native", "apple-native", "sync-secret-service", "crypto-rust"] }
 
+[dev-dependencies]
+# Real temp dirs for the path-traversal / zip-slip unit tests in src/lib.rs.
+tempfile = "3"
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]

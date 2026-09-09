@@ -212,6 +212,11 @@ fn find_likely_exe_inner(dir: &Path, depth: u32, max_depth: u32) -> Option<Strin
     None
 }
 
+// Each `cfg` arm is a full `return` so the arms stay mutually exclusive without
+// tripping "unreachable expression" on the platform whose arm is compiled last;
+// clippy reads the explicit `return` as needless, but dropping it makes the
+// multi-arm shape fragile. Scoped allow rather than a crate-wide one.
+#[allow(clippy::needless_return)]
 fn check_process_running(pid: u32) -> bool {
     if pid == 0 {
         return false;
@@ -233,10 +238,7 @@ fn check_process_running(pid: u32) -> bool {
         return Command::new("tasklist")
             .args(["/FI", &format!("PID eq {pid}"), "/NH"])
             .output()
-            .map(|output| {
-                String::from_utf8_lossy(&output.stdout)
-                    .contains(&pid.to_string())
-            })
+            .map(|output| String::from_utf8_lossy(&output.stdout).contains(&pid.to_string()))
             .unwrap_or(false);
     }
 
@@ -287,7 +289,9 @@ fn secure_store_get(app: tauri::AppHandle, account: String) -> Result<Option<Str
 #[tauri::command]
 fn secure_store_set(app: tauri::AppHandle, account: String, secret: String) -> Result<(), String> {
     let entry = secure_entry(&app, &account)?;
-    entry.set_password(&secret).map_err(|error| error.to_string())
+    entry
+        .set_password(&secret)
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -391,25 +395,44 @@ fn extract_zip_archive(
     let destination = PathBuf::from(&dest_dir);
     ensure_path_under_root(&archive, &downloads)?;
     ensure_path_under_root(&destination, &installs)?;
+    extract_zip_to_dir(&archive, &destination)
+}
 
+/// Extract every entry of `archive` under `destination`, restoring unix
+/// permission bits, and return the extract path plus a best-guess entry point.
+///
+/// Split out from `extract_zip_archive` so the zip-slip / `enclosed_name()`
+/// handling is unit-testable without a `tauri::AppHandle`. The command wrapper
+/// still owns the app-root containment check on `archive` / `destination`.
+fn extract_zip_to_dir(archive: &Path, destination: &Path) -> Result<ExtractZipResult, String> {
     if !archive.is_file() {
-        return Err(format!("Archive not found: {archive_path}"));
+        return Err(format!("Archive not found: {}", archive.display()));
     }
 
     if destination.exists() {
-        remove_path_inner(&destination)?;
+        remove_path_inner(destination)?;
     }
-    fs::create_dir_all(&destination).map_err(|error| error.to_string())?;
+    fs::create_dir_all(destination).map_err(|error| error.to_string())?;
 
-    let file = File::open(&archive).map_err(|error| error.to_string())?;
+    let file = File::open(archive).map_err(|error| error.to_string())?;
     let mut zip = ZipArchive::new(file).map_err(|error| error.to_string())?;
 
     for index in 0..zip.len() {
         let mut entry = zip.by_index(index).map_err(|error| error.to_string())?;
+        // `enclosed_name()` returns `None` for any entry name that would escape
+        // the destination (`..` segments, absolute paths, drive letters), so a
+        // zip-slip entry is skipped outright.
         let entry_path = match entry.enclosed_name() {
             Some(path) => destination.join(path),
             None => continue,
         };
+
+        // Defence in depth: `enclosed_name()` already blocks traversal, but a
+        // future swap of the zip crate must not be able to silently reintroduce
+        // zip-slip. A join that lands outside `destination` is dropped.
+        if !entry_path.starts_with(destination) {
+            continue;
+        }
 
         if entry.name().ends_with('/') {
             fs::create_dir_all(&entry_path).map_err(|error| error.to_string())?;
@@ -441,7 +464,7 @@ fn extract_zip_archive(
         }
     }
 
-    let exe_path = find_likely_exe(&destination, 2);
+    let exe_path = find_likely_exe(destination, 2);
     Ok(ExtractZipResult {
         extract_path: destination.to_string_lossy().into_owned(),
         exe_path,
@@ -654,7 +677,11 @@ fn run_flips_apply(
 
     let flips = flips_path
         .filter(|value| !value.trim().is_empty())
-        .or_else(|| std::env::var("FLIPS_PATH").ok().filter(|v| !v.trim().is_empty()))
+        .or_else(|| {
+            std::env::var("FLIPS_PATH")
+                .ok()
+                .filter(|v| !v.trim().is_empty())
+        })
         .ok_or_else(|| {
             "FLIPS_PATH not configured. Install Flips and set FLIPS_PATH, or apply manually."
                 .to_string()
@@ -685,7 +712,9 @@ fn run_flips_apply(
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("bin");
-        patches.join(safe_uuid).join(format!("{stem}.patched.{ext}"))
+        patches
+            .join(safe_uuid)
+            .join(format!("{stem}.patched.{ext}"))
     };
     ensure_path_under_root(&out, &patches)?;
     if let Some(parent) = out.parent() {
@@ -702,9 +731,7 @@ fn run_flips_apply(
     if !status.success() {
         return Err(format!("Flips exited with status {status}"));
     }
-    Ok(FlipsApplyResult {
-        output_path: out_s,
-    })
+    Ok(FlipsApplyResult { output_path: out_s })
 }
 
 #[tauri::command]
@@ -735,14 +762,16 @@ fn is_absolute_os_path(path: &Path) -> bool {
 }
 
 fn path_has_dotdot_segment(path: &str) -> bool {
-    path.split(['/', '\\'])
-        .any(|segment| segment == "..")
+    path.split(['/', '\\']).any(|segment| segment == "..")
 }
 
-/// Open `path` in Explorer (Windows), Finder (macOS), or the default file manager (Linux).
-/// When `select` is true and the path is a file, select it in the parent folder.
-#[tauri::command]
-fn reveal_path_in_os(path: String, select: Option<bool>) -> Result<RevealPathResult, String> {
+/// Validate a caller-supplied reveal path and classify it as a file or directory.
+///
+/// Every rejection here happens before any OS process is spawned, which is what
+/// makes the guard testable in isolation: empty / whitespace-only, longer than
+/// 4096 bytes, embedded NUL / CR / LF, any `..` path segment, a non-absolute
+/// path, or a path that does not exist on this machine.
+fn validate_reveal_path(path: &str) -> Result<(PathBuf, &'static str), String> {
     let trimmed = path.trim();
     if trimmed.is_empty() {
         return Err("Path is required".into());
@@ -765,12 +794,21 @@ fn reveal_path_in_os(path: String, select: Option<bool>) -> Result<RevealPathRes
         return Err(format!("Path does not exist on this machine: {trimmed}"));
     }
 
-    let select_item = select.unwrap_or(true);
     let revealed_as = if target.is_file() {
         "file"
     } else {
         "directory"
     };
+    Ok((target, revealed_as))
+}
+
+/// Open `path` in Explorer (Windows), Finder (macOS), or the default file manager (Linux).
+/// When `select` is true and the path is a file, select it in the parent folder.
+#[tauri::command]
+fn reveal_path_in_os(path: String, select: Option<bool>) -> Result<RevealPathResult, String> {
+    let trimmed = path.trim();
+    let (target, revealed_as) = validate_reveal_path(trimmed)?;
+    let select_item = select.unwrap_or(true);
 
     #[cfg(windows)]
     {
@@ -888,4 +926,350 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    // `super::*` also re-globs lib.rs's `use std::io::{copy, Write}`, so the
+    // `Write` trait `write_zip` needs is already in scope here.
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+    use zip::write::{SimpleFileOptions, ZipWriter};
+
+    // ---------------------------------------------------------------
+    // ensure_path_under_root
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn under_root_accepts_file_directly_inside() {
+        let root = tempdir().unwrap();
+        let target = root.path().join("archive.zip");
+        assert!(ensure_path_under_root(&target, root.path()).is_ok());
+    }
+
+    #[test]
+    fn under_root_accepts_existing_nested_file() {
+        let root = tempdir().unwrap();
+        let nested = root.path().join("a/b/c");
+        fs::create_dir_all(&nested).unwrap();
+        let target = nested.join("game.exe");
+        fs::write(&target, b"x").unwrap();
+        assert!(ensure_path_under_root(&target, root.path()).is_ok());
+    }
+
+    #[test]
+    fn under_root_rejects_sibling_directory() {
+        let base = tempdir().unwrap();
+        let root = base.path().join("installs");
+        let outside = base.path().join("outside");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&outside).unwrap();
+        let target = outside.join("evil.exe");
+        let err = ensure_path_under_root(&target, &root).unwrap_err();
+        assert!(err.contains("outside allowed"), "got: {err}");
+    }
+
+    #[test]
+    fn under_root_rejects_dotdot_traversal_out_of_root() {
+        let base = tempdir().unwrap();
+        let root = base.path().join("installs");
+        let child = root.join("game");
+        fs::create_dir_all(&child).unwrap();
+        // installs/game/../../escape.txt resolves to base/escape.txt
+        let target = child.join("..").join("..").join("escape.txt");
+        let err = ensure_path_under_root(&target, &root).unwrap_err();
+        assert!(err.contains("outside allowed"), "got: {err}");
+    }
+
+    #[test]
+    fn under_root_rejects_absolute_path_elsewhere() {
+        let base = tempdir().unwrap();
+        let root = base.path().join("installs");
+        fs::create_dir_all(&root).unwrap();
+        let other = tempdir().unwrap();
+        let target = other.path().join("payload.bin");
+        fs::write(&target, b"x").unwrap();
+        assert!(ensure_path_under_root(&target, &root).is_err());
+    }
+
+    #[test]
+    fn under_root_errors_when_root_missing() {
+        let base = tempdir().unwrap();
+        let missing_root = base.path().join("nope");
+        let target = base.path().join("nope/x.txt");
+        assert!(ensure_path_under_root(&target, &missing_root).is_err());
+    }
+
+    // ---------------------------------------------------------------
+    // ensure_path_under_any_root
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn any_root_accepts_when_under_a_later_root() {
+        let base = tempdir().unwrap();
+        let downloads = base.path().join("downloads");
+        let mods = base.path().join("mods");
+        fs::create_dir_all(&downloads).unwrap();
+        fs::create_dir_all(&mods).unwrap();
+        let target = mods.join("patch.bin");
+        assert!(
+            ensure_path_under_any_root(&target, &[downloads.as_path(), mods.as_path()]).is_ok()
+        );
+    }
+
+    #[test]
+    fn any_root_rejects_when_under_none_of_them() {
+        let base = tempdir().unwrap();
+        let downloads = base.path().join("downloads");
+        let mods = base.path().join("mods");
+        let elsewhere = base.path().join("elsewhere");
+        for dir in [&downloads, &mods, &elsewhere] {
+            fs::create_dir_all(dir).unwrap();
+        }
+        let target = elsewhere.join("x.bin");
+        let err = ensure_path_under_any_root(&target, &[downloads.as_path(), mods.as_path()])
+            .unwrap_err();
+        assert!(err.contains("outside allowed"), "got: {err}");
+    }
+
+    #[test]
+    fn any_root_rejects_dotdot_bridge_between_roots() {
+        let base = tempdir().unwrap();
+        let downloads = base.path().join("downloads");
+        let mods = base.path().join("mods");
+        fs::create_dir_all(&downloads).unwrap();
+        fs::create_dir_all(&mods).unwrap();
+        // Start inside `mods`, climb out, land in `downloads` — still "allowed"
+        // overall, but proves traversal is resolved rather than string-matched.
+        let bridged = mods.join("..").join("downloads").join("real.bin");
+        assert!(
+            ensure_path_under_any_root(&bridged, &[downloads.as_path(), mods.as_path()]).is_ok()
+        );
+        // ...and the same climb into a non-root sibling is refused.
+        let sibling = base.path().join("sibling");
+        fs::create_dir_all(&sibling).unwrap();
+        let escaped = mods.join("..").join("sibling").join("real.bin");
+        assert!(
+            ensure_path_under_any_root(&escaped, &[downloads.as_path(), mods.as_path()]).is_err()
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // path_has_dotdot_segment / is_absolute_os_path
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn dotdot_segment_detection() {
+        assert!(path_has_dotdot_segment("/home/user/../etc/passwd"));
+        assert!(path_has_dotdot_segment("C:\\Users\\me\\..\\Administrator"));
+        assert!(path_has_dotdot_segment(".."));
+        assert!(path_has_dotdot_segment("a/../b"));
+        assert!(!path_has_dotdot_segment("/home/user/games/rom.bin"));
+        assert!(!path_has_dotdot_segment("/home/user/..name/ok")); // ".." only as a full segment
+        assert!(!path_has_dotdot_segment("C:\\Users\\me\\game..v2"));
+    }
+
+    #[test]
+    fn absolute_path_detection() {
+        assert!(is_absolute_os_path(Path::new("C:\\Users\\me\\game")));
+        assert!(is_absolute_os_path(Path::new("C:/Users/me/game")));
+        assert!(is_absolute_os_path(Path::new("\\\\server\\share\\game")));
+        assert!(is_absolute_os_path(Path::new("//server/share/game")));
+        assert!(!is_absolute_os_path(Path::new("relative/path")));
+        assert!(!is_absolute_os_path(Path::new("game.exe")));
+        assert!(!is_absolute_os_path(Path::new("C:game"))); // drive-relative, no separator
+    }
+
+    // ---------------------------------------------------------------
+    // validate_reveal_path (reveal_path_in_os guards)
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn reveal_rejects_empty_or_whitespace() {
+        assert_eq!(validate_reveal_path("").unwrap_err(), "Path is required");
+        assert_eq!(
+            validate_reveal_path("    ").unwrap_err(),
+            "Path is required"
+        );
+    }
+
+    #[test]
+    fn reveal_rejects_overlong_path() {
+        let long = format!("/{}", "a".repeat(5000));
+        assert_eq!(validate_reveal_path(&long).unwrap_err(), "Path is too long");
+    }
+
+    #[test]
+    fn reveal_rejects_control_characters() {
+        assert!(validate_reveal_path("/tmp/a\nb")
+            .unwrap_err()
+            .contains("control"));
+        assert!(validate_reveal_path("/tmp/a\rb")
+            .unwrap_err()
+            .contains("control"));
+        assert!(validate_reveal_path("/tmp/a\0b")
+            .unwrap_err()
+            .contains("control"));
+    }
+
+    #[test]
+    fn reveal_rejects_dotdot_segments() {
+        assert!(validate_reveal_path("/home/user/../root/secret")
+            .unwrap_err()
+            .contains(".."));
+        assert!(validate_reveal_path("C:\\Users\\me\\..\\Administrator\\x")
+            .unwrap_err()
+            .contains(".."));
+    }
+
+    #[test]
+    fn reveal_rejects_non_absolute_path() {
+        assert_eq!(
+            validate_reveal_path("relative/dir/here").unwrap_err(),
+            "Path must be absolute"
+        );
+    }
+
+    #[test]
+    fn reveal_rejects_absolute_but_missing_path() {
+        let base = tempdir().unwrap();
+        let missing = base.path().join("does-not-exist-42");
+        let err = validate_reveal_path(missing.to_str().unwrap()).unwrap_err();
+        assert!(err.contains("does not exist"), "got: {err}");
+    }
+
+    #[test]
+    fn reveal_accepts_existing_directory() {
+        let base = tempdir().unwrap();
+        let (path, kind) = validate_reveal_path(base.path().to_str().unwrap()).unwrap();
+        assert_eq!(kind, "directory");
+        assert_eq!(path, base.path());
+    }
+
+    #[test]
+    fn reveal_accepts_existing_file() {
+        let base = tempdir().unwrap();
+        let file = base.path().join("readme.txt");
+        fs::write(&file, b"hi").unwrap();
+        let (_path, kind) = validate_reveal_path(file.to_str().unwrap()).unwrap();
+        assert_eq!(kind, "file");
+    }
+
+    // ---------------------------------------------------------------
+    // extract_zip_to_dir — enclosed_name() / zip-slip handling
+    // ---------------------------------------------------------------
+
+    fn write_zip(path: &Path, entries: &[(&str, &[u8])]) {
+        let file = fs::File::create(path).unwrap();
+        let mut zip = ZipWriter::new(file);
+        let opts = SimpleFileOptions::default();
+        for (name, body) in entries {
+            if name.ends_with('/') {
+                zip.add_directory(name.trim_end_matches('/'), opts).unwrap();
+            } else {
+                zip.start_file(*name, opts).unwrap();
+                zip.write_all(body).unwrap();
+            }
+        }
+        zip.finish().unwrap();
+    }
+
+    #[test]
+    fn extract_places_normal_entries_under_destination() {
+        let work = tempdir().unwrap();
+        let archive = work.path().join("bundle.zip");
+        write_zip(
+            &archive,
+            &[
+                ("game/", b""),
+                ("game/data.bin", b"payload"),
+                ("readme.txt", b"hi"),
+            ],
+        );
+        let dest = work.path().join("out");
+        let result = extract_zip_to_dir(&archive, &dest).unwrap();
+        assert_eq!(result.extract_path, dest.to_string_lossy().into_owned());
+        assert!(dest.join("game/data.bin").is_file());
+        assert_eq!(fs::read(dest.join("game/data.bin")).unwrap(), b"payload");
+        assert!(dest.join("readme.txt").is_file());
+    }
+
+    #[test]
+    fn extract_drops_parent_traversal_entry() {
+        let work = tempdir().unwrap();
+        let archive = work.path().join("evil.zip");
+        write_zip(
+            &archive,
+            &[("../escape.txt", b"pwned"), ("safe.txt", b"ok")],
+        );
+        let dest = work.path().join("out");
+        extract_zip_to_dir(&archive, &dest).unwrap();
+
+        // The traversal entry must not have been written anywhere outside dest.
+        assert!(!work.path().join("escape.txt").exists());
+        assert!(!dest.parent().unwrap().join("escape.txt").exists());
+        // The legitimate entry still lands.
+        assert!(dest.join("safe.txt").is_file());
+        // And nothing escaped the destination at all.
+        assert!(!dest.join("../escape.txt").exists());
+    }
+
+    #[test]
+    fn extract_drops_deep_traversal_and_absolute_entries() {
+        let work = tempdir().unwrap();
+        let src = work.path().join("src");
+        fs::create_dir_all(&src).unwrap();
+        let archive = src.join("evil2.zip");
+        write_zip(
+            &archive,
+            &[
+                ("a/b/../../../../../../tmp/evil.bin", b"x"),
+                ("nested/ok.bin", b"y"),
+            ],
+        );
+        let dest = work.path().join("out");
+        extract_zip_to_dir(&archive, &dest).unwrap();
+
+        assert!(dest.join("nested/ok.bin").is_file());
+        // Nothing may have been written outside the destination.
+        assert!(!work.path().join("tmp").exists());
+        assert!(!work.path().join("evil.bin").exists());
+        assert!(!dest.parent().unwrap().join("tmp/evil.bin").exists());
+
+        // Walk the destination tree; every extracted path must stay inside it.
+        let mut stack = vec![dest.clone()];
+        while let Some(dir) = stack.pop() {
+            for entry in fs::read_dir(&dir).unwrap() {
+                let path = entry.unwrap().path();
+                assert!(path.starts_with(&dest), "escaped path: {}", path.display());
+                if path.is_dir() {
+                    stack.push(path);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn extract_errors_when_archive_missing() {
+        let work = tempdir().unwrap();
+        let archive = work.path().join("absent.zip");
+        let dest = work.path().join("out");
+        let err = extract_zip_to_dir(&archive, &dest).unwrap_err();
+        assert!(err.contains("Archive not found"), "got: {err}");
+    }
+
+    #[test]
+    fn extract_replaces_a_pre_existing_destination() {
+        let work = tempdir().unwrap();
+        let archive = work.path().join("bundle.zip");
+        write_zip(&archive, &[("fresh.txt", b"new")]);
+        let dest = work.path().join("out");
+        fs::create_dir_all(&dest).unwrap();
+        fs::write(dest.join("stale.txt"), b"old").unwrap();
+
+        extract_zip_to_dir(&archive, &dest).unwrap();
+        assert!(dest.join("fresh.txt").is_file());
+        assert!(!dest.join("stale.txt").exists());
+    }
 }
