@@ -2,7 +2,15 @@
   "name": "oneirodex-repo",
   "private": true,
   "type": "module",
-  "description": "Repo-root tooling for the Oneirodex frontend SPAs (lint, format, typecheck). Not a workspace root yet.",
+  "description": "Repo-root workspace for the Oneirodex frontend SPAs and clients (lint, format, typecheck, single install).",
+  "workspaces": [
+    "frontend/member-app",
+    "frontend/admin-app",
+    "frontend/ops-glance",
+    "frontend/api-client",
+    "frontend/shared",
+    "clients/desktop"
+  ],
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
