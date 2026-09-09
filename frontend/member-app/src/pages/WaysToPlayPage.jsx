@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import './MorePage.css'
 import './WaysToPlayPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const PLAY_PATHS = [
   {
@@ -23,7 +24,8 @@ const PLAY_PATHS = [
   },
 ]
 
-export function WaysToPlayPage({ shellConfig = {} } = {}) {
+export function WaysToPlayPage() {
+  const shellConfig = useShellConfig()
   const enableVr = Boolean(shellConfig.enableVr)
 
   return (

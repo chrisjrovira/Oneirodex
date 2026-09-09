@@ -4,6 +4,7 @@ import { ContextBar, Popover } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './WishlistPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const RESOLVE_ACTIONS = [
   { status: 'approved', label: 'Approve' },
@@ -11,7 +12,8 @@ const RESOLVE_ACTIONS = [
   { status: 'fulfilled', label: 'Fulfilled' },
 ]
 
-export function WishlistPage({ shellConfig = {} } = {}) {
+export function WishlistPage() {
+  const shellConfig = useShellConfig()
   const isLibrarian = Boolean(shellConfig.isLibrarian ?? shellConfig.isAdmin)
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [requests, setRequests] = useState(null)

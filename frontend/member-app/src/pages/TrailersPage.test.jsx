@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrailersPage } from './TrailersPage'
 import * as trailersApi from '../api/trailers'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/trailers', () => ({
   fetchTrailerFilters: vi.fn(),
@@ -33,7 +34,11 @@ test('shows loading then renders the random trailer', async () => {
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
   })
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   expect(screen.getByText(/Loading random trailer/)).toBeInTheDocument()
 
@@ -54,7 +59,11 @@ test('shows the no-results state when nothing matches', async () => {
     message: 'No games with trailers found matching your filters',
   })
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   expect(
     await screen.findByText('No games with trailers found matching your filters'),
@@ -74,7 +83,11 @@ test('shows structured empty for Backend no_trailers contract without a CTA', as
     cta: { id: 'library', label: 'Browse Library', href: '/library' },
   })
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByText('No trailers in your library yet.')).toBeInTheDocument()
   expect(screen.getByRole('status')).toBeInTheDocument()
@@ -91,7 +104,11 @@ test('rejects a non-YouTube embed URL', async () => {
     video_url: 'javascript:alert(1)',
   })
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Invalid video URL format')
   expect(screen.queryByTitle('Game trailer')).not.toBeInTheDocument()
@@ -103,7 +120,11 @@ test('shows an error with retry', async () => {
     .mockRejectedValueOnce(new Error('boom'))
     .mockResolvedValueOnce({ has_videos: false, message: 'No games with trailers found' })
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load trailers.')
   await user.click(screen.getByRole('button', { name: 'Retry' }))
@@ -120,7 +141,11 @@ test('applies selected filters when asking for another trailer', async () => {
     video_url: 'https://www.youtube.com/embed/abc12345678?autoplay=1&rel=0',
   })
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   await screen.findByRole('heading', { name: 'Quake' })
 
@@ -160,7 +185,11 @@ test('another trailer keeps the player up while the next one loads', async () =>
         }),
     )
 
-  render(<TrailersPage />)
+  render(
+    <ShellHarness>
+      <TrailersPage />
+    </ShellHarness>,
+  )
   await screen.findByRole('heading', { name: 'Doom' })
   await user.click(screen.getByRole('button', { name: 'Another one' }))
 
@@ -187,7 +216,11 @@ test('new chrome keeps the playing title as content, not as a page heading', asy
     video_url: 'https://www.youtube.com/embed/x',
   })
 
-  render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   const link = await screen.findByRole('link', { name: 'Doom' })
   expect(link).toHaveAttribute('href', '/game_details/game-uuid-1')
@@ -203,7 +236,11 @@ test('new chrome keeps every playback action reachable', async () => {
     video_url: 'https://www.youtube.com/embed/x',
   })
 
-  render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <TrailersPage />
+    </ShellHarness>,
+  )
   await screen.findByRole('link', { name: 'Doom' })
 
   await user.click(screen.getByRole('button', { name: 'Another one' }))
@@ -233,7 +270,11 @@ test('trailers shows exactly one Filters control under the new chrome', async ()
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
   })
 
-  render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   await screen.findByRole('button', { name: /^filters$/i })
   expect(screen.getAllByRole('button', { name: /^filters$/i })).toHaveLength(1)
@@ -247,7 +288,11 @@ test('new chrome fuses Filters, Another one, and More into one cluster', async (
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
   })
 
-  const { container } = render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  const { container } = render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <TrailersPage />
+    </ShellHarness>,
+  )
   await screen.findByRole('button', { name: /^filters$/i })
 
   const group = container.querySelector('.od-cbtn-group')
@@ -268,7 +313,11 @@ test('Filters popover matches Library panel chrome', async () => {
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
   })
 
-  const { container } = render(<TrailersPage shellConfig={{ enableNewChrome: true }} />)
+  const { container } = render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <TrailersPage />
+    </ShellHarness>,
+  )
   await user.click(await screen.findByRole('button', { name: /^filters$/i }))
 
   const panel = container.querySelector('.od-pop__panel')
@@ -291,7 +340,11 @@ test('trailers keeps its own Filters toggle on the old chrome', async () => {
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0',
   })
 
-  render(<TrailersPage shellConfig={{ enableNewChrome: false }} />)
+  render(
+    <ShellHarness shell={{ enableNewChrome: false }}>
+      <TrailersPage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByRole('button', { name: /^filters$/i })).toBeInTheDocument()
 })

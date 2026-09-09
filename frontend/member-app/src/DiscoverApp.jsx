@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 import { fetchDiscoverSections } from './api/discover'
 import { fetchDiscoverPins, saveDiscoverPins } from './api/discoverPins'
 import { ContextBar } from './chrome/ContextBar'
@@ -30,7 +31,9 @@ export function arrangeDiscoverSections(sections, { pins = [], hidden = [] } = {
   return pinned.concat(rest)
 }
 
-export function DiscoverApp({ isAdmin = false, shellConfig = {} } = {}) {
+export function DiscoverApp() {
+  const { isAdmin } = useViewer()
+  const shellConfig = useShellConfig()
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

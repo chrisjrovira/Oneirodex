@@ -4,6 +4,7 @@ import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './CalendarPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const AHEAD_OPTIONS = [30, 60, 90, 180]
 const BEHIND_OPTIONS = [0, 7, 14, 30, 90]
@@ -350,7 +351,8 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
   )
 }
 
-export function CalendarPage({ shellConfig = {} }) {
+export function CalendarPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [payload, setPayload] = useState(null)
   const [error, setError] = useState(null)

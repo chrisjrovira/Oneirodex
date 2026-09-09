@@ -6,6 +6,7 @@ import { GameGrid } from '../components/GameGrid'
 import { NewsCard } from '../components/NewsCard'
 import { PageStatus } from '../components/PageStatus'
 import '../components/DiscoverShelf.css'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 
 /** Games per request. A page, not a shelf window — this view is the whole row. */
 const PAGE_SIZE = 60
@@ -17,7 +18,9 @@ const PAGE_SIZE = 60
  * as a filter never land here — the server hands those a `/library?…` href
  * instead, so this page is for the rows the Library has no way to say.
  */
-export function DiscoverRowPage({ isAdmin = false, shellConfig = {} } = {}) {
+export function DiscoverRowPage() {
+  const { isAdmin } = useViewer()
+  const shellConfig = useShellConfig()
   const { identifier } = useParams()
   const [row, setRow] = useState(null)
   const [games, setGames] = useState([])

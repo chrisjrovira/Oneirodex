@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders } from '@oneirodex/ui'
+import { csrfHeaders, useShellConfig } from '@oneirodex/ui'
 import { errorFromResponse } from '@oneirodex/ui'
 import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'
@@ -43,7 +43,8 @@ const NOTIFICATION_VIEWS = [
   { id: 'archive', label: 'Archive' },
 ]
 
-export function NotificationsPage({ shellConfig = {} }) {
+export function NotificationsPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [items, setItems] = useState([])
   const [unread, setUnread] = useState(0)

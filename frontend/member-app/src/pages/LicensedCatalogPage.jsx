@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody } from '@oneirodex/ui'
+import { errorFromBody, useShellConfig } from '@oneirodex/ui'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_LABELS } from '../chrome/regions'
 import { PageStatus } from '../components/PageStatus'
@@ -20,7 +20,8 @@ async function fetchLicensedCatalog({ libraryPlatform, signal }) {
   return data
 }
 
-export function LicensedCatalogPage({ shellConfig = {} } = {}) {
+export function LicensedCatalogPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [searchParams] = useSearchParams()
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()

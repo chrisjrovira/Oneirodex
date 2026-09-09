@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ChatPage, ChatPanel } from './ChatPage'
+import { ShellHarness } from '../testShell'
 
 beforeEach(() => {
   try {
@@ -73,7 +74,14 @@ test('/chat deep-link opens chat event and redirects to library', async () => {
     render(
       <MemoryRouter initialEntries={['/chat']}>
         <Routes>
-          <Route path="/chat" element={<ChatPage />} />
+          <Route
+            path="/chat"
+            element={
+              <ShellHarness>
+                <ChatPage />
+              </ShellHarness>
+            }
+          />
           <Route path="/library" element={<div>LibraryPage</div>} />
         </Routes>
       </MemoryRouter>,
@@ -107,7 +115,14 @@ test('the pop-out renders chat alone, with no redirect to the library', async ()
     render(
       <MemoryRouter initialEntries={['/chat']}>
         <Routes>
-          <Route path="/chat" element={<ChatPage />} />
+          <Route
+            path="/chat"
+            element={
+              <ShellHarness>
+                <ChatPage />
+              </ShellHarness>
+            }
+          />
           <Route path="/library" element={<div>LibraryPage</div>} />
         </Routes>
       </MemoryRouter>,

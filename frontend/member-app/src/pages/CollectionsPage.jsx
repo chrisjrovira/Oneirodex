@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { confirmAction } from '@oneirodex/ui'
+import { confirmAction, useShellConfig } from '@oneirodex/ui'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import { PageStatus } from '../components/PageStatus'
@@ -14,7 +14,8 @@ function itemCountLabel(collection) {
   return count === 1 ? '1 game' : `${count} games`
 }
 
-export function CollectionsPage({ shellConfig = {} } = {}) {
+export function CollectionsPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [collections, setCollections] = useState(null)
   const [error, setError] = useState(null)

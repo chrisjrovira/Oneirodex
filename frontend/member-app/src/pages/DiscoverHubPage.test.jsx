@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { DiscoverHubPage } from './DiscoverHubPage'
+import { ShellHarness } from '../testShell'
 
 function jsonResponse(body, status = 200) {
   return {
@@ -19,7 +20,14 @@ function renderHub(path = '/discover/hub/genre/Roguelike') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/discover/hub/genre/:genre" element={<DiscoverHubPage />} />
+        <Route
+          path="/discover/hub/genre/:genre"
+          element={
+            <ShellHarness>
+              <DiscoverHubPage />
+            </ShellHarness>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   )

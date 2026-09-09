@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { ShellConfigProvider, ViewerProvider, viewerFromConfig } from '@oneirodex/ui'
 import { App } from './App'
 import { GameDetailsApp, parseGameDetailsRootConfig } from './GameDetailsApp'
 
@@ -94,9 +95,18 @@ if (memberAppRoot) {
   if (memberAppRoot.dataset.enableNewChrome !== 'false') {
     document.documentElement.dataset.chrome = 'v2'
   }
+  const shellConfig = parseShellConfig(memberAppRoot)
+  // Wave B1.6: identity + the rest of the bootstrap are provided once here, so
+  // `<App>` and every page read them from `useViewer()` / `useShellConfig()`
+  // instead of the object being threaded down as a prop through 40+ routes.
+  const viewerFromShell = viewerFromConfig(shellConfig)
   createRoot(memberAppRoot).render(
     <BrowserRouter>
-      <App shellConfig={parseShellConfig(memberAppRoot)} />
+      <ViewerProvider value={viewerFromShell}>
+        <ShellConfigProvider value={shellConfig}>
+          <App />
+        </ShellConfigProvider>
+      </ViewerProvider>
     </BrowserRouter>,
   )
 }

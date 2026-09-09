@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CalendarPage, buildMonthCells, readCalendarView, writeCalendarView } from './CalendarPage'
 import * as calendarApi from '../api/calendar'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/calendar', () => ({
   fetchCalendar: vi.fn(),
@@ -52,7 +53,11 @@ beforeEach(() => {
 })
 
 test('lists dense release rows with date, title, and link', async () => {
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
 
   expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Example Title')).toBeInTheDocument()
@@ -63,7 +68,11 @@ test('lists dense release rows with date, title, and link', async () => {
 
 test('shows honest empty state', async () => {
   calendarApi.fetchCalendar.mockResolvedValue({ count: 0, releases: [] })
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   expect(await screen.findByText('No releases in this window.')).toBeInTheDocument()
 })
 
@@ -73,7 +82,11 @@ test('Retry reloads after error', async () => {
     .mockRejectedValueOnce(new Error('calendar 502'))
     .mockResolvedValueOnce({ count: 0, releases: [] })
 
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   expect(await screen.findByRole('alert')).toHaveTextContent(/Unable to load calendar/i)
   await user.click(screen.getByRole('button', { name: /Try again/i }))
   expect(await screen.findByText('No releases in this window.')).toBeInTheDocument()
@@ -81,7 +94,11 @@ test('Retry reloads after error', async () => {
 
 test('window controls pass days_ahead and days_behind', async () => {
   const user = userEvent.setup()
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   await screen.findByText('Example Title')
 
   await user.selectOptions(screen.getByLabelText('Days ahead'), '90')
@@ -101,7 +118,11 @@ test('window controls pass days_ahead and days_behind', async () => {
 
 test('view switcher persists selection in localStorage', async () => {
   const user = userEvent.setup()
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   await screen.findByText('Example Title')
 
   expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true')
@@ -118,7 +139,11 @@ test('restores persisted calendar view on mount', async () => {
   writeCalendarView('month')
   expect(readCalendarView()).toBe('month')
 
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   expect(await screen.findByRole('button', { name: 'Month' })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -160,7 +185,11 @@ test('month view renders a rotating cover tile per busy day', async () => {
     ],
   })
 
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   await screen.findByText('August Drop')
 
   await user.click(screen.getByRole('button', { name: 'Month' }))
@@ -210,7 +239,11 @@ test('month view survives an empty window and explains why', async () => {
     empty_reason: 'not_configured',
   })
 
-  render(<CalendarPage />)
+  render(
+    <ShellHarness>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   await screen.findByText(/IGDB is not set up/i)
 
   await user.click(screen.getByRole('button', { name: 'Month' }))
@@ -236,7 +269,11 @@ test('buildMonthCells indexes markers by date key', () => {
 test('new chrome moves views to bar two and the window into a popover', async () => {
   const user = userEvent.setup()
   calendarApi.fetchCalendar.mockResolvedValue({ releases: [] })
-  render(<CalendarPage shellConfig={{ enableNewChrome: true }} />)
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <CalendarPage />
+    </ShellHarness>,
+  )
   await screen.findByText('No releases in this window.')
 
   expect(screen.queryByRole('heading', { name: 'Release calendar' })).toBeNull()

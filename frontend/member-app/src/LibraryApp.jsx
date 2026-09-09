@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 import {
   batchAddToWishlist,
   batchCheckFreshness,
@@ -133,10 +134,12 @@ function searchParamsHaveLibraryFilters(searchParams) {
   return BADGE_FILTER_PARAMS.some((param) => searchParams.has(param))
 }
 
-export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
+export function LibraryApp({ initialConfig } = {}) {
+  const viewer = useViewer()
+  const shellConfig = useShellConfig()
   const t = useMemo(() => createTranslator(initialConfig.locale), [initialConfig.locale])
   const canBatchRefreshImages = Boolean(
-    shellConfig.isLibrarian || shellConfig.isAdmin || initialConfig.isAdmin,
+    viewer.isLibrarian || viewer.isAdmin || initialConfig.isAdmin,
   )
   const useNewChrome = usesNewChrome(shellConfig)
   const filtersPanelId = useId()

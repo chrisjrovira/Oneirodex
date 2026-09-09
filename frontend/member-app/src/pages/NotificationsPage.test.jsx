@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { NotificationsPage } from './NotificationsPage'
+import { ShellHarness } from '../testShell'
 
 function jsonResponse(body, status = 200) {
   return Promise.resolve({
@@ -60,7 +61,9 @@ test('the inbox asks the server for unread, so it cannot disagree with the count
   // badge, with no way to reach the notification. Inbox is a server query now.
   render(
     <MemoryRouter>
-      <NotificationsPage />
+      <ShellHarness>
+        <NotificationsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -79,7 +82,9 @@ test('the inbox holds what is outstanding; read notifications file themselves', 
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <NotificationsPage />
+      <ShellHarness>
+        <NotificationsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -97,7 +102,9 @@ test('new chrome moves the filter into bar two and keeps mark-all by the list', 
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <NotificationsPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <NotificationsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -119,7 +126,9 @@ test('keeps preferences on the Inbox row and collapsed by default', async () => 
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <NotificationsPage />
+      <ShellHarness>
+        <NotificationsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -137,7 +146,9 @@ test('shows retry when notifications fail to load', async () => {
   fetch.mockImplementation(() => Promise.reject(new Error('network')))
   render(
     <MemoryRouter>
-      <NotificationsPage />
+      <ShellHarness>
+        <NotificationsPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 

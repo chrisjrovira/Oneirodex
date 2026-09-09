@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { confirmAction, useShellConfig } from '@oneirodex/ui'
 import {
   connectAmazon,
   connectEpic,
@@ -115,7 +115,8 @@ function accountDraftsFrom(summary, current) {
   return next
 }
 
-export function OwnershipPage({ shellConfig = {} } = {}) {
+export function OwnershipPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   // Nothing selected on arrival: the summary is what most visits are for, and
   // opening a connect form nobody asked for buries it again.

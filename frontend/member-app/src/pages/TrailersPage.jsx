@@ -11,6 +11,7 @@ import { LoadingOverlay } from '../components/LoadingOverlay'
 import { showToast } from '../utils/toast'
 import '../components/libraryFilters.css'
 import './TrailersPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const SETTINGS_STORAGE_KEY = 'trailerAutoplaySettings'
 const ATTRACT_RETURN_KEY = 'attractModeReturnUrl'
@@ -437,7 +438,8 @@ function SettingsModal({ settings, onCancel, onSave }) {
   )
 }
 
-export function TrailersPage({ shellConfig = {} } = {}) {
+export function TrailersPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [attractMode] = useState(() =>
     new URLSearchParams(window.location.search).has('attract_mode'),

@@ -1,11 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { WaysToPlayPage } from './WaysToPlayPage'
+import { ShellHarness } from '../testShell'
 
 function renderPage(shellConfig = {}) {
   return render(
     <MemoryRouter>
-      <WaysToPlayPage shellConfig={shellConfig} />
+      <ShellHarness shell={shellConfig}>
+        <WaysToPlayPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }

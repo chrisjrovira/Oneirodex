@@ -5,6 +5,7 @@ import { UpdatesPage } from './UpdatesPage'
 import * as updatesApi from '../api/updates'
 import * as clientCommands from '../api/clientCommands'
 import * as calendarApi from '../api/calendar'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/updates', () => ({
   fetchUpdatesInbox: vi.fn(),
@@ -73,7 +74,9 @@ test('inbox shows apply action and queues companion update pack', async () => {
 
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -125,7 +128,9 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
 
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -171,7 +176,9 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
 test('shows upcoming releases teaser with calendar link', async () => {
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -184,7 +191,9 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <UpdatesPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
@@ -235,7 +244,9 @@ test('the one refresh control probes the library and refills the inbox', async (
 
   render(
     <MemoryRouter>
-      <UpdatesPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
   await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
@@ -261,7 +272,9 @@ test('store search failure uses PageStatus', async () => {
 
   render(
     <MemoryRouter>
-      <UpdatesPage />
+      <ShellHarness>
+        <UpdatesPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 

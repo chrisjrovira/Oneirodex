@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { LicensedCatalogPage } from './LicensedCatalogPage'
+import { ShellHarness } from '../testShell'
 
 function jsonResponse(body, status = 200) {
   return Promise.resolve({
@@ -40,7 +41,9 @@ const SAMPLE = {
 function renderPage(path, shellConfig = {}) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <LicensedCatalogPage shellConfig={shellConfig} />
+      <ShellHarness shell={shellConfig}>
+        <LicensedCatalogPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }

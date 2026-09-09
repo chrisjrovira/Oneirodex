@@ -7,6 +7,7 @@ import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './NewsPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 function formatEndsAt(value) {
   if (!value) {
@@ -77,7 +78,8 @@ function persistNewsLayout(value) {
   }
 }
 
-export function NewsPage({ shellConfig = {} }) {
+export function NewsPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [announcements, setAnnouncements] = useState(null)
   const [freeGames, setFreeGames] = useState(null)
