@@ -14,7 +14,12 @@ export type { TokensApi } from './tokens.js'
 export type { PlaytimeApi } from './playtime.js'
 export type { BrowseApi, SearchOptions } from './browse.js'
 export type { UpdatesApi } from './updates.js'
-export type { DownloadsApi, InitiateDownloadResponse } from './downloads.js'
+export type {
+  DownloadsApi,
+  GameVersionItem,
+  InitiateDownloadOptions,
+  InitiateDownloadResponse,
+} from './downloads.js'
 export type {
   ClientCapabilities,
   DeviceApi,

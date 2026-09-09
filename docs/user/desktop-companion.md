@@ -42,7 +42,7 @@ The Friends webview is least-privilege (browse only); install/launch ACLs stay o
 
 | Action | Local effect |
 |---|---|
-| Download | Streams archive into the companion downloads folder (chunked append) |
+| Download | Streams archive into the companion downloads folder (chunked append). When a title has more than one version, an in-window picker (arrow keys / Enter, Escape to cancel) chooses base vs. update/extra; a single version downloads straight away. |
 | Install | Extracts zip into installs folder |
 | Update | Downloads into a `.staging` folder, swaps into place, then marks installed |
 | Uninstall | Removes extract dir, leftover `.staging`, and archive (by default) |

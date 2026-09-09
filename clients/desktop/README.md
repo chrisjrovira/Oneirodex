@@ -160,9 +160,16 @@ clients/desktop/
 cd clients/desktop
 npm install
 npm test
+
+# Rust side (path-traversal / zip-slip guards in src-tauri/src/lib.rs):
+npm run build            # generate_context!() needs dist/ before the lib compiles
+cd src-tauri
+cargo fmt --all --check
+cargo clippy --all-targets -- -D warnings
+cargo test
 ```
 
-Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no live Oneirodex server required.
+Unit tests mock `fetch`, Tauri `invoke`, and the download initiate API — no live Oneirodex server required. The `rust-checks` job in `desktop-build.yml` runs `cargo fmt --check` / `clippy -D warnings` / `cargo test` on every push that touches `clients/desktop/**`, `frontend/api-client/**`, or `frontend/shared/**`.
 
 ## Out of scope (this track)
 
