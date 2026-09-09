@@ -171,7 +171,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/member-app/package-lock.json
 
@@ -200,7 +200,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/admin-app/package-lock.json
 
@@ -221,6 +221,39 @@ jobs:
         working-directory: .
         run: node scripts/css-token-lint.mjs
 
+  ops-glance-vitest:
+    name: Ops-glance vitest
+    # ops-glance ships in the Docker image (oneirodex/static/dist/ops-glance) but
+    # had no CI job — OpsApp.test.jsx / AppSmoke.test.jsx gated nothing and a
+    # broken bundle could reach an operator's Admin Ops glance behind a green tick.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend/ops-glance
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/ops-glance/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run vitest
+        run: npm test -- --run
+
+      - name: Build ops-glance bundle
+        # ops-glance is copied into the image at build time; a bundle that fails
+        # to build must not merge.
+        run: npm run build
+
   desktop-vitest:
     name: Desktop vitest
     runs-on: ubuntu-latest
@@ -236,7 +269,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: clients/desktop/package-lock.json
 
@@ -277,7 +310,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/api-client/package-lock.json
 

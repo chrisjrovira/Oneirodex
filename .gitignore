@@ -15,10 +15,11 @@ oneirodex/static/library/images
 /venv
 /.venv
 /.git
-# Track CI workflows + PR/issue templates; ignore other local .github scratch if any
+# Track CI workflows + PR/issue templates + Dependabot; ignore other local .github scratch if any
 /.github/*
 !/.github/workflows/
 !/.github/workflows/**
+!/.github/dependabot.yml
 !/.github/PULL_REQUEST_TEMPLATE.md
 !/.github/ISSUE_TEMPLATE/
 !/.github/ISSUE_TEMPLATE/**

@@ -4,6 +4,9 @@
   "version": "1.0.0-beta",
   "description": "Oneirodex desktop companion (Tauri 2)",
   "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
