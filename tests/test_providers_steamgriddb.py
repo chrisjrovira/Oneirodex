@@ -20,6 +20,8 @@ from oneirodex.utils.providers import (
     reset_provider_cache,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- SteamGridDB provider adapter.
+
 
 @pytest.fixture(autouse=True)
 def _reset_provider_state(monkeypatch):

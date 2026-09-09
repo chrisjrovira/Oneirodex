@@ -7,6 +7,9 @@ from oneirodex.utils.match_scoring import (
     score_candidate,
     select_best_match,
 )
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- IGDB title-match pipeline.
 
 
 def _assert_threshold_untouched():

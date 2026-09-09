@@ -10,6 +10,8 @@ from oneirodex.models import User, Library, ScanJob, UnmatchedFolder
 from oneirodex.platform import LibraryPlatform
 from oneirodex.utils.functions import PLATFORM_IDS
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- exercises the full library-scan API surface.
+
 
 def safe_cleanup_database(db_session):
     """Completely clean up ALL test data - this is a test database, nuke everything!"""

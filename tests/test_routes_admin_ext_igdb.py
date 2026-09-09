@@ -8,6 +8,8 @@ import json
 from unittest.mock import patch, Mock
 from datetime import datetime, timezone
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- IGDB admin provider surface.
+
 
 @pytest.fixture
 def admin_user(db_session):

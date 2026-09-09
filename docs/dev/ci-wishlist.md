@@ -31,9 +31,18 @@ directly — they append a line here.
   `test_asgi_activity_sse`, `test_api_tokens_health_events`, `test_ops_followons`,
   `test_library_batch_ops`). `--cov-fail-under` omitted for now — set it once CI
   reports real coverage for this subset.
-  **Done later:** the full `-m "not integration"` flip needs its own wave —
-  it depends on the `integration` marker being applied to the heavy/DB/live-service
-  modules first (currently 1 file), then a timing pass.
+  **Update (A3.1 marker pass):** the `integration` marker now covers **32 files**
+  (`test_background_workers` + 31 tagged in wave A3.1: the scan pipeline, external
+  metadata/store provider adapters — IGDB / Steam / SteamGridDB / SMTP — and the
+  worker/heartbeat/watch/LiveKit/cover-art-render modules). `-m "not integration"`
+  now selects **3699 / 4174** (475 deselected, up from 10). None of the tagged
+  files are in the `pytest-core` hand list, so nothing that was gated stopped
+  being gated. A flip is now **closer to feasible** but still not done: 3699
+  tests is far more than the current hand list (~1k) and this suite's cost is
+  dominated by the per-test `app` fixture rebuilding Flask on the NAS, so a
+  timing pass on CI hardware (empty Postgres, no NAS latency) is the remaining
+  gate before switching `pytest-core` to the marker. Tag more modules from that
+  timing data if the wall time is still over budget.
 - [B0.2] Add a `lint` job on Node 22: run `npm ci` at the repo root, then
   `npm run lint && npm run format:check`. This runs ESLint (flat config at
   `eslint.config.js`) and Prettier `--check` over `frontend/**`. The repo root

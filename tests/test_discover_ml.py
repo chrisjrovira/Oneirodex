@@ -20,6 +20,8 @@ from oneirodex.models import (
 )
 from oneirodex.platform import LibraryPlatform
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- discover ML row generation over the member set.
+
 NOW = datetime.now(timezone.utc)
 
 

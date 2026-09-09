@@ -1,6 +1,9 @@
 """Fallback name truncation must stay capped (scan stall guard)."""
 
 from oneirodex.utils import scanning
+import pytest
+
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan fallback capping over the library.
 
 
 def test_fallback_truncation_cap_math():

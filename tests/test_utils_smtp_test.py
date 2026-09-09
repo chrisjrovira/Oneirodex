@@ -5,6 +5,8 @@ import smtplib
 from unittest.mock import patch, MagicMock, call
 from oneirodex.utils.smtp_test import SMTPTester, main
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- SMTP connection-test path.
+
 
 class TestSMTPTesterInit:
     """Test SMTPTester class initialization."""

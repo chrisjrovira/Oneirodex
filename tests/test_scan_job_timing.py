@@ -16,6 +16,8 @@ from oneirodex.utils.scan_job_timing import (
     parse_scan_job_status_filter,
 )
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan-job lifecycle and timing.
+
 
 def test_format_duration_label():
     assert format_duration_label(None) is None

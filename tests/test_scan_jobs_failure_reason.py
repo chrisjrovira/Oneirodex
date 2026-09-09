@@ -17,6 +17,8 @@ import pytest
 from oneirodex.models import Library, ScanJob, User
 from oneirodex.platform import LibraryPlatform
 
+pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- scan-job failure/reclaim paths.
+
 RECLAIM_MESSAGE = (
     'Scan owner process is no longer running; reclaimed so queued scans can start.'
 )
