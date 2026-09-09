@@ -29,6 +29,46 @@
   --od-family-xbox: #2fd67b;
   --od-family-sega: #1a66ff;
   --od-family-atari: #f5a623;
+
+  /* External store / social / catalog brand marks (ExternalStoreLinks). Not
+     themed — each is the brand's own colour, identical on every preset. The
+     store chip reads one of these through --od-store-color for its border and
+     hover tint; the JS brand table points here instead of carrying raw hex, so
+     the palette stays editable in one place and the css-token ratchet can see
+     it. Values are the brands' current marks. */
+  --od-brand-steam: #66c0f4;
+  --od-brand-gog: #86328a;
+  --od-brand-epic: #ffffff;
+  --od-brand-playstation: #0070d1;
+  --od-brand-xbox: #107c10;
+  --od-brand-amazon: #ff9900;
+  --od-brand-humble: #cc2929;
+  --od-brand-itch: #fa5c5c;
+  --od-brand-ea: #ff4747;
+  --od-brand-ubisoft: #0084ff;
+  --od-brand-fandom: #fa005a;
+  --od-brand-igdb: #9146ff;
+  --od-brand-youtube: #ff0000;
+  --od-brand-wikipedia: #e0e0e0;
+  --od-brand-official: #2fd67b;
+  --od-brand-facebook: #1877f2;
+  --od-brand-x: #e7e9ea;
+  --od-brand-twitch: #9146ff;
+  --od-brand-instagram: #e4405f;
+  --od-brand-reddit: #ff4500;
+  --od-brand-android: #3ddc84;
+  --od-brand-apple: #e8e8e8;
+  --od-brand-unknown: #8899aa;
+
+  /* Play-status indicator colours (GameCard status dot + status dropdown).
+     Semantic, not themed: "beaten" reads green in every preset. The JS status
+     table points here rather than carrying raw hex. Current values. */
+  --od-status-unplayed: #808080;
+  --od-status-unfinished: #4A90E2;
+  --od-status-beaten: #50C878;
+  --od-status-completed: #FFD700;
+  --od-status-wont-play: #DC3545;
+  --od-status-none: #808080;
   --od-border: rgba(255, 255, 255, 0.12);
   --od-focus-ring: color-mix(in srgb, var(--od-accent) 70%, white);
   --od-tile-min: 180px;
