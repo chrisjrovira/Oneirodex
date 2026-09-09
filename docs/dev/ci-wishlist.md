@@ -178,3 +178,18 @@ directly — they append a line here.
     `clients/desktop`'s `"@oneirodex/api-client": "*"` workspace dep.
   - `lint` job: already `cache-dependency-path: package-lock.json` + root
     `npm ci` — confirmed, no change.
+- [B1.2] `frontend/shared` (`@oneirodex/ui`) is now a real testable workspace:
+  it has a `test` script (`vitest run`) and `vitest.config.js` (jsdom +
+  `src/testSetup.js`), and the consolidated contract tests live in
+  `frontend/shared/src/*.test.*` (`csrf`, `envelopeError`, `pageStatus`,
+  `confirmDialog`, `toastStack`, `libraryScanNotify`, `loadingStatusText` — 8
+  files / 55 tests as of this wave). No CI job runs them yet, so add one:
+  `shared-vitest` (Node 22), `cache-dependency-path: package-lock.json`, one
+  `Install workspace (repo-root npm ci)` step (`working-directory: .`), then
+  `npm test --workspace=frontend/shared`. Its devDeps (`vitest`, `jsdom`,
+  `@testing-library/react` + `jest-dom`, `@vitejs/plugin-react`, `react` /
+  `react-dom`) are already in the root lock — the same versions the SPAs pin —
+  so the root `npm ci` covers it. These tests are pure-logic + jsdom (no Flask,
+  no DB), so the job is fast and can fail hard. The moved tests are no longer
+  run by `member-app-vitest` / `admin-app-vitest`, so without this job the
+  coverage drops.
