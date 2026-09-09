@@ -35,12 +35,13 @@ import { loadStoredConfig, saveStoredConfig } from './config-store.js'
 import { openSocialCompanionWindow } from './social-window.js'
 import { keychainAdapter } from './keychain.js'
 import { buildLocalArchiveName } from './paths.js'
-import { hydrateLifecycleRegistry, pullLifecycleRegistryFromServer, syncLifecycleRegistryToServer, type LifecycleRegistry } from './lifecycle-store.js'
 import {
-  canPerformAction,
-  type GameLifecycleState,
-  type LifecycleAction,
-} from './lifecycle.js'
+  hydrateLifecycleRegistry,
+  pullLifecycleRegistryFromServer,
+  syncLifecycleRegistryToServer,
+  type LifecycleRegistry,
+} from './lifecycle-store.js'
+import { canPerformAction, type GameLifecycleState, type LifecycleAction } from './lifecycle.js'
 import {
   connectionModeLabel,
   friendsOpenBlockedReason,
@@ -124,7 +125,10 @@ async function renderLifecyclePanel(): Promise<void> {
       '<p class="muted">Lifecycle states appear after you load games (all start as <code>not_downloaded</code>).</p>'
     return
   }
-  let installs: Record<string, { extractPath?: string; archivePath?: string; exePath?: string | null }> = {}
+  let installs: Record<
+    string,
+    { extractPath?: string; archivePath?: string; exePath?: string | null }
+  > = {}
   try {
     installs = await loadInstallsFromDisk()
   } catch {
@@ -218,9 +222,7 @@ function renderLibrary(): void {
       const revealButton = canLaunchGame(state)
         ? `<button type="button" class="action-btn action-btn--reveal" data-action="reveal_path" data-uuid="${escapeHtml(uuid)}" title="Open install folder in Explorer / Finder">Show in Explorer</button>`
         : ''
-      const activityHtml = activity
-        ? `<p class="activity">${escapeHtml(activity)}</p>`
-        : ''
+      const activityHtml = activity ? `<p class="activity">${escapeHtml(activity)}</p>` : ''
       return `
         <article class="game-card" data-game-uuid="${escapeHtml(uuid)}">
           <h3>${escapeHtml(name)}</h3>
@@ -242,7 +244,10 @@ async function hydrateFromDisk(): Promise<void> {
   try {
     await auth.hydrateFromKeychain(keychainAdapter)
   } catch (error) {
-    logCompanion('keyring', `hydrate failed: ${error instanceof Error ? error.message : String(error)}`)
+    logCompanion(
+      'keyring',
+      `hydrate failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
     setStatus(formatKeychainError(error), 'error')
   }
   els.baseUrl.value = auth.getBaseUrl()

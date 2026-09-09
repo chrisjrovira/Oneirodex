@@ -62,10 +62,7 @@ export async function kickoffLaunch(
     activeWatchers.delete(gameUuid)
   }
 
-  activeWatchers.set(
-    gameUuid,
-    watchPlaySession(api, launchResult.pid, sessionId),
-  )
+  activeWatchers.set(gameUuid, watchPlaySession(api, launchResult.pid, sessionId))
 
   return { pid: launchResult.pid, sessionId }
 }

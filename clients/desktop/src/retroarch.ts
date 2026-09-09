@@ -132,7 +132,11 @@ export async function fetchCheatText(opts: {
   }
 }
 
-export function resolveCheatStagePath(cheatsDir: string, gameUuid: string, filename: string): string {
+export function resolveCheatStagePath(
+  cheatsDir: string,
+  gameUuid: string,
+  filename: string,
+): string {
   const root = cheatsDir.replace(/[\\/]+$/, '')
   const safeUuid = gameUuid.replace(/[^a-zA-Z0-9_-]/g, '_')
   return `${root}/${safeUuid}/${safeCheatFilename(filename)}`

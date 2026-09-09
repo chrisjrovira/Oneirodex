@@ -19,9 +19,7 @@ describe('thin library URL', () => {
   it('marks the webview as a thin seat so the SPA can be honest', () => {
     // Without this the SPA sees an ordinary cookie session and keeps offering
     // Install / Update, which a thin seat can never complete.
-    expect(joinLibraryUrl('https://games.example.com')).toBe(
-      'https://games.example.com/?seat=thin',
-    )
+    expect(joinLibraryUrl('https://games.example.com')).toBe('https://games.example.com/?seat=thin')
   })
 
   it('tolerates a trailing slash on the server URL', () => {

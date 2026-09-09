@@ -13,7 +13,10 @@ vi.mock('@tauri-apps/api/webviewWindow', () => {
     setFocus = vi.fn(async () => undefined)
     setAlwaysOnTop = vi.fn(async () => undefined)
     close = vi.fn(async () => undefined)
-    constructor(public label: string, public options: Record<string, unknown>) {
+    constructor(
+      public label: string,
+      public options: Record<string, unknown>,
+    ) {
       FakeWebviewWindow.lastOptions = options
     }
   }

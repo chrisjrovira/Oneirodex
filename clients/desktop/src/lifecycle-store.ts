@@ -139,9 +139,7 @@ export function createPersistedLifecycleRegistry(
   return registry
 }
 
-export async function hydrateLifecycleRegistry(
-  auth?: AuthStore,
-): Promise<LifecycleRegistry> {
+export async function hydrateLifecycleRegistry(auth?: AuthStore): Promise<LifecycleRegistry> {
   const initial = await loadLifecycleRegistryFromDisk()
   return createPersistedLifecycleRegistry({
     initial,

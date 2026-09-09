@@ -13,13 +13,7 @@ export interface ConnectionFailure {
   message: string
   /** Machine-oriented cause for companion console / local diagnostics. */
   cause?:
-    | 'shape_invalid'
-    | 'unauthorized'
-    | 'forbidden'
-    | 'not_found'
-    | 'network'
-    | 'keyring'
-    | 'unknown'
+    'shape_invalid' | 'unauthorized' | 'forbidden' | 'not_found' | 'network' | 'keyring' | 'unknown'
 }
 
 export type ConnectionResult = ConnectionValidation | ConnectionFailure
@@ -56,7 +50,11 @@ function isNetworkFailure(error: unknown): boolean {
 export function formatKeychainError(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error)
   logCompanion('keyring', `persist/load failed: ${raw}`)
-  if (/bad data|baddata|invalid data|platform error|credential|keyring|secure.?store|keychain|dpapi/i.test(raw)) {
+  if (
+    /bad data|baddata|invalid data|platform error|credential|keyring|secure.?store|keychain|dpapi/i.test(
+      raw,
+    )
+  ) {
     return `Could not save the API token in the OS credential store (${raw}). Check Windows Credential Manager access, then retry Connect.`
   }
   return `Could not save the API token in the OS credential store: ${raw}`
@@ -108,7 +106,10 @@ function classifyConnectionError(error: unknown): ConnectionFailure['cause'] {
   if (isNetworkFailure(error)) {
     return 'network'
   }
-  if (error instanceof Error && /bad data|baddata|keyring|secure.?store|credential/i.test(error.message)) {
+  if (
+    error instanceof Error &&
+    /bad data|baddata|keyring|secure.?store|credential/i.test(error.message)
+  ) {
     return 'keyring'
   }
   return 'unknown'

@@ -112,7 +112,7 @@ export async function kickoffUpdate(
     const remappedExe =
       extracted.exePath && extracted.exePath.startsWith(stagingExtract)
         ? `${finalExtract}${extracted.exePath.slice(stagingExtract.length)}`
-        : extracted.exePath ?? null
+        : (extracted.exePath ?? null)
     await saveInstallsToDisk({
       ...(await loadInstallsFromDisk()),
       [gameUuid]: {
