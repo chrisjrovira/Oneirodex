@@ -47,7 +47,7 @@ describe('CSRF handling lives in one module', () => {
     const local = source.match(/^(?:function|const)\s+(getCsrfToken|csrfToken|csrfHeaders)\b/gm)
     expect(
       local ?? [],
-      `import { csrfHeaders } from './csrf' instead — the shared chain is the ` +
+      `import { csrfHeaders } from '@oneirodex/ui' instead — the shared chain is the ` +
         `superset, so a local copy can only be narrower`,
     ).toEqual([])
   })

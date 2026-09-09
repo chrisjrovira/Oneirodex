@@ -1,4 +1,4 @@
-import { csrfHeaders, getCsrfToken } from './csrf'
+import { csrfHeaders, getCsrfToken } from '@oneirodex/ui'
 import { errorFromResponse } from './envelopeError'
 
 /**

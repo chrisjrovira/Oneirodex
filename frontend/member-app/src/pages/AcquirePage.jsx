@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from '../api/envelopeError'
 import { fetchAcquireStatus, searchAcquire } from '../api/updates'
 import { PageStatus } from '../components/PageStatus'

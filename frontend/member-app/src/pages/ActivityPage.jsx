@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody, errorFromResponse } from '../api/envelopeError'
 import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'

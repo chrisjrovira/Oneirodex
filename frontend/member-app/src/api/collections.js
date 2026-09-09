@@ -1,4 +1,4 @@
-import { csrfHeaders } from './csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from './envelopeError'
 function requestError(label, response, data) {
   return errorFromBody(data, response.status, label)

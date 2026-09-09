@@ -1,4 +1,4 @@
-import { csrfHeaders } from './csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromResponse } from './envelopeError'
 
 export async function fetchUpdatesInbox({ signal, limit = 100 } = {}) {

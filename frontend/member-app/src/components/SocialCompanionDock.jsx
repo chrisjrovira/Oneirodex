@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from '../api/envelopeError'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
 import {

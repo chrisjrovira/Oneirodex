@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from '../api/envelopeError'
 import { PageStatus } from '../components/PageStatus'
 import './ReportIssuePage.css'

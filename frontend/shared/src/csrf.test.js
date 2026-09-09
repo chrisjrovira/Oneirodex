@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { csrfHeaders, getCsrfToken } from './csrf'
+import { csrfHeaders, getCsrfToken } from './csrf.js'
 
 function setBody(html) {
   document.body.innerHTML = html

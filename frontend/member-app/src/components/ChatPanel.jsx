@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { confirmAction } from '@oneirodex/ui'
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from './PageStatus'
 import { SpaceRail } from './SpaceRail'

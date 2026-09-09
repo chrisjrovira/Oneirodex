@@ -1,4 +1,4 @@
-import { csrfHeaders } from './csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromResponse } from './envelopeError'
 /**
  * Queue Install / Update / Uninstall / Apply patch / Open path for the desktop companion.

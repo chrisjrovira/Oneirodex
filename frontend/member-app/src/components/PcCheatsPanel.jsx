@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { csrfHeaders } from '../api/csrf'
+import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody, errorFromResponse } from '../api/envelopeError'
 import { PageStatus } from './PageStatus'
 import './PcCheatsPanel.css'
