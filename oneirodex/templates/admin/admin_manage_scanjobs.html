@@ -289,7 +289,7 @@
                                 <p class="jobs-subtitle">Monitor running, queued, and recent scan operations</p>
                             </div>
                             <div class="jobs-controls">
-                                <form action="{{ url_for('main.clear_all_scan_jobs') }}" method="post" class="inline-form">
+                                <form action="{{ url_for('admin2.clear_all_scan_jobs') }}" method="post" class="inline-form">
                                     {{ csrf_form.csrf_token }}
                                     <button type="submit" class="btn btn-outline-danger btn-sm control-btn" data-od-confirm="Delete ALL jobs?">
                                         {{ icons.icon('trash') }} <span class="btn-text">Clear All</span>
