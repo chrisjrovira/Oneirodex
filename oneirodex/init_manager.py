@@ -146,6 +146,15 @@ class InitializationManager:
                 db_manager.add_column_if_not_exists()
                 _safe_print("[OK] Database migrations completed")
 
+                # One-time Alembic adoption (wave A3.1). Every schema this
+                # project has ever built came from create_all + updateschema
+                # above; Alembic now owns forward change. If this database has
+                # no alembic_version table yet but does have a schema, stamp it
+                # at the baseline revision so future `alembic upgrade` starts
+                # from the right place. Do NOT run the baseline migration --
+                # the schema is already present.
+                self._stamp_alembic_baseline_if_needed(engine)
+
             finally:
                 engine.dispose()
 
@@ -154,6 +163,42 @@ class InitializationManager:
         except Exception as e:
             _safe_print(f"[ERR] Database structure setup failed: {e}")
             return False
+
+    def _stamp_alembic_baseline_if_needed(self, engine):
+        """Stamp a pre-Alembic database at the baseline revision, once.
+
+        No-op when ``alembic_version`` already exists (a stamped or migrated
+        DB) or when there is no schema at all yet (nothing to adopt --
+        ``alembic upgrade`` would build it fresh). Failures here are logged
+        and swallowed: a missing stamp is recoverable by hand and must not
+        block boot.
+        """
+        try:
+            from sqlalchemy import inspect as sa_inspect
+
+            inspector = sa_inspect(engine)
+            if inspector.has_table('alembic_version'):
+                return
+            # "Schema exists" probe: a table every install has had for years.
+            if not inspector.has_table('games'):
+                return
+
+            from alembic import command
+            from alembic.config import Config as AlembicConfig
+
+            repo_root = os.path.dirname(PACKAGE_ROOT)
+            ini_path = os.path.join(repo_root, 'alembic.ini')
+            if not os.path.isfile(ini_path):
+                _safe_print(
+                    "[WARN] alembic.ini not found; skipping baseline stamp"
+                )
+                return
+
+            alembic_cfg = AlembicConfig(ini_path)
+            command.stamp(alembic_cfg, 'head')
+            _safe_print("[OK] Stamped existing schema at Alembic baseline")
+        except Exception as e:  # noqa: BLE001 - boot must not fail on this
+            _safe_print(f"[WARN] Alembic baseline stamp skipped: {e}")
 
     def _phase3_default_data(self):
         """Initialize all default data in the database."""

@@ -43,6 +43,20 @@ pytest tests/test_ops_followons.py tests/test_hardlinks_ai_vr_layouts.py tests/t
 - [ ] CI `desktop-build` green — six unsigned artifacts (full + thin × Windows / macOS / Linux); the upload fails the job if bundling produced nothing
 - [ ] Docker build: `docker compose build`
 - [ ] Fresh `.env` from `.env.docker.example` starts (`SECRET_KEY` set)
+- [ ] Schema: `python -m alembic upgrade head` runs clean on a fresh DB and `python -m alembic check` reports no new operations (allow-list in [`docs/dev/alembic-baseline-notes.md`](../dev/alembic-baseline-notes.md))
+
+## Schema migrations (Alembic)
+
+Since modernization wave A3.1 ([ADR 0004](../adr/0004-adopt-alembic.md)) the schema
+is owned by Alembic. `oneirodex/updateschema.py` is **frozen** — new schema
+change means `python -m alembic revision --autogenerate -m "..."`, reviewed by
+hand, committed under `alembic/versions/`.
+
+Operator upgrade path is unchanged in practice: pull image → `compose up` →
+`init_manager` Phase 2 builds/updates the schema and, on the first boot after
+this release, runs a one-time `alembic stamp head` for databases that predate
+Alembic (logged as `Stamped existing schema at Alembic baseline`). No operator
+action, no `alembic` command to run by hand. `/readyz` green as before.
 
 ## Publish
 

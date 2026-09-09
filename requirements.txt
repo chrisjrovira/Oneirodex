@@ -7,6 +7,9 @@ flask==3.1.3
 sqlalchemy==2.0.52
 werkzeug==3.1.8
 jinja2==3.1.6
+# Schema migrations (wave A3.1). Runtime dep, not dev-only: init_manager stamps
+# a pre-Alembic database at the baseline revision on first boot after upgrade.
+alembic==1.19.2
 
 flask_wtf==1.3.0
 flask_sqlalchemy==3.1.1

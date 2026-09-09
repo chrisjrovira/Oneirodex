@@ -1,0 +1,35 @@
+Oneirodex schema migrations (Alembic)
+=====================================
+
+Adopted in the modernization program, wave A3.1. Supersedes the
+"defer Alembic" decision in docs/adr/0001-schema-migrations-defer-alembic.md.
+
+Layout
+------
+- alembic.ini        - config; sqlalchemy.url is intentionally blank
+- env.py             - resolves the DB URL like the app (DATABASE_URL /
+                       TEST_DATABASE_URL / config.Config, or `-x db_url=...`);
+                       target metadata is oneirodex.models db.metadata
+- versions/          - revision scripts; the first is the squashed baseline
+
+Everyday use
+------------
+    # apply everything
+    python -m alembic upgrade head
+
+    # against an explicit database (no env vars touched)
+    python -m alembic -x db_url=postgresql://user:pass@host/dbname upgrade head
+
+    # new schema change: edit oneirodex/models.py, then
+    python -m alembic revision --autogenerate -m "short description"
+    # review the generated script by hand before committing
+
+    # drift gate (clean = metadata matches an upgraded DB)
+    python -m alembic check
+
+Do NOT add DDL to oneirodex/updateschema.py any more - it is frozen. It stays
+only to carry pre-Alembic installs up to the baseline; init_manager stamps such
+a database at the baseline revision on first boot after upgrade.
+
+Known `alembic check` allow-list: docs/dev/alembic-baseline-notes.md
+Operator upgrade steps: docs/runbooks/release-checklist.md
