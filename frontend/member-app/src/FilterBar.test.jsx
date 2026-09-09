@@ -103,12 +103,7 @@ test('typing in library search debounces name apply', async () => {
   const onApply = vi.fn()
 
   render(
-    <FilterBar
-      filters={{}}
-      onApply={onApply}
-      onLiveSearch={onLiveSearch}
-      onClear={() => {}}
-    />,
+    <FilterBar filters={{}} onApply={onApply} onLiveSearch={onLiveSearch} onClear={() => {}} />,
   )
 
   const input = screen.getByRole('searchbox', { name: /search library by title/i })
@@ -181,9 +176,7 @@ test('FilterBar hosts signal chips in the filter section', async () => {
  * Kind stays in the scrollable body. The body still stays mounted.
  */
 test('FilterBar leads with Apply; Signals under actions; Kind in body', async () => {
-  const { container } = render(
-    <FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />,
-  )
+  const { container } = render(<FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />)
 
   expect(screen.queryByRole('button', { name: 'Done' })).toBeNull()
 
@@ -192,12 +185,8 @@ test('FilterBar leads with Apply; Signals under actions; Kind in body', async ()
   const kind = screen.getByRole('group', { name: 'Kind filters' })
   const signals = screen.getByRole('group', { name: 'Badge filters' })
   const apply = screen.getByRole('button', { name: 'Apply' })
-  expect(
-    apply.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy()
-  expect(
-    signals.compareDocumentPosition(kind) & Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy()
+  expect(apply.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(signals.compareDocumentPosition(kind) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(body.contains(kind)).toBe(true)
   expect(body.contains(signals)).toBe(false)
   expect(screen.queryByRole('button', { name: 'Hide filters' })).toBeNull()
@@ -222,11 +211,7 @@ test('LibraryFiltersCollapseToggle reports expanded state', async () => {
   expect(onToggle).toHaveBeenCalledTimes(1)
 
   rerender(
-    <LibraryFiltersCollapseToggle
-      collapsed
-      onToggle={onToggle}
-      controlsId="filters-panel"
-    />,
+    <LibraryFiltersCollapseToggle collapsed onToggle={onToggle} controlsId="filters-panel" />,
   )
   const show = screen.getByRole('button', { name: 'Show filters' })
   expect(show).toHaveAttribute('aria-expanded', 'false')
@@ -236,9 +221,7 @@ test('FilterBar kind chips drive item_kind browse param', async () => {
   const user = userEvent.setup()
   const onApply = vi.fn()
 
-  const { rerender } = render(
-    <FilterBar filters={{}} onApply={onApply} onClear={() => {}} />,
-  )
+  const { rerender } = render(<FilterBar filters={{}} onApply={onApply} onClear={() => {}} />)
 
   expect(screen.getByRole('group', { name: 'Kind filters' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Games' })).toBeInTheDocument()
@@ -249,33 +232,17 @@ test('FilterBar kind chips drive item_kind browse param', async () => {
   await user.click(screen.getByRole('button', { name: 'Games' }))
   expect(onApply).toHaveBeenCalledWith({ item_kind: 'game' })
 
-  rerender(
-    <FilterBar
-      filters={{ item_kind: 'game' }}
-      onApply={onApply}
-      onClear={() => {}}
-    />,
-  )
+  rerender(<FilterBar filters={{ item_kind: 'game' }} onApply={onApply} onClear={() => {}} />)
   await user.click(screen.getByRole('button', { name: 'Soft titles' }))
   expect(onApply).toHaveBeenLastCalledWith({ item_kind: 'game,experience' })
 
   rerender(
-    <FilterBar
-      filters={{ item_kind: 'game,experience' }}
-      onApply={onApply}
-      onClear={() => {}}
-    />,
+    <FilterBar filters={{ item_kind: 'game,experience' }} onApply={onApply} onClear={() => {}} />,
   )
   await user.click(screen.getByRole('button', { name: 'Games' }))
   expect(onApply).toHaveBeenLastCalledWith({ item_kind: 'experience' })
 
-  rerender(
-    <FilterBar
-      filters={{ item_kind: 'experience' }}
-      onApply={onApply}
-      onClear={() => {}}
-    />,
-  )
+  rerender(<FilterBar filters={{ item_kind: 'experience' }} onApply={onApply} onClear={() => {}} />)
   await user.click(screen.getByRole('button', { name: 'Soft titles' }))
   expect(onApply).toHaveBeenLastCalledWith({})
 })
@@ -285,7 +252,5 @@ test('shows a page status when filter options fail to load', async () => {
 
   render(<FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />)
 
-  expect(await screen.findByRole('alert')).toHaveTextContent(
-    'Unable to load filter options.',
-  )
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load filter options.')
 })

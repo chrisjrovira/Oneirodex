@@ -21,23 +21,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 const HERE = dirname(fileURLToPath(import.meta.url))
 
 const SCRIPT = readFileSync(
-  join(
-    HERE,
-    '..',
-    '..',
-    '..',
-    'oneirodex',
-    'setup',
-    'default_theme',
-    'js',
-    'od_sortable_table.js',
-  ),
+  join(HERE, '..', '..', '..', 'oneirodex', 'setup', 'default_theme', 'js', 'od_sortable_table.js'),
   'utf8',
 )
 
 /** Evaluate the classic script against the current jsdom document. */
 function loadScript() {
-  // eslint-disable-next-line no-eval
   ;(0, eval)(SCRIPT)
 }
 

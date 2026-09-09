@@ -2,7 +2,14 @@
 import { checkStatus, deleteDownload, fetchMyDownloads } from '../api/downloads'
 import { PageStatus } from '../components/PageStatus'
 
-const TERMINAL_STATUSES = new Set(['available', 'completed', 'failed', 'error', 'invalid', 'not_found'])
+const TERMINAL_STATUSES = new Set([
+  'available',
+  'completed',
+  'failed',
+  'error',
+  'invalid',
+  'not_found',
+])
 const POLL_INTERVAL_MS = 5000
 
 function isTerminal(status) {
@@ -98,8 +105,7 @@ export function DownloadsPage({ shellConfig: _shellConfig } = {}) {
           return {
             ...row,
             status: nextStatus,
-            download_url:
-              nextStatus === 'available' ? `/download_zip/${row.id}` : row.download_url,
+            download_url: nextStatus === 'available' ? `/download_zip/${row.id}` : row.download_url,
           }
         }),
       )

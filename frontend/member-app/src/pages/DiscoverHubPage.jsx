@@ -79,10 +79,8 @@ export function DiscoverHubPage({ isAdmin = false, shellConfig = {} } = {}) {
       {bar}
       <p className="od-more-page__lede">
         Assembled from this genre.{' '}
-        {catalogHref ? (
-          <Link to={catalogHref}>Browse the catalog</Link>
-        ) : null}{' '}
-        for the full list. These rows cannot be pinned.
+        {catalogHref ? <Link to={catalogHref}>Browse the catalog</Link> : null} for the full list.
+        These rows cannot be pinned.
       </p>
       {sections.map((section) => (
         <DiscoverShelf

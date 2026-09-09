@@ -67,9 +67,7 @@ export function OpsApp({ pollMs = 15000 }) {
         </button>
       </header>
 
-      {error && snapshot ? (
-        <PageStatus error={error} onRetry={refresh} retryLabel="Retry" />
-      ) : null}
+      {error && snapshot ? <PageStatus error={error} onRetry={refresh} retryLabel="Retry" /> : null}
 
       {!snapshot ? (
         <PageStatus

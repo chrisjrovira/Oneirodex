@@ -56,10 +56,7 @@ test('lists downloads and polls non-terminal rows every 5s', async () => {
 
   expect(await screen.findByText('Pending Game')).toBeInTheDocument()
   expect(screen.getByText('Ready Game')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
-    'href',
-    '/download_zip/8',
-  )
+  expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('href', '/download_zip/8')
 
   await act(async () => {
     await vi.advanceTimersByTimeAsync(5000)
@@ -83,9 +80,7 @@ test('lists downloads and polls non-terminal rows every 5s', async () => {
 
 test('shows error with retry', async () => {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-  downloadsApi.fetchMyDownloads
-    .mockRejectedValueOnce(new Error('boom'))
-    .mockResolvedValueOnce([])
+  downloadsApi.fetchMyDownloads.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce([])
 
   render(<DownloadsPage />)
 

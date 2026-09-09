@@ -33,9 +33,7 @@ export function AppBar({
             key={link.id}
             to={link.to}
             onClick={onNavigate}
-            className={({ isActive }) =>
-              `od-appbar__link${isActive ? ' is-active' : ''}`
-            }
+            className={({ isActive }) => `od-appbar__link${isActive ? ' is-active' : ''}`}
           >
             {link.label}
           </NavLink>

@@ -97,8 +97,8 @@
 
 .game-card:has(.od-badge-stack--bottom-left) .od-platform-chip {
   bottom: calc(
-    var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) +
-    var(--od-tile-btn-gap, 4px) + var(--od-tile-title-h, 0px)
+    var(--od-tile-edge, 8px) + var(--od-badge-h, 1.35rem) + var(--od-tile-btn-gap, 4px) +
+      var(--od-tile-title-h, 0px)
   );
 }
 
@@ -247,7 +247,9 @@
 .od-toast--out {
   opacity: 0;
   transform: translateY(-0.35rem);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 @keyframes od-toast-in {

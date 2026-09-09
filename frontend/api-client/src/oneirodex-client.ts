@@ -22,5 +22,4 @@ export function createOneirodexClient(config: OneirodexClientConfig) {
   }
 }
 
-
 export type OneirodexClient = ReturnType<typeof createOneirodexClient>

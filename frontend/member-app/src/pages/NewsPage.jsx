@@ -225,11 +225,8 @@ export function NewsPage({ shellConfig = {} }) {
   }, [activeTab, announcements, visibleHeadlines, freeGames])
 
   const adminRest =
-    announcements && featured?.kind === 'admin'
-      ? announcements.slice(1)
-      : announcements || []
-  const headlineRest =
-    featured?.kind === 'headline' ? visibleHeadlines.slice(1) : visibleHeadlines
+    announcements && featured?.kind === 'admin' ? announcements.slice(1) : announcements || []
+  const headlineRest = featured?.kind === 'headline' ? visibleHeadlines.slice(1) : visibleHeadlines
   const freeRest = freeGames && featured?.kind === 'free' ? freeGames.slice(1) : freeGames || []
 
   // Counts ride on the segments themselves rather than a separate summary —
@@ -251,7 +248,7 @@ export function NewsPage({ shellConfig = {} }) {
 
   return (
     <>
-    {useNewChrome ? (
+      {useNewChrome ? (
         <ContextBar
           views={viewsWithCounts}
           activeView={activeTab}
@@ -264,239 +261,179 @@ export function NewsPage({ shellConfig = {} }) {
           }}
         />
       ) : null}
-    <div
-      className="od-more-page od-news od-news--fill"
-      data-layout={layout}
-      data-tab={activeTab}
-    >
-      {useNewChrome ? null : (
-        <div className="od-page-header od-news__header od-panels__full">
-          <div>
-            <h1>News</h1>
-            <p className="od-more-page__lede">
-              Admin notes, free claims, and gaming headlines.
-            </p>
+      <div className="od-more-page od-news od-news--fill" data-layout={layout} data-tab={activeTab}>
+        {useNewChrome ? null : (
+          <div className="od-page-header od-news__header od-panels__full">
+            <div>
+              <h1>News</h1>
+              <p className="od-more-page__lede">Admin notes, free claims, and gaming headlines.</p>
+            </div>
+            <nav className="od-news__tabs" aria-label="News sections">
+              {NEWS_VIEWS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={activeTab === id ? 'is-active' : ''}
+                  aria-pressed={activeTab === id}
+                  onClick={() => setActiveTab(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
           </div>
-          <nav className="od-news__tabs" aria-label="News sections">
-            {NEWS_VIEWS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={activeTab === id ? 'is-active' : ''}
-                aria-pressed={activeTab === id}
-                onClick={() => setActiveTab(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
+        )}
 
-      <PageStatus
-        loading={loading}
-        error={error}
-        errorMessage="Unable to load news."
-        loadingMessage="Loading news…"
-        onRetry={() => setRetryCount((n) => n + 1)}
-      />
+        <PageStatus
+          loading={loading}
+          error={error}
+          errorMessage="Unable to load news."
+          loadingMessage="Loading news…"
+          onRetry={() => setRetryCount((n) => n + 1)}
+        />
 
-      {!error && !loading && featured && (activeTab === 'all' || activeTab === 'admins') ? (
-        <section className="od-news__hero od-panels__full" aria-label="Featured">
-          <p className="od-news__hero-kicker">
-            {featured.kind === 'admin'
-              ? 'From your admins'
-              : featured.kind === 'free'
-                ? 'Free now'
-                : 'Headline'}
-          </p>
-          {featured.kind === 'headline' ? (
-            <a
-              className="od-news__hero-link"
-              href={featured.item.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <h2 className="od-news__hero-title">{featured.item.title}</h2>
-            </a>
-          ) : (
-            <h2 className="od-news__hero-title">{featured.item.title}</h2>
-          )}
-          {featured.kind === 'admin' && featured.item.body ? (
-            <p className="od-news__hero-body">{truncate(featured.item.body, 280)}</p>
-          ) : null}
-          {featured.kind === 'headline' && featured.item.summary ? (
-            <p className="od-news__hero-body">{truncate(featured.item.summary, 220)}</p>
-          ) : null}
-          {featured.kind === 'free' && featured.item.description ? (
-            <p className="od-news__hero-body">{truncate(featured.item.description, 180)}</p>
-          ) : null}
-          <p className="od-news__hero-meta">
-            {featured.kind === 'admin' && featured.item.created_at ? (
-              <time dateTime={featured.item.created_at}>
-                {formatLocaleDate(featured.item.created_at)}
-              </time>
-            ) : null}
+        {!error && !loading && featured && (activeTab === 'all' || activeTab === 'admins') ? (
+          <section className="od-news__hero od-panels__full" aria-label="Featured">
+            <p className="od-news__hero-kicker">
+              {featured.kind === 'admin'
+                ? 'From your admins'
+                : featured.kind === 'free'
+                  ? 'Free now'
+                  : 'Headline'}
+            </p>
             {featured.kind === 'headline' ? (
-              <>
-                <span>{featured.item.source}</span>
-                {featured.item.published_at ? (
-                  <time dateTime={featured.item.published_at}>
-                    {formatLocaleDate(featured.item.published_at)}
-                  </time>
-                ) : null}
-              </>
+              <a
+                className="od-news__hero-link"
+                href={featured.item.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <h2 className="od-news__hero-title">{featured.item.title}</h2>
+              </a>
+            ) : (
+              <h2 className="od-news__hero-title">{featured.item.title}</h2>
+            )}
+            {featured.kind === 'admin' && featured.item.body ? (
+              <p className="od-news__hero-body">{truncate(featured.item.body, 280)}</p>
             ) : null}
-            {featured.kind === 'free' ? (
-              <>
-                <span className="od-news__store">{storeLabel(featured.item.store)}</span>
-                {featured.item.ends_at ? (
-                  <time dateTime={featured.item.ends_at}>
-                    Ends {formatEndsAt(featured.item.ends_at)}
-                  </time>
-                ) : null}
-              </>
+            {featured.kind === 'headline' && featured.item.summary ? (
+              <p className="od-news__hero-body">{truncate(featured.item.summary, 220)}</p>
             ) : null}
-          </p>
-        </section>
-      ) : null}
+            {featured.kind === 'free' && featured.item.description ? (
+              <p className="od-news__hero-body">{truncate(featured.item.description, 180)}</p>
+            ) : null}
+            <p className="od-news__hero-meta">
+              {featured.kind === 'admin' && featured.item.created_at ? (
+                <time dateTime={featured.item.created_at}>
+                  {formatLocaleDate(featured.item.created_at)}
+                </time>
+              ) : null}
+              {featured.kind === 'headline' ? (
+                <>
+                  <span>{featured.item.source}</span>
+                  {featured.item.published_at ? (
+                    <time dateTime={featured.item.published_at}>
+                      {formatLocaleDate(featured.item.published_at)}
+                    </time>
+                  ) : null}
+                </>
+              ) : null}
+              {featured.kind === 'free' ? (
+                <>
+                  <span className="od-news__store">{storeLabel(featured.item.store)}</span>
+                  {featured.item.ends_at ? (
+                    <time dateTime={featured.item.ends_at}>
+                      Ends {formatEndsAt(featured.item.ends_at)}
+                    </time>
+                  ) : null}
+                </>
+              ) : null}
+            </p>
+          </section>
+        ) : null}
 
-      <div className="od-news__stage">
-      {/* Admin notes lead, full width, and only when there are any.
+        <div className="od-news__stage">
+          {/* Admin notes lead, full width, and only when there are any.
           `announcements` is an array, so the old `announcements &&` was true
           even when empty and rendered a heading, a zero count and "No
           announcements yet." — a permanent empty panel taking a column from the
           two sections that always have something in them. On the Admins tab the
           empty state still shows, because there the section *is* the page and
           silence would read as a failed load. */}
-      {!error && announcements && showAdmins && (announcements.length > 0 || activeTab === 'admins') ? (
-        <section className="od-news__section od-news__admins" aria-labelledby="news-admins-heading">
-          <div className="od-news__section-head">
-            <h2 id="news-admins-heading">From your admins</h2>
-            <span className="od-news__count">{announcements.length}</span>
-          </div>
-          <div className="od-news__panel-body">
-          {announcements.length === 0 ? <p className="od-news__empty">No announcements yet.</p> : null}
-          {adminRest.length > 0 ? (
-            <ul className="od-news__rail">
-              {adminRest.map((item) => (
-                <li key={item.id} className="od-news__rail-item od-news__rail-item--admin">
-                  <article>
-                    <header className="od-news__rail-head">
-                      <strong>{item.title}</strong>
-                      {item.created_at ? (
-                        <time dateTime={item.created_at}>
-                          {formatLocaleDate(item.created_at)}
-                        </time>
-                      ) : null}
-                    </header>
-                    <p>{truncate(item.body, 220)}</p>
-                  </article>
-                </li>
-              ))}
-            </ul>
+          {!error &&
+          announcements &&
+          showAdmins &&
+          (announcements.length > 0 || activeTab === 'admins') ? (
+            <section
+              className="od-news__section od-news__admins"
+              aria-labelledby="news-admins-heading"
+            >
+              <div className="od-news__section-head">
+                <h2 id="news-admins-heading">From your admins</h2>
+                <span className="od-news__count">{announcements.length}</span>
+              </div>
+              <div className="od-news__panel-body">
+                {announcements.length === 0 ? (
+                  <p className="od-news__empty">No announcements yet.</p>
+                ) : null}
+                {adminRest.length > 0 ? (
+                  <ul className="od-news__rail">
+                    {adminRest.map((item) => (
+                      <li key={item.id} className="od-news__rail-item od-news__rail-item--admin">
+                        <article>
+                          <header className="od-news__rail-head">
+                            <strong>{item.title}</strong>
+                            {item.created_at ? (
+                              <time dateTime={item.created_at}>
+                                {formatLocaleDate(item.created_at)}
+                              </time>
+                            ) : null}
+                          </header>
+                          <p>{truncate(item.body, 220)}</p>
+                        </article>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </section>
           ) : null}
-          </div>
-        </section>
-      ) : null}
 
-      {!error && freeGames && showFree ? (
-        <section id="free-games" className="od-news__section od-news__free" aria-labelledby="news-free-heading">
-          <div className="od-news__section-head">
-            <h2 id="news-free-heading">Free now</h2>
-            <span className="od-news__count">{freeGames.length}</span>
-          </div>
-          <p className="od-news__hint">
-            Claim on the store. Oneirodex does not download DRM titles — sync Ownership after claiming.
-          </p>
-          {freeGames.length === 0 ? (
-            <p className="od-news__empty">No free offers cached yet. Check back after the next refresh.</p>
-          ) : layout === 'rss' ? (
-            <div className="od-news__panel-body">
-            <ul className="od-news__magazine">
-              {freeItems.map((item) => {
-                const https = item.links?.https || item.claim_url || item.store_url
-                const protocol = item.links?.protocol
-                const ends = formatEndsAt(item.ends_at)
-                return (
-                  <li key={`${item.store}-${item.external_id}`} className="od-news__mag-row">
-                    <article>
-                      <header className="od-news__rail-head">
-                        <span className="od-news__store">{storeLabel(item.store)}</span>
-                        <strong>{item.title}</strong>
-                        {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
-                      </header>
-                      <p className="od-news__actions">
-                        {item.connected && item.id ? (
-                          <button
-                            type="button"
-                            className="od-btn od-btn--primary"
-                            onClick={() => void claimAssist(item)}
-                          >
-                            Claim &amp; sync
-                          </button>
-                        ) : https ? (
-                          <a
-                            className="od-btn od-btn--primary"
-                            href={https}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Claim on {storeLabel(item.store)}
-                          </a>
-                        ) : null}
-                        {protocol ? (
-                          <a className="od-btn od-btn--ghost" href={protocol}>
-                            Open in app
-                          </a>
-                        ) : null}
-                      </p>
-                      {assistMsg[item.id] ? (
-                        <p className="od-news__assist-msg">{assistMsg[item.id]}</p>
-                      ) : null}
-                    </article>
-                  </li>
-                )
-              })}
-            </ul>
-            </div>
-          ) : (
-            <div className="od-news__panel-body">
-            <ul className="od-news__free-strip">
-              {freeItems.map((item) => {
-                const https = item.links?.https || item.claim_url || item.store_url
-                const protocol = item.links?.protocol
-                const ends = formatEndsAt(item.ends_at)
-                return (
-                  <li key={`${item.store}-${item.external_id}`} className="od-news__free-tile">
-                    <article>
-                      <div className="od-news__free-row">
-                        {item.image_url ? (
-                          <img
-                            className="od-news__free-thumb"
-                            src={item.image_url}
-                            alt=""
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="od-news__free-thumb od-news__free-thumb--empty" aria-hidden="true" />
-                        )}
-                        <div className="od-news__free-body">
-                          <p className="od-news__meta">
-                            <span className="od-news__store">{storeLabel(item.store)}</span>
-                            {item.worth ? <span>{item.worth}</span> : null}
-                            {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
-                            {item.connected ? <span className="od-news__linked">Linked</span> : null}
-                          </p>
-                          <strong>{item.title}</strong>
-                          {item.description ? <p>{truncate(item.description, 110)}</p> : null}
-                          {/* FEAT-D6: one action that does the right thing.
-                              Linked store → claim assist opens the offer *and*
-                              registers ownership. Not linked → plain deeplink,
-                              with the reason it is not seamless stated once. */}
-                          <p className="od-news__actions">
-                            {item.connected && item.id ? (
-                              <>
+          {!error && freeGames && showFree ? (
+            <section
+              id="free-games"
+              className="od-news__section od-news__free"
+              aria-labelledby="news-free-heading"
+            >
+              <div className="od-news__section-head">
+                <h2 id="news-free-heading">Free now</h2>
+                <span className="od-news__count">{freeGames.length}</span>
+              </div>
+              <p className="od-news__hint">
+                Claim on the store. Oneirodex does not download DRM titles — sync Ownership after
+                claiming.
+              </p>
+              {freeGames.length === 0 ? (
+                <p className="od-news__empty">
+                  No free offers cached yet. Check back after the next refresh.
+                </p>
+              ) : layout === 'rss' ? (
+                <div className="od-news__panel-body">
+                  <ul className="od-news__magazine">
+                    {freeItems.map((item) => {
+                      const https = item.links?.https || item.claim_url || item.store_url
+                      const protocol = item.links?.protocol
+                      const ends = formatEndsAt(item.ends_at)
+                      return (
+                        <li key={`${item.store}-${item.external_id}`} className="od-news__mag-row">
+                          <article>
+                            <header className="od-news__rail-head">
+                              <span className="od-news__store">{storeLabel(item.store)}</span>
+                              <strong>{item.title}</strong>
+                              {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
+                            </header>
+                            <p className="od-news__actions">
+                              {item.connected && item.id ? (
                                 <button
                                   type="button"
                                   className="od-btn od-btn--primary"
@@ -504,169 +441,254 @@ export function NewsPage({ shellConfig = {} }) {
                                 >
                                   Claim &amp; sync
                                 </button>
-                                {protocol ? (
-                                  <a className="od-btn od-btn--ghost" href={protocol}>
-                                    Open in app
-                                  </a>
+                              ) : https ? (
+                                <a
+                                  className="od-btn od-btn--primary"
+                                  href={https}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Claim on {storeLabel(item.store)}
+                                </a>
+                              ) : null}
+                              {protocol ? (
+                                <a className="od-btn od-btn--ghost" href={protocol}>
+                                  Open in app
+                                </a>
+                              ) : null}
+                            </p>
+                            {assistMsg[item.id] ? (
+                              <p className="od-news__assist-msg">{assistMsg[item.id]}</p>
+                            ) : null}
+                          </article>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              ) : (
+                <div className="od-news__panel-body">
+                  <ul className="od-news__free-strip">
+                    {freeItems.map((item) => {
+                      const https = item.links?.https || item.claim_url || item.store_url
+                      const protocol = item.links?.protocol
+                      const ends = formatEndsAt(item.ends_at)
+                      return (
+                        <li
+                          key={`${item.store}-${item.external_id}`}
+                          className="od-news__free-tile"
+                        >
+                          <article>
+                            <div className="od-news__free-row">
+                              {item.image_url ? (
+                                <img
+                                  className="od-news__free-thumb"
+                                  src={item.image_url}
+                                  alt=""
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div
+                                  className="od-news__free-thumb od-news__free-thumb--empty"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <div className="od-news__free-body">
+                                <p className="od-news__meta">
+                                  <span className="od-news__store">{storeLabel(item.store)}</span>
+                                  {item.worth ? <span>{item.worth}</span> : null}
+                                  {ends ? <time dateTime={item.ends_at}>Ends {ends}</time> : null}
+                                  {item.connected ? (
+                                    <span className="od-news__linked">Linked</span>
+                                  ) : null}
+                                </p>
+                                <strong>{item.title}</strong>
+                                {item.description ? <p>{truncate(item.description, 110)}</p> : null}
+                                {/* FEAT-D6: one action that does the right thing.
+                              Linked store → claim assist opens the offer *and*
+                              registers ownership. Not linked → plain deeplink,
+                              with the reason it is not seamless stated once. */}
+                                <p className="od-news__actions">
+                                  {item.connected && item.id ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="od-btn od-btn--primary"
+                                        onClick={() => void claimAssist(item)}
+                                      >
+                                        Claim &amp; sync
+                                      </button>
+                                      {protocol ? (
+                                        <a className="od-btn od-btn--ghost" href={protocol}>
+                                          Open in app
+                                        </a>
+                                      ) : null}
+                                    </>
+                                  ) : (
+                                    <>
+                                      {https ? (
+                                        <a
+                                          className="od-btn od-btn--primary"
+                                          href={https}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                        >
+                                          Claim on {storeLabel(item.store)}
+                                        </a>
+                                      ) : null}
+                                      <Link className="od-news__connect-hint" to="/ownership">
+                                        Link {storeLabel(item.store)} to sync automatically
+                                      </Link>
+                                    </>
+                                  )}
+                                </p>
+                                {assistMsg[item.id] ? (
+                                  <p className="od-news__assist-msg">{assistMsg[item.id]}</p>
                                 ) : null}
-                              </>
-                            ) : (
-                              <>
-                                {https ? (
-                                  <a
-                                    className="od-btn od-btn--primary"
-                                    href={https}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    Claim on {storeLabel(item.store)}
-                                  </a>
-                                ) : null}
-                                <Link className="od-news__connect-hint" to="/ownership">
-                                  Link {storeLabel(item.store)} to sync automatically
-                                </Link>
-                              </>
-                            )}
-                          </p>
-                          {assistMsg[item.id] ? (
-                            <p className="od-news__assist-msg">{assistMsg[item.id]}</p>
-                          ) : null}
-                        </div>
-                      </div>
-                    </article>
-                  </li>
-                )
-              })}
-            </ul>
-            </div>
-          )}
-        </section>
-      ) : null}
+                              </div>
+                            </div>
+                          </article>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              )}
+            </section>
+          ) : null}
 
-      {/* Headlines take a column rather than the full row, so News and Free sit
+          {/* Headlines take a column rather than the full row, so News and Free sit
           side by side under the admin notes. Spanning the row was what pushed
           Free up beside admins and left the page reading as one long scroll on
           the tab that shows everything. */}
-      {!error && headlines && showHeadlines ? (
-        <section className="od-news__section od-news__headlines" aria-labelledby="news-headlines-heading">
-          <div className="od-news__section-head">
-            <h2 id="news-headlines-heading">Gaming headlines</h2>
-            <span className="od-news__count">{visibleHeadlines.length}</span>
-          </div>
+          {!error && headlines && showHeadlines ? (
+            <section
+              className="od-news__section od-news__headlines"
+              aria-labelledby="news-headlines-heading"
+            >
+              <div className="od-news__section-head">
+                <h2 id="news-headlines-heading">Gaming headlines</h2>
+                <span className="od-news__count">{visibleHeadlines.length}</span>
+              </div>
 
-          {/* Pick your sites. Every configured source is listed whether or not
+              {/* Pick your sites. Every configured source is listed whether or not
               it has an article today — filtering by what happened to arrive
               would hide a quiet site behind its own silence. */}
-          {sources.length > 0 ? (
-            <div className="od-news__sources" role="group" aria-label="Headline sources">
-              {sources.map((source) => {
-                const on = !mutedSources.has(source)
-                return (
-                  <button
-                    key={source}
-                    type="button"
-                    className="od-cbtn od-news__source"
-                    aria-pressed={on}
-                    onClick={() => toggleSource(source)}
-                    title={on ? `Hide ${source}` : `Show ${source}`}
-                  >
-                    {source}
-                  </button>
-                )
-              })}
-            </div>
-          ) : null}
+              {sources.length > 0 ? (
+                <div className="od-news__sources" role="group" aria-label="Headline sources">
+                  {sources.map((source) => {
+                    const on = !mutedSources.has(source)
+                    return (
+                      <button
+                        key={source}
+                        type="button"
+                        className="od-cbtn od-news__source"
+                        aria-pressed={on}
+                        onClick={() => toggleSource(source)}
+                        title={on ? `Hide ${source}` : `Show ${source}`}
+                      >
+                        {source}
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
 
-          {visibleHeadlines.length === 0 ? (
-            <p className="od-news__empty">
-              {mutedSources.size > 0 && headlines.length > 0
-                ? 'Every source is switched off — turn one back on above.'
-                : 'No external headlines available right now.'}
-            </p>
-          ) : layout === 'rss' ? (
-            <div className="od-news__panel-body">
-            <ul className="od-news__magazine">
-              {headlineItems.map((item) => (
-                <li key={item.url} className="od-news__mag-row">
-                  <article>
-                    <a
-                      className="od-news__mag-link"
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <strong>{item.title}</strong>
-                    </a>
-                    {item.summary ? <p>{truncate(item.summary, 180)}</p> : null}
-                    <p className="od-news__meta">
-                      <span className="od-news__source">{item.source}</span>
-                      {item.published_at ? (
-                        <time dateTime={item.published_at}>
-                          {formatLocaleDate(item.published_at)}
-                        </time>
-                      ) : null}
-                    </p>
-                  </article>
-                </li>
-              ))}
-            </ul>
-            </div>
-          ) : (
-            /* Image-forward cards (UX-C14) — the way Steam/Epic present news.
+              {visibleHeadlines.length === 0 ? (
+                <p className="od-news__empty">
+                  {mutedSources.size > 0 && headlines.length > 0
+                    ? 'Every source is switched off — turn one back on above.'
+                    : 'No external headlines available right now.'}
+                </p>
+              ) : layout === 'rss' ? (
+                <div className="od-news__panel-body">
+                  <ul className="od-news__magazine">
+                    {headlineItems.map((item) => (
+                      <li key={item.url} className="od-news__mag-row">
+                        <article>
+                          <a
+                            className="od-news__mag-link"
+                            href={item.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <strong>{item.title}</strong>
+                          </a>
+                          {item.summary ? <p>{truncate(item.summary, 180)}</p> : null}
+                          <p className="od-news__meta">
+                            <span className="od-news__source">{item.source}</span>
+                            {item.published_at ? (
+                              <time dateTime={item.published_at}>
+                                {formatLocaleDate(item.published_at)}
+                              </time>
+                            ) : null}
+                          </p>
+                        </article>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                /* Image-forward cards (UX-C14) — the way Steam/Epic present news.
                Feeds that carry no artwork fall back to a text card rather than
                a broken frame. Grid mode keeps this markup and densifies in CSS. */
-            <div className="od-news__panel-body">
-            <ul className="od-news__cards">
-              {headlineItems.map((item) => (
-                <li key={item.url} className="od-news__card">
-                  <a
-                    className="od-news__card-link"
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <span className="od-news__card-art-wrap">
-                      {item.image_url ? (
-                        <img
-                          className="od-news__card-art"
-                          src={item.image_url}
-                          alt=""
-                          loading="lazy"
-                          onError={(event) => {
-                            event.currentTarget.classList.add('is-broken')
-                          }}
-                        />
-                      ) : (
-                        <span className="od-news__card-art od-news__card-art--empty" aria-hidden="true" />
-                      )}
-                      {item.source ? (
-                        <span className="od-news__card-badge">{item.source}</span>
-                      ) : null}
-                      {item.published_at ? (
-                        <time className="od-news__card-when" dateTime={item.published_at}>
-                          {formatLocaleDate(item.published_at, {
-                            compact: true,
-                            fallback: null,
-                          })}
-                        </time>
-                      ) : null}
-                    </span>
-                    <span className="od-news__card-body">
-                      <strong className="od-news__card-title">{item.title}</strong>
-                      {item.summary ? (
-                        <span className="od-news__card-summary">{truncate(item.summary, 140)}</span>
-                      ) : null}
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            </div>
-          )}
-        </section>
-      ) : null}
+                <div className="od-news__panel-body">
+                  <ul className="od-news__cards">
+                    {headlineItems.map((item) => (
+                      <li key={item.url} className="od-news__card">
+                        <a
+                          className="od-news__card-link"
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <span className="od-news__card-art-wrap">
+                            {item.image_url ? (
+                              <img
+                                className="od-news__card-art"
+                                src={item.image_url}
+                                alt=""
+                                loading="lazy"
+                                onError={(event) => {
+                                  event.currentTarget.classList.add('is-broken')
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className="od-news__card-art od-news__card-art--empty"
+                                aria-hidden="true"
+                              />
+                            )}
+                            {item.source ? (
+                              <span className="od-news__card-badge">{item.source}</span>
+                            ) : null}
+                            {item.published_at ? (
+                              <time className="od-news__card-when" dateTime={item.published_at}>
+                                {formatLocaleDate(item.published_at, {
+                                  compact: true,
+                                  fallback: null,
+                                })}
+                              </time>
+                            ) : null}
+                          </span>
+                          <span className="od-news__card-body">
+                            <strong className="od-news__card-title">{item.title}</strong>
+                            {item.summary ? (
+                              <span className="od-news__card-summary">
+                                {truncate(item.summary, 140)}
+                              </span>
+                            ) : null}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          ) : null}
+        </div>
       </div>
-    </div>
     </>
   )
 }

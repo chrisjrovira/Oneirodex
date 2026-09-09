@@ -207,7 +207,8 @@ test('archive posts to archive API and refreshes room list', async () => {
   await waitFor(() => {
     expect(
       fetchMock.mock.calls.some(
-        ([url, init]) => String(url).includes('/api/chat/channels/1/archive') && init?.method === 'POST',
+        ([url, init]) =>
+          String(url).includes('/api/chat/channels/1/archive') && init?.method === 'POST',
       ),
     ).toBe(true)
   })
@@ -248,7 +249,8 @@ test('leave DM posts to leave API and refreshes list', async () => {
   await waitFor(() => {
     expect(
       fetchMock.mock.calls.some(
-        ([url, init]) => String(url).includes('/api/chat/channels/2/leave') && init?.method === 'POST',
+        ([url, init]) =>
+          String(url).includes('/api/chat/channels/2/leave') && init?.method === 'POST',
       ),
     ).toBe(true)
   })
@@ -298,7 +300,8 @@ test('leave household channel refreshes list and shows muted badge', async () =>
   await waitFor(() => {
     expect(
       fetchMock.mock.calls.some(
-        ([url, init]) => String(url).includes('/api/chat/channels/1/leave') && init?.method === 'POST',
+        ([url, init]) =>
+          String(url).includes('/api/chat/channels/1/leave') && init?.method === 'POST',
       ),
     ).toBe(true)
   })

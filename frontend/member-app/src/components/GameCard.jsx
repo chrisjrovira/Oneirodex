@@ -114,15 +114,16 @@ export function GameCard({
   const currentStatus = statusConfig(status)
   const igdbUrl = safeHttpUrl(game.url)
   const steamAppId = game.steam_app_id ? Number(game.steam_app_id) : null
-  const steamStoreUrl = safeHttpUrl(game.steam_url) || (steamAppId ? `https://store.steampowered.com/app/${steamAppId}` : null)
+  const steamStoreUrl =
+    safeHttpUrl(game.steam_url) ||
+    (steamAppId ? `https://store.steampowered.com/app/${steamAppId}` : null)
   const steamRunUrl = steamAppId ? `steam://run/${steamAppId}` : null
   const firmwareBlocked = isFirmwarePlayBlocked(game)
   // Browser play, not a demo. It was `playHref`, which read as "this is
   // the demo link" and was the reason a "Play demo" item sat in the tile menu
   // for a feature that does not exist. `demo_url` stays as a fallback because
   // some rows genuinely carry one and it is still the thing PLAY should open.
-  const playHref =
-    firmwareBlocked ? null : game.play_url || game.demo_url || null
+  const playHref = firmwareBlocked ? null : game.play_url || game.demo_url || null
   const archiveBlocked = game.play_blocker === 'unsupported_archive'
   const archiveBlockHint =
     game.companion_hint ||
@@ -130,9 +131,7 @@ export function GameCard({
   const firmwareHint = firmwareBlockMessage(game)
   const playBlocked = firmwareBlocked || archiveBlocked
   const playBlockHint = firmwareBlocked ? firmwareHint : archiveBlockHint
-  const playBlockLabel = firmwareBlocked
-    ? 'firmware missing'
-    : 'unsupported archive'
+  const playBlockLabel = firmwareBlocked ? 'firmware missing' : 'unsupported archive'
   const platformChip =
     !hidePlatformChip && (game.library_platform || game.edition_platforms?.length)
       ? editionChipLabels(game, activePlatform)
@@ -357,9 +356,7 @@ export function GameCard({
         // a Preview press as a bare-card click and navigate. Capture runs
         // before the target's own handler, so it cannot be suppressed.
         onPointerDownCapture={(event) => {
-          const control = event.target?.closest?.(
-            'a, button, input, select, [role="button"]',
-          )
+          const control = event.target?.closest?.('a, button, input, select, [role="button"]')
           pressStartedOnControl.current =
             !!control && !control.classList.contains('game-card__cover-link')
         }}
@@ -596,24 +593,14 @@ export function GameCard({
             )}
             {igdbUrl && (
               <div className="menu-item">
-                <a
-                  className="menu-button"
-                  href={igdbUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <a className="menu-button" href={igdbUrl} target="_blank" rel="noreferrer">
                   Open catalog page
                 </a>
               </div>
             )}
             {steamStoreUrl && (
               <div className="menu-item">
-                <a
-                  className="menu-button"
-                  href={steamStoreUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <a className="menu-button" href={steamStoreUrl} target="_blank" rel="noreferrer">
                   Open in Steam store
                 </a>
               </div>
@@ -647,11 +634,7 @@ export function GameCard({
 
         {/* The clip lives here now, not on .game-card — the card was clipping
             its own popup menu. See .game-card__cover-link in components.css. */}
-        <a
-          ref={coverLinkRef}
-          className="game-card__cover-link"
-          href={`/game_details/${game.uuid}`}
-        >
+        <a ref={coverLinkRef} className="game-card__cover-link" href={`/game_details/${game.uuid}`}>
           {/* Nothing to show is drawn, not fetched.
               The old path swapped `src` to default_cover.jpg — a raster with
               the logo and the words baked into it, unreadable below about a
@@ -692,9 +675,7 @@ export function GameCard({
             `--od-tile-title-h` (0 when off) and hidden properly rather than
             just collapsed — see components.css — so turning titles off never
             costs the accessible name. Rows layout names itself below. */}
-        {layout !== 'rows' ? (
-          <span className="game-card__title">{game.name}</span>
-        ) : null}
+        {layout !== 'rows' ? <span className="game-card__title">{game.name}</span> : null}
 
         {layout === 'rows' ? (
           <a className="game-card__row-meta" href={`/game_details/${game.uuid}`}>

@@ -44,9 +44,7 @@ test('youtubeEmbed handles watch, short, and embed URLs', () => {
   expect(youtubeEmbed('https://www.youtube.com/watch?v=abc123DEF')).toBe(
     'https://www.youtube.com/embed/abc123DEF',
   )
-  expect(youtubeEmbed('https://youtu.be/abc123DEF')).toBe(
-    'https://www.youtube.com/embed/abc123DEF',
-  )
+  expect(youtubeEmbed('https://youtu.be/abc123DEF')).toBe('https://www.youtube.com/embed/abc123DEF')
   expect(youtubeEmbed('https://www.youtube.com/embed/abc123DEF')).toBe(
     'https://www.youtube.com/embed/abc123DEF',
   )
@@ -95,12 +93,14 @@ test('trailerEmbedUrls prefers trailers[].embed_url over video_urls', () => {
 })
 
 test('youtubeDemoLink prefers youtube_demo_url then demo_url then urls', () => {
-  expect(
-    youtubeDemoLink({ youtube_demo_url: 'https://youtu.be/fromPayload' }),
-  ).toEqual({ href: 'https://youtu.be/fromPayload', label: 'YouTube demo' })
-  expect(
-    youtubeDemoLink({ demo_url: 'https://youtu.be/abc123DEF' }),
-  ).toEqual({ href: 'https://youtu.be/abc123DEF', label: 'YouTube demo' })
+  expect(youtubeDemoLink({ youtube_demo_url: 'https://youtu.be/fromPayload' })).toEqual({
+    href: 'https://youtu.be/fromPayload',
+    label: 'YouTube demo',
+  })
+  expect(youtubeDemoLink({ demo_url: 'https://youtu.be/abc123DEF' })).toEqual({
+    href: 'https://youtu.be/abc123DEF',
+    label: 'YouTube demo',
+  })
   expect(
     youtubeDemoLink({
       urls: [{ type: 'youtube', url: 'https://youtube.com/watch?v=abc123DEF' }],
@@ -183,21 +183,17 @@ test('extrasPanelModel prefers Backend extras and falls back to versions', () =>
   expect(emptyExtras.source).toBe('extras')
   expect(emptyExtras.rows).toEqual([])
 
-  const fromVersions = extrasPanelModel(
-    { uuid: 'g1' },
-    [
-      { kind: 'base', uuid: 'b', label: 'Base' },
-      { kind: 'extra', uuid: 'x1', label: 'Manual', extra_kind: 'manual' },
-    ],
-  )
+  const fromVersions = extrasPanelModel({ uuid: 'g1' }, [
+    { kind: 'base', uuid: 'b', label: 'Base' },
+    { kind: 'extra', uuid: 'x1', label: 'Manual', extra_kind: 'manual' },
+  ])
   expect(fromVersions.source).toBe('versions')
   expect(fromVersions.rows).toHaveLength(1)
   expect(fromVersions.rows[0].download_url).toContain('/download_other/extra/g1/x1')
 
-  const missingExtra = extrasPanelModel(
-    { uuid: 'g1' },
-    [{ kind: 'extra', uuid: 'x2', label: 'Gone', path_missing: true }],
-  )
+  const missingExtra = extrasPanelModel({ uuid: 'g1' }, [
+    { kind: 'extra', uuid: 'x2', label: 'Gone', path_missing: true },
+  ])
   expect(missingExtra.rows[0].download_url).toBeNull()
   expect(missingExtra.rows[0].path_missing).toBe(true)
 

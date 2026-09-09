@@ -66,9 +66,7 @@ test('applies libraryFilters cookie on boot', async () => {
   renderLibrary(<LibraryApp initialConfig={initialConfig} />)
 
   await waitFor(() => {
-    const browseCall = fetchMock.mock.calls.find(([url]) =>
-      url.startsWith('/browse_games?'),
-    )
+    const browseCall = fetchMock.mock.calls.find(([url]) => url.startsWith('/browse_games?'))
     expect(browseCall?.[0]).toContain('genre=Action')
   })
 })
@@ -129,16 +127,11 @@ test('apply persists selected filters and refreshes browse results', async () =>
   renderLibrary(<LibraryApp initialConfig={initialConfig} />)
 
   await openFilters(user)
-  await user.selectOptions(
-    await screen.findByLabelText('Genre'),
-    'Action',
-  )
+  await user.selectOptions(await screen.findByLabelText('Genre'), 'Action')
   await user.click(screen.getByRole('button', { name: 'Apply' }))
 
   await waitFor(() => {
-    expect(decodeURIComponent(document.cookie)).toContain(
-      '"genre":"Action"',
-    )
+    expect(decodeURIComponent(document.cookie)).toContain('"genre":"Action"')
     const browseUrls = fetchMock.mock.calls
       .map(([url]) => url)
       .filter((url) => url.startsWith('/browse_games?'))

@@ -30,16 +30,10 @@ test('fetches favorite games and renders them with the shared grid', async () =>
   })
   vi.stubGlobal('fetch', fetchMock)
 
-  render(
-    <FavoritesApp
-      initialConfig={{ showPlayStatus: true, isAdmin: false, perPage: 20 }}
-    />,
-  )
+  render(<FavoritesApp initialConfig={{ showPlayStatus: true, isAdmin: false, perPage: 20 }} />)
 
   expect(screen.getByText(/Loading favorites/)).toBeInTheDocument()
-  await waitFor(() =>
-    expect(screen.getByText('Favorite VR Game')).toBeInTheDocument(),
-  )
+  await waitFor(() => expect(screen.getByText('Favorite VR Game')).toBeInTheDocument())
   expect(fetchMock).toHaveBeenCalledWith(
     '/api/favorites?page=1&per_page=20',
     expect.objectContaining({ credentials: 'same-origin' }),
@@ -65,16 +59,15 @@ test('shows an empty message when there are no favorites', async () => {
 
   render(<FavoritesApp initialConfig={{ showPlayStatus: false, isAdmin: false }} />)
 
-  expect(
-    await screen.findByText("You haven't added any favorites yet!"),
-  ).toBeInTheDocument()
+  expect(await screen.findByText("You haven't added any favorites yet!")).toBeInTheDocument()
 })
 
 test('removes a card after it is unfavorited', async () => {
   const user = userEvent.setup()
   vi.stubGlobal(
     'fetch',
-    vi.fn()
+    vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: () =>
@@ -110,7 +103,5 @@ test('removes a card after it is unfavorited', async () => {
     }),
   )
 
-  expect(
-    await screen.findByText("You haven't added any favorites yet!"),
-  ).toBeInTheDocument()
+  expect(await screen.findByText("You haven't added any favorites yet!")).toBeInTheDocument()
 })

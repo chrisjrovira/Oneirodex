@@ -16,9 +16,7 @@ import {
   isScanRunning,
   normalizeScanJobsList,
 } from './scanQueuePolicy'
-import {
-  scanJobsStructureSignature,
-} from '../../../oneirodex/setup/default_theme/js/scanJobsDom.js'
+import { scanJobsStructureSignature } from '../../../oneirodex/setup/default_theme/js/scanJobsDom.js'
 import { useLibraryRefreshAll } from './useLibraryRefreshAll'
 import { useLibraryScan } from './useLibraryScan'
 import { useVisibilityPoll } from './useVisibilityPoll'
@@ -177,160 +175,157 @@ export function DashboardPage() {
   // effect, re-ran a layout measure + ResizeObserver teardown.
   const widgets = useMemo(
     () => ({
-    status: (
-      <OpsStatusBanner
-        severity={severity}
-        items={issues?.items}
-        ariaLabel="Health"
-      />
-    ),
-    'm-libraries': (
-      <MetricTile
-        label="Libraries"
-        value={na(library?.libraries)}
-        hint="folders"
-        tone={library?.libraries != null ? 'info' : 'na'}
-      />
-    ),
-    'm-games': (
-      <MetricTile
-        label="Games"
-        value={na(library?.games)}
-        hint={
-          library?.unmatched_folders != null
-            ? `${library.unmatched_folders} unmatched`
-            : 'catalogue'
-        }
-        tone={gamesTone}
-      />
-    ),
-    'm-health': (
-      <MetricTile
-        label="Library health"
-        value={formatLibraryHealthValue(library?.health)}
-        hint={formatLibraryHealthHint(library?.health)}
-        tone={libraryHealthTone(library?.health)}
-      />
-    ),
-    'm-scans': (
-      <MetricTile
-        label="Scans"
-        value={na(scans?.active_count)}
-        hint={
-          (scans?.jobs || [])[0]
-            ? `${scans.jobs[0].library || 'job'} · ${scans.jobs[0].progress}%`
-            : 'active'
-        }
-        tone={scansActiveTone(scans?.active_count)}
-      />
-    ),
-    'm-disk': (
-      <MetricTile
-        label="Disk"
-        value={disk?.percent != null ? `${disk.percent}%` : 'n/a'}
-        hint="games volume"
-        tone={percentHealthTone(disk?.percent)}
-      />
-    ),
-    'm-load': (
-      <MetricTile
-        label="Load 1/5/15"
-        value={formatLoadAvg(host?.load_avg)}
-        tone={host?.load_avg ? 'info' : 'na'}
-      />
-    ),
-    'm-rss': (
-      <MetricTile
-        label="Process RSS"
-        value={formatBytes(host?.process?.rss_bytes)}
-        hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
-        tone={host?.process?.rss_bytes != null ? 'info' : 'na'}
-      />
-    ),
-    'm-db': (
-      <MetricTile
-        label="DB ping"
-        value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
-        tone={dbPingTone(host?.db_ping_ms)}
-      />
-    ),
-    'm-awake': (
-      <MetricTile
-        label="Readyz"
-        value={formatReadyz(services?.awake)}
-        tone={awakeTone(services?.awake)}
-      />
-    ),
-    'm-companions': (
-      <MetricTile
-        label="Companions"
-        value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
-        hint={
-          kindRows.length
-            ? kindRows.map((r) => `${r.kind} ${r.online}/${r.registered}`).join(' · ')
-            : 'by kind n/a'
-        }
-        tone={companionsTone(companions)}
-      />
-    ),
-    host: (
-      <section className="od-ops-panel od-ops-panel--embedded">
-        <h2>Host meters</h2>
-        {!host ? (
-          <p className="od-admin-lede">Host data unavailable.</p>
-        ) : (
-          <div className="od-ops-meters">
-            <MeterBar label="CPU" percent={host.cpu?.percent} />
-            <MeterBar
-              label="Memory"
-              percent={host.memory?.percent}
-              detail={
-                host.memory
-                  ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
-                  : null
-              }
+      status: <OpsStatusBanner severity={severity} items={issues?.items} ariaLabel="Health" />,
+      'm-libraries': (
+        <MetricTile
+          label="Libraries"
+          value={na(library?.libraries)}
+          hint="folders"
+          tone={library?.libraries != null ? 'info' : 'na'}
+        />
+      ),
+      'm-games': (
+        <MetricTile
+          label="Games"
+          value={na(library?.games)}
+          hint={
+            library?.unmatched_folders != null
+              ? `${library.unmatched_folders} unmatched`
+              : 'catalogue'
+          }
+          tone={gamesTone}
+        />
+      ),
+      'm-health': (
+        <MetricTile
+          label="Library health"
+          value={formatLibraryHealthValue(library?.health)}
+          hint={formatLibraryHealthHint(library?.health)}
+          tone={libraryHealthTone(library?.health)}
+        />
+      ),
+      'm-scans': (
+        <MetricTile
+          label="Scans"
+          value={na(scans?.active_count)}
+          hint={
+            (scans?.jobs || [])[0]
+              ? `${scans.jobs[0].library || 'job'} · ${scans.jobs[0].progress}%`
+              : 'active'
+          }
+          tone={scansActiveTone(scans?.active_count)}
+        />
+      ),
+      'm-disk': (
+        <MetricTile
+          label="Disk"
+          value={disk?.percent != null ? `${disk.percent}%` : 'n/a'}
+          hint="games volume"
+          tone={percentHealthTone(disk?.percent)}
+        />
+      ),
+      'm-load': (
+        <MetricTile
+          label="Load 1/5/15"
+          value={formatLoadAvg(host?.load_avg)}
+          tone={host?.load_avg ? 'info' : 'na'}
+        />
+      ),
+      'm-rss': (
+        <MetricTile
+          label="Process RSS"
+          value={formatBytes(host?.process?.rss_bytes)}
+          hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
+          tone={host?.process?.rss_bytes != null ? 'info' : 'na'}
+        />
+      ),
+      'm-db': (
+        <MetricTile
+          label="DB ping"
+          value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
+          tone={dbPingTone(host?.db_ping_ms)}
+        />
+      ),
+      'm-awake': (
+        <MetricTile
+          label="Readyz"
+          value={formatReadyz(services?.awake)}
+          tone={awakeTone(services?.awake)}
+        />
+      ),
+      'm-companions': (
+        <MetricTile
+          label="Companions"
+          value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
+          hint={
+            kindRows.length
+              ? kindRows.map((r) => `${r.kind} ${r.online}/${r.registered}`).join(' · ')
+              : 'by kind n/a'
+          }
+          tone={companionsTone(companions)}
+        />
+      ),
+      host: (
+        <section className="od-ops-panel od-ops-panel--embedded">
+          <h2>Host meters</h2>
+          {!host ? (
+            <p className="od-admin-lede">Host data unavailable.</p>
+          ) : (
+            <div className="od-ops-meters">
+              <MeterBar label="CPU" percent={host.cpu?.percent} />
+              <MeterBar
+                label="Memory"
+                percent={host.memory?.percent}
+                detail={
+                  host.memory
+                    ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
+                    : null
+                }
+              />
+              <MeterBar label="Games disk" percent={disk?.percent} />
+            </div>
+          )}
+        </section>
+      ),
+      companions: (
+        <section className="od-ops-panel od-ops-panel--embedded">
+          <h2>Companions by kind</h2>
+          {kindRows.length === 0 ? (
+            <p className="od-admin-lede">
+              {companions
+                ? `Online ${companions.online ?? 0} / ${companions.registered ?? 0} · last seen 1h ${companions.last_seen?.within_1h ?? 0}`
+                : 'n/a'}
+            </p>
+          ) : (
+            <DataTable
+              columns={DASHBOARD_COMPANION_COLUMNS}
+              rows={kindRows}
+              getRowKey={(row) => row.kind}
+              toolbar={false}
             />
-            <MeterBar label="Games disk" percent={disk?.percent} />
-          </div>
-        )}
-      </section>
-    ),
-    companions: (
-      <section className="od-ops-panel od-ops-panel--embedded">
-        <h2>Companions by kind</h2>
-        {kindRows.length === 0 ? (
-          <p className="od-admin-lede">
-            {companions
-              ? `Online ${companions.online ?? 0} / ${companions.registered ?? 0} · last seen 1h ${companions.last_seen?.within_1h ?? 0}`
-              : 'n/a'}
-          </p>
-        ) : (
+          )}
+        </section>
+      ),
+      errors: hasErrors ? (
+        <section className="od-ops-panel od-ops-panel--embedded">
+          <h2>Recent errors</h2>
           <DataTable
-            columns={DASHBOARD_COMPANION_COLUMNS}
-            rows={kindRows}
-            getRowKey={(row) => row.kind}
+            columns={DASHBOARD_ERROR_COLUMNS}
+            rows={summary.recent_errors.slice(0, 4)}
+            getRowKey={(event) => event.id}
             toolbar={false}
           />
-        )}
-      </section>
-    ),
-    errors: hasErrors ? (
-      <section className="od-ops-panel od-ops-panel--embedded">
-        <h2>Recent errors</h2>
-        <DataTable
-          columns={DASHBOARD_ERROR_COLUMNS}
-          rows={summary.recent_errors.slice(0, 4)}
-          getRowKey={(event) => event.id}
-          toolbar={false}
-        />
-      </section>
-    ) : null,
+        </section>
+      ) : null,
     }),
     [summary],
   )
 
   return (
-    <Page title="Dashboard" lede="Observability glance — libraries, host pulse, and open issues (~15s). Drag a widget to move; drag the corner to resize. Reset layout is centred; hover refresh for Updated time.">
+    <Page
+      title="Dashboard"
+      lede="Observability glance — libraries, host pulse, and open issues (~15s). Drag a widget to move; drag the corner to resize. Reset layout is centred; hover refresh for Updated time."
+    >
       {/* GT-B33: the shared status block, not two hand-rolled ones.
           The error branch used to be a `.od-admin-alert` div and the loading
           branch a `.od-admin-lede` paragraph — two shapes on one page, neither
@@ -361,13 +356,8 @@ export function DashboardPage() {
 export function LibrariesPage() {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
-  const {
-    conflictOpen,
-    refreshing,
-    startRefreshAll,
-    onConflictChoose,
-    onConflictClose,
-  } = useLibraryRefreshAll()
+  const { conflictOpen, refreshing, startRefreshAll, onConflictChoose, onConflictClose } =
+    useLibraryRefreshAll()
   const {
     conflictOpen: scanConflictOpen,
     busyKey: scanBusyKey,
@@ -383,7 +373,10 @@ export function LibrariesPage() {
   }, [])
 
   return (
-    <Page title="Libraries & scans" lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs.">
+    <Page
+      title="Libraries & scans"
+      lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs."
+    >
       <PageStatus error={error} errorMessage="Unable to load libraries." />
       <p className="od-admin-lede">
         Prefer the unified classic page:{' '}
@@ -435,8 +428,7 @@ export function LibrariesPage() {
                 key: 'last_scan_folder',
                 label: 'Last scan folder',
                 value: (lib) => lib.last_scan_folder || '',
-                render: (lib) =>
-                  lib.last_scan_folder ? <code>{lib.last_scan_folder}</code> : '—',
+                render: (lib) => (lib.last_scan_folder ? <code>{lib.last_scan_folder}</code> : '—'),
               },
               {
                 // Scanning one library is the thing this page is for, and it
@@ -839,7 +831,10 @@ export function PluginsPage() {
   }, [])
 
   return (
-    <Page title="Plugins & connectors" lede="Built-in registry of metadata, acquire, emu, and export hooks.">
+    <Page
+      title="Plugins & connectors"
+      lede="Built-in registry of metadata, acquire, emu, and export hooks."
+    >
       <PageStatus error={error} errorMessage="Unable to load plugins." />
       <div className="od-admin-panel">
         {!plugins ? (
@@ -875,13 +870,8 @@ export function ScansPage() {
   const [error, setError] = useState(null)
   const [updatedAt, setUpdatedAt] = useState(null)
   const [pathModal, setPathModal] = useState(null)
-  const {
-    conflictOpen,
-    refreshing,
-    startRefreshAll,
-    onConflictChoose,
-    onConflictClose,
-  } = useLibraryRefreshAll()
+  const { conflictOpen, refreshing, startRefreshAll, onConflictChoose, onConflictClose } =
+    useLibraryRefreshAll()
   const {
     conflictOpen: scanConflictOpen,
     busyKey: scanBusyKey,
@@ -968,7 +958,10 @@ export function ScansPage() {
   }
 
   return (
-    <Page title="Libraries & scans" lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here.">
+    <Page
+      title="Libraries & scans"
+      lede="Scan jobs, identify workbench, and image queue. Start / queue / force from Scan jobs (Jinja Libraries & scans) or Refresh all here."
+    >
       <PageStatus error={error} errorMessage="Unable to load scan status." />
       <div className="od-admin-panel">
         <div className="od-admin-panel__toolbar od-admin-panel__toolbar--row">
@@ -981,7 +974,12 @@ export function ScansPage() {
             {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
           </button>
           {scanMotifActive ? (
-            <span className="od-admin-scan-live" role="status" aria-live="polite" data-state={running ? 'running' : 'queued'}>
+            <span
+              className="od-admin-scan-live"
+              role="status"
+              aria-live="polite"
+              data-state={running ? 'running' : 'queued'}
+            >
               <span className="od-spinner od-spinner--sm" aria-hidden="true" />
               {running ? 'Scanning…' : `Queued… (${queuedJobs.length})`}
             </span>
@@ -1062,10 +1060,18 @@ export function ScansPage() {
                     // where a reclaimed job now says the owner process is gone,
                     // instead of the operator seeing an idle-looking queue.
                     if (job.error_message) {
-                      return <span className="od-scan-detail od-scan-detail--error">{job.error_message}</span>
+                      return (
+                        <span className="od-scan-detail od-scan-detail--error">
+                          {job.error_message}
+                        </span>
+                      )
                     }
                     if (job.stalled) {
-                      return <span className="od-scan-detail od-scan-detail--warn">No progress reported</span>
+                      return (
+                        <span className="od-scan-detail od-scan-detail--warn">
+                          No progress reported
+                        </span>
+                      )
                     }
                     if (job.current_processing) {
                       return <span className="od-scan-detail">{job.current_processing}</span>
@@ -1100,8 +1106,7 @@ export function ScansPage() {
                   label: 'Retry',
                   sortable: false,
                   render: (job) => {
-                    const active =
-                      isScanBusyStatus(job.status) || isScanQueuedStatus(job.status)
+                    const active = isScanBusyStatus(job.status) || isScanQueuedStatus(job.status)
                     if (active) return <span className="od-admin-lede">—</span>
                     return (
                       <button
@@ -1122,9 +1127,7 @@ export function ScansPage() {
                             settings: {
                               scan_mode: job.setting_filefolder ? 'files' : 'folders',
                               remove_missing: Boolean(job.setting_remove),
-                              download_missing_images: Boolean(
-                                job.setting_download_missing_images,
-                              ),
+                              download_missing_images: Boolean(job.setting_download_missing_images),
                             },
                           })
                         }
@@ -1137,11 +1140,13 @@ export function ScansPage() {
               ]}
             />
             {updatedAt ? (
-              <p className="od-admin-lede">Live status · last refresh {updatedAt.toLocaleTimeString()}</p>
+              <p className="od-admin-lede">
+                Live status · last refresh {updatedAt.toLocaleTimeString()}
+              </p>
             ) : null}
             <p className="od-admin-lede">
-              When a scan is already running, Auto Scan / Refresh all offer <strong>Queue</strong> (default) or{' '}
-              <strong>Force parallel</strong> with an Unraid/NAS load warning.
+              When a scan is already running, Auto Scan / Refresh all offer <strong>Queue</strong>{' '}
+              (default) or <strong>Force parallel</strong> with an Unraid/NAS load warning.
             </p>
           </>
         )}
@@ -1178,7 +1183,12 @@ export function resolveAdminPage(pathname) {
   if (pathname === '/admin/invites') return 'invites'
   if (pathname === '/admin/plugins') return 'plugins'
   if (pathname === '/admin/extensions') return 'extensions'
-  if (pathname.startsWith('/libraries') || pathname.startsWith('/admin/library') || pathname.includes('library_tools') || pathname.includes('/admin/filters')) {
+  if (
+    pathname.startsWith('/libraries') ||
+    pathname.startsWith('/admin/library') ||
+    pathname.includes('library_tools') ||
+    pathname.includes('/admin/filters')
+  ) {
     return 'libraries'
   }
   if (pathname === '/admin/settings') return 'settings'
@@ -1195,17 +1205,21 @@ export function resolveAdminPage(pathname) {
   // 'image_queue' dropped from this list with the standalone page (W27-C6) —
   // it is a tab of /scan_management now, which the prefix below already covers,
   // and it only ever appears as a query parameter rather than in the pathname.
-  if (pathname.startsWith('/scan_management') || pathname.includes('game_identify') || pathname.includes('game_edit')) {
+  if (
+    pathname.startsWith('/scan_management') ||
+    pathname.includes('game_identify') ||
+    pathname.includes('game_edit')
+  ) {
     return 'libraries'
   }
-  if (pathname.startsWith('/admin/users') || pathname.includes('manage_invites') || pathname.includes('whitelist')) {
+  if (
+    pathname.startsWith('/admin/users') ||
+    pathname.includes('manage_invites') ||
+    pathname.includes('whitelist')
+  ) {
     return 'users'
   }
-  if (
-    pathname.includes('integration') ||
-    pathname.includes('smtp') ||
-    pathname.includes('igdb')
-  ) {
+  if (pathname.includes('integration') || pathname.includes('smtp') || pathname.includes('igdb')) {
     return 'integrations'
   }
   if (pathname.includes('new_server_settings')) {

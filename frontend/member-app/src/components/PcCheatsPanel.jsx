@@ -141,10 +141,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }) {
                 <strong className="od-pccheats__label">{cheat.label}</strong>
                 <span className="od-pccheats__method">{methodLabel(cheat.method)}</span>
                 {cheat.single_player_only ? (
-                  <span
-                    className="od-pccheats__flag"
-                    title="Recorded for single-player use"
-                  >
+                  <span className="od-pccheats__flag" title="Recorded for single-player use">
                     single-player
                   </span>
                 ) : null}

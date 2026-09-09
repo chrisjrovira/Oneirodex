@@ -4,10 +4,7 @@ export {
   OneirodexApiError,
 } from './oneirodex-client.js'
 export { createRequester } from './client.js'
-export type {
-  OneirodexClientConfig,
-  Requester,
-} from './client.js'
+export type { OneirodexClientConfig, Requester } from './client.js'
 export type { OneirodexClient } from './oneirodex-client.js'
 export type * from './types.js'
 export type { TokensApi } from './tokens.js'

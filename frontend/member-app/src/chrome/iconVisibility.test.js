@@ -34,19 +34,14 @@ import { railIconPaths } from './railIcons'
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const PRIMITIVES = join(
-  HERE,
-  '../../../../oneirodex/setup/default_theme/css/od-primitives.css',
-)
+const PRIMITIVES = join(HERE, '../../../../oneirodex/setup/default_theme/css/od-primitives.css')
 
 test('the stylesheet re-asserts fill on explicitly solid sub-paths', () => {
   const css = readFileSync(PRIMITIVES, 'utf8')
 
   // The selector has to target the sub-path, not the svg: a declaration on the
   // element is what outranks a value inherited from its parent.
-  const rule = css.match(
-    /\.od-icon\s*\[fill=['"]currentColor['"]\]\s*\{([^}]*)\}/,
-  )
+  const rule = css.match(/\.od-icon\s*\[fill=['"]currentColor['"]\]\s*\{([^}]*)\}/)
 
   expect(rule, 'od-primitives.css must keep the solid-sub-path rule').toBeTruthy()
   expect(rule[1]).toMatch(/fill:\s*currentColor/)
@@ -68,9 +63,7 @@ test('every rail glyph has at least one sub-path a theme cannot erase', () => {
     const parts = subPaths(glyph)
     // Survivable = drawn with a stroke (themes only change its width and joins,
     // never its colour), or explicitly solid (rule 1 above protects it).
-    const survivable = parts.some(
-      (part) => part.stroke !== 'none' || part.fill === 'currentColor',
-    )
+    const survivable = parts.some((part) => part.stroke !== 'none' || part.fill === 'currentColor')
     if (!survivable) invisible.push(name)
   }
 

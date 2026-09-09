@@ -60,10 +60,7 @@ test('shows loading then renders tiles and hero for the first game', async () =>
   expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Alpha Game')
   expect(screen.getByText('An alpha adventure.')).toBeInTheDocument()
   expect(screen.getByText('OWNED · 4.2 GB')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute(
-    'href',
-    '/game_details/a1',
-  )
+  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/game_details/a1')
   expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute(
     'href',
     '/download_game/a1',
@@ -91,10 +88,7 @@ test('arrow keys move the selection and update the hero', async () => {
   expect(betaTile).toHaveAttribute('aria-selected', 'true')
   expect(betaTile).toHaveFocus()
   expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Beta Game')
-  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute(
-    'href',
-    '/game_details/b2',
-  )
+  expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/game_details/b2')
 
   await user.keyboard('{ArrowLeft}')
   expect(screen.getByRole('option', { name: 'Alpha Game' })).toHaveAttribute(

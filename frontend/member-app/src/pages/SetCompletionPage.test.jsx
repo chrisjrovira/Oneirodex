@@ -85,17 +85,12 @@ test('empty query asks the member to open the page from Systems', () => {
   renderPage('/systems/completion')
   expect(screen.getByRole('heading', { name: 'Set completion' })).toBeInTheDocument()
   expect(screen.getByText(/Open this page from Systems/i)).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Back to Systems' })).toHaveAttribute(
-    'href',
-    '/systems',
-  )
+  expect(screen.getByRole('link', { name: 'Back to Systems' })).toHaveAttribute('href', '/systems')
   expect(global.fetch).not.toHaveBeenCalled()
 })
 
 test('404 names the missing reference set', async () => {
-  global.fetch.mockResolvedValue(
-    jsonResponse({ error: 'No set', error_code: 'not_found' }, 404),
-  )
+  global.fetch.mockResolvedValue(jsonResponse({ error: 'No set', error_code: 'not_found' }, 404))
   renderPage('/systems/completion?library_platform=NES&region=USA')
   expect(await screen.findByRole('alert')).toHaveTextContent(
     /No reference set uploaded for NES\/USA/,

@@ -56,12 +56,7 @@ export function resolveErrorDetail(error) {
 const MOTIF_ROTATE_MS = 400
 const ELLIPSIS_MS = 150
 
-function LoadingStatus({
-  inline,
-  className,
-  seedMotif,
-  loadingMessage,
-}) {
+function LoadingStatus({ inline, className, seedMotif, loadingMessage }) {
   const base = loadingMessageBase(loadingMessage)
   const [tick, setTick] = useState(0)
   const [motifIndex, setMotifIndex] = useState(0)
@@ -100,11 +95,7 @@ function LoadingStatus({
       aria-busy="true"
       aria-live="polite"
     >
-      <LoadingMotif
-        motifId={motifId}
-        size={inline ? 'md' : 'lg'}
-        title={label}
-      />
+      <LoadingMotif motifId={motifId} size={inline ? 'md' : 'lg'} title={label} />
       <p className="od-page-status__message">
         <span className="od-page-status__message-base">{base}</span>
         <span className="od-page-status__ellipsis" aria-hidden="true">

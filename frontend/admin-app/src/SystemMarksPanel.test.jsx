@@ -20,7 +20,10 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
   const originalFetch = global.fetch
   global.fetch = vi.fn(async (url, init) => {
     const path = String(url).split('?')[0]
-    if (path.endsWith('/admin/api/art-studio/system-marks') && (!init?.method || init.method === 'GET')) {
+    if (
+      path.endsWith('/admin/api/art-studio/system-marks') &&
+      (!init?.method || init.method === 'GET')
+    ) {
       return {
         ok: true,
         status: 200,
@@ -31,7 +34,10 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
             { theme: 'aurora', generated: 0, total: 72, complete: false },
           ],
           count: 2,
-          all_platforms: [{ id: 'nes', label: 'NES' }, { id: 'snes', label: 'SNES' }],
+          all_platforms: [
+            { id: 'nes', label: 'NES' },
+            { id: 'snes', label: 'SNES' },
+          ],
         }),
       }
     }
@@ -83,7 +89,10 @@ test('lab generates one forced pair and records the attempt', async () => {
   const originalFetch = global.fetch
   global.fetch = vi.fn(async (url, init) => {
     const path = String(url).split('?')[0]
-    if (path.endsWith('/admin/api/art-studio/system-marks') && (!init?.method || init.method === 'GET')) {
+    if (
+      path.endsWith('/admin/api/art-studio/system-marks') &&
+      (!init?.method || init.method === 'GET')
+    ) {
       return {
         ok: true,
         status: 200,

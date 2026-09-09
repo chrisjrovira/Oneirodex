@@ -17,7 +17,8 @@ import './ExternalStoreLinks.css'
 const BRANDS = [
   {
     id: 'steam',
-    match: (type, url) => /steam/i.test(type || '') || /steampowered\.com|steamcommunity\.com/i.test(url || ''),
+    match: (type, url) =>
+      /steam/i.test(type || '') || /steampowered\.com|steamcommunity\.com/i.test(url || ''),
     label: 'Steam',
     color: '#66c0f4',
     // Steam valve mark
@@ -41,14 +42,13 @@ const BRANDS = [
     label: 'Epic',
     color: '#ffffff',
     // Epic Games stylized "E" shield silhouette
-    paths: [
-      'M4 3.5h16v2.2H7.2v4.2h11.2v2.1H7.2v4.4H20.5V18.5H4z',
-    ],
+    paths: ['M4 3.5h16v2.2H7.2v4.2h11.2v2.1H7.2v4.4H20.5V18.5H4z'],
   },
   {
     id: 'playstation',
     match: (type, url) =>
-      /playstation|\bpsn\b/i.test(type || '') || /store\.playstation|playstation\.com/i.test(url || ''),
+      /playstation|\bpsn\b/i.test(type || '') ||
+      /store\.playstation|playstation\.com/i.test(url || ''),
     label: 'PlayStation',
     color: '#0070d1',
     mask: maskPlaystation,
@@ -96,7 +96,8 @@ const BRANDS = [
   {
     id: 'ubisoft',
     match: (type, url) =>
-      /ubisoft|uplay|ubi\s*connect/i.test(type || '') || /ubisoft\.com|store\.ubi\.com|uplay/i.test(url || ''),
+      /ubisoft|uplay|ubi\s*connect/i.test(type || '') ||
+      /ubisoft\.com|store\.ubi\.com|uplay/i.test(url || ''),
     label: 'Ubisoft',
     color: '#0084ff',
     // Recreated monochrome mark — supplied PNG was solid black / unusable
@@ -117,13 +118,12 @@ const BRANDS = [
     match: (type, url) => /igdb/i.test(type || '') || /igdb\.com/i.test(url || ''),
     label: 'IGDB',
     color: '#9146ff',
-    paths: [
-      'M3.5 4.5h4.2v15H3.5zm6.2 0h4.2v6.2H9.7zm0 8.8h4.2v6.2H9.7zm6.2-8.8H20v15h-4.1z',
-    ],
+    paths: ['M3.5 4.5h4.2v15H3.5zm6.2 0h4.2v6.2H9.7zm0 8.8h4.2v6.2H9.7zm6.2-8.8H20v15h-4.1z'],
   },
   {
     id: 'youtube',
-    match: (type, url) => /youtube|youtu\.be/i.test(type || '') || /youtube\.com|youtu\.be/i.test(url || ''),
+    match: (type, url) =>
+      /youtube|youtu\.be/i.test(type || '') || /youtube\.com|youtu\.be/i.test(url || ''),
     label: 'YouTube',
     color: '#ff0000',
     paths: [
@@ -160,7 +160,9 @@ const BRANDS = [
   },
   {
     id: 'twitter',
-    match: (type, url) => /twitter|x\.com/i.test(type || '') || /twitter\.com|(?:^|\/\/)(?:www\.)?x\.com/i.test(url || ''),
+    match: (type, url) =>
+      /twitter|x\.com/i.test(type || '') ||
+      /twitter\.com|(?:^|\/\/)(?:www\.)?x\.com/i.test(url || ''),
     label: 'X',
     color: '#e7e9ea',
     paths: [
@@ -205,7 +207,9 @@ const BRANDS = [
   },
   {
     id: 'apple',
-    match: (type, url) => /iphone|ipad|apple|ios/i.test(type || '') || /apps\.apple\.com|itunes\.apple\.com/i.test(url || ''),
+    match: (type, url) =>
+      /iphone|ipad|apple|ios/i.test(type || '') ||
+      /apps\.apple\.com|itunes\.apple\.com/i.test(url || ''),
     label: 'App Store',
     color: '#e8e8e8',
     paths: [

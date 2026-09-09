@@ -36,7 +36,12 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
               failure_reason: 'HTTP 403 from provider',
             },
           ],
-          image_save_path: { exists: true, writable: false, error: 'Permission denied', path: '/images' },
+          image_save_path: {
+            exists: true,
+            writable: false,
+            error: 'Permission denied',
+            path: '/images',
+          },
         }),
       }
     }

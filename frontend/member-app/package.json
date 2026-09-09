@@ -8,8 +8,11 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "test": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "npm --prefix ../.. run lint",
+    "format:check": "npm --prefix ../.. run format:check",
     "lint:css": "node ../../scripts/css-token-lint.mjs",
     "lint:css:update": "node ../../scripts/css-token-lint.mjs --update"
   },

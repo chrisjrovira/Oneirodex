@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { MAX_INDIVIDUAL_TOASTS, planToastStack, stackSummaryMessage } from '../../../shared/toastStack'
+import {
+  MAX_INDIVIDUAL_TOASTS,
+  planToastStack,
+  stackSummaryMessage,
+} from '../../../shared/toastStack'
 
 describe('planToastStack', () => {
   it('lets five individual toasts through', () => {
-    expect(
-      planToastStack({ stackedCount: 4, incomingCount: 1 }),
-    ).toEqual({ action: 'append' })
+    expect(planToastStack({ stackedCount: 4, incomingCount: 1 })).toEqual({ action: 'append' })
     expect(MAX_INDIVIDUAL_TOASTS).toBe(5)
   })
 

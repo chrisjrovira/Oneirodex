@@ -261,7 +261,7 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
 
   return (
     <>
-    {/* The heading here is the collection's *name*, not the page's. The v2
+      {/* The heading here is the collection's *name*, not the page's. The v2
           retirement rule matches `.od-page-header > h1`, so under the new
           chrome this page was rendering with nothing at all to say which
           collection you were looking at. It moves to bar two's summary. */}
@@ -282,184 +282,180 @@ export function CollectionDetailPage({ shellConfig = {} } = {}) {
           }
         />
       ) : null}
-    <div className="od-more-page od-collection">
-      <p className="od-collection__crumb">
-        <Link to="/collections">← Collections</Link>
-      </p>
-      {useNewChrome ? null : (
-        <>
-        <div className="od-page-header od-collection__header">
-          <h1>{collection?.name || 'Collection'}</h1>
-          {canEditMeta ? (
-            <button
-              type="button"
-              className="od-collections__delete"
-              disabled={deleting}
-              onClick={handleDeleteCollection}
-            >
-              {deleting ? 'Deleting…' : 'Delete collection'}
-            </button>
-          ) : null}
-        </div>
-        </>
-      )}
-      {collection?.description && !canEditMeta ? (
-        <p className="od-more-page__lede">{collection.description}</p>
-      ) : null}
-
-      {canEditMeta ? (
-        <form className="od-collections__form" onSubmit={handleSave}>
-          <label className="od-collections__field">
-            Name
-            <input
-              type="text"
-              maxLength={120}
-              required
-              value={editName}
-              onChange={(event) => setEditName(event.target.value)}
-            />
-          </label>
-          <label className="od-collections__field">
-            Description
-            <input
-              type="text"
-              maxLength={4000}
-              value={editDescription}
-              onChange={(event) => setEditDescription(event.target.value)}
-            />
-          </label>
-          <label className="od-collections__check">
-            <input
-              type="checkbox"
-              checked={editIsPublic}
-              onChange={(event) => setEditIsPublic(event.target.checked)}
-            />
-            Public
-          </label>
-          <button type="submit" className="od-cbtn od-cbtn--primary" disabled={saving}>
-            {saving ? 'Saving…' : 'Save changes'}
-          </button>
-          {saveError ? (
-            <PageStatus
-              error={saveError}
-              errorMessage={saveError.message || 'Unable to save changes.'}
-              className="od-collections__error"
-            />
-          ) : null}
-        </form>
-      ) : null}
-
-      <PageStatus
-        loading={!error && !collection}
-        error={error}
-        errorMessage={error ? loadErrorMessage(error) : null}
-        loadingMessage="Loading shelf…"
-        onRetry={() => setRetryCount((n) => n + 1)}
-      />
-
-      {!error && collection && items.length === 0 ? (
-        <p>No games in this collection yet. Search below to add one.</p>
-      ) : null}
-
-      {!error && items.length > 0 ? (
-        <ul className="od-collection__items">
-          {items.map((item, index) => (
-            <li key={item.id} className="od-collection__item">
-              <a href={`/game_details/${item.game_uuid}`}>
-                <strong>{item.game_name || item.game_uuid}</strong>
-                <span className="od-collections__meta">Open game</span>
-              </a>
-              {collection.can_edit ? (
-                <div className="od-collection__item-actions">
-                  <button
-                    type="button"
-                    className="od-collections__reorder"
-                    disabled={reordering || index === 0}
-                    onClick={() => handleMove(index, -1)}
-                    aria-label={`Move ${item.game_name || item.game_uuid} up`}
-                  >
-                    Up
-                  </button>
-                  <button
-                    type="button"
-                    className="od-collections__reorder"
-                    disabled={reordering || index === items.length - 1}
-                    onClick={() => handleMove(index, 1)}
-                    aria-label={`Move ${item.game_name || item.game_uuid} down`}
-                  >
-                    Down
-                  </button>
-                  <button
-                    type="button"
-                    className="od-collections__remove"
-                    disabled={removingUuid === item.game_uuid}
-                    onClick={() => handleRemove(item.game_uuid)}
-                  >
-                    {removingUuid === item.game_uuid ? 'Removing…' : 'Remove'}
-                  </button>
-                </div>
+      <div className="od-more-page od-collection">
+        <p className="od-collection__crumb">
+          <Link to="/collections">← Collections</Link>
+        </p>
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header od-collection__header">
+              <h1>{collection?.name || 'Collection'}</h1>
+              {canEditMeta ? (
+                <button
+                  type="button"
+                  className="od-collections__delete"
+                  disabled={deleting}
+                  onClick={handleDeleteCollection}
+                >
+                  {deleting ? 'Deleting…' : 'Delete collection'}
+                </button>
               ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+            </div>
+          </>
+        )}
+        {collection?.description && !canEditMeta ? (
+          <p className="od-more-page__lede">{collection.description}</p>
+        ) : null}
 
-      {!error && collection?.can_edit ? (
-        <details className="od-collection__add" open>
-          <summary>Add a game</summary>
-          <p>Search the library by title, then pick a result to add.</p>
-          <label className="od-collections__field">
-            Search games
-            <input
-              type="search"
-              value={query}
-              placeholder="Start typing a title…"
-              onChange={(event) => {
-                setAddError(null)
-                setQuery(event.target.value)
-              }}
-            />
-          </label>
-          {searching ? <p className="od-collections__meta">Searching…</p> : null}
-          {!searching && query.trim().length >= 2 && results.length === 0 ? (
-            <p className="od-collections__meta">No matching games.</p>
-          ) : null}
-          {results.length > 0 ? (
-            <ul className="od-collection__picker">
-              {results.map((game) => {
-                const already = existingUuids.has(game.uuid)
-                return (
-                  <li key={game.uuid}>
+        {canEditMeta ? (
+          <form className="od-collections__form" onSubmit={handleSave}>
+            <label className="od-collections__field">
+              Name
+              <input
+                type="text"
+                maxLength={120}
+                required
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+              />
+            </label>
+            <label className="od-collections__field">
+              Description
+              <input
+                type="text"
+                maxLength={4000}
+                value={editDescription}
+                onChange={(event) => setEditDescription(event.target.value)}
+              />
+            </label>
+            <label className="od-collections__check">
+              <input
+                type="checkbox"
+                checked={editIsPublic}
+                onChange={(event) => setEditIsPublic(event.target.checked)}
+              />
+              Public
+            </label>
+            <button type="submit" className="od-cbtn od-cbtn--primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+            {saveError ? (
+              <PageStatus
+                error={saveError}
+                errorMessage={saveError.message || 'Unable to save changes.'}
+                className="od-collections__error"
+              />
+            ) : null}
+          </form>
+        ) : null}
+
+        <PageStatus
+          loading={!error && !collection}
+          error={error}
+          errorMessage={error ? loadErrorMessage(error) : null}
+          loadingMessage="Loading shelf…"
+          onRetry={() => setRetryCount((n) => n + 1)}
+        />
+
+        {!error && collection && items.length === 0 ? (
+          <p>No games in this collection yet. Search below to add one.</p>
+        ) : null}
+
+        {!error && items.length > 0 ? (
+          <ul className="od-collection__items">
+            {items.map((item, index) => (
+              <li key={item.id} className="od-collection__item">
+                <a href={`/game_details/${item.game_uuid}`}>
+                  <strong>{item.game_name || item.game_uuid}</strong>
+                  <span className="od-collections__meta">Open game</span>
+                </a>
+                {collection.can_edit ? (
+                  <div className="od-collection__item-actions">
                     <button
                       type="button"
-                      className="od-collection__picker-item"
-                      disabled={already || addingUuid === game.uuid}
-                      onClick={() => handleAdd(game)}
+                      className="od-collections__reorder"
+                      disabled={reordering || index === 0}
+                      onClick={() => handleMove(index, -1)}
+                      aria-label={`Move ${item.game_name || item.game_uuid} up`}
                     >
-                      <strong>{game.name}</strong>
-                      <span>
-                        {already
-                          ? 'Already added'
-                          : addingUuid === game.uuid
-                            ? 'Adding…'
-                            : 'Add'}
-                      </span>
+                      Up
                     </button>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : null}
-          {addError ? (
-            <PageStatus
-              error={addError}
-              errorMessage={addError.message || 'Unable to add that game.'}
-              className="od-collections__error"
-            />
-          ) : null}
-        </details>
-      ) : null}
-    </div>
+                    <button
+                      type="button"
+                      className="od-collections__reorder"
+                      disabled={reordering || index === items.length - 1}
+                      onClick={() => handleMove(index, 1)}
+                      aria-label={`Move ${item.game_name || item.game_uuid} down`}
+                    >
+                      Down
+                    </button>
+                    <button
+                      type="button"
+                      className="od-collections__remove"
+                      disabled={removingUuid === item.game_uuid}
+                      onClick={() => handleRemove(item.game_uuid)}
+                    >
+                      {removingUuid === item.game_uuid ? 'Removing…' : 'Remove'}
+                    </button>
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {!error && collection?.can_edit ? (
+          <details className="od-collection__add" open>
+            <summary>Add a game</summary>
+            <p>Search the library by title, then pick a result to add.</p>
+            <label className="od-collections__field">
+              Search games
+              <input
+                type="search"
+                value={query}
+                placeholder="Start typing a title…"
+                onChange={(event) => {
+                  setAddError(null)
+                  setQuery(event.target.value)
+                }}
+              />
+            </label>
+            {searching ? <p className="od-collections__meta">Searching…</p> : null}
+            {!searching && query.trim().length >= 2 && results.length === 0 ? (
+              <p className="od-collections__meta">No matching games.</p>
+            ) : null}
+            {results.length > 0 ? (
+              <ul className="od-collection__picker">
+                {results.map((game) => {
+                  const already = existingUuids.has(game.uuid)
+                  return (
+                    <li key={game.uuid}>
+                      <button
+                        type="button"
+                        className="od-collection__picker-item"
+                        disabled={already || addingUuid === game.uuid}
+                        onClick={() => handleAdd(game)}
+                      >
+                        <strong>{game.name}</strong>
+                        <span>
+                          {already ? 'Already added' : addingUuid === game.uuid ? 'Adding…' : 'Add'}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : null}
+            {addError ? (
+              <PageStatus
+                error={addError}
+                errorMessage={addError.message || 'Unable to add that game.'}
+                className="od-collections__error"
+              />
+            ) : null}
+          </details>
+        ) : null}
+      </div>
     </>
   )
 }

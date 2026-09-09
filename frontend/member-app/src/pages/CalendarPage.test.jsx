@@ -1,11 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {
-  CalendarPage,
-  buildMonthCells,
-  readCalendarView,
-  writeCalendarView,
-} from './CalendarPage'
+import { CalendarPage, buildMonthCells, readCalendarView, writeCalendarView } from './CalendarPage'
 import * as calendarApi from '../api/calendar'
 
 vi.mock('../api/calendar', () => ({
@@ -194,10 +189,7 @@ test('month view renders a rotating cover tile per busy day', async () => {
   // column so busy days stay readable without auto-rotate.
   expect(dayBtn.querySelectorAll('.od-calendar__day-art')).toHaveLength(2)
   expect(dayBtn.querySelector('.od-calendar__day-stack')).toBeTruthy()
-  expect(dayBtn.querySelector('.od-calendar__day-art')).toHaveAttribute(
-    'title',
-    'August Drop',
-  )
+  expect(dayBtn.querySelector('.od-calendar__day-art')).toHaveAttribute('title', 'August Drop')
 
   await user.click(dayBtn)
   const panel = screen.getByText(/Aug/i, { selector: 'h4' }).closest('.od-calendar__day-panel')

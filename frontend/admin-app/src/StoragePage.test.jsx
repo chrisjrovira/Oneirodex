@@ -31,8 +31,7 @@ const STATUS_RO = {
   games_exists: true,
   games_readable: true,
   games_writable: false,
-  degrade_reason:
-    'Apply disabled (ALLOW_HARDLINK_APPLY=false); games path is read-only',
+  degrade_reason: 'Apply disabled (ALLOW_HARDLINK_APPLY=false); games path is read-only',
 }
 
 const PREVIEW_OK = {
@@ -69,9 +68,7 @@ function jsonOk(body, status = 200) {
 
 test('StoragePage shows helpers-off and apply-off banners from status', async () => {
   const originalFetch = global.fetch
-  global.fetch = mockFetch([
-    ['/api/storage/status', async () => jsonOk(STATUS_HELPERS_OFF)],
-  ])
+  global.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_HELPERS_OFF)]])
   try {
     render(<StoragePage />)
     expect(await screen.findByRole('heading', { name: 'Storage / hardlinks' })).toBeInTheDocument()

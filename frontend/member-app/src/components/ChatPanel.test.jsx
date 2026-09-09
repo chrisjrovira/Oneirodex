@@ -15,18 +15,16 @@ function baseFetch({
   attachStatus = 404,
   channels = [{ id: 1, name: 'household', kind: 'channel', slug: 'household' }],
 } = {}) {
-  const msgPayload =
-    messages ||
-    [
-      {
-        id: 10,
-        body: 'Hello household',
-        user: 'Alex',
-        created_at: '2026-07-27T12:00:00Z',
-        reactions: {},
-        mine: [],
-      },
-    ]
+  const msgPayload = messages || [
+    {
+      id: 10,
+      body: 'Hello household',
+      user: 'Alex',
+      created_at: '2026-07-27T12:00:00Z',
+      reactions: {},
+      mine: [],
+    },
+  ]
   return vi.fn(async (input, init) => {
     const url = String(input)
     const method = (init?.method || 'GET').toUpperCase()

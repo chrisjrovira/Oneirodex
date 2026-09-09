@@ -42,9 +42,19 @@ describe('platformSkins', () => {
     expect(familyForPlatform('SUPERGRAFX')).toBe('atari')
     expect(familyForPlatform('NGPC')).toBe('atari')
     for (const id of [
-      'PCE_CD', 'SUPERVISION', 'GX4000', 'ASTROCADE', 'ARCADIA',
-      'CREATIVISION', 'ADVISION', 'STUDIO2', 'ACTIONMAX', 'DAPHNE', 'PINBALL',
-      'CD_I', 'JAGUAR_CD',
+      'PCE_CD',
+      'SUPERVISION',
+      'GX4000',
+      'ASTROCADE',
+      'ARCADIA',
+      'CREATIVISION',
+      'ADVISION',
+      'STUDIO2',
+      'ACTIONMAX',
+      'DAPHNE',
+      'PINBALL',
+      'CD_I',
+      'JAGUAR_CD',
     ]) {
       expect(familyForPlatform(id)).toBe('atari')
     }

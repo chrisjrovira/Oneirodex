@@ -7,9 +7,7 @@ describe('taxonomyHref', () => {
   })
 
   test('modes and perspectives filter the catalog', () => {
-    expect(taxonomyHref('game_mode', 'Single-player')).toBe(
-      '/library?game_mode=Single-player',
-    )
+    expect(taxonomyHref('game_mode', 'Single-player')).toBe('/library?game_mode=Single-player')
     expect(taxonomyHref('player_perspective', 'Side view')).toBe(
       '/library?player_perspective=Side%20view',
     )

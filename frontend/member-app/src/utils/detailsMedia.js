@@ -124,8 +124,9 @@ export function youtubeDemoLink(game) {
   const urls = Array.isArray(game.urls) ? game.urls : []
   const yt = urls.find(
     (row) =>
-      String(row?.type || '').toLowerCase().includes('youtube') ||
-      /youtu(\.be|be\.com)/i.test(String(row?.url || '')),
+      String(row?.type || '')
+        .toLowerCase()
+        .includes('youtube') || /youtu(\.be|be\.com)/i.test(String(row?.url || '')),
   )
   if (yt?.url) {
     return { href: yt.url, label: 'YouTube' }
@@ -141,7 +142,11 @@ export function youtubeDemoLink(game) {
  */
 export function showsRetroarchCheats(game) {
   if (!game || typeof game !== 'object') return false
-  return String(game.cheat_surface || '').trim().toLowerCase() === 'retroarch'
+  return (
+    String(game.cheat_surface || '')
+      .trim()
+      .toLowerCase() === 'retroarch'
+  )
 }
 
 /**
@@ -240,9 +245,7 @@ export function detailsDiscChips(game) {
   if (!game) return []
   const discs = Array.isArray(game.discs) ? game.discs : []
   const parsedCount = Number(game.disc_count)
-  const count = Number.isFinite(parsedCount) && parsedCount > 0
-    ? parsedCount
-    : discs.length
+  const count = Number.isFinite(parsedCount) && parsedCount > 0 ? parsedCount : discs.length
   const multi = Boolean(game.is_multi_disc) || count > 1
   const chips = []
   if (multi || count > 1) {

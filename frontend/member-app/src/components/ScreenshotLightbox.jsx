@@ -12,11 +12,7 @@ import './ScreenshotLightbox.css'
  * `.od-lightbox`'s `fixed` on specificity and dropped the viewer into the page
  * flow at the foot of the article instead of over it.
  */
-export function ScreenshotLightbox({
-  urls = [],
-  openIndex = null,
-  onClose,
-}) {
+export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }) {
   const titleId = useId()
   const stageRef = useRef(null)
   const [index, setIndex] = useState(0)
@@ -76,10 +72,7 @@ export function ScreenshotLightbox({
       aria-labelledby={titleId}
       onClick={onClose}
     >
-      <div
-        className="od-lightbox__panel"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className="od-lightbox__panel" onClick={(event) => event.stopPropagation()}>
         <div className="od-lightbox__toolbar">
           <h2 id={titleId} className="od-lightbox__title">
             Screenshot {safeIndex + 1} / {items.length}
@@ -92,7 +85,12 @@ export function ScreenshotLightbox({
             >
               Fullscreen
             </button>
-            <button type="button" className="od-lightbox__close" onClick={onClose} aria-label="Close">
+            <button
+              type="button"
+              className="od-lightbox__close"
+              onClick={onClose}
+              aria-label="Close"
+            >
               ×
             </button>
           </div>

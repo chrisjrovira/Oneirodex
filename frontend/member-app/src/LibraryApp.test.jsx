@@ -29,7 +29,17 @@ test('page flip replaces cards and does not duplicate grid roots', async () => {
     browseRequest += 1
     if (browseRequest === 1) {
       return jsonResponse({
-        games: [{ uuid: 'a', name: 'Game A', cover_url: '/static/x', is_favorite: false, has_local_override: false, is_vr: false, genres: [] }],
+        games: [
+          {
+            uuid: 'a',
+            name: 'Game A',
+            cover_url: '/static/x',
+            is_favorite: false,
+            has_local_override: false,
+            is_vr: false,
+            genres: [],
+          },
+        ],
         pages: 2,
         current_page: 1,
         total: 2,
@@ -37,7 +47,17 @@ test('page flip replaces cards and does not duplicate grid roots', async () => {
     }
 
     return jsonResponse({
-      games: [{ uuid: 'b', name: 'Game B', cover_url: '/static/x', is_favorite: false, has_local_override: false, is_vr: false, genres: [] }],
+      games: [
+        {
+          uuid: 'b',
+          name: 'Game B',
+          cover_url: '/static/x',
+          is_favorite: false,
+          has_local_override: false,
+          is_vr: false,
+          genres: [],
+        },
+      ],
       pages: 2,
       current_page: 2,
       total: 2,
@@ -153,7 +173,17 @@ test('page change closes an open card menu before the next page loads', async ()
     browseRequest += 1
     if (browseRequest === 1) {
       return jsonResponse({
-        games: [{ uuid: 'a', name: 'Game A', cover_url: '/static/x', is_favorite: false, has_local_override: false, is_vr: false, genres: [] }],
+        games: [
+          {
+            uuid: 'a',
+            name: 'Game A',
+            cover_url: '/static/x',
+            is_favorite: false,
+            has_local_override: false,
+            is_vr: false,
+            genres: [],
+          },
+        ],
         pages: 2,
         current_page: 1,
         total: 2,
@@ -342,7 +372,15 @@ function renderNewChrome({ total = 3 } = {}) {
     if (!String(url).startsWith('/browse_games?')) return jsonResponse([])
     return jsonResponse({
       games: [
-        { uuid: 'a', name: 'Game A', cover_url: '/static/x', is_favorite: false, has_local_override: false, is_vr: false, genres: [] },
+        {
+          uuid: 'a',
+          name: 'Game A',
+          cover_url: '/static/x',
+          is_favorite: false,
+          has_local_override: false,
+          is_vr: false,
+          genres: [],
+        },
       ],
       pages: 1,
       current_page: 1,
@@ -352,7 +390,13 @@ function renderNewChrome({ total = 3 } = {}) {
   vi.stubGlobal('fetch', fetchMock)
   return renderLibrary(
     <LibraryApp
-      initialConfig={{ perPage: 20, showPlayStatus: false, isAdmin: false, libraryCount: 1, gamesCount: total }}
+      initialConfig={{
+        perPage: 20,
+        showPlayStatus: false,
+        isAdmin: false,
+        libraryCount: 1,
+        gamesCount: total,
+      }}
       shellConfig={{ enableNewChrome: true }}
     />,
   )
@@ -381,9 +425,7 @@ test('filters are still reachable, inside the popover', async () => {
   // Closed by default — the grid is what you came for.
   expect(screen.queryByLabelText(/Search by title/i)).toBeNull()
   await user.click(screen.getByRole('button', { name: /Filters/ }))
-  await waitFor(() =>
-    expect(screen.getByRole('dialog', { name: /Filters/ })).toBeInTheDocument(),
-  )
+  await waitFor(() => expect(screen.getByRole('dialog', { name: /Filters/ })).toBeInTheDocument())
 })
 
 test('kind is a segmented control, not duplicated in the panel', async () => {
@@ -443,15 +485,9 @@ test('new chrome unfurls Tile Rows Grid under the active layout name on the kind
   expect(screen.getByRole('button', { name: 'Grid' })).toBeInTheDocument()
 
   await user.click(screen.getByRole('button', { name: 'Rows' }))
-  expect(container.querySelector('[data-library-grid]')).toHaveAttribute(
-    'data-layout',
-    'rows',
-  )
+  expect(container.querySelector('[data-library-grid]')).toHaveAttribute('data-layout', 'rows')
   expect(window.localStorage.getItem('od.library.layout')).toBe('rows')
-  expect(screen.getByRole('button', { name: 'Rows' })).toHaveAttribute(
-    'aria-expanded',
-    'false',
-  )
+  expect(screen.getByRole('button', { name: 'Rows' })).toHaveAttribute('aria-expanded', 'false')
 })
 
 test('failed first browse uses PageStatus with Retry', async () => {
@@ -499,9 +535,7 @@ test('failed first browse uses PageStatus with Retry', async () => {
     />,
   )
 
-  expect(await screen.findByRole('alert')).toHaveTextContent(
-    "Couldn't load your catalog.",
-  )
+  expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't load your catalog.")
   expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
 
   failBrowse = false
@@ -541,9 +575,7 @@ test('empty catalog with no scan yet keeps the first-run line', async () => {
 
 test('empty catalog after a scan reports the scan, not first run', async () => {
   renderEmpty({ scanHasRun: true, unmatchedCount: 0 })
-  expect(
-    await screen.findByText(/A scan finished and matched nothing/i),
-  ).toBeTruthy()
+  expect(await screen.findByText(/A scan finished and matched nothing/i)).toBeTruthy()
   expect(screen.queryByText(/Nothing's turned up in a scan yet/i)).toBeNull()
 })
 
@@ -554,9 +586,7 @@ test('an admin is pointed at the unmatched folders a scan left behind', async ()
 
 test('a member is not pointed at Unmatched, which they cannot open', async () => {
   renderEmpty({ scanHasRun: true, unmatchedCount: 40, isAdmin: false })
-  expect(
-    await screen.findByText(/A scan finished and matched nothing/i),
-  ).toBeTruthy()
+  expect(await screen.findByText(/A scan finished and matched nothing/i)).toBeTruthy()
   expect(screen.queryByText(/Unmatched/i)).toBeNull()
 })
 

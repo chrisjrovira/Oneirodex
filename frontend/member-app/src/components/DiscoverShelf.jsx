@@ -166,9 +166,7 @@ export function DiscoverShelf({
           // identity means an overlapping window adds nothing rather than
           // duplicating a tile halfway down the shelf.
           const seen = new Set(current.map((item) => itemKey(item)))
-          return current.concat(
-            page.items.filter((item) => !seen.has(itemKey(item))),
-          )
+          return current.concat(page.items.filter((item) => !seen.has(itemKey(item))))
         })
         setLoading(false)
       })
@@ -258,10 +256,8 @@ export function DiscoverShelf({
   }
 
   const layout = section.layout || 'shelf'
-  const moreHref =
-    itemKind === 'articles' ? section.more_href || '/news' : section.more_href
-  const showSeeAll =
-    Boolean(moreHref) && (itemKind === 'articles' || Boolean(section.has_more))
+  const moreHref = itemKind === 'articles' ? section.more_href || '/news' : section.more_href
+  const showSeeAll = Boolean(moreHref) && (itemKind === 'articles' || Boolean(section.has_more))
 
   return (
     <section
@@ -276,9 +272,7 @@ export function DiscoverShelf({
           <h2 className="od-shelf__title">
             <span className="od-shelf__title-text">{section.title}</span>
           </h2>
-          {section.reason ? (
-            <span className="od-shelf__reason">{section.reason}</span>
-          ) : null}
+          {section.reason ? <span className="od-shelf__reason">{section.reason}</span> : null}
         </div>
         {section.is_event ? (
           <span className="od-shelf__event" title="Limited-time shelf">

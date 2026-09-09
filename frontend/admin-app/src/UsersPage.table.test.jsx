@@ -19,8 +19,22 @@ const INVITES = {
 
 const TICKETS = {
   tickets: [
-    { id: 2, severity: 'high', area: 'scan', title: 'Scan stalls', status: 'open', github_sync: 'off' },
-    { id: 1, severity: 'low', area: 'ui', title: 'Badge overlaps', status: 'resolved', github_sync: 'off' },
+    {
+      id: 2,
+      severity: 'high',
+      area: 'scan',
+      title: 'Scan stalls',
+      status: 'open',
+      github_sync: 'off',
+    },
+    {
+      id: 1,
+      severity: 'low',
+      area: 'ui',
+      title: 'Badge overlaps',
+      status: 'resolved',
+      github_sync: 'off',
+    },
   ],
 }
 

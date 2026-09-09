@@ -116,15 +116,12 @@ export async function reorderCollectionItems(collectionUuid, gameUuids) {
 }
 
 export async function addCollectionItem(collectionUuid, gameUuid) {
-  const response = await fetch(
-    `/api/collections/${encodeURIComponent(collectionUuid)}/items`,
-    {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ game_uuid: gameUuid }),
-    },
-  )
+  const response = await fetch(`/api/collections/${encodeURIComponent(collectionUuid)}/items`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ game_uuid: gameUuid }),
+  })
 
   const data = await response.json().catch(() => ({}))
 

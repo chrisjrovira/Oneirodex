@@ -30,8 +30,8 @@
   --od-glass-bg: rgba(20, 24, 32, 0.72);
   --od-glass-border: rgba(255, 255, 255, 0.14);
   --od-glass-blur: 12px;
-  --font-ui: "Segoe UI", "Helvetica Neue", sans-serif;
-  --font-display: "Arial Black", "Segoe UI", sans-serif;
+  --font-ui: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-display: 'Arial Black', 'Segoe UI', sans-serif;
 }
 
 *,
@@ -233,7 +233,8 @@ body.admin-shell.modal-open > .modal-backdrop {
 }
 
 body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.admin_manage_scanjobs-nav-panel),
-body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.admin_manage_libraries-library-container),
+body.od-shell-host
+  > #admin-legacy-content.od-admin-legacy:has(.admin_manage_libraries-library-container),
 body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-discovery-sections),
 body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   max-width: none;
@@ -271,13 +272,18 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 }
 
 .od-admin-legacy:has(#librariesPanel.active) .admin_manage_scanjobs-nav-panel,
-.od-admin-legacy:has(#librariesPanel.active) .admin_manage_scanjobs-nav-panel > .container-settings.od-adminpage,
+.od-admin-legacy:has(#librariesPanel.active)
+  .admin_manage_scanjobs-nav-panel
+  > .container-settings.od-adminpage,
 .od-admin-legacy:has(#librariesPanel.active) .admin_manage_scanjobs-tab-content,
 .od-admin-legacy:has(#librariesPanel.active) #librariesPanel.active,
 .od-admin-legacy:has(#librariesPanel.active) #odLibrariesPanel,
 .od-admin-legacy:has(#librariesPanel.active) #odLibrariesReactRoot,
-.od-admin-legacy:has(.admin_manage_libraries-library-container) .admin_manage_libraries-library-container,
-.od-admin-legacy:has(.admin_manage_libraries-library-container) .admin_manage_libraries-library-container > .container-settings.od-adminpage,
+.od-admin-legacy:has(.admin_manage_libraries-library-container)
+  .admin_manage_libraries-library-container,
+.od-admin-legacy:has(.admin_manage_libraries-library-container)
+  .admin_manage_libraries-library-container
+  > .container-settings.od-adminpage,
 .od-admin-legacy:has(.admin_manage_libraries-library-container) #odLibrariesPanel,
 .od-admin-legacy:has(.admin_manage_libraries-library-container) #odLibrariesReactRoot {
   flex: 1 1 auto;
@@ -365,7 +371,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 }
 
 .od-admin-legacy .settings-shell-header .btn,
-.od-admin-legacy a.btn[href*="dashboard"] {
+.od-admin-legacy a.btn[href*='dashboard'] {
   /* Prefer top-nav Dashboard; shrink leftover page widgets */
   display: none !important;
 }
@@ -551,7 +557,7 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 }
 
 .od-admin-legacy .settings-shell-header .btn,
-.od-admin-legacy a.btn[href*="dashboard"] {
+.od-admin-legacy a.btn[href*='dashboard'] {
   /* Prefer top-nav Dashboard; shrink leftover page widgets */
   display: none !important;
 }
@@ -717,7 +723,8 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 .od-art-studio-skin--pc {
   border-color: color-mix(in srgb, var(--od-art-skin, var(--od-accent)) 55%, transparent);
   color: var(--od-text);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--od-art-skin, var(--od-accent)) 25%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--od-art-skin, var(--od-accent)) 25%, transparent);
 }
 
 .od-art-studio {
@@ -733,8 +740,16 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   border-radius: var(--od-radius-xl);
   border: 1px solid var(--od-glass-border);
   background:
-    radial-gradient(120% 80% at 12% 0%, color-mix(in srgb, var(--od-accent) 14%, transparent), transparent 55%),
-    linear-gradient(165deg, color-mix(in srgb, var(--od-surface) 92%, var(--od-surface-2)), var(--od-surface));
+    radial-gradient(
+      120% 80% at 12% 0%,
+      color-mix(in srgb, var(--od-accent) 14%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--od-surface) 92%, var(--od-surface-2)),
+      var(--od-surface)
+    );
   box-shadow: var(--od-shadow-lg);
 }
 
@@ -750,7 +765,11 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   border-radius: var(--od-radius-xl);
   border: 2px solid var(--od-border);
   background:
-    radial-gradient(ellipse 70% 50% at 50% 20%, color-mix(in srgb, var(--od-accent) 10%, transparent), transparent),
+    radial-gradient(
+      ellipse 70% 50% at 50% 20%,
+      color-mix(in srgb, var(--od-accent) 10%, transparent),
+      transparent
+    ),
     var(--od-bg);
   overflow: hidden;
 }
@@ -808,8 +827,16 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   inset: -20% -10% auto;
   height: 140%;
   background:
-    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--od-accent) 22%, transparent), transparent 45%),
-    radial-gradient(circle at 70% 55%, color-mix(in srgb, var(--od-info) 18%, transparent), transparent 42%);
+    radial-gradient(
+      circle at 30% 40%,
+      color-mix(in srgb, var(--od-accent) 22%, transparent),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 70% 55%,
+      color-mix(in srgb, var(--od-info) 18%, transparent),
+      transparent 42%
+    );
   filter: blur(18px);
   opacity: 0.85;
   pointer-events: none;
@@ -1269,7 +1296,9 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color var(--od-motion-fast) var(--od-motion-ease), transform var(--od-motion-fast) var(--od-motion-ease);
+  transition:
+    border-color var(--od-motion-fast) var(--od-motion-ease),
+    transform var(--od-motion-fast) var(--od-motion-ease);
 }
 
 .od-stock-picker__card:hover {
@@ -2190,7 +2219,9 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
 .od-toast--out {
   opacity: 0;
   transform: translateY(-0.35rem);
-  transition: opacity var(--od-motion-base) var(--od-motion-ease), transform var(--od-motion-base) var(--od-motion-ease);
+  transition:
+    opacity var(--od-motion-base) var(--od-motion-ease),
+    transform var(--od-motion-base) var(--od-motion-ease);
 }
 
 @keyframes od-toast-in {

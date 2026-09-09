@@ -127,13 +127,7 @@ export function rowsForContentHeight(heightPx, rowPitch, minH = 2) {
 }
 
 export function overlaps(a, b) {
-  return (
-    a.id !== b.id &&
-    a.x < b.x + b.w &&
-    a.x + a.w > b.x &&
-    a.y < b.y + b.h &&
-    a.y + a.h > b.y
-  )
+  return a.id !== b.id && a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
 /**
@@ -143,9 +137,7 @@ export function overlaps(a, b) {
 export function resolveOverlaps(layout, pinnedId = null, minsFn = widgetMins) {
   const items = layout.map((item) => clampWidget(item, minsFn))
   const pinned = pinnedId ? items.find((item) => item.id === pinnedId) : null
-  const rest = items
-    .filter((item) => item.id !== pinnedId)
-    .sort((a, b) => a.y - b.y || a.x - b.x)
+  const rest = items.filter((item) => item.id !== pinnedId).sort((a, b) => a.y - b.y || a.x - b.x)
 
   const placed = pinned ? [pinned] : []
   for (const item of rest) {

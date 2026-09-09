@@ -80,8 +80,8 @@ export function VoiceLobby({
       <section>
         <h2>Voice lobby</h2>
         <p className="od-more-page__lede">
-          Voice is on by default. If tokens fail, set LIVEKIT_URL / API key/secret and run the compose
-          `livekit` profile. Chat and friends work without it.
+          Voice is on by default. If tokens fail, set LIVEKIT_URL / API key/secret and run the
+          compose `livekit` profile. Chat and friends work without it.
         </p>
       </section>
     )
@@ -108,8 +108,7 @@ export function VoiceLobby({
           type="checkbox"
           checked={screenshare}
           onChange={(e) => setScreenshare(e.target.checked)}
-        />
-        {' '}
+        />{' '}
         Request screenshare (blocked for child accounts)
       </label>
       <label>
@@ -120,8 +119,7 @@ export function VoiceLobby({
             setSpectator(e.target.checked)
             if (e.target.checked) setScreenshare(false)
           }}
-        />
-        {' '}
+        />{' '}
         Spectator (listen only — no mic/camera publish)
       </label>
       <button type="button" className="od-btn" disabled={busy} onClick={() => void joinLobby()}>

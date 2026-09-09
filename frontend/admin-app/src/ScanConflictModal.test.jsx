@@ -34,9 +34,7 @@ describe('ScanConflictModal', () => {
   })
 
   test('busy disables Queue / Force / Cancel', () => {
-    render(
-      <ScanConflictModal open busy onChoose={vi.fn()} onClose={vi.fn()} />,
-    )
+    render(<ScanConflictModal open busy onChoose={vi.fn()} onClose={vi.fn()} />)
     expect(screen.getByRole('button', { name: /queue this scan/i })).toBeDisabled()
     expect(screen.getByRole('button', { name: /force run now/i })).toBeDisabled()
     expect(screen.getByRole('button', { name: /^cancel$/i })).toBeDisabled()

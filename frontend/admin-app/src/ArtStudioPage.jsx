@@ -85,9 +85,7 @@ export function ArtStudioPage() {
   const systemForApi = system || undefined
   const activeVariant = PREVIEW_VARIANTS.find((v) => v.key === variantKey) || PREVIEW_VARIANTS[1]
   const heroSrc =
-    previews[activeVariant.key] ||
-    (activeVariant.key === 'md' ? previewUrl : '') ||
-    ''
+    previews[activeVariant.key] || (activeVariant.key === 'md' ? previewUrl : '') || ''
   const hasTitle = Boolean(title.trim())
   const previewBusy = busy === 'preview' || busy === 'preview-system' || busy === 'preview-live'
 
@@ -345,7 +343,9 @@ export function ArtStudioPage() {
         )
         setBatchLog(['Used POST /admin/api/art-studio/batch-generate.', ...failLines].join('\n'))
         if (applied > 0) return
-        lines.push('Batch-generate returned zero applies — trying covers/batch/apply generate_only…')
+        lines.push(
+          'Batch-generate returned zero applies — trying covers/batch/apply generate_only…',
+        )
       } catch {
         lines.push('batch-generate unavailable — trying covers/batch/apply policy=generate_only…')
       }
@@ -363,9 +363,11 @@ export function ArtStudioPage() {
           .filter((r) => r.status === 'failed')
           .map((r) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`)
         setBatchLog(
-          [...lines, 'Used POST /admin/api/covers/batch/apply policy=generate_only.', ...failLines].join(
-            '\n',
-          ),
+          [
+            ...lines,
+            'Used POST /admin/api/covers/batch/apply policy=generate_only.',
+            ...failLines,
+          ].join('\n'),
         )
         if (applied > 0) return
         lines.push('Batch apply returned zero applies — generating per selected title…')
@@ -399,9 +401,7 @@ export function ArtStudioPage() {
     }
   }, [missingCovers, batchSelected, systemForApi])
 
-  const downloadZip = packId
-    ? `/admin/api/art-studio/download/${encodeURIComponent(packId)}`
-    : null
+  const downloadZip = packId ? `/admin/api/art-studio/download/${encodeURIComponent(packId)}` : null
 
   const previewChromeStyle = skin?.accent
     ? {
@@ -418,8 +418,8 @@ export function ArtStudioPage() {
           <h1>Art studio</h1>
           <p className="od-admin-lede od-art-studio-lede">
             Type a title — watch an <strong>artistic</strong> cover form (motifs, bezels, initials).
-            Local Pillow renderer, aurora tokens, no cloud AI. Use{' '}
-            <strong>Pick &amp; queue</strong> for SteamGridDB / IGDB art.
+            Local Pillow renderer, aurora tokens, no cloud AI. Use <strong>Pick &amp; queue</strong>{' '}
+            for SteamGridDB / IGDB art.
           </p>
         </div>
         {skin ? (
@@ -485,7 +485,10 @@ export function ArtStudioPage() {
       {tab === 'stock' ? (
         <div className="od-art-stock-tab">
           <StockPicker onApplied={onStockApplied} showLibraryUuid />
-          <section className="od-admin-panel od-art-studio-fallbacks" aria-label="Current library defaults">
+          <section
+            className="od-admin-panel od-art-studio-fallbacks"
+            aria-label="Current library defaults"
+          >
             <div className="od-art-studio-fallbacks__head">
               <div>
                 <h2 className="od-admin-panel-title">Current library defaults</h2>
@@ -555,33 +558,33 @@ export function ArtStudioPage() {
                     {previewBusy ? 'Painting cover…' : 'Name a title to paint a cover'}
                   </p>
                   <p className="od-art-studio__empty-hint">
-                    Title-first atelier — Backend artistic compositions by default (motifs · bezels ·
-                    watermark), not gray placeholders.
+                    Title-first atelier — Backend artistic compositions by default (motifs · bezels
+                    · watermark), not gray placeholders.
                   </p>
                 </div>
               )}
 
               <div className="od-art-studio__thumbs" aria-label="Other tile sizes">
-                {PREVIEW_VARIANTS.filter((v) => v.key !== activeVariant.key && v.kind === 'tile').map(
-                  (size) => {
-                    const src = previews[size.key]
-                    return (
-                      <button
-                        key={size.key}
-                        type="button"
-                        className="od-art-studio__thumb"
-                        onClick={() => setVariantKey(size.key)}
-                        title={`Show ${size.label}`}
-                      >
-                        {src ? (
-                          <img src={src} alt="" width={size.width} height={size.height} />
-                        ) : (
-                          <span>{size.label}</span>
-                        )}
-                      </button>
-                    )
-                  },
-                )}
+                {PREVIEW_VARIANTS.filter(
+                  (v) => v.key !== activeVariant.key && v.kind === 'tile',
+                ).map((size) => {
+                  const src = previews[size.key]
+                  return (
+                    <button
+                      key={size.key}
+                      type="button"
+                      className="od-art-studio__thumb"
+                      onClick={() => setVariantKey(size.key)}
+                      title={`Show ${size.label}`}
+                    >
+                      {src ? (
+                        <img src={src} alt="" width={size.width} height={size.height} />
+                      ) : (
+                        <span>{size.label}</span>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -664,10 +667,10 @@ export function ArtStudioPage() {
                   />
                 </label>
                 <p id="od-art-scale-hint" className="od-art-studio__hint">
-                  Clamped {TITLE_SCALE_MIN}×–{TITLE_SCALE_MAX}× by the renderer, which also refuses to overflow the
-                  canvas — the slider asks for a size, it does not override the fit.
-                  Leave the fields empty to keep the text derived from the title; an
-                  empty subtitle is kept as “no subtitle”.
+                  Clamped {TITLE_SCALE_MIN}×–{TITLE_SCALE_MAX}× by the renderer, which also refuses
+                  to overflow the canvas — the slider asks for a size, it does not override the fit.
+                  Leave the fields empty to keep the text derived from the title; an empty subtitle
+                  is kept as “no subtitle”.
                 </p>
               </fieldset>
 
@@ -756,14 +759,21 @@ export function ArtStudioPage() {
             </div>
           </section>
 
-          <section className="od-admin-panel od-art-studio-fallbacks" aria-label="Library default covers">
+          <section
+            className="od-admin-panel od-art-studio-fallbacks"
+            aria-label="Library default covers"
+          >
             <div className="od-art-studio-fallbacks__head">
               <div>
                 <h2 className="od-admin-panel-title">Library default covers</h2>
                 <p className="od-admin-lede">
-                  Site-wide fallbacks when a title has no downloaded art. Generate a pack above, then
-                  set as fallback — or open{' '}
-                  <button type="button" className="od-art-inline-link" onClick={() => selectTab('stock')}>
+                  Site-wide fallbacks when a title has no downloaded art. Generate a pack above,
+                  then set as fallback — or open{' '}
+                  <button
+                    type="button"
+                    className="od-art-inline-link"
+                    onClick={() => selectTab('stock')}
+                  >
                     Backup &amp; stock
                   </button>{' '}
                   for platform packs and stock motifs.

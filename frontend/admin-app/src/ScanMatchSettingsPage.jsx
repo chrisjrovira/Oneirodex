@@ -65,7 +65,11 @@ export function ScanMatchSettingsPage() {
     try {
       const data = await saveScanMatchConfig(form, exposed)
       // Re-sync from response when Backend echoes keys (soft-degrade mid-save).
-      if (data && typeof data === 'object' && (data.propose_only_scan !== undefined || data.peel_profile)) {
+      if (
+        data &&
+        typeof data === 'object' &&
+        (data.propose_only_scan !== undefined || data.peel_profile)
+      ) {
         const next = { ...form }
         for (const key of exposed) {
           if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -109,9 +113,8 @@ export function ScanMatchSettingsPage() {
 
       {!loading && degradeReason ? (
         <div className="od-admin-banner od-admin-banner--warn" role="status">
-          {degradeReason}{' '}
-          <a href="/admin/new_server_settings">Open Server Settings</a> for propose-only until
-          Backend exposes this API.
+          {degradeReason} <a href="/admin/new_server_settings">Open Server Settings</a> for
+          propose-only until Backend exposes this API.
         </div>
       ) : null}
 
@@ -138,8 +141,8 @@ export function ScanMatchSettingsPage() {
                   Propose-only scan mode
                   <span className="od-admin-hint">
                     When on, the scanner never auto-imports games — not even on a high-confidence
-                    IGDB match. It writes proposal sidecars / unmatched rows for admin review. Prefer
-                    this for a first pass on a large PC or many-leaf console tree.
+                    IGDB match. It writes proposal sidecars / unmatched rows for admin review.
+                    Prefer this for a first pass on a large PC or many-leaf console tree.
                   </span>
                 </span>
               </label>

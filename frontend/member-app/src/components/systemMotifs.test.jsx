@@ -24,9 +24,9 @@ describe('catalogue', () => {
   test('every entry names a drawable archetype', () => {
     // The generator assigns archetypes by regex; a rule naming an archetype the
     // renderer does not implement would silently fall back for whole families.
-    const unknown = SYSTEM_MOTIFS.filter(
-      (m) => !SYSTEM_MOTIF_ARCHETYPES.includes(m.archetype),
-    ).map((m) => `${m.id}:${m.archetype}`)
+    const unknown = SYSTEM_MOTIFS.filter((m) => !SYSTEM_MOTIF_ARCHETYPES.includes(m.archetype)).map(
+      (m) => `${m.id}:${m.archetype}`,
+    )
 
     expect(unknown).toEqual([])
   })

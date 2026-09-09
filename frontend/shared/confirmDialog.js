@@ -28,7 +28,8 @@
  */
 import './confirmDialog.css'
 
-const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
 let openDialog = null
 

@@ -87,9 +87,7 @@ const VrPage = lazy(() => import('./pages/VrPage').then((m) => ({ default: m.VrP
 const WishlistPage = lazy(() =>
   import('./pages/WishlistPage').then((m) => ({ default: m.WishlistPage })),
 )
-const TokensPage = lazy(() =>
-  import('./pages/TokensPage').then((m) => ({ default: m.TokensPage })),
-)
+const TokensPage = lazy(() => import('./pages/TokensPage').then((m) => ({ default: m.TokensPage })))
 const LicensedCatalogPage = lazy(() =>
   import('./pages/LicensedCatalogPage').then((m) => ({ default: m.LicensedCatalogPage })),
 )
@@ -181,11 +179,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   const chatSurface = location.pathname.startsWith('/chat')
 
   return (
-    <div
-      className="od-shell"
-      data-rail={railState}
-      data-surface={chatSurface ? 'chat' : undefined}
-    >
+    <div className="od-shell" data-rail={railState} data-surface={chatSurface ? 'chat' : undefined}>
       <a className="od-skip-link" href="#main-content">
         Skip to main content
       </a>
@@ -219,11 +213,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
           railState={railState}
         />
       )}
-      <CommandPalette
-        shellConfig={shellConfig}
-        open={paletteOpen}
-        onOpenChange={setPaletteOpen}
-      />
+      <CommandPalette shellConfig={shellConfig} open={paletteOpen} onOpenChange={setPaletteOpen} />
       <main id="main-content" className="od-shell__main" tabIndex={-1}>
         <Outlet />
       </main>
@@ -238,11 +228,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
               visibly: it is what listens for OPEN_SOCIAL_EVENT. Without it the
               rail's Friends entry dispatched the event into an empty room and
               did nothing at all (W27-A7). */}
-          <ChatSlideOut
-            canCreateRooms={canCreateRooms}
-            viewer={chatViewer}
-            hideLauncher
-          />
+          <ChatSlideOut canCreateRooms={canCreateRooms} viewer={chatViewer} hideLauncher />
           {/* gameUuid still rides along: only the launcher moved to the rail.
               Without it the dock's game-scoped half — "Invite to play", "Share
               this game" — is inert on the one page it exists for, because both
@@ -297,30 +283,18 @@ export function App({ shellConfig = {} }) {
       />
       <Route
         element={
-          <Layout
-            shellConfig={shellConfig}
-            tileSize={tileSize}
-            onTileSizeChange={setTileSize}
-          />
+          <Layout shellConfig={shellConfig} tileSize={tileSize} onTileSizeChange={setTileSize} />
         }
       >
         <Route
           path="/discover"
-          element={
-            <DiscoverApp
-              isAdmin={Boolean(shellConfig.isAdmin)}
-              shellConfig={shellConfig}
-            />
-          }
+          element={<DiscoverApp isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />}
         />
         <Route
           path="/discover/hub/genre/:genre"
           element={
             <LazyPage>
-              <DiscoverHubPage
-                isAdmin={Boolean(shellConfig.isAdmin)}
-                shellConfig={shellConfig}
-              />
+              <DiscoverHubPage isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />
             </LazyPage>
           }
         />
@@ -331,20 +305,14 @@ export function App({ shellConfig = {} }) {
           path="/discover/zone/:slug"
           element={
             <LazyPage>
-              <DiscoverZonePage
-                isAdmin={Boolean(shellConfig.isAdmin)}
-                shellConfig={shellConfig}
-              />
+              <DiscoverZonePage isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />
             </LazyPage>
           }
         />
         <Route
           path="/discover/:identifier"
           element={
-            <DiscoverRowPage
-              isAdmin={Boolean(shellConfig.isAdmin)}
-              shellConfig={shellConfig}
-            />
+            <DiscoverRowPage isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />
           }
         />
         <Route

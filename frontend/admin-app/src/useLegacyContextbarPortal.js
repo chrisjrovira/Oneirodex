@@ -26,8 +26,7 @@ export function useLegacyContextbarPortal(enabled) {
     if (!pageSlot || !legacy) return undefined
 
     const bar =
-      legacy.querySelector(':scope > .od-contextbar') ||
-      legacy.querySelector('.od-contextbar')
+      legacy.querySelector(':scope > .od-contextbar') || legacy.querySelector('.od-contextbar')
     if (!bar) return undefined
     // Already lifted (views live in the page slot).
     if (pageSlot.contains(bar) || pageSlot.querySelector(':scope > .od-contextbar__views')) {

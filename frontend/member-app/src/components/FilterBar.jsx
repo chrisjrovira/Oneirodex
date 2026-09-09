@@ -25,7 +25,14 @@ const SELECTS = [
   ['genre', 'Genre', 'All Genres', 'genres', 'name', 'name'],
   ['theme', 'Theme', 'All Themes', 'themes', 'name', 'name'],
   ['game_mode', 'Game mode', 'All Game Modes', 'gameModes', 'name', 'name'],
-  ['player_perspective', 'Player perspective', 'All Perspectives', 'playerPerspectives', 'name', 'name'],
+  [
+    'player_perspective',
+    'Player perspective',
+    'All Perspectives',
+    'playerPerspectives',
+    'name',
+    'name',
+  ],
 ]
 
 /** localStorage: '1' = LHN expanded (default), '0' = collapsed rail. */
@@ -114,9 +121,7 @@ export function LibraryFiltersCollapseToggle({
       onClick={onToggle}
     >
       <CollapseChevron collapsed={collapsed} />
-      <span className="visually-hidden">
-        {collapsed ? t('Show filters') : t('Hide filters')}
-      </span>
+      <span className="visually-hidden">{collapsed ? t('Show filters') : t('Hide filters')}</span>
     </button>
   )
 }
@@ -295,9 +300,7 @@ export function FilterBar({
       </div>
 
       <div id="library-filters-body" className="library-filters__body">
-        {loadError ? (
-          <PageStatus error errorMessage={t('Unable to load filter options.')} />
-        ) : null}
+        {loadError ? <PageStatus error errorMessage={t('Unable to load filter options.')} /> : null}
         {selects.map(([name, label, emptyLabel, source, valueField, textField]) => (
           <label key={name}>
             {label}
@@ -309,10 +312,7 @@ export function FilterBar({
             >
               <option value="">{emptyLabel}</option>
               {options[source].map((option) => (
-                <option
-                  key={option.id ?? option[valueField]}
-                  value={option[valueField]}
-                >
+                <option key={option.id ?? option[valueField]} value={option[valueField]}>
                   {option[textField]}
                 </option>
               ))}
@@ -374,30 +374,30 @@ export function FilterBar({
         </label>
 
         {hideKind ? null : (
-        <fieldset className="library-filters__signals">
-          <legend>{t('Kind')}</legend>
-          <div className="od-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
-            {ITEM_KIND_FILTER_CHIPS.map((chip) => {
-              const active = parseItemKindFilter(
-                filters.item_kind ?? draft.item_kind,
-              ).includes(chip.kind)
-              return (
-                <button
-                  key={chip.kind}
-                  type="button"
-                  className={`od-badge-filter-chip${active ? ' is-active' : ''}`}
-                  aria-pressed={active}
-                  title={t(chip.title)}
-                  onClick={() =>
-                    toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
-                  }
-                >
-                  {t(chip.label)}
-                </button>
-              )
-            })}
-          </div>
-        </fieldset>
+          <fieldset className="library-filters__signals">
+            <legend>{t('Kind')}</legend>
+            <div className="od-badge-filter-chips" role="group" aria-label={t('Kind filters')}>
+              {ITEM_KIND_FILTER_CHIPS.map((chip) => {
+                const active = parseItemKindFilter(filters.item_kind ?? draft.item_kind).includes(
+                  chip.kind,
+                )
+                return (
+                  <button
+                    key={chip.kind}
+                    type="button"
+                    className={`od-badge-filter-chip${active ? ' is-active' : ''}`}
+                    aria-pressed={active}
+                    title={t(chip.title)}
+                    onClick={() =>
+                      toggleItemKindFilter(filters, chip.kind, applyBadgeToggle, cleanFilters)
+                    }
+                  >
+                    {t(chip.label)}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
         )}
 
         <label className="library-filters__rating">

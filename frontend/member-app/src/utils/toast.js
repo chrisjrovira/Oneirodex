@@ -1,8 +1,4 @@
-import {
-  isStackableTone,
-  planToastStack,
-  stackSummaryMessage,
-} from '../../../shared/toastStack'
+import { isStackableTone, planToastStack, stackSummaryMessage } from '../../../shared/toastStack'
 
 /**
  * Lightweight aurora toast — no jQuery / Bootstrap notify dependency.

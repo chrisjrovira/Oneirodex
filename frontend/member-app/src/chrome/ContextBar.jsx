@@ -73,39 +73,23 @@ function useDismiss(open, onClose, refs) {
  * @param {(id: string) => void} props.unfurl.onSelect
  * @param {string} [props.unfurl.triggerLabel='View'] Fallback + menu name
  */
-export function SegmentedViews({
-  views,
-  active,
-  onSelect,
-  label = 'Views',
-  unfurl = null,
-}) {
+export function SegmentedViews({ views, active, onSelect, label = 'Views', unfurl = null }) {
   const [unfurlOpen, setUnfurlOpen] = useState(false)
   const rootRef = useRef(null)
   const closeUnfurl = useCallback(() => setUnfurlOpen(false), [])
   useDismiss(unfurlOpen, closeUnfurl, [rootRef])
 
   const hasViews = Array.isArray(views) && views.length > 0
-  const hasUnfurl =
-    unfurl && Array.isArray(unfurl.views) && unfurl.views.length > 0
+  const hasUnfurl = unfurl && Array.isArray(unfurl.views) && unfurl.views.length > 0
   if (!hasViews && !hasUnfurl) return null
 
   const menuLabel = unfurl?.triggerLabel || 'View'
-  const activeUnfurlView = hasUnfurl
-    ? unfurl.views.find((view) => view.id === unfurl.active)
-    : null
+  const activeUnfurlView = hasUnfurl ? unfurl.views.find((view) => view.id === unfurl.active) : null
   const triggerLabel = activeUnfurlView?.label || menuLabel
 
   return (
-    <div
-      className={`od-contextbar__views${unfurlOpen ? ' is-unfurled' : ''}`}
-      ref={rootRef}
-    >
-      <div
-        className={`od-seg${unfurlOpen ? ' is-unfurled' : ''}`}
-        role="group"
-        aria-label={label}
-      >
+    <div className={`od-contextbar__views${unfurlOpen ? ' is-unfurled' : ''}`} ref={rootRef}>
+      <div className={`od-seg${unfurlOpen ? ' is-unfurled' : ''}`} role="group" aria-label={label}>
         {hasViews
           ? views.map((view) => {
               const selected = view.id === active
@@ -137,11 +121,7 @@ export function SegmentedViews({
               {triggerLabel}
             </button>
             {unfurlOpen ? (
-              <div
-                className="od-contextbar__views-unfurl"
-                role="group"
-                aria-label={menuLabel}
-              >
+              <div className="od-contextbar__views-unfurl" role="group" aria-label={menuLabel}>
                 {unfurl.views.map((view) => {
                   const selected = view.id === unfurl.active
                   return (
@@ -199,11 +179,7 @@ export function Popover({
   useDismiss(open, close, [triggerRef, panelRef])
 
   const active = count > 0
-  const triggerClass = [
-    'od-cbtn',
-    active ? 'is-on' : '',
-    triggerClassName,
-  ]
+  const triggerClass = ['od-cbtn', active ? 'is-on' : '', triggerClassName]
     .filter(Boolean)
     .join(' ')
 
@@ -330,20 +306,13 @@ export function ContextBar({
   // a box and repeated the word between them. Pages still passing a plain node
   // (Calendar, Trailers) keep the head, because it holds their only Done.
   const ownsDismiss = typeof filters === 'function'
-  const summaryIsFilterTrigger = Boolean(
-    filters && filtersOnSummary && summary,
-  )
+  const summaryIsFilterTrigger = Boolean(filters && filtersOnSummary && summary)
   const leadLabel = filtersLabel || t('Filters')
   /* Lead Filters (Library): left-anchored so the panel does not open over the
      rail. Trail summary-as-filters (Discover): end-anchored beside tile size. */
   const filterControl =
     filters && !summaryIsFilterTrigger ? (
-      <Popover
-        label={leadLabel}
-        count={filterCount}
-        chromeless={ownsDismiss}
-        align="start"
-      >
+      <Popover label={leadLabel} count={filterCount} chromeless={ownsDismiss} align="start">
         {filters}
       </Popover>
     ) : null
@@ -397,9 +366,7 @@ export function ContextBar({
    * bar uses for its own titles, so a data-named page reads identically to a
    * table-named one. od-shell.css suppresses the bar's copy when this is
    * present, otherwise a collapsed rail showed both. */
-  const titleControl = title ? (
-    <h1 className="od-topbar__section">{title}</h1>
-  ) : null
+  const titleControl = title ? <h1 className="od-topbar__section">{title}</h1> : null
 
   // One bar, not two.
   //

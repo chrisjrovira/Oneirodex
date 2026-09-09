@@ -89,10 +89,7 @@ test('a library with no last scan folder says so instead of posting', async () =
   const buttons = screen.getAllByRole('button', { name: 'Scan' })
   // Row order is name-ascending: PCWIN, PS2.
   expect(buttons[1]).toBeDisabled()
-  expect(buttons[1]).toHaveAttribute(
-    'title',
-    expect.stringContaining('No last scan folder'),
-  )
+  expect(buttons[1]).toHaveAttribute('title', expect.stringContaining('No last scan folder'))
 })
 
 test('a finished job offers Scan again and repeats that job, not the library', async () => {

@@ -50,8 +50,7 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
   }, [retryCount])
 
   const games = data?.games || []
-  const gameCountLabel =
-    games.length === 1 ? '1 game' : `${games.length} games`
+  const gameCountLabel = games.length === 1 ? '1 game' : `${games.length} games`
 
   return (
     <>
@@ -107,7 +106,10 @@ export function PlaytimePage({ shellConfig = {} } = {}) {
                 <ul className="od-playtime__list">
                   {games.map((row) => (
                     <li key={row.game_uuid} className="od-playtime__row">
-                      <a className="od-playtime__title-link" href={`/game_details/${row.game_uuid}`}>
+                      <a
+                        className="od-playtime__title-link"
+                        href={`/game_details/${row.game_uuid}`}
+                      >
                         <strong>{row.game_name || row.game_uuid}</strong>
                       </a>
                       <span className="od-playtime__meta">

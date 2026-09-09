@@ -95,10 +95,7 @@ function IconChevronDown(props) {
  * Jump-to-top / jump-to-bottom for the scrolling content pane. Hidden entirely
  * when there is nothing to scroll, so it never sits over content for no reason.
  */
-export function ScrollJump({
-  t = (key) => key,
-  label = 'Page scroll',
-} = {}) {
+export function ScrollJump({ t = (key) => key, label = 'Page scroll' } = {}) {
   const [metrics, setMetrics] = useState(() => ({
     scrollable: false,
     atTop: true,
@@ -129,18 +126,14 @@ export function ScrollJump({
 
     const root = document.documentElement
     const resizeObserver =
-      typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(schedule)
-        : null
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : null
     resizeObserver?.observe(root)
     if (document.body) {
       resizeObserver?.observe(document.body)
     }
 
     const mutationObserver =
-      typeof MutationObserver !== 'undefined'
-        ? new MutationObserver(schedule)
-        : null
+      typeof MutationObserver !== 'undefined' ? new MutationObserver(schedule) : null
     mutationObserver?.observe(document.body || root, {
       childList: true,
       subtree: true,

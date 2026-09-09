@@ -98,8 +98,6 @@ test('new chrome turns the friends-only checkbox into a view switch', async () =
   await user.click(screen.getByRole('button', { name: 'Friends only' }))
   // The switch must actually re-query, or it is decoration.
   await waitFor(() =>
-    expect(
-      fetch.mock.calls.some(([u]) => String(u).includes('friends_only=1')),
-    ).toBe(true),
+    expect(fetch.mock.calls.some(([u]) => String(u).includes('friends_only=1'))).toBe(true),
   )
 })

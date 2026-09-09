@@ -57,10 +57,7 @@ test('empty query asks the member to open the page from Systems', () => {
   renderPage('/systems/catalog')
   expect(screen.getByRole('heading', { name: 'Licensed catalog' })).toBeInTheDocument()
   expect(screen.getByText(/Open this page from a Systems tile/i)).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Back to Systems' })).toHaveAttribute(
-    'href',
-    '/systems',
-  )
+  expect(screen.getByRole('link', { name: 'Back to Systems' })).toHaveAttribute('href', '/systems')
   expect(global.fetch).not.toHaveBeenCalled()
 })
 

@@ -68,8 +68,8 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
     <form className="od-admin-panel" data-form-type="other" onSubmit={handleSubmit}>
       <h2>{title}</h2>
       <p className="od-admin-lede">
-        Creates the account straight away — no invite link required. Give the
-        person the username and password yourself. Email is optional.
+        Creates the account straight away — no invite link required. Give the person the username
+        and password yourself. Email is optional.
       </p>
 
       <PageStatus error={error} />

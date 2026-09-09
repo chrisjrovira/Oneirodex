@@ -171,9 +171,7 @@ export function FavoritesApp({ initialConfig, shellConfig } = {}) {
         layout={layout}
         onToggleFavorite={(gameUuid, isFavorite) => {
           if (!isFavorite) {
-            setGames((currentGames) =>
-              currentGames.filter((game) => game.uuid !== gameUuid),
-            )
+            setGames((currentGames) => currentGames.filter((game) => game.uuid !== gameUuid))
             setTotal((n) => Math.max(0, n - 1))
           }
         }}

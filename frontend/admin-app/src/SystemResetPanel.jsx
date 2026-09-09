@@ -33,9 +33,9 @@ const SCOPES = [
     id: 'users',
     title: 'Member accounts — and everything linked to a member',
     blurb:
-      'Members, invites, favorites, collections, playtime, chat and saves. Your own admin account is kept so you stay signed in. '
-      + 'Reaches further than it sounds: anything recording who did it goes too — announcements, newsletters, support tickets, '
-      + 'unmatched folders, PC cheats, reference sets and the system event log all carry a member reference.',
+      'Members, invites, favorites, collections, playtime, chat and saves. Your own admin account is kept so you stay signed in. ' +
+      'Reaches further than it sounds: anything recording who did it goes too — announcements, newsletters, support tickets, ' +
+      'unmatched folders, PC cheats, reference sets and the system event log all carry a member reference.',
   },
   {
     id: 'settings',
@@ -175,9 +175,9 @@ export function SystemResetPanel() {
     <section className="od-ops-panel od-ops-panel--wide od-danger-zone">
       <h2>Reset this install</h2>
       <p className="od-danger-zone__lede">
-        Clears Oneirodex&rsquo;s database. <strong>No files are deleted.</strong>{' '}
-        Everything on disk — your scanned games, artwork you supplied and BIOS
-        files — is left exactly as it is, so a rescan rebuilds the catalog.
+        Clears Oneirodex&rsquo;s database. <strong>No files are deleted.</strong> Everything on disk
+        — your scanned games, artwork you supplied and BIOS files — is left exactly as it is, so a
+        rescan rebuilds the catalog.
       </p>
 
       <label className="od-danger-zone__ack">
@@ -190,10 +190,7 @@ export function SystemResetPanel() {
             setConfirm('')
           }}
         />
-        <span>
-          I understand this cannot be undone and I am on the correct Oneirodex
-          install.
-        </span>
+        <span>I understand this cannot be undone and I am on the correct Oneirodex install.</span>
       </label>
 
       <ul className="od-danger-zone__scopes">
@@ -272,8 +269,8 @@ export function SystemResetPanel() {
         <p className="od-danger-zone__done" role="status">
           Reset complete — {done.table_count} table
           {done.table_count === 1 ? '' : 's'} cleared
-          {done.actor_restored ? ', your admin account was kept' : ''}. No files
-          were touched. Reload to see the empty install.
+          {done.actor_restored ? ', your admin account was kept' : ''}. No files were touched.
+          Reload to see the empty install.
         </p>
       ) : null}
 

@@ -84,7 +84,7 @@
   padding: 0.35rem 0.5rem;
   border-radius: var(--od-radius-sm);
   background: color-mix(in srgb, var(--od-surface-2) 85%, transparent);
-  font-family: "Consolas", "Courier New", monospace;
+  font-family: 'Consolas', 'Courier New', monospace;
   font-size: var(--od-font-sm);
   overflow-x: auto;
   white-space: pre-wrap;

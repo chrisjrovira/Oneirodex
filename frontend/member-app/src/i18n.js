@@ -80,8 +80,7 @@ const STRINGS = {
     'No games match the current filters.':
       'Ningún juego pasó esos filtros. Quita alguno y vuelve a intentarlo.',
     'Unable to load games.': 'No se pudo cargar tu catálogo. Inténtalo de nuevo.',
-    'Unable to refresh games.':
-      'No se pudo actualizar. Sigues viendo los últimos datos correctos.',
+    'Unable to refresh games.': 'No se pudo actualizar. Sigues viendo los últimos datos correctos.',
     'Unable to load filter options.':
       'No se pudieron cargar los filtros. Aun así puedes explorar todo lo de abajo.',
     Library: 'Biblioteca',

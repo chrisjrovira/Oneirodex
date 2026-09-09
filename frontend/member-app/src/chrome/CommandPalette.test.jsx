@@ -243,7 +243,6 @@ test('admin external command uses location href', async () => {
   vi.unstubAllGlobals()
 })
 
-
 describe('type-to-search', () => {
   const key = (k, extra = {}) => ({ key: k, target: document.body, ...extra })
 

@@ -99,9 +99,7 @@ export function AnnouncementsPage() {
 
       <h2 className="od-admin-subhead">Recent</h2>
       <PageStatus loading={!rows} loadingMessage="Loading announcements…" />
-      {rows && rows.length === 0 ? (
-        <PageStatus emptyMessage="No announcements yet." />
-      ) : null}
+      {rows && rows.length === 0 ? <PageStatus emptyMessage="No announcements yet." /> : null}
       {rows && rows.length > 0 ? (
         <ul className="od-admin-list">
           {rows.map((row) => (

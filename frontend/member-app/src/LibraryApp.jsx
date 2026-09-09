@@ -12,20 +12,14 @@ import { fetchBrowseGames } from './api/browse'
 import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
 import { SystemBackdrop } from './chrome/SystemBackdrop'
 import { usesNewChrome } from './chrome/usesNewChrome'
-import {
-  BADGE_FILTER_PARAMS,
-  badgeFiltersFromSearchParams,
-} from './components/BadgeFilterChips'
+import { BADGE_FILTER_PARAMS, badgeFiltersFromSearchParams } from './components/BadgeFilterChips'
 import {
   ITEM_KIND_FILTER_CHIPS,
   itemKindFromSearchParams,
   parseItemKindFilter,
 } from './components/ItemKindFilterChips'
 import { ContextBar } from './chrome/ContextBar'
-import {
-  cleanFilters,
-  FilterBar,
-} from './components/FilterBar'
+import { cleanFilters, FilterBar } from './components/FilterBar'
 import './components/libraryFilters.css'
 import { GameGrid } from './components/GameGrid'
 import { GameGridSkeleton } from './components/GameGridSkeleton'
@@ -140,10 +134,7 @@ function searchParamsHaveLibraryFilters(searchParams) {
 }
 
 export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
-  const t = useMemo(
-    () => createTranslator(initialConfig.locale),
-    [initialConfig.locale],
-  )
+  const t = useMemo(() => createTranslator(initialConfig.locale), [initialConfig.locale])
   const canBatchRefreshImages = Boolean(
     shellConfig.isLibrarian || shellConfig.isAdmin || initialConfig.isAdmin,
   )
@@ -328,9 +319,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       if (opts.range && games.length > 0) {
         const anchor = selectionAnchorRef.current
         const endIndex = games.findIndex((game) => game.uuid === uuid)
-        const startIndex = anchor
-          ? games.findIndex((game) => game.uuid === anchor)
-          : endIndex
+        const startIndex = anchor ? games.findIndex((game) => game.uuid === anchor) : endIndex
         if (endIndex >= 0 && startIndex >= 0) {
           const from = Math.min(startIndex, endIndex)
           const to = Math.max(startIndex, endIndex)
@@ -405,9 +394,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       return {
         ...prev,
         games: prev.games.map((game) =>
-          byUuid.has(game.uuid)
-            ? { ...game, user_status: byUuid.get(game.uuid) || '' }
-            : game,
+          byUuid.has(game.uuid) ? { ...game, user_status: byUuid.get(game.uuid) || '' } : game,
         ),
       }
     })
@@ -445,9 +432,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       const updatedRows = outcome.updated || outcome.results || []
       if (Array.isArray(updatedRows) && updatedRows.length > 0) {
         const byUuid = new Map(
-          updatedRows
-            .filter((row) => row && row.uuid)
-            .map((row) => [row.uuid, row]),
+          updatedRows.filter((row) => row && row.uuid).map((row) => [row.uuid, row]),
         )
         if (byUuid.size > 0) {
           setResult((prev) => {
@@ -551,12 +536,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
 
   const runBatchRefreshImages = async () => {
     const uuids = Array.from(selectedIds)
-    if (
-      uuids.length === 0 ||
-      selectionBusy ||
-      !canBatchRefreshImages ||
-      !refreshImagesAvailable
-    ) {
+    if (uuids.length === 0 || selectionBusy || !canBatchRefreshImages || !refreshImagesAvailable) {
       return
     }
     setSelectionBusy(true)
@@ -635,23 +615,23 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   } else if (showSkeleton) {
     content = (
       <>
-          <GameGridSkeleton count={perPage} layout={layout} />
+        <GameGridSkeleton count={perPage} layout={layout} />
         {showPager ? (
-        <PaginationBar
-          page={page}
-          pages={1}
-          perPage={perPage}
-          onPageChange={(nextPage) => {
-            clearSelection()
-            setPage(nextPage)
-          }}
-          onPerPageChange={(nextPerPage) => {
-            clearSelection()
-            setPage(1)
-            setPerPage(nextPerPage)
-          }}
-          t={t}
-        />
+          <PaginationBar
+            page={page}
+            pages={1}
+            perPage={perPage}
+            onPageChange={(nextPage) => {
+              clearSelection()
+              setPage(nextPage)
+            }}
+            onPerPageChange={(nextPerPage) => {
+              clearSelection()
+              setPage(1)
+              setPerPage(nextPerPage)
+            }}
+            t={t}
+          />
         ) : null}
       </>
     )
@@ -679,9 +659,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
             onFavorite={() => void runBatchFavorite(true)}
             onUnfavorite={() => void runBatchFavorite(false)}
             onRefreshFreshness={() => void runBatchFreshness()}
-            onRefreshImages={
-              canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined
-            }
+            onRefreshImages={canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined}
             onWishlist={() => void runBatchWishlist(false)}
             onWishlistRemove={() => void runBatchWishlist(true)}
             onPlayStatus={(status) => void runBatchPlayStatus(status)}
@@ -724,9 +702,10 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   // The label already rides along on the game rows, so the backdrop needs no
   // extra fetch and no 70-entry name table to stay in step with the enum.
   const selectedSystemLabel =
-    (result?.games ?? []).find(
-      (game) => game.library_platform === filters.library_platform,
-    )?.library_platform_label || filters.library_platform || ''
+    (result?.games ?? []).find((game) => game.library_platform === filters.library_platform)
+      ?.library_platform_label ||
+    filters.library_platform ||
+    ''
 
   // Kind becomes the segmented control. A URL may still carry several kinds —
   // that keeps working, it just lights no segment, which is honest: the
@@ -766,9 +745,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
       onFavorite={() => void runBatchFavorite(true)}
       onUnfavorite={() => void runBatchFavorite(false)}
       onRefreshFreshness={() => void runBatchFreshness()}
-      onRefreshImages={
-        canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined
-      }
+      onRefreshImages={canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined}
       onWishlist={() => void runBatchWishlist(false)}
       onWishlistRemove={() => void runBatchWishlist(true)}
       onPlayStatus={(status) => void runBatchPlayStatus(status)}
@@ -794,10 +771,7 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
   if (useNewChrome) {
     return (
       <>
-        <SystemBackdrop
-          platform={filters.library_platform}
-          label={selectedSystemLabel}
-        />
+        <SystemBackdrop platform={filters.library_platform} label={selectedSystemLabel} />
         <ContextBar
           /* While selecting, the kind / View strip is unused — put the fused
              selection actions in the centre instead (Filters stay). */
@@ -851,12 +825,9 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
 
   return (
     <>
-    <SystemBackdrop
-      platform={filters.library_platform}
-      label={selectedSystemLabel}
-    />
-    <div className="library-layout">
-      {/* Filters render into the rail (GT-B4) — see #od-rail-slot in SideRail.
+      <SystemBackdrop platform={filters.library_platform} label={selectedSystemLabel} />
+      <div className="library-layout">
+        {/* Filters render into the rail (GT-B4) — see #od-rail-slot in SideRail.
           They used to be a 17.5rem sticky aside sitting immediately right of
           the rail: two left-hand panels, which is what read as broken, plus a
           collapse tab that clipped itself against the top of the column.
@@ -865,20 +836,20 @@ export function LibraryApp({ initialConfig, shellConfig = {} } = {}) {
           here, only the markup moves, and the shell never has to know what a
           filter is. When the rail is absent (Big Picture, tests) it falls back
           to rendering in place rather than vanishing. */}
-      {railSlot ? (
-        createPortal(filterBar, railSlot)
-      ) : (
-        <aside
-          id={filtersPanelId}
-          className="library-layout__filters"
-          aria-label={t('Library filters')}
-        >
-          {filterBar}
-        </aside>
-      )}
+        {railSlot ? (
+          createPortal(filterBar, railSlot)
+        ) : (
+          <aside
+            id={filtersPanelId}
+            className="library-layout__filters"
+            aria-label={t('Library filters')}
+          >
+            {filterBar}
+          </aside>
+        )}
 
-      <div className="library-layout__main">{content}</div>
-    </div>
+        <div className="library-layout__main">{content}</div>
+      </div>
     </>
   )
 }

@@ -67,7 +67,11 @@ export function previewBadges(game) {
   }
   if (game.lifecycle_state === 'update_available' || game.has_updates) {
     const count = Number(game.updates_count) || 0
-    badges.push({ id: 'update', label: count > 1 ? `${count} updates` : 'Update available', tone: 'info' })
+    badges.push({
+      id: 'update',
+      label: count > 1 ? `${count} updates` : 'Update available',
+      tone: 'info',
+    })
   }
   if (game.can_play_in_browser) {
     badges.push({ id: 'play', label: 'Playable in browser', tone: 'good' })
@@ -121,9 +125,7 @@ export function friendsSentence(friends) {
  * both wrong and pointless.
  */
 export function systemCountLabel(editions) {
-  const systems = new Set(
-    (editions || []).map((row) => row.library_platform).filter(Boolean),
-  )
+  const systems = new Set((editions || []).map((row) => row.library_platform).filter(Boolean))
   return systems.size > 1 ? `${systems.size} systems` : null
 }
 
@@ -330,9 +332,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
               </p>
             ) : null}
 
-            {genres.length ? (
-              <p className="od-preview__genres">{genres.join(' · ')}</p>
-            ) : null}
+            {genres.length ? <p className="od-preview__genres">{genres.join(' · ')}</p> : null}
 
             {household ? <p className="od-preview__friends">{household}</p> : null}
 
@@ -366,9 +366,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
           <h3 className="od-preview__systems-title">
             Available on
             {systemCountLabel(editions) ? (
-              <span className="od-preview__systems-count">
-                {systemCountLabel(editions)}
-              </span>
+              <span className="od-preview__systems-count">{systemCountLabel(editions)}</span>
             ) : null}
           </h3>
 
@@ -398,9 +396,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }) {
                           'Unknown system'}
                       </span>
                       {edition.library_name ? (
-                        <span className="od-preview__system-library">
-                          {edition.library_name}
-                        </span>
+                        <span className="od-preview__system-library">{edition.library_name}</span>
                       ) : null}
                       {edition.is_current ? (
                         <span className="od-preview__system-tag">This copy</span>

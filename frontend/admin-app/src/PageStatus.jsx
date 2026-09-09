@@ -142,11 +142,7 @@ export function PageStatus({
 
   if (loading) {
     const node = (
-      <AdminLoadingStatus
-        inline={inline}
-        className={className}
-        loadingMessage={loadingMessage}
-      />
+      <AdminLoadingStatus inline={inline} className={className} loadingMessage={loadingMessage} />
     )
     if (inline || typeof document === 'undefined') return node
     return createPortal(node, document.body)

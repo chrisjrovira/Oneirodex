@@ -34,9 +34,7 @@ afterEach(() => {
 
 test('does not render on a RetroArch title', () => {
   mockFetch(PAYLOAD)
-  const { container } = render(
-    <PcCheatsPanel gameUuid="abc" cheatSurface="retroarch" />,
-  )
+  const { container } = render(<PcCheatsPanel gameUuid="abc" cheatSurface="retroarch" />)
   // The two cheat surfaces must never both appear for one game.
   expect(container).toBeEmptyDOMElement()
   expect(global.fetch).not.toHaveBeenCalled()
@@ -61,9 +59,7 @@ test('lists cheat notes on a PC title', async () => {
 test('states the notes-not-a-trainer stance', async () => {
   mockFetch(PAYLOAD)
   render(<PcCheatsPanel gameUuid="abc" cheatSurface="pc_wand" />)
-  expect(
-    await screen.findByText(/never modifies game files/i),
-  ).toBeInTheDocument()
+  expect(await screen.findByText(/never modifies game files/i)).toBeInTheDocument()
 })
 
 test('flags single-player entries', async () => {

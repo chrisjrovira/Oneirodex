@@ -47,7 +47,12 @@ test('lists announcement cards from API', async () => {
   expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Welcome')).toBeInTheDocument()
   expect(screen.getByText('Hello members')).toBeInTheDocument()
-  expect(screen.getByText((_, el) => el?.tagName === 'TIME' && el.getAttribute('dateTime') === '2026-07-01T12:00:00+00:00')).toBeInTheDocument()
+  expect(
+    screen.getByText(
+      (_, el) =>
+        el?.tagName === 'TIME' && el.getAttribute('dateTime') === '2026-07-01T12:00:00+00:00',
+    ),
+  ).toBeInTheDocument()
 })
 
 test('the admin section stays off the combined view when there is nothing in it', async () => {

@@ -2,12 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { AccountModal } from './AccountModal'
-import {
-  TOPBAR_LEAD_ID,
-  TOPBAR_SLOT_ID,
-  TOPBAR_TITLE_ID,
-  TOPBAR_TRAIL_ID,
-} from './ContextBar'
+import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TITLE_ID, TOPBAR_TRAIL_ID } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
 import { getPageTitle, hasTileSizeControl } from './navConfig'
@@ -166,9 +161,7 @@ export function TopBar({
               When ContextBar portals its own title into the lead slot,
               od-shell.css hides this copy with `display: none`, which removes
               it from the a11y tree too, so exactly one heading is exposed. */}
-          {pageTitle ? (
-            <h1 className="od-topbar__section">{pageTitle}</h1>
-          ) : null}
+          {pageTitle ? <h1 className="od-topbar__section">{pageTitle}</h1> : null}
         </div>
 
         {views ? <div className="od-topbar__views">{views}</div> : null}
@@ -241,9 +234,7 @@ export function TopBar({
               aria-label="Account menu"
               onClick={() => setAccountOpen((open) => !open)}
             >
-              <span className="od-topbar__account-name">
-                {username || 'Account'}
-              </span>
+              <span className="od-topbar__account-name">{username || 'Account'}</span>
               {avatar ? (
                 <img
                   className="od-topbar__account-avatar"

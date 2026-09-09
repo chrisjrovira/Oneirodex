@@ -63,10 +63,7 @@ test('freshness stays enabled now that bulk route is live', async () => {
   await user.click(screen.getByRole('button', { name: /^More$/i }))
   const freshness = screen.getByRole('button', { name: /Refresh freshness/i })
   expect(freshness).toBeEnabled()
-  expect(freshness).toHaveAttribute(
-    'title',
-    expect.stringMatching(/store freshness/i),
-  )
+  expect(freshness).toHaveAttribute('title', expect.stringMatching(/store freshness/i))
 })
 
 test('disables wishlist play status and refresh covers when routes unavailable', async () => {

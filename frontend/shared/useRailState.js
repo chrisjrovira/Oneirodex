@@ -74,8 +74,7 @@ export function useRailState() {
     // One button drives both behaviours: on mobile it opens the drawer, on
     // desktop it collapses. Deciding here rather than in the component keeps
     // both shells from re-implementing the branch.
-    const isMobile =
-      typeof window !== 'undefined' && window.matchMedia?.(MOBILE_QUERY).matches
+    const isMobile = typeof window !== 'undefined' && window.matchMedia?.(MOBILE_QUERY).matches
     if (isMobile) setDrawerOpen((open) => !open)
     else setCollapsed((value) => !value)
   }, [])

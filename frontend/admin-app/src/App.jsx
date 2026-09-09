@@ -78,9 +78,7 @@ export function resolveRenderMode(root = document.getElementById('admin-app-root
   if (declared === 'legacy') return 'legacy'
 
   if (declared && declared !== 'auto' && typeof console !== 'undefined') {
-    console.warn(
-      `[admin] unknown data-admin-render="${declared}" — falling back to auto detection`,
-    )
+    console.warn(`[admin] unknown data-admin-render="${declared}" — falling back to auto detection`)
   }
 
   return hasLegacyBody() ? 'legacy' : 'spa'
@@ -169,12 +167,7 @@ function renderAdminKind(kind) {
     case 'settings-section':
       return <SettingsSectionPage />
     default:
-      return (
-        <HubPage
-          title="Admin"
-          lede="Pick a section from the rail on the left."
-        />
-      )
+      return <HubPage title="Admin" lede="Pick a section from the rail on the left." />
   }
 }
 

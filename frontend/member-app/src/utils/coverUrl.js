@@ -19,11 +19,7 @@ export function coverUrl(coverUrlPath) {
     path = `https:${path}`
   }
 
-  if (
-    path.startsWith('http://') ||
-    path.startsWith('https://') ||
-    path.startsWith('/static/')
-  ) {
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/static/')) {
     return path
   }
 

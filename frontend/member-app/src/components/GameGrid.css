@@ -12,7 +12,9 @@
 }
 
 html {
-  transition: --od-tile-min 0.22s ease, --od-tile-gap 0.22s ease;
+  transition:
+    --od-tile-min 0.22s ease,
+    --od-tile-gap 0.22s ease;
 }
 
 /* Set by TileSizeControl while the slider is moving (W27-B2). During a drag the

@@ -13,9 +13,7 @@ export function readLibraryFilters() {
 
   try {
     const value = JSON.parse(decodeURIComponent(cookie.slice(prefix.length)))
-    return value && typeof value === 'object' && !Array.isArray(value)
-      ? value
-      : {}
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
   } catch {
     return {}
   }

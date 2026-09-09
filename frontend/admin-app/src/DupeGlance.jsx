@@ -25,8 +25,7 @@ import './DupeGlance.css'
 const STATUS_FALLBACK = {
   Duplicate:
     'Another library game already uses this IGDB match and the folder title looks like the same game.',
-  Unmatched:
-    'Could not auto-match to IGDB (or IGDB already used by a different-titled folder).',
+  Unmatched: 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder).',
   Ignore: 'Folder is ignored and will not be scanned.',
   Pending: 'Awaiting classification.',
 }
@@ -86,9 +85,7 @@ export function formatWhyUnmatched(row) {
     (row.suggested_kind_label != null && String(row.suggested_kind_label).trim()) ||
     (suggestedKind ? SUGGESTED_KIND_LABELS[suggestedKind] : '')
   const candidate =
-    row.suggested_candidate_name == null
-      ? ''
-      : String(row.suggested_candidate_name).trim()
+    row.suggested_candidate_name == null ? '' : String(row.suggested_candidate_name).trim()
 
   if (suggestedLabel) {
     const hint = candidate
@@ -217,9 +214,7 @@ function StageECandidates({ row }) {
                   ) : (
                     <span className="od-dupe-glance__stage-e-name">{label}</span>
                   )}
-                  {mode ? (
-                    <span className="od-dupe-glance__stage-e-mode">{mode}</span>
-                  ) : null}
+                  {mode ? <span className="od-dupe-glance__stage-e-mode">{mode}</span> : null}
                 </li>
               )
             })}
@@ -594,11 +589,7 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
         ...(name ? { name } : {}),
       })
       const kindLabel =
-        itemKind === 'experience'
-          ? 'Soft title'
-          : itemKind === 'emulator'
-            ? 'Emulator'
-            : 'Utility'
+        itemKind === 'experience' ? 'Soft title' : itemKind === 'emulator' ? 'Emulator' : 'Utility'
       setFixLog({
         ok: true,
         message: `Cataloged “${result.name || name || 'folder'}” as ${kindLabel} (no IGDB game match)`,
@@ -622,7 +613,8 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
     setFixLog(null)
     try {
       const result = await postJson(`/api/unmatched_folders/${row.id}/fix`, { action })
-      const label = action === 'merge' ? 'Merged' : action === 'keep' ? 'Kept as Unmatched' : 'Ignored'
+      const label =
+        action === 'merge' ? 'Merged' : action === 'keep' ? 'Kept as Unmatched' : 'Ignored'
       setFixLog({
         ok: true,
         message: `${label}${result.folder_path ? ` · ${result.folder_path}` : ''}`,
@@ -655,10 +647,7 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
         <div className="od-dupe-glance__toolbar">
           <label>
             Status{' '}
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
               <option value="Duplicate">Duplicate</option>
               <option value="Unmatched">Unmatched</option>
               <option value="Ignore">Ignore</option>
@@ -710,10 +699,7 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
       </div>
 
       {fixLog ? (
-        <p
-          className={`od-dupe-glance__log${fixLog.ok ? ' is-ok' : ' is-error'}`}
-          role="status"
-        >
+        <p className={`od-dupe-glance__log${fixLog.ok ? ' is-ok' : ' is-error'}`} role="status">
           {fixLog.message}
         </p>
       ) : null}
@@ -740,8 +726,7 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
               const marking = busyFolderId === row.id
               const suggestedKind = normalizeSuggestedKind(row.suggested_kind)
               const markKinds = markKindsOrdered(suggestedKind)
-              const showWhyUnmatchedLabel =
-                row.status === 'Unmatched' || row.status === 'Pending'
+              const showWhyUnmatchedLabel = row.status === 'Unmatched' || row.status === 'Pending'
               const diskName = folderBasename(row.folder_path)
               const searchName = resolveSearchName(row)
               const showStageE = hasStageEHints(row)
@@ -878,7 +863,9 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
                   </div>
                   <div className="od-dupe-glance__meta">
                     <div className="od-dupe-glance__chips">
-                      <span className={`od-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}>
+                      <span
+                        className={`od-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}
+                      >
                         {row.status === 'Duplicate' ? 'Duplicate (same title)' : row.status}
                       </span>
                       {suggestedKind ? (
@@ -902,7 +889,8 @@ export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
                     </div>
                     {searchName && searchName !== diskName ? (
                       <p className="od-dupe-glance__amend">
-                        <span className="od-dupe-glance__amend-label">Search name</span> {searchName}
+                        <span className="od-dupe-glance__amend-label">Search name</span>{' '}
+                        {searchName}
                         <span className="od-dupe-glance__ondisk"> · On disk: {diskName}</span>
                       </p>
                     ) : diskName ? (

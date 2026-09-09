@@ -170,7 +170,6 @@ export const SCAN_CONFLICT_COPY = Object.freeze({
   cancelLabel: 'Cancel',
 })
 
-
 /**
  * Is a scan actually in progress? (GT-B13)
  *

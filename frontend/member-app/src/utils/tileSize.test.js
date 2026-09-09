@@ -62,7 +62,9 @@ test('clampTileVarsForNarrowViewport caps large tiles', () => {
     tilePercentToCssVars(0),
   )
 
-  expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(100), false)).toEqual(tilePercentToCssVars(100))
+  expect(clampTileVarsForNarrowViewport(tilePercentToCssVars(100), false)).toEqual(
+    tilePercentToCssVars(100),
+  )
 })
 
 test('hover scale is one flat value at every tile size', () => {

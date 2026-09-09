@@ -341,9 +341,7 @@ export function BigPicturePage({ shellConfig = {} }) {
                 </Link>
               </div>
             ) : null}
-            {selected?.uuid ? (
-              <VoiceLobby gameUuid={selected.uuid} compact />
-            ) : null}
+            {selected?.uuid ? <VoiceLobby gameUuid={selected.uuid} compact /> : null}
           </div>
         </section>
       ) : null}

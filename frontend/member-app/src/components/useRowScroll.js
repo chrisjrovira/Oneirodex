@@ -47,8 +47,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
     // Tiles arrive after the row does — the shelf fills itself in as it is
     // scrolled — so the arrows have to re-evaluate when the content grows, not
     // only when the window resizes.
-    const observer =
-      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
     observer?.observe(node)
     for (const child of node.children) observer?.observe(child)
 
@@ -125,21 +124,17 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
     [measure, step, stopEdgeScroll],
   )
 
-  const wheelDeltaPx = useCallback(
-    (event, fallbackPage) => {
-      let delta =
-        event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
-          ? event.deltaX || event.deltaY
-          : event.deltaY
-      if (event.deltaMode === 1) delta *= 16
-      else if (event.deltaMode === 2) {
-        delta *=
-          typeof window !== 'undefined' ? window.innerHeight * 0.85 : fallbackPage
-      }
-      return delta
-    },
-    [],
-  )
+  const wheelDeltaPx = useCallback((event, fallbackPage) => {
+    let delta =
+      event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ? event.deltaX || event.deltaY
+        : event.deltaY
+    if (event.deltaMode === 1) delta *= 16
+    else if (event.deltaMode === 2) {
+      delta *= typeof window !== 'undefined' ? window.innerHeight * 0.85 : fallbackPage
+    }
+    return delta
+  }, [])
 
   /** Wheel over the bottom slider pans the shelf track. */
   const panTrackByWheel = useCallback(
@@ -181,46 +176,49 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 } = {})
    * shift-wheel, and wheel on the slider pan the track both ways. Capture on
    * the scroller so the track padding cannot steal the bar.
    */
-  const onWheel = useCallback((event) => {
-    const node = ref.current
-    if (!node) return
+  const onWheel = useCallback(
+    (event) => {
+      const node = ref.current
+      if (!node) return
 
-    if (wheelOverHbar(event)) {
-      panTrackByWheel(event)
-      return
-    }
-
-    if (node.scrollWidth <= node.clientWidth + 1) return
-
-    const vertical = !event.shiftKey && Math.abs(event.deltaY) >= Math.abs(event.deltaX)
-    if (!vertical) {
-      panTrackByWheel(event)
-      return
-    }
-
-    event.preventDefault()
-    event.stopPropagation()
-
-    const delta = wheelDeltaPx(
-      event,
-      typeof window !== 'undefined' ? window.innerHeight * 0.85 : node.clientWidth * step,
-    )
-
-    let target = node.parentElement
-    while (target && target !== document.documentElement) {
-      const style = window.getComputedStyle(target)
-      const oy = style.overflowY
-      if (
-        (oy === 'auto' || oy === 'scroll' || oy === 'overlay') &&
-        target.scrollHeight > target.clientHeight + 1
-      ) {
-        target.scrollTop += delta
+      if (wheelOverHbar(event)) {
+        panTrackByWheel(event)
         return
       }
-      target = target.parentElement
-    }
-    window.scrollBy(0, delta)
-  }, [panTrackByWheel, step, wheelDeltaPx, wheelOverHbar])
+
+      if (node.scrollWidth <= node.clientWidth + 1) return
+
+      const vertical = !event.shiftKey && Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+      if (!vertical) {
+        panTrackByWheel(event)
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      const delta = wheelDeltaPx(
+        event,
+        typeof window !== 'undefined' ? window.innerHeight * 0.85 : node.clientWidth * step,
+      )
+
+      let target = node.parentElement
+      while (target && target !== document.documentElement) {
+        const style = window.getComputedStyle(target)
+        const oy = style.overflowY
+        if (
+          (oy === 'auto' || oy === 'scroll' || oy === 'overlay') &&
+          target.scrollHeight > target.clientHeight + 1
+        ) {
+          target.scrollTop += delta
+          return
+        }
+        target = target.parentElement
+      }
+      window.scrollBy(0, delta)
+    },
+    [panTrackByWheel, step, wheelDeltaPx, wheelOverHbar],
+  )
 
   // React attaches wheel handlers passively, so `preventDefault()` inside an
   // onWheel prop is ignored. Bind on the scroller (viewportRef) in capture.

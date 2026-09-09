@@ -239,8 +239,7 @@ export function mergeDuplicateHits(folders, duplicatesPayload) {
   return list.map((folder) => {
     const hit = byId.get(String(folder.id))
     const folderHasTrail = Array.isArray(folder.transforms) && folder.transforms.length > 0
-    const softTransforms =
-      !folderHasTrail && hit?.transforms?.length ? hit.transforms : null
+    const softTransforms = !folderHasTrail && hit?.transforms?.length ? hit.transforms : null
     if (normalizeMatchedGame(folder)) {
       if (!softTransforms) return folder
       return { ...folder, transforms: softTransforms }
