@@ -20,12 +20,16 @@ on:
       - 'clients/desktop/**'
       - 'frontend/api-client/**'
       - 'frontend/shared/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/desktop-build.yml'
   pull_request:
     paths:
       - 'clients/desktop/**'
       - 'frontend/api-client/**'
       - 'frontend/shared/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/desktop-build.yml'
 
 jobs:
@@ -44,7 +48,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: clients/desktop/package-lock.json
+          # npm workspaces: the only lockfile is at the repo root now.
+          cache-dependency-path: package-lock.json
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -78,11 +83,13 @@ jobs:
       # `tauri::generate_context!()` fails to compile unless `frontendDist`
       # (clients/desktop/dist) exists, so the lib — and therefore `cargo test` /
       # `cargo clippy` — needs the web assets built first.
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
+        run: npm ci
+
       - name: Build frontend assets
         working-directory: clients/desktop
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       - name: cargo fmt
         run: cargo fmt --all --check
@@ -164,7 +171,8 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: clients/desktop/package-lock.json
+          # npm workspaces: the only lockfile is at the repo root now.
+          cache-dependency-path: package-lock.json
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -205,7 +213,8 @@ jobs:
         shell: bash
         run: rm -rf "src-tauri/target/${{ matrix.target_dir }}/bundle"
 
-      - name: Install frontend deps
+      - name: Install workspace (repo-root npm ci)
+        working-directory: .
         run: npm ci
 
       - name: Unit tests
