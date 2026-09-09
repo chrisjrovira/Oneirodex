@@ -17,7 +17,12 @@ these up.
   scope.
 - [B0.3] Add `npm run typecheck` to each existing per-SPA vitest job
   (`member-app-vitest`, `admin-app-vitest`, and an `ops-glance` job if one is
-  added). Each SPA gains a `tsconfig.json` and a `typecheck` script in B0.3;
-  `npm run build` also changes to `tsc --noEmit && vite build`, so the build
-  step in those jobs already covers typecheck once B0.3 lands — an explicit
-  `typecheck` step is only needed for jobs that do not run `build`.
+  added). Each SPA gains a `tsconfig.json` (extends repo-root
+  `tsconfig.base.json`) and a `typecheck` script; `npm run build` also changes
+  to `tsc --noEmit && vite build`.
+- [B0.3] `tsc` is NOT in the per-SPA `package.json` — it resolves from the
+  repo-root `package.json` (`typescript` pinned there). So any CI job that runs
+  `npm run typecheck` or `npm run build` for an SPA needs a repo-root
+  `npm ci` step first (the same one the `lint` job needs). Alternative: add
+  `typescript` to each SPA's own `devDependencies` and regenerate its
+  `package-lock.json`.

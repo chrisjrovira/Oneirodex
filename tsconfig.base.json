@@ -1,0 +1,23 @@
+{
+  // Shared TypeScript on-ramp for the frontend SPAs. Each SPA's tsconfig.json
+  // extends this and adds its own `include`.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": false,
+    "allowJs": true,
+    // Off for the on-ramp: the SPAs are untyped JSX with no @types/react in
+    // the tree, so `checkJs` would flood every file on the react/jsx-runtime
+    // import. Phase 3 pulls in the React types and flips this to true.
+    "checkJs": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": []
+  }
+}
