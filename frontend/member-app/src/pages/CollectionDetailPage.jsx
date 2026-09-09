@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { confirmAction, useShellConfig } from '@oneirodex/ui'
 import { ContextBar } from '../chrome/ContextBar'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -25,7 +25,8 @@ function loadErrorMessage(error) {
   return 'Unable to load this collection.'
 }
 
-export function CollectionDetailPage({ shellConfig = {} } = {}) {
+export function CollectionDetailPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const { collectionUuid } = useParams()
   const navigate = useNavigate()

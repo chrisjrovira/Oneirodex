@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { errorFromBody } from '@oneirodex/ui'
+import { errorFromBody, useShellConfig } from '@oneirodex/ui'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
 import { REGION_PREF_ORDER } from '../chrome/regions'
@@ -26,7 +26,8 @@ async function fetchSetCompletion({ libraryPlatform, region, signal }) {
   return data
 }
 
-export function SetCompletionPage({ shellConfig = {} } = {}) {
+export function SetCompletionPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [searchParams, setSearchParams] = useSearchParams()
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()

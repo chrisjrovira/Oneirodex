@@ -14,12 +14,14 @@ import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { showToast } from '../utils/toast'
 import { PageStatus } from '../components/PageStatus'
 import '../styles/panelGrid.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const INBOX_POLL_MS = 50000
 
 const CALENDAR_TEASER_LIMIT = 5
 
-export function UpdatesPage({ shellConfig = {} } = {}) {
+export function UpdatesPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)

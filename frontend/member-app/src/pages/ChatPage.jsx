@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useViewer } from '@oneirodex/ui'
 import { ChatPanel } from '../components/ChatPanel'
 import { isPopoutWindow, requestOpenChatPanel } from '../hooks/chatPanelApi'
 import './ChatPage.css'
@@ -28,7 +29,8 @@ function channelFromLocation() {
  * sliding over the top of them. The pop-out now renders the panel and nothing
  * else, which is what a pop-out is for.
  */
-export function ChatPage({ shellConfig = {} } = {}) {
+export function ChatPage() {
+  const viewer = useViewer()
   const navigate = useNavigate()
   const popout = isPopoutWindow()
 
@@ -50,10 +52,10 @@ export function ChatPage({ shellConfig = {} } = {}) {
         // shows the form either way and surfaces the 403, same as the dock.
         canCreateRooms
         viewer={{
-          userId: shellConfig.userId ?? null,
-          isLibrarian: Boolean(shellConfig.isLibrarian),
-          isAdmin: Boolean(shellConfig.isAdmin),
-          role: shellConfig.role || 'user',
+          userId: viewer.userId,
+          isLibrarian: viewer.isLibrarian,
+          isAdmin: viewer.isAdmin,
+          role: viewer.role,
         }}
         // No `onClose`: closing is what the window's own close button does.
         // A second dismiss inside a dedicated window is a control that either

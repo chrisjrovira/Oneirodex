@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PlaytimePage } from './PlaytimePage'
 import * as playtimeApi from '../api/playtime'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/playtime', () => ({
   fetchMyPlaytime: vi.fn(),
@@ -24,7 +25,11 @@ beforeEach(() => {
 })
 
 test('lists dense playtime rows with duration meta', async () => {
-  render(<PlaytimePage />)
+  render(
+    <ShellHarness>
+      <PlaytimePage />
+    </ShellHarness>,
+  )
   expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Hades')).toBeInTheDocument()
   expect(screen.getByLabelText('Playtime summary')).toHaveTextContent(/1h 01m/)
@@ -34,7 +39,11 @@ test('lists dense playtime rows with duration meta', async () => {
 
 test('shows honest empty state', async () => {
   playtimeApi.fetchMyPlaytime.mockResolvedValue({ total_seconds: 0, games: [] })
-  render(<PlaytimePage />)
+  render(
+    <ShellHarness>
+      <PlaytimePage />
+    </ShellHarness>,
+  )
   expect(await screen.findByText(/No playtime recorded yet/i)).toBeInTheDocument()
 })
 
@@ -44,7 +53,11 @@ test('Retry reloads after error', async () => {
     .mockRejectedValueOnce(new Error('playtime 502'))
     .mockResolvedValueOnce({ total_seconds: 0, games: [] })
 
-  render(<PlaytimePage />)
+  render(
+    <ShellHarness>
+      <PlaytimePage />
+    </ShellHarness>,
+  )
   expect(await screen.findByRole('alert')).toHaveTextContent(/Unable to load playtime/i)
   await user.click(screen.getByRole('button', { name: /Try again/i }))
   await waitFor(() => {
@@ -53,7 +66,11 @@ test('Retry reloads after error', async () => {
 })
 
 test('new chrome retires the title and puts totals in the bar', async () => {
-  render(<PlaytimePage shellConfig={{ enableNewChrome: true }} />)
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <PlaytimePage />
+    </ShellHarness>,
+  )
   expect(await screen.findByText('Hades')).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'Playtime' })).toBeNull()
   expect(screen.queryByLabelText('Playtime summary')).toBeNull()

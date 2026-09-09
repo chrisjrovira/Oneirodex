@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { OwnershipPage } from './OwnershipPage'
+import { ShellHarness } from '../testShell'
 
 function summaryPayload(overrides = {}) {
   return {
@@ -51,7 +52,11 @@ afterEach(() => {
 test('renders ownership summary after loading', async () => {
   global.fetch.mockImplementation(() => jsonResponse(summaryPayload()))
 
-  render(<OwnershipPage shellConfig={{}} />)
+  render(
+    <ShellHarness shell={{}}>
+      <OwnershipPage />
+    </ShellHarness>,
+  )
 
   expect(screen.getByText('Loading ownership status…')).toBeInTheDocument()
 
@@ -95,7 +100,11 @@ test('shows empty state when nothing is synced yet', async () => {
     ),
   )
 
-  render(<OwnershipPage />)
+  render(
+    <ShellHarness>
+      <OwnershipPage />
+    </ShellHarness>,
+  )
 
   expect(
     await screen.findByText('No owned titles synced yet. Connect a store or import a CSV below.'),
@@ -108,7 +117,11 @@ test('shows retry when the summary request fails', async () => {
     .mockImplementation(() => jsonResponse(summaryPayload()))
 
   const user = userEvent.setup()
-  render(<OwnershipPage />)
+  render(
+    <ShellHarness>
+      <OwnershipPage />
+    </ShellHarness>,
+  )
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load store ownership.')
 
@@ -128,7 +141,11 @@ test('sync posts to the steam sync endpoint with the CSRF header', async () => {
   })
 
   const user = userEvent.setup()
-  render(<OwnershipPage />)
+  render(
+    <ShellHarness>
+      <OwnershipPage />
+    </ShellHarness>,
+  )
 
   const syncButton = await screen.findByRole('button', { name: 'Sync from Steam' })
   await user.click(syncButton)
@@ -156,7 +173,11 @@ test('csv import posts the pasted rows as JSON', async () => {
   })
 
   const user = userEvent.setup()
-  render(<OwnershipPage />)
+  render(
+    <ShellHarness>
+      <OwnershipPage />
+    </ShellHarness>,
+  )
 
   const textarea = await screen.findByLabelText(
     'Import owned titles (CSV: product ID or id,name per line)',

@@ -4,13 +4,16 @@ import { fetchGenreHub } from '../api/discover'
 import { ContextBar } from '../chrome/ContextBar'
 import { DiscoverShelf } from '../components/DiscoverShelf'
 import { PageStatus } from '../components/PageStatus'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 
 /**
  * Genre hub — Discover shelves for one genre, no pin/hide.
  *
  * Reached from a genre zone's See all. The catalog is still the full list.
  */
-export function DiscoverHubPage({ isAdmin = false, shellConfig = {} } = {}) {
+export function DiscoverHubPage() {
+  const { isAdmin } = useViewer()
+  const shellConfig = useShellConfig()
   const { genre } = useParams()
   const [hub, setHub] = useState(null)
   const [loading, setLoading] = useState(true)

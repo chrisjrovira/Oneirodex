@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { SetCompletionPage } from './SetCompletionPage'
 import * as wishlistApi from '../api/wishlist'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/wishlist', () => ({
   createRequest: vi.fn(),
@@ -29,7 +30,9 @@ const SAMPLE = {
 function renderPage(path, shellConfig = {}) {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <SetCompletionPage shellConfig={shellConfig} />
+      <ShellHarness shell={shellConfig}>
+        <SetCompletionPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 }

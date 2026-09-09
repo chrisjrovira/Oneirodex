@@ -5,7 +5,7 @@ import './VrPage.css'
 
 const PER_PAGE = 48
 
-export function VrPage({ shellConfig: _shellConfig } = {}) {
+export function VrPage() {
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(null)
   const [page, setPage] = useState(1)

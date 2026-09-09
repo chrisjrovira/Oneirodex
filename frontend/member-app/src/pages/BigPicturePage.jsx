@@ -8,6 +8,7 @@ import { PageStatus } from '../components/PageStatus'
 import { coverUrl } from '../utils/coverUrl'
 import { showToast } from '../utils/toast'
 import './BigPicturePage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 const DEFAULT_PER_PAGE = 48
 const GAMEPAD_DEADZONE = 0.5
@@ -61,7 +62,8 @@ function focusGameFromQuery() {
   }
 }
 
-export function BigPicturePage({ shellConfig = {} }) {
+export function BigPicturePage() {
+  const shellConfig = useShellConfig()
   const perPage = Number(shellConfig.perPage) || DEFAULT_PER_PAGE
   const [games, setGames] = useState(null)
   const [error, setError] = useState(null)

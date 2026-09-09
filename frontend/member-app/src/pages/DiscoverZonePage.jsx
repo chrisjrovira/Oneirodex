@@ -4,6 +4,7 @@ import { fetchDiscoverZone } from '../api/discover'
 import { ContextBar } from '../chrome/ContextBar'
 import { DiscoverShelf } from '../components/DiscoverShelf'
 import { PageStatus } from '../components/PageStatus'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 
 /**
  * One Discover zone — the feed narrowed to one named surface.
@@ -17,7 +18,9 @@ import { PageStatus } from '../components/PageStatus'
  * heading over empty space, so the empty branch here is for a zone that emptied
  * out between the strip being drawn and the member clicking it.
  */
-export function DiscoverZonePage({ isAdmin = false, shellConfig = {} } = {}) {
+export function DiscoverZonePage() {
+  const { isAdmin } = useViewer()
+  const shellConfig = useShellConfig()
   const { slug } = useParams()
   const [zone, setZone] = useState(null)
   const [loading, setLoading] = useState(true)

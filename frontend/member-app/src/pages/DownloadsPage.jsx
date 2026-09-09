@@ -16,7 +16,7 @@ function isTerminal(status) {
   return TERMINAL_STATUSES.has(String(status || '').toLowerCase())
 }
 
-export function DownloadsPage({ shellConfig: _shellConfig } = {}) {
+export function DownloadsPage() {
   const [downloads, setDownloads] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)

@@ -6,7 +6,7 @@ import { LoadingOverlay } from './components/LoadingOverlay'
 import { SideRail } from './chrome/SideRail'
 import { applyTileSizeCssVars } from './chrome/TileSizeControl'
 import { TopBar } from './chrome/TopBar'
-import { useRailState } from '@oneirodex/ui'
+import { useRailState, useShellConfig, useViewer } from '@oneirodex/ui'
 import { ChatSlideOut } from './components/ChatSlideOut'
 import { SocialCompanionDock } from './components/SocialCompanionDock'
 import { isPopoutWindow, requestOpenChatPanel } from './hooks/chatPanelApi'
@@ -95,6 +95,7 @@ const SetCompletionPage = lazy(() =>
   import('./pages/SetCompletionPage').then((m) => ({ default: m.SetCompletionPage })),
 )
 
+// Pure — fed the `useShellConfig()` value at the call site (Wave B1.6).
 function libraryInitialConfig(shellConfig) {
   return {
     perPage: Number(shellConfig.perPage) || 50,
@@ -133,8 +134,9 @@ function LazyPage({ children }) {
   return <Suspense fallback={<RouteFallback />}>{children}</Suspense>
 }
 
-function Layout({ shellConfig, tileSize, onTileSizeChange }) {
+function Layout({ tileSize, onTileSizeChange }) {
   const location = useLocation()
+  const viewer = useViewer()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
   const hideDock = location.pathname.startsWith('/social-companion')
@@ -145,10 +147,10 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   // Admins create rooms; librarians also allowed by API — UI still shows form and surfaces 403.
   const canCreateRooms = true
   const chatViewer = {
-    userId: shellConfig.userId ?? null,
-    isLibrarian: Boolean(shellConfig.isLibrarian),
-    isAdmin: Boolean(shellConfig.isAdmin),
-    role: shellConfig.role || 'user',
+    userId: viewer.userId,
+    isLibrarian: viewer.isLibrarian,
+    isAdmin: viewer.isAdmin,
+    role: viewer.role,
   }
   // Pop-out windows render the route alone (GT-B17): no rail, no top bar, no
   // dock. They are small by definition, and the chrome is navigation for a
@@ -184,7 +186,6 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
         Skip to main content
       </a>
       <SideRail
-        shellConfig={shellConfig}
         railState={railState}
         onCloseDrawer={closeDrawer}
         onNavigate={(link) => {
@@ -205,7 +206,6 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
       ) : null}
       {chatSurface ? null : (
         <TopBar
-          shellConfig={shellConfig}
           tileSize={tileSize}
           onTileSizeChange={onTileSizeChange}
           onOpenCommandPalette={() => setPaletteOpen(true)}
@@ -213,7 +213,7 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
           railState={railState}
         />
       )}
-      <CommandPalette shellConfig={shellConfig} open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <main id="main-content" className="od-shell__main" tabIndex={-1}>
         <Outlet />
       </main>
@@ -240,7 +240,8 @@ function Layout({ shellConfig, tileSize, onTileSizeChange }) {
   )
 }
 
-export function App({ shellConfig = {} }) {
+export function App() {
+  const shellConfig = useShellConfig()
   const [tileSize, setTileSize] = useState(shellConfig.tileSize || '50')
   /* Read once from the shell, not held as state.
      Nothing in the SPA flips it any more — the control lives in Preferences,
@@ -269,7 +270,7 @@ export function App({ shellConfig = {} }) {
         path="/big-picture"
         element={
           <LazyPage>
-            <BigPicturePage shellConfig={shellConfig} />
+            <BigPicturePage />
           </LazyPage>
         }
       />
@@ -281,20 +282,13 @@ export function App({ shellConfig = {} }) {
           </LazyPage>
         }
       />
-      <Route
-        element={
-          <Layout shellConfig={shellConfig} tileSize={tileSize} onTileSizeChange={setTileSize} />
-        }
-      >
-        <Route
-          path="/discover"
-          element={<DiscoverApp isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />}
-        />
+      <Route element={<Layout tileSize={tileSize} onTileSizeChange={setTileSize} />}>
+        <Route path="/discover" element={<DiscoverApp />} />
         <Route
           path="/discover/hub/genre/:genre"
           element={
             <LazyPage>
-              <DiscoverHubPage isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />
+              <DiscoverHubPage />
             </LazyPage>
           }
         />
@@ -305,31 +299,21 @@ export function App({ shellConfig = {} }) {
           path="/discover/zone/:slug"
           element={
             <LazyPage>
-              <DiscoverZonePage isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />
+              <DiscoverZonePage />
             </LazyPage>
           }
         />
-        <Route
-          path="/discover/:identifier"
-          element={
-            <DiscoverRowPage isAdmin={Boolean(shellConfig.isAdmin)} shellConfig={shellConfig} />
-          }
-        />
+        <Route path="/discover/:identifier" element={<DiscoverRowPage />} />
         <Route
           path="/library"
-          element={
-            <LibraryApp
-              initialConfig={libraryInitialConfig(shellConfig)}
-              shellConfig={shellConfig}
-            />
-          }
+          element={<LibraryApp initialConfig={libraryInitialConfig(shellConfig)} />}
         />
-        <Route path="/systems" element={<SystemsPage shellConfig={shellConfig} />} />
+        <Route path="/systems" element={<SystemsPage />} />
         <Route
           path="/ways-to-play"
           element={
             <LazyPage>
-              <WaysToPlayPage shellConfig={shellConfig} />
+              <WaysToPlayPage />
             </LazyPage>
           }
         />
@@ -337,7 +321,7 @@ export function App({ shellConfig = {} }) {
           path="/systems/completion"
           element={
             <LazyPage>
-              <SetCompletionPage shellConfig={shellConfig} />
+              <SetCompletionPage />
             </LazyPage>
           }
         />
@@ -345,7 +329,7 @@ export function App({ shellConfig = {} }) {
           path="/systems/catalog"
           element={
             <LazyPage>
-              <LicensedCatalogPage shellConfig={shellConfig} />
+              <LicensedCatalogPage />
             </LazyPage>
           }
         />
@@ -356,8 +340,8 @@ export function App({ shellConfig = {} }) {
               initialConfig={{
                 isAdmin: Boolean(shellConfig.isAdmin),
                 showPlayStatus: Boolean(shellConfig.showPlayStatus),
+                perPage: Number(shellConfig.perPage) || 50,
               }}
-              shellConfig={shellConfig}
             />
           }
         />
@@ -365,7 +349,7 @@ export function App({ shellConfig = {} }) {
           path="/downloads"
           element={
             <LazyPage>
-              <DownloadsPage shellConfig={shellConfig} />
+              <DownloadsPage />
             </LazyPage>
           }
         />
@@ -373,7 +357,7 @@ export function App({ shellConfig = {} }) {
           path="/collections"
           element={
             <LazyPage>
-              <CollectionsPage shellConfig={shellConfig} />
+              <CollectionsPage />
             </LazyPage>
           }
         />
@@ -381,7 +365,7 @@ export function App({ shellConfig = {} }) {
           path="/collections/:collectionUuid"
           element={
             <LazyPage>
-              <CollectionDetailPage shellConfig={shellConfig} />
+              <CollectionDetailPage />
             </LazyPage>
           }
         />
@@ -389,7 +373,7 @@ export function App({ shellConfig = {} }) {
           path="/news"
           element={
             <LazyPage>
-              <NewsPage shellConfig={shellConfig} />
+              <NewsPage />
             </LazyPage>
           }
         />
@@ -397,7 +381,7 @@ export function App({ shellConfig = {} }) {
           path="/wishlist"
           element={
             <LazyPage>
-              <WishlistPage shellConfig={shellConfig} />
+              <WishlistPage />
             </LazyPage>
           }
         />
@@ -405,7 +389,7 @@ export function App({ shellConfig = {} }) {
           path="/updates"
           element={
             <LazyPage>
-              <UpdatesPage shellConfig={shellConfig} />
+              <UpdatesPage />
             </LazyPage>
           }
         />
@@ -421,7 +405,7 @@ export function App({ shellConfig = {} }) {
           path="/playtime"
           element={
             <LazyPage>
-              <PlaytimePage shellConfig={shellConfig} />
+              <PlaytimePage />
             </LazyPage>
           }
         />
@@ -429,7 +413,7 @@ export function App({ shellConfig = {} }) {
           path="/activity"
           element={
             <LazyPage>
-              <ActivityPage shellConfig={shellConfig} />
+              <ActivityPage />
             </LazyPage>
           }
         />
@@ -445,7 +429,7 @@ export function App({ shellConfig = {} }) {
           path="/notifications"
           element={
             <LazyPage>
-              <NotificationsPage shellConfig={shellConfig} />
+              <NotificationsPage />
             </LazyPage>
           }
         />
@@ -453,10 +437,9 @@ export function App({ shellConfig = {} }) {
           path="/chat"
           element={
             <LazyPage>
-              {/* shellConfig, because in a pop-out this route *is* the app and
-                  the panel needs the viewer it would otherwise get from the
-                  dock. See ChatPage. */}
-              <ChatPage shellConfig={shellConfig} />
+              {/* In a pop-out this route *is* the app, so ChatPage reads the
+                  viewer from useViewer() rather than the dock. See ChatPage. */}
+              <ChatPage />
             </LazyPage>
           }
         />
@@ -472,7 +455,7 @@ export function App({ shellConfig = {} }) {
           path="/calendar"
           element={
             <LazyPage>
-              <CalendarPage shellConfig={shellConfig} />
+              <CalendarPage />
             </LazyPage>
           }
         />
@@ -480,7 +463,7 @@ export function App({ shellConfig = {} }) {
           path="/ownership"
           element={
             <LazyPage>
-              <OwnershipPage shellConfig={shellConfig} />
+              <OwnershipPage />
             </LazyPage>
           }
         />
@@ -496,7 +479,7 @@ export function App({ shellConfig = {} }) {
           path="/vr"
           element={
             <LazyPage>
-              <VrPage shellConfig={shellConfig} />
+              <VrPage />
             </LazyPage>
           }
         />
@@ -504,7 +487,7 @@ export function App({ shellConfig = {} }) {
           path="/trailers"
           element={
             <LazyPage>
-              <TrailersPage shellConfig={shellConfig} />
+              <TrailersPage />
             </LazyPage>
           }
         />
@@ -512,7 +495,7 @@ export function App({ shellConfig = {} }) {
           path="/help"
           element={
             <LazyPage>
-              <HelpPage shellConfig={shellConfig} />
+              <HelpPage />
             </LazyPage>
           }
         />

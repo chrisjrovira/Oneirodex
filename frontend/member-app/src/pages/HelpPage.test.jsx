@@ -3,11 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, test } from 'vitest'
 import { HelpPage } from './HelpPage'
+import { ShellHarness } from '../testShell'
 
 test('opens on Getting started rather than on a wall of closed topics', () => {
   render(
     <MemoryRouter>
-      <HelpPage />
+      <ShellHarness>
+        <HelpPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -28,7 +31,9 @@ test('picking a card swaps the pane underneath', async () => {
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <HelpPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <HelpPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -44,7 +49,9 @@ test('one fold button, and its label names the state it moves you to', async () 
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <HelpPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <HelpPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -73,7 +80,9 @@ test('the bar carries the fold control and nothing else', () => {
   // with one pane open the number is always 1, and it was never actionable.
   render(
     <MemoryRouter>
-      <HelpPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <HelpPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 
@@ -90,7 +99,9 @@ test('every topic card carries a theme tone and a glyph', () => {
   // tone must come from the token set, not from a hex picked in the page.
   const { container } = render(
     <MemoryRouter>
-      <HelpPage shellConfig={{ enableNewChrome: true }} />
+      <ShellHarness shell={{ enableNewChrome: true }}>
+        <HelpPage />
+      </ShellHarness>
     </MemoryRouter>,
   )
 

@@ -7,8 +7,10 @@ import { PaginationBar } from './components/PaginationBar'
 import { PageStatus } from './components/PageStatus'
 import { CATALOG_LAYOUTS, useCatalogLayout } from './utils/catalogLayout'
 
-export function FavoritesApp({ initialConfig, shellConfig } = {}) {
-  const defaultPerPage = Number(shellConfig?.perPage) || Number(initialConfig?.perPage) || 50
+export function FavoritesApp({ initialConfig } = {}) {
+  // perPage rides in on initialConfig now (App builds it from useShellConfig()),
+  // so this view stays purely initialConfig-driven — no context of its own.
+  const defaultPerPage = Number(initialConfig?.perPage) || 50
   const [games, setGames] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)

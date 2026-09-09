@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
+import { ShellHarness } from './testShell'
 
 function jsonResponse(body) {
   return Promise.resolve({
@@ -11,7 +12,11 @@ function jsonResponse(body) {
 }
 
 function renderLibrary(ui) {
-  return render(<MemoryRouter initialEntries={['/library']}>{ui}</MemoryRouter>)
+  return render(
+    <MemoryRouter initialEntries={['/library']}>
+      <ShellHarness>{ui}</ShellHarness>
+    </MemoryRouter>,
+  )
 }
 
 async function openFilters(user) {

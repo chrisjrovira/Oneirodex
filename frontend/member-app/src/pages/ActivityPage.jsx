@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { csrfHeaders } from '@oneirodex/ui'
+import { csrfHeaders, useShellConfig } from '@oneirodex/ui'
 import { errorFromBody, errorFromResponse } from '@oneirodex/ui'
 import { ContextBar } from '../chrome/ContextBar'
 import { PageStatus } from '../components/PageStatus'
@@ -53,7 +53,8 @@ const ACTIVITY_VIEWS = [
   { id: 'friends', label: 'Friends only' },
 ]
 
-export function ActivityPage({ shellConfig = {} } = {}) {
+export function ActivityPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [data, setData] = useState(null)
   const [social, setSocial] = useState(null)

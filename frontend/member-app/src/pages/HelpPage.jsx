@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ContextBar } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import './HelpPage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 /**
  * Twelve topics is a strip you scroll, not a switcher you read (W29 human
@@ -328,7 +329,8 @@ function HelpSectionBody({ section, shellConfig }) {
  * the state it will move you to, not a permanent Expand/Collapse pair where
  * one of the two is always a no-op.
  */
-export function HelpPage({ shellConfig = {} }) {
+export function HelpPage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
 
   const [activeId, setActiveId] = useState(() => {

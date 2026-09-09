@@ -126,7 +126,7 @@ function groupPlatforms(platforms) {
   }))
 }
 
-export function SystemsPage({ shellConfig: _shellConfig } = {}) {
+export function SystemsPage() {
   const [platforms, setPlatforms] = useState(null)
   const [error, setError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)

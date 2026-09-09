@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Command } from 'cmdk'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 import { searchGames } from '../api/collections'
 import { fetchPaletteSuggest } from '../api/palette'
 import { openPreferencesModal } from '../api/preferences'
@@ -122,12 +123,9 @@ export function typeToSearchKey(event) {
   return !target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')
 }
 
-export function CommandPalette({
-  shellConfig = {},
-  open: openProp,
-  onOpenChange,
-  defaultOpen = false,
-}) {
+export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = false }) {
+  const viewer = useViewer()
+  const shellConfig = useShellConfig()
   const navigate = useNavigate()
   const location = useLocation()
   const libraryMode = isLibrarySearchRoute(location.pathname)
@@ -151,7 +149,10 @@ export function CommandPalette({
     [controlled, onOpenChange],
   )
 
-  const commands = useMemo(() => buildPaletteCommands(shellConfig), [shellConfig])
+  const commands = useMemo(
+    () => buildPaletteCommands({ ...shellConfig, isAdmin: viewer.isAdmin }),
+    [shellConfig, viewer.isAdmin],
+  )
 
   useEffect(() => {
     function onKeyDown(event) {

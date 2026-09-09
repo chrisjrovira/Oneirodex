@@ -4,6 +4,7 @@ import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './PlaytimePage.css'
+import { useShellConfig } from '@oneirodex/ui'
 
 function formatDuration(totalSeconds) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
@@ -19,7 +20,8 @@ function formatDuration(totalSeconds) {
   return `${s}s`
 }
 
-export function PlaytimePage({ shellConfig = {} } = {}) {
+export function PlaytimePage() {
+  const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)

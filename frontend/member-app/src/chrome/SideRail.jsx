@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useShellConfig, useViewer } from '@oneirodex/ui'
 
 import { RailIcon } from './railIcons'
 import { PRIMARY_GROUP, getMoreGroups, getPrimaryLinks } from './navConfig'
@@ -56,20 +57,14 @@ function useCollapsedGroups() {
  * legacy Jinja pages render the same rail from the same source (the UIR-4
  * pattern). This component contributes no CSS of its own.
  */
-export function SideRail({
-  shellConfig = {},
-  railState = 'expanded',
-  onNavigate,
-  onCloseDrawer,
-  footer = null,
-}) {
+export function SideRail({ railState = 'expanded', onNavigate, onCloseDrawer, footer = null }) {
+  const { isAdmin } = useViewer()
   const {
-    isAdmin = false,
     showTrailers = false,
     showHelp = false,
     enableVr = false,
     enableActivity = true,
-  } = shellConfig
+  } = useShellConfig()
 
   const primary = getPrimaryLinks()
   const groups = getMoreGroups({ showTrailers, showHelp, enableVr, enableActivity })

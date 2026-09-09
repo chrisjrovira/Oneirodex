@@ -5,6 +5,7 @@ import { NewsPage } from './NewsPage'
 import * as announcementsApi from '../api/announcements'
 import * as freeGamesApi from '../api/freeGames'
 import * as gamingNewsApi from '../api/gamingNews'
+import { ShellHarness } from '../testShell'
 
 vi.mock('../api/announcements', () => ({
   fetchAnnouncements: vi.fn(),
@@ -42,7 +43,12 @@ test('lists announcement cards from API', async () => {
     ],
   })
 
-  render(<NewsPage />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   expect(screen.getByRole('status', { busy: true })).toBeInTheDocument()
   expect(await screen.findByText('Welcome')).toBeInTheDocument()
@@ -62,7 +68,12 @@ test('the admin section stays off the combined view when there is nothing in it'
   // always have content.
   announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
 
-  render(<NewsPage />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   expect(await screen.findByRole('heading', { name: 'Free now' })).toBeInTheDocument()
   expect(screen.queryByText('No announcements yet.')).not.toBeInTheDocument()
@@ -74,7 +85,12 @@ test('the admin tab still says so when there are no announcements', async () => 
   // failed load rather than an empty one.
   announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
 
-  render(<NewsPage />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   const user = userEvent.setup()
   await user.click(await screen.findByRole('button', { name: /Admins/ }))
@@ -95,7 +111,12 @@ test('keeps announcements when gaming news fails', async () => {
   })
   gamingNewsApi.fetchGamingNews.mockRejectedValue(new Error('rss down'))
 
-  render(<NewsPage />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   expect(await screen.findByText('Maintenance')).toBeInTheDocument()
   expect(screen.queryByText('Unable to load news.')).not.toBeInTheDocument()
@@ -122,7 +143,12 @@ test('section tabs filter free offers without a long scroll dump', async () => {
   })
 
   const user = userEvent.setup()
-  render(<NewsPage />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   expect(await screen.findByText('Free Space Adventure')).toBeInTheDocument()
   expect(screen.getByText('Industry headline')).toBeInTheDocument()
@@ -162,7 +188,12 @@ test('News layout smoke: hero strip and magazine densify', async () => {
     ],
   })
 
-  const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
+  const { container } = render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   expect(await screen.findByText('Household note')).toBeInTheDocument()
   expect(container.querySelector('.od-news__hero')).toBeTruthy()
@@ -190,7 +221,12 @@ test('headline cards show artwork when the feed supplies it', async () => {
       },
     ],
   })
-  const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
+  const { container } = render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
   await screen.findByText('Studio ships patch')
   const wrap = container.querySelector('.od-news__card-art-wrap')
   expect(wrap).toBeTruthy()
@@ -210,7 +246,12 @@ test('a feed with no artwork gets a placeholder, never a broken frame', async ()
       { title: 'No art here', url: 'https://example.com/b', source: 'Example' },
     ],
   })
-  const { container } = render(<NewsPage />, { wrapper: MemoryRouter })
+  const { container } = render(
+    <ShellHarness>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
   await screen.findByText('No art here')
   expect(container.querySelector('.od-news__card-art--empty')).toBeTruthy()
   expect(container.querySelector('img.od-news__card-art')).toBeNull()
@@ -227,7 +268,12 @@ test('new chrome puts the sections in bar two with live counts', async () => {
     items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
   })
 
-  render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
   await screen.findByText('Welcome')
 
   // The h1 is gone; the sections it sat above are now the switcher.
@@ -244,7 +290,12 @@ test('section counts stay hidden until the feeds have actually answered', async 
   // A "0" beside Free now would read as "there is nothing free" when the truth
   // is that the request has not come back.
   announcementsApi.fetchAnnouncements.mockReturnValue(new Promise(() => {}))
-  render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
 
   expect(screen.getByRole('button', { name: /Free now/ }).textContent).not.toMatch(/\d/)
 })
@@ -256,7 +307,12 @@ test('new chrome unfurls Card Grid RSS under the active layout name on the secti
     items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
   })
 
-  render(<NewsPage shellConfig={{ enableNewChrome: true }} />, { wrapper: MemoryRouter })
+  render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <NewsPage />
+    </ShellHarness>,
+    { wrapper: MemoryRouter },
+  )
   await screen.findByRole('heading', { name: 'Gaming headlines' })
 
   const trigger = screen.getByRole('button', { name: 'Card' })
@@ -283,9 +339,14 @@ test('RSS layout renders headline magazine rows instead of cards', async () => {
     ],
   })
 
-  const { container } = render(<NewsPage shellConfig={{ enableNewChrome: true }} />, {
-    wrapper: MemoryRouter,
-  })
+  const { container } = render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <NewsPage />
+    </ShellHarness>,
+    {
+      wrapper: MemoryRouter,
+    },
+  )
   await screen.findByText('Studio ships patch')
   await user.click(screen.getByRole('button', { name: /Headlines/ }))
   await user.click(screen.getByRole('button', { name: 'Card' }))
@@ -311,9 +372,14 @@ test('the Free now tab fills the stage rather than a half column', async () => {
   })
 
   const user = userEvent.setup()
-  const { container } = render(<NewsPage shellConfig={{ enableNewChrome: true }} />, {
-    wrapper: MemoryRouter,
-  })
+  const { container } = render(
+    <ShellHarness shell={{ enableNewChrome: true }}>
+      <NewsPage />
+    </ShellHarness>,
+    {
+      wrapper: MemoryRouter,
+    },
+  )
   await screen.findByText('Free Space Adventure')
   await user.click(screen.getByRole('button', { name: /Free now/ }))
 
