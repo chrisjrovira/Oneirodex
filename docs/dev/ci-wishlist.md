@@ -102,6 +102,15 @@ directly — they append a line here.
   `postgresql://postgres:postgres@localhost:5432/oneirodextest`; `alembic`
   reads it via the same resolution the app uses. Runs independently of
   `pytest-core` (no app fixtures needed).
+  ✅ applied (CI reconcile wave #2 — new job `alembic-check` / "Alembic (upgrade
+  + check)". Mirrors `pytest-core`'s `postgres:16` service block + `env`
+  (`TEST_DATABASE_URL` on `oneirodextest`, `SECRET_KEY`, `FLASK_ENV: testing`),
+  Python 3.12, `pip install -r requirements-dev.txt`, then step `Alembic upgrade
+  head` = `python -m alembic upgrade head` and step `Alembic check (fail hard on
+  any diff)` = `python -m alembic check` — no `continue-on-error`, so a diff
+  fails the gate. Comment points at `docs/dev/alembic-baseline-notes.md`.
+  Verified on a scratch Postgres DB: `upgrade head` applied the baseline,
+  `alembic check` → "No new upgrade operations detected.")
 - [B1.1] npm workspaces landed on `chore/modz-fe-w1`. The repo root
   (`package.json` `workspaces` array) is now the single install point and
   `package-lock.json` at the root is the **only** lockfile — the per-app
@@ -150,3 +159,22 @@ directly — they append a line here.
     `oneirodex/static/dist/*` is copied forward). If build time there matters,
     scope it with
     `npm ci --workspace=member-app --workspace=admin-app --workspace=ops-glance --include-workspace-root`.
+  ✅ applied (CI reconcile wave #2). Every JS job now caches on the repo-root
+  `package-lock.json` and installs via a single `Install workspace (repo-root
+  npm ci)` step with `working-directory: .`:
+  - `member-app-vitest`, `admin-app-vitest`, `ops-glance-vitest`: the
+    D-reconcile-1 `Install repo-root toolchain (tsc)` step is renamed to
+    `Install workspace (repo-root npm ci)` (it now reifies the whole workspace
+    graph); the redundant per-app `Install dependencies` `npm ci` step is
+    deleted. `Run vitest` / `Typecheck` / `Build ops-glance bundle` keep
+    `defaults.run.working-directory: frontend/<app>` and run unchanged (npm
+    resolves up to the workspace root). The `working-directory: .` steps
+    (`Run classic theme JS harnesses`, `Run CSS token lint`) are untouched.
+  - `api-client-vitest`, `desktop-vitest`: the per-app `Install dependencies`
+    `npm ci` becomes a root `Install workspace (repo-root npm ci)`
+    (`working-directory: .`). `Typecheck` (`npm run build`), `Run vitest`
+    (`npm test`) and `Run fast desktop vitest slice` (`npx vitest run <files>`)
+    run unchanged from their app dir; the root install wires
+    `clients/desktop`'s `"@oneirodex/api-client": "*"` workspace dep.
+  - `lint` job: already `cache-dependency-path: package-lock.json` + root
+    `npm ci` — confirmed, no change.
