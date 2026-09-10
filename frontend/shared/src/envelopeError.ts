@@ -24,6 +24,20 @@
  * re-exports this as `adminError`.
  */
 
+/** Parsed error body — the GT-B1 envelope, a legacy shape, or anything JSON. */
+export type EnvelopeErrorBody = Record<string, unknown> | null | undefined
+
+/**
+ * An `Error` carrying the machine fields off a failed envelope: `status` from
+ * the HTTP response and `error_code` / `data` when the body supplied them.
+ * `PageStatus`'s `resolveErrorDetail` reads these.
+ */
+export interface EnvelopeError extends Error {
+  status?: number
+  error_code?: string
+  data?: unknown
+}
+
 /**
  * Build an Error from a body that has already been read.
  *
@@ -32,18 +46,21 @@
  * silently get nothing and fall back to the developer string. Those callers use
  * this instead, so there is still exactly one definition of the Error shape.
  *
- * @param {object|null} data   parsed response body, or null when there was none
- * @param {number} status      HTTP status of the failed response
- * @param {string} fallback    label used when the body carries no message
- * @returns {Error}
+ * @param data     parsed response body, or null when there was none
+ * @param status   HTTP status of the failed response
+ * @param fallback label used when the body carries no message
  */
-export function errorFromBody(data, status, fallback) {
+export function errorFromBody(
+  data: EnvelopeErrorBody,
+  status: number,
+  fallback: string,
+): EnvelopeError {
   // `error` is the GT-B1 envelope field; `message` is the second legacy shape
   // still in the tree, and the admin `adminError` copy already fell back to it.
   const raw = typeof data?.error === 'string' ? data.error : data?.message
   const sentence = typeof raw === 'string' ? raw.trim() : ''
 
-  const error = new Error(sentence || `${fallback} ${status}`)
+  const error: EnvelopeError = new Error(sentence || `${fallback} ${status}`)
   error.status = status
   if (typeof data?.error_code === 'string' && data.error_code) {
     error.error_code = data.error_code
@@ -59,16 +76,19 @@ export function errorFromBody(data, status, fallback) {
  *
  * Reads the body itself, so call it *before* consuming the response elsewhere.
  *
- * @param {Response} response  the failed response; its body is read here
- * @param {string} fallback    label used when the body carries no message,
- *                             e.g. 'announcements' -> "announcements 500"
- * @returns {Promise<Error>}   an Error carrying `status`, and `error_code` /
- *                             `data` when the body supplied them
+ * @param response the failed response; its body is read here
+ * @param fallback label used when the body carries no message,
+ *                 e.g. 'announcements' -> "announcements 500"
+ * @returns an Error carrying `status`, and `error_code` / `data` when the body
+ *          supplied them
  */
-export async function errorFromResponse(response, fallback) {
-  let data = null
+export async function errorFromResponse(
+  response: Pick<Response, 'status' | 'json'>,
+  fallback: string,
+): Promise<EnvelopeError> {
+  let data: EnvelopeErrorBody = null
   try {
-    data = await response.json()
+    data = (await response.json()) as EnvelopeErrorBody
   } catch {
     // No JSON body (HTML error page, empty 502, aborted stream), or the body
     // was already consumed. The fallback label is all we have.

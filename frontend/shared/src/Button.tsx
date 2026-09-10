@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, type ButtonHTMLAttributes } from 'react'
 
 /**
  * `<Button>` — one element for the class-by-convention `.od-btn` family.
@@ -25,14 +25,22 @@ import { forwardRef } from 'react'
  * a layout / one-off hook without losing the base classes.
  */
 
-const VARIANT_CLASS = {
+export type ButtonVariant = 'default' | 'primary' | 'danger' | 'ghost'
+export type ButtonSize = 'sm' | 'md'
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+  size?: ButtonSize
+}
+
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
   default: '',
   primary: 'od-btn--primary',
   danger: 'od-btn--danger',
   ghost: 'od-btn--ghost',
 }
 
-export const Button = forwardRef(function Button(
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = 'default', size = 'md', type = 'button', className = '', children, ...rest },
   ref,
 ) {

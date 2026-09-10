@@ -3,7 +3,7 @@ import { createRef } from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 
-import { Button } from './Button.jsx'
+import { Button } from './Button'
 
 test('renders a <button> carrying od-btn plus the variant class', () => {
   render(<Button variant="primary">Save</Button>)

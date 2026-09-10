@@ -1,0 +1,12 @@
+{
+  // `@oneirodex/ui` — the shared infrastructure package. Converted to
+  // TypeScript with `strict: true` (Phase 3.3, the template wave); every
+  // later SPA PR consumes these types.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "types": []
+  },
+  "include": ["src"]
+}

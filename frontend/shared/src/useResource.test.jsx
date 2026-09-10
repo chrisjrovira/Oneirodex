@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { expect, test, vi } from 'vitest'
 
-import { useResource, useResourceMutation } from './useResource.jsx'
+import { useResource, useResourceMutation } from './useResource'
 
 function makeWrapper() {
   const client = new QueryClient({

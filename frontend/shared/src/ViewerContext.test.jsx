@@ -1,8 +1,8 @@
 import { render, renderHook, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
 
-import { ViewerProvider, useViewer, viewerFromConfig } from './ViewerContext.jsx'
-import { ShellConfigProvider, useShellConfig } from './ShellConfigContext.jsx'
+import { ViewerProvider, useViewer, viewerFromConfig } from './ViewerContext'
+import { ShellConfigProvider, useShellConfig } from './ShellConfigContext'
 
 test('viewerFromConfig derives the predicates from role and flags', () => {
   expect(viewerFromConfig({ role: 'admin' })).toMatchObject({

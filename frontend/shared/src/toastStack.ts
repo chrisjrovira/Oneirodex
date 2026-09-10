@@ -8,32 +8,33 @@
 
 export const MAX_INDIVIDUAL_TOASTS = 5
 
-/**
- * @param {number} count
- * @returns {string}
- */
-export function stackSummaryMessage(count) {
+export type ToastTone = 'info' | 'success' | 'error' | 'warn'
+
+export interface ToastStackState {
+  stackedCount?: number
+  hasSummary?: boolean
+  incomingCount?: number
+}
+
+export type ToastStackPlan =
+  | { action: 'append' }
+  | { action: 'increment-summary'; add: number }
+  | { action: 'collapse'; nextCount: number }
+
+export function stackSummaryMessage(count: number): string {
   const n = Math.max(0, Math.floor(Number(count) || 0))
   return `${n} notification${n === 1 ? '' : 's'}`
 }
 
-/**
- * @param {string} tone
- * @returns {boolean}
- */
-export function isStackableTone(tone) {
+export function isStackableTone(tone: string): boolean {
   return tone === 'info' || tone === 'success'
 }
 
-/**
- * @param {{
- *   stackedCount?: number,
- *   hasSummary?: boolean,
- *   incomingCount?: number,
- * }} [state]
- * @returns {{ action: 'append' } | { action: 'increment-summary', add: number } | { action: 'collapse', nextCount: number }}
- */
-export function planToastStack({ stackedCount = 0, hasSummary = false, incomingCount = 1 } = {}) {
+export function planToastStack({
+  stackedCount = 0,
+  hasSummary = false,
+  incomingCount = 1,
+}: ToastStackState = {}): ToastStackPlan {
   const incoming = incomingCount > 0 ? incomingCount : 1
   const current = stackedCount > 0 ? stackedCount : 0
   if (hasSummary) {

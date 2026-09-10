@@ -3,6 +3,17 @@ import { useCallback, useEffect, useState } from 'react'
 const STORAGE_KEY = 'od-rail-state'
 const MOBILE_QUERY = '(max-width: 900px)'
 
+export type RailStateValue = 'open' | 'collapsed' | 'expanded'
+
+export interface RailState {
+  collapsed: boolean
+  drawerOpen: boolean
+  /** Value for the shell's `data-rail` attribute. */
+  railState: RailStateValue
+  toggle: () => void
+  closeDrawer: () => void
+}
+
 /**
  * Rail open/collapsed state, shared by both shells (GT-B2).
  *
@@ -28,7 +39,7 @@ const MOBILE_QUERY = '(max-width: 900px)'
  * Only the desktop preference is persisted. A drawer that reopened itself on
  * next load because it was open when you navigated away would be a bug.
  */
-export function useRailState() {
+export function useRailState(): RailState {
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false
     try {
@@ -53,7 +64,7 @@ export function useRailState() {
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return undefined
     const mq = window.matchMedia(MOBILE_QUERY)
-    function onChange(event) {
+    function onChange(event: MediaQueryListEvent) {
       if (!event.matches) setDrawerOpen(false)
     }
     mq.addEventListener('change', onChange)
@@ -63,7 +74,7 @@ export function useRailState() {
   // Escape closes the drawer — it is a modal overlay on mobile.
   useEffect(() => {
     if (!drawerOpen) return undefined
-    function onKey(event) {
+    function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') setDrawerOpen(false)
     }
     document.addEventListener('keydown', onKey)

@@ -14,24 +14,26 @@
  * it replaces — every call site keeps its own control flow.
  *
  * Typed acknowledgement is NOT here. It stays where it is proportionate, on
- * the factory reset (`SystemResetPanel.jsx`); asking someone to type a phrase
+ * the factory reset (the factory-reset panel); asking someone to type a phrase
  * to delete one collection would train them to type it without reading.
  *
- * @param {{
- *   title: string,
- *   body?: string | string[],
- *   confirmLabel: string,
- *   cancelLabel?: string,
- *   tone?: 'danger' | 'neutral',
- * }} request
- * @returns {Promise<boolean>} true only if the named confirm button was pressed.
+ * Resolves `true` only if the named confirm button was pressed — see
+ * `ConfirmRequest` for the options.
  */
 import './confirmDialog.css'
+
+export interface ConfirmRequest {
+  title?: string
+  body?: string | string[]
+  confirmLabel?: string
+  cancelLabel?: string
+  tone?: 'danger' | 'neutral'
+}
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
-let openDialog = null
+let openDialog: HTMLDivElement | null = null
 
 export function confirmAction({
   title,
@@ -39,14 +41,14 @@ export function confirmAction({
   confirmLabel,
   cancelLabel = 'Cancel',
   tone = 'danger',
-} = {}) {
+}: ConfirmRequest = {}): Promise<boolean> {
   if (typeof document === 'undefined') return Promise.resolve(false)
   // One at a time. A second ask while one is open is a bug at the call site,
   // and answering it "no" is the safe reading of an unanswered question.
   if (openDialog) return Promise.resolve(false)
 
-  return new Promise((resolve) => {
-    const returnFocusTo = document.activeElement
+  return new Promise<boolean>((resolve) => {
+    const returnFocusTo = document.activeElement as HTMLElement | null
     const previousOverflow = document.body.style.overflow
 
     const backdrop = document.createElement('div')
@@ -95,7 +97,7 @@ export function confirmAction({
     panel.appendChild(actions)
     backdrop.appendChild(panel)
 
-    function close(answer) {
+    function close(answer: boolean) {
       document.removeEventListener('keydown', onKeyDown, true)
       backdrop.remove()
       document.body.style.overflow = previousOverflow
@@ -106,7 +108,7 @@ export function confirmAction({
       resolve(answer)
     }
 
-    function onKeyDown(event) {
+    function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.preventDefault()
         close(false)
@@ -115,7 +117,7 @@ export function confirmAction({
       if (event.key !== 'Tab') return
       // Trap: the dialog covers the page, so tabbing out of it lands on
       // controls the viewer cannot see or reach with a pointer.
-      const focusable = [...panel.querySelectorAll(FOCUSABLE)]
+      const focusable = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)]
       if (!focusable.length) return
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
