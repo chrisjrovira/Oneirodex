@@ -1,4 +1,10 @@
-export function RecentErrors({ errors }) {
+import type { OpsRecentError } from '../api/summary'
+
+export interface RecentErrorsProps {
+  errors?: OpsRecentError[] | null
+}
+
+export function RecentErrors({ errors }: RecentErrorsProps) {
   return (
     <section className="ops-panel">
       <h2>Recent errors</h2>
@@ -10,7 +16,7 @@ export function RecentErrors({ errors }) {
         <ul>
           {errors.map((error) => (
             <li key={error.id}>
-              <time dateTime={error.timestamp}>{error.timestamp}</time>: {error.text}
+              <time dateTime={error.timestamp ?? undefined}>{error.timestamp}</time>: {error.text}
             </li>
           ))}
         </ul>

@@ -1,4 +1,10 @@
-export function LibraryPulse({ library }) {
+import type { OpsLibrary } from '../api/summary'
+
+export interface LibraryPulseProps {
+  library?: OpsLibrary | null
+}
+
+export function LibraryPulse({ library }: LibraryPulseProps) {
   return (
     <section className="ops-panel">
       <h2>Library pulse</h2>

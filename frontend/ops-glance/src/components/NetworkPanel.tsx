@@ -1,6 +1,11 @@
 import { formatBytes } from '../utils/formatBytes'
+import type { OpsNetwork } from '../api/summary'
 
-export function NetworkPanel({ network }) {
+export interface NetworkPanelProps {
+  network?: OpsNetwork | null
+}
+
+export function NetworkPanel({ network }: NetworkPanelProps) {
   return (
     <section className="ops-panel">
       <h2>Network</h2>
