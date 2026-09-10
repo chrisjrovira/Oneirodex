@@ -7,6 +7,8 @@ The implicit module-global ``settings`` written by ``create_game_instance``
 from datetime import datetime, UTC
 from flask import flash, current_app, abort, has_request_context
 import os, uuid
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 
 from oneirodex import db
 from oneirodex.models import (
