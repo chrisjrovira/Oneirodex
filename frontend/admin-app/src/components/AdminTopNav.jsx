@@ -1,8 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { AccountModal } from '@member/chrome/AccountModal'
-import { openPreferencesModal } from '@member/api/preferences'
+import { AccountModal, openPreferencesModal } from '@oneirodex/ui'
 import AdminCommandPalette from './AdminCommandPalette'
 import { resolveAdminPage } from './adminSection'
 import './AdminTopNav.css'

@@ -9,10 +9,10 @@ import {
   listInvites,
   revokeInvite,
   uploadAvatar,
-} from '../api/account'
-import { createToken, extractOneTimeSecret, listTokens, revokeToken } from '../api/tokens'
-import { copyText } from '../utils/copyText'
-import { PageStatus } from '../components/PageStatus'
+} from './accountApi.js'
+import { createToken, extractOneTimeSecret, listTokens, revokeToken } from './tokensApi.js'
+import { copyText } from './copyText.js'
+import { PageStatus } from './pageStatus.js'
 import './AccountModal.css'
 
 /**

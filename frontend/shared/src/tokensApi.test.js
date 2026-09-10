@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { extractOneTimeSecret } from './tokens'
+import { extractOneTimeSecret } from './tokensApi.js'
 
 test('extractOneTimeSecret prefers raw then secret then string token', () => {
   expect(

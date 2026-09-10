@@ -1,8 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useShellConfig } from '@oneirodex/ui'
+import { AccountModal, useShellConfig } from '@oneirodex/ui'
 
-import { AccountModal } from './AccountModal'
 import { TOPBAR_LEAD_ID, TOPBAR_SLOT_ID, TOPBAR_TITLE_ID, TOPBAR_TRAIL_ID } from './ContextBar'
 import { IconMenu, IconUser } from './icons'
 import { TileSizeControl } from './TileSizeControl'
