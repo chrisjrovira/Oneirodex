@@ -1,36 +1,13 @@
-import { useEffect, useMemo } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useRailState } from '@oneirodex/ui'
 import { AdminSideRail } from './components/AdminSideRail'
 import { AdminTopNav } from './components/AdminTopNav'
+import { AdminRoutes } from './components/AdminRoutes'
 import { useAdminShellFrame } from './hooks/useAdminShellFrame'
 import { useLegacyContextbarPortal } from './hooks/useLegacyContextbarPortal'
 import { useLibrariesContextbarUnfurl } from './hooks/useLibrariesContextbarUnfurl'
 import { useLibrariesPanelMount } from './hooks/useLibrariesPanelMount'
 import { useLibraryScanToasts } from './hooks/useLibraryScanToasts'
-import { AnnouncementsPage } from './pages/AnnouncementsPage'
-import { SupportInboxPage } from './pages/SupportInboxPage'
-import { InvitesPage } from './pages/InvitesPage'
-import { UsersPage } from './pages/UsersPage'
-import { OpsPage } from './pages/OpsPage'
-import { SystemDangerPage } from './pages/SystemDangerPage'
-import { ArtStudioPage } from './pages/ArtStudioPage'
-import { ImagesPage } from './pages/ImagesPage'
-import { RemotePlayPage } from './pages/RemotePlayPage'
-import { QualityProfilesPage } from './pages/QualityProfilesPage'
-import { StoragePage } from './pages/StoragePage'
-import { ScanMatchSettingsPage } from './pages/ScanMatchSettingsPage'
-import { ExtensionsPage } from './pages/ExtensionsPage'
-import { DashboardPage } from './pages/DashboardPage'
-import { LibrariesPage } from './pages/LibrariesPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { IntegrationsPage } from './pages/IntegrationsPage'
-import { ThemesPage } from './pages/ThemesPage'
-import { PluginsPage } from './pages/PluginsPage'
-import { ScansPage } from './pages/ScansPage'
-import { HubPage } from './components/HubPage'
-import { resolveAdminPage } from './components/adminSection'
-import { SETTINGS_CARDS, railDestinations } from './components/navConfig'
 import './ops.css'
 
 /**
@@ -82,99 +59,6 @@ export function resolveRenderMode(root = document.getElementById('admin-app-root
   return hasLegacyBody() ? 'legacy' : 'spa'
 }
 
-function SettingsSectionPage() {
-  const { pathname } = useLocation()
-  const card = SETTINGS_CARDS.find((c) => c.to === pathname)
-  // This renders only when a settings module has no React body yet, so without
-  // a link out it is a titled blank panel. The card knows its own destination;
-  // offering it is the difference between a landing page and a dead end.
-  return (
-    <HubPage
-      title={card?.title || 'Settings module'}
-      lede={card?.blurb || 'Server module settings.'}
-      links={card ? [{ href: card.to, label: `Open ${card.title}` }] : []}
-    />
-  )
-}
-
-/**
- * Map a resolved admin page-kind to its element.
- *
- * Hoisted out of the component and consumed through a `useMemo(…, [kind])` in
- * RoutedAdminPage: `resolveAdminPage` collapses many pathnames onto one kind
- * (`/admin` and `/admin/dashboard`; the whole `libraries` prefix set; the
- * `/scan_management…` variants), and without the memo every one of those
- * same-kind navigations produced a fresh element identity, remounting the entire
- * page subtree — a full DOM teardown/rebuild that makes a password-manager
- * extension re-scan the document on each in-app navigation.
- */
-function renderAdminKind(kind) {
-  switch (kind) {
-    case 'dashboard':
-      return <DashboardPage />
-    case 'libraries':
-      return <LibrariesPage />
-    case 'settings':
-      return <SettingsPage />
-    case 'themes':
-      return <ThemesPage />
-    case 'art_studio':
-      return <ArtStudioPage />
-    case 'images':
-      return <ImagesPage />
-    case 'remote_play':
-      return <RemotePlayPage />
-    case 'quality_profiles':
-      return <QualityProfilesPage />
-    case 'storage':
-      return <StoragePage />
-    case 'scan_match':
-      return <ScanMatchSettingsPage />
-    case 'extensions':
-      return <ExtensionsPage />
-    // '/admin/help' is a Jinja page (admin_help.html) — App renders chrome only
-    // for it, so there is no SPA element to return here. resolveAdminPage still
-    // maps it to 'help'; it falls through to the default HubPage if the template
-    // is ever switched to data-admin-render="spa".
-    case 'plugins':
-      return <PluginsPage />
-    case 'scans':
-      return <ScansPage />
-    case 'users':
-      return <UsersPage />
-    case 'system':
-      return <OpsPage />
-    case 'system-danger':
-      return <SystemDangerPage />
-    case 'integrations':
-      return <IntegrationsPage />
-    case 'content':
-      return (
-        <HubPage
-          title="Content"
-          lede="Discovery shelves, newsletter, announcements, and attract mode."
-          links={railDestinations('content')}
-        />
-      )
-    case 'announcements':
-      return <AnnouncementsPage />
-    case 'support':
-      return <SupportInboxPage />
-    case 'invites':
-      return <InvitesPage />
-    case 'settings-section':
-      return <SettingsSectionPage />
-    default:
-      return <HubPage title="Admin" lede="Pick a section from the rail on the left." />
-  }
-}
-
-function RoutedAdminPage() {
-  const { pathname } = useLocation()
-  const kind = resolveAdminPage(pathname)
-  return useMemo(() => renderAdminKind(kind), [kind])
-}
-
 export function App() {
   const legacy = resolveRenderMode() === 'legacy'
   const { railState, drawerOpen, toggle: toggleRail, closeDrawer } = useRailState()
@@ -214,11 +98,12 @@ export function App() {
         />
       ) : null}
       <AdminTopNav onToggleRail={toggleRail} railState={railState} />
+      {/* Legacy Jinja pages (resolveRenderMode() === 'legacy') render chrome
+          only — no <main>, no <Routes>. The one intentional Jinja-DOM sniff
+          lives in hasLegacyBody() above. */}
       {!legacy ? (
         <main className="od-admin-main">
-          <Routes>
-            <Route path="*" element={<RoutedAdminPage />} />
-          </Routes>
+          <AdminRoutes />
         </main>
       ) : null}
     </div>
