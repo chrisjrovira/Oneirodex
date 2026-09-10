@@ -151,7 +151,11 @@ export function SystemMarksPanel() {
   }, [selectedTheme, labPlatform])
 
   const runGenerate = useCallback(
-    async ({ themes, force = false, limit = null }: { themes?: string[]; force?: boolean; limit?: number | null } = {}) => {
+    async ({
+      themes,
+      force = false,
+      limit = null,
+    }: { themes?: string[]; force?: boolean; limit?: number | null } = {}) => {
       setBusy(force ? 'force' : 'generate')
       setError('')
       setStatus('')

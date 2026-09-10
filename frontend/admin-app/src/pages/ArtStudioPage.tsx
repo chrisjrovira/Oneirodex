@@ -108,7 +108,14 @@ export function ArtStudioPage() {
   }, [])
 
   const fetchPreviews = useCallback(
-    async (sizes: any, { soft = false, busyKey = 'preview', titleOverride }: { soft?: boolean; busyKey?: string; titleOverride?: string } = {}) => {
+    async (
+      sizes: any,
+      {
+        soft = false,
+        busyKey = 'preview',
+        titleOverride,
+      }: { soft?: boolean; busyKey?: string; titleOverride?: string } = {},
+    ) => {
       const trimmed = (titleOverride ?? title).trim()
       if (!trimmed) return
       const reqId = ++previewReqId.current

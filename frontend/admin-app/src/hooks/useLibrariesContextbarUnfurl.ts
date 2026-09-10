@@ -40,7 +40,11 @@ export function useLibrariesContextbarUnfurl(enabled) {
     /** @type {HTMLElement[]} */
     const unfurls = []
 
-    const makeUnfurl = (triggerLabel: any, menuItems: any, { activeWhen }: { activeWhen?: any } = {}) => {
+    const makeUnfurl = (
+      triggerLabel: any,
+      menuItems: any,
+      { activeWhen }: { activeWhen?: any } = {},
+    ) => {
       const anchor = document.createElement('span')
       anchor.className = 'od-seg__unfurl-anchor'
 

@@ -673,9 +673,7 @@ export interface AccountModalProps {
 }
 
 export function AccountModal({ panel, onClose, onAvatarChange }: AccountModalProps): ReactNode {
-  const [active, setActive] = useState<AccountPanelId>(() =>
-    isPanelId(panel) ? panel : 'profile',
-  )
+  const [active, setActive] = useState<AccountPanelId>(() => (isPanelId(panel) ? panel : 'profile'))
   const [summary, setSummary] = useState<AccountSummary | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
 

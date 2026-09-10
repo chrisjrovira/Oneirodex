@@ -3,7 +3,10 @@ import { confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 
 import { DataTable } from './DataTable'
-import { confirmCreateSelected, fetchImportLeafLibrariesPreview } from '../api/proposeLeafLibrariesApi'
+import {
+  confirmCreateSelected,
+  fetchImportLeafLibrariesPreview,
+} from '../api/proposeLeafLibrariesApi'
 import './ProposeLeafLibraries.css'
 
 /**

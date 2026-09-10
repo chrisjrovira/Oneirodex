@@ -63,7 +63,12 @@ function bindToastLifecycle(el, host) {
   return remove
 }
 
-function paintToast(host: any, message: unknown, safeTone: string, { count, stacked }: { count?: number; stacked?: boolean } = {}) {
+function paintToast(
+  host: any,
+  message: unknown,
+  safeTone: string,
+  { count, stacked }: { count?: number; stacked?: boolean } = {},
+) {
   const el = document.createElement('div')
   el.className = `od-toast od-toast--${safeTone}`
   if (stacked) {

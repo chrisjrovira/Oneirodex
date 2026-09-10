@@ -70,7 +70,13 @@ function useCollapsedSections(activeSectionId) {
  * the indented sub-links underneath. Dashboard and icon-only rail stay plain
  * destination links with icons.
  */
-export function AdminSideRail({ railState = 'expanded', onCloseDrawer }: { railState?: string; onCloseDrawer?: () => void }) {
+export function AdminSideRail({
+  railState = 'expanded',
+  onCloseDrawer,
+}: {
+  railState?: string
+  onCloseDrawer?: () => void
+}) {
   const { pathname } = useLocation()
   const iconOnly = railState === 'collapsed'
   const ownedSection = resolveNavSection(pathname)
