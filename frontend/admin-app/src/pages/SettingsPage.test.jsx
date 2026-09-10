@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { SettingsPage } from './pages'
+import { SettingsPage } from './SettingsPage'
 
 function stubModuleStatus(payload, { ok = true, status = 200 } = {}) {
   const fetchMock = vi.fn(async (url) => {

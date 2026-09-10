@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, test } from 'vitest'
 
-import { HubPage } from './pages'
+import { HubPage } from './HubPage'
 
 /**
  * GT-B35. A section landing page with no body of its own is the one page where

@@ -21,19 +21,17 @@ import { QualityProfilesPage } from './pages/QualityProfilesPage'
 import { StoragePage } from './pages/StoragePage'
 import { ScanMatchSettingsPage } from './pages/ScanMatchSettingsPage'
 import { ExtensionsPage } from './pages/ExtensionsPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { LibrariesPage } from './pages/LibrariesPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { IntegrationsPage } from './pages/IntegrationsPage'
+import { ThemesPage } from './pages/ThemesPage'
+import { PluginsPage } from './pages/PluginsPage'
+import { ScansPage } from './pages/ScansPage'
+import { HubPage } from './components/HubPage'
+import { resolveAdminPage } from './components/adminSection'
 import { SETTINGS_CARDS, railDestinations } from './components/navConfig'
 import './ops.css'
-import {
-  DashboardPage,
-  HubPage,
-  IntegrationsPage,
-  LibrariesPage,
-  PluginsPage,
-  ScansPage,
-  SettingsPage,
-  ThemesPage,
-  resolveAdminPage,
-} from './pages'
 
 /**
  * Legacy fallback only — see resolveRenderMode.

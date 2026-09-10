@@ -2,8 +2,9 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { LibrariesPage, ScansPage } from './pages'
-import { SCAN_QUEUE_POLICY } from './components/scanQueuePolicy'
+import { LibrariesPage } from './LibrariesPage'
+import { ScansPage } from './ScansPage'
+import { SCAN_QUEUE_POLICY } from '../components/scanQueuePolicy'
 
 describe('ScansPage queued jobs', () => {
   beforeEach(() => {

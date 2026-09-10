@@ -2,7 +2,8 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { LibrariesPage, ScansPage } from './pages'
+import { LibrariesPage } from './LibrariesPage'
+import { ScansPage } from './ScansPage'
 
 /**
  * Per-library Scan, and Scan again on a finished job (W28).

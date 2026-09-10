@@ -85,7 +85,9 @@ const STATUS_BASELINE = {
   'SystemMarksPanel.jsx': 1,
   'StoragePage.jsx': 5,
   'SystemResetPanel.jsx': 2,
-  'pages.jsx': 1,
+  // PR-4 (b) split pages.jsx; this one `role="status"` site (the scan-live
+  // pill) moved verbatim into ScansPage.jsx. Same total, new file key.
+  'ScansPage.jsx': 1,
 }
 
 /**
