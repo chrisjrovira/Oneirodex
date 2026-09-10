@@ -54,8 +54,25 @@ def _install_lock_timeout():
             dbapi_connection.autocommit = True
             try:
                 with dbapi_connection.cursor() as cur:
+                    # `lock_timeout` stays short: no healthy test waits on a
+                    # lock, so a 15s wait is always a leak somewhere and the
+                    # named `LockNotAvailable` on the blocked statement is the
+                    # bug report we want.
                     cur.execute("SET SESSION lock_timeout = '15s'")
-                    cur.execute("SET SESSION idle_in_transaction_session_timeout = '60s'")
+                    # `idle_in_transaction_session_timeout` is deliberately
+                    # generous. `db_session` now holds one outer transaction
+                    # open for the whole test (per-test SAVEPOINT isolation),
+                    # so between statements the connection is legitimately
+                    # "idle in transaction" for as long as the test's own
+                    # Python runs — and the slowest single tests
+                    # (`test_init_manager_themes`, ~75s of theme-file copying)
+                    # would trip a 60s ceiling and have Postgres sever their
+                    # own transaction mid-test. 300s clears the slowest test
+                    # with headroom while still killing a transaction a
+                    # crashed fixture stranded between tests (teardown always
+                    # rolls the outer transaction back, so a leak cannot
+                    # outlive one test otherwise).
+                    cur.execute("SET SESSION idle_in_transaction_session_timeout = '300s'")
             finally:
                 dbapi_connection.autocommit = previous
         except Exception:  # noqa: BLE001
@@ -196,7 +213,30 @@ def db_session(app):
     the test's connection because Flask-SQLAlchemy's own `Session.get_bind`
     returns the app's default engine before it will honour a per-session
     `bind=`, so `db.session.configure(bind=...)` alone does not route here.
+
+    Two things keep the SAVEPOINT model honest:
+
+    * **The savepoint-restart listener** (SQLAlchemy's "Joining a Session into
+      an External Transaction" recipe). A `db.session.commit()` inside a test —
+      or Flask-SQLAlchemy's `teardown_appcontext` firing `db.session.remove()`
+      when a nested `app_context()` / `test_request_context()` pops mid-test —
+      RELEASEs the per-test SAVEPOINT. With nothing re-opening one, the session
+      keeps a dangling savepoint reference and teardown's `.remove()` emits
+      `ROLLBACK TO SAVEPOINT` against a name Postgres has already released
+      (`InvalidSavepointSpecification`). `_restart_savepoint` re-arms a fresh
+      nested transaction the moment the previous one ends, so exactly one
+      per-test SAVEPOINT is always outstanding.
+
+    * **Exception-safe teardown.** Even with the listener, a slow test that let
+      Postgres hit `idle_in_transaction_session_timeout`, or any error inside
+      `.remove()`, must not skip `transaction.rollback()` /
+      `connection.close()`: an un-rolled-back outer transaction strands the
+      connection `idle in transaction` holding row locks, and the next test's
+      first write blocks on `lock_timeout` and fails — the cascade recorded in
+      `docs/dev/test-harness-2026-09-10.md`. Every teardown step therefore runs
+      under its own `try`, and the connection is closed no matter what.
     """
+    from sqlalchemy import event
     from sqlalchemy import orm as sa_orm
     from flask_sqlalchemy.session import _app_ctx_id
 
@@ -207,7 +247,7 @@ def db_session(app):
         transaction = connection.begin()  # outer transaction — always rolled back
 
         original_session = db.session
-        db.session = sa_orm.scoped_session(
+        test_session = sa_orm.scoped_session(
             sa_orm.sessionmaker(
                 bind=connection,
                 join_transaction_mode='create_savepoint',
@@ -216,15 +256,51 @@ def db_session(app):
             ),
             scopefunc=_app_ctx_id,
         )
+        db.session = test_session
         db.session.begin_nested()
 
+        def _restart_savepoint(sess, trans):
+            # Re-open a per-test SAVEPOINT only when the one that just ended
+            # left the session with *no* nested transaction at all — i.e. a
+            # `db.session.commit()` in a test released our per-test savepoint.
+            # `not sess.in_nested_transaction()` is the load-bearing check:
+            # `join_transaction_mode='create_savepoint'` makes the session's
+            # own root transaction report `nested`, so a parent-based guard
+            # (`not trans._parent.nested`) fires *inside* a product-code
+            # `with db.session.begin_nested():` __exit__ and corrupts that
+            # context manager. Keying on whether any savepoint is still
+            # outstanding leaves product-owned nested blocks alone.
+            if trans.nested and not sess.in_nested_transaction():
+                sess.begin_nested()
+
+        event.listen(test_session, 'after_transaction_end', _restart_savepoint)
+
         try:
-            yield db.session
+            yield test_session
         finally:
-            db.session.remove()
-            db.session = original_session
-            transaction.rollback()
-            connection.close()
+            try:
+                event.remove(
+                    test_session, 'after_transaction_end', _restart_savepoint
+                )
+            except Exception:  # noqa: BLE001
+                pass
+            try:
+                test_session.remove()
+            except Exception:  # noqa: BLE001
+                # Most likely `InvalidSavepointSpecification` if Postgres
+                # already severed the transaction. The outer rollback below
+                # still has to run.
+                pass
+            finally:
+                db.session = original_session
+                try:
+                    transaction.rollback()
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    connection.close()
+                except Exception:  # noqa: BLE001
+                    pass
 
 
 @pytest.fixture(scope='function')
