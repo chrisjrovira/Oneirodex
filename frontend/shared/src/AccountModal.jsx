@@ -609,7 +609,7 @@ function TokensPanel() {
 
 /* ------------------------------------------------------------------ shell */
 
-export function AccountModal({ panel, onClose, onAvatarChange }) {
+export function AccountModal({ panel, onClose = undefined, onAvatarChange = undefined }) {
   const [active, setActive] = useState(() => (PANEL_IDS.has(panel) ? panel : 'profile'))
   const [summary, setSummary] = useState(null)
   const panelRef = useRef(null)

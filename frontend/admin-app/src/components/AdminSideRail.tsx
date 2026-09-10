@@ -59,7 +59,7 @@ function useCollapsedSections(activeSectionId) {
     })
   }, [])
 
-  return [collapsed, toggle]
+  return [collapsed, toggle] as const
 }
 
 /**
@@ -70,7 +70,7 @@ function useCollapsedSections(activeSectionId) {
  * the indented sub-links underneath. Dashboard and icon-only rail stay plain
  * destination links with icons.
  */
-export function AdminSideRail({ railState = 'expanded', onCloseDrawer }) {
+export function AdminSideRail({ railState = 'expanded', onCloseDrawer }: { railState?: string; onCloseDrawer?: () => void }) {
   const { pathname } = useLocation()
   const iconOnly = railState === 'collapsed'
   const ownedSection = resolveNavSection(pathname)
@@ -102,7 +102,7 @@ export function AdminSideRail({ railState = 'expanded', onCloseDrawer }) {
     return path === base || path.startsWith(`${base}/`)
   }
 
-  function destinationLink(link, { active } = {}) {
+  function destinationLink(link: any, { active }: { active?: boolean } = {}) {
     const linkClass = active ? 'od-rail__link is-active' : 'od-rail__link'
     return (
       <li key={link.id}>

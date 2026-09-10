@@ -51,7 +51,7 @@ export function ImportLeafLibraries({
     setCreateHint('')
 
     try {
-      const result = await fetchImportLeafLibrariesPreview({
+      const result: any = await fetchImportLeafLibrariesPreview({
         mode: inputMode,
         text: pasteText,
         file,

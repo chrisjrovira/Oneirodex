@@ -28,7 +28,7 @@ function FieldNumber({ id, label, hint, value, onChange, min = 0, max = 1, step 
 }
 
 export function ScanMatchSettingsPage() {
-  const [form, setForm] = useState({})
+  const [form, setForm] = useState<Record<string, any>>({})
   const [exposed, setExposed] = useState([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)

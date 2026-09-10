@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { ImagesPage } from './ImagesPage'
 import { StockPicker } from '../components/StockPicker'
@@ -108,7 +108,7 @@ export function ArtStudioPage() {
   }, [])
 
   const fetchPreviews = useCallback(
-    async (sizes, { soft = false, busyKey = 'preview', titleOverride } = {}) => {
+    async (sizes: any, { soft = false, busyKey = 'preview', titleOverride }: { soft?: boolean; busyKey?: string; titleOverride?: string } = {}) => {
       const trimmed = (titleOverride ?? title).trim()
       if (!trimmed) return
       const reqId = ++previewReqId.current
@@ -425,7 +425,7 @@ export function ArtStudioPage() {
         {skin ? (
           <span
             className={`od-art-studio-skin od-art-studio-skin--${skin.family}`}
-            style={{ '--od-art-skin': skin.accent }}
+            style={{ '--od-art-skin': skin.accent } as CSSProperties}
           >
             {skin.label}
             {systemText ? ` · ${systemText}` : ''}

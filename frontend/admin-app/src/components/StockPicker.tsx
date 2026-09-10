@@ -70,8 +70,8 @@ export function StockPicker({
   heading = 'Platform & stock art',
   lede = 'Original Oneirodex packs — pick a decade room, platform look, or stock motif, then set as library default / fallback.',
   showLibraryUuid = false,
-} = {}) {
-  const [items, setItems] = useState([])
+}: { onApplied?: (v?: unknown) => void; heading?: string; lede?: string; showLibraryUuid?: boolean } = {}) {
+  const [items, setItems] = useState<any[]>([])
   const [unavailable, setUnavailable] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -153,7 +153,7 @@ export function StockPicker({
       try {
         const ready = await ensureGenerated(selected)
         const packId = ready.packId || ready.id
-        const body = { pack_id: packId, id: packId, mode }
+        const body: Record<string, unknown> = { pack_id: packId, id: packId, mode }
         if (mode === 'library') body.library_uuid = libraryUuid.trim()
         await postJson(APPLY_URL, body)
         const label =

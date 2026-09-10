@@ -147,6 +147,14 @@ export function OpsStatusBanner({
   onRefresh = null,
   refreshing = false,
   refreshDisabled = false,
+}: {
+  severity?: string
+  asOf?: string
+  items?: any
+  ariaLabel?: string
+  onRefresh?: (() => void) | null
+  refreshing?: boolean
+  refreshDisabled?: boolean
 }) {
   const tone = resolveBannerSeverity(items, severity)
   return (
@@ -209,7 +217,15 @@ export function booleanTone(ok) {
   return ok ? 'good' : 'poor'
 }
 
-export function MeterBar({ label, percent, detail }) {
+export function MeterBar({
+  label,
+  percent,
+  detail,
+}: {
+  label?: any
+  percent?: unknown
+  detail?: any
+}) {
   const pct =
     percent == null || !Number.isFinite(Number(percent))
       ? null
@@ -231,7 +247,17 @@ export function MeterBar({ label, percent, detail }) {
 
 const METRIC_TONES = new Set(['good', 'fair', 'poor', 'na', 'action', 'warning', 'info'])
 
-export function MetricTile({ label, value, hint, tone }) {
+export function MetricTile({
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  label?: any
+  value?: any
+  hint?: any
+  tone?: string
+}) {
   const toneClass = METRIC_TONES.has(tone) ? ` od-ops-metric--${tone}` : ''
   return (
     <div className={`od-ops-metric${toneClass}`}>
@@ -370,13 +396,15 @@ export function formatLibraryWatchDetail(watch) {
   return pulse
 }
 
-export function companionKindRows(byKind) {
+export function companionKindRows(byKind: unknown) {
   if (!byKind || typeof byKind !== 'object') return []
-  return Object.entries(byKind).map(([kind, counts]) => ({
-    kind,
-    online: counts?.online ?? 0,
-    registered: counts?.registered ?? 0,
-  }))
+  return Object.entries(byKind as Record<string, { online?: number; registered?: number }>).map(
+    ([kind, counts]) => ({
+      kind,
+      online: counts?.online ?? 0,
+      registered: counts?.registered ?? 0,
+    }),
+  )
 }
 
 /**

@@ -45,7 +45,7 @@ export function ProposeLeafLibraries({
     setProposedRoot('')
 
     try {
-      const result = await fetchProposeLeafLibraries(root)
+      const result: any = await fetchProposeLeafLibraries(root)
       if (result.unavailable) {
         setUnavailable(true)
         setError(result.error || 'Propose API unavailable.')

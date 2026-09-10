@@ -52,14 +52,19 @@ import { describe, expect, it } from 'vitest'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
-/* basename -> absolute path, gathered recursively from `src/`. */
+/* basename -> absolute path, gathered recursively from `src/`. PR-4 (e) renamed
+ * the components to `.tsx`; JSX still lives in a `.jsx`/`.tsx` file, so match
+ * both and key the baseline by `.tsx`. */
 function collectJsx(dir, acc) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name)
     if (entry.isDirectory()) {
       if (entry.name === 'node_modules') continue
       collectJsx(full, acc)
-    } else if (entry.name.endsWith('.jsx') && !entry.name.includes('.test.')) {
+    } else if (
+      (entry.name.endsWith('.jsx') || entry.name.endsWith('.tsx')) &&
+      !entry.name.includes('.test.')
+    ) {
       acc.set(entry.name, full)
     }
   }
@@ -71,23 +76,23 @@ const JSX_BY_NAME = collectJsx(HERE, new Map())
  * files, five files at zero. What remains is largely the deliberate categories
  * listed above rather than debt. */
 const STATUS_BASELINE = {
-  'ArtStudioPage.jsx': 1,
-  'ArtworkPicker.jsx': 1,
-  'CreateUserForm.jsx': 1,
-  'DupeGlance.jsx': 1,
-  'EmulatorFirmwarePanel.jsx': 2,
-  'ImportLeafLibraries.jsx': 2,
-  'OpenPathModal.jsx': 1,
-  'ProposeLeafLibraries.jsx': 2,
-  'RemotePlayPage.jsx': 1,
-  'ScanMatchSettingsPage.jsx': 3,
-  'StockPicker.jsx': 1,
-  'SystemMarksPanel.jsx': 1,
-  'StoragePage.jsx': 5,
-  'SystemResetPanel.jsx': 2,
+  'ArtStudioPage.tsx': 1,
+  'ArtworkPicker.tsx': 1,
+  'CreateUserForm.tsx': 1,
+  'DupeGlance.tsx': 1,
+  'EmulatorFirmwarePanel.tsx': 2,
+  'ImportLeafLibraries.tsx': 2,
+  'OpenPathModal.tsx': 1,
+  'ProposeLeafLibraries.tsx': 2,
+  'RemotePlayPage.tsx': 1,
+  'ScanMatchSettingsPage.tsx': 3,
+  'StockPicker.tsx': 1,
+  'SystemMarksPanel.tsx': 1,
+  'StoragePage.tsx': 5,
+  'SystemResetPanel.tsx': 2,
   // PR-4 (b) split pages.jsx; this one `role="status"` site (the scan-live
-  // pill) moved verbatim into ScansPage.jsx. Same total, new file key.
-  'ScansPage.jsx': 1,
+  // pill) moved verbatim into ScansPage. Same total, new file key.
+  'ScansPage.tsx': 1,
 }
 
 /**
@@ -95,7 +100,7 @@ const STATUS_BASELINE = {
  * It moved into `@oneirodex/ui` in wave B1.2, so there is no local file to
  * exempt any more; the set is kept as a guard in case a copy is ever re-added.
  */
-const EXEMPT = new Set(['PageStatus.jsx'])
+const EXEMPT = new Set(['PageStatus.jsx', 'PageStatus.tsx'])
 
 const STATUS_ROLE = /role="(?:status|alert)"/g
 

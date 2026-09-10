@@ -59,7 +59,7 @@ function packMetricRows(metricIds, startY) {
  * scans/errors, detail panels, recent log. `visibleIds` drops panels that have
  * no data yet so empty frames do not reserve tracks.
  */
-export function defaultOpsLayout({ visibleIds } = {}) {
+export function defaultOpsLayout({ visibleIds }: { visibleIds?: string[] } = {}) {
   const visible = visibleIds ? new Set(visibleIds) : null
   const show = (id) => !visible || visible.has(id)
   const items = []

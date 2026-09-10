@@ -83,7 +83,7 @@ export function QualityProfilesPage() {
     )
   }
 
-  async function reload(preferId) {
+  async function reload(preferId?: string) {
     const data = await getJson('/api/quality-profiles')
     applyStore(data, preferId)
     return data

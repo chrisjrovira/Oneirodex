@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from '../api/adminApi'
 import { showToast } from '../utils/toast'
@@ -151,12 +151,12 @@ export function SystemMarksPanel() {
   }, [selectedTheme, labPlatform])
 
   const runGenerate = useCallback(
-    async ({ themes, force = false, limit = null } = {}) => {
+    async ({ themes, force = false, limit = null }: { themes?: string[]; force?: boolean; limit?: number | null } = {}) => {
       setBusy(force ? 'force' : 'generate')
       setError('')
       setStatus('')
       try {
-        const body = { force }
+        const body: Record<string, unknown> = { force }
         if (themes?.length) body.themes = themes
         if (limit != null) body.limit = limit
         const result = await postJson(GENERATE_URL, body)
@@ -317,7 +317,7 @@ export function SystemMarksPanel() {
                   <span
                     className="od-system-marks__bar"
                     aria-hidden="true"
-                    style={{ '--od-marks-pct': `${pct}%` }}
+                    style={{ '--od-marks-pct': `${pct}%` } as CSSProperties}
                   />
                 </button>
               )

@@ -239,7 +239,7 @@ function markKindsOrdered(suggestedKind) {
 const EMPTY_FIELD = '—'
 const EMPTY_FIELD_TITLE = 'Not provided by API yet'
 
-function CompareField({ label, value, emptyTitle = EMPTY_FIELD_TITLE, children }) {
+function CompareField({ label, value, emptyTitle = EMPTY_FIELD_TITLE, children }: { label?: any; value?: any; emptyTitle?: string; children?: any }) {
   const hasValue = value != null && String(value).trim() !== ''
   return (
     <div className="od-dupe-glance__compare-field">
@@ -386,7 +386,7 @@ function DupeCompare({ row, onOpenPath }) {
 // it must not re-render every time its parent (ScansPage) re-renders on a 4s scan
 // tick — that would re-lay-out its list and note <input> and make a password
 // manager re-scan the subtree each tick.
-export const DupeGlance = memo(function DupeGlance({ onOpenPath }) {
+export const DupeGlance = memo(function DupeGlance({ onOpenPath }: { onOpenPath?: (v: any) => void }) {
   const [rows, setRows] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)

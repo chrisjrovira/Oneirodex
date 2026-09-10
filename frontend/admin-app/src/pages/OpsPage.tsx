@@ -32,7 +32,7 @@ import '../ops.css'
 // that has nothing to do with the move.
 export { formatScanJobCounters }
 
-async function getJson(url, { signal } = {}) {
+async function getJson(url: string, { signal }: { signal?: AbortSignal } = {}) {
   const response = await fetch(url, { credentials: 'same-origin', signal })
   if (response.status === 401) {
     window.location.href = '/login'
@@ -444,7 +444,7 @@ export function OpsPage() {
                         ? Object.entries(services.awake.checks)
                             .map(
                               ([k, v]) =>
-                                `${k}:${typeof v === 'object' ? v?.status || JSON.stringify(v) : v}`,
+                                `${k}:${typeof v === 'object' ? (v as any)?.status || JSON.stringify(v) : v}`,
                             )
                             .join(' · ') || 'n/a'
                         : 'n/a'}

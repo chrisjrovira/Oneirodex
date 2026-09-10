@@ -69,7 +69,7 @@ export function buildAdminCommands() {
   const seen = new Set()
   const commands = []
 
-  function push({ href, label, section, blurb }) {
+  function push({ href, label, section, blurb }: { href: string; label: string; section: string; blurb?: string }) {
     if (!href || !label) return
     // Anchored links into a page already listed are kept only when they carry a
     // distinct label — otherwise the palette fills with near-duplicates.

@@ -34,7 +34,8 @@ if (importLeafMount && !importLeafMount.dataset.reactMounted) {
 // Any legacy page can group its panels into tabs by marking them up and
 // dropping a mount in: the tab bar is React, the panels stay server-rendered
 // and keep posting to the handler they always did.
-document.querySelectorAll('[data-od-tabs-mount]').forEach((mount) => {
+document.querySelectorAll('[data-od-tabs-mount]').forEach((node) => {
+  const mount = node as HTMLElement
   if (mount.dataset.reactMounted) return
   const container = mount.closest('[data-od-tabs]') || document
   mount.dataset.reactMounted = '1'

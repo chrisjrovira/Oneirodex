@@ -63,7 +63,7 @@ function bindToastLifecycle(el, host) {
   return remove
 }
 
-function paintToast(host, message, safeTone, { count, stacked } = {}) {
+function paintToast(host: any, message: unknown, safeTone: string, { count, stacked }: { count?: number; stacked?: boolean } = {}) {
   const el = document.createElement('div')
   el.className = `od-toast od-toast--${safeTone}`
   if (stacked) {
@@ -89,7 +89,7 @@ function paintToast(host, message, safeTone, { count, stacked } = {}) {
   return dismiss
 }
 
-export function showToast(message, tone = 'info', options = {}) {
+export function showToast(message: unknown, tone = 'info', options: { count?: number } = {}) {
   if (typeof document === 'undefined' || !message) {
     return
   }

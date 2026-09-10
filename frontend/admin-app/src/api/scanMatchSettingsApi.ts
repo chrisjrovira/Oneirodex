@@ -108,7 +108,7 @@ export function normalizePeelProfile(value) {
   return PEEL_PROFILES.CONSERVATIVE
 }
 
-function clampUnit(value, fallback) {
+function clampUnit(value: unknown, fallback: number) {
   const n = Number(value)
   if (!Number.isFinite(n)) return fallback
   if (n < 0) return 0
@@ -120,9 +120,9 @@ function clampUnit(value, fallback) {
  * Build editable form state from a GET payload.
  * Only copies keys Backend exposed (soft-degrade).
  */
-export function formFromPayload(payload) {
-  const src = payload && typeof payload === 'object' ? payload : {}
-  const form = {}
+export function formFromPayload(payload: unknown) {
+  const src: any = payload && typeof payload === 'object' ? payload : {}
+  const form: Record<string, unknown> = {}
   const exposed = exposedPolicyKeys(src)
 
   if (exposed.includes('propose_only_scan')) {
@@ -158,8 +158,8 @@ export function formFromPayload(payload) {
 }
 
 /** Body for PUT — only keys currently exposed/edited. */
-export function bodyFromForm(form, exposedKeys) {
-  const body = {}
+export function bodyFromForm(form: any, exposedKeys?: string[]) {
+  const body: Record<string, unknown> = {}
   const keys = Array.isArray(exposedKeys) ? exposedKeys : Object.keys(form || {})
   for (const key of keys) {
     if (FORBIDDEN_UI_KEYS.includes(key)) continue

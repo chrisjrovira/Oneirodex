@@ -1,6 +1,31 @@
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useState, type Key, type ReactNode } from 'react'
 import './DataTable.css'
 import { PM_IGNORE } from './formIgnore'
+
+/* Loose by design (PR-4 e house style): admin rows come off untyped JSON
+ * helpers, so a row is `any` and a column carries optional render/value fns. */
+export interface DataTableColumn {
+  key: string
+  label?: ReactNode
+  sortable?: boolean
+  filterable?: boolean
+  align?: string
+  render?: (row: any) => ReactNode
+  value?: (row: any) => unknown
+}
+
+export interface DataTableProps {
+  columns: DataTableColumn[]
+  rows: any[]
+  getRowKey: (row: any, index?: number) => Key
+  emptyMessage?: string
+  initialSort?: { key: string; dir: 'asc' | 'desc' } | null
+  dense?: boolean
+  caption?: ReactNode
+  toolbar?: boolean
+  columnFilters?: boolean
+  showCount?: boolean
+}
 
 /**
  * Sortable + filterable admin table (UX-C8).
@@ -35,8 +60,8 @@ export function DataTable({
   toolbar = true,
   columnFilters = false,
   showCount,
-}) {
-  const [sort, setSort] = useState(initialSort) // { key, dir: 'asc' | 'desc' }
+}: DataTableProps) {
+  const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(initialSort) // { key, dir: 'asc' | 'desc' }
   const [query, setQuery] = useState('')
   const [columnQuery, setColumnQuery] = useState({})
   const listId = useId()

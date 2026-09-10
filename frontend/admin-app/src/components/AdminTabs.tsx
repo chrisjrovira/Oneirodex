@@ -12,18 +12,21 @@ import './AdminTabs.css'
  * Panels declare themselves with `data-od-tab-panel="<id>"` and
  * `data-od-tab-label="<label>"`, so adding a tab is a template change.
  */
-export function AdminTabs({ container }) {
+export function AdminTabs({ container }: { container?: Element | Document | null }) {
   const panels = useMemo(() => {
     if (!container) return []
-    return Array.from(container.querySelectorAll('[data-od-tab-panel]')).map((el) => ({
-      id: el.dataset.odTabPanel,
-      label: el.dataset.odTabLabel || el.dataset.odTabPanel,
-      el,
-      // A field that failed validation must not be hidden behind a tab the
-      // member has no reason to open — the form would just refuse to save
-      // with nothing on screen saying why.
-      hasError: Boolean(el.querySelector('.alert-danger')),
-    }))
+    return Array.from(container.querySelectorAll('[data-od-tab-panel]')).map((node) => {
+      const el = node as HTMLElement
+      return {
+        id: el.dataset.odTabPanel,
+        label: el.dataset.odTabLabel || el.dataset.odTabPanel,
+        el,
+        // A field that failed validation must not be hidden behind a tab the
+        // member has no reason to open — the form would just refuse to save
+        // with nothing on screen saying why.
+        hasError: Boolean(el.querySelector('.alert-danger')),
+      }
+    })
   }, [container])
 
   const firstErrored = panels.find((panel) => panel.hasError)

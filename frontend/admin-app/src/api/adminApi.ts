@@ -23,7 +23,7 @@ export { getCsrfToken as csrfToken, csrfHeaders }
  */
 export const adminError = errorFromBody
 
-export async function getJson(url, { signal } = {}) {
+export async function getJson(url: string, { signal }: { signal?: AbortSignal } = {}) {
   const response = await fetch(url, { credentials: 'same-origin', signal })
   if (response.status === 401) {
     window.location.href = '/login'
@@ -81,9 +81,9 @@ export async function putJson(url, body) {
   return data
 }
 
-export async function deleteJson(url, body) {
+export async function deleteJson(url: string, body?: unknown) {
   const headers = csrfHeaders()
-  const init = {
+  const init: RequestInit = {
     method: 'DELETE',
     credentials: 'same-origin',
     headers,

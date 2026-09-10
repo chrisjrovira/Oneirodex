@@ -15,7 +15,7 @@ export function useLibrariesContextbarUnfurl(enabled) {
 
     const pageSlot = document.getElementById(ADMIN_TOPBAR_SLOT_ID)
     const views = pageSlot?.querySelector(':scope > .od-contextbar__views')
-    const seg = views?.querySelector(':scope > .od-seg')
+    const seg = views?.querySelector(':scope > .od-seg') as HTMLElement | null | undefined
     if (!seg || seg.dataset.odUnfurlReady === '1') return undefined
 
     const items = Array.from(seg.querySelectorAll(':scope > a.od-seg__item'))
@@ -40,7 +40,7 @@ export function useLibrariesContextbarUnfurl(enabled) {
     /** @type {HTMLElement[]} */
     const unfurls = []
 
-    const makeUnfurl = (triggerLabel, menuItems, { activeWhen } = {}) => {
+    const makeUnfurl = (triggerLabel: any, menuItems: any, { activeWhen }: { activeWhen?: any } = {}) => {
       const anchor = document.createElement('span')
       anchor.className = 'od-seg__unfurl-anchor'
 
@@ -93,8 +93,8 @@ export function useLibrariesContextbarUnfurl(enabled) {
 
       anchor.appendChild(trigger)
       anchor.appendChild(panelEl)
-      anchor._odSetOpen = setOpen
-      anchor._odActiveWhen = activeWhen
+      ;(anchor as any)._odSetOpen = setOpen
+      ;(anchor as any)._odActiveWhen = activeWhen
       return anchor
     }
 

@@ -506,7 +506,7 @@ export function LibrariesPanel({ panelEl = null }) {
   )
 
   const columns = useMemo(() => {
-    const cols = [
+    const cols: any[] = [
       {
         key: 'select',
         label: (

@@ -27,7 +27,7 @@ const base = {
   strokeWidth: 2,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
-}
+} as const
 
 export const railIconPaths = {
   acquire: (
