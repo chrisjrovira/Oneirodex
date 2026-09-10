@@ -1,4 +1,5 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getCsrfToken } from '@oneirodex/ui'
+import { createOneirodexBrowserClient } from '@oneirodex/api-client'
 
 /**
  * Shape of `GET /admin/api/ops/summary` (`oneirodex/utils/ops_summary.py`
@@ -107,21 +108,22 @@ export interface FetchOpsSummaryOptions {
   signal?: AbortSignal
 }
 
+/**
+ * Same-origin browser client (ADR 0005). `getToken` is unused on this
+ * transport; a 401 bounces to the login page and `OneirodexApiError` carries
+ * the envelope sentence + `status` / `error_code` for `PageStatus`.
+ */
+const client = createOneirodexBrowserClient({
+  baseUrl: '',
+  fetchImpl: (input, init) => window.fetch(input, init),
+  csrfToken: () => getCsrfToken(),
+  onUnauthorized: () => {
+    window.location.href = '/login'
+  },
+})
+
 export async function fetchOpsSummary({
   signal,
 }: FetchOpsSummaryOptions = {}): Promise<OpsSummary> {
-  const response = await fetch('/admin/api/ops/summary', {
-    signal,
-    headers: { Accept: 'application/json' },
-  })
-
-  if (!response.ok) {
-    // Was a bare `throw new Error('Ops summary failed: ' + status)` — the body
-    // was never read, so PageStatus showed a developer string as the headline.
-    // The shared builder reads the envelope once and keeps `status` /
-    // `error_code` on the Error for resolveErrorDetail.
-    throw await errorFromResponse(response, 'ops summary')
-  }
-
-  return (await response.json()) as OpsSummary
+  return (await client.ops.getSummary({ signal })) as OpsSummary
 }

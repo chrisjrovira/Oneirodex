@@ -15,7 +15,7 @@ directly — they append a line here.
   declared in `pytest.ini`; heavy/thread/live-service modules carry a
   module-level `pytestmark = pytest.mark.integration`. The set of `integration`
   files is deliberately minimal — before flipping, diff `pytest -m "not
-  integration" --collect-only -q` against the current hand list so nothing that
+integration" --collect-only -q` against the current hand list so nothing that
   was gated silently stops being gated. `--cov-fail-under` is a low
   current-reality floor, not a target; raise it as coverage climbs.
   ✅ applied (partial — `--cov=oneirodex --cov-report=term-missing` added to the
@@ -59,20 +59,20 @@ directly — they append a line here.
   scope.
   ✅ applied (wave C3.7-client). Prettier baseline landed as
   `chore(fmt): prettier baseline for clients/desktop` over `clients/desktop/src`
-  + the tsconfig / vite / vitest configs. `lint` / `format:check` scripts added
-  to `clients/desktop/package.json` (`npm --prefix ../.. run …`, same shape as
-  `frontend/api-client`). `eslint.config.js` gains an appended
-  `clients/desktop/**/*.{ts,tsx}` block (typescript-eslint recommended, mirrors
-  the `frontend/api-client` block) and a `*.{test,spec}.ts` vitest-globals
-  block; the global `ignores` entry `clients/**` was narrowed to
-  `clients/quest/**` + `clients/desktop/src-tauri/**` so the desktop TS is
-  actually reached. `npx eslint clients/desktop frontend/api-client` is clean
-  (a stale `no-unused-vars` import in `apply_patch.ts` and a `prefer-const`
-  error in `config-store.ts` fixed in the fmt commit). No new workflow job —
-  the existing repo-root `lint` job (`npm run lint` = `eslint .`) now covers
-  `clients/desktop/**/*.ts` via the config change; also bumped the two
-  remaining `node-version: '20'` in `desktop-build.yml` and
-  `setup_20.x` / "Node 20+" in `scripts/build-installers.sh` to `22`.
+  - the tsconfig / vite / vitest configs. `lint` / `format:check` scripts added
+    to `clients/desktop/package.json` (`npm --prefix ../.. run …`, same shape as
+    `frontend/api-client`). `eslint.config.js` gains an appended
+    `clients/desktop/**/*.{ts,tsx}` block (typescript-eslint recommended, mirrors
+    the `frontend/api-client` block) and a `*.{test,spec}.ts` vitest-globals
+    block; the global `ignores` entry `clients/**` was narrowed to
+    `clients/quest/**` + `clients/desktop/src-tauri/**` so the desktop TS is
+    actually reached. `npx eslint clients/desktop frontend/api-client` is clean
+    (a stale `no-unused-vars` import in `apply_patch.ts` and a `prefer-const`
+    error in `config-store.ts` fixed in the fmt commit). No new workflow job —
+    the existing repo-root `lint` job (`npm run lint` = `eslint .`) now covers
+    `clients/desktop/**/*.ts` via the config change; also bumped the two
+    remaining `node-version: '20'` in `desktop-build.yml` and
+    `setup_20.x` / "Node 20+" in `scripts/build-installers.sh` to `22`.
 - [B0.3] Add `npm run typecheck` to each existing per-SPA vitest job
   (`member-app-vitest`, `admin-app-vitest`, and the new `ops-glance-vitest`
   job). Each SPA gains a `tsconfig.json` (extends repo-root
@@ -92,7 +92,7 @@ directly — they append a line here.
   so the root install needs the override. Also covers `ops-glance`'s existing
   `Build ops-glance bundle` = `npm run build` step, which runs `tsc --noEmit`.)
 - [A3.1] Add an `alembic` CI job: fresh Postgres service, `pip install -r
-  requirements-dev.txt`, then `python -m alembic upgrade head` followed by
+requirements-dev.txt`, then `python -m alembic upgrade head` followed by
   `python -m alembic check`. The baseline is wired so `alembic check` is
   **clean** (a named `include_object` allow-list in `alembic/env.py` covers the
   ~20 pre-Alembic indexes not declared on the models (`oneirodex/models/`) —
@@ -103,14 +103,14 @@ directly — they append a line here.
   reads it via the same resolution the app uses. Runs independently of
   `pytest-core` (no app fixtures needed).
   ✅ applied (CI reconcile wave #2 — new job `alembic-check` / "Alembic (upgrade
-  + check)". Mirrors `pytest-core`'s `postgres:16` service block + `env`
-  (`TEST_DATABASE_URL` on `oneirodextest`, `SECRET_KEY`, `FLASK_ENV: testing`),
-  Python 3.12, `pip install -r requirements-dev.txt`, then step `Alembic upgrade
-  head` = `python -m alembic upgrade head` and step `Alembic check (fail hard on
-  any diff)` = `python -m alembic check` — no `continue-on-error`, so a diff
-  fails the gate. Comment points at `docs/dev/alembic-baseline-notes.md`.
-  Verified on a scratch Postgres DB: `upgrade head` applied the baseline,
-  `alembic check` → "No new upgrade operations detected.")
+  - check)". Mirrors `pytest-core`'s `postgres:16` service block + `env`
+    (`TEST_DATABASE_URL` on `oneirodextest`, `SECRET_KEY`, `FLASK_ENV: testing`),
+    Python 3.12, `pip install -r requirements-dev.txt`, then step `Alembic upgrade
+head` = `python -m alembic upgrade head` and step `Alembic check (fail hard on
+any diff)` = `python -m alembic check` — no `continue-on-error`, so a diff
+    fails the gate. Comment points at `docs/dev/alembic-baseline-notes.md`.
+    Verified on a scratch Postgres DB: `upgrade head` applied the baseline,
+    `alembic check` → "No new upgrade operations detected.")
 - [B1.1] npm workspaces landed on `chore/modz-fe-w1`. The repo root
   (`package.json` `workspaces` array) is now the single install point and
   `package-lock.json` at the root is the **only** lockfile — the per-app
@@ -159,9 +159,9 @@ directly — they append a line here.
     `oneirodex/static/dist/*` is copied forward). If build time there matters,
     scope it with
     `npm ci --workspace=member-app --workspace=admin-app --workspace=ops-glance --include-workspace-root`.
-  ✅ applied (CI reconcile wave #2). Every JS job now caches on the repo-root
-  `package-lock.json` and installs via a single `Install workspace (repo-root
-  npm ci)` step with `working-directory: .`:
+    ✅ applied (CI reconcile wave #2). Every JS job now caches on the repo-root
+    `package-lock.json` and installs via a single `Install workspace (repo-root
+npm ci)` step with `working-directory: .`:
   - `member-app-vitest`, `admin-app-vitest`, `ops-glance-vitest`: the
     D-reconcile-1 `Install repo-root toolchain (tsc)` step is renamed to
     `Install workspace (repo-root npm ci)` (it now reifies the whole workspace
@@ -219,11 +219,13 @@ directly — they append a line here.
   ✅ applied (wave `chore/modz-ci3`, D-owed 3a). New job `shared-vitest` /
   "Shared vitest" in `ci-tests.yml`, modeled on `api-client-vitest` (both are
   `frontend/*` workspace packages): Node 22, `cache-dependency-path:
-  package-lock.json`, one `Install workspace (repo-root npm ci)` step
+package-lock.json`, one `Install workspace (repo-root npm ci)` step
   (`working-directory: .`), then `Run vitest` = `npm test` from
-  `defaults.run.working-directory: frontend/shared`. No `Typecheck` step —
-  `@oneirodex/ui` has no `build`/`typecheck` script (ships `.js`, not types).
-  Runs all 11 `frontend/shared/src/*.test.*` files; fails hard.
+  `defaults.run.working-directory: frontend/shared`. No `Typecheck` step at the
+  time — added later: Phase 3.3 converted `@oneirodex/ui` to TypeScript
+  (`strict: true`) with a `typecheck` script, so the job should now gain that
+  step alongside `Run vitest`. Runs all 11 `frontend/shared/src/*.test.*`
+  files; fails hard.
 - [D-owed 3b] `--cov-fail-under=35` applied to the `pytest-core` run (wave
   `chore/modz-ci3`). PR #33's merged `Pytest (core)` run (GH run
   `34408794615`) reported `TOTAL … 38%` line coverage for the hand-listed
