@@ -35,7 +35,7 @@ def test_attach_igdb_taxonomy_creates_missing_and_attaches():
         'player_perspectives': [{'name': 'First person'}],
     }
 
-    with patch('oneirodex.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
+    with patch('oneirodex.utils.services.scan_identify.get_or_create_entity', side_effect=fake_get_or_create):
         attached = attach_igdb_taxonomy_to_game(game, payload)
 
     assert attached['genres'] == ['BrandNewGenre']
@@ -66,7 +66,7 @@ def test_attach_igdb_taxonomy_unions_without_duplicating():
             return existing_genre
         return SimpleNamespace(name=kwargs[name_field])
 
-    with patch('oneirodex.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
+    with patch('oneirodex.utils.services.scan_identify.get_or_create_entity', side_effect=fake_get_or_create):
         attached = attach_igdb_taxonomy_to_game(
             game,
             {'genres': [{'name': 'Action'}, {'name': 'Adventure'}]},
@@ -76,7 +76,7 @@ def test_attach_igdb_taxonomy_unions_without_duplicating():
     assert attached['genres'] == ['Adventure']
 
 
-@patch('oneirodex.utils.game_core.fetch_game_by_igdb_id')
+@patch('oneirodex.utils.services.scan_identify.fetch_game_by_igdb_id')
 def test_ensure_manual_identify_taxonomy_fetches_and_attaches(mock_fetch):
     mock_fetch.return_value = [{
         'id': 1942,
@@ -98,7 +98,7 @@ def test_ensure_manual_identify_taxonomy_fetches_and_attaches(mock_fetch):
     def fake_get_or_create(model_class, name_field='name', **kwargs):
         return SimpleNamespace(name=kwargs[name_field])
 
-    with patch('oneirodex.utils.game_core.get_or_create_entity', side_effect=fake_get_or_create):
+    with patch('oneirodex.utils.services.scan_identify.get_or_create_entity', side_effect=fake_get_or_create):
         result = ensure_manual_identify_taxonomy(game, 1942)
 
     mock_fetch.assert_called_once_with(1942)

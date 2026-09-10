@@ -135,16 +135,16 @@ def test_apply_catalog_identity_stamps_steam_and_moby(mock_session):
     assert added.url_type == 'mobygames'
 
 
-@patch('oneirodex.utils.game_core.select_best_match')
+@patch('oneirodex.utils.services.scan_identify.select_best_match')
 @patch(
-    'oneirodex.utils.game_core.corroborate_igdb_with_catalogs',
+    'oneirodex.utils.services.scan_identify.corroborate_igdb_with_catalogs',
 )
-@patch('oneirodex.utils.game_core.notify_admins_new_game')
-@patch('oneirodex.utils.game_core.smart_process_images_for_game')
-@patch('oneirodex.utils.game_core.get_folder_size_in_bytes_updates', return_value=0)
-@patch('oneirodex.utils.game_core.read_first_nfo_content', return_value=None)
-@patch('oneirodex.utils.game_core.make_igdb_api_request')
-@patch('oneirodex.utils.game_core.create_game_instance')
+@patch('oneirodex.utils.services.scan_identify.notify_admins_new_game')
+@patch('oneirodex.utils.services.scan_identify.smart_process_images_for_game')
+@patch('oneirodex.utils.services.scan_identify.get_folder_size_in_bytes_updates', return_value=0)
+@patch('oneirodex.utils.services.scan_identify.read_first_nfo_content', return_value=None)
+@patch('oneirodex.utils.clients.igdb.make_igdb_api_request')
+@patch('oneirodex.utils.services.scan_identify.create_game_instance')
 def test_retrieve_catalog_disagreement_goes_to_review(
     mock_create,
     mock_api,

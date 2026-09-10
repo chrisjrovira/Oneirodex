@@ -500,34 +500,34 @@ class TestManualScanQueuesWhenBusy:
         with app.app_context():
             with app.test_request_context():
                 mock_session = {}
-                with patch('oneirodex.utilities.session', mock_session):
-                    with patch('oneirodex.utilities.flash') as mock_flash:
+                with patch('oneirodex.utils.services.scan_orchestration.session', mock_session):
+                    with patch('oneirodex.utils.services.scan_orchestration.flash') as mock_flash:
                         with patch(
-                            'oneirodex.utilities.redirect',
+                            'oneirodex.utils.services.scan_orchestration.redirect',
                             return_value='ok',
                         ):
                             with patch(
-                                'oneirodex.utilities.url_for',
+                                'oneirodex.utils.services.scan_orchestration.url_for',
                                 return_value='/scan',
                             ):
                                 with patch(
-                                    'oneirodex.utilities.get_allowed_base_directories',
+                                    'oneirodex.utils.services.scan_orchestration.get_allowed_base_directories',
                                     return_value=['/base'],
                                 ):
                                     with patch(
-                                        'oneirodex.utilities.is_safe_path',
+                                        'oneirodex.utils.services.scan_orchestration.is_safe_path',
                                         return_value=(True, None),
                                     ):
                                         with patch(
-                                            'oneirodex.utilities.os.path.exists',
+                                            'oneirodex.utils.services.scan_orchestration.os.path.exists',
                                             return_value=True,
                                         ):
                                             with patch(
-                                                'oneirodex.utilities.os.access',
+                                                'oneirodex.utils.services.scan_orchestration.os.access',
                                                 return_value=True,
                                             ):
                                                 with patch.dict(
-                                                    'oneirodex.utilities.current_app.config',
+                                                    'oneirodex.utils.services.scan_orchestration.current_app.config',
                                                     {
                                                         'BASE_FOLDER_POSIX': '/base',
                                                         'BASE_FOLDER_WINDOWS': '/base',

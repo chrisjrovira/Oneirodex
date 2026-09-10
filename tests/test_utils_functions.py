@@ -157,7 +157,7 @@ class TestFormatSize:
 class TestSquareImage:
     """Test cases for square_image function."""
     
-    @patch('oneirodex.utils.functions.PILImage')
+    @patch('oneirodex.utils.helpers.images.PILImage')
     def test_square_image_already_square(self, mock_pil):
         """Test square_image when image is already square."""
         # Mock image that's already the target size
@@ -169,7 +169,7 @@ class TestSquareImage:
         mock_image.thumbnail.assert_called_once_with((100, 100))
         assert result == mock_image
     
-    @patch('oneirodex.utils.functions.PILImage')
+    @patch('oneirodex.utils.helpers.images.PILImage')
     def test_square_image_needs_padding(self, mock_pil):
         """Test square_image when image needs padding."""
         # Mock image that needs padding
@@ -186,7 +186,7 @@ class TestSquareImage:
         mock_new_image.paste.assert_called_once()
         assert result == mock_new_image
     
-    @patch('oneirodex.utils.functions.PILImage')
+    @patch('oneirodex.utils.helpers.images.PILImage')
     def test_square_image_different_aspect_ratio(self, mock_pil):
         """Test square_image with different aspect ratios."""
         mock_image = MagicMock()
@@ -288,8 +288,8 @@ class TestGetFolderSizeInBytesUpdates:
     
     def test_get_folder_size_updates_single_file(self, db_session):
         """Test get_folder_size_in_bytes_updates with single file."""
-        with patch('oneirodex.utils.functions.get_allowed_base_directories', return_value=['/']):
-            with patch('oneirodex.utils.functions.is_safe_path', return_value=(True, None)):
+        with patch('oneirodex.utils.helpers.fs.get_allowed_base_directories', return_value=['/']):
+            with patch('oneirodex.utils.helpers.fs.is_safe_path', return_value=(True, None)):
                 with patch('os.path.isfile', return_value=True):
                     with patch('os.path.getsize', return_value=2048):
                         result = get_folder_size_in_bytes_updates('/path/to/file.txt')
@@ -297,8 +297,8 @@ class TestGetFolderSizeInBytesUpdates:
     
     def test_get_folder_size_updates_nonexistent_path(self, db_session):
         """Test get_folder_size_in_bytes_updates with non-existent path."""
-        with patch('oneirodex.utils.functions.get_allowed_base_directories', return_value=['/']):
-            with patch('oneirodex.utils.functions.is_safe_path', return_value=(True, None)):
+        with patch('oneirodex.utils.helpers.fs.get_allowed_base_directories', return_value=['/']):
+            with patch('oneirodex.utils.helpers.fs.is_safe_path', return_value=(True, None)):
                 with patch('os.path.exists', return_value=False):
                     with patch('builtins.print') as mock_print:
                         result = get_folder_size_in_bytes_updates('/nonexistent/path')
@@ -314,8 +314,8 @@ class TestGetFolderSizeInBytesUpdates:
             ('/test/normal', [], ['game.exe'])
         ]
         
-        with patch('oneirodex.utils.functions.get_allowed_base_directories', return_value=['/']):
-            with patch('oneirodex.utils.functions.is_safe_path', return_value=(True, None)):
+        with patch('oneirodex.utils.helpers.fs.get_allowed_base_directories', return_value=['/']):
+            with patch('oneirodex.utils.helpers.fs.is_safe_path', return_value=(True, None)):
                 with patch('os.path.isfile', return_value=False):
                     with patch('os.path.exists', return_value=True):
                         with patch('os.access', return_value=True):
@@ -409,7 +409,7 @@ class TestDownloadImage:
 
     def _allow_url(self, monkeypatch):
         monkeypatch.setattr(
-            'oneirodex.utils.functions.validate_user_outbound_http_url',
+            'oneirodex.utils.clients.images.validate_user_outbound_http_url',
             lambda url: (True, url),
         )
 
@@ -420,7 +420,7 @@ class TestDownloadImage:
         mock_response.content = b'fake_image_data'
         mock_get = MagicMock(return_value=mock_response)
         self._allow_url(monkeypatch)
-        monkeypatch.setattr('oneirodex.utils.functions.safe_get', mock_get)
+        monkeypatch.setattr('oneirodex.utils.clients.images.safe_get', mock_get)
 
         with patch('os.path.exists', return_value=True):
             with patch('os.access', return_value=True):
@@ -441,7 +441,7 @@ class TestDownloadImage:
         mock_response.content = b'fake_image_data'
         mock_get = MagicMock(return_value=mock_response)
         self._allow_url(monkeypatch)
-        monkeypatch.setattr('oneirodex.utils.functions.safe_get', mock_get)
+        monkeypatch.setattr('oneirodex.utils.clients.images.safe_get', mock_get)
 
         with patch('os.path.exists', return_value=True):
             with patch('os.access', return_value=True):
@@ -457,7 +457,7 @@ class TestDownloadImage:
         mock_response.status_code = 404
         self._allow_url(monkeypatch)
         monkeypatch.setattr(
-            'oneirodex.utils.functions.safe_get',
+            'oneirodex.utils.clients.images.safe_get',
             MagicMock(return_value=mock_response),
         )
 
@@ -472,7 +472,7 @@ class TestDownloadImage:
         mock_response.content = b'fake_image_data'
         self._allow_url(monkeypatch)
         monkeypatch.setattr(
-            'oneirodex.utils.functions.safe_get',
+            'oneirodex.utils.clients.images.safe_get',
             MagicMock(return_value=mock_response),
         )
 
@@ -493,7 +493,7 @@ class TestDownloadImage:
         """Test download_image handles request exceptions."""
         self._allow_url(monkeypatch)
         monkeypatch.setattr(
-            'oneirodex.utils.functions.safe_get',
+            'oneirodex.utils.clients.images.safe_get',
             MagicMock(side_effect=requests.exceptions.ConnectionError("Network error")),
         )
 
@@ -637,7 +637,7 @@ class TestLoadScanningFilterPatterns:
     def test_load_scanning_filter_patterns_empty_db(self, db_session):
         """Test load_scanning_filter_patterns with empty database."""
         # Mock empty database response
-        with patch('oneirodex.utils.functions.db.session.execute') as mock_execute:
+        with patch('oneirodex.utils.helpers.scan_filters.db.session.execute') as mock_execute:
             mock_scalars = MagicMock()
             mock_scalars.all.return_value = []
             mock_execute.return_value.scalars.return_value = mock_scalars
@@ -649,7 +649,7 @@ class TestLoadScanningFilterPatterns:
     def test_load_scanning_filter_patterns_db_error(self, db_session):
         """Test load_scanning_filter_patterns handles database errors."""
         from sqlalchemy.exc import SQLAlchemyError
-        with patch('oneirodex.utils.functions.db.session.execute', side_effect=SQLAlchemyError("DB Error")):
+        with patch('oneirodex.utils.helpers.scan_filters.db.session.execute', side_effect=SQLAlchemyError("DB Error")):
             with patch('builtins.print') as mock_print:
                 insensitive, sensitive = load_scanning_filter_patterns()
                 assert insensitive == []
