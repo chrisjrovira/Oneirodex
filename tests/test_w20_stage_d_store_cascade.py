@@ -487,16 +487,16 @@ def test_retrieve_and_save_game_stage_d_on_igdb_miss(
     }
 
     with patch(
-        'oneirodex.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.services.scan_identify.search_igdb_for_game',
         return_value=[],
     ), patch(
-        'oneirodex.utils.game_core.fetch_steam_title_by_app_id',
+        'oneirodex.utils.services.scan_identify.fetch_steam_title_by_app_id',
         return_value='Abandon Ship',
     ), patch(
         'oneirodex.utils.steam_lookup.fetch_steam_app_details',
         return_value=details,
     ), patch(
-        'oneirodex.utils.game_core.notify_admins_new_game',
+        'oneirodex.utils.services.scan_identify.notify_admins_new_game',
     ), patch(
         'oneirodex.utils.software_identify.search_steam_games',
         return_value=[],
@@ -507,7 +507,7 @@ def test_retrieve_and_save_game_stage_d_on_igdb_miss(
         'oneirodex.utils.software_identify.search_epic_games',
         return_value=[],
     ), patch(
-        'oneirodex.utils.game_core.get_folder_size_in_bytes_updates',
+        'oneirodex.utils.services.scan_identify.get_folder_size_in_bytes_updates',
         return_value=0,
     ):
         result = retrieve_and_save_game(
@@ -537,7 +537,7 @@ def test_retrieve_skips_stage_d_when_propose_only(
     path = f'/test/stage-d/ProposeOnly-{uuid4().hex[:4]}'
 
     with patch(
-        'oneirodex.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.services.scan_identify.search_igdb_for_game',
         return_value=[],
     ), patch(
         'oneirodex.utils.software_identify.try_stage_d_store_identify',
@@ -545,7 +545,7 @@ def test_retrieve_skips_stage_d_when_propose_only(
         'oneirodex.utils.software_identify.enrich_proposal_with_software',
         side_effect=lambda p, *_a, **_k: p,
     ), patch(
-        'oneirodex.utils.game_core.write_match_proposal',
+        'oneirodex.utils.services.scan_identify.write_match_proposal',
         return_value=True,
     ):
         result = retrieve_and_save_game(

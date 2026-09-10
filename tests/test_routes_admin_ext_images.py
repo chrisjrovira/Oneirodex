@@ -364,7 +364,7 @@ class TestDownloadImagesAPI:
         db_session.add(pending_image)
         db_session.flush()
 
-        with patch('oneirodex.utils.functions.download_image') as mock_download, \
+        with patch('oneirodex.utils.clients.images.download_image') as mock_download, \
              patch('os.path.join') as mock_join, \
              patch('oneirodex.routes_admin_ext.images.current_app') as mock_app:
             
@@ -474,7 +474,7 @@ class TestDownloadImagesAPI:
         db_session.add(pending_image)
         db_session.flush()
 
-        with patch('oneirodex.utils.functions.download_image') as mock_download:
+        with patch('oneirodex.utils.clients.images.download_image') as mock_download:
             mock_download.side_effect = Exception("Download failed")
             
             response = client.post('/admin/api/download_images', 

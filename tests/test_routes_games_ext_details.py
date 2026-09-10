@@ -405,7 +405,7 @@ class TestGameDetailsUtilityFunctionLogging:
         """Test that get_game_by_uuid function logs appropriately."""
         with app.app_context():
             # Need to set up Flask-Login context
-            with patch('oneirodex.utils.game_core.log_system_event') as mock_log:
+            with patch('oneirodex.utils.services.game_lookup.log_system_event') as mock_log:
                 from oneirodex.utils.game_core import get_game_by_uuid
                 result = get_game_by_uuid(test_game.uuid)
         
@@ -423,7 +423,7 @@ class TestGameDetailsUtilityFunctionLogging:
         """Test logging when game is not found."""
         nonexistent_uuid = str(uuid4())
         with app.app_context():
-            with patch('oneirodex.utils.game_core.log_system_event') as mock_log:
+            with patch('oneirodex.utils.services.game_lookup.log_system_event') as mock_log:
                 from oneirodex.utils.game_core import get_game_by_uuid
                 result = get_game_by_uuid(nonexistent_uuid)
         
