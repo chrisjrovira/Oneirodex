@@ -1,11 +1,11 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { AdminTabs } from './AdminTabs'
+import { AdminTabs } from './components/AdminTabs'
 import { App } from './App'
-import { EmulatorFirmwarePanel } from './EmulatorFirmwarePanel'
-import { BrowserPlayerPilot } from './BrowserPlayerPilot'
-import { ImportLeafLibraries } from './ImportLeafLibraries'
-import { ProposeLeafLibraries } from './ProposeLeafLibraries'
+import { EmulatorFirmwarePanel } from './components/EmulatorFirmwarePanel'
+import { BrowserPlayerPilot } from './components/BrowserPlayerPilot'
+import { ImportLeafLibraries } from './components/ImportLeafLibraries'
+import { ProposeLeafLibraries } from './components/ProposeLeafLibraries'
 import './styles.css'
 
 const root = document.getElementById('admin-app-root')

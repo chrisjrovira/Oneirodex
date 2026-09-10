@@ -3,6 +3,11 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
+/* PR-4 moved the flat `src/` into pages/ components/ api/ hooks/. This guard
+ * still lives at `src/` root, so it walks the subtree to keep covering every
+ * `.jsx`. Baseline rows stay keyed by basename — they are unique across the
+ * admin `src/` tree. */
+
 /**
  * One status language for admin (GT-B33) — a ratchet, not a cleanup mandate.
  *
@@ -47,6 +52,21 @@ import { describe, expect, it } from 'vitest'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
+/* basename -> absolute path, gathered recursively from `src/`. */
+function collectJsx(dir, acc) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules') continue
+      collectJsx(full, acc)
+    } else if (entry.name.endsWith('.jsx') && !entry.name.includes('.test.')) {
+      acc.set(entry.name, full)
+    }
+  }
+  return acc
+}
+const JSX_BY_NAME = collectJsx(HERE, new Map())
+
 /* Recorded 2026-08-25 after the GT-B33 conversion: 59 → 27 sites, 21 → 16
  * files, five files at zero. What remains is largely the deliberate categories
  * listed above rather than debt. */
@@ -78,14 +98,12 @@ const EXEMPT = new Set(['PageStatus.jsx'])
 const STATUS_ROLE = /role="(?:status|alert)"/g
 
 function sourceFiles() {
-  return readdirSync(HERE)
-    .filter((name) => name.endsWith('.jsx'))
-    .filter((name) => !name.includes('.test.'))
-    .filter((name) => !EXEMPT.has(name))
+  return [...JSX_BY_NAME.keys()].filter((name) => !EXEMPT.has(name))
 }
 
 function countStatusRoles(name) {
-  const source = readFileSync(join(HERE, name), 'utf8')
+  const full = JSX_BY_NAME.get(name) ?? join(HERE, name)
+  const source = readFileSync(full, 'utf8')
   return (source.match(STATUS_ROLE) || []).length
 }
 

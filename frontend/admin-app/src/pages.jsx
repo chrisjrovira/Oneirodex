@@ -1,27 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { csrfHeaders, getJson } from './adminApi'
-import { DataTable } from './DataTable'
-import { DupeGlance } from './DupeGlance'
-import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
-import { OpenPathModal } from './OpenPathModal'
+import { csrfHeaders, getJson } from './api/adminApi'
+import { DataTable } from './components/DataTable'
+import { DupeGlance } from './components/DupeGlance'
+import { HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './components/navConfig'
+import { OpenPathModal } from './components/OpenPathModal'
 import { Button, PageStatus } from '@oneirodex/ui'
-import { ImportLeafLibraries } from './ImportLeafLibraries'
-import { ProposeLeafLibraries } from './ProposeLeafLibraries'
-import { ScanConflictModal } from './ScanConflictModal'
+import { ImportLeafLibraries } from './components/ImportLeafLibraries'
+import { ProposeLeafLibraries } from './components/ProposeLeafLibraries'
+import { ScanConflictModal } from './components/ScanConflictModal'
 import {
   hasActiveScan,
   isScanBusyStatus,
   isScanQueuedStatus,
   isScanRunning,
   normalizeScanJobsList,
-} from './scanQueuePolicy'
+} from './components/scanQueuePolicy'
 import { scanJobsStructureSignature } from '../../../oneirodex/setup/default_theme/js/scanJobsDom.js'
-import { useLibraryRefreshAll } from './useLibraryRefreshAll'
-import { useLibraryScan } from './useLibraryScan'
-import { useVisibilityPoll } from './useVisibilityPoll'
+import { useLibraryRefreshAll } from './hooks/useLibraryRefreshAll'
+import { useLibraryScan } from './hooks/useLibraryScan'
+import { useVisibilityPoll } from './hooks/useVisibilityPoll'
 import { showToast } from './utils/toast'
-import { DashboardBoard } from './DashboardBoard'
+import { DashboardBoard } from './components/DashboardBoard'
 import {
   MeterBar,
   MetricTile,
@@ -40,7 +40,7 @@ import {
   percentHealthTone,
   awakeTone,
   scansActiveTone,
-} from './opsWidgets'
+} from './components/opsWidgets'
 
 /**
  * Dashboard glance tables (UX-C8 · W27-C1). Hand-rolled `od-ops-table` blocks

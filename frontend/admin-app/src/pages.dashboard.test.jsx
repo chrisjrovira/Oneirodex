@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach } from 'vitest'
 import { DashboardPage } from './pages'
-import { DASHBOARD_STORAGE_KEY } from './dashboardLayout'
+import { DASHBOARD_STORAGE_KEY } from './components/dashboardLayout'
 
 beforeEach(() => {
   const store = new Map()
