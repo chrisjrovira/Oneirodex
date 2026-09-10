@@ -78,8 +78,8 @@ def app():
         )
     
     # Enhanced safety checks: ensure we're not using production database
-    production_indicators = ['oneirodex', 'oneirodex', 'prod', 'production']
-    test_indicators = ['test', 'testing', 'oneirodextest', 'oneirodextest']
+    production_indicators = ['oneirodex', 'prod', 'production']
+    test_indicators = ['test', 'testing', 'oneirodextest']
     
     # Check if URL contains production indicators without test indicators
     contains_production = any(indicator in test_db_url.lower() for indicator in production_indicators)
@@ -175,7 +175,7 @@ def _truncate_all_tables():
     `ONEIRODEX_KEEP_TEST_DATA=1` skips it, for when the leftover rows *are* the thing
     being investigated.
     """
-    if os.getenv('ONEIRODEX_KEEP_TEST_DATA') == '1' or os.getenv('ONEIRODEX_KEEP_TEST_DATA') == '1':
+    if os.getenv('ONEIRODEX_KEEP_TEST_DATA') == '1':
         print('PYTEST: KEEP_TEST_DATA=1 — leaving existing rows in place')
         return
 
