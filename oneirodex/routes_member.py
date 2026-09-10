@@ -2,10 +2,15 @@
 
 from pathlib import Path
 
-from flask import Blueprint, current_app, redirect, send_from_directory, url_for
-from flask_login import login_required
+from flask import (
+    Blueprint, current_app, jsonify, redirect, request, send_from_directory,
+    url_for,
+)
+from flask_login import current_user, login_required
 
 from oneirodex import cache
+from oneirodex.utils.browse_payload import build_browse_payload
+from oneirodex.utils.browse_query import run_browse_query
 from oneirodex.utils.member_spa import render_member_spa
 from oneirodex.utils.processors import get_global_settings
 
@@ -21,6 +26,24 @@ def inject_settings():
     merges these flags, so a forgotten processor cannot hide Help / Trailers.
     """
     return get_global_settings()
+
+
+@member_bp.route('/browse_games')
+@login_required
+def browse_games():
+    """Library grid for the member SPA.
+
+    Arg parsing, filters and the per-page batch lookups are
+    :func:`oneirodex.utils.browse_query.run_browse_query`; the response body
+    (populated or guaranteed-empty, same shape either way) is
+    :func:`oneirodex.utils.browse_payload.build_browse_payload`.
+
+    Kept at the exact path ``/browse_games`` -- the member SPA
+    (``frontend/member-app/src/api/browse.js``) hits the raw URL, never
+    ``url_for``. Moved off the retired ``'main'`` blueprint in wave A2.1f.
+    """
+    result = run_browse_query(request.args, current_user)
+    return jsonify(build_browse_payload(result))
 
 
 @member_bp.route('/systems')

@@ -880,7 +880,7 @@ def handle_auto_scan(auto_form):
         if not library:
             logger.warning("Selected library does not exist. Please select a valid library.")
             flash('Selected library does not exist. Please select a valid library.', 'danger')
-            return redirect(url_for('main.scan_management', active_tab='auto'))
+            return redirect(url_for('admin2.scan_management', active_tab='auto'))
 
         folder_path = (auto_form.folder_path.data or '').strip()
         scan_mode = auto_form.scan_mode.data
@@ -892,7 +892,7 @@ def handle_auto_scan(auto_form):
         allowed_bases = get_allowed_base_directories(current_app)
         if not allowed_bases:
             flash('Service configuration error: No allowed base directories configured.', 'danger')
-            return redirect(url_for('main.scan_management', active_tab='auto'))
+            return redirect(url_for('admin2.scan_management', active_tab='auto'))
 
         # folder_path is relative to whichever scan location the admin browsed
         # (the OS base folder unless they picked another declared root).
@@ -903,19 +903,19 @@ def handle_auto_scan(auto_form):
         )
         if root_error:
             flash(f'Service configuration error: {root_error}', 'danger')
-            return redirect(url_for('main.scan_management', active_tab='auto'))
+            return redirect(url_for('admin2.scan_management', active_tab='auto'))
 
         is_safe, error_message = is_safe_path(full_path, allowed_bases)
         if not is_safe:
             logger.warning(f"Security error: Auto-scan path validation failed for {full_path}: {error_message}")
             flash(f"Access denied: {error_message}", 'danger')
-            return redirect(url_for('main.scan_management', active_tab='auto'))
+            return redirect(url_for('admin2.scan_management', active_tab='auto'))
 
         if not os.path.exists(full_path) or not os.access(full_path, os.R_OK):
             flash(f"Cannot access folder: {full_path}. Please check the path and permissions.", 'danger')
             logger.warning("Cannot access folder: %s. Check the path and permissions.", full_path)
             session['active_tab'] = 'auto'
-            return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='auto'))
+            return redirect(url_for('admin2.scan_management', library_uuid=library_uuid, active_tab='auto'))
 
         force_raw = request.form.get('force_parallel') or request.args.get('force_parallel')
         policy_raw = request.form.get('queue_policy') or request.args.get('queue_policy')
@@ -947,7 +947,7 @@ def handle_auto_scan(auto_form):
     else:
         flash(f"Auto-scan form validation failed: {auto_form.errors}", 'danger')
         logger.warning(f"Auto-scan form validation failed: {auto_form.errors}")
-    return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='auto'))
+    return redirect(url_for('admin2.scan_management', library_uuid=library_uuid, active_tab='auto'))
 
 
 
@@ -972,7 +972,7 @@ def handle_manual_scan(manual_form):
 
         if not library_uuid:
             flash('Please select a library.', 'danger')
-            return redirect(url_for('main.scan_management', active_tab='manual'))
+            return redirect(url_for('admin2.scan_management', active_tab='manual'))
 
         # Store library_uuid in session for use in identify page
         session['selected_library_uuid'] = library_uuid
@@ -982,7 +982,7 @@ def handle_manual_scan(manual_form):
         allowed_bases = get_allowed_base_directories(current_app)
         if not allowed_bases:
             flash('Service configuration error: No allowed base directories configured.', 'danger')
-            return redirect(url_for('main.scan_management', active_tab='manual'))
+            return redirect(url_for('admin2.scan_management', active_tab='manual'))
 
         from oneirodex.utils.library_roots import resolve_scan_path
 
@@ -991,7 +991,7 @@ def handle_manual_scan(manual_form):
         )
         if root_error:
             flash(f'Service configuration error: {root_error}', 'danger')
-            return redirect(url_for('main.scan_management', active_tab='manual'))
+            return redirect(url_for('admin2.scan_management', active_tab='manual'))
         logger.info(f"Manual scan form submitted. Full path: {full_path}, Library UUID: {library_uuid}")
 
         # Security validation: ensure the constructed path is within allowed directories
@@ -999,11 +999,11 @@ def handle_manual_scan(manual_form):
         if not is_safe:
             logger.warning(f"Security error: Manual scan path validation failed for {full_path}: {error_message}")
             flash(f"Access denied: {error_message}", 'danger')
-            return redirect(url_for('main.scan_management', active_tab='manual'))
+            return redirect(url_for('admin2.scan_management', active_tab='manual'))
 
         if not (os.path.exists(full_path) and os.access(full_path, os.R_OK)):
             flash("Folder does not exist or cannot be accessed.", "danger")
-            return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))
+            return redirect(url_for('admin2.scan_management', library_uuid=library_uuid, active_tab='manual'))
 
         # Busy → same queue contract as Auto Scan (queue by default; admin may force).
         # Idle Manual remains identify "List Games" (does not start a ScanJob).
@@ -1034,7 +1034,7 @@ def handle_manual_scan(manual_form):
                 flash_cat = 'warning'
             flash(result['message'], flash_cat)
             session['active_tab'] = 'manual'
-            return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))
+            return redirect(url_for('admin2.scan_management', library_uuid=library_uuid, active_tab='manual'))
 
         # Check write permissions if local metadata writing is enabled
         from oneirodex.utils.local_metadata import check_library_write_permissions
@@ -1051,7 +1051,7 @@ def handle_manual_scan(manual_form):
                 session['permission_errors'] = failed_paths
                 session['permission_check_path'] = full_path
                 flash('Write permission check failed. Please review the permission errors.', 'danger')
-                return redirect(url_for('main.scan_management', active_tab='manual', show_permissions_modal='true'))
+                return redirect(url_for('admin2.scan_management', active_tab='manual', show_permissions_modal='true'))
 
         logger.info("Folder exists and can be accessed.")
         insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
@@ -1074,7 +1074,7 @@ def handle_manual_scan(manual_form):
             supported_extensions = [file_type.value for file_type in allowed_file_types]
             if not supported_extensions:
                 flash("No allowed file types defined in the database.", "danger")
-                return redirect(url_for('main.scan_management', active_tab='manual'))
+                return redirect(url_for('admin2.scan_management', active_tab='manual'))
 
             games_with_paths = get_game_names_from_files(full_path, supported_extensions, insensitive_patterns, sensitive_patterns)
         session['game_paths'] = {game['name']: game['full_path'] for game in games_with_paths}
@@ -1087,7 +1087,7 @@ def handle_manual_scan(manual_form):
         flash('Manual scan form validation failed.', 'danger')
 
     logger.debug("Game paths: %s", session.get('game_paths', {}))
-    return redirect(url_for('main.scan_management', library_uuid=library_uuid, active_tab='manual'))
+    return redirect(url_for('admin2.scan_management', library_uuid=library_uuid, active_tab='manual'))
 
 
 __all__ = [

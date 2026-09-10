@@ -15,4 +15,4 @@ from . import admin2_bp
 @login_required
 @admin_required
 def library_tools_page():
-    return redirect(url_for('main.scan_management', active_tab='tools'))
+    return redirect(url_for('admin2.scan_management', active_tab='tools'))

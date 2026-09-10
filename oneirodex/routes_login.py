@@ -41,18 +41,16 @@ from oneirodex import cache
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from urllib.parse import urlparse
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from itsdangerous import SignatureExpired, BadSignature
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
+
+from oneirodex.utils.tokens import get_serializer
 
 
 login_bp = Blueprint('login', __name__)
 
 _INVALID_CREDS = 'Invalid username or password. USERNAMES ARE CASE SENSITIVE!'
-
-def get_serializer():
-    """Get URLSafeTimedSerializer with current app's secret key."""
-    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
 
 def is_smtp_configured():
     """Check if SMTP settings are properly configured."""

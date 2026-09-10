@@ -191,7 +191,7 @@ def test_library_deletion_worker_actually_deletes(app, db_session):
 @pytest.mark.parametrize(
     'module_name',
     [
-        'oneirodex.routes',
+        'oneirodex.routes_admin_ext.scan_management',
         'oneirodex.routes_apis.game',
         'oneirodex.routes_games_ext.add',
         'oneirodex.routes_games_ext.edit',

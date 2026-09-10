@@ -255,7 +255,7 @@ def add_game_manual():
             )
             
             if from_unmatched:
-                return redirect(url_for('main.scan_management', active_tab='unmatched'))
+                return redirect(url_for('admin2.scan_management', active_tab='unmatched'))
             else:
                 return redirect(url_for('library.library'))
         except SQLAlchemyError as e:
@@ -370,4 +370,4 @@ def link_existing_game():
         flash('An error occurred while linking the game. Please try again.', 'error')
         return back_to_identify()
 
-    return redirect(url_for('main.scan_management', active_tab='unmatched'))
+    return redirect(url_for('admin2.scan_management', active_tab='unmatched'))
