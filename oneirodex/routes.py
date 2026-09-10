@@ -31,8 +31,6 @@ from oneirodex.utils.auth import admin_required
 from oneirodex.utils.unmatched import handle_delete_unmatched
 from oneirodex.utils.processors import get_global_settings
 from oneirodex.utils.library_acl import apply_game_access_filters
-from oneirodex.utils.browse_query import run_browse_query
-from oneirodex.utils.browse_payload import build_browse_payload
 bp = Blueprint('main', __name__)
 
 def get_serializer():
@@ -47,20 +45,6 @@ has_initialized_setup = False
 def inject_settings():
     """Context processor to inject global settings into templates"""
     return get_global_settings()
-
-
-@bp.route('/browse_games')
-@login_required
-def browse_games():
-    """Library grid for the member SPA.
-
-    Arg parsing, filters and the per-page batch lookups are
-    :func:`oneirodex.utils.browse_query.run_browse_query`; the response body
-    (populated or guaranteed-empty, same shape either way) is
-    :func:`oneirodex.utils.browse_payload.build_browse_payload`.
-    """
-    result = run_browse_query(request.args, current_user)
-    return jsonify(build_browse_payload(result))
 
 
 @bp.route('/admin/scan_management', methods=['GET'])
