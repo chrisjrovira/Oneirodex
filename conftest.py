@@ -319,6 +319,43 @@ def db_session(app):
                     pass
 
 
+# ---------------------------------------------------------------------------
+# Auto-markers (pytest.ini declares `database` and `slow`; --strict-markers is on)
+# ---------------------------------------------------------------------------
+
+# Conservative `slow` list: only tests whose *own* work — filesystem theme
+# copies, redirect-chain walks, mocked-network retry loops — pushed them past
+# ~20s of call time in the 2026-09-10 re-baseline (`--durations`). Not derived
+# from timings at collection time (those move with the box); revisit from a
+# fresh `--durations` when the set visibly drifts.
+_SLOW_NODEIDS = (
+    'test_init_manager_themes.py::TestSetupDefaultTheme',
+    'test_init_manager_themes.py::test_install_preset_themes_uses_the_shipped_source',
+    'test_ssrf_hardening.py::test_redirect_chain_is_bounded',
+    'test_ssrf_hardening.py::test_post_body_is_not_replayed_on_a_303',
+    'test_ssrf_hardening.py::test_relative_redirect_resolves_against_current_hop',
+    'test_providers_steamgriddb.py::test_fetch_image_mocked',
+    'test_gaming_news_feeds.py::TestFeedApi::test_response_lists_the_configured_sources',
+    'test_indexer_registry.py::test_enable_presets_copies_without_mutating_pack',
+)
+
+
+def pytest_collection_modifyitems(config, items):
+    """Tag every test that reaches Postgres `database`, and the known-slow ones `slow`.
+
+    `database` is derived, not hand-maintained: a test gets it whenever
+    `db_session` is in its resolved fixture graph — directly, or through
+    `configured_install` / `global_settings` / `admin_user` / any fixture that
+    itself requests `db_session`. `-m "not database"` then selects the pure
+    unit tests, and `-m database` the ones that need `oneirodex-review-db` up.
+    """
+    for item in items:
+        if 'db_session' in getattr(item, 'fixturenames', ()):  # noqa: SIM118
+            item.add_marker('database')
+        if any(frag in item.nodeid for frag in _SLOW_NODEIDS):
+            item.add_marker('slow')
+
+
 @pytest.fixture(scope='function')
 def client(app):
     """Create a test client for the Flask application."""

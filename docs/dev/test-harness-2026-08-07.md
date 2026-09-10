@@ -143,3 +143,12 @@ a boot or Admin → Reset Default Themes rebuilds it).
   Accumulation is still worth removing on its own merits — it makes runs slower
   and every unscoped assertion a latent failure. It is no longer blocking a
   green suite, so it should be done deliberately rather than under pressure.
+
+  **Done, 2026-09-10.** `db_session` now wraps each test in a rolled-back
+  SAVEPOINT bound to one connection. This is the change this note said not to
+  make *for the 23 failures* — those causes were fixed on their own — done
+  later on its own merits. See
+  [test-harness-2026-09-10.md](test-harness-2026-09-10.md) for the SAVEPOINT
+  model, the savepoint-restart listener and exception-safe teardown it needs,
+  and the per-clean-database fallout (`configured_install` / `global_settings`
+  preconditions the suite used to inherit from an earlier file).
