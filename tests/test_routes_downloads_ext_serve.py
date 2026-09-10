@@ -85,7 +85,7 @@ def sample_download_request(db_session, authenticated_user, test_game):
 class TestDownloadZipRoute:
     """Test the Flask download_zip route (should always return error since ASGI handles downloads)."""
 
-    def test_download_zip_requires_login(self, client):
+    def test_download_zip_requires_login(self, client, configured_install):
         """Test that download route requires authentication."""
         response = client.get('/download_zip/1')
         assert response.status_code == 302

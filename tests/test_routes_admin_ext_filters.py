@@ -43,7 +43,7 @@ def regular_user(db_session):
 
 class TestEditFiltersRoute:
     
-    def test_edit_filters_requires_login(self, client):
+    def test_edit_filters_requires_login(self, client, configured_install):
         """Test that edit_filters requires login."""
         response = client.get('/admin/edit_filters')
         assert response.status_code == 302
@@ -204,7 +204,7 @@ class TestEditFiltersRoute:
 
 class TestDeleteFilterRoute:
     
-    def test_delete_filter_requires_login(self, client):
+    def test_delete_filter_requires_login(self, client, configured_install):
         """Test that delete_filter requires login."""
         response = client.get('/delete_filter/1')
         assert response.status_code == 302

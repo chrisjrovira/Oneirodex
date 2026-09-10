@@ -42,7 +42,7 @@ def regular_user(db_session):
 
 class TestAdminHelpRoute:
     
-    def test_admin_help_requires_login(self, client):
+    def test_admin_help_requires_login(self, client, configured_install):
         """Test that admin help page requires login."""
         response = client.get('/admin/help')
         assert response.status_code == 302
@@ -142,7 +142,7 @@ class TestAdminHelpRoute:
         response_delete = client.delete('/admin/help')
         assert response_delete.status_code == 405  # Method Not Allowed
     
-    def test_admin_help_decorators_applied(self, client):
+    def test_admin_help_decorators_applied(self, client, configured_install):
         """Test that both login_required and admin_required decorators are applied."""
         # Test without any authentication - should redirect due to login_required
         response = client.get('/admin/help')

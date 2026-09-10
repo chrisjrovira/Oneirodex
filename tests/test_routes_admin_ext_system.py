@@ -979,7 +979,7 @@ class TestSystemIntegrationExtended:
         assert '/admin/ops' in response.headers['Location']
     
     @patch('oneirodex.routes_admin_ext.system.log_system_event')
-    def test_error_handling_with_database_rollback(self, mock_log, client, admin_user, sample_discovery_sections, db_session):
+    def test_error_handling_with_database_rollback(self, mock_log, client, admin_user, sample_discovery_sections, db_session, global_settings):
         """Test that database errors are handled properly with rollback."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)

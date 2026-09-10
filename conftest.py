@@ -251,36 +251,52 @@ def db_session(app):
             sa_orm.sessionmaker(
                 bind=connection,
                 join_transaction_mode='create_savepoint',
-                expire_on_commit=False,
                 future=True,
+                # No `expire_on_commit=False`. Keeping objects unexpired after a
+                # `db_session.commit()` hands the test the *pre-commit* Python
+                # values — a tz-aware datetime the column stores naive, a
+                # relationship a concurrent writer has since changed — instead
+                # of what a fresh query returns. Flask-SQLAlchemy's own session
+                # expires on commit; matching that keeps a test reading the
+                # database, not its own stale identity map.
             ),
             scopefunc=_app_ctx_id,
         )
         db.session = test_session
-        db.session.begin_nested()
+        # The session for *this* (the fixture's) app context. The per-test
+        # SAVEPOINT and the restart listener both belong to it alone. A Flask
+        # test-client request pushes its own app context, so `scopefunc=
+        # _app_ctx_id` hands it a *separate* short-lived session bound to the
+        # same connection; that one manages its own savepoints, is `.remove()`d
+        # when the request context pops, and must NOT get the restart listener
+        # (its product-code `with db.session.begin_nested():` blocks are often
+        # the only nested transaction it has, and re-arming inside their
+        # `__exit__` raises "Can't operate on closed transaction inside context
+        # manager").
+        bound_session = test_session()
+        bound_session.begin_nested()
 
         def _restart_savepoint(sess, trans):
-            # Re-open a per-test SAVEPOINT only when the one that just ended
-            # left the session with *no* nested transaction at all — i.e. a
-            # `db.session.commit()` in a test released our per-test savepoint.
-            # `not sess.in_nested_transaction()` is the load-bearing check:
-            # `join_transaction_mode='create_savepoint'` makes the session's
-            # own root transaction report `nested`, so a parent-based guard
-            # (`not trans._parent.nested`) fires *inside* a product-code
-            # `with db.session.begin_nested():` __exit__ and corrupts that
-            # context manager. Keying on whether any savepoint is still
-            # outstanding leaves product-owned nested blocks alone.
+            # Re-open the per-test SAVEPOINT once the previous one has fully
+            # ended — a `db.session.commit()` in a test releases it and lands
+            # here with `in_nested_transaction()` False. A product-code
+            # `with bound_session.begin_nested():` in a fixture also fires this
+            # event from its `__exit__`, but the per-test SAVEPOINT is still
+            # outstanding under it, so `in_nested_transaction()` is True and it
+            # is left alone. (`not trans._parent.nested` cannot be the guard:
+            # `join_transaction_mode='create_savepoint'` makes the root join
+            # itself report `nested`.)
             if trans.nested and not sess.in_nested_transaction():
                 sess.begin_nested()
 
-        event.listen(test_session, 'after_transaction_end', _restart_savepoint)
+        event.listen(bound_session, 'after_transaction_end', _restart_savepoint)
 
         try:
             yield test_session
         finally:
             try:
                 event.remove(
-                    test_session, 'after_transaction_end', _restart_savepoint
+                    bound_session, 'after_transaction_end', _restart_savepoint
                 )
             except Exception:  # noqa: BLE001
                 pass

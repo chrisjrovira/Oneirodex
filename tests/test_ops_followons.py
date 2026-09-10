@@ -141,7 +141,7 @@ def test_oidc_status_local_optional(client, app, admin):
     assert body['ready'] is False
 
 
-def test_vr_sw_route(client, app):
+def test_vr_sw_route(client, app, configured_install):
     app.config['ENABLE_VR_BROWSE'] = True
     resp = client.get('/vr/sw.js')
     assert resp.status_code == 200

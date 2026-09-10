@@ -146,7 +146,7 @@ def sample_newsletter(db_session, admin_user):
 
 class TestNewsletterRoute:
     
-    def test_newsletter_requires_login(self, client):
+    def test_newsletter_requires_login(self, client, configured_install):
         """Test that newsletter page requires login."""
         response = client.get('/admin/newsletter')
         assert response.status_code == 302
@@ -285,7 +285,7 @@ class TestNewsletterRoute:
 
 class TestViewNewsletterRoute:
     
-    def test_view_newsletter_requires_login(self, client):
+    def test_view_newsletter_requires_login(self, client, configured_install):
         """Test that view newsletter page requires login."""
         response = client.get('/admin/newsletter/1')
         assert response.status_code == 302

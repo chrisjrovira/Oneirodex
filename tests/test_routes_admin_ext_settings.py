@@ -240,7 +240,7 @@ class TestBuildCurrentSettings:
 class TestSettingsRoutes:
     """Test the settings route handlers."""
     
-    def test_get_settings_requires_login(self, client):
+    def test_get_settings_requires_login(self, client, configured_install):
         """Test that GET settings requires login."""
         response = client.get('/admin/settings')
         assert response.status_code == 302
@@ -347,7 +347,7 @@ class TestSettingsRoutes:
         mock_cache_delete.assert_called_once_with('global_settings')
 
     @patch('oneirodex.routes_admin_ext.settings.db.session.commit')
-    def test_update_settings_database_error(self, mock_commit, client, admin_user):
+    def test_update_settings_database_error(self, mock_commit, client, admin_user, global_settings):
         """Test settings update with database error."""
         mock_commit.side_effect = Exception('Database error')
         

@@ -41,7 +41,12 @@ def test_games(db_session, test_libraries):
             name=f'Test Game {i}',
             summary=f'Test summary for game {i}',
             rating=80.0 + i if i > 0 else None,
-            times_downloaded=i * 10,
+            # (i + 1) so every seeded game has a non-zero download count. The
+            # `most_downloaded` query filters `times_downloaded > 0` and the
+            # test asserts it sees all five; `i * 10` left game 0 at zero and
+            # only passed while an unrelated row in the shared database filled
+            # the gap.
+            times_downloaded=(i + 1) * 10,
             first_release_date=datetime(2020, 1, 1 + i),
             library_uuid=library.uuid
         )

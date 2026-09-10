@@ -156,7 +156,7 @@ class TestSmtpSettings:
         assert args[0] == 'admin/admin_manage_smtp_settings.html'
         assert kwargs['settings'].smtp_server == test_settings.smtp_server
     
-    def test_post_requires_login(self, client):
+    def test_post_requires_login(self, client, configured_install):
         """Test that POST request requires login."""
         response = client.post('/admin/smtp_settings', json={})
         assert response.status_code == 302
@@ -462,7 +462,7 @@ class TestSmtpSettings:
         assert response_data['success'] is False
         assert response_data['message'] == 'Invalid port number. Must be between 1 and 65535'
     
-    def test_post_database_commit_error(self, client, admin_user, db_session):
+    def test_post_database_commit_error(self, client, admin_user, db_session, global_settings):
         """Test POST request with database commit error."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
@@ -527,7 +527,7 @@ class TestSmtpSettings:
 class TestSmtpTest:
     """Test the smtp_test route."""
     
-    def test_post_requires_login(self, client):
+    def test_post_requires_login(self, client, configured_install):
         """Test that POST request requires login."""
         response = client.post('/admin/smtp_test')
         assert response.status_code == 302
