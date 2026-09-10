@@ -1,4 +1,10 @@
 {
+  // ops-glance SPA — converted to .ts/.tsx in Phase 3.3. `strict: true` is an
+  // override over the shared on-ramp base (which stays `strict: false` until
+  // every SPA is converted).
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true
+  },
   "include": ["src"]
 }

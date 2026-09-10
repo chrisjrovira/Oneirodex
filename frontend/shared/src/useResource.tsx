@@ -1,5 +1,15 @@
 import { useCallback } from 'react'
-import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  hashKey,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryKey,
+  type QueryObserverResult,
+  type RefetchOptions,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from '@tanstack/react-query'
 
 /**
  * `useResource` — the shared read hook for SPA pages, `@oneirodex/ui`.
@@ -32,22 +42,43 @@ import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-
  *
  * `opts` is passed straight through to `useQuery` (`enabled`, `staleTime`,
  * `select`, …). The one `@oneirodex/ui`-shaped default is that pages provide
- * the `QueryClient`; member-app does in `main.jsx`, admin-app / ops-glance can
+ * the `QueryClient`; member-app does in its `main` entry, admin-app / ops-glance can
  * adopt this in a later wave once they wrap their trees.
- *
- * @template T
- * @param {readonly unknown[]} key           react-query queryKey
- * @param {(context: object) => Promise<T>} fetcher
- * @param {object} [opts]                     forwarded to `useQuery`
- * @returns {{ data: T | undefined, loading: boolean, error: Error | null,
- *            reload: () => Promise<void>, refetch: Function, isFetching: boolean,
- *            isSuccess: boolean }}
  */
-export function useResource(key, fetcher, opts = {}) {
+
+/** The slice of react-query's queryFn context a resource fetcher actually reads. */
+export interface ResourceFetchContext {
+  queryKey: QueryKey
+  signal: AbortSignal
+  meta: Record<string, unknown> | undefined
+}
+
+export interface UseResourceResult<T> {
+  data: T | undefined
+  /** Pending *and* actively fetching — first load with nothing cached. */
+  loading: boolean
+  error: Error | null
+  reload: () => Promise<void>
+  refetch: (options?: RefetchOptions) => Promise<QueryObserverResult<T, Error>>
+  isFetching: boolean
+  isSuccess: boolean
+}
+
+/** `useQuery` options minus the two this hook owns. */
+export type UseResourceOptions<T> = Omit<
+  UseQueryOptions<T, Error, T, QueryKey>,
+  'queryKey' | 'queryFn'
+>
+
+export function useResource<T = unknown>(
+  key: QueryKey,
+  fetcher: (context: ResourceFetchContext) => Promise<T>,
+  opts: UseResourceOptions<T> = {},
+): UseResourceResult<T> {
   const queryClient = useQueryClient()
   const keyHash = hashKey(key)
 
-  const query = useQuery({
+  const query = useQuery<T, Error, T, QueryKey>({
     queryKey: key,
     queryFn: (context) => fetcher(context),
     ...opts,
@@ -89,21 +120,39 @@ export function useResource(key, fetcher, opts = {}) {
  * `invalidate` is a list of query keys (each key is itself an array). Every
  * remaining option is forwarded to `useMutation`; a caller-supplied `onSuccess`
  * runs after the invalidations.
- *
- * @param {Function} mutationFn
- * @param {{ invalidate?: readonly (readonly unknown[])[] } & object} [opts]
  */
-export function useResourceMutation(mutationFn, opts = {}) {
+
+export interface UseResourceMutationOptions<TData, TVars> extends Omit<
+  UseMutationOptions<TData, Error, TVars>,
+  'mutationFn'
+> {
+  /** Query keys to invalidate (and refetch) once the mutation resolves. */
+  invalidate?: QueryKey[]
+}
+
+export interface UseResourceMutationResult<TData, TVars> {
+  mutate: (variables: TVars) => void
+  mutateAsync: (variables: TVars) => Promise<TData>
+  loading: boolean
+  error: Error | null
+  data: TData | undefined
+  reset: () => void
+}
+
+export function useResourceMutation<TData = unknown, TVars = void>(
+  mutationFn: (variables: TVars) => Promise<TData>,
+  opts: UseResourceMutationOptions<TData, TVars> = {},
+): UseResourceMutationResult<TData, TVars> {
   const { invalidate = [], onSuccess, ...rest } = opts
   const queryClient = useQueryClient()
 
-  const mutation = useMutation({
+  const mutation = useMutation<TData, Error, TVars>({
     mutationFn,
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, onMutateResult, context) => {
       if (invalidate.length > 0) {
         await Promise.all(invalidate.map((queryKey) => queryClient.invalidateQueries({ queryKey })))
       }
-      return onSuccess?.(data, variables, context)
+      return onSuccess?.(data, variables, onMutateResult, context)
     },
     ...rest,
   })

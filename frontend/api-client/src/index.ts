@@ -1,5 +1,6 @@
 export {
   createOneirodexClient,
+  createOneirodexBrowserClient,
   formatBearerAuthorization,
   OneirodexApiError,
 } from './oneirodex-client.js'
@@ -14,6 +15,7 @@ export type { TokensApi } from './tokens.js'
 export type { PlaytimeApi } from './playtime.js'
 export type { BrowseApi, SearchOptions } from './browse.js'
 export type { UpdatesApi } from './updates.js'
+export type { OpsApi, OpsSummaryResponse, OpsSummaryOptions } from './ops.js'
 export type {
   DownloadsApi,
   GameVersionItem,

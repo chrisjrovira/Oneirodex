@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText.js'
@@ -35,6 +35,21 @@ import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText.js
  * must act on; loading and empty stay role="status" (polite).
  */
 
+/** The loose error shapes still in the tree, alongside a thrown `Error`. */
+interface ErrorBag {
+  error?: unknown
+  message?: unknown
+  status?: unknown
+  error_code?: unknown
+}
+
+/** Args handed to a caller-supplied `renderLoading` render prop. */
+export interface RenderLoadingArgs {
+  inline: boolean
+  className: string
+  loadingMessage: string
+}
+
 /**
  * Read the human sentence out of a failed request (GT-A2).
  *
@@ -47,7 +62,7 @@ import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText.js
  *
  * Never surfaces a raw status code as the headline; that goes in `detail`.
  */
-export function resolveErrorMessage(error, fallback = 'Something went wrong.') {
+export function resolveErrorMessage(error: unknown, fallback = 'Something went wrong.'): string {
   if (!error) return fallback
   if (typeof error === 'string') return error.trim() || fallback
 
@@ -55,33 +70,36 @@ export function resolveErrorMessage(error, fallback = 'Something went wrong.') {
     return error.message?.trim() || fallback
   }
 
-  const direct = error.error
+  const bag = error as ErrorBag
+  const direct = bag.error
   if (typeof direct === 'string' && direct.trim()) return direct.trim()
-  if (direct && typeof direct === 'object' && typeof direct.message === 'string') {
-    if (direct.message.trim()) return direct.message.trim()
+  if (direct && typeof direct === 'object') {
+    const nested = (direct as { message?: unknown }).message
+    if (typeof nested === 'string' && nested.trim()) return nested.trim()
   }
 
-  if (typeof error.message === 'string' && error.message.trim()) {
-    return error.message.trim()
+  if (typeof bag.message === 'string' && bag.message.trim()) {
+    return bag.message.trim()
   }
 
   return fallback
 }
 
 /** Operator-facing detail line — status code / stable error code, never the headline. */
-export function resolveErrorDetail(error) {
+export function resolveErrorDetail(error: unknown): string | null {
   // Errors are included on purpose: the fetch wrappers throw Error objects that
   // carry `status` / `error_code` off the GT-B1 envelope, and bailing on
   // `instanceof Error` dropped exactly the fields this line exists to show. A
   // plain Error from a network failure has neither, so it still yields null.
   if (!error || typeof error !== 'object') return null
-  const parts = []
-  if (error.status != null) parts.push(`HTTP ${error.status}`)
-  if (typeof error.error_code === 'string' && error.error_code) parts.push(error.error_code)
+  const bag = error as ErrorBag
+  const parts: string[] = []
+  if (bag.status != null) parts.push(`HTTP ${bag.status}`)
+  if (typeof bag.error_code === 'string' && bag.error_code) parts.push(bag.error_code)
   return parts.length ? parts.join(' · ') : null
 }
 
-function DefaultLoadingStatus({ inline, className, loadingMessage }) {
+function DefaultLoadingStatus({ inline, className, loadingMessage }: RenderLoadingArgs) {
   const base = loadingMessageBase(loadingMessage)
   const [tick, setTick] = useState(0)
 
@@ -113,6 +131,20 @@ function DefaultLoadingStatus({ inline, className, loadingMessage }) {
   )
 }
 
+export interface PageStatusProps {
+  loading?: boolean
+  error?: unknown
+  onRetry?: (() => void) | null
+  errorMessage?: string | null
+  retryLabel?: string
+  emptyMessage?: string | null
+  loadingMessage?: string
+  children?: ReactNode
+  className?: string
+  inline?: boolean
+  renderLoading?: ((args: RenderLoadingArgs) => ReactNode) | null
+}
+
 export function PageStatus({
   loading = false,
   error = null,
@@ -125,7 +157,7 @@ export function PageStatus({
   className = '',
   inline = false,
   renderLoading = null,
-}) {
+}: PageStatusProps): ReactNode {
   if (error) {
     const message = errorMessage || resolveErrorMessage(error)
     const detail = resolveErrorDetail(error)

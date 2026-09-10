@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fetchOpsSummary } from './api/summary'
+import { fetchOpsSummary, type OpsSummary } from './api/summary'
 import { PageStatus } from '@oneirodex/ui'
 import { DeepLinks } from './components/DeepLinks'
 import { HostPanel } from './components/HostPanel'
@@ -10,15 +10,24 @@ import { RecentErrors } from './components/RecentErrors'
 import { ScansPanel } from './components/ScansPanel'
 import { StatusBanner } from './components/StatusBanner'
 
-function isAbortError(error) {
-  return error?.name === 'AbortError'
+function isAbortError(error: unknown): boolean {
+  return (error as { name?: string } | null | undefined)?.name === 'AbortError'
 }
 
-export function OpsApp({ pollMs = 15000 }) {
-  const [snapshot, setSnapshot] = useState(null)
-  const [error, setError] = useState(null)
+interface RequestRef {
+  id: number
+  controller: AbortController | null
+}
+
+export interface OpsAppProps {
+  pollMs?: number
+}
+
+export function OpsApp({ pollMs = 15000 }: OpsAppProps) {
+  const [snapshot, setSnapshot] = useState<OpsSummary | null>(null)
+  const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
-  const requestRef = useRef({ id: 0, controller: null })
+  const requestRef = useRef<RequestRef>({ id: 0, controller: null })
 
   const refresh = useCallback(() => {
     requestRef.current.controller?.abort()

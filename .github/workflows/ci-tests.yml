@@ -476,8 +476,9 @@ jobs:
     # loadingStatusText, useResource, Button, ViewerContext). They ran only
     # transitively via the SPA jobs before the B1.2 consolidation moved them
     # here — without a dedicated job the shared surface gates nothing. Modeled
-    # on api-client-vitest (both are frontend/* workspace packages). No
-    # typecheck step: @oneirodex/ui ships .js, not types.
+    # on api-client-vitest (both are frontend/* workspace packages). PR-3
+    # converted @oneirodex/ui to strict TypeScript, so this job now also runs
+    # `npm run typecheck` — the only CI enforcement of the shared surface's types.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -505,3 +506,6 @@ jobs:
 
       - name: Run vitest
         run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck

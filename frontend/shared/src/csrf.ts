@@ -22,22 +22,35 @@
  * bypassed it for no stated reason; going through it is the consistent answer.
  */
 
+export type HeaderMap = Record<string, string>
+
+/** The classic theme's `setup/default_theme/js/csrf-utils.js` global, when present. */
+interface CsrfUtils {
+  getHeaders?: (extra?: HeaderMap) => HeaderMap
+}
+
+declare global {
+  interface Window {
+    CSRFUtils?: CsrfUtils
+  }
+}
+
 /**
  * Read the CSRF token from the page.
  *
- * @returns {string} the token, or '' when the page carries none
+ * @returns the token, or '' when the page carries none
  */
-export function getCsrfToken() {
+export function getCsrfToken(): string {
   if (typeof document === 'undefined') {
     return ''
   }
 
-  const meta = document.querySelector('meta[name="csrf-token"]')
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
   if (meta?.content) {
     return meta.content
   }
 
-  const input = document.querySelector('input[name="csrf_token"]')
+  const input = document.querySelector<HTMLInputElement>('input[name="csrf_token"]')
   if (input?.value) {
     return input.value
   }
@@ -48,10 +61,10 @@ export function getCsrfToken() {
 /**
  * Build request headers carrying the CSRF token.
  *
- * @param {Object} [extra] additional headers merged over the token header
- * @returns {Object} headers object including `X-CSRFToken`
+ * @param extra additional headers merged over the token header
+ * @returns headers object including `X-CSRFToken`
  */
-export function csrfHeaders(extra = {}) {
+export function csrfHeaders(extra: HeaderMap = {}): HeaderMap {
   // `typeof window` guard: the api modules are imported under vitest's node
   // environment too, where `window` is not always defined.
   if (typeof window !== 'undefined' && window.CSRFUtils?.getHeaders) {

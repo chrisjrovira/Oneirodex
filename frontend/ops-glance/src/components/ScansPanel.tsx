@@ -1,4 +1,10 @@
-export function ScansPanel({ scans }) {
+import type { OpsScans } from '../api/summary'
+
+export interface ScansPanelProps {
+  scans?: OpsScans | null
+}
+
+export function ScansPanel({ scans }: ScansPanelProps) {
   const jobs = scans?.jobs ?? []
   return (
     <section className="ops-panel">

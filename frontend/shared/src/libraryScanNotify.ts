@@ -1,4 +1,4 @@
-import { MAX_INDIVIDUAL_TOASTS, stackSummaryMessage } from './toastStack'
+import { MAX_INDIVIDUAL_TOASTS, stackSummaryMessage } from './toastStack.js'
 
 /**
  * Soft-detect “N games added to Library X” notifications from watch/scan.
@@ -7,6 +7,47 @@ import { MAX_INDIVIDUAL_TOASTS, stackSummaryMessage } from './toastStack'
  * Shared by member-app and admin-app (UX-B7): staff watching a scan live on
  * admin pages, members browsing the library.
  */
+
+/**
+ * A notification row as the poll endpoints hand it over. Every field is
+ * optional — the backend is mid-migration and some rows carry only a title.
+ */
+export interface ScanNotificationRow {
+  id?: string | number
+  uuid?: string
+  created_at?: string
+  kind?: string
+  type?: string
+  category?: string
+  title?: string
+  body?: string
+  message?: string
+  library?: string
+  library_name?: string
+  library_uuid?: string
+  count?: number
+  added?: number
+  data?: {
+    library?: string
+    library_name?: string
+    count?: number
+  }
+}
+
+/** A batch of rows collapsed to one entry per library. */
+export interface ScanToastGroup {
+  key: string
+  rows: ScanNotificationRow[]
+  total: number
+  library: string
+}
+
+/** One toast line for a whole poll's worth of groups. */
+export interface BurstToastMessage {
+  message: string
+  count: number
+  rows: ScanNotificationRow[]
+}
 
 const KIND_HINTS = new Set([
   'library_games_added',
@@ -20,10 +61,9 @@ const TITLE_BODY_RE = /\d+\s+games?\s+added\s+to\s+library/i
 
 const SEEN_KEY = 'oneirodex.libraryScanToasts.seen.v1'
 
-/**
- * @param {object | null | undefined} row
- */
-export function isLibraryGamesAddedNotification(row) {
+export function isLibraryGamesAddedNotification(
+  row: ScanNotificationRow | null | undefined,
+): boolean {
   if (!row || typeof row !== 'object') {
     return false
   }
@@ -42,7 +82,7 @@ const LIBRARY_RE = /added\s+to\s+library\s+(.+?)\s*$/i
 
 /** Library a notification belongs to, for grouping. Falls back to its own id
  *  so an unattributable row still toasts once rather than merging with others. */
-export function libraryKeyOf(row) {
+export function libraryKeyOf(row: ScanNotificationRow | null | undefined): string {
   const named =
     row?.library ||
     row?.library_name ||
@@ -60,7 +100,7 @@ export function libraryKeyOf(row) {
 
 /** Games added, for summing a burst into one figure. Unknown counts as 1 so a
  *  countless notification still contributes rather than reading as zero. */
-export function addedCountOf(row) {
+export function addedCountOf(row: ScanNotificationRow | null | undefined): number {
   const explicit = Number(row?.count ?? row?.added ?? row?.data?.count)
   if (Number.isFinite(explicit) && explicit > 0) return explicit
 
@@ -77,17 +117,16 @@ export function addedCountOf(row) {
  * games added" — which is noise standing in for one useful fact. Grouping by
  * library and summing gives a single toast per library per poll, which is the
  * granularity anyone actually wants.
- *
- * @returns {Array<{key: string, rows: object[], total: number, library: string}>}
  */
-export function groupLibraryScanToasts(rows) {
-  const groups = new Map()
+export function groupLibraryScanToasts(rows: ScanNotificationRow[]): ScanToastGroup[] {
+  const groups = new Map<string, ScanToastGroup>()
   for (const row of rows) {
     const key = libraryKeyOf(row)
-    if (!groups.has(key)) {
-      groups.set(key, { key, rows: [], total: 0, library: key.startsWith('__row_') ? '' : key })
+    let group = groups.get(key)
+    if (!group) {
+      group = { key, rows: [], total: 0, library: key.startsWith('__row_') ? '' : key }
+      groups.set(key, group)
     }
-    const group = groups.get(key)
     group.rows.push(row)
     group.total += addedCountOf(row)
   }
@@ -95,7 +134,7 @@ export function groupLibraryScanToasts(rows) {
 }
 
 /** One line for a whole library's batch. */
-export function groupedToastMessage(group) {
+export function groupedToastMessage(group: ScanToastGroup): string {
   if (group.rows.length === 1) {
     return libraryGamesAddedToastMessage(group.rows[0])
   }
@@ -106,11 +145,10 @@ export function groupedToastMessage(group) {
 /**
  * Five libraries stay named. Six or more become one “N notifications” toast
  * so a FIFO drain cannot cover Discover (or any other page).
- *
- * @param {Array<{ rows: object[] }>} groups
- * @returns {Array<{ message: string, count: number, rows: object[] }>}
  */
-export function burstToastMessages(groups) {
+export function burstToastMessages(
+  groups: Array<Pick<ScanToastGroup, 'rows'>> | null | undefined,
+): BurstToastMessage[] {
   const list = Array.isArray(groups) ? groups : []
   if (list.length === 0) {
     return []
@@ -126,17 +164,13 @@ export function burstToastMessages(groups) {
     ]
   }
   return list.map((group) => ({
-    message: groupedToastMessage(group),
+    message: groupedToastMessage(group as ScanToastGroup),
     count: 1,
     rows: group.rows || [],
   }))
 }
 
-/**
- * @param {object} row
- * @returns {string}
- */
-export function libraryGamesAddedToastMessage(row) {
+export function libraryGamesAddedToastMessage(row: ScanNotificationRow | null | undefined): string {
   const title = String(row?.title || '').trim()
   if (title) {
     return title
@@ -148,20 +182,20 @@ export function libraryGamesAddedToastMessage(row) {
   return 'Games added to library'
 }
 
-function readSeenIds() {
+function readSeenIds(): Set<string> {
   try {
     const raw = sessionStorage.getItem(SEEN_KEY)
     if (!raw) {
       return new Set()
     }
-    const parsed = JSON.parse(raw)
+    const parsed: unknown = JSON.parse(raw)
     return new Set(Array.isArray(parsed) ? parsed.map(String) : [])
   } catch {
     return new Set()
   }
 }
 
-function writeSeenIds(ids) {
+function writeSeenIds(ids: Set<string>): void {
   try {
     const list = [...ids].slice(-80)
     sessionStorage.setItem(SEEN_KEY, JSON.stringify(list))
@@ -170,11 +204,8 @@ function writeSeenIds(ids) {
   }
 }
 
-/**
- * Mark a notification id as toasted this session.
- * @param {string | number} id
- */
-export function markLibraryScanToastSeen(id) {
+/** Mark a notification id as toasted this session. */
+export function markLibraryScanToastSeen(id: string | number | null | undefined): void {
   if (id == null || id === '') {
     return
   }
@@ -183,25 +214,21 @@ export function markLibraryScanToastSeen(id) {
   writeSeenIds(seen)
 }
 
-/**
- * @param {string | number} id
- */
-export function wasLibraryScanToastSeen(id) {
+export function wasLibraryScanToastSeen(id: string | number | null | undefined): boolean {
   if (id == null || id === '') {
     return false
   }
   return readSeenIds().has(String(id))
 }
 
-/**
- * Pick unseen library-added rows to toast (newest first, capped).
- * @param {object[]} notifications
- * @param {{ limit?: number }} [options]
- */
-export function pickUnseenLibraryScanToasts(notifications, options = {}) {
+/** Pick unseen library-added rows to toast (newest first, capped). */
+export function pickUnseenLibraryScanToasts(
+  notifications: ScanNotificationRow[] | null | undefined,
+  options: { limit?: number } = {},
+): ScanNotificationRow[] {
   const limit = options.limit ?? 50
   const rows = Array.isArray(notifications) ? notifications : []
-  const out = []
+  const out: ScanNotificationRow[] = []
   for (const row of rows) {
     if (!isLibraryGamesAddedNotification(row)) {
       continue

@@ -114,6 +114,33 @@ export default [
     languageOptions: { globals: { ...TEST_GLOBALS } },
   },
 
+  // TypeScript surface owned by this seat: `@oneirodex/ui` (frontend/shared)
+  // and the ops-glance SPA, both converted to `.ts`/`.tsx` with `strict: true`
+  // in Phase 3.3. Same non-type-checked recommended set as the api-client block
+  // above, plus the React plugins because these files carry components/hooks.
+  ...tseslint.config({
+    files: ['frontend/shared/**/*.{ts,tsx}', 'frontend/ops-glance/**/*.{ts,tsx}'],
+    extends: [tseslint.configs.recommended],
+    plugins: { react: reactPlugin, 'react-hooks': reactHooks },
+    settings: { react: { version: 'detect' } },
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+    },
+    rules: {
+      ...reactPlugin.configs.flat.recommended.rules,
+      ...reactPlugin.configs.flat['jsx-runtime'].rules,
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'react/prop-types': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-undef': 'off',
+    },
+  }),
+
   // --- Desktop track (clients/desktop) --------------------------------------
   // Appended by the Desktop seat (wave C3.7-client / ci-wishlist [B0.2]).
   // Mirrors the frontend/api-client block: typescript-eslint's non-type-checked

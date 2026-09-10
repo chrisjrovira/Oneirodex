@@ -1,10 +1,10 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, type ReactNode } from 'react'
 
 /**
  * The non-identity half of the member-app bootstrap — `@oneirodex/ui`.
  *
  * Wave B1.6. Everything `parseShellConfig` reads off the SPA root element that
- * is *not* viewer identity (that half lives in `ViewerContext.jsx`): render
+ * is *not* viewer identity (that half lives in `ViewerContext.tsx`): render
  * knobs (`perPage`, `tileSize`, `defaultSort`), catalog counts
  * (`libraryCount`, `gamesCount`, `unmatchedCount`), the "why is it empty"
  * signal (`scanHasRun`), feature toggles (`showPlayStatus`,
@@ -15,15 +15,23 @@ import { createContext, useContext } from 'react'
  * `shellConfig` prop now call `useShellConfig()`.
  */
 
+/** The bootstrap bag — keys vary by page; consumers read the ones they need. */
+export type ShellConfig = Record<string, unknown>
+
 const MISSING = Symbol('ShellConfigContext.missing')
 
-const ShellConfigContext = createContext(MISSING)
+const ShellConfigContext = createContext<ShellConfig | typeof MISSING>(MISSING)
 
-export function ShellConfigProvider({ value, children }) {
+export interface ShellConfigProviderProps {
+  value?: ShellConfig
+  children?: ReactNode
+}
+
+export function ShellConfigProvider({ value, children }: ShellConfigProviderProps) {
   return <ShellConfigContext.Provider value={value ?? {}}>{children}</ShellConfigContext.Provider>
 }
 
-export function useShellConfig() {
+export function useShellConfig(): ShellConfig {
   const config = useContext(ShellConfigContext)
   if (config === MISSING) {
     throw new Error('useShellConfig must be used within a <ShellConfigProvider>')

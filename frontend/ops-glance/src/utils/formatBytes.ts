@@ -1,4 +1,4 @@
-export function formatBytes(bytes) {
+export function formatBytes(bytes: number | null | undefined): string {
   if (bytes == null || !Number.isFinite(bytes)) {
     return 'Unavailable'
   }

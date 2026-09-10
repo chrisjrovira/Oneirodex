@@ -1,4 +1,10 @@
-export function IssuesList({ issues }) {
+import type { OpsIssues } from '../api/summary'
+
+export interface IssuesListProps {
+  issues?: OpsIssues | null
+}
+
+export function IssuesList({ issues }: IssuesListProps) {
   const items = issues?.items ?? []
   return (
     <section className="ops-panel">

@@ -6,6 +6,9 @@
 // had drifted into 2-3 divergent copies across the SPAs — and repoints every
 // consumer onto `import { X } from '@oneirodex/ui'`.
 //
+// Phase 3.3 converted the package to TypeScript (`strict: true`); the exports
+// carry types now and a consuming SPA's bundler compiles the source directly.
+//
 // Behavioural rule when copies diverged: the superset wins, so consolidating
 // widens the narrow copies and narrows none.
 
@@ -17,8 +20,8 @@ export * from './csrf.js'
 export * from './envelopeError.js'
 export * from './loadingStatusText.js'
 export * from './toast.js'
-export * from './pageStatus.jsx'
-export * from './Button.jsx'
-export * from './useResource.jsx'
-export * from './ViewerContext.jsx'
-export * from './ShellConfigContext.jsx'
+export * from './pageStatus.js'
+export * from './Button.js'
+export * from './useResource.js'
+export * from './ViewerContext.js'
+export * from './ShellConfigContext.js'

@@ -1,6 +1,7 @@
 import { formatBytes } from '../utils/formatBytes'
+import type { OpsHost, OpsMeter } from '../api/summary'
 
-function Meter({ label, value }) {
+function Meter({ label, value }: { label: string; value?: OpsMeter | null }) {
   if (!value) return null
   return (
     <li>
@@ -9,7 +10,11 @@ function Meter({ label, value }) {
   )
 }
 
-export function HostPanel({ host }) {
+export interface HostPanelProps {
+  host?: OpsHost | null
+}
+
+export function HostPanel({ host }: HostPanelProps) {
   return (
     <section className="ops-panel">
       <h2>Host</h2>

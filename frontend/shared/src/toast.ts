@@ -1,10 +1,29 @@
-import { isStackableTone, planToastStack, stackSummaryMessage } from './toastStack.js'
+import {
+  isStackableTone,
+  planToastStack,
+  stackSummaryMessage,
+  type ToastTone,
+} from './toastStack.js'
 
 /**
  * Lightweight aurora toast — no jQuery / Bootstrap notify dependency.
  */
 
-function toastHost() {
+/** A toast node carries its lifecycle handlers so `showToast` can drive it. */
+type ToastElement = HTMLDivElement & {
+  _gtAbort?: () => void
+  _gtRestart?: () => void
+  _gtDismiss?: () => void
+}
+
+type DismissFn = () => void
+
+interface PaintOptions {
+  count?: number
+  stacked?: boolean
+}
+
+function toastHost(): HTMLElement {
   let host = document.getElementById('od-toast-host')
   if (!host) {
     host = document.createElement('div')
@@ -16,20 +35,20 @@ function toastHost() {
   return host
 }
 
-function visibleStackable(host) {
-  return [...host.children].filter(
+function visibleStackable(host: HTMLElement): ToastElement[] {
+  return ([...host.children] as ToastElement[]).filter(
     (el) =>
       !el.classList.contains('od-toast--out') &&
       (el.classList.contains('od-toast--info') || el.classList.contains('od-toast--success')),
   )
 }
 
-function stackCountOf(el) {
+function stackCountOf(el: HTMLElement): number {
   const n = Number(el.dataset.toastCount)
   return Number.isFinite(n) && n > 0 ? n : 1
 }
 
-function bindToastLifecycle(el, host) {
+function bindToastLifecycle(el: ToastElement, host: HTMLElement): DismissFn {
   let removeTimer = 0
   let outTimer = 0
 
@@ -63,8 +82,13 @@ function bindToastLifecycle(el, host) {
   return remove
 }
 
-function paintToast(host, message, safeTone, { count, stacked } = {}) {
-  const el = document.createElement('div')
+function paintToast(
+  host: HTMLElement,
+  message: string,
+  safeTone: ToastTone,
+  { count, stacked }: PaintOptions = {},
+): DismissFn {
+  const el = document.createElement('div') as ToastElement
   el.className = `od-toast od-toast--${safeTone}`
   if (stacked) {
     el.dataset.toastStack = '1'
@@ -89,13 +113,21 @@ function paintToast(host, message, safeTone, { count, stacked } = {}) {
   return dismiss
 }
 
-export function showToast(message, tone = 'info', options = {}) {
+export function showToast(
+  message: string,
+  tone: ToastTone | string = 'info',
+  options: { count?: number } = {},
+): DismissFn | undefined {
   if (typeof document === 'undefined' || !message) {
-    return
+    return undefined
   }
 
   const host = toastHost()
-  const safeTone = ['info', 'success', 'error', 'warn'].includes(tone) ? tone : 'info'
+  const safeTone: ToastTone = (['info', 'success', 'error', 'warn'] as const).includes(
+    tone as ToastTone,
+  )
+    ? (tone as ToastTone)
+    : 'info'
   const incomingCount = Number(options.count) > 0 ? Number(options.count) : 1
 
   if (isStackableTone(safeTone)) {
