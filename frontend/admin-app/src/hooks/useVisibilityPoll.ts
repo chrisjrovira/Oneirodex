@@ -1,17 +1,20 @@
 import { useEffect, useRef } from 'react'
 
+/** Runs each tick; receives an `AbortSignal` cancelled on the next tick / unmount. */
+export type VisibilityPollCallback = (ctx: { signal: AbortSignal }) => unknown
+
 /**
  * Poll while the tab is visible. Skip overlapping in-flight work and abort
  * on unmount / next tick so a background tab cannot pile requests.
  */
-export function useVisibilityPoll(callback, intervalMs) {
+export function useVisibilityPoll(callback: VisibilityPollCallback, intervalMs: number) {
   const cbRef = useRef(callback)
   cbRef.current = callback
 
   useEffect(() => {
     let cancelled = false
     let inFlight = false
-    let controller = null
+    let controller: AbortController | null = null
 
     const tick = () => {
       if (cancelled || document.hidden || inFlight) return

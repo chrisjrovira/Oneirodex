@@ -8,7 +8,20 @@ import {
   toastForScanStartResponse,
   toastToneForScanVariant,
 } from '../components/scanQueuePolicy'
+import type { ScanQueuePolicy } from '../components/scanQueuePolicy'
 import { showToast } from '../utils/toast'
+import { errorText } from '../utils/errorText'
+
+/** One library to (re)scan. `folder` omitted falls back to the library's `last_scan_folder`. */
+export interface ScanTarget {
+  libraryUuid: string
+  folder?: string
+  label?: string
+  /** Row key for `busyKey`; defaults to `libraryUuid`. */
+  key?: string
+  /** Extra scan fields merged into the POST body (e.g. a restarted job's settings). */
+  settings?: Record<string, unknown>
+}
 
 const SCAN_URL = '/api/admin/libraries/scan'
 const SCAN_STATUS_URL = '/api/scan_jobs_status'
@@ -34,9 +47,9 @@ export function useLibraryScan() {
   const [busyKey, setBusyKey] = useState('')
   // Held across the conflict modal: the operator picks a policy after the POST
   // has already been rejected, so the retry needs the target that was refused.
-  const pendingTarget = useRef(null)
+  const pendingTarget = useRef<ScanTarget | null>(null)
 
-  const postScan = useCallback(async (target, policy) => {
+  const postScan = useCallback(async (target: ScanTarget, policy: ScanQueuePolicy | null) => {
     const body = {
       library_uuid: target.libraryUuid,
       ...(target.folder ? { folder: target.folder } : {}),
@@ -59,7 +72,7 @@ export function useLibraryScan() {
       pendingTarget.current = null
       return { ok, status, data, deferred: false }
     } catch (err) {
-      showToast(err?.message || 'Scan failed to start.', 'error')
+      showToast(errorText(err) || 'Scan failed to start.', 'error')
       setConflictOpen(false)
       pendingTarget.current = null
       return { ok: false, deferred: false, error: err }
@@ -69,7 +82,7 @@ export function useLibraryScan() {
   }, [])
 
   const startScan = useCallback(
-    async (target) => {
+    async (target: ScanTarget | null | undefined) => {
       if (!target?.libraryUuid) {
         showToast('That job has no library attached, so it cannot be re-run.', 'error')
         return
@@ -94,14 +107,14 @@ export function useLibraryScan() {
         }
         await postScan(target, null)
       } catch (err) {
-        showToast(err?.message || 'Could not check scan status.', 'error')
+        showToast(errorText(err) || 'Could not check scan status.', 'error')
       }
     },
     [postScan],
   )
 
   const onConflictChoose = useCallback(
-    (policy) => {
+    (policy: ScanQueuePolicy) => {
       const target = pendingTarget.current
       if (!target) {
         setConflictOpen(false)

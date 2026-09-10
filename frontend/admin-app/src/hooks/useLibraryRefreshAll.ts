@@ -9,7 +9,9 @@ import {
   toastForScanStartResponse,
   toastToneForScanVariant,
 } from '../components/scanQueuePolicy'
+import type { ScanQueuePolicy } from '../components/scanQueuePolicy'
 import { showToast } from '../utils/toast'
+import { errorText } from '../utils/errorText'
 
 const REFRESH_ALL_URL = '/api/admin/libraries/refresh_all'
 const SCAN_STATUS_URL = '/api/scan_jobs_status'
@@ -22,7 +24,7 @@ export function useLibraryRefreshAll() {
   const [conflictOpen, setConflictOpen] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const postRefresh = useCallback(async (policy) => {
+  const postRefresh = useCallback(async (policy: ScanQueuePolicy | null) => {
     // null = operator has not chosen yet (idle path or legacy 409 recovery) → default queue fields.
     const fields = buildScanQueueRequestFields(policy == null ? undefined : policy)
     setBusy(true)
@@ -37,7 +39,7 @@ export function useLibraryRefreshAll() {
       setConflictOpen(false)
       return { ok, status, data, deferred: false }
     } catch (err) {
-      showToast(err?.message || 'Refresh all failed.', 'error')
+      showToast(errorText(err) || 'Refresh all failed.', 'error')
       setConflictOpen(false)
       return { ok: false, deferred: false, error: err }
     } finally {
@@ -72,12 +74,12 @@ export function useLibraryRefreshAll() {
       }
       await postRefresh(null)
     } catch (err) {
-      showToast(err?.message || 'Could not check scan status.', 'error')
+      showToast(errorText(err) || 'Could not check scan status.', 'error')
     }
   }, [postRefresh])
 
   const onConflictChoose = useCallback(
-    (policy) => {
+    (policy: ScanQueuePolicy) => {
       void postRefresh(policy)
     },
     [postRefresh],

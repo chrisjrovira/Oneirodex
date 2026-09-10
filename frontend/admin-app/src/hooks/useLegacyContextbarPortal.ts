@@ -16,7 +16,7 @@ export const LEGACY_CONTENT_ID = 'admin-legacy-content'
  * Full page loads own Jinja bodies; a placeholder keeps the original home for
  * cleanup when React unmounts (SPA route).
  */
-export function useLegacyContextbarPortal(enabled) {
+export function useLegacyContextbarPortal(enabled: boolean) {
   useLayoutEffect(() => {
     if (!enabled || typeof document === 'undefined') return undefined
 
@@ -36,7 +36,7 @@ export function useLegacyContextbarPortal(enabled) {
     const views = bar.querySelector(':scope > .od-contextbar__views')
     const actions = bar.querySelector(':scope > .od-contextbar__actions')
     const placeholder = document.createComment('od-contextbar-home')
-    bar.parentNode.insertBefore(placeholder, bar)
+    bar.parentNode?.insertBefore(placeholder, bar)
 
     if (views) pageSlot.appendChild(views)
     if (actions) {

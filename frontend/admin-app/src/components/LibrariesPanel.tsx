@@ -285,7 +285,7 @@ function GroupDialog({ targets, existingNames, onClose, onSave, busy }) {
  * typeahead filters, themed row actions, grouping, and multi-select batch
  * Scan/Edit/Delete/Group.
  */
-export function LibrariesPanel({ panelEl = null }) {
+export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null }) {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState(null)
   const [selected, setSelected] = useState(() => new Set())

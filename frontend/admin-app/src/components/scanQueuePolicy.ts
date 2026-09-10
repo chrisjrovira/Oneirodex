@@ -16,6 +16,9 @@
  * Legacy: HTTP 409 + { error: 'A scan is already running' }
  */
 
+/** The operator's conflict choice: queue behind the running scan, or force a parallel run. */
+export type ScanQueuePolicy = 'queue' | 'force'
+
 export const SCAN_QUEUE_POLICY = Object.freeze({
   QUEUE: 'queue',
   FORCE: 'force',
