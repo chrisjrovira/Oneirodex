@@ -182,7 +182,7 @@ def test_retrieve_unique_dat_auto_before_stage_e(app, db_session, gb_library, tm
     rom.write_bytes(b'rom-payload')
 
     with patch(
-        'oneirodex.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.services.scan_identify.search_igdb_for_game',
         return_value=[],
     ), patch(
         'oneirodex.utils.software_identify.try_stage_d_store_identify',
@@ -195,7 +195,7 @@ def test_retrieve_unique_dat_auto_before_stage_e(app, db_session, gb_library, tm
             'sha1': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         },
     ), patch(
-        'oneirodex.utils.game_core.notify_admins_new_game',
+        'oneirodex.utils.services.scan_identify.notify_admins_new_game',
     ), patch(
         'oneirodex.utils.software_identify.enrich_proposal_with_stage_e',
     ) as mock_stage_e:
@@ -226,7 +226,7 @@ def test_retrieve_skips_dat_when_propose_only(app, db_session, gb_library, tmp_p
     rom.write_bytes(b'x')
 
     with patch(
-        'oneirodex.utils.game_core.search_igdb_for_game',
+        'oneirodex.utils.services.scan_identify.search_igdb_for_game',
         return_value=[],
     ), patch(
         'oneirodex.utils.set_completion.try_dat_hash_identify',
@@ -239,7 +239,7 @@ def test_retrieve_skips_dat_when_propose_only(app, db_session, gb_library, tmp_p
         'oneirodex.utils.software_identify.enrich_proposal_with_stage_e',
         side_effect=lambda p, **_k: p,
     ), patch(
-        'oneirodex.utils.game_core.write_match_proposal',
+        'oneirodex.utils.services.scan_identify.write_match_proposal',
         return_value=True,
     ):
         result = retrieve_and_save_game(

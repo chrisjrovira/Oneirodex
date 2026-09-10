@@ -26,6 +26,7 @@ import json
 import logging
 import logging.config
 import os
+import sys
 import uuid
 
 from flask import g, has_request_context, request
@@ -147,6 +148,24 @@ def configure_logging(app=None) -> None:
             },
         }
     )
+
+    # The console handler above is a plain ``logging.StreamHandler`` on stdout.
+    # On a Windows console running code page cp1252 a record carrying non-Latin-1
+    # characters (an emoji in a warning message, say) raises ``UnicodeEncodeError``
+    # inside ``StreamHandler.emit`` — the stdlib prints "--- Logging error ---" to
+    # stderr and drops the line. Force the underlying stream to UTF-8 with a
+    # replacing error handler so those records emit instead of vanishing.
+    # ``TextIOWrapper.reconfigure`` exists on Py3.7+; streams that don't support it
+    # (pytest capture, some redirects) are left untouched. Linux/Docker already run
+    # a UTF-8 locale and are unaffected. This does not touch the JSON path or levels.
+    for _stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(_stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError, OSError):  # pragma: no cover - stream-dependent
+            pass
 
     if app is not None:
         app.logger.setLevel(level)

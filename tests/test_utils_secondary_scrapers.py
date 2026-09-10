@@ -136,8 +136,8 @@ def test_apply_steam_enrichment_no_steam_data():
     assert result['is_vr'] is False
 
 
-@patch('oneirodex.utils.game_core.apply_enriched_metadata')
-@patch('oneirodex.utils.game_core.fetch_steam_data')
+@patch('oneirodex.utils.services.game_enrich.apply_enriched_metadata')
+@patch('oneirodex.utils.services.game_enrich.fetch_steam_data')
 def test_enrich_game_with_steam_delegates(mock_fetch, mock_apply):
     from oneirodex.utils.game_core import enrich_game_with_steam
 
@@ -169,8 +169,8 @@ def test_enrich_game_with_steam_delegates(mock_fetch, mock_apply):
     assert callable(mock_apply.call_args.kwargs['game_mode_factory'])
 
 
-@patch('oneirodex.utils.game_core.apply_enriched_metadata')
-@patch('oneirodex.utils.game_core.fetch_steam_data')
+@patch('oneirodex.utils.services.game_enrich.apply_enriched_metadata')
+@patch('oneirodex.utils.services.game_enrich.fetch_steam_data')
 def test_enrich_game_with_steam_applies_genres(mock_fetch, mock_apply):
     """W20-3: Steam enrich must pass genres (and mapped modes) into apply_enriched_metadata."""
     from oneirodex.utils.game_core import enrich_game_with_steam
@@ -197,8 +197,8 @@ def test_enrich_game_with_steam_applies_genres(mock_fetch, mock_apply):
     assert enriched['summary'] == 'Gordon'
 
 
-@patch('oneirodex.utils.game_core.apply_enriched_metadata')
-@patch('oneirodex.utils.game_core.fetch_steam_data')
+@patch('oneirodex.utils.services.game_enrich.apply_enriched_metadata')
+@patch('oneirodex.utils.services.game_enrich.fetch_steam_data')
 def test_enrich_game_with_steam_logs_vr_yes(mock_fetch, mock_apply, capsys):
     from oneirodex.utils.game_core import enrich_game_with_steam
 
@@ -217,8 +217,8 @@ def test_enrich_game_with_steam_logs_vr_yes(mock_fetch, mock_apply, capsys):
     assert "Archery Kings VR" in out
 
 
-@patch('oneirodex.utils.game_core.apply_enriched_metadata')
-@patch('oneirodex.utils.game_core.fetch_steam_data')
+@patch('oneirodex.utils.services.game_enrich.apply_enriched_metadata')
+@patch('oneirodex.utils.services.game_enrich.fetch_steam_data')
 def test_enrich_game_with_steam_logs_vr_no_when_skipped(mock_fetch, mock_apply, capsys):
     from oneirodex.utils.game_core import enrich_game_with_steam
 
@@ -232,8 +232,8 @@ def test_enrich_game_with_steam_logs_vr_no_when_skipped(mock_fetch, mock_apply, 
     mock_apply.assert_not_called()
 
 
-@patch('oneirodex.utils.game_core.apply_enriched_metadata')
-@patch('oneirodex.utils.game_core.fetch_steam_data')
+@patch('oneirodex.utils.services.game_enrich.apply_enriched_metadata')
+@patch('oneirodex.utils.services.game_enrich.fetch_steam_data')
 def test_enrich_game_with_steam_still_enriches_an_already_vr_game(
     mock_fetch, mock_apply, capsys,
 ):
@@ -270,8 +270,8 @@ def test_enrich_game_with_steam_still_enriches_an_already_vr_game(
     assert 'Steam VR: yes' in capsys.readouterr().out
 
 
-@patch('oneirodex.utils.game_core.apply_enriched_metadata')
-@patch('oneirodex.utils.game_core.fetch_steam_data')
+@patch('oneirodex.utils.services.game_enrich.apply_enriched_metadata')
+@patch('oneirodex.utils.services.game_enrich.fetch_steam_data')
 def test_enrich_game_with_steam_reports_rollback(mock_fetch, mock_apply, capsys):
     """When the savepoint rolls back, the caller must see applied=False and no perspectives."""
     from oneirodex.utils.game_core import enrich_game_with_steam
