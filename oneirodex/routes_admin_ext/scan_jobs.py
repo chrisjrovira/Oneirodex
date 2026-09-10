@@ -4,7 +4,7 @@ Extracted verbatim from ``oneirodex/routes.py`` (wave A2.1b). These are the
 manual-scan entry point and the lifecycle actions (cancel / restart / delete /
 clear) for rows in ``scan_jobs``. They render / redirect only -- no JSON
 envelope -- and share the ``admin/admin_manage_scanjobs.html`` template with
-``main.scan_management``, which stays in ``routes.py``.
+``admin2.scan_management`` (in ``scan_management.py``).
 
 The blueprint is ``admin2_bp`` (registered with **no** ``url_prefix``), so every
 URL rule here is byte-identical to when these lived on the ``main`` blueprint;
@@ -139,7 +139,7 @@ def cancel_scan_job(job_id):
         logger.info(f"Queued scan job {job_id} cancelled.")
     else:
         flash('Scan job not found or not in a cancellable state.', 'error')
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))
 
 @admin2_bp.route('/restart_scan_job/<job_id>', methods=['POST'])
 @login_required
@@ -149,7 +149,7 @@ def restart_scan_job(job_id):
     job = db.session.get(ScanJob, job_id) or abort(404)
     if job.status == 'Running':
         flash('Cannot restart a running scan.', 'error')
-        return redirect(url_for('main.scan_management'))
+        return redirect(url_for('admin2.scan_management'))
 
     # Reset the existing job's counters instead of creating a new job
     job.status = 'Running'
@@ -206,7 +206,7 @@ def restart_scan_job(job_id):
         _run_restarted_scan,
         name=f'oneirodex-restart-scan-{str(scan_job_id)[:8]}',
     )
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))
 
 
 @admin2_bp.route('/delete_scan_job/<job_id>', methods=['POST'])
@@ -217,7 +217,7 @@ def delete_scan_job(job_id):
     db.session.delete(job)
     db.session.commit()
     flash('Scan job deleted successfully.', 'success')
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))
 
 @admin2_bp.route('/clear_all_scan_jobs', methods=['POST'])
 @login_required
@@ -226,4 +226,4 @@ def clear_all_scan_jobs():
     db.session.execute(delete(ScanJob))
     db.session.commit()
     flash('All scan jobs cleared successfully.', 'success')
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))

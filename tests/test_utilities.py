@@ -151,7 +151,7 @@ class TestHandleAutoScanCore:
                                 # Verify redirect is called with correct parameters
                                 mock_redirect.assert_called_once()
                                 mock_url_for.assert_called_with(
-                                    'main.scan_management', 
+                                    'admin2.scan_management', 
                                     library_uuid=test_uuid, 
                                     active_tab='auto'
                                 )

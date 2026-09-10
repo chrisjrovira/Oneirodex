@@ -8,7 +8,7 @@ Extracted verbatim from ``oneirodex/routes.py`` (wave A2.1d): bulk clear
 The blueprint is ``admin2_bp`` (registered with **no** ``url_prefix``), so every
 URL rule here is byte-identical to when these lived on the ``main`` blueprint;
 only the endpoint names change (``main.*`` -> ``admin2.*``). The redirects still
-target ``main.scan_management``, which stays in ``routes.py``.
+target ``admin2.scan_management`` (in ``scan_management.py``).
 
 Route bodies moved verbatim; the ``print()`` calls become module-level
 ``logger.{info,error}``.
@@ -49,7 +49,7 @@ def delete_all_unmatched_folders():
         error_message = f"An unexpected error occurred while deleting all unmatched folders: {str(e)}"
         logger.error(error_message)
         flash(error_message, 'error')
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))
 
 
 @admin2_bp.route('/update_unmatched_folder_status', methods=['POST'])
@@ -86,7 +86,7 @@ def update_unmatched_folder_status():
     else:
         flash('Folder not found.', 'error')
 
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))
 
 
 @admin2_bp.route('/clear_unmatched_entry/<folder_id>', methods=['POST'])
@@ -111,7 +111,7 @@ def clear_unmatched_entry(folder_id):
                 body_status='error',
             )
         flash('Error clearing unmatched folder entry.', 'error')
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))
 
 
 @admin2_bp.route('/toggle_ignore_status/<folder_id>', methods=['POST'])
@@ -148,4 +148,4 @@ def toggle_ignore_status(folder_id):
             )
         flash('Error toggling ignore status.', 'error')
 
-    return redirect(url_for('main.scan_management'))
+    return redirect(url_for('admin2.scan_management'))

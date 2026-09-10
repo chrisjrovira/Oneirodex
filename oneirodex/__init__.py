@@ -264,8 +264,9 @@ def create_app(config_object=None):
             if request.endpoint and request.path != setup_url:
                 return redirect(setup_url)
 
-    # Import models and routes
-    from . import routes, models
+    # Import models
+    from . import models
+    from oneirodex.context import register_context_processors
     from oneirodex.routes_site import site_bp
     from oneirodex.routes_member import member_bp
     from oneirodex.routes_library import library_bp
@@ -281,8 +282,11 @@ def create_app(config_object=None):
     from oneirodex.routes_apis import apis_bp
     from oneirodex.routes_arr import arr_bp
 
+    # App-level template context processors (moved off the retired 'main'
+    # blueprint in wave A2.1f).
+    register_context_processors(app)
+
     # Register all blueprints
-    app.register_blueprint(routes.bp)
     app.register_blueprint(site_bp)
     app.register_blueprint(member_bp)
     app.register_blueprint(admin2_bp)

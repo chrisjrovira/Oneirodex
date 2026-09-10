@@ -15,7 +15,7 @@
   data-check-progress-url="{{ url_for('admin2.check_deletion_progress', job_id='') }}"
   data-edit-url-template="{{ url_for('admin2.edit_library', library_uuid='__UUID__') }}"
   data-add-url="{{ url_for('admin2.add_library') }}"
-  data-scan-tab-url="{{ url_for('main.scan_management', active_tab='auto') }}"
+  data-scan-tab-url="{{ url_for('admin2.scan_management', active_tab='auto') }}"
 >
   <div id="deleteSpinner" class="spinner-overlay" style="display: none;" role="status" aria-live="assertive" aria-busy="true">
     <div class="spinner-container">

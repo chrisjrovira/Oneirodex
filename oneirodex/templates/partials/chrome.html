@@ -18,7 +18,7 @@
      {% import 'partials/chrome.html' as chrome %}
      {% call chrome.contextbar(
           views=[('all', 'Libraries', url_for('library.libraries')),
-                 ('scans', 'Scans', url_for('main.scan_management'))],
+                 ('scans', 'Scans', url_for('admin2.scan_management'))],
           active='all',
           summary='12 libraries') %}
        <a class="od-cbtn od-cbtn--primary" href="...">Add library</a>

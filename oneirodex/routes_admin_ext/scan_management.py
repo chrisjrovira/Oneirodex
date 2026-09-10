@@ -1,53 +1,54 @@
-# oneirodex/routes.py
-from flask import (
-    render_template, flash, redirect, url_for, request, Blueprint,
-    jsonify, session, abort, current_app
-)
-from flask_login import current_user, login_required
-from sqlalchemy.orm import joinedload
-from sqlalchemy import func, select
-from oneirodex import db, cache
-from itsdangerous import URLSafeTimedSerializer
+"""Admin: the scan-management page and its ``/admin/`` alias.
 
+Extracted verbatim from ``oneirodex/routes.py`` (wave A2.1f, which retired the
+``'main'`` blueprint). The view renders / redirects only -- no JSON envelope --
+and shares the ``admin/admin_manage_scanjobs.html`` template with the scan-job
+lifecycle routes in ``scan_jobs.py``.
+
+The blueprint is ``admin2_bp`` (registered with **no** ``url_prefix``), so the
+URL rules (``/scan_management`` GET/POST, ``/admin/scan_management`` GET) are
+byte-identical to when they lived on the ``main`` blueprint; only the endpoint
+names change (``main.scan_management`` -> ``admin2.scan_management``,
+``main.scan_management_admin_alias`` -> ``admin2.scan_management_admin_alias``).
+"""
+
+from flask import (
+    flash, redirect, render_template, request, session, url_for,
+)
+from flask_login import login_required
+from sqlalchemy import func, select
+
+from oneirodex import db
 from oneirodex.forms import (
-    ScanFolderForm, CsrfProtectForm,
-    AutoScanForm, UpdateUnmatchedFolderForm,
-    ReleaseGroupForm
+    AutoScanForm,
+    CsrfProtectForm,
+    ReleaseGroupForm,
+    ScanFolderForm,
+    UpdateUnmatchedFolderForm,
 )
 from oneirodex.models import (
-    Game, ScanJob, UnmatchedFolder,
-    Genre, Theme, GameMode, PlayerPerspective,
-    Category, Library, Platform,
-    ReleaseGroup, AllowedFileType, GlobalSettings, user_game_status,
-    GameUpdate, user_favorites, GameExtra,
+    AllowedFileType,
+    Game,
+    Library,
+    ReleaseGroup,
+    ScanJob,
+    UnmatchedFolder,
 )
-from oneirodex.utils.game_editions import normalize_title
+from oneirodex.utils.auth import admin_required
 from oneirodex.utils.functions import (
     igdb_platform_id_for,
     normalize_case_sensitive,
 )
-from oneirodex.utilities import handle_auto_scan, handle_manual_scan
-from oneirodex.utils.auth import admin_required
+from oneirodex.utils.services.scan_orchestration import (
+    handle_auto_scan,
+    handle_manual_scan,
+)
 from oneirodex.utils.unmatched import handle_delete_unmatched
-from oneirodex.utils.processors import get_global_settings
-from oneirodex.utils.library_acl import apply_game_access_filters
-bp = Blueprint('main', __name__)
 
-def get_serializer():
-    """Get URLSafeTimedSerializer with current app's secret key."""
-    return URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-has_initialized_whitelist = False
-has_upgraded_admin = False
-has_initialized_setup = False
-
-@bp.context_processor
-@cache.cached(timeout=500, key_prefix='global_settings')
-def inject_settings():
-    """Context processor to inject global settings into templates"""
-    return get_global_settings()
+from . import admin2_bp
 
 
-@bp.route('/admin/scan_management', methods=['GET'])
+@admin2_bp.route('/admin/scan_management', methods=['GET'])
 @login_required
 @admin_required
 def scan_management_admin_alias():
@@ -57,13 +58,13 @@ def scan_management_admin_alias():
     the image queue at `/scan_management?active_tab=image_queue`, so an
     operator who reasons from the pattern (or edits a URL) lands on a 404. The
     view itself is unchanged and already carries `@admin_required`, so this is
-    a naming inconsistency rather than an access one — the alias just makes the
+    a naming inconsistency rather than an access one -- the alias just makes the
     namespace hold. `request.args` is forwarded so `?active_tab=` survives.
     """
-    return redirect(url_for('main.scan_management', **request.args.to_dict(flat=True)))
+    return redirect(url_for('admin2.scan_management', **request.args.to_dict(flat=True)))
 
 
-@bp.route('/scan_management', methods=['GET', 'POST'])
+@admin2_bp.route('/scan_management', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def scan_management():
@@ -119,7 +120,7 @@ def scan_management():
         elif submit_action == 'DeleteOnlyUnmatched':
             return handle_delete_unmatched(all=False)
         elif submit_action == 'AddReleaseGroup' and release_group_form.validate_on_submit():
-            # Canonical String column form ('yes'|'no') — matches edit_filters.
+            # Canonical String column form ('yes'|'no') -- matches edit_filters.
             new_group = ReleaseGroup(
                 filter_pattern=release_group_form.filter_pattern.data,
                 case_sensitive=normalize_case_sensitive(release_group_form.case_sensitive.data),
@@ -127,7 +128,7 @@ def scan_management():
             db.session.add(new_group)
             db.session.commit()
             flash('New scanning filter added.', 'success')
-            return redirect(url_for('main.scan_management', active_tab='scan_filters'))
+            return redirect(url_for('admin2.scan_management', active_tab='scan_filters'))
         elif submit_action == 'DeleteReleaseGroup':
             # Handle deleting scanning filter
             filter_id = request.form.get('filter_id')
@@ -139,10 +140,10 @@ def scan_management():
                     flash('Scanning filter removed.', 'success')
                 else:
                     flash('Filter not found.', 'error')
-            return redirect(url_for('main.scan_management', active_tab='scan_filters'))
+            return redirect(url_for('admin2.scan_management', active_tab='scan_filters'))
         else:
             flash("Unrecognized action.", "error")
-            return redirect(url_for('main.scan_management'))
+            return redirect(url_for('admin2.scan_management'))
 
     game_paths_dict = session.get('game_paths', {})
     game_names_with_ids = [{'name': name, 'full_path': path} for name, path in game_paths_dict.items()]

@@ -242,9 +242,10 @@ def send_email_quiet(to, subject, html_body):
 
 
 def send_password_reset_email(user_email, token):
-    # Two fixes in one line. The endpoint is `login.reset_password` — there is
-    # no `main.reset_password`, so the old `url_for('main.reset_password', ...)`
-    # raised BuildError and no reset mail was ever sent. And `_external=True`
+    # Two fixes in one line. The endpoint is `login.reset_password` — there has
+    # never been a reset_password rule on the old `main` blueprint, so the
+    # earlier build against that name raised BuildError and no reset mail was
+    # ever sent. And `_external=True`
     # took the origin from the request's Host header, which an unauthenticated
     # caller controls; `public_origin()` prefers Site URL and only falls back to
     # a *trusted* request host. See oneirodex/utils/trusted_host.py.

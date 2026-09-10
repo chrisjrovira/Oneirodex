@@ -140,15 +140,15 @@ def test_image(db_session, test_game):
 
 
 class TestMainBlueprint:
-    """Test cases for the main blueprint (routes.py)."""
+    """Test cases for the routes folded out of the retired 'main' blueprint."""
 
-    @patch('oneirodex.routes.get_global_settings')
+    @patch('oneirodex.context.get_global_settings')
     def test_inject_settings_context_processor(self, mock_get_global_settings, app, db_session):
         """Test the inject_settings context processor."""
         mock_get_global_settings.return_value = {'test_setting': 'test_value'}
-        
+
         with app.app_context():
-            from oneirodex.routes import inject_settings
+            from oneirodex.context import inject_settings
             result = inject_settings()
             assert result == {'test_setting': 'test_value'}
             mock_get_global_settings.assert_called_once()
@@ -456,7 +456,7 @@ class TestMainBlueprint:
         assert response.status_code == 200
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.handle_auto_scan')
+    @patch('oneirodex.routes_admin_ext.scan_management.handle_auto_scan')
     def test_scan_management_auto_scan(self, mock_handle_auto_scan, mock_current_user, 
                                       client, app, db_session, admin_user, test_library):
         """Test scan_management with auto scan submission."""
@@ -478,7 +478,7 @@ class TestMainBlueprint:
         mock_handle_auto_scan.assert_called_once()
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.handle_manual_scan')
+    @patch('oneirodex.routes_admin_ext.scan_management.handle_manual_scan')
     def test_scan_management_manual_scan(self, mock_handle_manual_scan, mock_current_user, 
                                         client, app, db_session, admin_user, test_library):
         """Test scan_management with manual scan submission."""
@@ -500,7 +500,7 @@ class TestMainBlueprint:
         mock_handle_manual_scan.assert_called_once()
 
     @patch('flask_login.current_user')
-    @patch('oneirodex.routes.handle_delete_unmatched')
+    @patch('oneirodex.routes_admin_ext.scan_management.handle_delete_unmatched')
     def test_scan_management_delete_unmatched(self, mock_handle_delete, mock_current_user, 
                                              client, app, db_session, admin_user):
         """Test scan_management with delete unmatched submission."""
