@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 
 import {
@@ -9,8 +17,16 @@ import {
   listInvites,
   revokeInvite,
   uploadAvatar,
+  type AccountSummary,
+  type ListInvitesResponse,
 } from './accountApi.js'
-import { createToken, extractOneTimeSecret, listTokens, revokeToken } from './tokensApi.js'
+import {
+  createToken,
+  extractOneTimeSecret,
+  listTokens,
+  revokeToken,
+  type ApiToken,
+} from './tokensApi.js'
 import { copyText } from './copyText.js'
 import { PageStatus } from './pageStatus.js'
 import './AccountModal.css'
@@ -29,7 +45,17 @@ import './AccountModal.css'
  * the routes themselves.
  */
 
-export const ACCOUNT_PANELS = [
+/** The five sections the modal switches between. */
+export type AccountPanelId = 'profile' | 'avatar' | 'password' | 'invites' | 'tokens'
+
+/** One entry in the account section tab strip. */
+export interface AccountPanel {
+  id: AccountPanelId
+  label: string
+  title: string
+}
+
+export const ACCOUNT_PANELS: AccountPanel[] = [
   { id: 'profile', label: 'Profile', title: 'Profile' },
   { id: 'avatar', label: 'Avatar', title: 'Change avatar' },
   { id: 'password', label: 'Password', title: 'Change password' },
@@ -37,9 +63,14 @@ export const ACCOUNT_PANELS = [
   { id: 'tokens', label: 'API tokens', title: 'API tokens' },
 ]
 
-const PANEL_IDS = new Set(ACCOUNT_PANELS.map((panel) => panel.id))
+const PANEL_IDS: Set<string> = new Set(ACCOUNT_PANELS.map((panel) => panel.id))
 
-function panelTitle(id) {
+/** True when `value` names one of {@link ACCOUNT_PANELS}. */
+function isPanelId(value: unknown): value is AccountPanelId {
+  return typeof value === 'string' && PANEL_IDS.has(value)
+}
+
+function panelTitle(id: string): string {
   return ACCOUNT_PANELS.find((panel) => panel.id === id)?.title || 'Account'
 }
 
@@ -55,14 +86,17 @@ function panelTitle(id) {
  * sends back when picking a stock avatar, and it is what an older server (or
  * one whose theme folders predate the recoloured copies) will be sending.
  */
-function avatarSrc(summary, path) {
+function avatarSrc(
+  summary: AccountSummary | null | undefined,
+  path: string | null | undefined,
+): string {
   const resolved = summary?.avatar_url
   if (resolved && (!path || path === summary?.avatar_path)) return resolved
   if (!path) return ''
   return path.startsWith('/') ? path : `/static/${path}`
 }
 
-function formatWhen(iso) {
+function formatWhen(iso: string | null | undefined): string {
   if (!iso) return '—'
   try {
     return new Date(iso).toLocaleString()
@@ -72,12 +106,20 @@ function formatWhen(iso) {
 }
 
 /** Read `error` off a thrown envelope error without leaking `[object Object]`. */
-function messageOf(error, fallback) {
-  const text = error && typeof error.message === 'string' ? error.message.trim() : ''
-  return text || fallback
+function messageOf(error: unknown, fallback: string): string {
+  const raw =
+    error && typeof (error as { message?: unknown }).message === 'string'
+      ? (error as { message: string }).message.trim()
+      : ''
+  return raw || fallback
 }
 
-function Note({ tone, children }) {
+interface NoteProps {
+  tone: 'error' | 'good'
+  children?: ReactNode
+}
+
+function Note({ tone, children }: NoteProps): ReactNode {
   if (!children) return null
   return (
     <p
@@ -99,7 +141,7 @@ function Note({ tone, children }) {
  * what three tabs already said, and the "3 of 5 invites left" line repeated
  * what the Invites panel opens with.
  */
-function ProfilePanel({ summary }) {
+function ProfilePanel({ summary }: { summary: AccountSummary | null }): ReactNode {
   if (!summary) return <PageStatus loading inline className="od-acct__empty" />
 
   return (
@@ -118,8 +160,13 @@ function ProfilePanel({ summary }) {
 
 /* ----------------------------------------------------------------- avatar */
 
-function AvatarPanel({ summary, onUpdated }) {
-  const [file, setFile] = useState(null)
+interface AvatarPanelProps {
+  summary: AccountSummary | null
+  onUpdated?: (path: string) => void
+}
+
+function AvatarPanel({ summary, onUpdated }: AvatarPanelProps): ReactNode {
+  const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -138,7 +185,7 @@ function AvatarPanel({ summary, onUpdated }) {
     return () => URL.revokeObjectURL(url)
   }, [file])
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!file || busy) return
     setBusy(true)
@@ -156,7 +203,7 @@ function AvatarPanel({ summary, onUpdated }) {
     }
   }
 
-  async function handleStock(id) {
+  async function handleStock(id: string) {
     if (busy) return
     setBusy(true)
     setError('')
@@ -251,21 +298,28 @@ function AvatarPanel({ summary, onUpdated }) {
 
 /* --------------------------------------------------------------- password */
 
-function PasswordPanel() {
-  const [values, setValues] = useState({ current: '', next: '', confirm: '' })
+interface PasswordValues {
+  current: string
+  next: string
+  confirm: string
+}
+
+function PasswordPanel(): ReactNode {
+  const [values, setValues] = useState<PasswordValues>({ current: '', next: '', confirm: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
 
-  function update(key) {
-    return (event) => {
-      setValues((previous) => ({ ...previous, [key]: event.target.value }))
+  function update(key: keyof PasswordValues) {
+    return (event: ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.target
+      setValues((previous) => ({ ...previous, [key]: value }))
       setError('')
       setDone('')
     }
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setBusy(true)
@@ -339,14 +393,14 @@ function PasswordPanel() {
 
 /* ---------------------------------------------------------------- invites */
 
-function InvitesPanel() {
-  const [state, setState] = useState(null)
+function InvitesPanel(): ReactNode {
+  const [state, setState] = useState<ListInvitesResponse | null>(null)
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
 
-  const load = useCallback(async (signal) => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     try {
       setState(await listInvites({ signal }))
     } catch (err) {
@@ -361,7 +415,7 @@ function InvitesPanel() {
     return () => controller.abort()
   }, [load])
 
-  async function handleCreate(event) {
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setBusy(true)
@@ -383,7 +437,7 @@ function InvitesPanel() {
     }
   }
 
-  async function handleRevoke(token) {
+  async function handleRevoke(token: string) {
     setError('')
     setDone('')
     try {
@@ -478,15 +532,17 @@ function InvitesPanel() {
 
 /* ----------------------------------------------------------------- tokens */
 
-function TokensPanel() {
-  const [tokens, setTokens] = useState([])
+type ScopePresetId = 'companion' | 'thin'
+
+function TokensPanel(): ReactNode {
+  const [tokens, setTokens] = useState<ApiToken[]>([])
   const [name, setName] = useState('')
-  const [preset, setPreset] = useState('companion')
+  const [preset, setPreset] = useState<ScopePresetId>('companion')
   const [secret, setSecret] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const load = useCallback(async (signal) => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     try {
       const data = await listTokens({ signal })
       setTokens(Array.isArray(data.tokens) ? data.tokens : [])
@@ -502,7 +558,7 @@ function TokensPanel() {
     return () => controller.abort()
   }, [load])
 
-  async function handleCreate(event) {
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy || !name.trim()) return
     setBusy(true)
@@ -519,7 +575,7 @@ function TokensPanel() {
     }
   }
 
-  async function handleRevoke(id) {
+  async function handleRevoke(id: number) {
     setError('')
     try {
       await revokeToken(id)
@@ -565,7 +621,7 @@ function TokensPanel() {
           <select
             className="od-acct__input"
             value={preset}
-            onChange={(event) => setPreset(event.target.value)}
+            onChange={(event) => setPreset(event.target.value as ScopePresetId)}
           >
             <option value="companion">Desktop companion — library + download</option>
             <option value="thin">Thin client — library + social, no download</option>
@@ -609,13 +665,22 @@ function TokensPanel() {
 
 /* ------------------------------------------------------------------ shell */
 
-export function AccountModal({ panel, onClose = undefined, onAvatarChange = undefined }) {
-  const [active, setActive] = useState(() => (PANEL_IDS.has(panel) ? panel : 'profile'))
-  const [summary, setSummary] = useState(null)
-  const panelRef = useRef(null)
+export interface AccountModalProps {
+  /** Which section to open on. A falsy value keeps the modal closed. */
+  panel?: AccountPanelId | null
+  onClose?: () => void
+  onAvatarChange?: (path: string) => void
+}
+
+export function AccountModal({ panel, onClose, onAvatarChange }: AccountModalProps): ReactNode {
+  const [active, setActive] = useState<AccountPanelId>(() =>
+    isPanelId(panel) ? panel : 'profile',
+  )
+  const [summary, setSummary] = useState<AccountSummary | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (PANEL_IDS.has(panel)) setActive(panel)
+    if (isPanelId(panel)) setActive(panel)
   }, [panel])
 
   // Both of these are gated on the modal actually being open.
@@ -638,14 +703,14 @@ export function AccountModal({ panel, onClose = undefined, onAvatarChange = unde
 
   useEffect(() => {
     if (!panel) return undefined
-    function onKey(event) {
+    function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [panel, onClose])
 
-  function handleAvatarUpdated(path) {
+  function handleAvatarUpdated(path: string) {
     setSummary((previous) => (previous ? { ...previous, avatar_path: path } : previous))
     onAvatarChange?.(path)
   }

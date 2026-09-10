@@ -33,5 +33,4 @@ export * from './copyText.js'
 export * from './accountApi.js'
 export * from './tokensApi.js'
 export * from './preferencesModal.js'
-// .jsx (not .js): this one is still untyped JSX, unlike the .ts modules above.
-export * from './AccountModal.jsx'
+export * from './AccountModal.js'

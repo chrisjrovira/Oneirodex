@@ -2,12 +2,20 @@
  * Copy raw text to the clipboard without stripping or transforming it.
  * Tries Clipboard API first; on failure (common over plain HTTP LAN) falls back to
  * selecting an optional DOM element, then a temporary textarea + execCommand('copy').
- *
- * @param {string} text
- * @param {{ selectEl?: Element | null }} [options]
- * @returns {Promise<boolean>} true when a copy path reported success
  */
-export async function copyText(text, options = {}) {
+
+/** Options for {@link copyText}. */
+export interface CopyTextOptions {
+  /** An already-rendered element to select and copy from before the textarea path. */
+  selectEl?: Element | null
+}
+
+/**
+ * @param text the exact string to place on the clipboard
+ * @param options optional element to select as the second fallback
+ * @returns true when a copy path reported success
+ */
+export async function copyText(text: string, options: CopyTextOptions = {}): Promise<boolean> {
   if (typeof text !== 'string' || text.length === 0) {
     return false
   }
@@ -35,11 +43,8 @@ export async function copyText(text, options = {}) {
   return copyViaTextarea(text)
 }
 
-/**
- * @param {Element} el
- * @returns {boolean}
- */
-export function copyViaElementSelection(el) {
+/** Select an element's contents and `execCommand('copy')` it. */
+export function copyViaElementSelection(el: Element | null): boolean {
   if (typeof document === 'undefined' || !el) {
     return false
   }
@@ -67,11 +72,8 @@ export function copyViaElementSelection(el) {
   return Boolean(ok)
 }
 
-/**
- * @param {string} text
- * @returns {boolean}
- */
-export function copyViaTextarea(text) {
+/** Copy `text` via a throwaway offscreen `<textarea>` + `execCommand('copy')`. */
+export function copyViaTextarea(text: string): boolean {
   if (typeof document === 'undefined') {
     return false
   }
