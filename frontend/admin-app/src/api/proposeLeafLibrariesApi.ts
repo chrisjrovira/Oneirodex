@@ -8,64 +8,97 @@ export const LIBRARY_ADD_URL = '/admin/library/add'
 export const LIBRARY_SCAN_URL = '/api/admin/libraries/scan'
 export const GET_LIBRARIES_URL = '/api/get_libraries'
 
+/** One normalized candidate row (propose or import preview). */
+export interface CandidateRow {
+  id: string
+  path: string
+  suggested_name: string
+  platform: string
+  scan_mode: 'files' | 'folders'
+  scan_depth: 1 | 2
+  reason: string
+  source_index: number
+}
+
+/** One rejected row from an import preview. */
+export interface ImportPreviewError {
+  index: number | null
+  path: string | null
+  code: string
+  message: string
+  id: string
+}
+
+/** Normalized propose API payload. */
+export interface ProposeResponse {
+  root: string
+  candidates: CandidateRow[]
+  count: number
+  autoCreate: boolean
+}
+
+/** Normalized import preview payload. */
+export interface ImportPreviewResponse {
+  candidates: CandidateRow[]
+  errors: ImportPreviewError[]
+  count: number
+  errorCount: number
+  autoCreate: boolean
+  createHint: string
+}
+
+/** Soft-degrade / error shape returned by the propose + import preview fetchers. */
+export interface ProposeLeafError {
+  unavailable?: boolean
+  error: string
+}
+
 /**
  * Normalize one candidate row (propose or import preview).
- * @param {unknown} row
- * @param {number} index
- * @returns {object|null}
  */
-export function normalizeCandidateRow(row, index) {
+export function normalizeCandidateRow(row: unknown, index: number): CandidateRow | null {
   if (!row || typeof row !== 'object') return null
-  const path = String(row.path || '').trim()
+  const r = row as Record<string, unknown>
+  const path = String(r.path || '').trim()
   if (!path) return null
   const sourceIndex =
-    typeof row.source_index === 'number' && Number.isFinite(row.source_index)
-      ? row.source_index
-      : index
+    typeof r.source_index === 'number' && Number.isFinite(r.source_index) ? r.source_index : index
   return {
     id: `${path}::${sourceIndex}`,
     path,
-    suggested_name: String(row.suggested_name || row.name || path).trim() || path,
-    platform: String(row.platform || 'OTHER').trim() || 'OTHER',
-    scan_mode: row.scan_mode === 'files' ? 'files' : 'folders',
-    scan_depth: Number(row.scan_depth) === 2 ? 2 : 1,
-    reason: String(row.reason || '').trim(),
+    suggested_name: String(r.suggested_name || r.name || path).trim() || path,
+    platform: String(r.platform || 'OTHER').trim() || 'OTHER',
+    scan_mode: r.scan_mode === 'files' ? 'files' : 'folders',
+    scan_depth: Number(r.scan_depth) === 2 ? 2 : 1,
+    reason: String(r.reason || '').trim(),
     source_index: sourceIndex,
   }
 }
 
 /**
  * Normalize propose API payload into a stable candidate list.
- * @param {unknown} data
- * @returns {{ root: string, candidates: object[], count: number, autoCreate: boolean }}
  */
-export function normalizeProposeResponse(data) {
+export function normalizeProposeResponse(data: unknown): ProposeResponse {
   if (!data || typeof data !== 'object') {
     return { root: '', candidates: [], count: 0, autoCreate: false }
   }
-  const raw = Array.isArray(data.candidates) ? data.candidates : []
-  const candidates = raw.map((row, index) => normalizeCandidateRow(row, index)).filter(Boolean)
+  const d = data as Record<string, unknown>
+  const raw = Array.isArray(d.candidates) ? d.candidates : []
+  const candidates = raw
+    .map((row: unknown, index: number) => normalizeCandidateRow(row, index))
+    .filter((row): row is CandidateRow => row !== null)
   return {
-    root: String(data.root || ''),
+    root: String(d.root || ''),
     candidates,
-    count: typeof data.count === 'number' ? data.count : candidates.length,
-    autoCreate: Boolean(data.auto_create),
+    count: typeof d.count === 'number' ? d.count : candidates.length,
+    autoCreate: Boolean(d.auto_create),
   }
 }
 
 /**
  * Normalize import preview payload (candidates + errors; never creates).
- * @param {unknown} data
- * @returns {{
- *   candidates: object[],
- *   errors: object[],
- *   count: number,
- *   errorCount: number,
- *   autoCreate: boolean,
- *   createHint: string,
- * }}
  */
-export function normalizeImportPreviewResponse(data) {
+export function normalizeImportPreviewResponse(data: unknown): ImportPreviewResponse {
   if (!data || typeof data !== 'object') {
     return {
       candidates: [],
@@ -76,33 +109,37 @@ export function normalizeImportPreviewResponse(data) {
       createHint: '',
     }
   }
-  const raw = Array.isArray(data.candidates) ? data.candidates : []
-  const candidates = raw.map((row, index) => normalizeCandidateRow(row, index)).filter(Boolean)
-  const errors = (Array.isArray(data.errors) ? data.errors : [])
-    .filter((err) => err && typeof err === 'object')
-    .map((err, index) => ({
+  const d = data as Record<string, unknown>
+  const raw = Array.isArray(d.candidates) ? d.candidates : []
+  const candidates = raw
+    .map((row: unknown, index: number) => normalizeCandidateRow(row, index))
+    .filter((row): row is CandidateRow => row !== null)
+  const errors: ImportPreviewError[] = (Array.isArray(d.errors) ? d.errors : [])
+    .filter((err: unknown): err is Record<string, unknown> => !!err && typeof err === 'object')
+    .map((err: Record<string, unknown>, index: number) => ({
       index: typeof err.index === 'number' ? err.index : null,
       path: err.path != null ? String(err.path) : null,
       code: String(err.code || '').trim(),
       message: String(err.message || err.error || '').trim() || 'Row rejected',
-      id: `err-${err.index ?? index}-${err.code || 'unknown'}`,
+      id: `err-${String(err.index ?? index)}-${String(err.code || 'unknown')}`,
     }))
   return {
     candidates,
     errors,
-    count: typeof data.count === 'number' ? data.count : candidates.length,
-    errorCount: typeof data.error_count === 'number' ? data.error_count : errors.length,
-    autoCreate: Boolean(data.auto_create),
-    createHint: String(data.create_hint || '').trim(),
+    count: typeof d.count === 'number' ? d.count : candidates.length,
+    errorCount: typeof d.error_count === 'number' ? d.error_count : errors.length,
+    autoCreate: Boolean(d.auto_create),
+    createHint: String(d.create_hint || '').trim(),
   }
 }
 
 /**
  * Call propose API. Soft-degrades on 404 mid-rollout.
- * @param {string} root
- * @returns {Promise<{ unavailable?: boolean, error?: string, root?: string, candidates?: object[], count?: number }>}
+ * @returns {Promise<ProposeResponse | ProposeLeafError>}
  */
-export async function fetchProposeLeafLibraries(root) {
+export async function fetchProposeLeafLibraries(
+  root: string,
+): Promise<ProposeResponse | ProposeLeafError> {
   const trimmed = String(root || '').trim()
   if (!trimmed) {
     return { error: 'Enter a root path under an allowed base.' }
@@ -145,25 +182,21 @@ export async function fetchProposeLeafLibraries(root) {
   return normalized
 }
 
+export interface ImportLeafPreviewOpts {
+  /** 'json' | 'csv' | 'file'; anything else is treated as 'json'. */
+  mode?: string
+  text?: string
+  file?: File | null
+}
+
 /**
  * Preview CSV/JSON leaf library import. Soft-degrades on 404; never creates.
  *
- * @param {{
- *   mode: 'json' | 'csv' | 'file',
- *   text?: string,
- *   file?: File | null,
- * }} opts
- * @returns {Promise<{
- *   unavailable?: boolean,
- *   error?: string,
- *   candidates?: object[],
- *   errors?: object[],
- *   count?: number,
- *   errorCount?: number,
- *   createHint?: string,
- * }>}
+ * @returns {Promise<ImportPreviewResponse | ProposeLeafError>}
  */
-export async function fetchImportLeafLibrariesPreview(opts) {
+export async function fetchImportLeafLibrariesPreview(
+  opts: ImportLeafPreviewOpts,
+): Promise<ImportPreviewResponse | ProposeLeafError> {
   const mode = opts?.mode || 'json'
   let response
 
@@ -247,10 +280,11 @@ export async function fetchImportLeafLibrariesPreview(opts) {
 
 /**
  * Create one library via existing form POST (name / platform / scan_depth).
- * @param {{ suggested_name: string, platform: string, scan_depth: number }} candidate
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
-export async function createLibraryFromCandidate(candidate) {
+export async function createLibraryFromCandidate(
+  candidate: CandidateRow,
+): Promise<{ ok: boolean; error?: string }> {
   const form = new FormData()
   form.append('csrf_token', csrfToken())
   form.append('name', candidate.suggested_name)
@@ -287,29 +321,35 @@ export async function createLibraryFromCandidate(candidate) {
 
 /**
  * Match a newly created library by suggested name (best-effort).
- * @param {string} name
  * @returns {Promise<string|null>} uuid
  */
-export async function findLibraryUuidByName(name) {
+export async function findLibraryUuidByName(name: string): Promise<string | null> {
   const data = await getJson(GET_LIBRARIES_URL)
-  const rows = Array.isArray(data) ? data : data.libraries || []
+  const rows: unknown[] = Array.isArray(data) ? data : data.libraries || []
   const want = String(name || '')
     .trim()
     .toLowerCase()
   const hit = rows.find(
-    (row) =>
-      String(row.name || '')
+    (row): row is Record<string, unknown> =>
+      !!row &&
+      typeof row === 'object' &&
+      String((row as Record<string, unknown>).name || '')
         .trim()
         .toLowerCase() === want,
   )
-  return hit?.uuid || null
+  return hit && typeof hit.uuid === 'string' ? hit.uuid : null
+}
+
+export interface QueueLeafScanOpts {
+  uuid: string
+  path: string
+  scan_mode: string
 }
 
 /**
  * Queue a first scan so last_scan_folder remembers the leaf path.
- * @param {{ uuid: string, path: string, scan_mode: string }} opts
  */
-export async function queueLeafScan({ uuid, path, scan_mode }) {
+export async function queueLeafScan({ uuid, path, scan_mode }: QueueLeafScanOpts) {
   const { ok, status, data } = await postJsonResult(LIBRARY_SCAN_URL, {
     library_uuid: uuid,
     folder: path,
@@ -318,22 +358,32 @@ export async function queueLeafScan({ uuid, path, scan_mode }) {
     force_parallel: false,
   })
   if (!ok) {
+    const body = (data ?? {}) as Record<string, unknown>
     return {
       ok: false,
-      error: data.message || data.error || `Scan queue failed (${status})`,
+      error: String(body.message || body.error || `Scan queue failed (${status})`),
     }
   }
   return { ok: true, data }
 }
 
+export interface LeafCreateResult {
+  path: string
+  name: string
+  uuid?: string
+  ok: boolean
+  stage: 'create' | 'scan'
+  error?: string
+  note?: string
+}
+
 /**
  * Confirm path: create each selected library, then queue a first scan when UUID is found.
  * Never invents a mega-lib — one create per candidate.
- * @param {object[]} selected
- * @returns {Promise<{ results: object[], created: number, scanned: number, failed: number }>}
+ * @returns {Promise<{ results: LeafCreateResult[], created: number, scanned: number, failed: number }>}
  */
-export async function confirmCreateSelected(selected) {
-  const results = []
+export async function confirmCreateSelected(selected: CandidateRow[]) {
+  const results: LeafCreateResult[] = []
   let created = 0
   let scanned = 0
   let failed = 0
@@ -353,7 +403,7 @@ export async function confirmCreateSelected(selected) {
     }
     created += 1
 
-    let uuid = null
+    let uuid: string | null = null
     try {
       uuid = await findLibraryUuidByName(candidate.suggested_name)
     } catch {

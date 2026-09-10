@@ -36,7 +36,7 @@ export async function getJson(url: string, { signal }: { signal?: AbortSignal } 
   return data
 }
 
-export async function postJson(url, body) {
+export async function postJson(url: string, body?: unknown) {
   const { ok, status, data } = await postJsonResult(url, body)
   if (!ok) {
     throw adminError(data, status, url)
@@ -48,7 +48,7 @@ export async function postJson(url, body) {
  * POST JSON and return `{ ok, status, data }` without throwing on 4xx/5xx
  * (still redirects on 401). Used for scan conflict / 409 recovery.
  */
-export async function postJsonResult(url, body) {
+export async function postJsonResult(url: string, body?: unknown) {
   const response = await fetch(url, {
     method: 'POST',
     credentials: 'same-origin',
@@ -59,11 +59,14 @@ export async function postJsonResult(url, body) {
     window.location.href = '/login'
     throw new Error('unauthorized')
   }
+  // `data` stays inferred `any` here, matching `getJson`: the admin envelope is
+  // loose and each consumer narrows at its use site. Tightening this to a shared
+  // response type is a follow-up once the pages/components are annotated.
   const data = await response.json().catch(() => ({}))
   return { ok: response.ok, status: response.status, data }
 }
 
-export async function putJson(url, body) {
+export async function putJson(url: string, body?: unknown) {
   const response = await fetch(url, {
     method: 'PUT',
     credentials: 'same-origin',
