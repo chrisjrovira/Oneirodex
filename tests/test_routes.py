@@ -1363,11 +1363,14 @@ class TestErrorHandling:
                 assert db_session.query(Game).filter_by(uuid=game_uuid).first() is None
 
     @patch('flask_login.current_user')
-    def test_delete_all_unmatched_folders_db_error(self, mock_current_user, client, app, db_session, admin_user):
+    def test_delete_all_unmatched_folders_db_error(self, mock_current_user, client, app, db_session, admin_user, global_settings):
         """Test delete_all_unmatched_folders with database error."""
         mock_current_user.is_authenticated = True
         mock_current_user.role = 'admin'
-        
+
+        # `global_settings` so the `check_setup_status` before_request hook finds
+        # its settings row already present and does not itself call the
+        # `db.session.commit` this test patches to raise.
         with patch.object(db.session, 'commit', side_effect=Exception("DB Error")):
             with client.session_transaction() as sess:
                 sess['_user_id'] = str(admin_user.id)

@@ -25,16 +25,22 @@ CONFTEST = (ROOT / 'conftest.py').read_text(encoding='utf-8')
 
 
 def test_schema_setup_does_not_run_per_test():
-    """Session-scoped, or the lock storm comes back."""
+    """DDL runs once per process, or the lock storm comes back.
+
+    Per-test isolation is now a rolled-back SAVEPOINT (see `db_session`), but the
+    schema build — `create_all` + the incremental `ALTER TABLE` migration — must
+    still happen exactly once, behind `_SCHEMA_READY`. `db_session` calls
+    `_build_schema_once()`, which is where that guarded work lives.
+    """
     assert '_SCHEMA_READY' in CONFTEST
-    body = CONFTEST[CONFTEST.index('def db_session('):]
-    body = body[:body.index('\n@pytest.fixture')]
+    build = CONFTEST[CONFTEST.index('def _build_schema_once('):]
+    build = build[:build.index('\n@pytest.fixture')]
     migration = 'DatabaseManager().add_column_if_not_exists()'
-    assert migration in body
-    guarded = re.search(
-        r'if not _SCHEMA_READY:.*?' + re.escape(migration), body, re.S
-    )
-    assert guarded, 'the migration is no longer behind the once-per-run guard'
+    assert migration in build
+    assert re.search(r'if _SCHEMA_READY:\s*\n\s*return', build), \
+        'the once-per-process guard is gone from _build_schema_once'
+    assert '_build_schema_once()' in CONFTEST[CONFTEST.index('def db_session('):], \
+        'db_session no longer triggers the guarded schema build'
 
 
 def test_lock_timeout_is_set_outside_a_transaction():
