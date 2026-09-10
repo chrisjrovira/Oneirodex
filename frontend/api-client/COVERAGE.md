@@ -54,3 +54,11 @@ typed) matching the `src/types.ts` house style — tighten per group as
 
 - `docs/openapi/openapi.json` regen was out of scope for wave C3.7-client — the
   new groups above are not yet in the spec.
+- **admin-app browser-transport adoption (PR-4 f, deferred).** `admin-app/src/api/adminApi.ts`
+  still runs its own `fetch` verbs (over `@oneirodex/ui` `csrfHeaders` / `errorFromBody`).
+  Swapping them onto `createBrowserRequester` is blocked on `unwrapResponse` returning
+  `undefined` unless the response carries `content-type: application/json`, which ~30 admin
+  vitest `fetch` mocks do not set — the swap fails that suite wholesale until the mocks
+  gain the header. The `/api/admin/**` resource modules and the `account` multipart
+  `uploadAvatar` (added to `@oneirodex/ui` `accountApi.js` in PR-4 d, not here) remain
+  unwrapped.

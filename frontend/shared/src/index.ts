@@ -25,3 +25,12 @@ export * from './Button.js'
 export * from './useResource.js'
 export * from './ViewerContext.js'
 export * from './ShellConfigContext.js'
+// PR-4 (d): AccountModal + its data helpers move here so the admin shell drops
+// its `@member` cross-app alias. member-app keeps thin re-export shims at the
+// old `api/tokens` / `utils/copyText` paths and re-exports openPreferencesModal
+// from `api/preferences`.
+export * from './copyText.js'
+export * from './accountApi.js'
+export * from './tokensApi.js'
+export * from './preferencesModal.js'
+export * from './AccountModal.js'

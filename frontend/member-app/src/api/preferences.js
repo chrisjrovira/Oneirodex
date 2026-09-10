@@ -57,43 +57,10 @@ export function preferencesFromShell(shellConfig = {}, partial = {}) {
 }
 
 /**
- * Open the server-rendered preferences modal used by the member SPA shell.
- * Theme changes saved there trigger a full reload (see module docstring).
+ * Open the server-rendered preferences modal used by the SPA shells.
+ *
+ * Moved into `@oneirodex/ui` (PR-4 d) so the admin shell can open it without the
+ * `@member` cross-app alias. Re-exported here so `CommandPalette` / `TopBar` and
+ * their tests keep importing it from `../api/preferences`.
  */
-export async function openPreferencesModal() {
-  const container = document.getElementById('preferencesModalContainer')
-  if (!container) {
-    throw new Error('preferences modal container missing')
-  }
-
-  const res = await fetch('/settings_panel', {
-    credentials: 'same-origin',
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-  })
-  if (!res.ok) {
-    // Not errorFromResponse: /settings_panel renders HTML, so there is no
-    // envelope to read and a parse attempt would only cost a round trip.
-    throw new Error('preferences load failed')
-  }
-
-  const html = await res.text()
-  container.innerHTML = html
-
-  const modalElement = document.getElementById('preferencesModal')
-  if (!modalElement) {
-    throw new Error('preferences modal markup missing')
-  }
-
-  if (typeof window.odHoistBootstrapModals === 'function') {
-    window.odHoistBootstrapModals(modalElement)
-  }
-
-  const bootstrap = window.bootstrap
-  if (bootstrap?.Modal) {
-    bootstrap.Modal.getOrCreateInstance(modalElement).show()
-    return
-  }
-
-  modalElement.style.display = 'block'
-  modalElement.classList.add('show')
-}
+export { openPreferencesModal } from '@oneirodex/ui'

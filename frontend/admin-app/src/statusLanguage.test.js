@@ -3,6 +3,11 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
+/* PR-4 moved the flat `src/` into pages/ components/ api/ hooks/. This guard
+ * still lives at `src/` root, so it walks the subtree to keep covering every
+ * `.jsx`. Baseline rows stay keyed by basename — they are unique across the
+ * admin `src/` tree. */
+
 /**
  * One status language for admin (GT-B33) — a ratchet, not a cleanup mandate.
  *
@@ -47,25 +52,47 @@ import { describe, expect, it } from 'vitest'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
+/* basename -> absolute path, gathered recursively from `src/`. PR-4 (e) renamed
+ * the components to `.tsx`; JSX still lives in a `.jsx`/`.tsx` file, so match
+ * both and key the baseline by `.tsx`. */
+function collectJsx(dir, acc) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules') continue
+      collectJsx(full, acc)
+    } else if (
+      (entry.name.endsWith('.jsx') || entry.name.endsWith('.tsx')) &&
+      !entry.name.includes('.test.')
+    ) {
+      acc.set(entry.name, full)
+    }
+  }
+  return acc
+}
+const JSX_BY_NAME = collectJsx(HERE, new Map())
+
 /* Recorded 2026-08-25 after the GT-B33 conversion: 59 → 27 sites, 21 → 16
  * files, five files at zero. What remains is largely the deliberate categories
  * listed above rather than debt. */
 const STATUS_BASELINE = {
-  'ArtStudioPage.jsx': 1,
-  'ArtworkPicker.jsx': 1,
-  'CreateUserForm.jsx': 1,
-  'DupeGlance.jsx': 1,
-  'EmulatorFirmwarePanel.jsx': 2,
-  'ImportLeafLibraries.jsx': 2,
-  'OpenPathModal.jsx': 1,
-  'ProposeLeafLibraries.jsx': 2,
-  'RemotePlayPage.jsx': 1,
-  'ScanMatchSettingsPage.jsx': 3,
-  'StockPicker.jsx': 1,
-  'SystemMarksPanel.jsx': 1,
-  'StoragePage.jsx': 5,
-  'SystemResetPanel.jsx': 2,
-  'pages.jsx': 1,
+  'ArtStudioPage.tsx': 1,
+  'ArtworkPicker.tsx': 1,
+  'CreateUserForm.tsx': 1,
+  'DupeGlance.tsx': 1,
+  'EmulatorFirmwarePanel.tsx': 2,
+  'ImportLeafLibraries.tsx': 2,
+  'OpenPathModal.tsx': 1,
+  'ProposeLeafLibraries.tsx': 2,
+  'RemotePlayPage.tsx': 1,
+  'ScanMatchSettingsPage.tsx': 3,
+  'StockPicker.tsx': 1,
+  'SystemMarksPanel.tsx': 1,
+  'StoragePage.tsx': 5,
+  'SystemResetPanel.tsx': 2,
+  // PR-4 (b) split pages.jsx; this one `role="status"` site (the scan-live
+  // pill) moved verbatim into ScansPage. Same total, new file key.
+  'ScansPage.tsx': 1,
 }
 
 /**
@@ -73,19 +100,17 @@ const STATUS_BASELINE = {
  * It moved into `@oneirodex/ui` in wave B1.2, so there is no local file to
  * exempt any more; the set is kept as a guard in case a copy is ever re-added.
  */
-const EXEMPT = new Set(['PageStatus.jsx'])
+const EXEMPT = new Set(['PageStatus.jsx', 'PageStatus.tsx'])
 
 const STATUS_ROLE = /role="(?:status|alert)"/g
 
 function sourceFiles() {
-  return readdirSync(HERE)
-    .filter((name) => name.endsWith('.jsx'))
-    .filter((name) => !name.includes('.test.'))
-    .filter((name) => !EXEMPT.has(name))
+  return [...JSX_BY_NAME.keys()].filter((name) => !EXEMPT.has(name))
 }
 
 function countStatusRoles(name) {
-  const source = readFileSync(join(HERE, name), 'utf8')
+  const full = JSX_BY_NAME.get(name) ?? join(HERE, name)
+  const source = readFileSync(full, 'utf8')
   return (source.match(STATUS_ROLE) || []).length
 }
 
