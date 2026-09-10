@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 
+import { getJson } from '../api/adminApi'
 import { DashboardBoard } from '../components/DashboardBoard'
 import { DataTable } from '../components/DataTable'
 import { OpsLogModal } from '../components/OpsLogModal'
@@ -31,16 +32,6 @@ import '../ops.css'
 // from this module. Moving the definition without this would have broken a test
 // that has nothing to do with the move.
 export { formatScanJobCounters }
-
-async function getJson(url: string, { signal }: { signal?: AbortSignal } = {}) {
-  const response = await fetch(url, { credentials: 'same-origin', signal })
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('unauthorized')
-  }
-  if (!response.ok) throw new Error(`${url} ${response.status}`)
-  return response.json()
-}
 
 function livekitLabel(livekit) {
   if (!livekit) return 'n/a'

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
+import { getJson } from '../api/adminApi'
 import { DataTable } from '../components/DataTable'
 import { MetricStrip } from '../components/opsWidgets'
 import { CreateUserForm } from '../components/CreateUserForm'
@@ -15,16 +16,6 @@ const COLUMNS = [
   },
   { key: 'unused_invites', label: 'Unused tokens', align: 'right' },
 ]
-
-async function getJson(url) {
-  const response = await fetch(url, { credentials: 'same-origin' })
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('unauthorized')
-  }
-  if (!response.ok) throw new Error(`${url} ${response.status}`)
-  return response.json()
-}
 
 export function InvitesPage() {
   const [users, setUsers] = useState([])
