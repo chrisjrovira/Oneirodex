@@ -40,7 +40,7 @@ function rethrowAsMemberError(err: unknown, label: string): never {
     const body = err.body
     const data =
       body && typeof body === 'object'
-        ? (body as Record<string, unknown>)
+        ? (body as unknown as Record<string, unknown>)
         : body
           ? { error: String(body) }
           : null
