@@ -58,13 +58,59 @@ model: a model with required fields → 422 naming them; an all-optional model
 
 ## Adopted so far
 
+48 routes (PRs #80–#96 plus the earlier collections / Steam wave). Prefixes
+below match the Flask blueprints (`/api` for `routes_apis/`).
+
 | File | Route | Model |
 |---|---|---|
 | `routes_apis/collections.py` | `POST /api/collections` (`create_collection`) | `CreateCollectionBody` |
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
+| `routes_apis/collections.py` | `POST /api/announcements` (`create_announcement`) | `CreateAnnouncementBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
 | `routes_apis/support.py` | `POST /api/support/tickets` (`support_ticket_create`) | `CreateSupportTicketBody` |
+| `routes_apis/playtime.py` | `POST /api/playtime/sessions` (`playtime_start`) | `StartPlaytimeSessionBody` |
+| `routes_apis/wishlist.py` | `POST /api/requests` (`create_request`) | `CreateWishlistRequestBody` |
+| `routes_apis/wishlist.py` | `PATCH /api/requests/<id>` (`resolve_request`) | `ResolveWishlistRequestBody` |
+| `routes_apis/tokens.py` | `POST /api/tokens` (`create_api_token`) | `CreateApiTokenBody` |
+| `routes_apis/related_media.py` | `POST /api/games/<uuid>/related_media` (`related_media_create`) | `CreateRelatedMediaBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/proposals/approve` (`approve_proposal`) | `ApproveProposalBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/proposals/scan_roots` (`scan_roots_for_proposals`) | `ScanRootsBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/doctor/dry_run` (`library_doctor_dry_run`) | `DoctorDryRunBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/doctor/write_proposals` (`library_doctor_write_proposals`) | `WriteProposalsBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/doctor/apply_renames` (`library_doctor_apply_renames`) | `ApplyRenamesBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/check_freshness` (`library_tools_check_freshness`) | `CheckFreshnessBody` |
+| `routes_apis/chat.py` | `POST /api/chat/channels/<id>/mute` (`chat_channel_mute`) | `MuteChannelBody` |
+| `routes_apis/chat_spaces_api.py` | `POST /api/chat/spaces/<id>/members` (`chat_space_member_add`) | `AddSpaceMemberBody` |
+| `routes_apis/quality_stats.py` | `POST /api/quality-profiles/score` (`quality_profiles_score`) | `ScoreReleaseBody` |
+| `routes_apis/emulator_cheats.py` | `POST /api/games/<uuid>/pc_cheats` (`pc_cheats_create`) | `CreatePcCheatBody` |
+| `routes_apis/client.py` | `POST /api/client/lifecycle` (`client_lifecycle_post`) | `ClientLifecycleBody` |
+| `routes_apis/wanted.py` | `POST /api/updates/wanted` (`updates_wanted_add`) | `AddWantedBody` |
+| `routes_apis/wanted.py` | `POST /api/updates/wanted/fulfill` (`updates_wanted_fulfill`) | `FulfillWantedBody` |
+| `routes_apis/storage.py` | `POST /api/storage/hardlink/preview` (`hardlink_preview`) | `HardlinkBody` |
+| `routes_apis/storage.py` | `POST /api/storage/hardlink/apply` (`hardlink_apply`) | `HardlinkBody` |
+| `routes_apis/game_servers.py` | `POST /api/game-servers` (`create_game_server`) | `CreateGameServerBody` |
+| `routes_apis/malware_scan.py` | `POST /api/admin/malware-scan` (`malware_scan_run`) | `MalwareScanBody` |
+| `routes_apis/acquire.py` | `POST /api/acquire/download` (`acquire_download`) | `AcquireDownloadBody` |
+| `routes_apis/user.py` | `POST /api/check_username` (`check_username`) | `CheckUsernameBody` |
+| `routes_apis/layouts.py` | `POST /api/layouts/detail/presets` (`layouts_detail_presets_post`) | `CreateLayoutPresetBody` |
+| `routes_apis/patch_catalog.py` | `POST /api/patch-catalog/attach` (`patch_catalog_attach`) | `AttachPatchGuideBody` |
+| `routes_apis/providers.py` | `POST /api/games/<uuid>/artwork/steamgriddb` (`steamgriddb_apply_artwork`) | `ApplyArtworkBody` |
+| `routes_apis/account.py` | `POST /api/account/avatar/stock` (`account_stock_avatar`) | `StockAvatarBody` |
+| `routes_apis/account.py` | `POST /api/account/password` (`account_password`) | `ChangePasswordBody` |
+| `routes_apis/ai_assist.py` | `POST /api/ai/apply-triage` (`ai_apply_triage`) | `ApplyTriageBody` |
+| `routes_admin_ext/system.py` | `POST /admin/api/discovery_sections` (`create_discovery_section`) | `DiscoveryShelfBody` |
+| `routes_admin_ext/system.py` | `PUT /admin/api/discovery_sections/<id>` (`update_discovery_section`) | `DiscoveryShelfBody` |
+| `routes_admin_ext/game_delete.py` | `POST /delete_full_game` (`delete_full_game`) | `DeleteFullGameBody` |
+| `routes_admin_ext/game_images.py` | `POST /delete_image` (`delete_game_image`) | `DeleteGameImageBody` |
+| `routes_admin_ext/libraries.py` | `POST /api/library/preview-cropped-image` (`preview_cropped_image`) | `PreviewCroppedImageBody` |
+| `routes_admin_ext/images.py` | `POST /admin/api/covers/apply` (`covers_apply_single`) | `ApplyCoverBody` |
+| `routes_admin_ext/images.py` | `POST /admin/api/artwork/generate` (`artwork_generate`) | `GenerateArtworkBody` |
+| `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/preview` (`art_studio_preview`) | `ArtStudioPreviewBody` |
+| `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/generate` (`art_studio_generate`) | `ArtStudioGenerateBody` |
+| `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/apply` (`art_studio_apply`) | `ArtStudioApplyBody` |
+| `routes_arr.py` | `POST /api/arr/download` (`arr_download`) | `ArrDownloadBody` |
+| `routes_arr.py` | `POST /api/arr/hardlink/preview` (`arr_hardlink_preview`) | `ArrHardlinkPreviewBody` |
 
 ### Contract notes for the adopted routes
 
@@ -87,6 +133,14 @@ model: a model with required fields → 422 naming them; an all-optional model
   required"`, now `422 {detail:{title:"..."}}`. Unknown `area` / `kind` /
   `severity` still coerce in the view. Member Report form always sends a
   title; it renders `err.message` and does not branch on the old 400.
+- **Wave #81–#96** — missing/blank required fields that used to be
+  `400 bad_request` with an English sentence are now `422 unprocessable`
+  naming the field (or `__root__` for `url or magnet` / `pack_id or id`
+  after-validators). Feature-flag, librarian, child-ACL, and "scan running"
+  refusals stay in the view and still 403/404 **after** a well-formed body.
+  Frontends render `err.message` / `data.error`; they must not branch on the
+  old 400 string. Passwords are not stripped. Usernames that historically
+  used `if not username` without strip are not stripped.
 
 ## Deliberately not adopted (and why)
 
@@ -132,29 +186,196 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/library_tools.py`
+
+- `propose_leaf_libraries_api` — also reads `request.args` (`root` / `path`).
+- `import_leaf_libraries_preview_api` — JSON, multipart file, or form CSV.
+- `rename_preview` / `rename_apply` — missing `game_uuid` is 404, not a
+  presence guard.
+- `library_tools_backfill_steam_metadata` — every field optional; the *success*
+  body carries `updated` / `skipped` / `errors`.
+
+### `routes_apis/chat.py`
+
+- `chat_channels_create` — empty name/slug become `ValueError` in the helper.
+- `chat_open_dm` — missing `user_id` / `username` is opaque `404 User not found`.
+- `chat_messages_post` — empty `body` is allowed; `parent_message_id` /
+  reactions are optional.
+- `chat_message_reaction_toggle` — empty emoji is `ValueError` in the helper.
+
+### `routes_apis/chat_spaces_api.py`
+
+- `chat_spaces_create` / `chat_space_channel_create` — empty name is a helper
+  `ValueError`.
+- `chat_space_invite_create` — optional ISO / hours parsing, no required field.
+- `chat_space_join` — empty token is whatever `redeem_space_invite` returns.
+
+### `routes_apis/quality_stats.py`
+
+- `quality_profiles_create` / `put` / `update_one` — pass-through JSON bags.
+- `quality_profiles_set_active` — `id` / `active_id` / `profile_id` aliases.
+
+### `routes_apis/emulator_cheats.py`
+
+- `.cht` create — JSON *or* file upload.
+- Firmware plan/install — `source` falls back to `BIOS_IMPORT_SOURCE`;
+  `selections` / `skipped` are optional type checks on a default empty map/list.
+
+### `routes_apis/client.py`
+
+- `client_heartbeat` — missing `device_id` mints a UUID.
+- `client_commands_post` — missing `game_uuid` is 404 (and `open_path` may omit it).
+- ack/nack — missing `ids` is `[]`.
+
+### `routes_apis/library.py`
+
+- Watch GET+PUT share one view; `@validate_body` on GET would 422. Batch scan /
+  edit / delete — partial-success envelopes.
+
+### `routes_apis/ai_assist.py`
+
+- `ai_config` — GET+PUT share one view; wrapping would 422 GET.
+- `ai_triage` — `name` can come from `folder_id` / `folder_path`; no single
+  required field.
+- `ai_doctor_notes` — all-optional context bag.
+
+### `routes_apis/user.py`
+
+- `set_game_status` — empty `status` is a valid clear; unknown values stay
+  400 from the view.
+
+### `routes_apis/layouts.py`
+
+- `layouts_detail_put` / `layouts_detail_mine_put` — pass the whole JSON bag
+  through.
+
+### `routes_apis/discover.py`
+
+- Member pin/hide PUT shares a view with GET. Wrapping would 422 GET.
+
+### `routes_apis/account.py`
+
+- `create_account_invite` — `email` is optional; `{}` is a valid create.
+- Avatar upload is multipart, not JSON.
+
+### `routes_apis/collections.py`
+
+- `update_collection` — empty `name` is refused only when that key is
+  present.
+
+### `routes_apis/acquire.py`
+
+- `acquire_search` — `q` is a query argument, not JSON.
+
+### `routes_apis/game_servers.py`
+
+- `update_game_server` — empty `display_name` is refused only when that key is
+  present.
+
+### `routes_apis/patch_catalog.py`
+
+- `patch_catalog_search` — `q` / `game_uuid` are query arguments, not JSON.
+
+### `routes_apis/providers.py`
+
+- Search routes — `q` is a query argument, not JSON.
+
+### Other JSON bodies left on purpose
+
+- `routes_apis/social.py` friends POST — a missing username is an **opaque
+  success**.
+- `routes_apis/rtc.py` — every field optional with defaults.
+- `routes_apis/assists.py` PUT — every field optional.
+- `routes_apis/locale.py` — also reads `request.form`.
+- `routes_apis/notifications.py` — all-optional toggles.
+- `routes_apis/download.py` — JSON + query args.
+- `routes_apis/imports_playnite.py` — file or JSON.
+- `routes_apis/game_mods_api.py` create — all fields optional.
+- `routes_apis/licensed_catalog.py` refresh / `reference_sets.py` rehash —
+  also `request.form`.
+- GET+PUT sharing one view: `remote_play`, `ambient_lighting`,
+  `challenge_solver`, `loading_icons`, `metadata_providers`, `scan_match`
+  config.
+
+### `routes_admin_ext/system.py`
+
+- `update_discovery_section_schedule` / `update_discovery_section_pin` —
+  all-optional bags.
+- `update_section_order` / `update_section_visibility` — typed lists;
+  tests assert the old 400 messages; no-content-type currently 500 via bare
+  `get_json()`. Wrapable but noisier.
+- `system_reset_plan_or_perform` — rejection carries `valid_scopes` extra.
+
+### `routes_admin_ext/game_delete.py`
+
+- `delete_folder` — missing `folder_path` is 400 with `body_status='error'`.
+
+### `routes_admin_ext/images.py`
+
+- `covers_search_single` — `query` or `game_uuid` (with `q` / `name`
+  aliases).
+- Batch search/apply, auto-pick, generate-batch — optional bags /
+  partial-success.
+
+### `routes_admin_ext/art_studio.py`
+
+- Stock generate, apply-batch, system-marks generate — optional bags
+  (`ids` / `game_uuids` / `themes` may be absent). They still share
+  `_json_body()`.
+
+### `routes_admin_ext` leftovers (settings / attract / library delete)
+
+- `settings.py` / `attract_mode.py` — pass-through bags / "no data provided".
+- `library_delete.py` — JSON + form + query; `body_status='error'` extras.
+
+### `routes_arr.py`
+
+- `arr_module_flag` / `arr_config` / `arr_indexers` / `arr_indexer_one` —
+  GET+PUT share a view.
+- `arr_indexers_bulk` — JSON or raw text.
+- `arr_hardlink_apply` — `proposals` list *or* `library_dest_dir`.
+- `arr_indexers_enable_presets` — `preset_ids` optional (empty list is valid).
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11,
+merged #80–#96):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 114 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~150** | **57** |
+| `routes_apis/` | 83 | 35 |
+| `routes_admin_ext/` | 17 | 7 |
+| rest of `oneirodex/` | 10 | 2 |
+| **total** | **110** | **44** |
+
+`utils/validation.py` (3) is the decorator helper, not a wrap candidate.
+`routes_arr.py` (7 remaining) is the other rest-of-package file.
 
 Highest-count files still to do, roughly in priority order:
 
 - `routes_apis/scan.py` (11) — most are partial-success; needs a batch-aware
   companion to `@validate_body` first.
-- `routes_apis/library_tools.py` (11)
-- `routes_apis/quality_stats.py` (5), `routes_apis/client.py` (5),
-  `routes_apis/chat_spaces_api.py` (5), `routes_apis/chat.py` (5)
-- `routes_apis/library.py` (4), `routes_apis/emulator_cheats.py` (4),
-  `routes_apis/ai_assist.py` (4)
-- `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
-  needs the bespoke-message validator.
-- long tail of 1–3-site files.
+- `routes_apis/game.py` (7) — mostly the batch routes above;
+  `move_game_to_library` needs the bespoke-message validator.
+- `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
+- `routes_apis/library_tools.py` (5 remaining — propose/import dual-input,
+  rename 404, Steam backfill).
+- `routes_admin_ext/system.py` (5 remaining) — schedule/pin bags, order,
+  visibility, reset extras.
+- `routes_admin_ext/images.py` (5 remaining) — search/batch optional bags.
+- `routes_apis/quality_stats.py` (4 remaining), `routes_apis/client.py` (4),
+  `routes_apis/chat_spaces_api.py` (4), `routes_apis/chat.py` (4),
+  `routes_apis/library.py` (4), `routes_apis/ownership.py` (4).
+- `routes_apis/emulator_cheats.py` (3 remaining), `routes_apis/ai_assist.py`
+  (3 remaining), `routes_apis/system.py` (3), `routes_apis/game_mods_api.py`
+  (3).
+- `routes_admin_ext/art_studio.py` (1 helper, still used by stock/batch/marks).
+- long tail of 1–2-site files (GET+PUT config, all-optional, dual-input).
+
+Named-field JSON with a real presence/type guard is exhausted until the
+skip-list items get a different validator. Next wrap candidates once a
+bespoke helper exists: discovery **order/visibility** (`system.py`), leftover
+`images.py` search/batch, leftover `library_tools` / `chat` / `quality_stats`.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards
 → run that file's tests → confirm the happy-path body is unchanged.

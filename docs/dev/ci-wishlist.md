@@ -253,3 +253,13 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   `fetch` sites use the same verbs. `preferences.ts` HTML and EventSource stay
   off this path. Typed resource modules are still not wired into the SPA. No
   workflow change.
+- [A2.4] `tests/test_pydantic_*.py` added to the `pytest-core` hand list
+  (named-field JSON `@validate_body` 422 contracts from PRs #81–#96:
+  playtime/wishlist/tokens/related-media, library-tools, chat mute / space
+  members / quality-score, PC-cheats / companion lifecycle, wanted / hardlink /
+  game-servers / malware-scan, acquire / announcements, check-username /
+  layout-presets, patch-catalog attach / artwork-apply, stock-avatar /
+  password-change, AI apply-triage, discovery shelves, full-game / image
+  delete, crop-preview, cover-apply / artwork-generate, Arr download /
+  hardlink-preview, art-studio preview/generate/apply). Support-ticket
+  coverage stays in `tests/test_wave2c_support_news_notifications.py` (#80).

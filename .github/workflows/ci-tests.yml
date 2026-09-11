@@ -159,7 +159,22 @@ jobs:
           tests/test_api_tokens_health_events.py
           tests/test_ops_followons.py
           tests/test_library_batch_ops.py
+          tests/test_pydantic_account.py
+          tests/test_pydantic_acquire_news.py
+          tests/test_pydantic_admin_art.py
+          tests/test_pydantic_admin_covers.py
+          tests/test_pydantic_admin_crop.py
+          tests/test_pydantic_admin_deletes.py
+          tests/test_pydantic_admin_shelves.py
+          tests/test_pydantic_ai_apply.py
+          tests/test_pydantic_arr.py
+          tests/test_pydantic_chat_quality.py
+          tests/test_pydantic_cheats_client.py
+          tests/test_pydantic_library_tools.py
+          tests/test_pydantic_ops_json.py
+          tests/test_pydantic_patch_artwork.py
           tests/test_pydantic_request_bodies.py
+          tests/test_pydantic_user_layouts.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
       # the problem then grew from ~699 call sites to 1194 — new routes reached
