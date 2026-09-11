@@ -191,16 +191,28 @@ export function normalizeMatchedGame(
  * Size/date may be null until Backend enriches list/`matched_game`.
  * @returns {{ folder: object, library: object|null } | null}
  */
+export interface CompareSideData {
+  role: 'folder' | 'library'
+  label: string
+  name: unknown
+  path: unknown
+  size_bytes: number | null
+  mtime: string | null
+  cover_url: unknown
+  uuid: unknown
+  match_score?: unknown
+}
+
 export function buildDupeCompare(
   folder: UnmatchedRow | null | undefined,
-): { folder: Record<string, unknown>; library: Record<string, unknown> | null } | null {
+): { folder: CompareSideData; library: CompareSideData | null } | null {
   if (!folder || typeof folder !== 'object') return null
   const hit = normalizeMatchedGame(folder)
   const isDuplicate = folder.status === 'Duplicate'
   if (!hit && !isDuplicate) return null
 
-  const folderSide = {
-    role: 'folder',
+  const folderSide: CompareSideData = {
+    role: 'folder' as const,
     label: 'This folder',
     name: resolveSearchName(folder) || folderBasename(folder.folder_path) || 'Folder',
     path: folder.folder_path ? String(folder.folder_path) : '',
@@ -210,9 +222,9 @@ export function buildDupeCompare(
     uuid: null,
   }
 
-  const librarySide = hit
+  const librarySide: CompareSideData | null = hit
     ? {
-        role: 'library',
+        role: 'library' as const,
         label: 'Library game',
         name: hit.name,
         path: hit.path || '',

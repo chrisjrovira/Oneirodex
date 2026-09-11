@@ -1,8 +1,9 @@
-import { memo, useEffect, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useState, type Key, type ReactNode } from 'react'
 import { Button, confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 import { PM_IGNORE } from './formIgnore'
 import { getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import {
   buildDupeCompare,
   folderBasename,
@@ -11,6 +12,7 @@ import {
   mergeDuplicateHits,
   normalizeMatchedGame,
   resolveSearchName,
+  type CompareSideData,
 } from './unmatchedDupe'
 import {
   hasStageEHints,
@@ -22,7 +24,10 @@ import {
 } from './stageECandidates'
 import './DupeGlance.css'
 
-const STATUS_FALLBACK = {
+/** Loose unmatched/duplicate folder row — Backend field map, not fully typed. */
+export type UnmatchedFolderRow = Record<string, unknown>
+
+const STATUS_FALLBACK: Record<string, string> = {
   Duplicate:
     'Another library game already uses this IGDB match and the folder title looks like the same game.',
   Unmatched: 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder).',
@@ -31,7 +36,7 @@ const STATUS_FALLBACK = {
 }
 
 /** Machine codes from duplicate_check / scan → one-line librarian copy. */
-const MATCH_REASON_LABELS = {
+const MATCH_REASON_LABELS: Record<string, string> = {
   same_path: 'Same on-disk path as an existing library game.',
   title_vs_folder: 'Folder title closely matches an existing library game folder.',
   title_vs_library_name: 'Folder title closely matches an existing library game name.',
@@ -45,7 +50,7 @@ const MARK_KINDS = [
   { kind: 'tool', label: 'Mark as Utility' },
 ]
 
-const SUGGESTED_KIND_LABELS = {
+const SUGGESTED_KIND_LABELS: Record<string, string> = {
   experience: 'Soft title',
   emulator: 'Emulator',
   tool: 'Utility',
@@ -53,7 +58,7 @@ const SUGGESTED_KIND_LABELS = {
 }
 
 /** Normalize API `suggested_kind` (null-safe). Backend may omit until list enrichment lands. */
-function normalizeSuggestedKind(value) {
+function normalizeSuggestedKind(value: unknown): string | null {
   if (value == null || value === '') return null
   const kind = String(value).trim().toLowerCase()
   return SUGGESTED_KIND_LABELS[kind] ? kind : null
@@ -64,7 +69,7 @@ function normalizeSuggestedKind(value) {
  * `unmatched_reason` when present; otherwise match_reason (+ suggested_kind).
  * Null-safe — returns null when nothing useful.
  */
-export function formatWhyUnmatched(row) {
+export function formatWhyUnmatched(row: UnmatchedFolderRow | null | undefined): string | null {
   if (!row || typeof row !== 'object') return null
 
   const summary =
@@ -99,7 +104,8 @@ export function formatWhyUnmatched(row) {
   }
 
   if (reason) return reason
-  if (row.status && STATUS_FALLBACK[row.status]) return STATUS_FALLBACK[row.status]
+  const status = row.status as string | undefined
+  if (status && STATUS_FALLBACK[status]) return STATUS_FALLBACK[status]
   return null
 }
 
@@ -108,7 +114,7 @@ export function formatWhyUnmatched(row) {
  * Null-safe — returns null when missing / non-numeric.
  * Values ≤1 shown to 2 decimals; 0–100 integers shown as whole numbers.
  */
-export function formatMatchScore(score) {
+export function formatMatchScore(score: unknown): string | null {
   if (score == null || score === '') return null
   const n = Number(score)
   if (!Number.isFinite(n)) return null
@@ -123,12 +129,19 @@ export function formatMatchScore(score) {
  * Soft-degrades when missing / mid-rollout — returns [].
  * @returns {{ stage: string, before: string, after: string, reason: string }[]}
  */
-export function normalizeTransforms(row) {
+export interface TransformStep {
+  stage: string
+  before: string
+  after: string
+  reason: string
+}
+
+export function normalizeTransforms(row: UnmatchedFolderRow | null | undefined): TransformStep[] {
   if (!row || typeof row !== 'object') return []
   const raw = row.transforms
   if (!Array.isArray(raw) || raw.length === 0) return []
   return raw
-    .filter((step) => step && typeof step === 'object')
+    .filter((step): step is Record<string, unknown> => step && typeof step === 'object')
     .map((step) => ({
       stage: step.stage == null ? '' : String(step.stage).trim(),
       before: step.before == null ? '' : String(step.before),
@@ -139,7 +152,7 @@ export function normalizeTransforms(row) {
 }
 
 /** Compact expander: stage · before → after · reason (reason optional). */
-function TransformTrail({ transforms }) {
+function TransformTrail({ transforms }: { transforms?: TransformStep[] }) {
   const steps = Array.isArray(transforms) ? transforms : []
   if (!steps.length) return null
   return (
@@ -170,7 +183,7 @@ function TransformTrail({ transforms }) {
  * Quiet Stage E propose-only candidates (Moby / TheGamesDB).
  * Soft-degrades when list API has not flattened proposal fields yet.
  */
-function StageECandidates({ row }) {
+function StageECandidates({ row }: { row: UnmatchedFolderRow | null | undefined }) {
   if (!hasStageEHints(row)) return null
   const candidates = normalizeStageECandidates(row)
   const meta = normalizeStageEMeta(row)
@@ -229,7 +242,7 @@ function StageECandidates({ row }) {
   )
 }
 
-function markKindsOrdered(suggestedKind) {
+function markKindsOrdered(suggestedKind: string | null) {
   if (!suggestedKind) return MARK_KINDS
   const preferred = MARK_KINDS.find((row) => row.kind === suggestedKind)
   if (!preferred) return MARK_KINDS
@@ -269,7 +282,17 @@ function CompareField({
   )
 }
 
-function CompareSide({ side, why, onOpenPath, pathLabel }) {
+function CompareSide({
+  side,
+  why,
+  onOpenPath,
+  pathLabel,
+}: {
+  side: CompareSideData | null
+  why?: string | null
+  onOpenPath?: (v: { path: unknown; label: string; matchReason?: string }) => void
+  pathLabel: string
+}) {
   if (!side) {
     return (
       <div className="od-dupe-glance__compare-side od-dupe-glance__compare-side--empty">
@@ -280,13 +303,16 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
   const sizeLabel = formatByteSize(side.size_bytes)
   const dateLabel = formatDiskDate(side.mtime)
   const score = formatMatchScore(side.match_score)
+  const path = side.path as string | undefined
+  const uuid = side.uuid as string | undefined
+  const coverUrl = side.cover_url as string | undefined
   return (
     <div className={`od-dupe-glance__compare-side od-dupe-glance__compare-side--${side.role}`}>
       <div className="od-dupe-glance__compare-head">
-        {side.cover_url ? (
+        {coverUrl ? (
           <img
             className="od-dupe-glance__dupe-thumb"
-            src={side.cover_url}
+            src={coverUrl}
             alt=""
             width={28}
             height={36}
@@ -299,15 +325,15 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
         ) : null}
         <div className="od-dupe-glance__compare-head-text">
           <span className="od-dupe-glance__compare-role">{side.label}</span>
-          {side.uuid ? (
+          {uuid ? (
             <a
               className="od-dupe-glance__dupe-title"
-              href={`/game_details/${encodeURIComponent(side.uuid)}`}
+              href={`/game_details/${encodeURIComponent(uuid)}`}
             >
-              {side.name}
+              {side.name as ReactNode}
             </a>
           ) : (
-            <span className="od-dupe-glance__dupe-title">{side.name}</span>
+            <span className="od-dupe-glance__dupe-title">{side.name as ReactNode}</span>
           )}
           {score ? (
             <span className="od-dupe-glance__match-score" title="Match confidence score">
@@ -318,19 +344,19 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
       </div>
       <dl className="od-dupe-glance__compare-fields">
         <CompareField label="Path">
-          {side.path ? (
+          {path ? (
             <button
               type="button"
               className="od-dupe-glance__dupe-path"
               onClick={() =>
                 onOpenPath?.({
-                  path: side.path,
+                  path,
                   label: pathLabel,
                   matchReason: why || undefined,
                 })
               }
             >
-              {side.path}
+              {path}
             </button>
           ) : (
             <span className="od-dupe-glance__compare-empty" title={EMPTY_FIELD_TITLE}>
@@ -340,9 +366,9 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
         </CompareField>
         <CompareField label="Size" value={sizeLabel} />
         <CompareField label="Date" value={dateLabel} />
-        {side.uuid ? (
+        {uuid ? (
           <CompareField label="UUID">
-            <code className="od-dupe-glance__dupe-uuid">{side.uuid}</code>
+            <code className="od-dupe-glance__dupe-uuid">{uuid}</code>
           </CompareField>
         ) : null}
       </dl>
@@ -354,7 +380,13 @@ function CompareSide({ side, why, onOpenPath, pathLabel }) {
  * Side-by-side Duplicate trail: this folder vs library hit (path · size · date).
  * Soft-degrades when size/date omitted by API.
  */
-function DupeCompare({ row, onOpenPath }) {
+function DupeCompare({
+  row,
+  onOpenPath,
+}: {
+  row: UnmatchedFolderRow
+  onOpenPath?: (v: { path: unknown; label: string; matchReason?: string }) => void
+}) {
   const compare = buildDupeCompare(row)
   if (!compare) return null
   const why = formatWhyUnmatched(row)
@@ -396,24 +428,35 @@ function DupeCompare({ row, onOpenPath }) {
 // it must not re-render every time its parent (ScansPage) re-renders on a 4s scan
 // tick — that would re-lay-out its list and note <input> and make a password
 // manager re-scan the subtree each tick.
+interface BadMatchReason {
+  id: string
+  label: string
+}
+
+interface FixLog {
+  ok: boolean
+  message: string
+  detail?: unknown
+}
+
 export const DupeGlance = memo(function DupeGlance({
   onOpenPath,
 }: {
   onOpenPath?: (v: any) => void
 }) {
-  const [rows, setRows] = useState([])
-  const [error, setError] = useState(null)
+  const [rows, setRows] = useState<UnmatchedFolderRow[]>([])
+  const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
-  const [fixLog, setFixLog] = useState(null)
+  const [fixLog, setFixLog] = useState<FixLog | null>(null)
   const [busy, setBusy] = useState(false)
-  const [busyFolderId, setBusyFolderId] = useState(null)
+  const [busyFolderId, setBusyFolderId] = useState<unknown>(null)
   const [statusFilter, setStatusFilter] = useState('Duplicate')
   const [sortKey, setSortKey] = useState('folder')
   const [sortDir, setSortDir] = useState('asc')
   // UX-C5: the vocabulary is served, never hardcoded here, so it can grow
   // without a frontend release.
-  const [badMatchReasons, setBadMatchReasons] = useState([])
-  const [noteFor, setNoteFor] = useState(null)
+  const [badMatchReasons, setBadMatchReasons] = useState<BadMatchReason[]>([])
+  const [noteFor, setNoteFor] = useState<unknown>(null)
   const [noteText, setNoteText] = useState('')
 
   function load() {
@@ -421,7 +464,7 @@ export const DupeGlance = memo(function DupeGlance({
     setError(null)
     return getJson('/api/unmatched_folders')
       .then(async (data) => {
-        let list = Array.isArray(data) ? data : []
+        let list: UnmatchedFolderRow[] = Array.isArray(data) ? data : []
         const needsEnrich = list.some(
           (row) =>
             (row.status === 'Duplicate' || row.matched_game_uuid) && !normalizeMatchedGame(row),
@@ -455,7 +498,11 @@ export const DupeGlance = memo(function DupeGlance({
       .catch(() => setBadMatchReasons([]))
   }, [])
 
-  async function submitBadMatch(row, reason, note) {
+  async function submitBadMatch(
+    row: UnmatchedFolderRow,
+    reason: string | null,
+    note: string | null,
+  ) {
     setBusy(true)
     setBusyFolderId(row.id)
     setError(null)
@@ -475,12 +522,12 @@ export const DupeGlance = memo(function DupeGlance({
     }
   }
 
-  function handleBadMatchChange(row, reason) {
+  function handleBadMatchChange(row: UnmatchedFolderRow, reason: string) {
     // 'other' is not feedback without a note — the API rejects it, so ask here
     // rather than posting something we know will fail.
     if (reason === 'other') {
       setNoteFor(row.id)
-      setNoteText(row.bad_match_note || '')
+      setNoteText(String(row.bad_match_note || ''))
       return
     }
     setNoteFor(null)
@@ -523,7 +570,7 @@ export const DupeGlance = memo(function DupeGlance({
   }, [visible, sortKey, sortDir])
 
   const grouped = useMemo(() => {
-    const map = new Map()
+    const map = new Map<string, UnmatchedFolderRow[]>()
     for (const row of sortedVisible) {
       const key = `${row.library_name || 'Library'}::${row.platform_name || ''}`
       const list = map.get(key) || []
@@ -533,7 +580,7 @@ export const DupeGlance = memo(function DupeGlance({
     return [...map.entries()]
   }, [sortedVisible])
 
-  function toggleSort(nextKey) {
+  function toggleSort(nextKey: string) {
     if (sortKey === nextKey) {
       setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
@@ -554,7 +601,7 @@ export const DupeGlance = memo(function DupeGlance({
       })
       await load()
     } catch (err) {
-      setFixLog({ ok: false, message: err?.message || 'Reclassify failed' })
+      setFixLog({ ok: false, message: errorText(err) || 'Reclassify failed' })
     } finally {
       setBusy(false)
     }
@@ -585,13 +632,13 @@ export const DupeGlance = memo(function DupeGlance({
       })
       await load()
     } catch (err) {
-      setFixLog({ ok: false, message: err?.message || 'Backfill kind hints failed' })
+      setFixLog({ ok: false, message: errorText(err) || 'Backfill kind hints failed' })
     } finally {
       setBusy(false)
     }
   }
 
-  async function handleMarkKind(row, itemKind) {
+  async function handleMarkKind(row: UnmatchedFolderRow, itemKind: string) {
     if (busy) return
     setBusy(true)
     setBusyFolderId(row.id)
@@ -612,7 +659,7 @@ export const DupeGlance = memo(function DupeGlance({
     } catch (err) {
       setFixLog({
         ok: false,
-        message: err?.message || `Could not mark as ${itemKind}`,
+        message: errorText(err) || `Could not mark as ${itemKind}`,
       })
     } finally {
       setBusy(false)
@@ -620,7 +667,7 @@ export const DupeGlance = memo(function DupeGlance({
     }
   }
 
-  async function handleFix(row, action) {
+  async function handleFix(row: UnmatchedFolderRow, action: string) {
     if (busy) return
     setBusy(true)
     setBusyFolderId(row.id)
@@ -635,14 +682,14 @@ export const DupeGlance = memo(function DupeGlance({
       })
       await load()
     } catch (err) {
-      setFixLog({ ok: false, message: err?.message || `Could not ${action}` })
+      setFixLog({ ok: false, message: errorText(err) || `Could not ${action}` })
     } finally {
       setBusy(false)
       setBusyFolderId(null)
     }
   }
 
-  function canMarkKind(status) {
+  function canMarkKind(status: unknown) {
     return status === 'Unmatched' || status === 'Pending' || status === 'Duplicate'
   }
 
@@ -750,7 +797,7 @@ export const DupeGlance = memo(function DupeGlance({
                 transforms.length > 0 ||
                 showStageE
               return (
-                <li key={row.id} className="od-dupe-glance__row">
+                <li key={row.id as Key} className="od-dupe-glance__row">
                   <div className="od-dupe-glance__actions" role="toolbar" aria-label="Row actions">
                     <button
                       type="button"
@@ -767,7 +814,7 @@ export const DupeGlance = memo(function DupeGlance({
                     </button>
                     <a
                       className="od-btn"
-                      href={`/add_game_manual?full_disk_path=${encodeURIComponent(row.folder_path || '')}&library_uuid=${encodeURIComponent(row.library_uuid || '')}&platform_name=${encodeURIComponent(row.platform_name || '')}&platform_id=${encodeURIComponent(row.platform_id || '')}&from_unmatched=true`}
+                      href={`/add_game_manual?full_disk_path=${encodeURIComponent(String(row.folder_path || ''))}&library_uuid=${encodeURIComponent(String(row.library_uuid || ''))}&platform_name=${encodeURIComponent(String(row.platform_name || ''))}&platform_id=${encodeURIComponent(String(row.platform_id || ''))}&from_unmatched=true`}
                       title="Fix search — opens manual add / IGDB search (uses Search name when set)"
                     >
                       Fix search
@@ -827,7 +874,7 @@ export const DupeGlance = memo(function DupeGlance({
                         <select
                           className="od-select"
                           aria-label={`Flag bad match for ${row.folder_path || row.id}`}
-                          value={row.bad_match_reason || ''}
+                          value={String(row.bad_match_reason || '')}
                           disabled={busy}
                           onChange={(event) => handleBadMatchChange(row, event.target.value)}
                           {...PM_IGNORE}
@@ -880,7 +927,9 @@ export const DupeGlance = memo(function DupeGlance({
                       <span
                         className={`od-dupe-glance__status status-${String(row.status || '').toLowerCase()}`}
                       >
-                        {row.status === 'Duplicate' ? 'Duplicate (same title)' : row.status}
+                        {row.status === 'Duplicate'
+                          ? 'Duplicate (same title)'
+                          : (row.status as ReactNode)}
                       </span>
                       {suggestedKind ? (
                         <span
@@ -893,11 +942,11 @@ export const DupeGlance = memo(function DupeGlance({
                       {row.bad_match_reason ? (
                         <span
                           className="od-dupe-glance__badmatch-chip"
-                          title={row.bad_match_note || 'Flagged as a bad match'}
+                          title={String(row.bad_match_note || 'Flagged as a bad match')}
                         >
                           Bad match:{' '}
                           {badMatchReasons.find((r) => r.id === row.bad_match_reason)?.label ||
-                            row.bad_match_reason}
+                            (row.bad_match_reason as ReactNode)}
                         </span>
                       ) : null}
                     </div>
@@ -911,7 +960,9 @@ export const DupeGlance = memo(function DupeGlance({
                       <p className="od-dupe-glance__ondisk">On disk: {diskName}</p>
                     ) : null}
                     {buildDupeCompare(row) ? null : (
-                      <code title={row.folder_path}>{row.folder_path}</code>
+                      <code title={row.folder_path as string | undefined}>
+                        {row.folder_path as ReactNode}
+                      </code>
                     )}
                     <DupeCompare row={row} onOpenPath={onOpenPath} />
                     {showWhyBlock ? (
