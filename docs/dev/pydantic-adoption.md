@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_admin_ext/system.py` | `POST /admin/api/discovery_sections` (`create_discovery_section`) | `DiscoveryShelfBody` |
+| `routes_admin_ext/system.py` | `PUT /admin/api/discovery_sections/<id>` (`update_discovery_section`) | `DiscoveryShelfBody` |
 
 ### Contract notes for the adopted routes
 
@@ -80,8 +82,17 @@ model: a model with required fields → 422 naming them; an all-optional model
 - **`connect_steam`** — same ordering note: the `is_ownership_sync_enabled()`
   feature-flag refusal (403) now runs *after* body validation, so `POST
   /api/ownership/steam` with a malformed body returns 422 even when sync is
-  switched off. A well-formed body still hits the 403. Happy path (valid
+  switched off. A well-formed body still hits the 403. Happy path (valid)
   `steam_id`, feature on → 201) is byte-identical.
+- **`create_discovery_section` / `update_discovery_section`** — missing/blank
+  `name` was `400 "Shelf name is required"`, now `422 {detail:{name:"..."}}`.
+  The 50-character cap and `validate_shelf_config` stay in the view (still
+  400). Admin theme JS (`discovery_sections.js`) posts `game_uuids` as the
+  textarea string; the model leaves that field untyped so a string still
+  reaches the helper. `@admin_required` sits above validation. Update used
+  to 404 missing shelves *before* reading JSON; wrapping innermost means
+  `{}` is 422 even for an unknown id. A well-formed body is still 404 /
+  "only custom shelves can be edited". Frontend renders `data.error`.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +138,24 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_admin_ext/system.py`
+
+- `update_discovery_section_schedule` / `update_discovery_section_pin` —
+  all-optional bags (`{}` clears pin / leaves schedule unchanged).
+- `update_section_order` / `update_section_visibility` — typed lists /
+  bools with product 400 messages; wrapable, not this slice.
+- `system_reset_plan_or_perform` — rejection carries `valid_scopes` extra.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
 | `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_admin_ext/` | 22 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
@@ -149,6 +168,8 @@ Highest-count files still to do, roughly in priority order:
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
   needs the bespoke-message validator.
+- `routes_admin_ext/system.py` (5 remaining) — schedule/pin bags, order,
+  visibility, reset scopes.
 - long tail of 1–3-site files.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards

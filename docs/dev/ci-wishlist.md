@@ -250,3 +250,6 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   (same shape as admin `adminApi.ts`). First covered groups rewired:
   collections, wishlist, discover, discoverPins, playtime, favorites.
   Remaining `src/api/` modules still hand-roll `fetch`. No workflow change.
+- [A2.4-admin-shelves] `tests/test_pydantic_admin_shelves.py` added to the
+  `pytest-core` hand list (discovery-shelf create/update `@validate_body`
+  422 contracts).

@@ -6,12 +6,14 @@ from oneirodex.utils.auth import admin_required
 from oneirodex.models import SystemEvents, DiscoverySection, Game, Genre, Library, user_favorites
 from oneirodex import db
 from oneirodex.platform import LibraryPlatform
+from oneirodex.schemas.admin_system import DiscoveryShelfBody
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.discovery_shelves import (
     count_custom_shelf_games,
     describe_shelf_config,
     validate_shelf_config,
 )
+from oneirodex.utils.validation import validate_body
 from sqlalchemy import select, and_, func
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -129,21 +131,19 @@ def discovery_sections() -> str:
 @admin2_bp.route('/admin/api/discovery_sections', methods=['POST'])
 @login_required
 @admin_required
-def create_discovery_section() -> tuple[Dict[str, Any], int]:
+@validate_body(DiscoveryShelfBody)
+def create_discovery_section(body: DiscoveryShelfBody) -> tuple[Dict[str, Any], int]:
     """Create a custom discovery shelf (manual game pick list or library/platform/genre filter)."""
     try:
-        data = request.get_json() or {}
-        name = str(data.get('name') or '').strip()
-        if not name:
-            return api_error('Shelf name is required', code='bad_request')
+        name = body.name
         if len(name) > 50:
             return api_error('Shelf name must be 50 characters or fewer', code='bad_request')
 
         config, error = validate_shelf_config(
-            data.get('mode'),
-            game_uuids=data.get('game_uuids'),
-            filter_type=data.get('filter_type'),
-            filter_value=data.get('filter_value'),
+            body.mode,
+            game_uuids=body.game_uuids,
+            filter_type=body.filter_type,
+            filter_value=body.filter_value,
         )
         if error:
             return api_error(error, code='bad_request')
@@ -195,7 +195,8 @@ def create_discovery_section() -> tuple[Dict[str, Any], int]:
 @admin2_bp.route('/admin/api/discovery_sections/<int:section_id>', methods=['PUT'])
 @login_required
 @admin_required
-def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
+@validate_body(DiscoveryShelfBody)
+def update_discovery_section(section_id: int, body: DiscoveryShelfBody) -> tuple[Dict[str, Any], int]:
     """Edit a custom discovery shelf's name and/or selection."""
     try:
         section = db.session.get(DiscoverySection, section_id)
@@ -204,18 +205,15 @@ def update_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
         if section.section_type != 'custom':
             return api_error('Only custom shelves can be edited', code='bad_request')
 
-        data = request.get_json() or {}
-        name = str(data.get('name') or '').strip()
-        if not name:
-            return api_error('Shelf name is required', code='bad_request')
+        name = body.name
         if len(name) > 50:
             return api_error('Shelf name must be 50 characters or fewer', code='bad_request')
 
         config, error = validate_shelf_config(
-            data.get('mode'),
-            game_uuids=data.get('game_uuids'),
-            filter_type=data.get('filter_type'),
-            filter_value=data.get('filter_value'),
+            body.mode,
+            game_uuids=body.game_uuids,
+            filter_type=body.filter_type,
+            filter_value=body.filter_value,
         )
         if error:
             return api_error(error, code='bad_request')
