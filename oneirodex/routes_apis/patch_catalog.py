@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game
+from oneirodex.schemas.patch_catalog import AttachPatchGuideBody
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.library_acl import user_can_access_game
 from oneirodex.utils.patch_catalog.attach import attach_patch_guide
@@ -17,6 +18,7 @@ from oneirodex.utils.patch_catalog.registry import (
     list_patch_providers,
     search_all_patch_providers,
 )
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -107,13 +109,12 @@ def patch_catalog_search():
 @apis_bp.route('/patch-catalog/attach', methods=['POST'])
 @login_required
 @admin_required
-def patch_catalog_attach():
+@validate_body(AttachPatchGuideBody)
+def patch_catalog_attach(body: AttachPatchGuideBody):
     if not _catalog_module_enabled():
         return _module_disabled_response()
 
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
-    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    game = db.session.execute(select(Game).filter_by(uuid=body.game_uuid)).scalars().first()
     if not game:
         return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
@@ -122,10 +123,10 @@ def patch_catalog_attach():
     try:
         result = attach_patch_guide(
             game,
-            source_url=data.get('source_url') or '',
-            notes=(data.get('notes') or None),
-            target_language=(data.get('target_language') or None),
-            patch_format=(data.get('patch_format') or None),
+            source_url=body.source_url,
+            notes=(body.notes or None),
+            target_language=(body.target_language or None),
+            patch_format=(body.patch_format or None),
         )
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')

@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/patch_catalog.py` | `POST /api/patch-catalog/attach` (`patch_catalog_attach`) | `AttachPatchGuideBody` |
+| `routes_apis/providers.py` | `POST /api/games/<uuid>/artwork/steamgriddb` (`steamgriddb_apply_artwork`) | `ApplyArtworkBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,18 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`patch_catalog_attach`** — empty `game_uuid` previously fell through to
+  404; missing `source_url` was 400 from the helper. Both are now 422 naming
+  the field. `@admin_required` sits above validation. The module-disabled 403
+  runs after, so `{}` is 422 even when the catalog is off; a well-formed body
+  is still 403. Non-http(s) `source_url` stays 400.
+- **`steamgriddb_apply_artwork`** — blank `url` was 400 from
+  `apply_cover_from_url` (`url must be an absolute http(s) image URL`); now
+  422 naming `url`. Game 404 runs after validation, so `{}` against a missing
+  game is 422 rather than 404. `@admin_required` is unchanged. Invalid
+  `image_type` / non-http(s) URL still 400. Admin ArtworkPicker and
+  `game_edit_images.js` render `data.error`; they do not branch on the 400
+  string.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +141,24 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/patch_catalog.py`
+
+- `patch_catalog_search` — `q` / `game_uuid` are query arguments, not JSON.
+
+### `routes_apis/providers.py`
+
+- Search routes — `q` is a query argument, not JSON.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 113 | 44 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **55** |
 
 Highest-count files still to do, roughly in priority order:
 
