@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom'
 import { getJson, postJsonResult } from '../api/adminApi'
 import { ADMIN_TOPBAR_TRAIL_ID } from '../hooks/useLegacyContextbarPortal'
-import { DataTable } from './DataTable'
+import { DataTable, type DataTableColumn } from './DataTable'
 import { gameCountHeat } from './gameCountHeat'
 import { ScanConflictModal } from './ScanConflictModal'
 import { useLibraryScan } from '../hooks/useLibraryScan'
@@ -15,13 +15,34 @@ const BATCH_EDIT_URL = '/api/admin/libraries/batch/edit'
 const CATALOG_REFRESH_URL = '/api/licensed-catalog/refresh'
 const CATALOG_REFRESH_FLAG = 'od-libraries-catalog-refresh-v1'
 
-function libraryThumb(url) {
-  const src = (url || '').trim() || DEFAULT_LIBRARY_IMAGE
+/** GET /api/get_libraries row — loose Backend field map, common fields typed. */
+interface LibraryRow {
+  uuid: string
+  name: string
+  platform?: string
+  platform_key?: string
+  platform_total?: number
+  game_count?: number
+  unmatched_count?: number
+  group_name?: string
+  image_url?: string
+  last_scan_folder?: string
+  [key: string]: unknown
+}
+
+interface PlatformSummary {
+  platform: string
+  games: number
+  unmatched: number
+}
+
+function libraryThumb(url: unknown): string {
+  const src = String(url || '').trim() || DEFAULT_LIBRARY_IMAGE
   return src
 }
 
-function groupLabel(lib) {
-  return (lib?.group_name || '').trim()
+function groupLabel(lib: LibraryRow | null | undefined): string {
+  return String(lib?.group_name || '').trim()
 }
 
 /**
@@ -35,13 +56,20 @@ function LibrariesTrailSummary({
   platforms,
   platformFilter,
   onPlatformFilter,
+}: {
+  libraryCount: number
+  totalGames: number
+  totalUnmatched: number
+  platforms: PlatformSummary[]
+  platformFilter: string
+  onPlatformFilter: (platform: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const [needle, setNeedle] = useState('')
-  const [trailHost, setTrailHost] = useState(() =>
+  const [trailHost, setTrailHost] = useState<HTMLElement | null>(() =>
     typeof document !== 'undefined' ? document.getElementById(ADMIN_TOPBAR_TRAIL_ID) : null,
   )
-  const rootRef = useRef(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const panelId = useId()
 
   useLayoutEffect(() => {
@@ -50,10 +78,10 @@ function LibrariesTrailSummary({
 
   useEffect(() => {
     if (!open) return undefined
-    const onDoc = (event) => {
-      if (!rootRef.current?.contains(event.target)) setOpen(false)
+    const onDoc = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node | null)) setOpen(false)
     }
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
     }
     document.addEventListener('mousedown', onDoc)
@@ -163,7 +191,7 @@ function LibrariesTrailSummary({
   return control
 }
 
-async function kickCatalogRefresh(rows) {
+async function kickCatalogRefresh(rows: LibraryRow[] | null | undefined) {
   if (typeof window === 'undefined') return
   try {
     if (window.sessionStorage?.getItem(CATALOG_REFRESH_FLAG)) return
@@ -192,7 +220,19 @@ async function kickCatalogRefresh(rows) {
   }
 }
 
-function GroupDialog({ targets, existingNames, onClose, onSave, busy }) {
+function GroupDialog({
+  targets,
+  existingNames,
+  onClose,
+  onSave,
+  busy,
+}: {
+  targets: LibraryRow[]
+  existingNames: string[]
+  onClose?: () => void
+  onSave: (name: string) => void
+  busy?: boolean
+}) {
   const titleId = useId()
   const listId = useId()
   const shared = targets.length
@@ -201,12 +241,12 @@ function GroupDialog({ targets, existingNames, onClose, onSave, busy }) {
       : ''
     : ''
   const [name, setName] = useState(shared)
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
   const anyGroupedTargets = targets.some((lib) => groupLabel(lib))
 
   useEffect(() => {
     inputRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !busy) onClose?.()
     }
     document.addEventListener('keydown', onKey)
@@ -286,11 +326,11 @@ function GroupDialog({ targets, existingNames, onClose, onSave, busy }) {
  * Scan/Edit/Delete/Group.
  */
 export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null }) {
-  const [rows, setRows] = useState(null)
-  const [error, setError] = useState(null)
-  const [selected, setSelected] = useState(() => new Set())
+  const [rows, setRows] = useState<LibraryRow[] | null>(null)
+  const [error, setError] = useState<unknown>(null)
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [platformFilter, setPlatformFilter] = useState('')
-  const [groupTargets, setGroupTargets] = useState(null)
+  const [groupTargets, setGroupTargets] = useState<LibraryRow[] | null>(null)
   const [groupBusy, setGroupBusy] = useState(false)
   const { conflictOpen, busyKey, startScan, onConflictChoose, onConflictClose } = useLibraryScan()
 
@@ -333,7 +373,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
   const editUrlTemplate =
     panelEl?.getAttribute('data-edit-url-template') || '/admin/library/__UUID__/edit'
 
-  const toggleOne = useCallback((uuid, on) => {
+  const toggleOne = useCallback((uuid: string, on: boolean) => {
     setSelected((prev) => {
       const next = new Set(prev)
       if (on) next.add(uuid)
@@ -343,7 +383,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
   }, [])
 
   const toggleAll = useCallback(
-    (on) => {
+    (on: boolean) => {
       if (!rows) return
       setSelected(on ? new Set(rows.map((r) => r.uuid)) : new Set())
     },
@@ -355,7 +395,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
     return rows.filter((r) => selected.has(r.uuid))
   }, [rows, selected])
 
-  const askDelete = useCallback((targets) => {
+  const askDelete = useCallback((targets: { uuid: string; name: string }[]) => {
     if (typeof window.odLibrariesAskDelete === 'function') {
       window.odLibrariesAskDelete(targets)
       return
@@ -385,7 +425,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
   }, [selectedList])
 
   const saveGroup = useCallback(
-    async (name) => {
+    async (name: string) => {
       if (!groupTargets?.length) return
       setGroupBusy(true)
       const { ok, data } = await postJsonResult(BATCH_EDIT_URL, {
@@ -414,8 +454,8 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
 
   const anyGrouped = Boolean(rows?.some((lib) => groupLabel(lib)))
   const existingGroups = useMemo(() => {
-    const seen = new Set()
-    const names = []
+    const seen = new Set<string>()
+    const names: string[] = []
     for (const lib of rows || []) {
       const name = groupLabel(lib)
       if (!name || seen.has(name.toLowerCase())) continue
@@ -448,7 +488,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
   )
 
   const platforms = useMemo(() => {
-    const byPlatform = new Map()
+    const byPlatform = new Map<string, PlatformSummary>()
     for (const lib of rows || []) {
       const platform = String(lib.platform || '').trim() || 'Unknown'
       const current = byPlatform.get(platform) || { platform, games: 0, unmatched: 0 }
@@ -462,7 +502,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
   }, [rows])
 
   const actionButtons = useCallback(
-    (lib) => (
+    (lib: LibraryRow) => (
       <div
         className="od-cbtn-group od-libraries-actions"
         role="group"
@@ -506,7 +546,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
   )
 
   const columns = useMemo(() => {
-    const cols: any[] = [
+    const cols: DataTableColumn[] = [
       {
         key: 'select',
         label: (
