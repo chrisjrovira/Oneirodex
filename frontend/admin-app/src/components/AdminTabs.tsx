@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import './AdminTabs.css'
 
 /**
@@ -18,8 +18,8 @@ export function AdminTabs({ container }: { container?: Element | Document | null
     return Array.from(container.querySelectorAll('[data-od-tab-panel]')).map((node) => {
       const el = node as HTMLElement
       return {
-        id: el.dataset.odTabPanel,
-        label: el.dataset.odTabLabel || el.dataset.odTabPanel,
+        id: el.dataset.odTabPanel || '',
+        label: el.dataset.odTabLabel || el.dataset.odTabPanel || '',
         el,
         // A field that failed validation must not be hidden behind a tab the
         // member has no reason to open — the form would just refuse to save
@@ -41,7 +41,7 @@ export function AdminTabs({ container }: { container?: Element | Document | null
 
   if (panels.length < 2) return null
 
-  function onKeyDown(event) {
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const index = panels.findIndex((panel) => panel.id === active)
     if (index < 0) return
     let next = null

@@ -1,4 +1,11 @@
+import type { ReactNode } from 'react'
+
 import { Page } from './Page'
+
+interface HubLink {
+  href: string
+  label: string
+}
 
 /**
  * A section landing page with no body of its own (GT-B35).
@@ -20,7 +27,15 @@ import { Page } from './Page'
  * the page, and it is also the only route to those destinations when the rail
  * is a closed drawer on a narrow screen.
  */
-export function HubPage({ title, lede, links = [] }) {
+export function HubPage({
+  title,
+  lede,
+  links = [],
+}: {
+  title: ReactNode
+  lede?: ReactNode
+  links?: HubLink[]
+}) {
   return (
     <Page title={title} lede={lede}>
       <div className="od-admin-panel">
