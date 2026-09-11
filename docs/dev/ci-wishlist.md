@@ -250,3 +250,6 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   (same shape as admin `adminApi.ts`). First covered groups rewired:
   collections, wishlist, discover, discoverPins, playtime, favorites.
   Remaining `src/api/` modules still hand-roll `fetch`. No workflow change.
+- [A2.4-admin-crop] `tests/test_pydantic_admin_crop.py` added to the
+  `pytest-core` hand list (library crop-preview `@validate_body` 422
+  contract).

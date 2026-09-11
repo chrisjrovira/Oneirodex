@@ -64,6 +64,7 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_admin_ext/libraries.py` | `POST /api/library/preview-cropped-image` (`preview_cropped_image`) | `PreviewCroppedImageBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +83,9 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`preview_cropped_image`** — missing `image_data` was `400 "No image data
+  provided"`, now `422 {detail:{image_data:"..."}}`. The value is not
+  stripped. Invalid base64 / non-image bytes still 500 from the view.
 
 ## Deliberately not adopted (and why)
 
@@ -129,14 +133,14 @@ Leave these until the contract can be preserved; do not force them.
 
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
 | `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_admin_ext/` | 23 | 8 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **150** | **56** |
 
 Highest-count files still to do, roughly in priority order:
 
@@ -149,6 +153,7 @@ Highest-count files still to do, roughly in priority order:
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
   needs the bespoke-message validator.
+- `routes_admin_ext/images.py` (7), `routes_admin_ext/system.py` (7).
 - long tail of 1–3-site files.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards
