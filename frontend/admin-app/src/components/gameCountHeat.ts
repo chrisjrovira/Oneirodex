@@ -5,7 +5,7 @@
  * little. Returns null when there is no total to judge against — the UI must
  * stay neutral then, not treat "unknown" as empty.
  */
-export function gameCountHeat(owned, total) {
+export function gameCountHeat(owned: unknown, total: unknown) {
   const have = Number(owned)
   const goal = Number(total)
   if (!Number.isFinite(goal) || goal <= 0 || !Number.isFinite(have) || have < 0) {

@@ -18,8 +18,17 @@ import { ADMIN_NAV, HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navC
  * cannot silently fall out of the index.
  */
 
+export interface AdminCommand {
+  id: string
+  href: string
+  label: string
+  section: string
+  blurb?: string
+  keywords: string
+}
+
 /** Where a link came from, used as the group heading in the palette. */
-const SECTION_LABELS = {
+const SECTION_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
   libraries: 'Libraries & scans',
   settings: 'Settings',
@@ -34,7 +43,7 @@ const SECTION_LABELS = {
  * operator would actually type. Without these, searching "email" finds nothing
  * even though SMTP is exactly what was wanted.
  */
-const KEYWORDS = {
+const KEYWORDS: Record<string, string> = {
   '/admin/smtp_settings': 'email mail outbound invite reset',
   '/admin/igdb_settings': 'metadata api credentials',
   '/admin/themes': 'colours colors appearance preset skin',
@@ -57,17 +66,13 @@ const KEYWORDS = {
 }
 
 /** Normalise a href for dedupe: same page, different anchor, is one entry. */
-function dedupeKey(href) {
+function dedupeKey(href: string): string {
   return href.split('#')[0].split('?')[0]
 }
 
-/**
- * @returns {Array<{id: string, label: string, href: string, section: string,
- *   blurb?: string, keywords: string}>}
- */
-export function buildAdminCommands() {
-  const seen = new Set()
-  const commands = []
+export function buildAdminCommands(): AdminCommand[] {
+  const seen = new Set<string>()
+  const commands: AdminCommand[] = []
 
   function push({
     href,
@@ -125,7 +130,7 @@ export function buildAdminCommands() {
 
   for (const [hubId, links] of Object.entries(HUB_LINKS)) {
     const section = SECTION_LABELS[hubId] || hubId
-    for (const link of links) {
+    for (const link of links as { href: string; label: string }[]) {
       push({ href: link.href, label: link.label, section })
     }
   }
@@ -142,7 +147,7 @@ export function buildAdminCommands() {
  * word-start beats substring beats keyword, so "user" puts Users above
  * "Manage users (classic)".
  */
-export function scoreCommand(command, query) {
+export function scoreCommand(command: AdminCommand, query: string): number {
   const q = query.trim().toLowerCase()
   if (!q) return 0
 
@@ -157,7 +162,7 @@ export function scoreCommand(command, query) {
   return -1
 }
 
-export function filterAdminCommands(commands, query) {
+export function filterAdminCommands(commands: AdminCommand[], query: string): AdminCommand[] {
   if (!query.trim()) return commands
   return commands
     .map((command) => ({ command, score: scoreCommand(command, query) }))
