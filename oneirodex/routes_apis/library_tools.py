@@ -12,6 +12,14 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, Library
+from oneirodex.schemas.library_tools import (
+    ApplyRenamesBody,
+    ApproveProposalBody,
+    CheckFreshnessBody,
+    DoctorDryRunBody,
+    ScanRootsBody,
+    WriteProposalsBody,
+)
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.security import is_safe_path, get_allowed_base_directories
 from oneirodex.utils.disk_rename import build_rename_plan, apply_rename_plan
@@ -22,6 +30,7 @@ from oneirodex.utils.match_proposal import (
 from oneirodex.utils.library_doctor import doctor_dry_run, doctor_write_proposals, iter_game_folders
 from oneirodex.utils.propose_leaf_libraries import propose_leaf_libraries
 from oneirodex.utils.import_leaf_libraries import preview_from_csv, preview_from_json
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -224,15 +233,15 @@ def list_proposals():
 @apis_bp.route('/library_tools/proposals/approve', methods=['POST'])
 @login_required
 @admin_required
-def approve_proposal():
+@validate_body(ApproveProposalBody)
+def approve_proposal(body: ApproveProposalBody):
     """
     Approve a proposal by IGDB ID for an on-disk folder path.
     Clears the proposal sidecar and returns identify hint for import.
     """
-    data = request.get_json(silent=True) or {}
-    path = data.get('path')
-    igdb_id = data.get('igdb_id')
-    if not path or not igdb_id:
+    path = body.path
+    igdb_id = body.igdb_id
+    if not igdb_id:
         return api_error('path and igdb_id required', code='bad_request')
     safe, err = is_safe_path(path, _allowed_bases())
     if not safe:
@@ -252,11 +261,9 @@ def approve_proposal():
 @apis_bp.route('/library_tools/proposals/scan_roots', methods=['POST'])
 @login_required
 @admin_required
-def scan_roots_for_proposals():
-    data = request.get_json(silent=True) or {}
-    roots = data.get('roots') or []
-    if not isinstance(roots, list):
-        return api_error('roots must be a list', code='bad_request')
+@validate_body(ScanRootsBody)
+def scan_roots_for_proposals(body: ScanRootsBody):
+    roots = body.roots
 
     found = []
     for root in roots:
@@ -282,13 +289,11 @@ def scan_roots_for_proposals():
 @apis_bp.route('/library_tools/doctor/dry_run', methods=['POST'])
 @login_required
 @admin_required
-def library_doctor_dry_run():
-    data = request.get_json(silent=True) or {}
-    roots = data.get('roots') or []
-    template = data.get('template') or '{title}'
-    limit = data.get('limit')
-    if not isinstance(roots, list) or not roots:
-        return api_error('roots required', code='bad_request')
+@validate_body(DoctorDryRunBody)
+def library_doctor_dry_run(body: DoctorDryRunBody):
+    roots = body.roots
+    template = body.template or '{title}'
+    limit = body.limit
 
     safe_roots = []
     for root in roots:
@@ -305,11 +310,9 @@ def library_doctor_dry_run():
 @apis_bp.route('/library_tools/doctor/write_proposals', methods=['POST'])
 @login_required
 @admin_required
-def library_doctor_write_proposals():
-    data = request.get_json(silent=True) or {}
-    rows = data.get('rows') or []
-    if not isinstance(rows, list):
-        return api_error('rows must be a list', code='bad_request')
+@validate_body(WriteProposalsBody)
+def library_doctor_write_proposals(body: WriteProposalsBody):
+    rows = body.rows
     # Only allow writing under safe bases
     filtered = []
     for row in rows:
@@ -323,13 +326,11 @@ def library_doctor_write_proposals():
 @apis_bp.route('/library_tools/doctor/apply_renames', methods=['POST'])
 @login_required
 @admin_required
-def library_doctor_apply_renames():
+@validate_body(ApplyRenamesBody)
+def library_doctor_apply_renames(body: ApplyRenamesBody):
     from oneirodex.utils.library_doctor import doctor_apply_renames
-    data = request.get_json(silent=True) or {}
-    rows = data.get('rows') or []
-    template = data.get('template') or '{title}'
-    if not isinstance(rows, list) or not rows:
-        return api_error('rows required', code='bad_request')
+    rows = body.rows
+    template = body.template or '{title}'
     filtered = []
     for row in rows:
         path = row.get('path')
@@ -430,7 +431,8 @@ def library_tools_backfill_steam_metadata():
 @apis_bp.route('/library_tools/check_freshness', methods=['POST'])
 @login_required
 @admin_required
-def library_tools_check_freshness():
+@validate_body(CheckFreshnessBody)
+def library_tools_check_freshness(body: CheckFreshnessBody):
     """Check version / updates / DLC across a library (FEAT-D1).
 
     The same pass a scan runs when ``SCAN_CHECK_FRESHNESS`` is on, exposed so it
@@ -441,10 +443,7 @@ def library_tools_check_freshness():
     """
     from oneirodex.utils.freshness.service import check_library_freshness
 
-    data = request.get_json(silent=True) or {}
-    library_uuid = (data.get('library_uuid') or '').strip()
-    if not library_uuid:
-        return api_error('library_uuid is required', code='bad_request')
+    library_uuid = body.library_uuid
 
     library = db.session.execute(
         select(Library).filter_by(uuid=library_uuid)
@@ -453,13 +452,13 @@ def library_tools_check_freshness():
         return api_error('Library not found', code='not_found')
 
     try:
-        limit = min(max(int(data.get('limit') or 50), 1), 500)
+        limit = min(max(int(body.limit or 50), 1), 500)
     except (TypeError, ValueError):
         return api_error('limit must be a number', code='bad_request')
 
     result = check_library_freshness(
         library_uuid,
         limit=limit,
-        only_missing=bool(data.get('only_missing', True)),
+        only_missing=bool(body.only_missing),
     )
     return api_ok(result)

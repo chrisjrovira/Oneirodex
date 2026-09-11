@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Admin shell shows the AGPL source offer again when `source_url` is configured.
 
 ### Changed
+- Library-tools JSON routes with a real presence/type guard (`proposals/approve`, `proposals/scan_roots`, doctor dry-run / write / apply-renames, `check_freshness`) adopt `@validate_body`. Missing `library_uuid` / `path` / `igdb_id` / `roots` / `rows` are now `422 unprocessable`. Propose/import (query + file), rename (404 fallback), and steam backfill (all-optional) stay hand-rolled.
 - **Probe endpoints renamed — `/healthz` → `/pulse`, `/readyz` → `/awake`.** **Breaking.** The trailing `z` is a Kubernetes convention and Oneirodex ships on Docker/Unraid, so the paths now say what they do. Response bodies, status codes and the `probe` field are unchanged, so a healthcheck only needs its URL updated. Compose is updated; **an existing Unraid container template pointing at `/healthz` or `/readyz` must be repointed or its healthcheck will fail.** Captured samples renamed to `docs/media/screenshots/pulse.json` / `awake.json`.
 - **Legacy `GameTheca` identifiers removed — clean break, no back-compat ([ADR 0003](docs/adr/0003-product-name-oneirodex.md) finished).** **Breaking.**
   - Env: `ONEIRODEX_*` is the only prefix. The `GT_*` fallback is deleted from `product_env.py`, so **an `.env` still using `GT_*` silently falls back to defaults** — update it before redeploying. `LEGACY_PREFIX` / `NEW_PREFIX` are gone; `product_env.PREFIX` replaces them.

@@ -64,6 +64,12 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/proposals/approve` (`approve_proposal`) | `ApproveProposalBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/proposals/scan_roots` (`scan_roots_for_proposals`) | `ScanRootsBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/doctor/dry_run` (`library_doctor_dry_run`) | `DoctorDryRunBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/doctor/write_proposals` (`library_doctor_write_proposals`) | `WriteProposalsBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/doctor/apply_renames` (`library_doctor_apply_renames`) | `ApplyRenamesBody` |
+| `routes_apis/library_tools.py` | `POST /api/library_tools/check_freshness` (`library_tools_check_freshness`) | `CheckFreshnessBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +88,21 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`approve_proposal`** — missing `path` / `igdb_id` was `400 "path and igdb_id
+  required"`, now `422` naming the missing field(s). An empty-string `igdb_id`
+  still 400 with the old sentence. `@admin_required` sits above validation.
+- **`scan_roots_for_proposals` / `library_doctor_write_proposals`** — no required
+  field; the admin UI posts `{}`. The model defaults `roots` / `rows` to `[]`
+  and only rejects a non-list (422 instead of 400). Happy path for `{}` is
+  unchanged.
+- **`library_doctor_dry_run`** — missing/empty `roots` was `400 "roots required"`,
+  now `422 {detail:{roots:"..."}}`. Unsafe-only roots still 403.
+- **`library_doctor_apply_renames`** — missing/empty `rows` was `400 "rows
+  required"`, now 422 naming `rows`.
+- **`library_tools_check_freshness`** — missing/blank `library_uuid` was `400
+  "library_uuid is required"`, now 422 naming `library_uuid`. Unknown uuid still
+  404; non-numeric `limit` still 400. `tests/test_pydantic_library_tools.py`
+  gates the 422 contracts.
 
 ## Deliberately not adopted (and why)
 
@@ -127,22 +148,32 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/library_tools.py`
+
+- `propose_leaf_libraries_api` — also reads `request.args` (`root` / `path`).
+- `import_leaf_libraries_preview_api` — JSON, multipart file, or form CSV.
+- `rename_preview` / `rename_apply` — missing `game_uuid` is 404, not a
+  presence 400. `rename_apply` can attach `results=` to a DB-failure envelope.
+- `library_tools_backfill_steam_metadata` — every field optional; the *success*
+  body carries `updated` / `skipped` / `errors`.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 109 | 46 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **145** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
 - `routes_apis/scan.py` (11) — most are partial-success; needs a batch-aware
   companion to `@validate_body` first.
-- `routes_apis/library_tools.py` (11)
+- `routes_apis/library_tools.py` (5 remaining — propose/import dual-input,
+  rename 404-fallback, all-optional steam backfill)
 - `routes_apis/quality_stats.py` (5), `routes_apis/client.py` (5),
   `routes_apis/chat_spaces_api.py` (5), `routes_apis/chat.py` (5)
 - `routes_apis/library.py` (4), `routes_apis/emulator_cheats.py` (4),

@@ -152,4 +152,7 @@ class TestApi:
     def test_library_uuid_is_required(self, client, admin_user):
         _login(client, admin_user)
         response = client.post('/api/library_tools/check_freshness', json={})
-        assert response.status_code == 400
+        assert response.status_code == 422
+        body = response.get_json()
+        assert body['error_code'] == 'unprocessable'
+        assert 'library_uuid' in body['detail']
