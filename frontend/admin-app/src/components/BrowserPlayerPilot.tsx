@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useState, type ChangeEvent } from 'react'
 import { getJson, putJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { PageStatus } from '@oneirodex/ui'
 import { showToast } from '../utils/toast'
 
@@ -15,7 +16,7 @@ export function BrowserPlayerPilot() {
   const [pilot, setPilot] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<unknown>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -36,7 +37,7 @@ export function BrowserPlayerPilot() {
     void load()
   }, [load])
 
-  const onToggle = useCallback(async (event) => {
+  const onToggle = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const next = event.target.checked
     setBusy(true)
     setError(null)
@@ -51,7 +52,7 @@ export function BrowserPlayerPilot() {
       )
     } catch (err) {
       setError(err)
-      showToast(err.message || 'Could not save browser player settings.', 'error')
+      showToast(errorText(err) || 'Could not save browser player settings.', 'error')
     } finally {
       setBusy(false)
     }

@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import './OpenPathModal.css'
 
-async function copyPath(path) {
+async function copyPath(path: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(path)
     return
@@ -21,17 +22,29 @@ async function copyPath(path) {
 /**
  * Unmatched open-path popup — never navigates to Auto Scan.
  */
-export function OpenPathModal({ open, path = '', label = 'Path', matchReason = '', onClose }) {
+export function OpenPathModal({
+  open,
+  path = '',
+  label = 'Path',
+  matchReason = '',
+  onClose,
+}: {
+  open: boolean
+  path?: string
+  label?: string
+  matchReason?: string
+  onClose?: () => void
+}) {
   const titleId = useId()
-  const closeRef = useRef(null)
+  const closeRef = useRef<HTMLButtonElement | null>(null)
   const [busy, setBusy] = useState(false)
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return undefined
     setStatus(null)
     closeRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', onKey)
@@ -61,15 +74,16 @@ export function OpenPathModal({ open, path = '', label = 'Path', matchReason = '
       })
       setStatus('Queued open in file explorer for companion')
     } catch (err) {
+      const message = errorText(err)
       try {
         await copyPath(path)
         setStatus(
-          err?.message
-            ? `${err.message} — path copied as fallback`
+          message
+            ? `${message} — path copied as fallback`
             : 'Open failed — path copied as fallback',
         )
       } catch {
-        setStatus(err?.message || 'Unable to open or copy path')
+        setStatus(message || 'Unable to open or copy path')
       }
     } finally {
       setBusy(false)

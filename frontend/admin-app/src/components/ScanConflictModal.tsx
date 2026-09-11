@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { Button } from '@oneirodex/ui'
-import { SCAN_CONFLICT_COPY, SCAN_QUEUE_POLICY } from './scanQueuePolicy'
+import { SCAN_CONFLICT_COPY, SCAN_QUEUE_POLICY, type ScanQueuePolicy } from './scanQueuePolicy'
 import './ScanConflictModal.css'
 
 /**
@@ -13,14 +13,21 @@ export function ScanConflictModal({
   busy = false,
   title = SCAN_CONFLICT_COPY.title,
   lede = SCAN_CONFLICT_COPY.lede,
+}: {
+  open: boolean
+  onClose?: () => void
+  onChoose?: (policy: ScanQueuePolicy) => void
+  busy?: boolean
+  title?: string
+  lede?: string
 }) {
   const titleId = useId()
-  const queueRef = useRef(null)
+  const queueRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     if (!open) return undefined
     queueRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !busy) onClose?.()
     }
     document.addEventListener('keydown', onKey)

@@ -1,34 +1,52 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
 
 const STOCK_CATALOG_URL = '/admin/api/art-studio/stock'
 const STOCK_GENERATE_URL = '/admin/api/art-studio/stock/generate'
 const APPLY_URL = '/admin/api/art-studio/apply'
 
+export interface StockItem {
+  id: string
+  label: string
+  kind: 'platform' | 'era' | 'stock'
+  platform: string
+  packId: string
+  thumb: string
+  preview: string
+  generated: boolean
+  hint: string
+}
+
 /**
  * Normalize Backend catalog payloads.
  * Contract: GET /admin/api/art-studio/stock → { items, count }
  * Item: { id, label, kind, platform?, pack_id, path, urls{tile,wide,hero}, generated }
  */
-export function normalizeStockCatalog(data) {
+export function normalizeStockCatalog(data: unknown): StockItem[] {
   if (!data) return []
+  const payload = data as Record<string, unknown>
   const raw = Array.isArray(data)
     ? data
-    : data.items || data.catalog || data.stock || data.packs || []
+    : payload.items || payload.catalog || payload.stock || payload.packs || []
   if (!Array.isArray(raw)) return []
   return raw
-    .map((row, index) => {
-      if (!row || typeof row !== 'object') return null
+    .map((rawRow, index): StockItem | null => {
+      if (!rawRow || typeof rawRow !== 'object') return null
+      const row = rawRow as Record<string, unknown>
       const id = String(row.id || row.pack_id || row.key || `item-${index}`)
-      const urls = row.urls && typeof row.urls === 'object' ? row.urls : {}
+      const urls = (row.urls && typeof row.urls === 'object' ? row.urls : {}) as Record<
+        string,
+        unknown
+      >
       const generated = Boolean(row.generated)
       const thumb = generated
-        ? urls.tile || urls.thumb || urls.wide || row.thumb_url || row.preview_url || ''
+        ? String(urls.tile || urls.thumb || urls.wide || row.thumb_url || row.preview_url || '')
         : ''
       const preview = generated
-        ? urls.wide || urls.hero || urls.tile || row.preview_url || thumb || ''
+        ? String(urls.wide || urls.hero || urls.tile || row.preview_url || thumb || '')
         : ''
       return {
         id,
@@ -39,13 +57,13 @@ export function normalizeStockCatalog(data) {
         thumb,
         preview,
         generated,
-        hint: row.hint || row.description || '',
+        hint: String(row.hint || row.description || ''),
       }
     })
-    .filter(Boolean)
+    .filter((item): item is StockItem => item != null)
 }
 
-async function fetchStockCatalog() {
+async function fetchStockCatalog(): Promise<{ unavailable: boolean; items: StockItem[] }> {
   const response = await fetch(STOCK_CATALOG_URL, { credentials: 'same-origin' })
   if (response.status === 401) {
     window.location.href = '/login'
@@ -76,7 +94,7 @@ export function StockPicker({
   lede?: string
   showLibraryUuid?: boolean
 } = {}) {
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<StockItem[]>([])
   const [unavailable, setUnavailable] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -106,7 +124,7 @@ export function StockPicker({
         )
       }
     } catch (err) {
-      setError(err.message || 'Could not load stock catalog')
+      setError(errorText(err) || 'Could not load stock catalog')
       setItems([])
       setUnavailable(false)
     } finally {
@@ -130,7 +148,7 @@ export function StockPicker({
     return items
   }, [items, filter])
 
-  const ensureGenerated = useCallback(async (item) => {
+  const ensureGenerated = useCallback(async (item: StockItem): Promise<StockItem> => {
     if (item.generated) return item
     await postJson(STOCK_GENERATE_URL, { ids: [item.packId || item.id] })
     const refreshed = await fetchStockCatalog()
@@ -143,7 +161,7 @@ export function StockPicker({
   }, [])
 
   const applySelected = useCallback(
-    async (mode) => {
+    async (mode: string) => {
       if (!selected) {
         setError('Select an image first.')
         return
@@ -170,7 +188,7 @@ export function StockPicker({
         onApplied?.({ item: ready, mode })
         await loadCatalog()
       } catch (err) {
-        const text = err.message || 'Apply failed'
+        const text = errorText(err) || 'Apply failed'
         setError(text)
         showToast(text, 'error')
       } finally {
@@ -193,7 +211,7 @@ export function StockPicker({
       await loadCatalog()
       setStatus(`Pack “${selected.label}” ready.`)
     } catch (err) {
-      const text = err.message || 'Generate failed'
+      const text = errorText(err) || 'Generate failed'
       setError(text)
       showToast(text, 'error')
     } finally {

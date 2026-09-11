@@ -63,10 +63,10 @@ export function DataTable({
 }: DataTableProps) {
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(initialSort) // { key, dir: 'asc' | 'desc' }
   const [query, setQuery] = useState('')
-  const [columnQuery, setColumnQuery] = useState({})
+  const [columnQuery, setColumnQuery] = useState<Record<string, string>>({})
   const listId = useId()
 
-  const cellValue = (column, row) => {
+  const cellValue = (column: DataTableColumn, row: any): unknown => {
     if (typeof column.value === 'function') {
       return column.value(row)
     }
@@ -76,12 +76,12 @@ export function DataTable({
   const filterable = columns.filter((c) => c.filterable !== false)
   const countVisible = showCount ?? Boolean(toolbar || columnFilters)
 
-  const suggestionsByKey = useMemo(() => {
+  const suggestionsByKey = useMemo<Record<string, string[]>>(() => {
     if (!columnFilters) return {}
-    const out = {}
+    const out: Record<string, string[]> = {}
     for (const column of filterable) {
-      const seen = new Set()
-      const values = []
+      const seen = new Set<string>()
+      const values: string[] = []
       for (const row of rows) {
         const raw = cellValue(column, row)
         if (raw == null || raw === '') continue
@@ -155,7 +155,7 @@ export function DataTable({
     })
   }, [filtered, sort, columns])
 
-  const toggleSort = (key) => {
+  const toggleSort = (key: string) => {
     setSort((current) => {
       if (current?.key !== key) {
         return { key, dir: 'asc' }
@@ -172,7 +172,7 @@ export function DataTable({
   )
   const filterActive = Boolean(query.trim()) || hasActiveColumnFilter
 
-  const renderFilter = (column) => {
+  const renderFilter = (column: DataTableColumn) => {
     if (!columnFilters || column.filterable === false) return null
     const label = typeof column.label === 'string' ? column.label : column.key
     const options = suggestionsByKey[column.key] || []
@@ -284,7 +284,7 @@ export function DataTable({
                       key={column.key}
                       className={column.align ? `is-${column.align}` : undefined}
                     >
-                      {column.render ? column.render(row) : cellValue(column, row)}
+                      {column.render ? column.render(row) : (cellValue(column, row) as ReactNode)}
                     </td>
                   ))}
                 </tr>

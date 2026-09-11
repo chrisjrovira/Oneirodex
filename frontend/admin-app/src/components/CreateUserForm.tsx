@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 
 import { putJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { PM_IGNORE } from './formIgnore'
 
@@ -17,7 +18,13 @@ const ROLES = ['user', 'librarian', 'child', 'admin']
  * Without an email the account gets an unroutable placeholder address
  * (RFC 2606 `.invalid`) because `users.email` is NOT NULL.
  */
-export function CreateUserForm({ onCreated, title = 'Create user' }) {
+export function CreateUserForm({
+  onCreated,
+  title = 'Create user',
+}: {
+  onCreated?: () => void
+  title?: string
+}) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -27,7 +34,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setBusy(true)
@@ -48,7 +55,7 @@ export function CreateUserForm({ onCreated, title = 'Create user' }) {
       setPassword('')
       onCreated?.()
     } catch (err) {
-      setError(err?.message || 'Could not create that user.')
+      setError(errorText(err) || 'Could not create that user.')
     } finally {
       setBusy(false)
     }
