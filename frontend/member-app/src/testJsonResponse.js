@@ -4,6 +4,7 @@
  * A 2xx response is only parsed when `Content-Type` includes `application/json`.
  * A 4xx/5xx body is read via `.text()`, not `.json()`.
  */
+import { vi } from 'vitest'
 
 export function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const payload = typeof body === 'string' ? body : JSON.stringify(body ?? {})
@@ -40,7 +41,7 @@ export function jsonFrom(result) {
 
 export function stubFetch(impl) {
   const fn = vi.fn((...args) => jsonFrom(impl(...args)))
-  global.fetch = fn
+  globalThis.fetch = fn
   return fn
 }
 
