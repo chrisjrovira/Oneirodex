@@ -3,7 +3,16 @@ import { render, screen, within } from '@testing-library/react'
 import { SupportInboxPage } from './SupportInboxPage'
 
 function mockFetch(tickets) {
-  return vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ tickets }) }))
+  return vi.fn(async () => ({
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
+    json: async () => ({ tickets }),
+  }))
 }
 
 /**

@@ -15,6 +15,11 @@ describe('ScansPage queued jobs', () => {
           return {
             ok: true,
             status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => [
               {
                 id: 'aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb',
@@ -35,7 +40,16 @@ describe('ScansPage queued jobs', () => {
             ],
           }
         }
-        return { ok: false, status: 404, json: async () => ({}) }
+        return {
+          ok: false,
+          status: 404,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
+          json: async () => ({}),
+        }
       }),
     )
   })
@@ -75,12 +89,26 @@ describe('ScansPage queued jobs', () => {
           return {
             ok: true,
             status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => [
               { id: 'q1', library_name: 'PS2', status: 'Queued', queue_position: 1 },
             ],
           }
         }
-        return { ok: false, status: 404, json: async () => ({}) }
+        return {
+          ok: false,
+          status: 404,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
+          json: async () => ({}),
+        }
       }),
     )
 
@@ -105,6 +133,11 @@ describe('ScansPage queued jobs', () => {
           return {
             ok: true,
             status: 200,
+            headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => [
               {
                 id: 'f1',
@@ -119,7 +152,16 @@ describe('ScansPage queued jobs', () => {
             ],
           }
         }
-        return { ok: false, status: 404, json: async () => ({}) }
+        return {
+          ok: false,
+          status: 404,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
+          json: async () => ({}),
+        }
       }),
     )
 
@@ -141,6 +183,11 @@ describe('ScansPage queued jobs', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [{ id: '1', status: 'Running', library_name: 'PCWIN' }],
         }
       }
@@ -148,10 +195,24 @@ describe('ScansPage queued jobs', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ status: 'queued', position: 2, count: 1 }),
         }
       }
-      return { ok: false, status: 404, json: async () => ({}) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
+        json: async () => ({}),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -193,20 +254,48 @@ describe('LibrariesPage refresh all', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [{ uuid: 'lib-1', name: 'PCWIN' }],
         }
       }
       if (String(url).includes('/api/scan_jobs_status')) {
-        return { ok: true, status: 200, json: async () => [] }
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
+          json: async () => [],
+        }
       }
       if (String(url).includes('/api/admin/libraries/refresh_all')) {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ status: 'started', count: 1, message: 'started' }),
         }
       }
-      return { ok: false, status: 404, json: async () => ({}) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
+        json: async () => ({}),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 

@@ -37,6 +37,13 @@ export interface AccountInvitesResponse {
   [key: string]: unknown
 }
 
+/** Result of an avatar change — upload or stock pick. */
+export interface AvatarChangeResponse {
+  avatar_path: string
+  avatar_url: string
+  [key: string]: unknown
+}
+
 export function createAccountApi(request: Requester) {
   return {
     /** Everything the account modals show in their headers (`GET /api/account/summary`). */
@@ -50,6 +57,22 @@ export function createAccountApi(request: Requester) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+      })
+    },
+
+    /**
+     * Upload a custom avatar (`POST /api/account/avatar`, multipart). No JSON
+     * `Content-Type` is set here — the browser assigns its own multipart
+     * boundary for a `FormData` body, and forcing one would break the upload.
+     * `X-CSRFToken` still rides as a header; the transport adds it to every
+     * mutating request the same way it does for JSON bodies.
+     */
+    uploadAvatar(file: File): Promise<AvatarChangeResponse> {
+      const body = new FormData()
+      body.append('avatar', file)
+      return request<AvatarChangeResponse>('/api/account/avatar', {
+        method: 'POST',
+        body,
       })
     },
 

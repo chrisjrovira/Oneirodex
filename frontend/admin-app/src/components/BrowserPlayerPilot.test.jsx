@@ -12,12 +12,26 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
   global.fetch = vi.fn(async (url, init = {}) => {
     const method = init.method || 'GET'
     if (!String(url).includes('/api/browser-player-settings')) {
-      return { ok: false, status: 404, json: async () => ({}) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
+        json: async () => ({}),
+      }
     }
     if (method === 'GET') {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           nostalgist_nes_pilot: getPilot,
@@ -32,19 +46,38 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
         return {
           ok: false,
           status: 400,
+          headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ ok: false, error: 'not wired' }),
         }
       }
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           nostalgist_nes_pilot: Boolean(body.nostalgist_nes_pilot),
         }),
       }
     }
-    return { ok: false, status: 405, json: async () => ({}) }
+    return {
+      ok: false,
+      status: 405,
+      headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
+      json: async () => ({}),
+    }
   })
 }
 

@@ -43,6 +43,40 @@ describe('ops api', () => {
     })
   })
 
+  it('getSystemDetail GETs /admin/api/ops/system', async () => {
+    const { calls, client } = harness(
+      200,
+      okEnvelope({ system: { os: 'Linux' }, database: {}, logs: {}, config: {} }),
+    )
+
+    const detail = await client.ops.getSystemDetail()
+
+    expect(calls[0]).toMatchObject({
+      url: 'https://host.example/admin/api/ops/system',
+      method: 'GET',
+    })
+    expect((detail.system as { os?: string }).os).toBe('Linux')
+  })
+
+  it('getLogs appends ?limit and rejects on a 500', async () => {
+    const { calls, client } = harness(200, okEnvelope({ events: [{ id: 1, message: 'started' }] }))
+
+    const logs = await client.ops.getLogs({ limit: 50 })
+
+    expect(calls[0]).toMatchObject({
+      url: 'https://host.example/admin/api/ops/logs?limit=50',
+      method: 'GET',
+    })
+    expect(logs.events?.[0].message).toBe('started')
+
+    const failing = harness(500, { ok: false, error: 'log read failed', error_code: 'io_error' })
+    await expect(failing.client.ops.getLogs()).rejects.toMatchObject({
+      status: 500,
+      error_code: 'io_error',
+    })
+    expect(failing.calls[0]).toMatchObject({ url: 'https://host.example/admin/api/ops/logs' })
+  })
+
   it('is reachable on the browser client with credentials + no bearer header', async () => {
     const seen: RequestInit[] = []
     const fetchImpl = (async (_url: string | URL, init: RequestInit = {}) => {

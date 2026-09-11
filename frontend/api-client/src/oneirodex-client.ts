@@ -1,6 +1,8 @@
 import { createRequester, type OneirodexClientConfig, type Requester } from './client.js'
 import { createBrowserRequester, type BrowserTransportConfig } from './transport-browser.js'
 import { createAccountApi } from './account.js'
+import { createAdminArtApi } from './admin-art.js'
+import { createAdminUsersApi } from './admin-users.js'
 import { createBrowseApi } from './browse.js'
 import { createCollectionsApi } from './collections.js'
 import { createDeviceApi } from './device.js'
@@ -8,6 +10,7 @@ import { createDiscoverApi } from './discover.js'
 import { createDownloadsApi } from './downloads.js'
 import { createGameApi } from './game.js'
 import { createLibraryApi } from './library.js'
+import { createLibraryToolsApi } from './library-tools.js'
 import { createOpsApi } from './ops.js'
 import { createPlaytimeApi } from './playtime.js'
 import { createTokensApi } from './tokens.js'
@@ -33,6 +36,9 @@ function buildClient(request: Requester) {
     account: createAccountApi(request),
     wishlist: createWishlistApi(request),
     ops: createOpsApi(request),
+    adminUsers: createAdminUsersApi(request),
+    libraryTools: createLibraryToolsApi(request),
+    adminArt: createAdminArtApi(request),
   }
 }
 

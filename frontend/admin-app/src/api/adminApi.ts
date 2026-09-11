@@ -1,14 +1,15 @@
 /**
  * Admin SPA fetch helpers — the thin admin wrapper (401 redirect, JSON verbs)
- * over the shared primitives.
+ * now sitting on `@oneirodex/api-client`'s browser transport (PR-4c) instead
+ * of a hand-rolled `fetch`.
  *
- * The CSRF lookup and the failed-response Error builder moved into
- * `@oneirodex/ui` in wave B1.2: the member SPA's fallback chain is the superset,
- * so the admin copy (meta → input → #csrf_token, plus a `data.message`
- * fallback) is now one of the behaviours that lookup already covers. Re-exported
- * here under the names admin call sites already use so their imports do not move.
+ * `createBrowserRequester` already provides everything this file used to do
+ * by hand: `credentials: 'include'`, `X-CSRFToken` on mutating verbs (from the
+ * injected `getCsrfToken`), and `onUnauthorized()` on a 401. Exported under
+ * the names admin call sites already use so their imports do not move.
  */
 import { getCsrfToken, csrfHeaders, errorFromBody } from '@oneirodex/ui'
+import { createBrowserRequester, OneirodexApiError } from '@oneirodex/api-client'
 
 /** @deprecated import { getCsrfToken } from '@oneirodex/ui' — kept for admin call sites. */
 export { getCsrfToken as csrfToken, csrfHeaders }
@@ -16,93 +17,107 @@ export { getCsrfToken as csrfToken, csrfHeaders }
 /**
  * Build an Error from a failed admin response.
  *
- * Was a local copy that threw a bare `Error(message)`; it now delegates to the
- * shared `errorFromBody`, which keeps `status` / `error_code` / `data` on the
- * Error and prefers `data.error` then `data.message` for the sentence — the
- * same shape this copy had. Same signature `(data, status, label)`.
+ * Delegates to the shared `errorFromBody`, which keeps `status` / `error_code`
+ * / `data` on the Error and prefers `data.error` then `data.message` for the
+ * sentence. Same signature `(data, status, label)`. Still exported: components
+ * that build their own request by hand (`SystemResetPanel`) import this
+ * directly.
  */
 export const adminError = errorFromBody
 
-export async function getJson(url: string, { signal }: { signal?: AbortSignal } = {}) {
-  const response = await fetch(url, { credentials: 'same-origin', signal })
-  if (response.status === 401) {
+const request = createBrowserRequester({
+  baseUrl: '',
+  // Looked up per call, not captured at module-load time — admin vitest
+  // suites `vi.stubGlobal('fetch', ...)` / reassign `global.fetch` per test,
+  // after this module (and its `createBrowserRequester` call) is already
+  // loaded. Binding to `fetch` directly here would freeze on whatever the
+  // global was at import time and never see those stubs.
+  fetchImpl: (input, init) => fetch(input, init),
+  csrfToken: getCsrfToken,
+  onUnauthorized: () => {
     window.location.href = '/login'
-    throw new Error('unauthorized')
+  },
+})
+
+/**
+ * Re-throw a failed `request()` call as the `adminError` shape (an `Error`
+ * with `.status` / `.error_code` / `.data`) call sites already expect, rather
+ * than leaking `OneirodexApiError` (`.body`, no `.data`) up to them.
+ */
+function rethrowAsAdminError(err: unknown, label: string): never {
+  if (err instanceof OneirodexApiError) {
+    throw adminError(err.body as Record<string, unknown> | null, err.status, label)
   }
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw adminError(data, response.status, url)
+  throw err
+}
+
+// `data` stays inferred `any` throughout, matching the pre-rewire behaviour:
+// the admin envelope is loose and each consumer narrows at its use site.
+// Tightening this to a shared response type is a follow-up once the
+// pages/components are annotated.
+
+export async function getJson(url: string, { signal }: { signal?: AbortSignal } = {}) {
+  try {
+    return await request<any>(url, { signal })
+  } catch (err) {
+    return rethrowAsAdminError(err, url)
   }
-  return data
 }
 
 export async function postJson(url: string, body?: unknown) {
-  const { ok, status, data } = await postJsonResult(url, body)
-  if (!ok) {
-    throw adminError(data, status, url)
+  try {
+    return await request<any>(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body ?? {}),
+    })
+  } catch (err) {
+    return rethrowAsAdminError(err, url)
   }
-  return data
 }
 
 /**
  * POST JSON and return `{ ok, status, data }` without throwing on 4xx/5xx
- * (still redirects on 401). Used for scan conflict / 409 recovery.
+ * (still redirects on 401, via the transport's `onUnauthorized`). Used for
+ * scan conflict / 409 recovery.
  */
 export async function postJsonResult(url: string, body?: unknown) {
-  const response = await fetch(url, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(body ?? {}),
-  })
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('unauthorized')
+  try {
+    const data = await request<any>(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body ?? {}),
+    })
+    return { ok: true, status: 200, data }
+  } catch (err) {
+    if (err instanceof OneirodexApiError) {
+      return { ok: false, status: err.status, data: err.body ?? {} }
+    }
+    throw err
   }
-  // `data` stays inferred `any` here, matching `getJson`: the admin envelope is
-  // loose and each consumer narrows at its use site. Tightening this to a shared
-  // response type is a follow-up once the pages/components are annotated.
-  const data = await response.json().catch(() => ({}))
-  return { ok: response.ok, status: response.status, data }
 }
 
 export async function putJson(url: string, body?: unknown) {
-  const response = await fetch(url, {
-    method: 'PUT',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(body ?? {}),
-  })
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('unauthorized')
+  try {
+    return await request<any>(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body ?? {}),
+    })
+  } catch (err) {
+    return rethrowAsAdminError(err, url)
   }
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw adminError(data, response.status, url)
-  }
-  return data
 }
 
 export async function deleteJson(url: string, body?: unknown) {
-  const headers = csrfHeaders()
-  const init: RequestInit = {
-    method: 'DELETE',
-    credentials: 'same-origin',
-    headers,
-  }
+  const init: RequestInit = { method: 'DELETE' }
   if (body !== undefined) {
-    headers['Content-Type'] = 'application/json'
+    init.headers = { 'Content-Type': 'application/json' }
     init.body = JSON.stringify(body)
   }
-  const response = await fetch(url, init)
-  if (response.status === 401) {
-    window.location.href = '/login'
-    throw new Error('unauthorized')
+  try {
+    return await request<any>(url, init)
+  } catch (err) {
+    return rethrowAsAdminError(err, url)
   }
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw adminError(data, response.status, url)
-  }
-  return data
 }

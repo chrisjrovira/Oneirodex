@@ -23,28 +23,32 @@ SPAs adopt (ops-glance `src/api/summary.ts` is the first, Phase 3.3).
 
 ## Resource modules
 
-| Group                | Module        | Status  | Methods                                                                                                          | Notes                                                                             |
-| -------------------- | ------------- | ------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Tokens               | `tokens`      | covered | `list`, `create`, `revoke`                                                                                       | `/api/tokens`                                                                     |
-| Playtime             | `playtime`    | covered | `startSession`, `heartbeatSession`, `stopSession`, `me`                                                          |                                                                                   |
-| Browse / search      | `browse`      | partial | `search`, `listCollections`                                                                                      | search filters/facets not modelled                                                |
-| Updates              | `updates`     | covered | `inbox`                                                                                                          | freshness inbox only; `/api/updates/wanted` TODO                                  |
-| Downloads            | `downloads`   | covered | `initiateGameDownload`, `listGameVersions`                                                                       | Bearer + `write:download`                                                         |
-| Device / presence    | `device`      | covered | `heartbeat`, `capabilities`, `ackCommands`, `nackCommands`                                                       | companion command transport                                                       |
-| Library              | `library`     | covered | `list`, `get`, `getWatch`, `setWatch`, `reorder`                                                                 | admin batch scan/edit/delete TODO                                                 |
-| Game details         | `game`        | covered | `details`, `moreFrom`, `editions`, `screenshots`                                                                 | freshness, saves, mods, cheats TODO                                               |
-| Collections          | `collections` | covered | `list`, `create`, `get`, `update`, `remove`, `addItem`, `removeItem`, `reorderItems`                             | full CRUD                                                                         |
-| Discover             | `discover`    | covered | `sections`, `row`, `zone`, `genreHub`, `getPins`, `setPins`                                                      |                                                                                   |
-| Account              | `account`     | partial | `summary`, `changePassword`, `setStockAvatar`, `listInvites`, `createInvite`, `deleteInvite`                     | multipart `POST /api/account/avatar` (file upload) TODO                           |
-| Wishlist / favorites | `wishlist`    | partial | `listRequests`, `createRequest`, `cancelRequest`, `setBatch`, `listFavorites`, `checkFavorite`, `toggleFavorite` | librarian resolve (`PATCH /api/requests/{id}`) TODO                               |
-| Ops summary          | `ops`         | covered | `getSummary`                                                                                                     | `GET /admin/api/ops/summary`; loose `OpsSummaryResponse` (every section nullable) |
+| Group                | Module         | Status  | Methods                                                                                                                                                                                                                                                       | Notes                                                                                                 |
+| -------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Tokens               | `tokens`       | covered | `list`, `create`, `revoke`                                                                                                                                                                                                                                    | `/api/tokens`                                                                                         |
+| Playtime             | `playtime`     | covered | `startSession`, `heartbeatSession`, `stopSession`, `me`                                                                                                                                                                                                       |                                                                                                       |
+| Browse / search      | `browse`       | partial | `search`, `listCollections`                                                                                                                                                                                                                                   | search filters/facets not modelled                                                                    |
+| Updates              | `updates`      | covered | `inbox`                                                                                                                                                                                                                                                       | freshness inbox only; `/api/updates/wanted` TODO                                                      |
+| Downloads            | `downloads`    | covered | `initiateGameDownload`, `listGameVersions`                                                                                                                                                                                                                    | Bearer + `write:download`                                                                             |
+| Device / presence    | `device`       | covered | `heartbeat`, `capabilities`, `ackCommands`, `nackCommands`                                                                                                                                                                                                    | companion command transport                                                                           |
+| Library              | `library`      | covered | `list`, `get`, `getWatch`, `setWatch`, `reorder`, `startScan`, `batchScan`, `batchEdit`, `refreshAll`, `getScanJobsStatus`                                                                                                                                    | scan management added PR-4c; batch delete not called by any SPA yet, still TODO                       |
+| Library tools        | `libraryTools` | covered | `proposeLeafLibraries`, `importLeafLibrariesPreview`                                                                                                                                                                                                          | preview-only, never creates; `/admin/library/add` is a classic Jinja form POST, not a JSON API — TODO |
+| Game details         | `game`         | covered | `details`, `moreFrom`, `editions`, `screenshots`                                                                                                                                                                                                              | freshness, saves, mods, cheats TODO                                                                   |
+| Collections          | `collections`  | covered | `list`, `create`, `get`, `update`, `remove`, `addItem`, `removeItem`, `reorderItems`                                                                                                                                                                          | full CRUD                                                                                             |
+| Discover             | `discover`     | covered | `sections`, `row`, `zone`, `genreHub`, `getPins`, `setPins`                                                                                                                                                                                                   |                                                                                                       |
+| Account              | `account`      | covered | `summary`, `changePassword`, `uploadAvatar`, `setStockAvatar`, `listInvites`, `createInvite`, `deleteInvite`                                                                                                                                                  | multipart `FormData` upload, no forced `Content-Type`; full account surface wrapped                   |
+| Wishlist / favorites | `wishlist`     | partial | `listRequests`, `createRequest`, `cancelRequest`, `setBatch`, `listFavorites`, `checkFavorite`, `toggleFavorite`                                                                                                                                              | librarian resolve (`PATCH /api/requests/{id}`) TODO                                                   |
+| Ops summary          | `ops`          | covered | `getSummary`, `getSystemDetail`, `getLogs`                                                                                                                                                                                                                    | `system`/`logs` GETs added PR-4c; loose response shapes (every section nullable)                      |
+| Admin users          | `adminUsers`   | covered | `list`, `upsert`, `listInviteQuotas`                                                                                                                                                                                                                          | `/admin/api/users`, `/admin/api/user/{id}` (id `0` = create), `/admin/api/invites` — admin only       |
+| Admin art            | `adminArt`     | covered | `preview`, `generate`, `apply`, `batchGenerate`, `getStockCatalog`, `generateStock`, `getSystemMarks`, `generateSystemMarks`, `getSystemMarksLab`, `searchCovers`, `applyCover`, `batchSearchCovers`, `batchApplyCovers`, `generateArtwork`, `downloadImages` | Art Studio + provider covers + AI artwork + bulk image downloads, all under `/admin/api/**`           |
 
 ## Not yet wrapped (call `client.request` directly)
 
 Chat / social (`/api/chat/**`), notifications, ownership imports
 (`/api/ownership/**`), game servers, emulator profiles / BIOS / saves / cheats,
-layouts, quality profiles, providers / metadata search, AI triage, admin
-surfaces (`/api/admin/**`), activity / events SSE, RTC tokens.
+layouts, quality profiles, providers / metadata search, AI triage, activity /
+events SSE, RTC tokens, and the classic-form admin surfaces that are not JSON
+APIs (`/admin/library/add`, `/admin/themes/reset`).
 
 Types are intentionally loose (`[key: string]: unknown` with the known fields
 typed) matching the `src/types.ts` house style — tighten per group as
@@ -54,11 +58,22 @@ typed) matching the `src/types.ts` house style — tighten per group as
 
 - `docs/openapi/openapi.json` regen was out of scope for wave C3.7-client — the
   new groups above are not yet in the spec.
-- **admin-app browser-transport adoption (PR-4 f, deferred).** `admin-app/src/api/adminApi.ts`
-  still runs its own `fetch` verbs (over `@oneirodex/ui` `csrfHeaders` / `errorFromBody`).
-  Swapping them onto `createBrowserRequester` is blocked on `unwrapResponse` returning
-  `undefined` unless the response carries `content-type: application/json`, which ~30 admin
-  vitest `fetch` mocks do not set — the swap fails that suite wholesale until the mocks
-  gain the header. The `/api/admin/**` resource modules and the `account` multipart
-  `uploadAvatar` (added to `@oneirodex/ui` `accountApi.js` in PR-4 d, not here) remain
-  unwrapped.
+- **admin-app browser-transport adoption — done (PR-4c).** `admin-app/src/api/adminApi.ts`
+  now sits on `createBrowserRequester` instead of its own hand-rolled `fetch`
+  verbs; exported names (`getJson`/`postJson`/`postJsonResult`/`putJson`/`deleteJson`/
+  `adminError`/`csrfToken`/`csrfHeaders`) are unchanged so call sites did not move.
+  That required two admin vitest mock fixes across ~25 test files: a
+  `content-type: application/json` response header (`unwrapResponse` returns
+  `undefined` without one) and a `.text()` method alongside `.json()`
+  (`unwrapResponse`'s error path reads the body via `response.text()`, not
+  `.json()`, which the old hand-rolled `adminApi` never called). The new
+  `adminUsers` / `libraryTools` / `adminArt` modules above, plus the scan-management
+  additions to `library`, cover the `/admin/api/**` and `/api/admin/**` surface
+  admin-app actually calls — none of admin-app's own hooks/components were
+  rewired onto them yet (still call `getJson`/`postJson`/`postJsonResult`
+  directly); that adoption is a separate follow-up.
+- Account `uploadAvatar` — done (this PR). Moved from `@oneirodex/ui`'s
+  `accountApi.ts` (PR-4 sub-wave d) into `account.ts` here as a multipart
+  `FormData` POST; `AccountModal.tsx` now calls it through a scoped
+  `createOneirodexBrowserClient` instance instead of the removed hand-rolled
+  helper. Account group status is now covered end to end.

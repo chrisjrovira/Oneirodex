@@ -62,6 +62,11 @@ function jsonOk(body, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => body,
   }
 }
@@ -159,7 +164,19 @@ test('StoragePage hides the readiness strip when status could not be read', asyn
   // a confident answer to a question we could not ask.
   const originalFetch = global.fetch
   global.fetch = mockFetch([
-    ['/api/storage/status', async () => ({ ok: false, status: 503, json: async () => ({}) })],
+    [
+      '/api/storage/status',
+      async () => ({
+        ok: false,
+        status: 503,
+        headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
+        json: async () => ({}),
+      }),
+    ],
   ])
   try {
     render(<StoragePage />)

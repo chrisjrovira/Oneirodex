@@ -12,9 +12,10 @@ import { AnnouncementsPage } from './AnnouncementsPage'
  */
 
 function mockList(announcements, { fail = false } = {}) {
+  const headers = new Headers({ 'content-type': 'application/json' })
   global.fetch = vi.fn(async () => {
-    if (fail) return { ok: false, status: 500, json: async () => ({ error: 'Boom' }) }
-    return { ok: true, status: 200, json: async () => ({ announcements }) }
+    if (fail) return { ok: false, status: 500, headers, json: async () => ({ error: 'Boom' }) }
+    return { ok: true, status: 200, headers, json: async () => ({ announcements }) }
   })
 }
 
