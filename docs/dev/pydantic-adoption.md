@@ -64,6 +64,9 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/preview` (`art_studio_preview`) | `ArtStudioPreviewBody` |
+| `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/generate` (`art_studio_generate`) | `ArtStudioGenerateBody` |
+| `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/apply` (`art_studio_apply`) | `ArtStudioApplyBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +85,14 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`art_studio_preview` / `art_studio_generate`** — missing/blank `title`
+  was 400, now 422 naming `title`. Size / format / artistic / disk errors
+  stay in the view. Frontend (`ArtStudioPage.tsx`) renders `errorText`.
+- **`art_studio_apply`** — missing `pack_id` (or `id`) was 400, now 422
+  naming `__root__`. Mode-dependent `game_uuid` / `library_uuid` still 400
+  from the view. The file's `request.get_json` count does not drop: the
+  `_json_body()` helper remains for stock generate, batch, and
+  system-marks.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +138,22 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_admin_ext/art_studio.py`
+
+- Stock generate, apply-batch, system-marks generate — optional bags
+  (`ids` / `game_uuids` / `themes` may be absent). They still share
+  `_json_body()`.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
 | `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **151** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
@@ -149,6 +166,7 @@ Highest-count files still to do, roughly in priority order:
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
   needs the bespoke-message validator.
+- `routes_admin_ext/art_studio.py` (1 helper, still used by stock/batch/marks).
 - long tail of 1–3-site files.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards

@@ -13,6 +13,11 @@ from sqlalchemy.orm import joinedload
 
 from oneirodex import db
 from oneirodex.models import Game
+from oneirodex.schemas.admin_art_studio import (
+    ArtStudioApplyBody,
+    ArtStudioGenerateBody,
+    ArtStudioPreviewBody,
+)
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.cover_art_studio import (
     apply_pack_as_fallback,
@@ -39,6 +44,7 @@ from oneirodex.utils.system_marks import (
     platform_choices,
     system_mark_lab_spec,
 )
+from oneirodex.utils.validation import validate_body
 from . import admin2_bp
 
 
@@ -56,17 +62,15 @@ def art_studio_page():
 @admin2_bp.route('/admin/api/art-studio/preview', methods=['POST'])
 @login_required
 @admin_required
-def art_studio_preview():
-    data = _json_body()
-    title = (data.get('title') or '').strip()
-    if not title:
-        return api_error('title is required', code='bad_request')
-    system = (data.get('system') or '').strip() or None
-    width = int(data.get('width') or 400)
-    height = int(data.get('height') or 600)
+@validate_body(ArtStudioPreviewBody)
+def art_studio_preview(body: ArtStudioPreviewBody):
+    title = body.title
+    system = (body.system or '').strip() or None
+    width = int(body.width or 400)
+    height = int(body.height or 600)
     width = max(64, min(width, 2048))
     height = max(64, min(height, 2048))
-    fmt = (data.get('format') or 'webp').lower()
+    fmt = (body.format or 'webp').lower()
     if fmt not in ('webp', 'png'):
         fmt = 'webp'
     if width == height:
@@ -76,16 +80,16 @@ def art_studio_preview():
     else:
         variant = 'tile'
     # artistic defaults ON — pass artistic=0 / false to preview the legacy flat template
-    artistic_raw = data.get('artistic', True)
+    artistic_raw = body.artistic
     if isinstance(artistic_raw, str):
         artistic = artistic_raw.strip().lower() not in ('0', 'false', 'no', 'off')
     else:
         artistic = bool(artistic_raw)
     # FEAT-D4: operator overrides for the drawn text. Absent keys keep the
     # derived values; an explicit empty subtitle means "no subtitle".
-    headline_override = data.get('headline')
-    subtitle_override = data.get('subtitle')
-    title_scale = clamp_title_scale(data.get('title_scale'))
+    headline_override = body.headline
+    subtitle_override = body.subtitle
+    title_scale = clamp_title_scale(body.title_scale)
 
     img = render_cover_art(
         width, height, title=title, system=system, variant=variant, artistic=artistic,
@@ -109,25 +113,23 @@ def art_studio_preview():
 @admin2_bp.route('/admin/api/art-studio/generate', methods=['POST'])
 @login_required
 @admin_required
-def art_studio_generate():
-    data = _json_body()
-    title = (data.get('title') or '').strip()
-    if not title:
-        return api_error('title is required', code='bad_request')
-    system = (data.get('system') or '').strip() or None
-    fmt = (data.get('format') or 'webp').lower()
+@validate_body(ArtStudioGenerateBody)
+def art_studio_generate(body: ArtStudioGenerateBody):
+    title = body.title
+    system = (body.system or '').strip() or None
+    fmt = (body.format or 'webp').lower()
     if fmt not in ('webp', 'png'):
         fmt = 'webp'
     # Same overrides the preview accepts. Without them Generate would render the
     # derived text while the preview above it showed the operator's, so the
     # preview would be lying about its own output.
-    pack_title_scale = clamp_title_scale(data.get('title_scale'))
+    pack_title_scale = clamp_title_scale(body.title_scale)
 
     try:
         manifest = save_pack(
             title, system=system, fmt=fmt,
-            headline_override=data.get('headline'),
-            subtitle_override=data.get('subtitle'),
+            headline_override=body.headline,
+            subtitle_override=body.subtitle,
             title_scale=pack_title_scale,
         )
         preview = pack_preview_url(manifest['pack_id'], 'tile_400x600.webp')
@@ -207,28 +209,26 @@ def art_studio_stock_generate():
 @admin2_bp.route('/admin/api/art-studio/apply', methods=['POST'])
 @login_required
 @admin_required
-def art_studio_apply():
-    data = _json_body()
-    pack_id = (data.get('pack_id') or data.get('id') or '').strip()
-    if not pack_id:
-        return api_error('pack_id is required', code='bad_request')
-    mode = (data.get('mode') or 'game').strip().lower()
+@validate_body(ArtStudioApplyBody)
+def art_studio_apply(body: ArtStudioApplyBody):
+    pack_id = (body.pack_id or body.id or '').strip()
+    mode = (body.mode or 'game').strip().lower()
     try:
         if mode == 'fallback':
             paths = apply_pack_as_fallback(pack_id)
             log_system_event(f"Art studio set fallback pack {pack_id}")
             return jsonify({'mode': 'fallback', 'paths': paths, 'pack_id': pack_id})
         if mode == 'library':
-            library_uuid = (data.get('library_uuid') or '').strip()
+            library_uuid = (body.library_uuid or '').strip()
             if not library_uuid:
                 return api_error('library_uuid is required for library mode', code='bad_request')
             result = apply_pack_to_library(pack_id, library_uuid)
             log_system_event(f"Art studio applied pack {pack_id} to library {library_uuid}")
             return jsonify({'mode': 'library', **result})
-        game_uuid = (data.get('game_uuid') or '').strip()
+        game_uuid = (body.game_uuid or '').strip()
         if not game_uuid:
             return api_error('game_uuid is required for game mode', code='bad_request')
-        filename = (data.get('filename') or '').strip() or None
+        filename = (body.filename or '').strip() or None
         result = apply_pack_to_game(pack_id, game_uuid, filename=filename)
         log_system_event(f"Art studio applied pack {pack_id} to game {game_uuid}")
         return jsonify({'mode': 'game', **result})
