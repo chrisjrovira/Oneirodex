@@ -21,6 +21,7 @@ from sqlalchemy import func, select
 
 from oneirodex import db
 from oneirodex.models import InviteToken, User
+from oneirodex.schemas.account import ChangePasswordBody, StockAvatarBody
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.avatar import (
     STOCK_AVATARS,
@@ -35,6 +36,7 @@ from oneirodex.utils.public_origin import (
     site_url_is_configured,
 )
 from oneirodex.utils.smtp import is_smtp_config_valid
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -172,15 +174,15 @@ def account_avatar():
 
 @apis_bp.route('/account/avatar/stock', methods=['POST'])
 @login_required
-def account_stock_avatar():
+@validate_body(StockAvatarBody)
+def account_stock_avatar(body: StockAvatarBody):
     """Pick one of the avatars Oneirodex ships.
 
     Takes an **id**, never a path. A path parameter here would be an
     arbitrary-file setter aimed at the static tree, and the whole point of a
     fixed set is that the server already knows every legal answer.
     """
-    data = request.get_json(silent=True) or {}
-    path, error = set_stock_avatar(data.get('id'), current_user, current_app)
+    path, error = set_stock_avatar(body.id, current_user, current_app)
     if error:
         return api_error(error, code='bad_request')
 
@@ -199,11 +201,11 @@ def account_stock_avatar():
 
 @apis_bp.route('/account/password', methods=['POST'])
 @login_required
-def account_password():
-    data = request.get_json(silent=True) or {}
-    current = data.get('current_password') or ''
-    new_password = data.get('new_password') or ''
-    confirm = data.get('confirm_password') or ''
+@validate_body(ChangePasswordBody)
+def account_password(body: ChangePasswordBody):
+    current = body.current_password
+    new_password = body.new_password
+    confirm = body.confirm_password
 
     user = db.session.get(User, current_user.id)
     if user is None:
