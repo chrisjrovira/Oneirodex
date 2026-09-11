@@ -4,10 +4,27 @@ import { ImagesPage } from './ImagesPage'
 import { StockPicker } from '../components/StockPicker'
 import { SystemMarksPanel } from '../components/SystemMarksPanel'
 import { getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { ART_STUDIO_SYSTEMS, skinForPlatform, systemLabel } from '../components/platformSkins'
 import { showToast } from '../utils/toast'
 
-const PREVIEW_VARIANTS = [
+type ArtStudioTab = 'studio' | 'stock' | 'marks' | 'images'
+
+interface PreviewVariant {
+  key: string
+  width: number
+  height: number
+  label: string
+  kind: string
+}
+
+interface MissingCoverGame {
+  uuid: string
+  name: string
+  issues?: { code?: string }[]
+}
+
+const PREVIEW_VARIANTS: PreviewVariant[] = [
   { key: 'sm', width: 200, height: 300, label: '200×300', kind: 'tile' },
   { key: 'md', width: 400, height: 600, label: '400×600', kind: 'tile' },
   { key: 'wide', width: 960, height: 540, label: '960×540', kind: 'wide' },
@@ -34,7 +51,7 @@ const FALLBACK_ASSETS = [
 
 const PREVIEW_DEBOUNCE_MS = 420
 
-function initialTab() {
+function initialTab(): ArtStudioTab {
   if (typeof window === 'undefined') return 'studio'
   const hash = (window.location.hash || '').replace('#', '')
   if (hash === 'images' || hash === 'queue' || hash === 'picker') return 'images'
@@ -43,7 +60,7 @@ function initialTab() {
   return 'studio'
 }
 
-function tabHash(tab) {
+function tabHash(tab: ArtStudioTab) {
   if (tab === 'images') return '#images'
   if (tab === 'stock') return '#stock'
   if (tab === 'marks') return '#marks'
@@ -51,19 +68,19 @@ function tabHash(tab) {
 }
 
 export function ArtStudioPage() {
-  const [tab, setTab] = useState(initialTab)
+  const [tab, setTab] = useState<ArtStudioTab>(initialTab)
   const [title, setTitle] = useState('')
   const [system, setSystem] = useState('')
   const [variantKey, setVariantKey] = useState('md')
-  const [previews, setPreviews] = useState({})
+  const [previews, setPreviews] = useState<Record<string, string>>({})
   const [packId, setPackId] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
   const [gameUuid, setGameUuid] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
-  const [missingCovers, setMissingCovers] = useState([])
-  const [batchSelected, setBatchSelected] = useState(() => new Set())
+  const [missingCovers, setMissingCovers] = useState<MissingCoverGame[]>([])
+  const [batchSelected, setBatchSelected] = useState<Set<string>>(() => new Set())
   const [batchLog, setBatchLog] = useState('')
   const [fallbackBust, setFallbackBust] = useState(() => Date.now())
   const [batchOpen, setBatchOpen] = useState(false)
@@ -89,7 +106,7 @@ export function ArtStudioPage() {
   const hasTitle = Boolean(title.trim())
   const previewBusy = busy === 'preview' || busy === 'preview-system' || busy === 'preview-live'
 
-  const selectTab = (next) => {
+  const selectTab = (next: ArtStudioTab) => {
     setTab(next)
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', tabHash(next))
@@ -109,7 +126,7 @@ export function ArtStudioPage() {
 
   const fetchPreviews = useCallback(
     async (
-      sizes: any,
+      sizes: PreviewVariant[],
       {
         soft = false,
         busyKey = 'preview',
@@ -125,7 +142,7 @@ export function ArtStudioPage() {
         setMessage('')
       }
       try {
-        const next = {}
+        const next: Record<string, string> = {}
         for (const size of sizes) {
           const data = await postJson('/admin/api/art-studio/preview', {
             title: trimmed,
@@ -149,7 +166,7 @@ export function ArtStudioPage() {
         if (!soft) setMessage('Artistic preview refreshed.')
       } catch (err) {
         if (reqId !== previewReqId.current) return
-        const text = err.message || 'Preview failed'
+        const text = errorText(err) || 'Preview failed'
         if (soft) {
           showToast(text, 'warn')
         } else {
@@ -211,8 +228,9 @@ export function ArtStudioPage() {
       setMessage(`Generated pack ${data.pack_id} (${data.files?.length || 0} sizes).`)
       showToast('Art pack ready', 'success')
     } catch (err) {
-      setError(err.message)
-      showToast(err.message || 'Generate failed', 'error')
+      const text = errorText(err)
+      setError(text)
+      showToast(text || 'Generate failed', 'error')
     } finally {
       setBusy('')
     }
@@ -234,8 +252,9 @@ export function ArtStudioPage() {
       setMessage(`Cover applied to ${data.game_uuid}.`)
       showToast('Cover applied to game', 'success')
     } catch (err) {
-      setError(err.message)
-      showToast(err.message || 'Apply failed', 'error')
+      const text = errorText(err)
+      setError(text)
+      showToast(text || 'Apply failed', 'error')
     } finally {
       setBusy('')
     }
@@ -257,8 +276,9 @@ export function ArtStudioPage() {
       setMessage('Library default covers updated. Hard-refresh member browsers.')
       showToast('Fallback pack installed', 'success')
     } catch (err) {
-      setError(err.message)
-      showToast(err.message || 'Fallback apply failed', 'error')
+      const text = errorText(err)
+      setError(text)
+      showToast(text || 'Fallback apply failed', 'error')
     } finally {
       setBusy('')
     }
@@ -286,8 +306,9 @@ export function ArtStudioPage() {
       )
       showToast('Library defaults refreshed', 'success')
     } catch (err) {
-      setError(err.message)
-      showToast(err.message || 'Could not regenerate defaults', 'error')
+      const text = errorText(err)
+      setError(text)
+      showToast(text || 'Could not regenerate defaults', 'error')
     } finally {
       setBusy('')
     }
@@ -298,7 +319,7 @@ export function ArtStudioPage() {
     setError('')
     try {
       const data = await getJson('/api/health/library?limit=200')
-      const worst = Array.isArray(data.worst) ? data.worst : []
+      const worst: MissingCoverGame[] = Array.isArray(data.worst) ? data.worst : []
       const rows = worst.filter((g) => (g.issues || []).some((i) => i.code === 'missing_cover'))
       setMissingCovers(rows)
       setBatchSelected(new Set(rows.map((r) => r.uuid)))
@@ -309,13 +330,13 @@ export function ArtStudioPage() {
           : 'No missing-cover titles in the health sample.',
       )
     } catch (err) {
-      setError(err.message)
+      setError(errorText(err))
     } finally {
       setBusy('')
     }
   }, [])
 
-  const toggleBatch = (uuid) => {
+  const toggleBatch = (uuid: string) => {
     setBatchSelected((prev) => {
       const next = new Set(prev)
       if (next.has(uuid)) next.delete(uuid)
@@ -346,7 +367,7 @@ export function ArtStudioPage() {
         const failed = batch.failed ?? (Array.isArray(batch.errors) ? batch.errors.length : 0)
         setMessage(`Batch generate finished — applied ${applied}, failed ${failed}.`)
         const failLines = (batch.errors || []).map(
-          (r) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`,
+          (r: any) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`,
         )
         setBatchLog(['Used POST /admin/api/art-studio/batch-generate.', ...failLines].join('\n'))
         if (applied > 0) return
@@ -367,8 +388,8 @@ export function ArtStudioPage() {
         const failed = batch.failed ?? 0
         setMessage(`Placeholder apply finished — applied ${applied}, failed ${failed}.`)
         const failLines = (batch.results || [])
-          .filter((r) => r.status === 'failed')
-          .map((r) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`)
+          .filter((r: any) => r.status === 'failed')
+          .map((r: any) => `✗ ${r.name || r.game_uuid}: ${r.error || 'failed'}`)
         setBatchLog(
           [
             ...lines,
@@ -398,7 +419,7 @@ export function ArtStudioPage() {
           ok += 1
           lines.push(`✓ ${game.name}`)
         } catch (err) {
-          lines.push(`✗ ${game.name}: ${err.message}`)
+          lines.push(`✗ ${game.name}: ${errorText(err)}`)
         }
       }
       setMessage(`Applied placeholders to ${ok}/${targets.length} title(s).`)
