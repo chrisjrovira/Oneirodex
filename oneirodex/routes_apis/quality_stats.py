@@ -22,6 +22,8 @@ from oneirodex.utils.quality_profiles import (
 )
 from oneirodex.utils.stats_share import build_playtime_share_svg
 from oneirodex.utils.library_acl import user_can_access_game
+from oneirodex.schemas.quality_stats import ScoreReleaseBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -114,17 +116,15 @@ def quality_profiles_delete_one(profile_id: str):
 @apis_bp.route('/quality-profiles/score', methods=['POST'])
 @login_required
 @admin_required
-def quality_profiles_score():
-    data = request.get_json(silent=True) or {}
-    title = (data.get('title') or '').strip()
-    if not title:
-        return api_error('title is required', code='bad_request')
-    size = data.get('size_bytes')
+@validate_body(ScoreReleaseBody)
+def quality_profiles_score(body: ScoreReleaseBody):
+    title = body.title
+    size = body.size_bytes
     try:
         size_bytes = int(size) if size is not None else None
     except (TypeError, ValueError):
         size_bytes = None
-    profile_id = (data.get('profile_id') or data.get('id') or '').strip() or None
+    profile_id = (body.profile_id or body.id or '').strip() or None
     return jsonify(score_release_title(title, size_bytes=size_bytes, profile_id=profile_id))
 
 

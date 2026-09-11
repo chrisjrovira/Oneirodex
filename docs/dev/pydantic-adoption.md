@@ -64,6 +64,9 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/chat.py` | `POST /api/chat/channels/<id>/mute` (`chat_channel_mute`) | `MuteChannelBody` |
+| `routes_apis/chat_spaces_api.py` | `POST /api/chat/spaces/<id>/members` (`chat_space_member_add`) | `AddSpaceMemberBody` |
+| `routes_apis/quality_stats.py` | `POST /api/quality-profiles/score` (`quality_profiles_score`) | `ScoreReleaseBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +85,17 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`chat_channel_mute`** — missing `muted` was `400 "muted is required"`, now
+  `422 {detail:{muted:"..."}}`. `false` is accepted (the key must be present,
+  not truthy). `@login_required` then validation, then the opaque channel 404 —
+  `POST .../channels/1/mute` with `{}` is 422, not 404. A well-formed body
+  against a missing channel is still 404 (`tests/test_chat_wave15c_mute.py`).
+- **`chat_space_member_add`** — missing `user_id` was `400 "user_id is required"`,
+  now 422 naming `user_id`. `@admin_required` sits above validation; space 404
+  runs after. `user_id` of `0` is 422 (`gt=0`) rather than the old 400.
+- **`quality_profiles_score`** — missing/blank `title` was `400 "title is
+  required"`, now 422 naming `title`. Create/PUT still pass the JSON bag
+  through. `id` remains an optional alias for `profile_id`.
 
 ## Deliberately not adopted (and why)
 
@@ -127,24 +141,46 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/chat.py`
+
+- `chat_channels_create` — empty name/slug become `ValueError` in the helper.
+- `chat_open_dm` — missing `user_id` / `username` is opaque `404 User not found`.
+- `chat_messages_post` — empty `body` is allowed; `parent_message_id` /
+  `attachment_ids` keep their own 400 sentences.
+- `chat_message_reaction_toggle` — empty emoji is `ValueError` in the helper.
+
+### `routes_apis/chat_spaces_api.py`
+
+- `chat_spaces_create` / `chat_space_channel_create` — empty name is a helper
+  `ValueError`; visibility membership stays 400 in the view.
+- `chat_space_invite_create` — optional ISO / hours parsing, no required field.
+- `chat_space_join` — empty token is whatever `redeem_space_invite` returns,
+  not a presence 400.
+
+### `routes_apis/quality_stats.py`
+
+- `quality_profiles_create` / `put` / `update_one` — pass-through JSON bags.
+- `quality_profiles_set_active` — `id` / `active_id` / `profile_id` aliases.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 112 | 46 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **148** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
 - `routes_apis/scan.py` (11) — most are partial-success; needs a batch-aware
   companion to `@validate_body` first.
 - `routes_apis/library_tools.py` (11)
-- `routes_apis/quality_stats.py` (5), `routes_apis/client.py` (5),
-  `routes_apis/chat_spaces_api.py` (5), `routes_apis/chat.py` (5)
+- `routes_apis/quality_stats.py` (4 remaining — pass-through bags + aliased
+  set-active), `routes_apis/client.py` (5), `routes_apis/chat_spaces_api.py`
+  (4 remaining), `routes_apis/chat.py` (4 remaining)
 - `routes_apis/library.py` (4), `routes_apis/emulator_cheats.py` (4),
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
