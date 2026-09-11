@@ -5,6 +5,7 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from oneirodex.schemas.layouts import CreateLayoutPresetBody
 from oneirodex.utils.api_response import api_error
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.detail_layouts import (
@@ -18,6 +19,7 @@ from oneirodex.utils.detail_layouts import (
     save_user_detail_layout,
     user_has_detail_override,
 )
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -91,13 +93,13 @@ def layouts_detail_presets_get():
 
 @apis_bp.route('/layouts/detail/presets', methods=['POST'])
 @login_required
-def layouts_detail_presets_post():
-    data = request.get_json(silent=True) or {}
+@validate_body(CreateLayoutPresetBody)
+def layouts_detail_presets_post(body: CreateLayoutPresetBody):
     try:
         saved = save_layout_preset(
             current_user.id,
-            data.get('name'),
-            data.get('layout'),
+            body.name,
+            body.layout,
         )
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
