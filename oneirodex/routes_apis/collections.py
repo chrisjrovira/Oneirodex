@@ -10,6 +10,7 @@ from oneirodex import db
 from oneirodex.models import Announcement, Game, GameCollection, GameCollectionItem
 from oneirodex.schemas.collections import (
     AddCollectionItemBody,
+    CreateAnnouncementBody,
     CreateCollectionBody,
     ReorderCollectionItemsBody,
 )
@@ -261,18 +262,14 @@ def list_announcements():
 
 @apis_bp.route('/announcements', methods=['POST'])
 @login_required
-def create_announcement():
+@validate_body(CreateAnnouncementBody)
+def create_announcement(body: CreateAnnouncementBody):
     if current_user.role != 'admin':
         return api_error('Admin required', code='forbidden')
-    data = request.get_json(silent=True) or {}
-    title = (data.get('title') or '').strip()
-    body = (data.get('body') or '').strip()
-    if not title or not body:
-        return api_error('A title and body are required', code='bad_request')
     row = Announcement(
-        title=title[:200],
-        body=body[:20000],
-        published=bool(data.get('published', True)),
+        title=body.title[:200],
+        body=body.body[:20000],
+        published=bool(body.published),
         author_user_id=current_user.id,
     )
     db.session.add(row)

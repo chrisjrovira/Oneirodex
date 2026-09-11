@@ -63,7 +63,9 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections` (`create_collection`) | `CreateCollectionBody` |
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
+| `routes_apis/collections.py` | `POST /api/announcements` (`create_announcement`) | `CreateAnnouncementBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/acquire.py` | `POST /api/acquire/download` (`acquire_download`) | `AcquireDownloadBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,17 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`create_announcement`** — missing/blank `title` or `body` was
+  `400 "A title and body are required"`, now 422 naming each. The in-view
+  admin check runs *after* validation: a member sending `{}` is 422; a
+  well-formed body is still 403 (`tests/test_member_hub_api.py`).
+- **`acquire_download`** — missing/blank `url` and `magnet` was
+  `400 "url or magnet required"`, now 422 `{detail:{__root__:"..."}}`
+  (either key is enough; `url` still wins when both are set). The in-view
+  librarian check and Arr/debrid feature flags run after: a member sending
+  `{}` is 422; a well-formed body without librarian role is still 403.
+  `member-app/src/api/updates.ts` `sendAcquireDownload` renders
+  `errorFromResponse`; it does not branch on the 400 string.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +140,25 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/collections.py`
+
+- `update_collection` — empty `name` is refused only when that key is
+  present; `description` / `is_public` are optional patches.
+
+### `routes_apis/acquire.py`
+
+- `acquire_search` — `q` is a query argument, not JSON.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 113 | 45 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **56** |
 
 Highest-count files still to do, roughly in priority order:
 
