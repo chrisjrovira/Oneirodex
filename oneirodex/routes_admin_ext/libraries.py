@@ -6,7 +6,9 @@ from oneirodex.models import Library, LibraryPlatform
 from oneirodex import db
 from sqlalchemy import select
 from oneirodex.forms import LibraryForm, coerce_library_watch_enabled, library_watch_form_value
+from oneirodex.schemas.admin_libraries import PreviewCroppedImageBody
 from oneirodex.utils.event_logging import log_system_event
+from oneirodex.utils.validation import validate_body
 from PIL import Image as PILImage
 from uuid import uuid4
 from werkzeug.utils import secure_filename
@@ -169,16 +171,11 @@ def edit_library(library_uuid):
 @admin2_bp.route('/api/library/preview-cropped-image', methods=['POST'])
 @login_required
 @admin_required
-def preview_cropped_image():
+@validate_body(PreviewCroppedImageBody)
+def preview_cropped_image(body: PreviewCroppedImageBody):
     """Process cropped image and return preview URL for immediate feedback."""
     try:
-        data = request.get_json()
-
-        if not data or 'image_data' not in data:
-            return api_error('No image data provided', code='bad_request')
-
-        # Extract base64 image data
-        image_data = data['image_data']
+        image_data = body.image_data
         if image_data.startswith('data:image'):
             # Remove data URL prefix
             image_data = image_data.split(',')[1]
