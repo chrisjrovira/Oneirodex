@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game
+from oneirodex.schemas.providers import ApplyArtworkBody
 from oneirodex.utils.artwork_apply import apply_cover_from_url
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.image_kinds import (
@@ -17,6 +18,7 @@ from oneirodex.utils.image_kinds import (
 )
 from oneirodex.utils.providers import ProviderDisabledError, get_provider, list_providers
 from oneirodex.utils.providers.giantbomb import pcgamingwiki_enrichment
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -118,18 +120,18 @@ def igdb_cover_search():
 @apis_bp.route('/games/<game_uuid>/artwork/steamgriddb', methods=['POST'])
 @login_required
 @admin_required
-def steamgriddb_apply_artwork(game_uuid):
+@validate_body(ApplyArtworkBody)
+def steamgriddb_apply_artwork(game_uuid, body: ApplyArtworkBody):
     """Download artwork URL and persist as a locked image kind (cover/box/…/fanart)."""
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return api_error('Game not found', code='not_found', game_uuid=game_uuid)
 
-    data = request.get_json(silent=True) or {}
-    image_url = (data.get('url') or '').strip()
-    provider_id = (data.get('provider') or 'steamgriddb').strip().lower() or 'steamgriddb'
+    image_url = body.url
+    provider_id = (body.provider or 'steamgriddb').strip().lower() or 'steamgriddb'
     try:
         image_type = parse_image_kind(
-            data.get('image_type') or data.get('kind'),
+            body.image_type or body.kind,
             default='cover',
         )
     except ValueError:
