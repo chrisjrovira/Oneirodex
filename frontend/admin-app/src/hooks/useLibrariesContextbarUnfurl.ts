@@ -1,6 +1,12 @@
 import { useLayoutEffect } from 'react'
 import { ADMIN_TOPBAR_SLOT_ID } from './useLegacyContextbarPortal'
 
+/** An injected unfurl anchor, tagged with the imperative handles the effect drives. */
+type UnfurlAnchor = HTMLElement & {
+  _odSetOpen?: (open: boolean) => void
+  _odActiveWhen?: () => boolean
+}
+
 /**
  * Collapse Libraries / Auto scan / Manual scan into two unfurl segs.
  *
@@ -9,19 +15,19 @@ import { ADMIN_TOPBAR_SLOT_ID } from './useLegacyContextbarPortal'
  * top bar, rewrite the seg so Libraries and Scan unfurl menus match the member
  * chrome without replacing the whole multi-pane document.
  */
-export function useLibrariesContextbarUnfurl(enabled) {
+export function useLibrariesContextbarUnfurl(enabled: boolean) {
   useLayoutEffect(() => {
     if (!enabled || typeof document === 'undefined') return undefined
 
     const pageSlot = document.getElementById(ADMIN_TOPBAR_SLOT_ID)
     const views = pageSlot?.querySelector(':scope > .od-contextbar__views')
     const seg = views?.querySelector(':scope > .od-seg') as HTMLElement | null | undefined
-    if (!seg || seg.dataset.odUnfurlReady === '1') return undefined
+    if (!views || !seg || seg.dataset.odUnfurlReady === '1') return undefined
 
     const items = Array.from(seg.querySelectorAll(':scope > a.od-seg__item'))
     if (!items.length) return undefined
 
-    const byHref = (needles) =>
+    const byHref = (needles: string[]) =>
       items.find((el) => needles.some((n) => (el.getAttribute('href') || '').includes(n)))
 
     const librariesItem = byHref(['#librariesPanel', '/libraries'])
@@ -37,14 +43,13 @@ export function useLibrariesContextbarUnfurl(enabled) {
       closeAll() {},
       syncActive() {},
     }
-    /** @type {HTMLElement[]} */
-    const unfurls = []
+    const unfurls: UnfurlAnchor[] = []
 
     const makeUnfurl = (
-      triggerLabel: any,
-      menuItems: any,
-      { activeWhen }: { activeWhen?: any } = {},
-    ) => {
+      triggerLabel: string,
+      menuItems: Array<{ label: string; href: string; tab: boolean }>,
+      { activeWhen }: { activeWhen?: () => boolean } = {},
+    ): UnfurlAnchor => {
       const anchor = document.createElement('span')
       anchor.className = 'od-seg__unfurl-anchor'
 
@@ -79,7 +84,7 @@ export function useLibrariesContextbarUnfurl(enabled) {
         panelEl.appendChild(link)
       })
 
-      const setOpen = (open) => {
+      const setOpen = (open: boolean) => {
         panelEl.hidden = !open
         trigger.setAttribute('aria-expanded', open ? 'true' : 'false')
         views.classList.toggle('is-unfurled', open)
@@ -97,9 +102,10 @@ export function useLibrariesContextbarUnfurl(enabled) {
 
       anchor.appendChild(trigger)
       anchor.appendChild(panelEl)
-      ;(anchor as any)._odSetOpen = setOpen
-      ;(anchor as any)._odActiveWhen = activeWhen
-      return anchor
+      const decorated = anchor as UnfurlAnchor
+      decorated._odSetOpen = setOpen
+      decorated._odActiveWhen = activeWhen
+      return decorated
     }
 
     if (librariesItem) {
@@ -169,17 +175,21 @@ export function useLibrariesContextbarUnfurl(enabled) {
     // does not own, so cleanup has to be able to put the Jinja-rendered segment
     // back exactly as it was.
     const displaced = [librariesItem, autoItem, manualItem]
-      .filter(Boolean)
-      .map((el) => ({ el, parent: el.parentNode, next: el.nextSibling }))
+      .filter((el): el is Element => Boolean(el))
+      .map((el) => ({
+        el,
+        parent: el.parentNode as (Node & ParentNode) | null,
+        next: el.nextSibling,
+      }))
     displaced.forEach(({ el }) => el.remove())
 
     seg.dataset.odUnfurlReady = '1'
     api.syncActive()
 
-    const onDocClick = (event) => {
-      if (!views.contains(event.target)) api.closeAll()
+    const onDocClick = (event: MouseEvent) => {
+      if (!views.contains(event.target as Node | null)) api.closeAll()
     }
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') api.closeAll()
     }
     const onTabShown = () => {

@@ -1,6 +1,12 @@
 /** Ops console board layout — same 12-col drag/resize model as Dashboard. */
 
-import { DASHBOARD_COLS, mergeBoardLayout, resolveOverlaps } from './dashboardLayout'
+import {
+  DASHBOARD_COLS,
+  mergeBoardLayout,
+  resolveOverlaps,
+  type WidgetItem,
+  type WidgetMins,
+} from './dashboardLayout'
 
 export const OPS_STORAGE_KEY = 'od-admin-ops-layout-v1'
 
@@ -30,15 +36,15 @@ const PANEL_MIN = { w: 3, h: 3 }
 const STATUS_MIN = { w: 6, h: 2 }
 const WIDE_MIN = { w: 4, h: 3 }
 
-export function opsWidgetMins(id) {
+export function opsWidgetMins(id: string): WidgetMins {
   if (id === 'status') return STATUS_MIN
   if (String(id).startsWith('m-')) return METRIC_MIN
   if (id === 'scans' || id === 'errors' || id === 'recent-log') return WIDE_MIN
   return PANEL_MIN
 }
 
-function packMetricRows(metricIds, startY) {
-  const items = []
+function packMetricRows(metricIds: string[], startY: number): { items: WidgetItem[]; y: number } {
+  const items: WidgetItem[] = []
   let y = startY
   const perRow = 4
   for (let i = 0; i < metricIds.length; i += perRow) {
@@ -59,10 +65,10 @@ function packMetricRows(metricIds, startY) {
  * scans/errors, detail panels, recent log. `visibleIds` drops panels that have
  * no data yet so empty frames do not reserve tracks.
  */
-export function defaultOpsLayout({ visibleIds }: { visibleIds?: string[] } = {}) {
+export function defaultOpsLayout({ visibleIds }: { visibleIds?: string[] } = {}): WidgetItem[] {
   const visible = visibleIds ? new Set(visibleIds) : null
-  const show = (id) => !visible || visible.has(id)
-  const items = []
+  const show = (id: string) => !visible || visible.has(id)
+  const items: WidgetItem[] = []
 
   if (show('status')) {
     items.push({ id: 'status', x: 0, y: 0, w: 12, h: 2 })
@@ -105,7 +111,7 @@ export function defaultOpsLayout({ visibleIds }: { visibleIds?: string[] } = {})
   return resolveOverlaps(items, null, opsWidgetMins)
 }
 
-export function loadOpsLayout(visibleIds) {
+export function loadOpsLayout(visibleIds?: string[]): WidgetItem[] {
   const fallback = () => defaultOpsLayout({ visibleIds })
   if (typeof window === 'undefined' || !window.localStorage) return fallback()
   try {

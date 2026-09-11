@@ -1,5 +1,16 @@
 /** Shared 12-column widget board layout — Dashboard + Ops. */
 
+export interface WidgetItem {
+  id: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+export type WidgetMins = { w: number; h: number }
+export type WidgetMinsFn = (id: string) => WidgetMins
+
 export const DASHBOARD_COLS = 12
 /** Bumped when the board interaction model changes so sticky bad layouts reset. */
 export const DASHBOARD_STORAGE_KEY = 'od-admin-dashboard-layout-v4'
@@ -23,7 +34,7 @@ const METRIC_MIN = { w: 2, h: 2 }
 const PANEL_MIN = { w: 3, h: 3 }
 const STATUS_MIN = { w: 6, h: 2 }
 
-export function widgetMins(id) {
+export function widgetMins(id: string): WidgetMins {
   if (id === 'status') return STATUS_MIN
   if (id === 'host' || id === 'companions' || id === 'errors') return PANEL_MIN
   return METRIC_MIN
@@ -33,8 +44,10 @@ export function widgetMins(id) {
  * Default pack: metrics fill the row (no orphan empty tracks), then host +
  * companions side by side, optional errors full width.
  */
-export function defaultDashboardLayout({ hasErrors = false } = {}) {
-  const items = [{ id: 'status', x: 0, y: 0, w: 12, h: 2 }]
+export function defaultDashboardLayout({
+  hasErrors = false,
+}: { hasErrors?: boolean } = {}): WidgetItem[] {
+  const items: WidgetItem[] = [{ id: 'status', x: 0, y: 0, w: 12, h: 2 }]
   let y = 2
   const perRow = 4
   const ids = DASHBOARD_METRIC_IDS
@@ -57,7 +70,10 @@ export function defaultDashboardLayout({ hasErrors = false } = {}) {
   return items
 }
 
-export function clampWidget(item, minsFn = widgetMins) {
+export function clampWidget(
+  item: Partial<WidgetItem> & { id: string },
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem {
   const mins = minsFn(item.id)
   const w = Math.max(mins.w, Math.min(DASHBOARD_COLS, Number(item.w) || mins.w))
   const h = Math.max(mins.h, Math.min(16, Number(item.h) || mins.h))
@@ -71,7 +87,7 @@ export function clampWidget(item, minsFn = widgetMins) {
  * returns `3.5rem` (not px) — `parseFloat` alone yields 3.5 and makes drag drop
  * widgets ~16× too far down the board.
  */
-export function cssLengthToPx(raw, element) {
+export function cssLengthToPx(raw: string | null | undefined, element?: Element | null): number {
   const value = String(raw || '').trim()
   if (!value) return 0
   const amount = parseFloat(value)
@@ -92,7 +108,7 @@ export function cssLengthToPx(raw, element) {
  * Column / row pitch for pointer → grid mapping (cell size + gap).
  * Prefer a resolved `gridTemplateRows` px track; fall back to `--od-dash-row`.
  */
-export function boardCellMetrics(board) {
+export function boardCellMetrics(board: Element | null | undefined) {
   if (!board) {
     return { colPitch: 1, rowPitch: 56 }
   }
@@ -121,12 +137,12 @@ export function boardCellMetrics(board) {
 }
 
 /** How many row tracks a content height needs (ceil, at least minH). */
-export function rowsForContentHeight(heightPx, rowPitch, minH = 2) {
+export function rowsForContentHeight(heightPx: number, rowPitch: number, minH = 2): number {
   const pitch = rowPitch > 0 ? rowPitch : 56
   return Math.max(minH, Math.min(16, Math.ceil(heightPx / pitch)))
 }
 
-export function overlaps(a, b) {
+export function overlaps(a: WidgetItem, b: WidgetItem): boolean {
   return a.id !== b.id && a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
@@ -134,12 +150,16 @@ export function overlaps(a, b) {
  * Push overlapping widgets down, but never move `pinnedId`.
  * Used on drop so the widget you placed stays where you put it.
  */
-export function resolveOverlaps(layout, pinnedId = null, minsFn = widgetMins) {
+export function resolveOverlaps(
+  layout: (Partial<WidgetItem> & { id: string })[],
+  pinnedId: string | null = null,
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem[] {
   const items = layout.map((item) => clampWidget(item, minsFn))
   const pinned = pinnedId ? items.find((item) => item.id === pinnedId) : null
   const rest = items.filter((item) => item.id !== pinnedId).sort((a, b) => a.y - b.y || a.x - b.x)
 
-  const placed = pinned ? [pinned] : []
+  const placed: WidgetItem[] = pinned ? [pinned] : []
   for (const item of rest) {
     let next = { ...item }
     let guard = 0
@@ -153,7 +173,12 @@ export function resolveOverlaps(layout, pinnedId = null, minsFn = widgetMins) {
 }
 
 /** Apply size/position without shoving the active widget away mid-drag. */
-export function patchWidget(layout, id, patch, minsFn = widgetMins) {
+export function patchWidget(
+  layout: WidgetItem[],
+  id: string,
+  patch: Partial<WidgetItem>,
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem[] {
   return layout.map((item) =>
     item.id === id ? clampWidget({ ...item, ...patch, id }, minsFn) : item,
   )
@@ -163,7 +188,13 @@ export function patchWidget(layout, id, patch, minsFn = widgetMins) {
  * Commit a move: same-size overlap swaps; otherwise pin the mover and nudge
  * everyone else down.
  */
-export function commitMove(layout, id, x, y, minsFn = widgetMins) {
+export function commitMove(
+  layout: WidgetItem[],
+  id: string,
+  x: number | undefined,
+  y: number | undefined,
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem[] {
   const current = layout.find((item) => item.id === id)
   if (!current) return layout
   const moved = clampWidget({ ...current, x, y }, minsFn)
@@ -180,12 +211,23 @@ export function commitMove(layout, id, x, y, minsFn = widgetMins) {
   return resolveOverlaps(patchWidget(layout, id, { x, y }, minsFn), id, minsFn)
 }
 
-export function commitResize(layout, id, w, h, minsFn = widgetMins) {
+export function commitResize(
+  layout: WidgetItem[],
+  id: string,
+  w: number | undefined,
+  h: number | undefined,
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem[] {
   return resolveOverlaps(patchWidget(layout, id, { w, h }, minsFn), id, minsFn)
 }
 
 /** @deprecated — use commitMove / commitResize; kept for older call sites. */
-export function updateWidget(layout, id, patch, minsFn = widgetMins) {
+export function updateWidget(
+  layout: WidgetItem[],
+  id: string,
+  patch: Partial<WidgetItem>,
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem[] {
   if (patch.w != null || patch.h != null) {
     return commitResize(layout, id, patch.w ?? undefined, patch.h ?? undefined, minsFn)
   }
@@ -196,11 +238,20 @@ export function updateWidget(layout, id, patch, minsFn = widgetMins) {
  * Merge a stored layout against a freshly built default (add new widgets, drop
  * unknown ids). Shared by Dashboard and Ops.
  */
-export function mergeBoardLayout(stored, fallback, minsFn = widgetMins) {
+export function mergeBoardLayout(
+  stored: unknown,
+  fallback: WidgetItem[],
+  minsFn: WidgetMinsFn = widgetMins,
+): WidgetItem[] {
   if (!Array.isArray(stored) || !stored.length) {
     return resolveOverlaps(fallback, null, minsFn)
   }
-  const byId = new Map(stored.map((item) => [item.id, clampWidget(item, minsFn)]))
+  const byId = new Map(
+    (stored as (Partial<WidgetItem> & { id: string })[]).map((item) => [
+      item.id,
+      clampWidget(item, minsFn),
+    ]),
+  )
   const ids = new Set(fallback.map((item) => item.id))
   const merged = fallback.map((item) => byId.get(item.id) || item)
   for (const item of byId.values()) {
@@ -215,7 +266,7 @@ export function mergeBoardLayout(stored, fallback, minsFn = widgetMins) {
   )
 }
 
-export function loadDashboardLayout(hasErrors) {
+export function loadDashboardLayout(hasErrors: boolean): WidgetItem[] {
   const fallback = defaultDashboardLayout({ hasErrors })
   if (typeof window === 'undefined' || !window.localStorage) return fallback
   try {
@@ -238,16 +289,27 @@ export function loadDashboardLayout(hasErrors) {
   }
 }
 
-export function saveDashboardLayout(layout) {
+export function saveDashboardLayout(layout: WidgetItem[]): void {
   if (typeof window === 'undefined' || !window.localStorage) return
   try {
-    window.localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(layout.map(clampWidget)))
+    window.localStorage.setItem(
+      DASHBOARD_STORAGE_KEY,
+      JSON.stringify(layout.map((item) => clampWidget(item))),
+    )
   } catch {
     /* private mode / quota — layout still works for the session */
   }
 }
 
-export function loadBoardLayout({ storageKey, defaultLayout, minsFn = widgetMins }) {
+export function loadBoardLayout({
+  storageKey,
+  defaultLayout,
+  minsFn = widgetMins,
+}: {
+  storageKey: string
+  defaultLayout: () => WidgetItem[]
+  minsFn?: WidgetMinsFn
+}): WidgetItem[] {
   const fallback = defaultLayout()
   if (typeof window === 'undefined' || !window.localStorage) return fallback
   try {
@@ -259,7 +321,11 @@ export function loadBoardLayout({ storageKey, defaultLayout, minsFn = widgetMins
   }
 }
 
-export function saveBoardLayout(storageKey, layout, minsFn = widgetMins) {
+export function saveBoardLayout(
+  storageKey: string,
+  layout: WidgetItem[],
+  minsFn: WidgetMinsFn = widgetMins,
+): void {
   if (typeof window === 'undefined' || !window.localStorage) return
   try {
     window.localStorage.setItem(

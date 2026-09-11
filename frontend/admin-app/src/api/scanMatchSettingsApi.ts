@@ -9,6 +9,7 @@
  */
 
 import { getJson, putJson } from './adminApi'
+import { errorText } from '../utils/errorText'
 
 export const SCAN_MATCH_CONFIG_PATH = '/api/admin/scan-match/config'
 
@@ -81,15 +82,15 @@ export const FORBIDDEN_UI_KEYS = Object.freeze([
  * True when a key is present on the payload (including null/false/0).
  * Used for soft-degrade: hide controls Backend has not rolled out yet.
  */
-export function hasPolicyKey(payload, key) {
+export function hasPolicyKey(payload: unknown, key: string): boolean {
   if (!payload || typeof payload !== 'object') return false
   if (FORBIDDEN_UI_KEYS.includes(key)) return false
   return Object.prototype.hasOwnProperty.call(payload, key)
 }
 
 /** Which core + safe-variant fields Backend exposed this load. */
-export function exposedPolicyKeys(payload) {
-  const keys = []
+export function exposedPolicyKeys(payload: unknown): string[] {
+  const keys: string[] = []
   for (const key of CORE_POLICY_KEYS) {
     if (hasPolicyKey(payload, key)) keys.push(key)
   }
@@ -99,7 +100,7 @@ export function exposedPolicyKeys(payload) {
   return keys
 }
 
-export function normalizePeelProfile(value) {
+export function normalizePeelProfile(value: unknown): string {
   const raw = String(value || '')
     .trim()
     .toLowerCase()
@@ -203,7 +204,7 @@ export async function loadScanMatchConfig() {
     }
     return { ok: true, form, exposed, degradeReason: null, raw: data }
   } catch (err) {
-    const message = err?.message || String(err)
+    const message = errorText(err) || String(err)
     return {
       ok: false,
       form: {},
@@ -216,7 +217,7 @@ export async function loadScanMatchConfig() {
   }
 }
 
-export async function saveScanMatchConfig(form, exposedKeys) {
+export async function saveScanMatchConfig(form: Record<string, unknown>, exposedKeys?: string[]) {
   const body = bodyFromForm(form, exposedKeys)
   return putJson(SCAN_MATCH_CONFIG_PATH, body)
 }

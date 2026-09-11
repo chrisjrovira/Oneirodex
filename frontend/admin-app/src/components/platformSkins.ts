@@ -150,26 +150,28 @@ export const ART_STUDIO_SYSTEMS = [
   { id: 'GAME_WATCH', label: 'Game & Watch' },
 ]
 
-export function platformFamily(platformId) {
+type PlatformFamily = keyof typeof FAMILY_META
+
+export function platformFamily(platformId: unknown): PlatformFamily | null {
   if (!platformId) return null
   const id = String(platformId).toUpperCase()
   for (const [family, members] of Object.entries(FAMILY_BY_PLATFORM)) {
-    if (members.has(id)) return family
+    if (members.has(id)) return family as PlatformFamily
   }
   return 'pc'
 }
 
-export function skinForPlatform(platformId) {
+export function skinForPlatform(platformId: unknown) {
   if (!platformId) return null
-  const family = platformFamily(platformId) || 'pc'
+  const family: PlatformFamily = platformFamily(platformId) || 'pc'
   return {
     ...FAMILY_META[family],
     platform: String(platformId).toUpperCase(),
   }
 }
 
-export function systemLabel(platformId) {
+export function systemLabel(platformId: unknown) {
   if (!platformId) return ''
   const hit = ART_STUDIO_SYSTEMS.find((s) => s.id === platformId)
-  return hit?.label || platformId
+  return hit?.label || String(platformId)
 }

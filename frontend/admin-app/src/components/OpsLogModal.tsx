@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { confirmAction } from '@oneirodex/ui'
 import { deleteJson } from '../api/adminApi'
-import { DataTable } from './DataTable'
+import { errorText } from '../utils/errorText'
+import { DataTable, type DataTableColumn } from './DataTable'
 import './OpenPathModal.css'
 import './OpsLogModal.css'
 
-const LOG_COLUMNS = [
+const LOG_COLUMNS: DataTableColumn[] = [
   {
     key: 'timestamp',
     label: 'When',
@@ -31,17 +32,24 @@ export function OpsLogModal({
   error = null,
   onClose,
   onCleared,
+}: {
+  open: boolean
+  events?: Record<string, unknown>[] | null
+  loading?: boolean
+  error?: string | null
+  onClose?: () => void
+  onCleared?: () => void
 }) {
   const titleId = useId()
-  const closeRef = useRef(null)
+  const closeRef = useRef<HTMLButtonElement | null>(null)
   const [clearing, setClearing] = useState(false)
-  const [clearError, setClearError] = useState(null)
+  const [clearError, setClearError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return undefined
     setClearError(null)
     closeRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', onKey)
@@ -71,7 +79,7 @@ export function OpsLogModal({
       await deleteJson('/admin/api/system_logs/clear')
       onCleared?.()
     } catch (err) {
-      setClearError(err?.message || 'Unable to clear logs')
+      setClearError(errorText(err) || 'Unable to clear logs')
     } finally {
       setClearing(false)
     }

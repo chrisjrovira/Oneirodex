@@ -2,8 +2,12 @@
  * Shared Ops / Dashboard widgets for the observability console.
  * Keep presentation here; pages own fetch / poll cadence.
  */
+import type { Key, ReactNode, SVGProps } from 'react'
 
-export function formatBytes(bytes) {
+/** Loose Backend-shaped rows (ops summary / issues / health) — narrow at use. */
+export type OpsRow = Record<string, unknown>
+
+export function formatBytes(bytes: unknown) {
   if (bytes == null || !Number.isFinite(Number(bytes))) return 'n/a'
   const n = Number(bytes)
   if (n === 0) return '0 B'
@@ -14,7 +18,7 @@ export function formatBytes(bytes) {
 }
 
 /** Treat null / undefined as n/a for Grafana-style empty metrics. */
-export function na(value, suffix = '') {
+export function na(value: unknown, suffix = '') {
   if (value == null || value === '') return 'n/a'
   return suffix ? `${value}${suffix}` : String(value)
 }
@@ -28,7 +32,7 @@ export function na(value, suffix = '') {
  * duplicate the human kept reporting on the Dashboard. The banner answers
  * "how is the server?"; the folds answer "which bucket is this issue in?".
  */
-export function severityLabel(severity) {
+export function severityLabel(severity: unknown) {
   if (severity === 'bad') return 'Needs attention'
   if (severity === 'warn') return 'Degraded'
   return 'All systems healthy'
@@ -41,7 +45,7 @@ export function severityLabel(severity) {
  * - soft: category warning|info (fallback warn|info)
  * Disk capacity ids (e.g. disk_*_critical) stay soft when Backend emits warning/warn.
  */
-export function issueFold(item) {
+export function issueFold(item: OpsRow | null | undefined) {
   if (!item || typeof item !== 'object') return 'soft'
   const category = item.category
   if (category === 'action') return 'action'
@@ -52,10 +56,10 @@ export function issueFold(item) {
 }
 
 /** Split issues into Action required vs Warning / Info (empty buckets omitted by callers). */
-export function partitionIssues(items) {
-  const rows = Array.isArray(items) ? items : []
-  const action = []
-  const soft = []
+export function partitionIssues(items: unknown) {
+  const rows: OpsRow[] = Array.isArray(items) ? items : []
+  const action: OpsRow[] = []
+  const soft: OpsRow[] = []
   for (const item of rows) {
     if (issueFold(item) === 'action') action.push(item)
     else soft.push(item)
@@ -66,7 +70,7 @@ export function partitionIssues(items) {
 /**
  * Banner tone from items when present: any action → bad; else soft → warn; else fallback.
  */
-export function resolveBannerSeverity(items, fallback = 'good') {
+export function resolveBannerSeverity(items: unknown, fallback = 'good') {
   const { action, soft } = partitionIssues(items)
   if (action.length) return 'bad'
   if (soft.length) return 'warn'
@@ -74,7 +78,13 @@ export function resolveBannerSeverity(items, fallback = 'good') {
   return 'good'
 }
 
-function OpsIssueRows({ items, toneFallback = 'warn' }) {
+function OpsIssueRows({
+  items,
+  toneFallback = 'warn',
+}: {
+  items: OpsRow[]
+  toneFallback?: string
+}) {
   return items.map((item) => {
     const tone =
       item.severity === 'bad' || item.severity === 'warn' || item.severity === 'info'
@@ -84,16 +94,20 @@ function OpsIssueRows({ items, toneFallback = 'warn' }) {
         : toneFallback
     return (
       <li
-        key={item.id || item.message}
+        key={(item.id ?? item.message) as string}
         className={`od-ops-issues__item od-ops-issues__item--${tone}`}
       >
-        {item.href ? <a href={item.href}>{item.message}</a> : <span>{item.message}</span>}
+        {item.href ? (
+          <a href={item.href as string}>{item.message as ReactNode}</a>
+        ) : (
+          <span>{item.message as ReactNode}</span>
+        )}
       </li>
     )
   })
 }
 
-export function OpsIssuesList({ items }) {
+export function OpsIssuesList({ items }: { items?: unknown }) {
   const { action, soft } = partitionIssues(items)
   if (!action.length && !soft.length) return null
   return (
@@ -124,7 +138,7 @@ export function OpsIssuesList({ items }) {
   )
 }
 
-function IconReset(props) {
+function IconReset(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" width="1.15em" height="1.15em" aria-hidden="true" {...props}>
       <path
@@ -194,7 +208,10 @@ export function OpsStatusBanner({
  * Colour only where it means something (UX-C12): an unknown value returns 'na'
  * rather than green, because "we could not read it" is not "healthy".
  */
-export function usageTone(value, { warn = 85, bad = 95 } = {}) {
+export function usageTone(
+  value: unknown,
+  { warn = 85, bad = 95 }: { warn?: number; bad?: number } = {},
+) {
   const n = Number(value)
   if (value == null || !Number.isFinite(n)) return 'na'
   if (n >= bad) return 'poor'
@@ -203,7 +220,10 @@ export function usageTone(value, { warn = 85, bad = 95 } = {}) {
 }
 
 /** Tone for a "higher is better" metric — free space, online companions. */
-export function healthTone(value, { warn = 50, bad = 20 } = {}) {
+export function healthTone(
+  value: unknown,
+  { warn = 50, bad = 20 }: { warn?: number; bad?: number } = {},
+) {
   const n = Number(value)
   if (value == null || !Number.isFinite(n)) return 'na'
   if (n <= bad) return 'poor'
@@ -212,7 +232,7 @@ export function healthTone(value, { warn = 50, bad = 20 } = {}) {
 }
 
 /** Tone for a plain up/down signal. */
-export function booleanTone(ok) {
+export function booleanTone(ok: unknown) {
   if (ok == null) return 'na'
   return ok ? 'good' : 'poor'
 }
@@ -258,7 +278,7 @@ export function MetricTile({
   hint?: any
   tone?: string
 }) {
-  const toneClass = METRIC_TONES.has(tone) ? ` od-ops-metric--${tone}` : ''
+  const toneClass = tone && METRIC_TONES.has(tone) ? ` od-ops-metric--${tone}` : ''
   return (
     <div className={`od-ops-metric${toneClass}`}>
       <div className="od-ops-metric__label">{label}</div>
@@ -280,7 +300,21 @@ export function MetricTile({
  * Pass `items` as `{ id, label, value, hint, tone }`. Entries are skipped when
  * `value` is undefined so a page can declare optional metrics without branching.
  */
-export function MetricStrip({ items = [], label = 'Key metrics' }) {
+export interface MetricStripItem {
+  id?: string
+  label?: ReactNode
+  value?: ReactNode
+  hint?: ReactNode
+  tone?: string
+}
+
+export function MetricStrip({
+  items = [],
+  label = 'Key metrics',
+}: {
+  items?: MetricStripItem[]
+  label?: string
+}) {
   const rows = (Array.isArray(items) ? items : []).filter(
     (item) => item && item.value !== undefined,
   )
@@ -289,7 +323,7 @@ export function MetricStrip({ items = [], label = 'Key metrics' }) {
     <div className="od-ops-strip" aria-label={label}>
       {rows.map((item) => (
         <MetricTile
-          key={item.id || item.label}
+          key={item.id || String(item.label)}
           label={item.label}
           value={item.value}
           hint={item.hint}
@@ -301,7 +335,7 @@ export function MetricStrip({ items = [], label = 'Key metrics' }) {
 }
 
 /** Disk / CPU-style percent → good | warning | action | na (aurora issue tones). */
-export function percentHealthTone(percent) {
+export function percentHealthTone(percent: unknown) {
   if (percent == null || !Number.isFinite(Number(percent))) return 'na'
   const pct = Number(percent)
   if (pct >= 95) return 'action'
@@ -311,9 +345,9 @@ export function percentHealthTone(percent) {
 }
 
 /** Readyz string/object → good | action | warning | info | na. */
-export function awakeTone(awake) {
+export function awakeTone(awake: unknown) {
   if (!awake) return 'na'
-  const status = String(awake.status || awake || '').toLowerCase()
+  const status = String((awake as OpsRow).status || awake || '').toLowerCase()
   if (status === 'ok' || status === 'ready' || status === 'pass') return 'good'
   if (status === 'fail' || status === 'failed' || status === 'error' || status === 'down') {
     return 'action'
@@ -324,16 +358,17 @@ export function awakeTone(awake) {
 }
 
 /** Active scan count → info when busy, good when idle, na when missing. */
-export function scansActiveTone(activeCount) {
+export function scansActiveTone(activeCount: unknown) {
   if (activeCount == null || !Number.isFinite(Number(activeCount))) return 'na'
   return Number(activeCount) > 0 ? 'info' : 'good'
 }
 
 /** Companions online/registered → good / fair / warning / na. */
-export function companionsTone(companions) {
+export function companionsTone(companions: unknown) {
   if (!companions) return 'na'
-  const online = Number(companions.online)
-  const registered = Number(companions.registered)
+  const row = companions as OpsRow
+  const online = Number(row.online)
+  const registered = Number(row.registered)
   if (!Number.isFinite(registered) || registered <= 0) {
     return Number.isFinite(online) && online > 0 ? 'info' : 'na'
   }
@@ -343,7 +378,7 @@ export function companionsTone(companions) {
 }
 
 /** DB ping ms → good / fair / warning / action / na. */
-export function dbPingTone(ms) {
+export function dbPingTone(ms: unknown) {
   if (ms == null || !Number.isFinite(Number(ms))) return 'na'
   const n = Number(ms)
   if (n >= 500) return 'action'
@@ -352,19 +387,21 @@ export function dbPingTone(ms) {
   return 'good'
 }
 
-export function formatLoadAvg(loadAvg) {
+export function formatLoadAvg(loadAvg: unknown) {
   if (!loadAvg || typeof loadAvg !== 'object') return 'n/a'
-  const one = loadAvg['1'] ?? loadAvg[1]
-  const five = loadAvg['5'] ?? loadAvg[5]
-  const fifteen = loadAvg['15'] ?? loadAvg[15]
+  const row = loadAvg as OpsRow
+  const one = row['1'] ?? row[1 as unknown as string]
+  const five = row['5'] ?? row[5 as unknown as string]
+  const fifteen = row['15'] ?? row[15 as unknown as string]
   if (one == null && five == null && fifteen == null) return 'n/a'
   return `${na(one)} / ${na(five)} / ${na(fifteen)}`
 }
 
-export function formatReadyz(awake) {
+export function formatReadyz(awake: unknown) {
   if (!awake) return 'n/a'
-  const status = awake.status || 'unknown'
-  const ms = awake.check_ms != null ? ` · ${awake.check_ms}ms` : ''
+  const row = awake as OpsRow
+  const status = row.status || 'unknown'
+  const ms = row.check_ms != null ? ` · ${row.check_ms}ms` : ''
   return `${status}${ms}`
 }
 
@@ -372,27 +409,29 @@ export function formatReadyz(awake) {
  * Compact status for services.library_watch (ONEIRODEX_LIBRARY_WATCH, default off).
  * Honest when disabled — operators should see "off", not a false healthy.
  */
-export function formatLibraryWatchStatus(watch) {
+export function formatLibraryWatchStatus(watch: unknown) {
   if (!watch || typeof watch !== 'object') return 'n/a'
-  if (!watch.enabled) return 'off'
-  if (watch.running) return 'running'
+  const row = watch as OpsRow
+  if (!row.enabled) return 'off'
+  if (row.running) return 'running'
   return 'enabled (not running)'
 }
 
 /** Detail line: note when off / not started; else roots · pending · debounce. */
-export function formatLibraryWatchDetail(watch) {
+export function formatLibraryWatchDetail(watch: unknown): string {
   if (!watch || typeof watch !== 'object') return 'n/a'
-  if (!watch.enabled) {
-    return watch.note || 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable.'
+  const row = watch as OpsRow
+  if (!row.enabled) {
+    return String(row.note || 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable.')
   }
-  const roots = watch.roots ?? 0
-  const pending = watch.pending_libraries ?? 0
+  const roots = row.roots ?? 0
+  const pending = row.pending_libraries ?? 0
   const debounce =
-    watch.debounce_seconds != null && Number.isFinite(Number(watch.debounce_seconds))
-      ? Number(watch.debounce_seconds)
+    row.debounce_seconds != null && Number.isFinite(Number(row.debounce_seconds))
+      ? Number(row.debounce_seconds)
       : null
   const pulse = `${roots} roots · ${pending} pending${debounce != null ? ` · ${debounce}s debounce` : ''}`
-  if (!watch.running && watch.note) return `${watch.note} · ${pulse}`
+  if (!row.running && row.note) return `${row.note} · ${pulse}`
   return pulse
 }
 
@@ -413,19 +452,35 @@ export function companionKindRows(byKind: unknown) {
  * Defensive remaps: `average_score` / letter grades / `top_issues` from older health APIs.
  * Returns null when nothing useful — callers show honest n/a.
  */
-export function normalizeLibraryHealth(health) {
-  if (!health || typeof health !== 'object') return null
+export interface HealthFactor {
+  id?: unknown
+  label?: unknown
+  count?: unknown
+  weight?: unknown
+  deduction?: unknown
+}
 
-  let score = health.score
-  if (score == null && health.average_score != null) score = health.average_score
+export interface NormalizedLibraryHealth {
+  score: number | null
+  grade: string | null
+  factors: HealthFactor[]
+  thin: boolean
+  note: string | null
+}
+
+export function normalizeLibraryHealth(health: unknown): NormalizedLibraryHealth | null {
+  if (!health || typeof health !== 'object') return null
+  const row = health as OpsRow
+
+  let score = row.score
+  if (score == null && row.average_score != null) score = row.average_score
   const scoreNum = score == null || score === '' ? null : Number(score)
   const hasScore = scoreNum != null && Number.isFinite(scoreNum)
 
-  let gradeRaw =
-    health.grade == null || health.grade === '' ? '' : String(health.grade).trim().toLowerCase()
+  let gradeRaw = row.grade == null || row.grade === '' ? '' : String(row.grade).trim().toLowerCase()
   if (!gradeRaw && hasScore) {
-    if (scoreNum >= 80) gradeRaw = 'good'
-    else if (scoreNum >= 50) gradeRaw = 'fair'
+    if ((scoreNum as number) >= 80) gradeRaw = 'good'
+    else if ((scoreNum as number) >= 50) gradeRaw = 'fair'
     else gradeRaw = 'poor'
   } else if (gradeRaw === 'a' || gradeRaw === 'b') {
     gradeRaw = 'good'
@@ -438,13 +493,21 @@ export function normalizeLibraryHealth(health) {
   } else if (gradeRaw === 'bad' || gradeRaw === 'critical') {
     gradeRaw = 'poor'
   } else if (gradeRaw !== 'good' && gradeRaw !== 'fair' && gradeRaw !== 'poor') {
-    gradeRaw = hasScore ? (scoreNum >= 80 ? 'good' : scoreNum >= 50 ? 'fair' : 'poor') : ''
+    gradeRaw = hasScore
+      ? (scoreNum as number) >= 80
+        ? 'good'
+        : (scoreNum as number) >= 50
+          ? 'fair'
+          : 'poor'
+      : ''
   }
 
-  let factors = Array.isArray(health.factors) ? health.factors : null
-  if (!factors && Array.isArray(health.top_issues)) {
-    factors = health.top_issues
-      .map((issue) => {
+  let factors: HealthFactor[] | null = Array.isArray(row.factors)
+    ? (row.factors as HealthFactor[])
+    : null
+  if (!factors && Array.isArray(row.top_issues)) {
+    factors = (row.top_issues as OpsRow[])
+      .map((issue): HealthFactor | null => {
         if (!issue || typeof issue !== 'object') return null
         const id = issue.id || issue.code || null
         const label = issue.label || issue.code || issue.id || null
@@ -457,10 +520,10 @@ export function normalizeLibraryHealth(health) {
           deduction: issue.deduction ?? null,
         }
       })
-      .filter(Boolean)
+      .filter((f): f is HealthFactor => f != null)
   } else if (factors) {
-    factors = factors
-      .map((f) => {
+    factors = (factors as OpsRow[])
+      .map((f): HealthFactor | null => {
         if (!f || typeof f !== 'object') return null
         const id = f.id || f.code || null
         const label = f.label || f.code || f.id || null
@@ -473,25 +536,23 @@ export function normalizeLibraryHealth(health) {
           deduction: f.deduction ?? null,
         }
       })
-      .filter(Boolean)
+      .filter((f): f is HealthFactor => f != null)
   }
 
-  const thin = Boolean(
-    health.thin || health.sample_thin || health.count === 0 || health.games === 0,
-  )
+  const thin = Boolean(row.thin || row.sample_thin || row.count === 0 || row.games === 0)
   if (!hasScore && !gradeRaw && !(factors && factors.length) && !thin) return null
 
   return {
-    score: hasScore ? scoreNum : null,
+    score: hasScore ? (scoreNum as number) : null,
     grade: gradeRaw || null,
     factors: factors || [],
     thin,
-    note: health.note == null || health.note === '' ? null : String(health.note),
+    note: row.note == null || row.note === '' ? null : String(row.note),
   }
 }
 
 /** Rank factors for display — prefer deduction, then count; drop zero-impact when others exist. */
-export function topLibraryHealthFactors(health, limit = 3) {
+export function topLibraryHealthFactors(health: unknown, limit = 3) {
   const n = normalizeLibraryHealth(health)
   if (!n) return []
   const ranked = [...(n.factors || [])].sort((a, b) => {
@@ -511,7 +572,7 @@ export function topLibraryHealthFactors(health, limit = 3) {
  * MetricTile tone from library.health grade — good|fair|poor|na.
  * Honest na when thin/null/withheld (no false accent healthy).
  */
-export function libraryHealthTone(health) {
+export function libraryHealthTone(health: unknown) {
   const n = normalizeLibraryHealth(health)
   if (!n?.grade) return 'na'
   if (n.grade === 'good' || n.grade === 'fair' || n.grade === 'poor') return n.grade
@@ -519,14 +580,14 @@ export function libraryHealthTone(health) {
 }
 
 /** Compact score for MetricTile — rounded 0–100 or n/a. */
-export function formatLibraryHealthScore(health) {
+export function formatLibraryHealthScore(health: unknown) {
   const n = normalizeLibraryHealth(health)
   if (!n || n.score == null || !Number.isFinite(Number(n.score))) return 'n/a'
   return String(Math.round(Number(n.score)))
 }
 
 /** Metric value: `82 · good` when both present; otherwise score, grade, or n/a. */
-export function formatLibraryHealthValue(health) {
+export function formatLibraryHealthValue(health: unknown) {
   const n = normalizeLibraryHealth(health)
   if (!n) return 'n/a'
   const score =
@@ -538,7 +599,7 @@ export function formatLibraryHealthValue(health) {
 }
 
 /** Hint line: top factor labels, grade, or honest empty/thin copy. */
-export function formatLibraryHealthHint(health, limit = 2) {
+export function formatLibraryHealthHint(health: unknown, limit = 2) {
   const n = normalizeLibraryHealth(health)
   if (!n) return 'not scored yet'
   const tops = topLibraryHealthFactors(health, limit)
@@ -556,7 +617,7 @@ export function formatLibraryHealthHint(health, limit = 2) {
 }
 
 /** Left-edge grade cue class — poor=danger, fair=warn-gold; good/na unchanged. */
-export function libraryHealthFactorsGradeClass(grade) {
+export function libraryHealthFactorsGradeClass(grade: unknown) {
   if (grade === 'poor') return ' od-ops-health-factors--poor'
   if (grade === 'fair') return ' od-ops-health-factors--fair'
   return ''
@@ -567,7 +628,7 @@ export function libraryHealthFactorsGradeClass(grade) {
  * Honest empty when health absent or factors empty.
  * Grade cues: poor → danger left edge; fair → warn-gold (good/na unchanged).
  */
-export function LibraryHealthFactors({ health, limit = 3 }) {
+export function LibraryHealthFactors({ health, limit = 3 }: { health?: unknown; limit?: number }) {
   const n = normalizeLibraryHealth(health)
   if (!n) {
     return (
@@ -594,13 +655,13 @@ export function LibraryHealthFactors({ health, limit = 3 }) {
   return (
     <ul className={`od-ops-health-factors${gradeClass}`} aria-label="Top health factors">
       {factors.map((f) => {
-        const key = f.id || f.label
-        const label = f.label || f.id || 'factor'
+        const key = (f.id || f.label) as Key
+        const label = (f.label || f.id || 'factor') as ReactNode
         return (
           <li key={key} className="od-ops-health-factors__item">
             <span className="od-ops-health-factors__label">{label}</span>
             {f.count != null && Number.isFinite(Number(f.count)) ? (
-              <span className="od-ops-health-factors__count">{f.count}</span>
+              <span className="od-ops-health-factors__count">{f.count as ReactNode}</span>
             ) : null}
           </li>
         )
@@ -616,22 +677,23 @@ export function LibraryHealthFactors({ health, limit = 3 }) {
  * scan progress — which was itself the bug: the page an operator actually
  * watches a scan on showed less than the dashboard did.
  */
-export function formatScanJobCounters(job) {
-  const success = Number(job?.folders_success) || 0
-  const failed = Number(job?.folders_failed) || 0
-  const total = Number(job?.total_folders) || 0
+export function formatScanJobCounters(job: unknown) {
+  const row = job as OpsRow | null | undefined
+  const success = Number(row?.folders_success) || 0
+  const failed = Number(row?.folders_failed) || 0
+  const total = Number(row?.total_folders) || 0
   const processed = success + failed
   if (total > 0) {
     return `${processed}/${total}` + (failed ? ` · ${failed} failed` : '')
   }
-  if (job?.status === 'Queued' || job?.status === 'Pending') {
-    return job?.queue_position != null ? `Queued #${job.queue_position}` : 'Queued'
+  if (row?.status === 'Queued' || row?.status === 'Pending') {
+    return row?.queue_position != null ? `Queued #${row.queue_position}` : 'Queued'
   }
-  if (job?.status === 'Running' || job?.status === 'Stopping') {
+  if (row?.status === 'Running' || row?.status === 'Stopping') {
     return 'Starting…'
   }
-  if (job?.progress != null && Number(job.progress) > 0) {
-    return `${job.progress}%`
+  if (row?.progress != null && Number(row.progress) > 0) {
+    return `${row.progress}%`
   }
   return '—'
 }

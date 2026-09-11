@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { getJson } from '../api/adminApi'
 import { DataTable } from '../components/DataTable'
@@ -11,6 +11,7 @@ import {
   isScanQueuedStatus,
   isScanRunning,
   normalizeScanJobsList,
+  type ScanJobsPayload,
 } from '../components/scanQueuePolicy'
 import { formatScanJobCounters } from '../components/opsWidgets'
 import { scanJobsStructureSignature } from '../../../../oneirodex/setup/default_theme/js/scanJobsDom.js'
@@ -18,11 +19,17 @@ import { useLibraryRefreshAll } from '../hooks/useLibraryRefreshAll'
 import { useLibraryScan } from '../hooks/useLibraryScan'
 import { useVisibilityPoll } from '../hooks/useVisibilityPoll'
 
+interface PathModalState {
+  path?: string
+  label?: string
+  matchReason?: string
+}
+
 export function ScansPage() {
-  const [status, setStatus] = useState(null)
-  const [error, setError] = useState(null)
-  const [updatedAt, setUpdatedAt] = useState(null)
-  const [pathModal, setPathModal] = useState(null)
+  const [status, setStatus] = useState<ScanJobsPayload>(null)
+  const [error, setError] = useState<unknown>(null)
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [pathModal, setPathModal] = useState<PathModalState | null>(null)
   const { conflictOpen, refreshing, startRefreshAll, onConflictChoose, onConflictClose } =
     useLibraryRefreshAll()
   const {
@@ -67,7 +74,7 @@ export function ScansPage() {
       setUpdatedAt(new Date())
       hasSnapshotRef.current = true
     } catch (err) {
-      if (err?.name === 'AbortError') return
+      if (err instanceof DOMException && err.name === 'AbortError') return
       if (!hasSnapshotRef.current) setError(err)
     }
   }, 4000)
@@ -77,8 +84,10 @@ export function ScansPage() {
   const running = isScanRunning(status)
   const queuedJobs = jobs.filter((job) => isScanQueuedStatus(job?.status))
   const recentJobs = jobs.slice(0, 12)
-  const progress = status?.progress ?? status?.percent ?? null
-  const message = status?.message || status?.status_message || status?.phase || null
+  const statusPayload = (status && !Array.isArray(status) ? status : {}) as Record<string, unknown>
+  const progress = statusPayload.progress ?? statusPayload.percent ?? null
+  const message =
+    statusPayload.message || statusPayload.status_message || statusPayload.phase || null
   const scanMotifActive = running || queuedJobs.length > 0
 
   /**
@@ -149,7 +158,7 @@ export function ScansPage() {
                 by an orphaned job rendered as "Running: no · queued 1", which
                 reads as idle rather than stuck. */}
             <p className="od-scan-summary">{scanSummary}</p>
-            {message ? <p className="od-admin-lede">{message}</p> : null}
+            {message ? <p className="od-admin-lede">{message as ReactNode}</p> : null}
             {/* Scan jobs sort and filter like every other table now (W27-C2).
                 Each column declares `value` where what it renders is not what
                 it should sort on: Job renders a truncated code element, and

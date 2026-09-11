@@ -5,7 +5,49 @@ import { useSearchParams } from 'react-router-dom'
 import { ArtworkPicker } from '../components/ArtworkPicker'
 import { DataTable } from '../components/DataTable'
 import { deleteJson, getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { ART_STUDIO_SYSTEMS } from '../components/platformSkins'
+
+interface ImageRow {
+  id: string
+  game_uuid?: string
+  game_name?: string
+  status?: string
+  is_downloaded?: boolean
+  file_missing?: boolean
+  local_url?: string
+  image_type?: string
+  failure_reason?: string
+  last_error?: string
+}
+
+interface ImageGroup {
+  name: string
+  uuid: string
+  items: ImageRow[]
+}
+
+interface GameHit {
+  uuid: string
+  name?: string
+}
+
+interface LibraryOption {
+  uuid: string
+  name?: string
+}
+
+interface Option {
+  id: string
+  label?: string
+}
+
+interface MissingCoverGame {
+  uuid: string
+  name?: string
+  score?: number
+  issues?: { code?: string }[]
+}
 
 /** Backend policy for “best available” mass cover apply. */
 const BEST_AVAILABLE_POLICY = 'sgdb_then_igdb_then_generate'
@@ -25,8 +67,8 @@ const IMAGE_KIND_OPTIONS = [
   { id: 'fanart', label: 'Fan art' },
 ]
 
-function groupByGame(images) {
-  const groups = new Map()
+function groupByGame(images: ImageRow[]): ImageGroup[] {
+  const groups = new Map<string, ImageGroup>()
   for (const image of images) {
     const key = image.game_uuid || 'unknown'
     if (!groups.has(key)) {
@@ -36,43 +78,43 @@ function groupByGame(images) {
         items: [],
       })
     }
-    groups.get(key).items.push(image)
+    groups.get(key)!.items.push(image)
   }
   return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name))
 }
 
-function queueFailureText(image) {
+function queueFailureText(image: ImageRow): string {
   return image.failure_reason || image.last_error || ''
 }
 
-export function ImagesPage({ embedded = false }) {
+export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
   const [params, setParams] = useSearchParams()
   const [gameUuid, setGameUuid] = useState(params.get('game') || '')
   const [gameName, setGameName] = useState(params.get('name') || '')
   const [gameQuery, setGameQuery] = useState('')
-  const [gameHits, setGameHits] = useState([])
+  const [gameHits, setGameHits] = useState<GameHit[]>([])
 
   const [statusFilter, setStatusFilter] = useState('pending')
   const [typeFilter, setTypeFilter] = useState('cover')
   const [groupToggle, setGroupToggle] = useState(true)
-  const [images, setImages] = useState([])
-  const [pathStatus, setPathStatus] = useState(null)
+  const [images, setImages] = useState<ImageRow[]>([])
+  const [pathStatus, setPathStatus] = useState<{ error?: string; path?: string } | null>(null)
   const [queueError, setQueueError] = useState('')
   const [queueMsg, setQueueMsg] = useState('')
   const [queueBusy, setQueueBusy] = useState('')
   const [loadingQueue, setLoadingQueue] = useState(true)
 
-  const [missingCovers, setMissingCovers] = useState([])
+  const [missingCovers, setMissingCovers] = useState<MissingCoverGame[]>([])
   const [missingError, setMissingError] = useState('')
-  const [libraries, setLibraries] = useState([])
-  const [platforms, setPlatforms] = useState([])
-  const [serviceOptions, setServiceOptions] = useState([])
+  const [libraries, setLibraries] = useState<LibraryOption[]>([])
+  const [platforms, setPlatforms] = useState<Option[]>([])
+  const [serviceOptions, setServiceOptions] = useState<Option[]>([])
   const [libraryFilter, setLibraryFilter] = useState('')
   const [platformFilter, setPlatformFilter] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
 
   const syncGameParam = useCallback(
-    (uuid, name) => {
+    (uuid: string, name: string) => {
       setGameUuid(uuid)
       setGameName(name || '')
       const next = new URLSearchParams(params)
@@ -102,7 +144,7 @@ export function ImagesPage({ embedded = false }) {
       setImages(Array.isArray(data.images) ? data.images : [])
       setPathStatus(data.image_save_path || null)
     } catch (err) {
-      setQueueError(err.message || String(err))
+      setQueueError(errorText(err) || String(err))
       setImages([])
       setPathStatus(null)
     } finally {
@@ -140,7 +182,7 @@ export function ImagesPage({ embedded = false }) {
       })
     getJson('/api/search_metadata/sources')
       .then((data) => {
-        const sources = Array.isArray(data.sources) ? data.sources : []
+        const sources: any[] = Array.isArray(data.sources) ? data.sources : []
         setServiceOptions(
           sources
             .filter((s) => SERVICE_SOURCE_IDS.has(s.id))
@@ -156,12 +198,12 @@ export function ImagesPage({ embedded = false }) {
       const qs = new URLSearchParams({ limit: '200' })
       if (libraryFilter) qs.set('library_uuid', libraryFilter)
       const data = await getJson(`/api/health/library?${qs}`)
-      const worst = Array.isArray(data.worst) ? data.worst : []
+      const worst: MissingCoverGame[] = Array.isArray(data.worst) ? data.worst : []
       setMissingCovers(
         worst.filter((g) => (g.issues || []).some((i) => i.code === 'missing_cover')),
       )
     } catch (err) {
-      setMissingError(err.message || String(err))
+      setMissingError(errorText(err) || String(err))
       setMissingCovers([])
     }
   }, [libraryFilter])
@@ -186,7 +228,7 @@ export function ImagesPage({ embedded = false }) {
 
   const groups = useMemo(() => (groupToggle ? groupByGame(images) : null), [groupToggle, images])
 
-  const downloadBatch = async (size) => {
+  const downloadBatch = async (size: number) => {
     setQueueBusy(`batch-${size}`)
     setQueueMsg('')
     setQueueError('')
@@ -195,7 +237,7 @@ export function ImagesPage({ embedded = false }) {
       setQueueMsg(result.message || `Downloaded ${result.downloaded || 0}`)
       await loadQueue()
     } catch (err) {
-      setQueueError(err.message || String(err))
+      setQueueError(errorText(err) || String(err))
     } finally {
       setQueueBusy('')
     }
@@ -214,13 +256,13 @@ export function ImagesPage({ embedded = false }) {
       }
       await loadQueue()
     } catch (err) {
-      setQueueError(err.message || String(err))
+      setQueueError(errorText(err) || String(err))
     } finally {
       setQueueBusy('')
     }
   }
 
-  const downloadOne = async (imageId) => {
+  const downloadOne = async (imageId: string) => {
     setQueueBusy(`img-${imageId}`)
     setQueueError('')
     try {
@@ -233,13 +275,13 @@ export function ImagesPage({ embedded = false }) {
       }
       await loadQueue()
     } catch (err) {
-      setQueueError(err.message || String(err))
+      setQueueError(errorText(err) || String(err))
     } finally {
       setQueueBusy('')
     }
   }
 
-  const removeOne = async (imageId) => {
+  const removeOne = async (imageId: string) => {
     const ok = await confirmAction({
       title: 'Remove this image from the queue?',
       body: 'The file on disk stays where it is.',
@@ -253,7 +295,7 @@ export function ImagesPage({ embedded = false }) {
       setQueueMsg('Image deleted')
       await loadQueue()
     } catch (err) {
-      setQueueError(err.message || String(err))
+      setQueueError(errorText(err) || String(err))
     } finally {
       setQueueBusy('')
     }
@@ -282,7 +324,7 @@ export function ImagesPage({ embedded = false }) {
       await loadMissing()
     } catch (err) {
       setQueueError(
-        `${err.message || String(err)} — set ENABLE_AI_ARTWORK and AI_ARTWORK_URL, ` +
+        `${errorText(err) || String(err)} — set ENABLE_AI_ARTWORK and AI_ARTWORK_URL, ` +
           'and start the artwork profile.',
       )
     } finally {
@@ -315,7 +357,7 @@ export function ImagesPage({ embedded = false }) {
             : ''),
       )
       if (failed && result.results?.length) {
-        const firstFail = result.results.find((r) => r.status === 'failed')
+        const firstFail = result.results.find((r: any) => r.status === 'failed')
         if (firstFail?.error) {
           setQueueError(
             `Sample failure (${firstFail.name || firstFail.game_uuid}): ${firstFail.error}`,
@@ -326,7 +368,7 @@ export function ImagesPage({ embedded = false }) {
       await loadMissing()
     } catch (err) {
       setQueueError(
-        `Auto-pick failed calling POST /admin/api/covers/batch/apply (policy=${BEST_AVAILABLE_POLICY}). ${err.message}`,
+        `Auto-pick failed calling POST /admin/api/covers/batch/apply (policy=${BEST_AVAILABLE_POLICY}). ${errorText(err)}`,
       )
     } finally {
       setQueueBusy('')
@@ -350,7 +392,7 @@ export function ImagesPage({ embedded = false }) {
         : Array.isArray(result.results)
           ? result.results
           : []
-      const withHits = games.filter((g) => (g.candidates || []).length > 0).length
+      const withHits = games.filter((g: any) => (g.candidates || []).length > 0).length
       setQueueMsg(
         `Mass cover search — ${games.length} title(s), ${withHits} with candidates` +
           (serviceFilter ? ` · service ${serviceFilter}` : ''),
@@ -359,7 +401,7 @@ export function ImagesPage({ embedded = false }) {
         setQueueError(`Sample search error: ${result.errors[0].error || 'unknown'}`)
       }
     } catch (err) {
-      setQueueError(`Mass search failed (POST /admin/api/covers/batch/search). ${err.message}`)
+      setQueueError(`Mass search failed (POST /admin/api/covers/batch/search). ${errorText(err)}`)
     } finally {
       setQueueBusy('')
     }
@@ -429,7 +471,7 @@ export function ImagesPage({ embedded = false }) {
                   type="button"
                   className="od-btn od-btn--ghost"
                   onClick={() => {
-                    syncGameParam(g.uuid, g.name)
+                    syncGameParam(g.uuid, g.name || '')
                     setGameHits([])
                     setGameQuery(g.name || '')
                   }}
@@ -753,7 +795,7 @@ export function ImagesPage({ embedded = false }) {
                 <button
                   type="button"
                   className="od-btn od-btn--ghost"
-                  onClick={() => syncGameParam(g.uuid, g.name)}
+                  onClick={() => syncGameParam(g.uuid, g.name || '')}
                 >
                   {g.name}
                 </button>
@@ -767,7 +809,19 @@ export function ImagesPage({ embedded = false }) {
   )
 }
 
-function QueueRow({ image, busy, onDownload, onDelete, showGame = false }) {
+function QueueRow({
+  image,
+  busy,
+  onDownload,
+  onDelete,
+  showGame = false,
+}: {
+  image: ImageRow
+  busy?: string
+  onDownload: (id: string) => void
+  onDelete: (id: string) => void
+  showGame?: boolean
+}) {
   const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending')
   const failure = queueFailureText(image)
   return (

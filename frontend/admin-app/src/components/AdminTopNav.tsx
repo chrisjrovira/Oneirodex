@@ -1,7 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { AccountModal, openPreferencesModal } from '@oneirodex/ui'
+import { AccountModal, openPreferencesModal, type AccountPanelId } from '@oneirodex/ui'
 import AdminCommandPalette from './AdminCommandPalette'
 import { resolveAdminPage } from './adminSection'
 import './AdminTopNav.css'
@@ -29,7 +29,13 @@ const SECTION_HOME = {
 /* Identity entries only — exits live on the rail (not duplicated here).
    Preferences opens the shared modal; Profile / tokens / password open the
    shared AccountModal so they stay inside the shell. */
-const ACCOUNT_LINKS = [
+const ACCOUNT_LINKS: {
+  id: string
+  href: string
+  label: string
+  modal?: AccountPanelId
+  preferences?: boolean
+}[] = [
   { id: 'profile', href: '/settings_profile_view', label: 'Profile', modal: 'profile' },
   { id: 'preferences', href: '/settings_panel', label: 'Preferences', preferences: true },
   { id: 'tokens', href: '/tokens', label: 'API tokens', modal: 'tokens' },
@@ -56,24 +62,30 @@ function readAdminIdentity() {
 /**
  * Bar one for the admin shell, composed like the member bar (GT-B2 · GT-B31).
  */
-export function AdminTopNav({ onToggleRail, railState = 'expanded' }) {
+export function AdminTopNav({
+  onToggleRail,
+  railState = 'expanded',
+}: {
+  onToggleRail?: () => void
+  railState?: string
+}) {
   const { pathname } = useLocation()
   const section = resolveAdminPage(pathname)
-  const sectionHome = SECTION_HOME[section] || SECTION_HOME.generic
+  const sectionHome = SECTION_HOME[section as keyof typeof SECTION_HOME] || SECTION_HOME.generic
 
   const [identity] = useState(readAdminIdentity)
   const [accountOpen, setAccountOpen] = useState(false)
-  const [accountModal, setAccountModal] = useState(null)
+  const [accountModal, setAccountModal] = useState<AccountPanelId | null>(null)
   const accountId = useId()
-  const rootRef = useRef(null)
+  const rootRef = useRef<HTMLElement | null>(null)
   const paletteHint = commandPaletteHint()
 
   useEffect(() => {
     if (!accountOpen) return undefined
-    function onPointerDown(event) {
-      if (!rootRef.current?.contains(event.target)) setAccountOpen(false)
+    function onPointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node | null)) setAccountOpen(false)
     }
-    function onKey(event) {
+    function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') setAccountOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
@@ -84,7 +96,7 @@ export function AdminTopNav({ onToggleRail, railState = 'expanded' }) {
     }
   }, [accountOpen])
 
-  async function handlePreferencesClick(event) {
+  async function handlePreferencesClick(event: ReactMouseEvent) {
     event.preventDefault()
     setAccountOpen(false)
     try {
@@ -94,8 +106,8 @@ export function AdminTopNav({ onToggleRail, railState = 'expanded' }) {
     }
   }
 
-  function openAccountModal(panel) {
-    return (event) => {
+  function openAccountModal(panel: AccountPanelId) {
+    return (event: ReactMouseEvent) => {
       event.preventDefault()
       setAccountOpen(false)
       setAccountModal(panel)

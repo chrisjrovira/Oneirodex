@@ -1,9 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button, confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson, putJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 
-const EMPTY_FORM = {
+interface QualityProfile {
+  id: string
+  name?: string
+  preferred_groups?: string[]
+  preferred_patterns?: string[]
+  blocked_groups?: string[]
+  excluded_terms?: string[]
+  min_size_mb?: number | null
+  max_size_mb?: number | null
+  prefer_repack?: boolean
+}
+
+interface QualityProfileForm {
+  name: string
+  preferred_groups: string
+  preferred_patterns: string
+  blocked_groups: string
+  excluded_terms: string
+  min_size_mb: number | string
+  max_size_mb: number | string
+  prefer_repack: boolean
+}
+
+interface ProbeResult {
+  error?: string
+  score?: number
+  allowed?: boolean
+  reasons?: string[]
+}
+
+const EMPTY_FORM: QualityProfileForm = {
   name: '',
   preferred_groups: '',
   preferred_patterns: '',
@@ -14,15 +45,15 @@ const EMPTY_FORM = {
   prefer_repack: true,
 }
 
-function splitList(value) {
+function splitList(value: unknown): string[] {
   return String(value || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
 }
 
-function formFromProfile(profile) {
-  const p = profile || {}
+function formFromProfile(profile: QualityProfile | null | undefined): QualityProfileForm {
+  const p = profile || ({} as QualityProfile)
   return {
     name: p.name || '',
     preferred_groups: (p.preferred_groups || []).join(', '),
@@ -35,7 +66,7 @@ function formFromProfile(profile) {
   }
 }
 
-function bodyFromForm(form) {
+function bodyFromForm(form: QualityProfileForm) {
   return {
     name: String(form.name || '').trim() || 'Profile',
     preferred_groups: splitList(form.preferred_groups),
@@ -49,18 +80,18 @@ function bodyFromForm(form) {
 }
 
 export function QualityProfilesPage() {
-  const [profiles, setProfiles] = useState([])
+  const [profiles, setProfiles] = useState<QualityProfile[]>([])
   const [activeId, setActiveId] = useState('')
   const [selectedId, setSelectedId] = useState('')
-  const [form, setForm] = useState(EMPTY_FORM)
+  const [form, setForm] = useState<QualityProfileForm>(EMPTY_FORM)
   const [status, setStatus] = useState('Loading…')
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [probeTitle, setProbeTitle] = useState('')
-  const [probeResult, setProbeResult] = useState(null)
+  const [probeResult, setProbeResult] = useState<ProbeResult | null>(null)
 
-  function applyStore(data, preferId) {
-    const list = Array.isArray(data?.profiles) ? data.profiles : []
+  function applyStore(data: any, preferId?: string) {
+    const list: QualityProfile[] = Array.isArray(data?.profiles) ? data.profiles : []
     const nextActive = data?.active_id || ''
     setProfiles(list)
     setActiveId(nextActive)
@@ -93,8 +124,9 @@ export function QualityProfilesPage() {
     let cancelled = false
     reload().catch((err) => {
       if (!cancelled) {
-        setError(err.message || 'Failed to load')
-        setStatus(err.message || 'Failed to load')
+        const text = errorText(err) || 'Failed to load'
+        setError(text)
+        setStatus(text)
       }
     })
     return () => {
@@ -103,11 +135,11 @@ export function QualityProfilesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only load
   }, [])
 
-  function updateField(key, value) {
+  function updateField<K extends keyof QualityProfileForm>(key: K, value: QualityProfileForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  function onSelectChange(id) {
+  function onSelectChange(id: string) {
     setSelectedId(id)
     const selected = profiles.find((p) => p.id === id) || null
     setForm(formFromProfile(selected))
@@ -124,8 +156,9 @@ export function QualityProfilesPage() {
       applyStore(data, selectedId)
       setStatus('Active profile updated')
     } catch (err) {
-      setError(err.message || 'Activate failed')
-      setStatus(err.message || 'Activate failed')
+      const text = errorText(err) || 'Activate failed'
+      setError(text)
+      setStatus(text)
     } finally {
       setBusy(false)
     }
@@ -144,8 +177,9 @@ export function QualityProfilesPage() {
       await reload(created.id || '')
       setStatus(`Created ${created.name || 'profile'}`)
     } catch (err) {
-      setError(err.message || 'Create failed')
-      setStatus(err.message || 'Create failed')
+      const text = errorText(err) || 'Create failed'
+      setError(text)
+      setStatus(text)
     } finally {
       setBusy(false)
     }
@@ -168,14 +202,15 @@ export function QualityProfilesPage() {
       applyStore(data, '')
       setStatus('Profile deleted')
     } catch (err) {
-      setError(err.message || 'Delete failed')
-      setStatus(err.message || 'Delete failed')
+      const text = errorText(err) || 'Delete failed'
+      setError(text)
+      setStatus(text)
     } finally {
       setBusy(false)
     }
   }
 
-  async function saveProfile(event) {
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedId || busy) return
     setBusy(true)
@@ -188,8 +223,9 @@ export function QualityProfilesPage() {
       await reload(saved.id || selectedId)
       setStatus('Saved')
     } catch (err) {
-      setError(err.message || 'Save failed')
-      setStatus(err.message || 'Save failed')
+      const text = errorText(err) || 'Save failed'
+      setError(text)
+      setStatus(text)
     } finally {
       setBusy(false)
     }
@@ -207,7 +243,7 @@ export function QualityProfilesPage() {
       })
       setProbeResult(result)
     } catch (err) {
-      setProbeResult({ error: err.message || 'Score failed' })
+      setProbeResult({ error: errorText(err) || 'Score failed' })
     } finally {
       setBusy(false)
     }

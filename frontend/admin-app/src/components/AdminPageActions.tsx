@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 export const ADMIN_TOPBAR_PAGE_SLOT_ID = 'od-admin-topbar-slot'
@@ -17,8 +17,16 @@ export const ADMIN_TOPBAR_TITLE_SLOT_ID = 'od-admin-topbar-title'
  * `slot="title"` portals into `#od-admin-topbar-title` (left, after rail toggle).
  * Falls back to the inline row in tests and any host without the bar.
  */
-export function AdminPageActions({ children, label = 'Page actions', slot = 'page' }) {
-  const [host, setHost] = useState(null)
+export function AdminPageActions({
+  children,
+  label = 'Page actions',
+  slot = 'page',
+}: {
+  children?: ReactNode
+  label?: string
+  slot?: 'page' | 'trail' | 'title'
+}) {
+  const [host, setHost] = useState<HTMLElement | null>(null)
   const slotId =
     slot === 'trail'
       ? ADMIN_TOPBAR_TRAIL_SLOT_ID

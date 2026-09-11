@@ -6,6 +6,17 @@ import { RailIcon } from './railIcons'
 
 const COLLAPSED_SECTIONS_KEY = 'od.admin.rail.collapsedSections'
 
+interface AdminNavLink {
+  id: string
+  path: string
+  label: string
+}
+
+interface RailSubLink {
+  href: string
+  label: string
+}
+
 /**
  * Which admin LHN sections the operator has folded away.
  *
@@ -13,15 +24,15 @@ const COLLAPSED_SECTIONS_KEY = 'od.admin.rail.collapsedSections'
  * rail opens focused on where you are. After the first visit, the set is
  * whatever the operator last chose — folding must stick across pages.
  */
-function useCollapsedSections(activeSectionId) {
-  const [collapsed, setCollapsed] = useState(() => {
+function useCollapsedSections(activeSectionId: string | null) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
     try {
       const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_KEY)
       if (raw) return new Set(JSON.parse(raw))
     } catch {
       // Preference only.
     }
-    const initial = new Set()
+    const initial = new Set<string>()
     for (const link of ADMIN_NAV) {
       if (!railDestinations(link.id).length) continue
       if (link.id === activeSectionId) continue
@@ -50,7 +61,7 @@ function useCollapsedSections(activeSectionId) {
     })
   }, [activeSectionId])
 
-  const toggle = useCallback((id) => {
+  const toggle = useCallback((id: string) => {
     setCollapsed((previous) => {
       const next = new Set(previous)
       if (next.has(id)) next.delete(id)
@@ -82,7 +93,7 @@ export function AdminSideRail({
   const ownedSection = resolveNavSection(pathname)
   const [collapsedSections, toggleSection] = useCollapsedSections(ownedSection)
 
-  function isActiveSection(link) {
+  function isActiveSection(link: AdminNavLink) {
     if (ownedSection) {
       return link.id === ownedSection
     }
@@ -101,14 +112,14 @@ export function AdminSideRail({
     return pathname === base || pathname.startsWith(`${base}/`)
   }
 
-  function isActiveSub(href) {
+  function isActiveSub(href: string | undefined) {
     const base = (href || '').split('#')[0].split('?')[0]
     if (!base) return false
     const path = pathname.split('?')[0]
     return path === base || path.startsWith(`${base}/`)
   }
 
-  function destinationLink(link: any, { active }: { active?: boolean } = {}) {
+  function destinationLink(link: AdminNavLink, { active }: { active?: boolean } = {}) {
     const linkClass = active ? 'od-rail__link is-active' : 'od-rail__link'
     return (
       <li key={link.id}>

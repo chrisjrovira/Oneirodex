@@ -1,9 +1,31 @@
 import { useEffect, useState } from 'react'
 import { getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { MetricStrip } from '../components/opsWidgets'
 import { PageStatus } from '@oneirodex/ui'
 
-const EMPTY_STATUS = {
+interface StorageStatus {
+  helpers_enabled: boolean
+  allow_apply: boolean
+  games_path: string
+  games_exists: boolean
+  games_readable: boolean
+  games_writable: boolean
+  degrade_reason: string | null
+}
+
+interface HardlinkResult {
+  applied?: boolean
+  would_succeed?: boolean
+  ok?: boolean
+  same_volume?: boolean
+  bytes_saved_estimate?: number
+  reasons?: string[]
+  source?: string
+  dest?: string
+}
+
+const EMPTY_STATUS: StorageStatus = {
   helpers_enabled: false,
   allow_apply: false,
   games_path: '',
@@ -13,7 +35,7 @@ const EMPTY_STATUS = {
   degrade_reason: null,
 }
 
-function formatBytes(n) {
+function formatBytes(n: unknown) {
   const value = Number(n) || 0
   if (value <= 0) return '0 B'
   if (value < 1024) return `${value} B`
@@ -23,15 +45,15 @@ function formatBytes(n) {
 }
 
 export function StoragePage() {
-  const [status, setStatus] = useState(EMPTY_STATUS)
+  const [status, setStatus] = useState<StorageStatus>(EMPTY_STATUS)
   const [statusLoaded, setStatusLoaded] = useState(false)
-  const [statusError, setStatusError] = useState(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
   const [source, setSource] = useState('')
   const [dest, setDest] = useState('')
   const [busy, setBusy] = useState(false)
-  const [actionError, setActionError] = useState(null)
-  const [result, setResult] = useState(null)
-  const [resultKind, setResultKind] = useState(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [result, setResult] = useState<HardlinkResult | null>(null)
+  const [resultKind, setResultKind] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -53,7 +75,7 @@ export function StoragePage() {
         if (cancelled) return
         // Soft-fail: keep form usable; banners degrade to unknown/off.
         setStatus(EMPTY_STATUS)
-        setStatusError(err.message || 'Could not load storage status')
+        setStatusError(errorText(err) || 'Could not load storage status')
       })
       .finally(() => {
         if (!cancelled) setStatusLoaded(true)
@@ -63,7 +85,7 @@ export function StoragePage() {
     }
   }, [])
 
-  async function runAction(kind) {
+  async function runAction(kind: string) {
     const path = kind === 'apply' ? '/api/storage/hardlink/apply' : '/api/storage/hardlink/preview'
     if (busy) return
     setBusy(true)
@@ -78,7 +100,7 @@ export function StoragePage() {
       setResult(data)
       setResultKind(kind)
     } catch (err) {
-      setActionError(err.message || `${kind} failed`)
+      setActionError(errorText(err) || `${kind} failed`)
     } finally {
       setBusy(false)
     }

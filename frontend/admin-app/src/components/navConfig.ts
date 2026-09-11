@@ -257,14 +257,14 @@ export const PAGE_ACTION_HREFS = new Set([
  * @param {string} pathname
  * @returns {string|null} an ADMIN_NAV id, or null when nothing owns the path
  */
-export function resolveNavSection(pathname) {
+export function resolveNavSection(pathname: string): string | null {
   // Fragment and query stripped from the input as well as the href: a router
   // pathname will not carry either, but callers pass raw hrefs too and a
   // section that depended on which of the two forms it was handed would be a
   // subtle way to reintroduce exactly this bug.
   const path = (pathname || '/').split('#')[0].split('?')[0].replace(/\/+$/, '') || '/'
 
-  const owns = (href) => {
+  const owns = (href: string | undefined) => {
     // Fragments and query strings are the same page for ownership purposes.
     const base = (href || '').split('#')[0].split('?')[0].replace(/\/+$/, '')
     if (!base || base === '/') return false
@@ -287,8 +287,9 @@ export function resolveNavSection(pathname) {
  * A section's hub links, minus the page actions — what the rail should show.
  * @param {string} sectionId
  */
-export function railDestinations(sectionId) {
-  return (HUB_LINKS[sectionId] || []).filter((link) => !PAGE_ACTION_HREFS.has(link.href))
+export function railDestinations(sectionId: string) {
+  const links = HUB_LINKS[sectionId as keyof typeof HUB_LINKS] || []
+  return links.filter((link) => !PAGE_ACTION_HREFS.has(link.href))
 }
 
 export const HUB_LINKS = {

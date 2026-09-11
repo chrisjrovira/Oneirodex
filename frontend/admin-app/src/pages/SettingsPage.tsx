@@ -3,7 +3,13 @@ import { getJson } from '../api/adminApi'
 import { Page } from '../components/Page'
 import { SETTINGS_GROUPS } from '../components/navConfig'
 
-function ModuleBadge({ status }) {
+interface ModuleStatusEntry {
+  on?: boolean
+  label?: string
+  detail?: string
+}
+
+function ModuleBadge({ status }: { status?: ModuleStatusEntry | null }) {
   if (!status) return null
   const on = Boolean(status.on)
   return (
@@ -29,7 +35,7 @@ export function SettingsPage() {
   // variable kept being computed with nothing left to read it. They sit beside
   // the title, not inside the title column — that 13rem slot was clipping
   // "Scan / match policy" plus the pill.
-  const [moduleStatus, setModuleStatus] = useState(null)
+  const [moduleStatus, setModuleStatus] = useState<Record<string, ModuleStatusEntry> | null>(null)
 
   useEffect(() => {
     getJson('/api/settings/module-status')

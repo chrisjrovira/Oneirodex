@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 
 import { getJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { DashboardBoard } from '../components/DashboardBoard'
-import { DataTable } from '../components/DataTable'
+import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { OpsLogModal } from '../components/OpsLogModal'
 import { defaultOpsLayout, OPS_STORAGE_KEY, opsWidgetMins } from '../components/opsLayout'
 import {
@@ -33,7 +34,15 @@ import '../ops.css'
 // that has nothing to do with the move.
 export { formatScanJobCounters }
 
-function livekitLabel(livekit) {
+/**
+ * GET /admin/api/ops/summary and /admin/api/ops/system payloads — same loose
+ * Backend field map as DashboardPage's OpsSummary; not fully typed, consumers
+ * read defensively with `?.` throughout.
+ */
+type OpsSummary = any
+type OpsSystemDetail = any
+
+function livekitLabel(livekit: OpsSummary) {
   if (!livekit) return 'n/a'
   if (livekit.configured) {
     if (livekit.reachable === true) return 'reachable'
@@ -46,7 +55,7 @@ function livekitLabel(livekit) {
 
 /** Panel id → heading. The ids are the keys of the /admin/api/ops/system
  *  payload, so a panel and its data cannot drift apart. */
-const DETAIL_PANELS = {
+const DETAIL_PANELS: Record<string, string> = {
   system: 'System',
   database: 'Database',
   logs: 'Logs',
@@ -56,13 +65,13 @@ const DETAIL_PANELS = {
 
 const DETAIL_PANEL_IDS = Object.keys(DETAIL_PANELS)
 
-const COMPANION_KIND_COLUMNS = [
+const COMPANION_KIND_COLUMNS: DataTableColumn[] = [
   { key: 'kind', label: 'Kind' },
   { key: 'online', label: 'Online', align: 'right' },
   { key: 'registered', label: 'Registered', align: 'right' },
 ]
 
-const SCAN_JOB_COLUMNS = [
+const SCAN_JOB_COLUMNS: DataTableColumn[] = [
   {
     key: 'id',
     label: 'Job',
@@ -92,7 +101,7 @@ const SCAN_JOB_COLUMNS = [
   },
 ]
 
-const RECENT_ERROR_COLUMNS = [
+const RECENT_ERROR_COLUMNS: DataTableColumn[] = [
   { key: 'event_type', label: 'Type', render: (event) => <code>{event.event_type}</code> },
   { key: 'text', label: 'Message' },
 ]
@@ -100,7 +109,7 @@ const RECENT_ERROR_COLUMNS = [
 /**
  * A key/value block in the Ops console. Board drag replaces ↑↓ reorder.
  */
-function DetailPanel({ title, values }) {
+function DetailPanel({ title, values }: { title: string; values?: Record<string, unknown> }) {
   const entries = Object.entries(values || {})
   if (entries.length === 0) return null
 
@@ -124,19 +133,22 @@ function DetailPanel({ title, values }) {
 }
 
 export function OpsPage() {
-  const [snapshot, setSnapshot] = useState(null)
-  const [error, setError] = useState(null)
+  const [snapshot, setSnapshot] = useState<OpsSummary>(null)
+  const [error, setError] = useState<unknown>(null)
   /** Initial mount only — never flash content away on background poll. */
   const [bootLoading, setBootLoading] = useState(true)
   /** Manual Refresh button feedback only. */
   const [manualRefreshing, setManualRefreshing] = useState(false)
-  const [systemDetail, setSystemDetail] = useState(null)
-  const [recentLogs, setRecentLogs] = useState(null)
+  const [systemDetail, setSystemDetail] = useState<OpsSystemDetail>(null)
+  const [recentLogs, setRecentLogs] = useState<Record<string, unknown>[] | null>(null)
   const [fullLogOpen, setFullLogOpen] = useState(false)
-  const [fullLogEvents, setFullLogEvents] = useState(null)
+  const [fullLogEvents, setFullLogEvents] = useState<Record<string, unknown>[] | null>(null)
   const [fullLogLoading, setFullLogLoading] = useState(false)
-  const [fullLogError, setFullLogError] = useState(null)
-  const requestRef = useRef({ id: 0, controller: null })
+  const [fullLogError, setFullLogError] = useState<string | null>(null)
+  const requestRef = useRef<{ id: number; controller: AbortController | null }>({
+    id: 0,
+    controller: null,
+  })
   const hasSnapshotRef = useRef(false)
 
   const openFullLog = useCallback(() => {
@@ -166,7 +178,7 @@ export function OpsPage() {
         setFullLogLoading(false)
       })
       .catch((err) => {
-        setFullLogError(err?.message || 'Unable to load events')
+        setFullLogError(errorText(err) || 'Unable to load events')
         setFullLogLoading(false)
       })
   }, [])
@@ -189,7 +201,7 @@ export function OpsPage() {
         if (isManual) setManualRefreshing(false)
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return
+        if (err?.name === 'AbortError') return
         if (requestRef.current.id !== id) return
         setError(err)
         if (isBoot || !hasSnapshotRef.current) setBootLoading(false)
@@ -271,7 +283,7 @@ export function OpsPage() {
   )
 
   const widgets = useMemo(() => {
-    const map = {
+    const map: Record<string, ReactNode> = {
       status: (
         <OpsStatusBanner severity={severity} items={issues?.items} ariaLabel="System status" />
       ),
@@ -468,7 +480,7 @@ export function OpsPage() {
                     <td>{formatLibraryWatchStatus(services.library_watch)}</td>
                     <td>{formatLibraryWatchDetail(services.library_watch)}</td>
                   </tr>
-                  {(services.game_servers?.servers || []).map((server) => (
+                  {(services.game_servers?.servers || []).map((server: OpsSummary) => (
                     <tr key={server.uuid || server.display_name}>
                       <td>Game server · {server.display_name || 'unnamed'}</td>
                       <td>

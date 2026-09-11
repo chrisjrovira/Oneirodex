@@ -1,4 +1,14 @@
-export function Page({ title, lede, children }) {
+import type { ReactNode } from 'react'
+
+export function Page({
+  title,
+  lede,
+  children,
+}: {
+  title: ReactNode
+  lede?: ReactNode
+  children?: ReactNode
+}) {
   return (
     <div className="od-admin-page">
       <h1>{title}</h1>

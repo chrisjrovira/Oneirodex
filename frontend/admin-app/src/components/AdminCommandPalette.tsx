@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 
 import { buildAdminCommands, filterAdminCommands } from './adminCommands'
 import './AdminCommandPalette.css'
@@ -18,8 +25,8 @@ export default function AdminCommandPalette() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const inputRef = useRef(null)
-  const listRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const listRef = useRef<HTMLUListElement | null>(null)
 
   const commands = useMemo(() => buildAdminCommands(), [])
   const results = useMemo(() => filterAdminCommands(commands, query), [commands, query])
@@ -31,7 +38,7 @@ export default function AdminCommandPalette() {
   }, [])
 
   useEffect(() => {
-    function onKeyDown(event) {
+    function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setOpen((wasOpen) => !wasOpen)
@@ -65,7 +72,7 @@ export default function AdminCommandPalette() {
     listRef.current?.querySelector('[data-active="true"]')?.scrollIntoView({ block: 'nearest' })
   }, [active])
 
-  function onInputKeyDown(event) {
+  function onInputKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
       setActive((i) => Math.min(i + 1, results.length - 1))

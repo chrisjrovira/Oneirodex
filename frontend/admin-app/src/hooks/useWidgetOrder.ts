@@ -19,10 +19,13 @@ const STORAGE_PREFIX = 'od-widget-order:'
  * The alternative — treating a mismatch as "reset to defaults" — throws away an
  * arrangement someone built every time we ship a new widget.
  */
-export function reconcileOrder(storedIds, knownIds) {
+export function reconcileOrder(
+  storedIds: readonly string[] | null | undefined,
+  knownIds: readonly string[],
+): string[] {
   const known = new Set(knownIds)
-  const seen = new Set()
-  const ordered = []
+  const seen = new Set<string>()
+  const ordered: string[] = []
 
   for (const id of Array.isArray(storedIds) ? storedIds : []) {
     if (known.has(id) && !seen.has(id)) {
@@ -40,7 +43,7 @@ export function reconcileOrder(storedIds, knownIds) {
 }
 
 /** Swap the item at `index` with its neighbour `delta` away. */
-export function moveInOrder(ids, id, delta) {
+export function moveInOrder(ids: string[], id: string, delta: number): string[] {
   const from = ids.indexOf(id)
   if (from < 0) return ids
   const to = from + delta
@@ -68,11 +71,15 @@ export function moveInOrder(ids, id, delta) {
  * widget takes the next id from the new visible order, and positions held by
  * absent ones are left exactly where they are.
  */
-export function mergeVisibleOrder(preferred, visibleOrder, knownIds) {
+export function mergeVisibleOrder(
+  preferred: readonly string[] | null | undefined,
+  visibleOrder: readonly string[],
+  knownIds: readonly string[],
+): string[] {
   const known = new Set(knownIds)
   const queue = [...visibleOrder]
-  const merged = []
-  const seen = new Set()
+  const merged: string[] = []
+  const seen = new Set<string>()
 
   for (const id of Array.isArray(preferred) ? preferred : []) {
     if (seen.has(id)) continue
@@ -97,7 +104,7 @@ export function mergeVisibleOrder(preferred, visibleOrder, knownIds) {
   return merged
 }
 
-function readStored(key) {
+function readStored(key: string): unknown {
   try {
     const raw = window.localStorage.getItem(key)
     return raw ? JSON.parse(raw) : null
@@ -117,7 +124,7 @@ function readStored(key) {
  * `reconcileOrder` is deliberately independent of storage so that move does not
  * touch the ordering rules.
  */
-export function useWidgetOrder(surface, knownIds) {
+export function useWidgetOrder(surface: string, knownIds: string[]) {
   const key = `${STORAGE_PREFIX}${surface}`
 
   // State is the *preference*, not the rendered list, and it is deliberately a
@@ -130,9 +137,9 @@ export function useWidgetOrder(surface, knownIds) {
   // mount, so a panel that blinked lost its position until a page reload. The
   // docstring above already promised the saved order survives that; now it
   // does.
-  const [preferred, setPreferred] = useState(() => {
+  const [preferred, setPreferred] = useState<string[]>(() => {
     const stored = readStored(key)
-    return Array.isArray(stored) ? stored : []
+    return Array.isArray(stored) ? (stored as string[]) : []
   })
 
   // Derived rather than stored, so there is no second copy to keep in step and
@@ -142,7 +149,7 @@ export function useWidgetOrder(surface, knownIds) {
   const ids = useMemo(() => reconcileOrder(preferred, knownIds), [preferred, knownKey])
 
   const persist = useCallback(
-    (next) => {
+    (next: string[]) => {
       try {
         window.localStorage.setItem(key, JSON.stringify(next))
       } catch {
@@ -154,7 +161,7 @@ export function useWidgetOrder(surface, knownIds) {
   )
 
   const move = useCallback(
-    (id, delta) => {
+    (id: string, delta: number) => {
       setPreferred((current) => {
         const visible = reconcileOrder(current, knownIds)
         const next = moveInOrder(visible, id, delta)

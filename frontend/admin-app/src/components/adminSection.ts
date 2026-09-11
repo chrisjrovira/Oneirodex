@@ -9,7 +9,7 @@
  * it, so 'help' has no SPA element. It still classifies here so the top nav can
  * highlight the section.
  */
-export function resolveAdminPage(pathname) {
+export function resolveAdminPage(pathname: string): string {
   if (pathname === '/admin/dashboard' || pathname === '/admin' || pathname === '/admin/') {
     return 'dashboard'
   }

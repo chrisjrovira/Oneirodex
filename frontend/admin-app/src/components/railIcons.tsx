@@ -15,6 +15,8 @@
  * icons.html header and was not being kept. Same 24x24 viewBox, currentColor
  * and 2px stroke, so the icon-pack tokens restyle these for free.
  */
+import type { SVGProps } from 'react'
+
 const base = {
   className: 'od-icon',
   // Padded by a unit on each side: a 2px stroke sitting on the edge of the
@@ -226,9 +228,13 @@ export const railIconPaths = {
   ),
 }
 
-/** @param {{ name: string, size?: number }} props */
-export function RailIcon({ name, size = 18, ...rest }) {
-  const glyph = railIconPaths[name]
+interface RailIconProps extends SVGProps<SVGSVGElement> {
+  name: string
+  size?: number
+}
+
+export function RailIcon({ name, size = 18, ...rest }: RailIconProps) {
+  const glyph = railIconPaths[name as keyof typeof railIconPaths]
   // An unknown id renders nothing rather than a dot: a missing glyph should be
   // invisible, not a mark the eye reads as a real category.
   if (!glyph) return null

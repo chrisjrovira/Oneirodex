@@ -4,7 +4,10 @@
  * W22 dupe side-by-side: soft-read size/date when Backend adds them; never invent.
  */
 
-export function folderBasename(path) {
+/** Loose Wave 17 folder/candidate row — Backend field map, not fully typed. */
+export type UnmatchedRow = Record<string, unknown>
+
+export function folderBasename(path: unknown): string {
   const parts = String(path || '')
     .replace(/\\/g, '/')
     .split('/')
@@ -16,7 +19,7 @@ export function folderBasename(path) {
  * Soft Wave 17 naming: search_name → display_name → folder_name → basename.
  * Never implies a disk rename.
  */
-export function resolveSearchName(folder) {
+export function resolveSearchName(folder: UnmatchedRow | null | undefined): string {
   if (!folder || typeof folder !== 'object') return ''
   const soft =
     (folder.search_name != null && String(folder.search_name).trim()) ||
@@ -30,7 +33,7 @@ export function resolveSearchName(folder) {
 }
 
 /** Soft size bytes from row / matched_game (null when API omits). */
-export function pickDiskSizeBytes(source) {
+export function pickDiskSizeBytes(source: UnmatchedRow | null | undefined): number | null {
   if (!source || typeof source !== 'object') return null
   const keys = ['size_bytes', 'folder_size_bytes', 'folder_size', 'size']
   for (const key of keys) {
@@ -42,7 +45,7 @@ export function pickDiskSizeBytes(source) {
 }
 
 /** Soft mtime / date from row / matched_game (null when API omits). */
-export function pickDiskDate(source) {
+export function pickDiskDate(source: UnmatchedRow | null | undefined): string | null {
   if (!source || typeof source !== 'object') return null
   const keys = [
     'mtime',
@@ -74,7 +77,7 @@ export function pickDiskDate(source) {
 }
 
 /** Human size for compare cells; null → caller shows empty state. */
-export function formatByteSize(bytes) {
+export function formatByteSize(bytes: unknown): string | null {
   if (bytes == null || bytes === '') return null
   const n = Number(bytes)
   if (!Number.isFinite(n) || n < 0) return null
@@ -91,7 +94,7 @@ export function formatByteSize(bytes) {
 }
 
 /** Locale date for compare cells; null → caller shows empty state. */
-export function formatDiskDate(value) {
+export function formatDiskDate(value: unknown): string | null {
   if (value == null || value === '') return null
   const text = String(value).trim()
   if (!text) return null
@@ -122,9 +125,21 @@ export function formatDiskDate(value) {
  *   mtime: string|null,
  * } | null}
  */
-export function normalizeMatchedGame(folder) {
+export interface NormalizedMatch {
+  uuid: unknown
+  name: string
+  path: unknown
+  cover_url: unknown
+  match_score: unknown
+  size_bytes: number | null
+  mtime: string | null
+}
+
+export function normalizeMatchedGame(
+  folder: UnmatchedRow | null | undefined,
+): NormalizedMatch | null {
   if (!folder || typeof folder !== 'object') return null
-  const nested = folder.matched_game || folder.duplicate_of
+  const nested = (folder.matched_game || folder.duplicate_of) as UnmatchedRow | null | undefined
   if (nested && typeof nested === 'object') {
     const uuid = nested.uuid || nested.matched_game_uuid || null
     const name = String(nested.name || nested.title || '').trim()
@@ -176,14 +191,28 @@ export function normalizeMatchedGame(folder) {
  * Size/date may be null until Backend enriches list/`matched_game`.
  * @returns {{ folder: object, library: object|null } | null}
  */
-export function buildDupeCompare(folder) {
+export interface CompareSideData {
+  role: 'folder' | 'library'
+  label: string
+  name: unknown
+  path: unknown
+  size_bytes: number | null
+  mtime: string | null
+  cover_url: unknown
+  uuid: unknown
+  match_score?: unknown
+}
+
+export function buildDupeCompare(
+  folder: UnmatchedRow | null | undefined,
+): { folder: CompareSideData; library: CompareSideData | null } | null {
   if (!folder || typeof folder !== 'object') return null
   const hit = normalizeMatchedGame(folder)
   const isDuplicate = folder.status === 'Duplicate'
   if (!hit && !isDuplicate) return null
 
-  const folderSide = {
-    role: 'folder',
+  const folderSide: CompareSideData = {
+    role: 'folder' as const,
     label: 'This folder',
     name: resolveSearchName(folder) || folderBasename(folder.folder_path) || 'Folder',
     path: folder.folder_path ? String(folder.folder_path) : '',
@@ -193,9 +222,9 @@ export function buildDupeCompare(folder) {
     uuid: null,
   }
 
-  const librarySide = hit
+  const librarySide: CompareSideData | null = hit
     ? {
-        role: 'library',
+        role: 'library' as const,
         label: 'Library game',
         name: hit.name,
         path: hit.path || '',
@@ -211,12 +240,16 @@ export function buildDupeCompare(folder) {
 }
 
 /** Merge /duplicates candidates into list rows missing matched_game. */
-export function mergeDuplicateHits(folders, duplicatesPayload) {
-  const list = Array.isArray(folders) ? folders : []
-  const byId = new Map()
-  const dups = duplicatesPayload?.duplicates || duplicatesPayload || []
-  ;(Array.isArray(dups) ? dups : []).forEach((dup) => {
-    const cand = (dup.candidates && dup.candidates[0]) || null
+export function mergeDuplicateHits(folders: unknown, duplicatesPayload: unknown): UnmatchedRow[] {
+  const list: UnmatchedRow[] = Array.isArray(folders) ? folders : []
+  const byId = new Map<string, Record<string, unknown>>()
+  const dupsPayload = duplicatesPayload as Record<string, unknown> | unknown[] | null | undefined
+  const dups = Array.isArray(dupsPayload)
+    ? dupsPayload
+    : (dupsPayload as Record<string, unknown> | null | undefined)?.duplicates || []
+  ;(Array.isArray(dups) ? (dups as UnmatchedRow[]) : []).forEach((dup) => {
+    const candidates = dup.candidates as UnmatchedRow[] | undefined
+    const cand = (candidates && candidates[0]) || null
     if (!cand) return
     byId.set(String(dup.id), {
       uuid: cand.uuid,
@@ -239,7 +272,8 @@ export function mergeDuplicateHits(folders, duplicatesPayload) {
   return list.map((folder) => {
     const hit = byId.get(String(folder.id))
     const folderHasTrail = Array.isArray(folder.transforms) && folder.transforms.length > 0
-    const softTransforms = !folderHasTrail && hit?.transforms?.length ? hit.transforms : null
+    const hitTransforms = hit?.transforms as unknown[] | undefined
+    const softTransforms = !folderHasTrail && hitTransforms?.length ? hitTransforms : null
     if (normalizeMatchedGame(folder)) {
       if (!softTransforms) return folder
       return { ...folder, transforms: softTransforms }

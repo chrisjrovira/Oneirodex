@@ -3,7 +3,13 @@ import { confirmAction } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 
 import { DataTable } from './DataTable'
-import { confirmCreateSelected, fetchProposeLeafLibraries } from '../api/proposeLeafLibrariesApi'
+import {
+  confirmCreateSelected,
+  fetchProposeLeafLibraries,
+  type CandidateRow,
+  type LeafCreateResult,
+} from '../api/proposeLeafLibrariesApi'
+import { errorText } from '../utils/errorText'
 import './ProposeLeafLibraries.css'
 
 /**
@@ -15,15 +21,15 @@ export function ProposeLeafLibraries({
   lede = 'Point at a console or platform tree root. Review candidates, then confirm — Oneirodex never auto-creates libraries or family mega-libs.',
 } = {}) {
   const [root, setRoot] = useState('')
-  const [candidates, setCandidates] = useState([])
+  const [candidates, setCandidates] = useState<CandidateRow[]>([])
   const [proposedRoot, setProposedRoot] = useState('')
-  const [selected, setSelected] = useState(() => new Set())
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [loading, setLoading] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [unavailable, setUnavailable] = useState(false)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
-  const [confirmLog, setConfirmLog] = useState([])
+  const [confirmLog, setConfirmLog] = useState<LeafCreateResult[]>([])
 
   const selectedCount = selected.size
   const allSelected = candidates.length > 0 && selectedCount === candidates.length
@@ -33,7 +39,7 @@ export function ProposeLeafLibraries({
     [candidates, selected],
   )
 
-  async function onPropose(event) {
+  async function onPropose(event?: { preventDefault?: () => void }) {
     event?.preventDefault?.()
     setLoading(true)
     setError('')
@@ -68,13 +74,13 @@ export function ProposeLeafLibraries({
         )
       }
     } catch (err) {
-      setError(err?.message || String(err))
+      setError(errorText(err) || String(err))
     } finally {
       setLoading(false)
     }
   }
 
-  function toggleOne(id) {
+  function toggleOne(id: string) {
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -119,7 +125,7 @@ export function ProposeLeafLibraries({
         setSelected(keptSelected)
       }
     } catch (err) {
-      setError(err?.message || String(err))
+      setError(errorText(err) || String(err))
     } finally {
       setConfirming(false)
     }

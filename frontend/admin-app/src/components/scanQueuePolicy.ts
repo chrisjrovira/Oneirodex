@@ -16,6 +16,9 @@
  * Legacy: HTTP 409 + { error: 'A scan is already running' }
  */
 
+/** The operator's conflict choice: queue behind the running scan, or force a parallel run. */
+export type ScanQueuePolicy = 'queue' | 'force'
+
 export const SCAN_QUEUE_POLICY = Object.freeze({
   QUEUE: 'queue',
   FORCE: 'force',
@@ -33,27 +36,49 @@ export const SCAN_START_STATUS = Object.freeze({
  * exactly while its sibling isScanQueuedStatus lowercased first, so the two
  * disagreed about the same payload whenever the backend cased a status
  * differently — a lowercase 'running' job counted as neither busy nor queued. */
-export function isScanBusyStatus(status) {
+export type ScanJob = Record<string, unknown>
+export type ScanJobsPayload = ScanJob[] | Record<string, unknown> | null | undefined
+
+/** Backend scan-start / refresh_all response fields (see module header). */
+export interface ScanStartResponseBody {
+  status?: string
+  job_id?: string
+  position?: number
+  message?: string
+  error?: string
+  coalesced?: boolean
+  coalesced_count?: number
+  risk?: string
+  count?: number
+  queued?: unknown[]
+  jobs?: (ScanJob & { position?: number; coalesced?: boolean })[]
+}
+
+export function isScanBusyStatus(status: unknown): boolean {
   const s = String(status || '').toLowerCase()
   return s === 'running' || s === 'stopping'
 }
 
-export function isScanQueuedStatus(status) {
+export function isScanQueuedStatus(status: unknown): boolean {
   const s = String(status || '').toLowerCase()
   return s === 'queued' || s === 'pending' || s === 'scheduled'
 }
 
 /** True when any job in a list/payload is currently busy. */
-export function hasActiveScan(jobsOrPayload) {
+export function hasActiveScan(jobsOrPayload: ScanJobsPayload): boolean {
   const jobs = normalizeScanJobsList(jobsOrPayload)
   return jobs.some((job) => isScanBusyStatus(job?.status))
 }
 
 /** Normalize /api/scan_jobs_status (array) or ops summary scans.jobs. */
-export function normalizeScanJobsList(jobsOrPayload) {
+export function normalizeScanJobsList(jobsOrPayload: ScanJobsPayload): ScanJob[] {
   if (Array.isArray(jobsOrPayload)) return jobsOrPayload
-  if (Array.isArray(jobsOrPayload?.jobs)) return jobsOrPayload.jobs
-  if (Array.isArray(jobsOrPayload?.data)) return jobsOrPayload.data
+  if (jobsOrPayload && Array.isArray((jobsOrPayload as Record<string, unknown>).jobs)) {
+    return (jobsOrPayload as Record<string, unknown>).jobs as ScanJob[]
+  }
+  if (jobsOrPayload && Array.isArray((jobsOrPayload as Record<string, unknown>).data)) {
+    return (jobsOrPayload as Record<string, unknown>).data as ScanJob[]
+  }
   return []
 }
 
@@ -62,7 +87,10 @@ export function normalizeScanJobsList(jobsOrPayload) {
  * Default (missing / unknown) is queue — never omit fields on a conflict retry.
  * @param {'queue'|'force'|string|null|undefined} [policy]
  */
-export function buildScanQueueRequestFields(policy) {
+export function buildScanQueueRequestFields(policy?: string | null): {
+  queue_policy: string
+  force_parallel: boolean
+} {
   const useForce = policy === SCAN_QUEUE_POLICY.FORCE
   return {
     queue_policy: useForce ? SCAN_QUEUE_POLICY.FORCE : SCAN_QUEUE_POLICY.QUEUE,
@@ -71,7 +99,10 @@ export function buildScanQueueRequestFields(policy) {
 }
 
 /** Detect legacy/already-running reject from fetch result. */
-export function isAlreadyRunningReject(httpStatus, body) {
+export function isAlreadyRunningReject(
+  httpStatus: number,
+  body: ScanStartResponseBody | null | undefined,
+): boolean {
   if (httpStatus === 409) return true
   const status = String(body?.status || '').toLowerCase()
   if (status === SCAN_START_STATUS.REJECTED) {
@@ -87,7 +118,7 @@ export function isAlreadyRunningReject(httpStatus, body) {
  * @returns {{ text: string, variant: 'success'|'info'|'error' }}
  */
 /** True when Backend coalesced this request into an existing Queued job. */
-export function isScanCoalesced(body) {
+export function isScanCoalesced(body: ScanStartResponseBody | null | undefined): boolean {
   if (body?.coalesced === true) return true
   if (Number(body?.coalesced_count) > 0) return true
   if (Array.isArray(body?.jobs) && body.jobs.some((job) => job?.coalesced === true)) {
@@ -96,9 +127,12 @@ export function isScanCoalesced(body) {
   return false
 }
 
-export function toastForScanStartResponse(body, httpOk = true) {
+export function toastForScanStartResponse(
+  body: ScanStartResponseBody | null | undefined,
+  httpOk = true,
+): { text: string; variant: string } {
   const status = String(body?.status || '').toLowerCase()
-  const message = (body?.message || body?.error || '').trim()
+  const message = String(body?.message || body?.error || '').trim()
   const coalescedSuffix = isScanCoalesced(body) ? ' · coalesced' : ''
 
   if (status === SCAN_START_STATUS.QUEUED) {
@@ -152,7 +186,7 @@ export function toastForScanStartResponse(body, httpOk = true) {
 }
 
 /** Map toastForScanStartResponse variant → admin showToast tone. */
-export function toastToneForScanVariant(variant) {
+export function toastToneForScanVariant(variant: string): string {
   if (variant === 'warning') return 'warn'
   if (variant === 'error' || variant === 'danger') return 'error'
   if (variant === 'success') return 'success'
@@ -181,12 +215,15 @@ export const SCAN_CONFLICT_COPY = Object.freeze({
  *
  * @param {object|Array} payload /api/scan_jobs_status or ops summary scans
  */
-export function isScanRunning(payload) {
+export function isScanRunning(payload: ScanJobsPayload): boolean {
   const jobs = normalizeScanJobsList(payload)
   if (jobs.some((job) => isScanBusyStatus(job?.status))) return true
 
   const flagged = Boolean(
-    payload && !Array.isArray(payload) && (payload.running || payload.is_running),
+    payload &&
+    !Array.isArray(payload) &&
+    ((payload as Record<string, unknown>).running ||
+      (payload as Record<string, unknown>).is_running),
   )
   return flagged && jobs.length > 0
 }

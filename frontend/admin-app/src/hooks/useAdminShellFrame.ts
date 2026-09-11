@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import type { RailStateValue } from '@oneirodex/ui'
 
 /**
  * Put the admin shell grid on <body> (GT-B2).
@@ -19,7 +20,7 @@ import { useEffect } from 'react'
  * itself back in with its own `data-density="compact"`, which is what the
  * attribute was designed for and is still supported here.
  */
-export function useAdminShellFrame(railState) {
+export function useAdminShellFrame(railState: RailStateValue) {
   useEffect(() => {
     const { body } = document
     body.classList.add('od-shell-host')

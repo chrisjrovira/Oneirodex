@@ -16,7 +16,7 @@ const INVENTORY_CATEGORY_ORDER = [
   'ownership',
 ]
 
-const INVENTORY_CATEGORY_LABELS = {
+const INVENTORY_CATEGORY_LABELS: Record<string, string> = {
   metadata: 'Metadata',
   artwork: 'Artwork',
   email: 'Email',
@@ -28,17 +28,34 @@ const INVENTORY_CATEGORY_LABELS = {
   ownership: 'Ownership',
 }
 
-function groupInventoryByCategory(rows) {
-  const groups = new Map()
+interface InventoryRow {
+  id?: string
+  name?: string
+  category?: string
+  status?: string
+  configured?: boolean
+  notes?: string
+  settings_href?: string
+  admin_href?: string
+}
+
+interface InventoryGroup {
+  id: string
+  label: string
+  rows: InventoryRow[]
+}
+
+function groupInventoryByCategory(rows: InventoryRow[]): InventoryGroup[] {
+  const groups = new Map<string, InventoryRow[]>()
   for (const row of rows) {
     const key = row.category || 'other'
     if (!groups.has(key)) groups.set(key, [])
-    groups.get(key).push(row)
+    groups.get(key)!.push(row)
   }
   const ordered = INVENTORY_CATEGORY_ORDER.filter((id) => groups.has(id)).map((id) => ({
     id,
     label: INVENTORY_CATEGORY_LABELS[id] || id,
-    rows: groups.get(id),
+    rows: groups.get(id)!,
   }))
   for (const [id, groupRows] of groups) {
     if (!INVENTORY_CATEGORY_ORDER.includes(id)) {
@@ -48,12 +65,12 @@ function groupInventoryByCategory(rows) {
   return ordered
 }
 
-function inventoryHref(row) {
+function inventoryHref(row: InventoryRow): string {
   return row.settings_href || row.admin_href || '/admin/integrations'
 }
 
 export function IntegrationsPage() {
-  const [inventory, setInventory] = useState(null)
+  const [inventory, setInventory] = useState<InventoryRow[] | null>(null)
   const [inventoryError, setInventoryError] = useState(false)
 
   useEffect(() => {

@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { getJson } from '../api/adminApi'
-import { DataTable } from '../components/DataTable'
+import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { MetricStrip } from '../components/opsWidgets'
 import { CreateUserForm } from '../components/CreateUserForm'
 
-const COLUMNS = [
+interface InviteUser {
+  user_id?: string
+  id?: string
+  name?: string
+  role?: string
+  invite_quota?: number
+  unused_invites?: number
+}
+
+const COLUMNS: DataTableColumn[] = [
   { key: 'name', label: 'Name' },
   { key: 'role', label: 'Role' },
   {
@@ -18,8 +27,8 @@ const COLUMNS = [
 ]
 
 export function InvitesPage() {
-  const [users, setUsers] = useState([])
-  const [error, setError] = useState(null)
+  const [users, setUsers] = useState<InviteUser[]>([])
+  const [error, setError] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
 
   // Summed with Number() and a zero default: the API omits the field for

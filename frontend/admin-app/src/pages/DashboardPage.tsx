@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { getJson } from '../api/adminApi'
-import { DataTable } from '../components/DataTable'
+import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { DashboardBoard } from '../components/DashboardBoard'
 import { Page } from '../components/Page'
 import {
@@ -30,23 +30,33 @@ import {
  * sets are capped at a handful, and a filter box over four errors is chrome
  * standing in front of the thing you came to read.
  */
-const DASHBOARD_COMPANION_COLUMNS = [
+const DASHBOARD_COMPANION_COLUMNS: DataTableColumn[] = [
   { key: 'kind', label: 'Kind' },
   { key: 'online', label: 'Online', align: 'right' },
   { key: 'registered', label: 'Registered', align: 'right' },
 ]
 
-const DASHBOARD_ERROR_COLUMNS = [
+const DASHBOARD_ERROR_COLUMNS: DataTableColumn[] = [
   { key: 'event_type', label: 'Type', render: (event) => <code>{event.event_type}</code> },
   { key: 'text', label: 'Message' },
 ]
 
+/**
+ * GET /admin/api/ops/summary payload — loose Backend field map (same host,
+ * services, library, scans, issues shape as OpsPage). Not fully typed;
+ * consumers read defensively with `?.` throughout.
+ */
+type OpsSummary = any
+
 export function DashboardPage() {
-  const [summary, setSummary] = useState(null)
-  const [error, setError] = useState(null)
+  const [summary, setSummary] = useState<OpsSummary>(null)
+  const [error, setError] = useState<unknown>(null)
   const [bootLoading, setBootLoading] = useState(true)
   const [manualRefreshing, setManualRefreshing] = useState(false)
-  const requestRef = useRef({ id: 0, controller: null })
+  const requestRef = useRef<{ id: number; controller: AbortController | null }>({
+    id: 0,
+    controller: null,
+  })
   const hasSummaryRef = useRef(false)
 
   const refresh = useCallback((source = 'poll') => {
@@ -67,7 +77,7 @@ export function DashboardPage() {
         if (isManual) setManualRefreshing(false)
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return
+        if (err?.name === 'AbortError') return
         if (requestRef.current.id !== id) return
         setError(err)
         if (isBoot || !hasSummaryRef.current) setBootLoading(false)

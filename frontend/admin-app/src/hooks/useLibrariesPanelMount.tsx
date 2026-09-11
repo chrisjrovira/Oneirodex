@@ -7,7 +7,7 @@ const MOUNT_ID = 'odLibrariesReactRoot'
 /**
  * Mount the React Libraries DataTable into the Jinja Libraries pane.
  */
-export function useLibrariesPanelMount(enabled) {
+export function useLibrariesPanelMount(enabled: boolean) {
   useLayoutEffect(() => {
     if (!enabled || typeof document === 'undefined') return undefined
 
