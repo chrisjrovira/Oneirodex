@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, Image
+from oneirodex.schemas.admin_images import ApplyCoverBody, GenerateArtworkBody
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.cover_art_studio import apply_pack_to_game, save_pack
 from oneirodex.utils.functions import download_stored_image
@@ -24,6 +25,7 @@ from oneirodex.utils.image_kinds import (
     image_kinds_error_message,
     parse_image_kind,
 )
+from oneirodex.utils.validation import validate_body
 from . import admin2_bp
 
 
@@ -299,18 +301,14 @@ def covers_search_single():
 @admin2_bp.route('/admin/api/covers/apply', methods=['POST'])
 @login_required
 @admin_required
-def covers_apply_single():
+@validate_body(ApplyCoverBody)
+def covers_apply_single(body: ApplyCoverBody):
     """Apply one cover URL from a provider to a game."""
     from oneirodex.utils.artwork_apply import apply_cover_from_url
 
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
-    image_url = (data.get('url') or '').strip()
-    provider_id = (data.get('provider') or 'steamgriddb').strip().lower() or 'steamgriddb'
-    if not game_uuid:
-        return api_error('game_uuid is required', code='bad_request')
-    if not image_url:
-        return api_error('url is required', code='bad_request')
+    game_uuid = body.game_uuid
+    image_url = body.url
+    provider_id = (body.provider or 'steamgriddb').strip().lower() or 'steamgriddb'
 
     path_status = image_save_path_status()
     if not path_status.get('writable'):
@@ -473,7 +471,8 @@ def artwork_auto_pick():
 @admin2_bp.route('/admin/api/artwork/generate', methods=['POST'])
 @login_required
 @admin_required
-def artwork_generate():
+@validate_body(GenerateArtworkBody)
+def artwork_generate(body: GenerateArtworkBody):
     """Generate cover art for one game (FEAT-D3).
 
     Off unless ``ENABLE_AI_ARTWORK`` is set and an endpoint is configured — a
@@ -492,14 +491,11 @@ def artwork_generate():
             code='forbidden',
         )
 
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
-    if not game_uuid:
-        return api_error('game_uuid is required', code='bad_request')
+    game_uuid = body.game_uuid
 
     try:
         result = generate_and_store_cover(
-            game_uuid, image_type=data.get('image_type') or 'cover',
+            game_uuid, image_type=body.image_type or 'cover',
         )
     except LookupError:
         return api_error('Game not found', code='not_found')

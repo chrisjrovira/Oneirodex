@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_admin_ext/images.py` | `POST /admin/api/covers/apply` (`covers_apply_single`) | `ApplyCoverBody` |
+| `routes_admin_ext/images.py` | `POST /admin/api/artwork/generate` (`artwork_generate`) | `GenerateArtworkBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,13 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`covers_apply_single`** — missing/blank `game_uuid` / `url` was 400,
+  now 422 naming those fields. Path-not-writable 503 and apply-helper
+  errors stay in the view. Frontend (`ArtworkPicker.tsx`) posts
+  `game_uuid` + `url` + `provider` and renders `postJson` errors.
+- **`artwork_generate`** — missing `game_uuid` was 400 after the
+  `ENABLE_AI_ARTWORK` flag. Now 422 naming `game_uuid`. The flag 403 runs
+  after validation, so `{}` is 422 even when generation is off.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +136,23 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_admin_ext/images.py`
+
+- `covers_search_single` — `query` or `game_uuid` (with `q` / `name`
+  aliases). No single required field.
+- Batch search/apply, auto-pick, generate-batch — optional bags /
+  partial-success.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
 | `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_admin_ext/` | 22 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
@@ -149,6 +165,7 @@ Highest-count files still to do, roughly in priority order:
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
   needs the bespoke-message validator.
+- `routes_admin_ext/images.py` (5 remaining), `routes_admin_ext/system.py` (7).
 - long tail of 1–3-site files.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards
