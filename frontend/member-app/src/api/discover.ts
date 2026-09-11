@@ -1,19 +1,17 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
+
+function requireJson(data: any, label: string) {
+  if (data === undefined) {
+    throw new Error(`${label} returned non-JSON (session expired or server error)`)
+  }
+  return data
+}
 
 export async function fetchDiscoverSections({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/discover/sections', {
-    credentials: 'same-origin',
-    signal,
-    headers: { Accept: 'application/json' },
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'discover sections')
-  }
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    throw new Error('discover sections returned non-JSON (session expired or server error)')
-  }
-  const data = await response.json()
+  const data = requireJson(
+    await getJson('/api/discover/sections', { signal, label: 'discover sections' }),
+    'discover sections',
+  )
   const sections = Array.isArray(data.sections) ? data.sections : []
   // The token names this feed's dedupe record. Rows hand it back when they page
   // so their later tiles skip what the rows above already showed.
@@ -45,19 +43,13 @@ export async function fetchDiscoverRow(
   if (feedToken) {
     params.set('feed_token', feedToken)
   }
-  const response = await fetch(`/api/discover/rows/${encodeURIComponent(identifier)}?${params}`, {
-    credentials: 'same-origin',
-    signal,
-    headers: { Accept: 'application/json' },
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'discover row')
-  }
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    throw new Error('discover row returned non-JSON (session expired or server error)')
-  }
-  const data = await response.json()
+  const data = requireJson(
+    await getJson(`/api/discover/rows/${encodeURIComponent(identifier)}?${params}`, {
+      signal,
+      label: 'discover row',
+    }),
+    'discover row',
+  )
   return {
     identifier: data.identifier || identifier,
     title: data.title || '',
@@ -82,19 +74,13 @@ export async function fetchDiscoverRow(
  * One zone: the feed narrowed to the rows that belong to that surface.
  */
 export async function fetchDiscoverZone(slug: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/discover/zones/${encodeURIComponent(slug)}`, {
-    credentials: 'same-origin',
-    signal,
-    headers: { Accept: 'application/json' },
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'discover zone')
-  }
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    throw new Error('discover zone returned non-JSON (session expired or server error)')
-  }
-  const data = await response.json()
+  const data = requireJson(
+    await getJson(`/api/discover/zones/${encodeURIComponent(slug)}`, {
+      signal,
+      label: 'discover zone',
+    }),
+    'discover zone',
+  )
   const sections = Array.isArray(data.sections) ? data.sections : []
   // Same dedupe contract as the main feed: rows page against the token this
   // assembly produced, not the one the main feed produced.
@@ -116,19 +102,13 @@ export async function fetchDiscoverZone(slug: any, { signal }: LooseProps = {}) 
  * Virtual Discover shelves for one genre (unplayed / newest / loved).
  */
 export async function fetchGenreHub(genre: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/discover/hubs/genre/${encodeURIComponent(genre)}`, {
-    credentials: 'same-origin',
-    signal,
-    headers: { Accept: 'application/json' },
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'genre hub')
-  }
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    throw new Error('genre hub returned non-JSON (session expired or server error)')
-  }
-  const data = await response.json()
+  const data = requireJson(
+    await getJson(`/api/discover/hubs/genre/${encodeURIComponent(genre)}`, {
+      signal,
+      label: 'genre hub',
+    }),
+    'genre hub',
+  )
   return {
     genre: data.genre || genre,
     title: data.title || data.genre || 'Genre',

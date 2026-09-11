@@ -4,11 +4,18 @@ import { WishlistPage } from './WishlistPage'
 import { ShellHarness } from '../testShell'
 
 function jsonResponse(body, { ok = true, status = 200 } = {}) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
     ok,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
   })
+}
+
+function requestHeaders(call) {
+  return new Headers(call?.[1]?.headers)
 }
 
 beforeEach(() => {
@@ -50,7 +57,7 @@ test('renders requests returned by the API', async () => {
   expect(screen.getByText('Jul 1, 2026')).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/requests',
-    expect.objectContaining({ credentials: 'same-origin' }),
+    expect.objectContaining({ credentials: 'include' }),
   )
 })
 
@@ -115,11 +122,12 @@ test('cancelling a pending request sends DELETE with the CSRF header', async () 
   await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
   await waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith('/api/requests/42', {
-      method: 'DELETE',
-      credentials: 'same-origin',
-      headers: { 'X-CSRFToken': 'test-csrf-token' },
-    })
+    const del = global.fetch.mock.calls.find(
+      (call) => call[0] === '/api/requests/42' && call[1]?.method === 'DELETE',
+    )
+    expect(del).toBeTruthy()
+    expect(del[1]).toEqual(expect.objectContaining({ method: 'DELETE', credentials: 'include' }))
+    expect(requestHeaders(del).get('X-CSRFToken')).toBe('test-csrf-token')
   })
 
   expect(
@@ -147,12 +155,19 @@ test('librarian can resolve a request and toggle the all-requests view', async (
   await user.click(screen.getByRole('button', { name: 'Fulfilled' }))
 
   await waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith('/api/requests/7', {
-      method: 'PATCH',
-      credentials: 'same-origin',
-      headers: { 'X-CSRFToken': 'test-csrf-token', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'fulfilled' }),
-    })
+    const patch = global.fetch.mock.calls.find(
+      (call) => call[0] === '/api/requests/7' && call[1]?.method === 'PATCH',
+    )
+    expect(patch).toBeTruthy()
+    expect(patch[1]).toEqual(
+      expect.objectContaining({
+        method: 'PATCH',
+        credentials: 'include',
+        body: JSON.stringify({ status: 'fulfilled' }),
+      }),
+    )
+    expect(requestHeaders(patch).get('X-CSRFToken')).toBe('test-csrf-token')
+    expect(requestHeaders(patch).get('Content-Type')).toBe('application/json')
   })
 
   await user.click(screen.getByRole('checkbox', { name: 'Show everyone’s requests' }))
@@ -160,7 +175,7 @@ test('librarian can resolve a request and toggle the all-requests view', async (
   await waitFor(() => {
     expect(global.fetch).toHaveBeenCalledWith(
       '/api/requests?all=1',
-      expect.objectContaining({ credentials: 'same-origin' }),
+      expect.objectContaining({ credentials: 'include' }),
     )
   })
 })

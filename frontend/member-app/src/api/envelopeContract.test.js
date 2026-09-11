@@ -25,7 +25,7 @@ const API_DIR = path.dirname(fileURLToPath(import.meta.url))
  */
 const EXEMPT = new Map([
   ['preferences.ts', '/settings_panel renders HTML, so there is no envelope to parse'],
-  ['discover.ts', 'guards the content-type after an ok response, not a failed one'],
+  ['discover.ts', 'guards a missing JSON body after an ok response, not a failed one'],
 ])
 
 function sourceFiles() {
