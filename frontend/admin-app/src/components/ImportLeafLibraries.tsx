@@ -6,7 +6,11 @@ import { DataTable } from './DataTable'
 import {
   confirmCreateSelected,
   fetchImportLeafLibrariesPreview,
+  type CandidateRow,
+  type ImportPreviewError,
+  type LeafCreateResult,
 } from '../api/proposeLeafLibrariesApi'
+import { errorText } from '../utils/errorText'
 import './ProposeLeafLibraries.css'
 
 /**
@@ -19,17 +23,17 @@ export function ImportLeafLibraries({
 } = {}) {
   const [inputMode, setInputMode] = useState('json')
   const [pasteText, setPasteText] = useState('')
-  const [file, setFile] = useState(null)
-  const [candidates, setCandidates] = useState([])
-  const [rowErrors, setRowErrors] = useState([])
-  const [selected, setSelected] = useState(() => new Set())
+  const [file, setFile] = useState<File | null>(null)
+  const [candidates, setCandidates] = useState<CandidateRow[]>([])
+  const [rowErrors, setRowErrors] = useState<ImportPreviewError[]>([])
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [loading, setLoading] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [unavailable, setUnavailable] = useState(false)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
   const [createHint, setCreateHint] = useState('')
-  const [confirmLog, setConfirmLog] = useState([])
+  const [confirmLog, setConfirmLog] = useState<LeafCreateResult[]>([])
 
   const selectedCount = selected.size
   const allSelected = candidates.length > 0 && selectedCount === candidates.length
@@ -41,7 +45,7 @@ export function ImportLeafLibraries({
 
   const canPreview = inputMode === 'file' ? Boolean(file) : Boolean(String(pasteText || '').trim())
 
-  async function onPreview(event) {
+  async function onPreview(event?: { preventDefault?: () => void }) {
     event?.preventDefault?.()
     setLoading(true)
     setError('')
@@ -89,13 +93,13 @@ export function ImportLeafLibraries({
         )
       }
     } catch (err) {
-      setError(err?.message || String(err))
+      setError(errorText(err) || String(err))
     } finally {
       setLoading(false)
     }
   }
 
-  function toggleOne(id) {
+  function toggleOne(id: string) {
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -139,7 +143,7 @@ export function ImportLeafLibraries({
         setSelected(keptSelected)
       }
     } catch (err) {
-      setError(err?.message || String(err))
+      setError(errorText(err) || String(err))
     } finally {
       setConfirming(false)
     }
