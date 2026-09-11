@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
 
 const CATALOG_URL = '/admin/api/art-studio/system-marks'
@@ -8,17 +9,43 @@ const GENERATE_URL = '/admin/api/art-studio/system-marks/generate'
 const LAB_URL = '/admin/api/art-studio/system-marks/lab'
 const DEFAULT_LAB_PLATFORM = 'nes'
 
+export interface SystemMarksRow {
+  theme: string
+  era: string
+  generated: number
+  total: number
+  complete: boolean
+  platforms: string[]
+}
+
+export interface PlatformChoice {
+  id: string
+  label: string
+}
+
+interface LabLogRow {
+  id: string
+  theme: string
+  platform: string
+  generated: number
+  skipped: number
+  error: string
+  prompt: string
+}
+
 /**
  * Normalize GET /admin/api/art-studio/system-marks → theme progress rows.
  * Item: { theme, era, generated, total, complete, platforms }
  */
-export function normalizeSystemMarksCatalog(data) {
+export function normalizeSystemMarksCatalog(data: unknown): SystemMarksRow[] {
   if (!data) return []
-  const raw = Array.isArray(data) ? data : data.items || data.catalog || []
+  const payload = data as Record<string, unknown>
+  const raw = Array.isArray(data) ? data : payload.items || payload.catalog || []
   if (!Array.isArray(raw)) return []
   return raw
-    .map((row, index) => {
-      if (!row || typeof row !== 'object') return null
+    .map((rawRow, index): SystemMarksRow | null => {
+      if (!rawRow || typeof rawRow !== 'object') return null
+      const row = rawRow as Record<string, unknown>
       const theme = String(row.theme || row.slug || `theme-${index}`)
       const generated = Number(row.generated) || 0
       const total = Number(row.total) || 0
@@ -31,24 +58,30 @@ export function normalizeSystemMarksCatalog(data) {
         platforms: Array.isArray(row.platforms) ? row.platforms.map(String) : [],
       }
     })
-    .filter(Boolean)
+    .filter((row): row is SystemMarksRow => row != null)
 }
 
-export function normalizePlatformChoices(data) {
-  const raw = Array.isArray(data) ? data : data?.all_platforms || []
+export function normalizePlatformChoices(data: unknown): PlatformChoice[] {
+  const payload = data as Record<string, unknown> | undefined
+  const raw = Array.isArray(data) ? data : payload?.all_platforms || []
   if (!Array.isArray(raw)) return []
   return raw
-    .map((row) => {
+    .map((row): PlatformChoice | null => {
       if (typeof row === 'string') return { id: row, label: row }
       if (!row || typeof row !== 'object') return null
-      const id = String(row.id || row.platform || '').trim()
+      const r = row as Record<string, unknown>
+      const id = String(r.id || r.platform || '').trim()
       if (!id) return null
-      return { id, label: String(row.label || id) }
+      return { id, label: String(r.label || id) }
     })
-    .filter(Boolean)
+    .filter((row): row is PlatformChoice => row != null)
 }
 
-async function fetchCatalog() {
+async function fetchCatalog(): Promise<{
+  unavailable: boolean
+  items: SystemMarksRow[]
+  allPlatforms: PlatformChoice[]
+}> {
   const response = await fetch(CATALOG_URL, { credentials: 'same-origin' })
   if (response.status === 401) {
     window.location.href = '/login'
@@ -73,8 +106,8 @@ async function fetchCatalog() {
  * Requires ENABLE_AI_ARTWORK on the server.
  */
 export function SystemMarksPanel() {
-  const [items, setItems] = useState([])
-  const [allPlatforms, setAllPlatforms] = useState([])
+  const [items, setItems] = useState<SystemMarksRow[]>([])
+  const [allPlatforms, setAllPlatforms] = useState<PlatformChoice[]>([])
   const [unavailable, setUnavailable] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -87,7 +120,7 @@ export function SystemMarksPanel() {
   const [labExists, setLabExists] = useState(false)
   const [labUrl, setLabUrl] = useState('')
   const [labBust, setLabBust] = useState(0)
-  const [labLog, setLabLog] = useState([])
+  const [labLog, setLabLog] = useState<LabLogRow[]>([])
 
   const loadCatalog = useCallback(async () => {
     setLoading(true)
@@ -102,7 +135,7 @@ export function SystemMarksPanel() {
       } else if (!result.items.length) {
         setStatus('No theme rows. Check preset theme install.')
       } else {
-        const incomplete = result.items.filter((row) => !row.complete).length
+        const incomplete = result.items.filter((row: SystemMarksRow) => !row.complete).length
         setStatus(
           incomplete
             ? `${result.items.length} themes · ${incomplete} still missing platforms.`
@@ -111,7 +144,7 @@ export function SystemMarksPanel() {
         setSelectedTheme((current) => current || result.items[0].theme)
       }
     } catch (err) {
-      setError(err.message || 'Could not load system marks catalog')
+      setError(errorText(err) || 'Could not load system marks catalog')
       setItems([])
       setUnavailable(false)
     } finally {
@@ -143,7 +176,7 @@ export function SystemMarksPanel() {
         setLabPrompt('')
         setLabExists(false)
         setLabUrl('')
-        setError(err.message || 'Could not load lab spec')
+        setError(errorText(err) || 'Could not load lab spec')
       })
     return () => {
       cancelled = true
@@ -174,7 +207,7 @@ export function SystemMarksPanel() {
         showToast(label, errCount && !generated ? 'error' : 'success')
         await loadCatalog()
       } catch (err) {
-        const text = err.message || 'Generate failed'
+        const text = errorText(err) || 'Generate failed'
         setError(text)
         showToast(text, 'error')
       } finally {
@@ -222,7 +255,7 @@ export function SystemMarksPanel() {
       setLabExists(generated > 0 || skipped > 0)
       await loadCatalog()
     } catch (err) {
-      const text = err.message || 'Lab generate failed'
+      const text = errorText(err) || 'Lab generate failed'
       setError(text)
       showToast(text, 'error')
       setLabLog((rows) =>

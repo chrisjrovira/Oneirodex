@@ -1,11 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { adminError, csrfHeaders } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { PageStatus } from '@oneirodex/ui'
 
 const ENDPOINT = '/admin/api/system/reset'
 const CONFIRM_PHRASE = 'RESET ONEIRODEX'
 const CONFIRM_ALIASES = new Set([CONFIRM_PHRASE])
+
+interface ResetScope {
+  id: string
+  title: string
+  blurb: string
+  implies?: string[]
+}
+
+interface ResetPlan {
+  table_count: number
+  tables: string[]
+  cascaded?: string[]
+}
+
+interface ResetDone {
+  table_count: number
+  actor_restored?: boolean
+}
 
 /**
  * What each scope means, in the operator's terms rather than the schema's.
@@ -15,7 +34,7 @@ const CONFIRM_ALIASES = new Set([CONFIRM_PHRASE])
  * for a round trip to reveal that "libraries" also clears the catalog would let
  * someone confirm a reset larger than the one they read.
  */
-const SCOPES = [
+const SCOPES: ResetScope[] = [
   {
     id: 'catalog',
     title: 'Library catalog & scan state',
@@ -61,17 +80,17 @@ const SCOPES = [
  * guarantee rather than a claim the UI is making on its own.
  */
 export function SystemResetPanel() {
-  const [selected, setSelected] = useState(() => new Set())
-  const [plan, setPlan] = useState(null)
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
+  const [plan, setPlan] = useState<ResetPlan | null>(null)
   const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
-  const [done, setDone] = useState(null)
-  const [counts, setCounts] = useState({})
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState<ResetDone | null>(null)
+  const [counts, setCounts] = useState<Record<string, number | null>>({})
   /** Explicit gate before preview — stops a mis-click from even planning a wipe. */
   const [acknowledged, setAcknowledged] = useState(false)
 
-  const toggle = useCallback((scope) => {
+  const toggle = useCallback((scope: ResetScope) => {
     setSelected((previous) => {
       const next = new Set(previous)
       if (next.has(scope.id)) {
@@ -128,7 +147,7 @@ export function SystemResetPanel() {
     }
   }, [])
 
-  async function post(body) {
+  async function post(body: Record<string, unknown>) {
     const response = await fetch(ENDPOINT, {
       method: 'POST',
       credentials: 'same-origin',
@@ -146,7 +165,7 @@ export function SystemResetPanel() {
     try {
       setPlan(await post({ scopes: [...selected] }))
     } catch (exc) {
-      setError(exc.message)
+      setError(errorText(exc))
     } finally {
       setBusy(false)
     }
@@ -162,7 +181,7 @@ export function SystemResetPanel() {
       setConfirm('')
       setSelected(new Set())
     } catch (exc) {
-      setError(exc.message)
+      setError(errorText(exc))
     } finally {
       setBusy(false)
     }
