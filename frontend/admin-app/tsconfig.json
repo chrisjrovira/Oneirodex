@@ -1,8 +1,8 @@
 {
-  // admin-app SPA — files renamed to .ts/.tsx in PR-4 (e). The `strict: true`
-  // override is deferred: the annotation pass that makes `tsc --noEmit` clean
-  // under strict is tracked as follow-up. Until then this inherits the shared
-  // on-ramp base (strict:false) so `build` / `typecheck` stay green.
+  // admin-app SPA — files renamed to .ts/.tsx in PR-4 (e), annotated for
+  // strict in PR-4 (b). Local override only — tsconfig.base.json stays
+  // strict:false for the other workspaces until each does its own pass.
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "strict": true },
   "include": ["src"]
 }
