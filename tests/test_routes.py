@@ -792,7 +792,7 @@ class TestMainBlueprint:
             sess['_user_id'] = str(admin_user.id)
         
         response = client.post('/delete_image', json={})
-        assert response.status_code == 400
+        assert response.status_code == 422
 
     @patch('flask_login.current_user')
     def test_delete_scan_job(self, mock_current_user, client, app, db_session, admin_user, test_scan_job):
@@ -1186,7 +1186,7 @@ class TestMainBlueprint:
             sess['_user_id'] = str(admin_user.id)
         
         response = client.post('/delete_full_game', json={})
-        assert response.status_code == 400
+        assert response.status_code == 422
         
         data = json.loads(response.data)
         assert data['success'] == False

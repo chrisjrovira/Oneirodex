@@ -24,11 +24,13 @@ from werkzeug.exceptions import NotFound
 
 from oneirodex import db
 from oneirodex.models import Game, UnmatchedFolder
+from oneirodex.schemas.admin_game_delete import DeleteFullGameBody
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.game_core import delete_game
 from oneirodex.utils.scanning import is_scan_job_running
 from oneirodex.utils.security import get_allowed_base_directories, is_safe_path
+from oneirodex.utils.validation import validate_body
 
 from . import admin2_bp
 
@@ -115,14 +117,11 @@ def delete_folder():
 @admin2_bp.route('/delete_full_game', methods=['POST'])
 @login_required
 @admin_required
-def delete_full_game():
+@validate_body(DeleteFullGameBody)
+def delete_full_game(body: DeleteFullGameBody):
     logger.info(f"Route: /delete_full_game - {current_user.name} - {current_user.role} method: {request.method}")
-    data = request.get_json()
-    game_uuid = data.get('game_uuid') if data else None
+    game_uuid = body.game_uuid
     logger.info(f"Route: /delete_full_game - Game UUID: {game_uuid}")
-    if not game_uuid:
-        logger.warning("Route: /delete_full_game - Game UUID is required.")
-        return api_error('Game UUID is required.', code='bad_request')
 
     if is_scan_job_running():
         logger.warning(f"Error: Attempt to delete full game UUID: {game_uuid} while scan job is running")

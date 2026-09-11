@@ -37,6 +37,7 @@ from PIL import Image as PILImage
 
 from oneirodex import cache, db
 from oneirodex.models import Game, Image
+from oneirodex.schemas.admin_game_images import DeleteGameImageBody
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.background import run_in_background
@@ -48,6 +49,7 @@ from oneirodex.utils.image_kinds import (
     parse_image_kind,
 )
 from oneirodex.utils.scanning import refresh_images_in_background, is_scan_job_running
+from oneirodex.utils.validation import validate_body
 
 from . import admin2_bp
 
@@ -209,18 +211,15 @@ def upload_image(game_uuid):
 @admin2_bp.route('/delete_image', methods=['POST'])
 @login_required
 @admin_required
-def delete_game_image():
+@validate_body(DeleteGameImageBody)
+def delete_game_image(body: DeleteGameImageBody):
     if is_scan_job_running():
         logger.warning("Attempt to delete image while scan job is running")
         return api_error('A scan is running. Deleting images is available again as soon as it finishes.', code='forbidden')
 
     try:
-        data = request.get_json()
-        if not data or 'image_id' not in data:
-            return api_error('Invalid request. Missing image_id parameter', code='bad_request')
-
-        image_id = data['image_id']
-        is_cover = data.get('is_cover', False)
+        image_id = body.image_id
+        is_cover = body.is_cover
         image = db.session.get(Image, image_id)
         if not image:
             return api_error('Image not found', code='not_found')
