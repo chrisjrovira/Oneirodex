@@ -133,7 +133,10 @@ class TestAuthoring:
             f'/api/games/{pc_game.uuid}/pc_cheats',
             json={'method': 'note'},
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
+        body = response.get_json()
+        assert body['error_code'] == 'unprocessable'
+        assert 'label' in body['detail']
 
     def test_methods_are_advertised_so_the_ui_never_hardcodes_them(self, client, admin_user, pc_game):
         _login(client, admin_user)
