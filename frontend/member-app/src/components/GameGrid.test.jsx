@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import { GameGrid } from './GameGrid'
+import { jsonFrom } from '../testJsonResponse'
 import {
   chunkGamesIntoRows,
   computeGridColumns,
@@ -199,14 +200,16 @@ function stubGridFetch({ genres = ['Action', 'RPG'], total = 2, bundleFails = fa
   const fetchStub = vi.fn((url) => {
     calls.push(String(url))
     if (String(url).includes('/api/filters/bundle')) {
-      if (bundleFails) return Promise.resolve({ ok: false, status: 500, json: async () => ({}) })
-      return Promise.resolve({
+      if (bundleFails) {
+        return jsonFrom({ ok: false, status: 500, json: async () => ({}) })
+      }
+      return jsonFrom({
         ok: true,
         json: async () => ({ genres: genres.map((name, id) => ({ id, name })) }),
       })
     }
     const genre = new URL(String(url), 'http://localhost').searchParams.get('genre')
-    return Promise.resolve({
+    return jsonFrom({
       ok: true,
       json: async () => ({
         games: makeGames(total).map((game) => ({

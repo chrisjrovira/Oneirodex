@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ChatPage, ChatPanel } from './ChatPage'
 import { ShellHarness } from '../testShell'
+import { stubFetch } from '../testJsonResponse'
 
 beforeEach(() => {
   try {
@@ -9,50 +10,47 @@ beforeEach(() => {
   } catch {
     // ignore
   }
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/chat/emoji')) {
-        return {
-          ok: true,
-          json: async () => ({ fixed: ['👍', '❤️'], custom: [] }),
-        }
+  stubFetch(async (input) => {
+    const url = String(input)
+    if (url.includes('/api/chat/emoji')) {
+      return {
+        ok: true,
+        json: async () => ({ fixed: ['👍', '❤️'], custom: [] }),
       }
-      if (/\/api\/chat\/channels\/\d+\/messages/.test(url)) {
-        return {
-          ok: true,
-          json: async () => ({
-            messages: [
-              {
-                id: 10,
-                body: 'Hello household',
-                user: 'Alex',
-                created_at: '2026-07-27T12:00:00Z',
-                reactions: {},
-                mine: [],
-              },
-            ],
-          }),
-        }
+    }
+    if (/\/api\/chat\/channels\/\d+\/messages/.test(url)) {
+      return {
+        ok: true,
+        json: async () => ({
+          messages: [
+            {
+              id: 10,
+              body: 'Hello household',
+              user: 'Alex',
+              created_at: '2026-07-27T12:00:00Z',
+              reactions: {},
+              mine: [],
+            },
+          ],
+        }),
       }
-      if (url.includes('/api/chat/channels')) {
-        return {
-          ok: true,
-          json: async () => ({
-            channels: [{ id: 1, name: 'household', kind: 'channel' }],
-          }),
-        }
+    }
+    if (url.includes('/api/chat/channels')) {
+      return {
+        ok: true,
+        json: async () => ({
+          channels: [{ id: 1, name: 'household', kind: 'channel' }],
+        }),
       }
-      if (url.includes('/api/rtc/status')) {
-        return { ok: true, json: async () => ({ enabled: false }) }
-      }
-      if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
-        return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
-      }
-      return { ok: true, json: async () => ({}) }
-    }),
-  )
+    }
+    if (url.includes('/api/rtc/status')) {
+      return { ok: true, json: async () => ({ enabled: false }) }
+    }
+    if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+      return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
+    }
+    return { ok: true, json: async () => ({}) }
+  })
 })
 
 afterEach(() => {

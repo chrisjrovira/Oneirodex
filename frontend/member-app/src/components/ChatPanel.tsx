@@ -1,19 +1,30 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@oneirodex/ui'
 import { confirmAction } from '@oneirodex/ui'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromResponse } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 import { SpaceRail } from './SpaceRail'
 import { VoiceLobby } from './VoiceLobby'
+import {
+  archiveChatChannel,
+  createChatChannel,
+  fetchChatChannels,
+  fetchChatEmoji,
+  fetchChatMessages,
+  leaveChatChannel,
+  muteChatChannel,
+  openChatDm,
+  postChatMessage,
+  probeChatAttachmentUpload,
+  searchChat,
+  toggleChatReaction,
+  uploadChatAttachment,
+} from '../api/chat'
 import {
   canArchiveChannel,
   canLeaveChannel,
   isImageAttachment,
   normalizeAttachments,
-  probeChatAttachmentUpload,
   slugifyRoomName,
-  uploadChatAttachment,
 } from '../hooks/chatPanelApi'
 import '../pages/ChatPage.css'
 
@@ -189,9 +200,8 @@ export function ChatPanel({
 
   async function loadEmoji() {
     try {
-      const response = await fetch('/api/chat/emoji', { credentials: 'same-origin' })
-      if (!response.ok) return
-      const data = await response.json()
+      const data = await fetchChatEmoji()
+      if (!data) return
       const fixed = (Array.isArray(data.fixed) ? data.fixed : FIXED_REACTION_EMOJIS).map(
         (emoji: any) => ({
           emoji,
@@ -210,9 +220,7 @@ export function ChatPanel({
   }
 
   async function loadChannels() {
-    const response = await fetch('/api/chat/channels', { credentials: 'same-origin' })
-    if (!response.ok) throw await errorFromResponse(response, 'channels')
-    const data = await response.json()
+    const data = (await fetchChatChannels()) ?? {}
     const list = Array.isArray(data.channels) ? data.channels : []
     setChannels(list)
     setActiveId((prev: any) => {
@@ -226,13 +234,7 @@ export function ChatPanel({
 
   async function loadMessages(channelId: any, { sinceId }: LooseProps = {}) {
     if (!channelId) return
-    const params = new URLSearchParams()
-    if (sinceId) params.set('since', String(sinceId))
-    const qs = params.toString()
-    const url = `/api/chat/channels/${channelId}/messages${qs ? `?${qs}` : ''}`
-    const response = await fetch(url, { credentials: 'same-origin' })
-    if (!response.ok) throw await errorFromResponse(response, 'messages')
-    const data = await response.json()
+    const data = (await fetchChatMessages(channelId, { sinceId })) ?? {}
     const next = Array.isArray(data.messages) ? data.messages : []
     if (sinceId) {
       setMessages((prev) => mergeById(prev, next))
@@ -373,15 +375,9 @@ export function ChatPanel({
       parent_message_id: replyTo?.id || undefined,
     }
     if (attachmentIds.length) payload.attachment_ids = attachmentIds
-    const response = await fetch(`/api/chat/channels/${activeId}/messages`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(payload),
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      showStatus(data.error || 'Send failed', { isError: true })
+    const result = await postChatMessage(activeId, payload)
+    if (!result.ok) {
+      showStatus(result.error, { isError: true })
       return
     }
     setBody('')
@@ -396,20 +392,14 @@ export function ChatPanel({
     event.preventDefault()
     const username = dmName.trim()
     if (!username) return
-    const response = await fetch('/api/chat/dm', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ username }),
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      showStatus(data.error || 'DM failed', { isError: true })
+    const result = await openChatDm({ username })
+    if (!result.ok) {
+      showStatus(result.error, { isError: true })
       return
     }
     setDmName('')
     await loadChannels()
-    if (data.channel?.id) setActiveId(data.channel.id)
+    if (result.data?.channel?.id) setActiveId(result.data.channel.id)
   }
 
   async function createRoom(event: any) {
@@ -424,20 +414,14 @@ export function ChatPanel({
     setCreatingRoom(true)
     showStatus(null)
     try {
-      const response = await fetch('/api/chat/channels', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ name, slug, is_child_safe: true }),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        showStatus(data.error || 'Could not create room', { isError: true })
+      const result = await createChatChannel({ name, slug, is_child_safe: true })
+      if (!result.ok) {
+        showStatus(result.error, { isError: true })
         return
       }
       setNewRoomName('')
       await loadChannels()
-      if (data.channel?.id) setActiveId(data.channel.id)
+      if (result.data?.channel?.id) setActiveId(result.data.channel.id)
     } finally {
       setCreatingRoom(false)
     }
@@ -450,26 +434,18 @@ export function ChatPanel({
       setSearchHits([])
       return
     }
-    const response = await fetch(`/api/chat/search?q=${encodeURIComponent(q)}`, {
-      credentials: 'same-origin',
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      showStatus(data.error || 'Search failed', { isError: true })
+    const result = await searchChat(q)
+    if (!result.ok) {
+      showStatus(result.error, { isError: true })
       return
     }
-    setSearchHits(Array.isArray(data.results) ? data.results : [])
+    setSearchHits(Array.isArray(result.data?.results) ? result.data.results : [])
   }
 
   async function toggleReaction(messageId: any, emoji: any) {
-    const response = await fetch(`/api/chat/messages/${messageId}/reactions`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ emoji }),
-    })
-    if (!response.ok) return
-    const data = await response.json().catch(() => ({}))
+    const result = await toggleChatReaction(messageId, emoji)
+    if (!result.ok) return
+    const data = result.data ?? {}
     setMessages((prev) =>
       prev.map((m) =>
         m.id === messageId ? { ...m, reactions: data.reactions || {}, mine: data.mine || [] } : m,
@@ -482,19 +458,13 @@ export function ChatPanel({
     const current = channels.find((c) => c.id === activeId)
     if (!current) return
     const nextMuted = !current.muted
-    const response = await fetch(`/api/chat/channels/${activeId}/mute`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ muted: nextMuted }),
-    })
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      showStatus(data.error || 'Mute failed', { isError: true })
+    const result = await muteChatChannel(activeId, nextMuted)
+    if (!result.ok) {
+      showStatus(result.error, { isError: true })
       return
     }
     setChannels((prev) =>
-      prev.map((ch) => (ch.id === activeId ? { ...ch, muted: Boolean(data.muted) } : ch)),
+      prev.map((ch) => (ch.id === activeId ? { ...ch, muted: Boolean(result.data?.muted) } : ch)),
     )
     showStatus(null)
   }
@@ -514,19 +484,14 @@ export function ChatPanel({
     setRoomActionBusy(true)
     showStatus(null)
     try {
-      const response = await fetch(`/api/chat/channels/${activeId}/archive`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders(),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        if (response.status === 403) {
-          showStatus(data.error || 'You don’t have permission to archive this room', {
+      const result = await archiveChatChannel(activeId)
+      if (!result.ok) {
+        if (result.status === 403) {
+          showStatus(result.data?.error || 'You don’t have permission to archive this room', {
             isError: true,
           })
         } else {
-          showStatus(data.error || 'Archive failed', { isError: true })
+          showStatus(result.error, { isError: true })
         }
         return
       }
@@ -560,19 +525,14 @@ export function ChatPanel({
     setRoomActionBusy(true)
     showStatus(null)
     try {
-      const response = await fetch(`/api/chat/channels/${activeId}/leave`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders(),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        if (response.status === 403) {
-          showStatus(data.error || 'You don’t have permission to leave this room', {
+      const result = await leaveChatChannel(activeId)
+      if (!result.ok) {
+        if (result.status === 403) {
+          showStatus(result.data?.error || 'You don’t have permission to leave this room', {
             isError: true,
           })
         } else {
-          showStatus(data.error || 'Leave failed', { isError: true })
+          showStatus(result.error, { isError: true })
         }
         return
       }
@@ -580,7 +540,7 @@ export function ChatPanel({
         setMessages([])
         setReplyTo(null)
       } else {
-        const mutedAfterLeave = typeof data.muted === 'boolean' ? data.muted : true
+        const mutedAfterLeave = typeof result.data?.muted === 'boolean' ? result.data.muted : true
         setChannels((prev) =>
           prev.map((ch) => (ch.id === leftId ? { ...ch, muted: mutedAfterLeave } : ch)),
         )

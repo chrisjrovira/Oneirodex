@@ -1,8 +1,9 @@
 """Public product string for Oneirodex (ADR 0003).
 
-``ONEIRODEX_*`` env wins over ``GT_*``. CSS tokens and classes are ``--od-*`` /
+``ONEIRODEX_*`` env is the only prefix. CSS tokens and classes are ``--od-*`` /
 ``.od-*`` (P3b). Package path is ``oneirodex/``. Do not invent ``OD_*`` env
-aliases — that prefix was reserved against.
+aliases — that prefix was reserved against. The legacy ``GT_*`` fallback is not
+read.
 """
 
 from __future__ import annotations

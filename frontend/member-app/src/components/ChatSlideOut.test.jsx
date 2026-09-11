@@ -1,6 +1,54 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChatSlideOut } from './ChatSlideOut'
+import { stubFetch } from '../testJsonResponse'
+
+function defaultChatFetch() {
+  return async (input) => {
+    const url = String(input)
+    if (url.includes('/api/chat/emoji')) {
+      return {
+        ok: true,
+        json: async () => ({ fixed: ['👍', '❤️'], custom: [] }),
+      }
+    }
+    if (/\/api\/chat\/channels\/\d+\/messages/.test(url)) {
+      return {
+        ok: true,
+        json: async () => ({
+          messages: [
+            {
+              id: 10,
+              body: 'Hello household',
+              user: 'Alex',
+              created_at: '2026-07-27T12:00:00Z',
+              reactions: {},
+              mine: [],
+            },
+          ],
+        }),
+      }
+    }
+    if (url.includes('/api/chat/channels') && !url.includes('/messages')) {
+      return {
+        ok: true,
+        json: async () => ({
+          channels: [
+            { id: 1, name: 'household', kind: 'channel', slug: 'household' },
+            { id: 2, name: 'Alex', kind: 'dm' },
+          ],
+        }),
+      }
+    }
+    if (url.includes('/api/rtc/status')) {
+      return { ok: true, json: async () => ({ enabled: false }) }
+    }
+    if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
+      return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
+    }
+    return { ok: true, json: async () => ({}) }
+  }
+}
 
 beforeEach(() => {
   try {
@@ -8,53 +56,7 @@ beforeEach(() => {
   } catch {
     // jsdom may lack localStorage
   }
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/chat/emoji')) {
-        return {
-          ok: true,
-          json: async () => ({ fixed: ['👍', '❤️'], custom: [] }),
-        }
-      }
-      if (/\/api\/chat\/channels\/\d+\/messages/.test(url)) {
-        return {
-          ok: true,
-          json: async () => ({
-            messages: [
-              {
-                id: 10,
-                body: 'Hello household',
-                user: 'Alex',
-                created_at: '2026-07-27T12:00:00Z',
-                reactions: {},
-                mine: [],
-              },
-            ],
-          }),
-        }
-      }
-      if (url.includes('/api/chat/channels') && !url.includes('/messages')) {
-        return {
-          ok: true,
-          json: async () => ({
-            channels: [
-              { id: 1, name: 'household', kind: 'channel', slug: 'household' },
-              { id: 2, name: 'Alex', kind: 'dm' },
-            ],
-          }),
-        }
-      }
-      if (url.includes('/api/rtc/status')) {
-        return { ok: true, json: async () => ({ enabled: false }) }
-      }
-      if (/\/api\/chat\/channels\/\d+\/attachments/.test(url)) {
-        return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
-      }
-      return { ok: true, json: async () => ({}) }
-    }),
-  )
+  stubFetch(defaultChatFetch())
 })
 
 afterEach(() => {
@@ -107,8 +109,7 @@ test('close dismisses slide-out and shows launcher again', async () => {
 
 test('create room posts to channels API', async () => {
   const user = userEvent.setup()
-  const fetchMock = globalThis.fetch
-  fetchMock.mockImplementation(async (input, init) => {
+  const fetchMock = stubFetch(async (input, init) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return { ok: true, json: async () => ({ fixed: ['👍'], custom: [] }) }
@@ -162,7 +163,7 @@ function mockChatFetch({ channels, onArchive, onLeave } = {}) {
     { id: 1, name: 'household', kind: 'channel', slug: 'household', created_by_user_id: 9 },
     { id: 2, name: 'Alex', kind: 'dm' },
   ]
-  return vi.fn(async (input, init) => {
+  return async (input, init) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return { ok: true, json: async () => ({ fixed: ['👍'], custom: [] }) }
@@ -190,13 +191,12 @@ function mockChatFetch({ channels, onArchive, onLeave } = {}) {
       return { ok: false, status: 404, json: async () => ({ error: 'Not found' }) }
     }
     return { ok: true, json: async () => ({}) }
-  })
+  }
 }
 
 test('archive posts to archive API and refreshes room list', async () => {
   const user = userEvent.setup()
-  const fetchMock = mockChatFetch()
-  vi.stubGlobal('fetch', fetchMock)
+  const fetchMock = stubFetch(mockChatFetch())
 
   render(<ChatSlideOut defaultOpen viewer={{ isLibrarian: true }} />)
   expect(await screen.findByRole('button', { name: /^archive$/i })).toBeInTheDocument()
@@ -219,14 +219,15 @@ test('archive posts to archive API and refreshes room list', async () => {
 
 test('archive surfaces 403 error honestly', async () => {
   const user = userEvent.setup()
-  const fetchMock = mockChatFetch({
-    onArchive: async () => ({
-      ok: false,
-      status: 403,
-      json: async () => ({ error: 'Not allowed to archive this channel' }),
+  const fetchMock = stubFetch(
+    mockChatFetch({
+      onArchive: async () => ({
+        ok: false,
+        status: 403,
+        json: async () => ({ error: 'Not allowed to archive this channel' }),
+      }),
     }),
-  })
-  vi.stubGlobal('fetch', fetchMock)
+  )
 
   render(<ChatSlideOut defaultOpen viewer={{ userId: 9 }} />)
   await user.click(await screen.findByRole('button', { name: /^archive$/i }))
@@ -236,8 +237,7 @@ test('archive surfaces 403 error honestly', async () => {
 
 test('leave DM posts to leave API and refreshes list', async () => {
   const user = userEvent.setup()
-  const fetchMock = mockChatFetch()
-  vi.stubGlobal('fetch', fetchMock)
+  const fetchMock = stubFetch(mockChatFetch())
 
   render(<ChatSlideOut defaultOpen viewer={{ userId: 9 }} />)
   await user.click(await screen.findByRole('button', { name: /^alex$/i }))
@@ -265,7 +265,7 @@ test('leave household channel refreshes list and shows muted badge', async () =>
     { id: 1, name: 'household', kind: 'channel', slug: 'household', muted: false },
     { id: 2, name: 'Alex', kind: 'dm' },
   ]
-  const fetchMock = vi.fn(async (input, init) => {
+  const fetchMock = stubFetch(async (input, init) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return { ok: true, json: async () => ({ fixed: ['👍'], custom: [] }) }
@@ -288,7 +288,6 @@ test('leave household channel refreshes list and shows muted badge', async () =>
     }
     return { ok: true, json: async () => ({}) }
   })
-  vi.stubGlobal('fetch', fetchMock)
 
   render(<ChatSlideOut defaultOpen viewer={{ userId: 3 }} />)
   expect(await screen.findByRole('button', { name: /household/i })).toBeInTheDocument()

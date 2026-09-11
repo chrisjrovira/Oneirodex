@@ -1,6 +1,8 @@
 /** Game library RetroArch `.cht` cheats — list / create / upload / delete. */
 
-import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
+import { errorFromBody } from '@oneirodex/ui'
+import { deleteJson, getJson, postJson, send } from './client'
+
 /** Capability-language dialect hints (API values match Backend CHEAT_DIALECTS). */
 export const CHEAT_DIALECTS = Object.freeze([
   { value: 'raw', label: 'Raw' },
@@ -26,21 +28,26 @@ function raiseApiError(data: any, fallback: any, status: any) {
   return error
 }
 
+function withCheatCode(err: any, fallback: string) {
+  const data = err?.data && typeof err.data === 'object' ? err.data : {}
+  const status = err?.status
+  const error = raiseApiError({ ...data, status }, fallback, status)
+  error.code = data.code ?? err?.code ?? error.code
+  return error
+}
+
 /**
  * @returns {Promise<{ game_uuid: string, cheats: Array<{ name: string, size: number, url: string }> }>}
  */
 export async function listCheats(gameUuid: any, { signal }: LooseProps = {}) {
-  const response = await fetch(cheatsUrl(gameUuid), {
-    credentials: 'same-origin',
-    signal,
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw raiseApiError({ ...data, status: response.status }, 'cheats list', response.status)
-  }
-  return {
-    game_uuid: data.game_uuid || gameUuid,
-    cheats: Array.isArray(data.cheats) ? data.cheats : [],
+  try {
+    const data = (await getJson(cheatsUrl(gameUuid), { signal, label: 'cheats list' })) ?? {}
+    return {
+      game_uuid: data.game_uuid || gameUuid,
+      cheats: Array.isArray(data.cheats) ? data.cheats : [],
+    }
+  } catch (err: any) {
+    throw withCheatCode(err, 'cheats list')
   }
 }
 
@@ -51,28 +58,24 @@ export async function listCheats(gameUuid: any, { signal }: LooseProps = {}) {
  * @throws {Error} with `code: 'create_unavailable'` when the create API is not shipped yet
  */
 export async function createCheat(gameUuid: any, { name, codes, dialect }: LooseProps = {}) {
-  const response = await fetch(cheatsUrl(gameUuid), {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' }),
-    body: JSON.stringify({
-      name,
-      codes,
-      ...(dialect ? { dialect } : {}),
-    }),
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    const message = String(data.error || '')
+  try {
+    return await postJson(
+      cheatsUrl(gameUuid),
+      {
+        name,
+        codes,
+        ...(dialect ? { dialect } : {}),
+      },
+      { label: 'cheat create' },
+    )
+  } catch (err: any) {
+    const data = err?.data && typeof err.data === 'object' ? err.data : {}
+    const message = String(data.error || err?.message || '')
     const createMissing =
       data.code === 'create_unavailable' ||
-      response.status === 415 ||
-      (response.status === 400 && /^file required$/i.test(message))
-    const error = raiseApiError(
-      { ...data, status: response.status, code: createMissing ? 'create_unavailable' : data.code },
-      'cheat create',
-      response.status,
-    )
+      err?.status === 415 ||
+      (err?.status === 400 && /^file required$/i.test(message))
+    const error = withCheatCode(err, 'cheat create')
     if (createMissing) {
       error.code = 'create_unavailable'
       error.message =
@@ -80,35 +83,25 @@ export async function createCheat(gameUuid: any, { name, codes, dialect }: Loose
     }
     throw error
   }
-  return data
 }
 
 /** Legacy / operator path — multipart `.cht` upload. */
 export async function uploadCheat(gameUuid: any, file: any) {
   const body = new FormData()
   body.append('file', file)
-  const response = await fetch(cheatsUrl(gameUuid), {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-    body,
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw raiseApiError({ ...data, status: response.status }, 'cheat upload', response.status)
+  try {
+    return (await send(cheatsUrl(gameUuid), { method: 'POST', body, label: 'cheat upload' })) ?? {}
+  } catch (err: any) {
+    throw withCheatCode(err, 'cheat upload')
   }
-  return data
 }
 
 export async function deleteCheat(gameUuid: any, filename: any) {
-  const response = await fetch(cheatsUrl(gameUuid, filename), {
-    method: 'DELETE',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ Accept: 'application/json' }),
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw raiseApiError({ ...data, status: response.status }, 'cheat delete', response.status)
+  try {
+    return (
+      (await deleteJson(cheatsUrl(gameUuid, filename), undefined, { label: 'cheat delete' })) ?? {}
+    )
+  } catch (err: any) {
+    throw withCheatCode(err, 'cheat delete')
   }
-  return data
 }

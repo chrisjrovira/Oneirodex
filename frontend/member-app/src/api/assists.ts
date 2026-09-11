@@ -4,15 +4,11 @@
  * @param {{ signal?: AbortSignal }} [options]
  * @returns {Promise<{ enabled: boolean, pack: object | null }>}
  */
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 export async function fetchGameAssists(gameUuid: any, options: LooseProps = {}) {
-  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/assists`, {
-    credentials: 'same-origin',
+  return getJson(`/api/games/${encodeURIComponent(gameUuid)}/assists`, {
     signal: options.signal,
+    label: 'Assists request failed',
   })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Assists request failed')
-  }
-  return response.json()
 }

@@ -6,10 +6,13 @@ import { NotificationsPage } from './NotificationsPage'
 import { ShellHarness } from '../testShell'
 
 function jsonResponse(body, status = 200) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => body,
+    text: async () => payload,
   })
 }
 

@@ -1,16 +1,7 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 export async function fetchFilterOptions({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/filters/bundle', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, '/api/filters/bundle')
-  }
-
-  const data = await response.json()
+  const data = await getJson('/api/filters/bundle', { signal, label: '/api/filters/bundle' })
   return {
     libraries: Array.isArray(data.libraries) ? data.libraries : [],
     libraryPlatforms: Array.isArray(data.libraryPlatforms) ? data.libraryPlatforms : [],

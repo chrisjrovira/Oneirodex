@@ -1,14 +1,5 @@
-﻿import { errorFromResponse } from '@oneirodex/ui'
+﻿import { getJson } from './client'
 
 export async function fetchAnnouncements({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/announcements', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'announcements')
-  }
-
-  return response.json()
+  return getJson('/api/announcements', { signal, label: 'announcements' })
 }

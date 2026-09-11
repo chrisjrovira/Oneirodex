@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from flask import current_app, jsonify, request
+from flask import current_app, jsonify
 
 from oneirodex.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
@@ -12,7 +12,9 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import SupportTicket
+from oneirodex.schemas.support import CreateSupportTicketBody
 from oneirodex.utils.auth import admin_required
+from oneirodex.utils.validation import validate_body
 from oneirodex.utils.github_issues import build_issue_body, create_github_issue
 from oneirodex.utils.notifications import notify_admins
 from oneirodex.utils.rbac import normalize_role
@@ -35,37 +37,35 @@ _LOGS_MAX = 4000
 
 @apis_bp.route('/support/tickets', methods=['POST'])
 @login_required
-def support_ticket_create():
-    data = request.get_json(silent=True) or {}
-    title = (data.get('title') or '').strip()[:200]
+@validate_body(CreateSupportTicketBody)
+def support_ticket_create(body: CreateSupportTicketBody):
+    title = body.title[:200]
     # Symptom/body optional for redesigned Report UI (title alone is enough).
-    body = (data.get('body') or data.get('symptom') or '').strip()[:_BODY_MAX]
-    if not title:
-        return api_error('A title is required', code='bad_request')
-    area = (data.get('area') or 'other').strip().lower()
+    ticket_body = (body.body or body.symptom or '').strip()[:_BODY_MAX]
+    area = (body.area or 'other').strip().lower()
     if area not in VALID_AREAS:
         area = 'other'
     # A request for something new is not a defect, and filing it as one both
     # misleads triage and makes the product look broken. Unknown values fall
     # back to 'issue' rather than 404ing a report someone took time to write.
-    kind = (data.get('kind') or 'issue').strip().lower()
+    kind = (body.kind or 'issue').strip().lower()
     if kind not in VALID_KINDS:
         kind = 'issue'
-    severity = (data.get('severity') or 'P2').strip().upper()
+    severity = (body.severity or 'P2').strip().upper()
     if severity not in VALID_SEV:
         severity = 'P2'
-    logs_raw = (data.get('logs') or '').strip()[:_LOGS_MAX]
+    logs_raw = (body.logs or '').strip()[:_LOGS_MAX]
     ticket = SupportTicket(
         user_id=current_user.id,
         title=title,
-        body=body or '',
+        body=ticket_body or '',
         area=area,
         kind=kind,
         severity=severity,
         role_at_submit=normalize_role(getattr(current_user, 'role', None)),
-        deploy_hint=(data.get('deploy_hint') or data.get('deploy') or '')[:64] or None,
-        client_hint=(data.get('client_hint') or data.get('client') or '')[:120] or None,
-        url_hint=(data.get('url_hint') or data.get('url') or '')[:512] or None,
+        deploy_hint=(body.deploy_hint or body.deploy or '')[:64] or None,
+        client_hint=(body.client_hint or body.client or '')[:120] or None,
+        url_hint=(body.url_hint or body.url or '')[:512] or None,
         logs=logs_raw or None,
         status='open',
         github_sync='pending',

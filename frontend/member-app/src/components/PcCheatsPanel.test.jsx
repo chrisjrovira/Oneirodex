@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { PcCheatsPanel } from './PcCheatsPanel'
+import { stubFetch } from '../testJsonResponse'
 
 const PAYLOAD = {
   ok: true,
@@ -22,10 +23,7 @@ const PAYLOAD = {
 }
 
 function mockFetch(payload, ok = true) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => ({ ok, status: ok ? 200 : 400, json: async () => payload })),
-  )
+  stubFetch(async () => ({ ok, status: ok ? 200 : 400, json: async () => payload }))
 }
 
 afterEach(() => {
@@ -37,7 +35,7 @@ test('does not render on a RetroArch title', () => {
   const { container } = render(<PcCheatsPanel gameUuid="abc" cheatSurface="retroarch" />)
   // The two cheat surfaces must never both appear for one game.
   expect(container).toBeEmptyDOMElement()
-  expect(global.fetch).not.toHaveBeenCalled()
+  expect(globalThis.fetch).not.toHaveBeenCalled()
 })
 
 test('does not render when the platform has no cheat surface', () => {

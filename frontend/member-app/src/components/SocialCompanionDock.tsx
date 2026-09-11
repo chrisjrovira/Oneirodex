@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@oneirodex/ui'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '@oneirodex/ui'
 import { requestOpenChatPanel } from '../hooks/chatPanelApi'
+import { acceptFriend, requestFriend } from '../api/social'
 import {
   mintPartyToken,
   OPEN_SOCIAL_EVENT,
@@ -221,14 +220,7 @@ export function SocialCompanionDock({
     if (!username) return
     setBusyKey('add')
     try {
-      const response = await fetch('/api/social/friends', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ username }),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Request failed')
+      const data = await requestFriend(username)
       setAddName('')
       notify(data.sent ? 'Friend request sent' : data.message || 'Request sent')
       await social.reload()
@@ -311,11 +303,7 @@ export function SocialCompanionDock({
                     type="button"
                     className="od-social-dock__mini"
                     onClick={() => {
-                      void fetch(`/api/social/friends/${row.id}/accept`, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: csrfHeaders(),
-                      }).then(() => social.reload())
+                      void acceptFriend(row.id).then(() => social.reload())
                     }}
                   >
                     Accept

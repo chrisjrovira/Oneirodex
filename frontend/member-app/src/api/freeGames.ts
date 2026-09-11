@@ -1,30 +1,19 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, postJson } from './client'
+
 export async function fetchFreeGames({ signal, store }: LooseProps = {}) {
   const params = new URLSearchParams({ limit: '40' })
   if (store) {
     params.set('store', store)
   }
-  const response = await fetch(`/api/news/free-games?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'free games')
-  }
-
-  return response.json()
+  return getJson(`/api/news/free-games?${params}`, { signal, label: 'free games' })
 }
 
 export async function claimFreeGameAssist(offerId: any) {
-  const response = await fetch(`/api/news/free-games/${offerId}/claim-assist`, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: '{}',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'claim assist')
-  }
-  return response.json().catch(() => ({}))
+  return (
+    (await postJson(
+      `/api/news/free-games/${offerId}/claim-assist`,
+      {},
+      { label: 'claim assist' },
+    )) ?? {}
+  )
 }

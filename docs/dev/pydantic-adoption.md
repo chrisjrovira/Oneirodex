@@ -64,6 +64,7 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/support.py` | `POST /api/support/tickets` (`support_ticket_create`) | `CreateSupportTicketBody` |
 
 ### Contract notes for the adopted routes
 
@@ -78,10 +79,14 @@ model: a model with required fields → 422 naming them; an all-optional model
   gets 422 instead of 403. Auth (`@login_required`) is unchanged; only the
   order of the object-ownership refusal vs. body validation moved.
 - **`connect_steam`** — same ordering note: the `is_ownership_sync_enabled()`
-  feature-flag refusal (403) now runs *after* body validation, so `POST
-  /api/ownership/steam` with a malformed body returns 422 even when sync is
-  switched off. A well-formed body still hits the 403. Happy path (valid
+  feature-flag refusal (403) now runs *after* body validation, so
+  `POST /api/ownership/steam` with a malformed body returns 422 even when sync
+  is switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`support_ticket_create`** — missing/blank `title` was `400 "A title is
+  required"`, now `422 {detail:{title:"..."}}`. Unknown `area` / `kind` /
+  `severity` still coerce in the view. Member Report form always sends a
+  title; it renders `err.message` and does not branch on the old 400.
 
 ## Deliberately not adopted (and why)
 
@@ -133,10 +138,10 @@ Leave these until the contract can be preserved; do not force them.
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
+| `routes_apis/` | 114 | 46 |
 | `routes_admin_ext/` | 23 | — |
 | rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| **total** | **~150** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 

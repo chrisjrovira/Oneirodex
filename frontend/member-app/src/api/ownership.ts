@@ -1,105 +1,83 @@
-import { csrfHeaders, errorFromResponse, getCsrfToken } from '@oneirodex/ui'
-async function mutate(url: any, label: any, { method = 'POST', json, body }: LooseProps = {}) {
-  const headers =
-    json === undefined ? csrfHeaders() : csrfHeaders({ 'Content-Type': 'application/json' })
-
-  const response = await fetch(url, {
-    method,
-    credentials: 'same-origin',
-    headers,
-    ...(json === undefined ? {} : { body: JSON.stringify(json) }),
-    ...(body === undefined ? {} : { body }),
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, label)
-  }
-
-  return response.json()
-}
+import { getCsrfToken } from '@oneirodex/ui'
+import { deleteJson, getJson, postJson, send } from './client'
 
 export async function fetchOwnership({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/ownership', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'ownership')
-  }
-
-  return response.json()
+  return getJson('/api/ownership', { signal, label: 'ownership' })
 }
 
 export async function connectSteam(steamId: any) {
-  return mutate('/api/ownership/steam', 'connect_steam', {
-    json: { steam_id: steamId },
-  })
+  return postJson('/api/ownership/steam', { steam_id: steamId }, { label: 'connect_steam' })
 }
 
 export async function disconnectSteam() {
-  return mutate('/api/ownership/steam', 'disconnect_steam', { method: 'DELETE' })
+  return deleteJson('/api/ownership/steam', undefined, { label: 'disconnect_steam' })
 }
 
 export async function syncSteam() {
-  return mutate('/api/ownership/steam/sync', 'sync_steam', { json: {} })
+  return postJson('/api/ownership/steam/sync', {}, { label: 'sync_steam' })
 }
 
 export async function connectGog(gogUserId: any, { refreshToken, accessToken }: LooseProps = {}) {
-  return mutate('/api/ownership/gog', 'connect_gog', {
-    json: {
+  return postJson(
+    '/api/ownership/gog',
+    {
       gog_user_id: gogUserId,
       ...(refreshToken ? { refresh_token: refreshToken } : {}),
       ...(accessToken ? { access_token: accessToken } : {}),
     },
-  })
+    { label: 'connect_gog' },
+  )
 }
 
 export async function disconnectGog() {
-  return mutate('/api/ownership/gog', 'disconnect_gog', { method: 'DELETE' })
+  return deleteJson('/api/ownership/gog', undefined, { label: 'disconnect_gog' })
 }
 
 export async function syncGog() {
-  return mutate('/api/ownership/gog/sync', 'sync_gog', { json: {} })
+  return postJson('/api/ownership/gog/sync', {}, { label: 'sync_gog' })
 }
 
 export async function connectEpic(epicAccountId: any, { deviceAuth }: LooseProps = {}) {
-  return mutate('/api/ownership/epic', 'connect_epic', {
-    json: {
+  return postJson(
+    '/api/ownership/epic',
+    {
       epic_account_id: epicAccountId,
       ...(deviceAuth ? { device_auth: deviceAuth } : {}),
     },
-  })
+    { label: 'connect_epic' },
+  )
 }
 
 export async function disconnectEpic() {
-  return mutate('/api/ownership/epic', 'disconnect_epic', { method: 'DELETE' })
+  return deleteJson('/api/ownership/epic', undefined, { label: 'disconnect_epic' })
 }
 
 export async function syncEpic() {
-  return mutate('/api/ownership/epic/sync', 'sync_epic', { json: {} })
+  return postJson('/api/ownership/epic/sync', {}, { label: 'sync_epic' })
 }
 
 export async function connectAmazon(
   amazonUserId: any,
   { credential, refreshToken, deviceSerial }: LooseProps = {},
 ) {
-  return mutate('/api/ownership/amazon', 'connect_amazon', {
-    json: {
+  return postJson(
+    '/api/ownership/amazon',
+    {
       amazon_user_id: amazonUserId,
       ...(credential ? { credential } : {}),
       ...(refreshToken ? { refresh_token: refreshToken } : {}),
       ...(deviceSerial ? { device_serial: deviceSerial } : {}),
     },
-  })
+    { label: 'connect_amazon' },
+  )
 }
 
 export async function disconnectAmazon() {
-  return mutate('/api/ownership/amazon', 'disconnect_amazon', { method: 'DELETE' })
+  return deleteJson('/api/ownership/amazon', undefined, { label: 'disconnect_amazon' })
 }
 
 export async function syncAmazon() {
-  return mutate('/api/ownership/amazon/sync', 'sync_amazon', { json: {} })
+  return postJson('/api/ownership/amazon/sync', {}, { label: 'sync_amazon' })
 }
 
 /**
@@ -117,8 +95,8 @@ export async function importCsv(store: any, { csv, file }: LooseProps = {}) {
     if (token) {
       body.append('csrf_token', token)
     }
-    return mutate(url, label, { body })
+    return send(url, { method: 'POST', body, label })
   }
 
-  return mutate(url, label, { json: { csv } })
+  return postJson(url, { csv }, { label })
 }

@@ -83,10 +83,11 @@ clients/desktop/src-tauri/target/
 /docs/research/
 .codebuddy/
 letsrebuild.md
-# Root-only scratch markdown; keep README, CHANGELOG, deploy notes
+# Root-only scratch markdown; keep README, CHANGELOG, CONTRIBUTING, deploy notes
 /*.md
 !/README.md
 !/CHANGELOG.md
+!/CONTRIBUTING.md
 !/NAS-DEPLOY.md
 !/VERSION
 

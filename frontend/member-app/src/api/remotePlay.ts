@@ -3,15 +3,11 @@
  * @param {{ signal?: AbortSignal }} [options]
  * @returns {Promise<object>}
  */
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 export async function fetchRemotePlayStatus(options: LooseProps = {}) {
-  const response = await fetch('/api/remote-play/status', {
-    credentials: 'same-origin',
+  return getJson('/api/remote-play/status', {
     signal: options.signal,
+    label: 'Remote play status failed',
   })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Remote play status failed')
-  }
-  return response.json()
 }

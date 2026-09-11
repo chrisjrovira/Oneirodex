@@ -1,48 +1,40 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, postJson } from './client'
+
 export async function fetchGameDetails(gameUuid: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/details`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'game details')
-  }
-  return response.json().catch(() => ({}))
+  return (
+    (await getJson(`/api/games/${encodeURIComponent(gameUuid)}/details`, {
+      signal,
+      label: 'game details',
+    })) ?? {}
+  )
 }
 
 export async function fetchGameMoreFrom(gameUuid: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/more_from`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'more from')
-  }
-  return response.json().catch(() => ({ sections: [] }))
+  return (
+    (await getJson(`/api/games/${encodeURIComponent(gameUuid)}/more_from`, {
+      signal,
+      label: 'more from',
+    })) ?? { sections: [] }
+  )
 }
 
 export async function fetchGameVersions(gameUuid: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/versions`, {
+  return getJson(`/api/games/${encodeURIComponent(gameUuid)}/versions`, {
     signal,
-    credentials: 'same-origin',
+    label: 'game versions',
   })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'game versions')
-  }
-  return response.json()
 }
 
 export async function checkGameFreshness(gameUuid: any) {
-  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/freshness/check`, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: '{}',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'freshness check')
-  }
-  return response.json().catch(() => ({}))
+  return (
+    (await postJson(
+      `/api/games/${encodeURIComponent(gameUuid)}/freshness/check`,
+      {},
+      {
+        label: 'freshness check',
+      },
+    )) ?? {}
+  )
 }
 
 /**
@@ -51,17 +43,20 @@ export async function checkGameFreshness(gameUuid: any) {
  * @returns {Promise<object>}
  */
 export async function cleanupOrphanVersions(gameUuid: any) {
-  const response = await fetch(
-    `/api/games/${encodeURIComponent(gameUuid)}/versions/cleanup_orphans`,
-    {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-      body: '{}',
-    },
+  return (
+    (await postJson(
+      `/api/games/${encodeURIComponent(gameUuid)}/versions/cleanup_orphans`,
+      {},
+      { label: 'cleanup orphans' },
+    )) ?? {}
   )
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'cleanup orphans')
-  }
-  return response.json().catch(() => ({}))
+}
+
+export async function fetchRelatedMedia(gameUuid: any) {
+  return (
+    (await getJson(`/api/games/${gameUuid}/related_media`, { label: 'related media' })) ?? {
+      items: [],
+      kinds: [],
+    }
+  )
 }

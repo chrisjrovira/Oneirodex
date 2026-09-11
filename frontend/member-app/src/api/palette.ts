@@ -1,4 +1,4 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 /**
  * Empty-state titles for the command palette: recently played + favourited here.
@@ -6,14 +6,7 @@ import { errorFromResponse } from '@oneirodex/ui'
 export async function fetchPaletteSuggest({ signal, limit = 8 }: LooseProps = {}) {
   const params = new URLSearchParams()
   if (limit) params.set('limit', String(limit))
-  const response = await fetch(`/api/palette/suggest?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'palette suggest')
-  }
-  const data = await response.json()
+  const data = await getJson(`/api/palette/suggest?${params}`, { signal, label: 'palette suggest' })
   return {
     recent: Array.isArray(data.recent) ? data.recent : [],
     popular: Array.isArray(data.popular) ? data.popular : [],

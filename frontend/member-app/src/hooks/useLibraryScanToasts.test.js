@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { useLibraryScanToasts } from './useLibraryScanToasts'
+import { stubFetch } from '../testJsonResponse'
 import { showToast } from '../utils/toast'
 
 vi.mock('../utils/toast', () => ({
@@ -17,22 +18,23 @@ afterEach(() => {
 })
 
 test('useLibraryScanToasts toasts library-added rows and soft-fails on error', async () => {
-  const fetchMock = vi
-    .fn()
-    .mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        notifications: [
-          {
-            id: 99,
-            kind: 'library_games_added',
-            title: '2 games added to Library Arcade',
-          },
-        ],
-      }),
-    })
-    .mockRejectedValueOnce(new Error('offline'))
-  vi.stubGlobal('fetch', fetchMock)
+  const fetchMock = stubFetch(async () => {
+    if (fetchMock.mock.calls.length <= 1) {
+      return {
+        ok: true,
+        json: async () => ({
+          notifications: [
+            {
+              id: 99,
+              kind: 'library_games_added',
+              title: '2 games added to Library Arcade',
+            },
+          ],
+        }),
+      }
+    }
+    throw new Error('offline')
+  })
 
   const { unmount } = renderHook(() => useLibraryScanToasts({ intervalMs: 60_000 }))
 
@@ -45,10 +47,7 @@ test('useLibraryScanToasts toasts library-added rows and soft-fails on error', a
 })
 
 test('useLibraryScanToasts stays quiet when endpoint is not ready', async () => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({ ok: false, status: 404, json: async () => ({}) }),
-  )
+  stubFetch(async () => ({ ok: false, status: 404, json: async () => ({}) }))
 
   renderHook(() => useLibraryScanToasts({ intervalMs: 60_000 }))
 
@@ -65,13 +64,10 @@ test('useLibraryScanToasts collapses more than five libraries to a count', async
     library,
     title: `1 games added to library ${library}`,
   }))
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ notifications }),
-    }),
-  )
+  stubFetch(async () => ({
+    ok: true,
+    json: async () => ({ notifications }),
+  }))
 
   renderHook(() => useLibraryScanToasts({ intervalMs: 60_000 }))
 

@@ -1,5 +1,8 @@
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '@oneirodex/ui'
+import { createChatDmOrThrow } from '../api/chat'
+import { mintRtcToken } from '../api/rtc'
+
+export { fetchSocialStatus } from '../api/social'
+export { fetchFriends as fetchFriendsList } from '../api/social'
 
 const STORAGE_OPEN = 'od-social-companion-open'
 const STORAGE_PINNED = 'od-social-companion-pinned'
@@ -49,52 +52,18 @@ export function writeCompanionPinned(pinned: any) {
   }
 }
 
-export async function fetchSocialStatus({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/social/status', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) return null
-  return response.json()
-}
-
-export async function fetchFriendsList({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/social/friends', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) return { friends: [] }
-  return response.json()
-}
-
 export async function openDirectMessage({ userId, username }: LooseProps = {}) {
   const body = userId ? { user_id: userId } : { username }
-  const response = await fetch('/api/chat/dm', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(body),
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw errorFromBody(data, response.status, 'Could not open DM')
-  }
-  return data
+  return createChatDmOrThrow(body)
 }
 
 export async function mintPartyToken({ gameUuid, spectator = false }: LooseProps = {}) {
   const id = (gameUuid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
   const room = id ? `household:party:${id}` : 'household:lobby'
-  const response = await fetch('/api/rtc/token', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ room, spectator: spectator || undefined }),
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw errorFromBody(data, response.status, 'Voice party unavailable')
-  }
+  const data = await mintRtcToken(
+    { room, spectator: spectator || undefined },
+    { label: 'Voice party unavailable' },
+  )
   return { ...data, room }
 }
 

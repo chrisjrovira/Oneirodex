@@ -13,89 +13,58 @@
  * design — the caller refetches the list afterwards — so they resolve to the
  * response's `ok` flag rather than throwing.
  */
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, postJson, sendResult } from './client'
+
+function httpFailure(err: any) {
+  return typeof err?.status === 'number'
+}
 
 export async function fetchActivity({ signal, friendsOnly }: LooseProps = {}) {
   const qs = friendsOnly ? '?friends_only=1' : ''
-  const response = await fetch(`/api/activity${qs}`, {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Activity')
-  }
-  return response.json()
+  return getJson(`/api/activity${qs}`, { signal, label: 'Activity' })
 }
 
 export async function fetchSocialStatus({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/social/status', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    return null
+  try {
+    return await getJson('/api/social/status', { signal, label: 'social/status' })
+  } catch (err: any) {
+    if (httpFailure(err)) {
+      return null
+    }
+    throw err
   }
-  return response.json()
 }
 
 export async function fetchFriends({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/social/friends', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    return { friends: [] }
+  try {
+    return await getJson('/api/social/friends', { signal, label: 'social/friends' })
+  } catch (err: any) {
+    if (httpFailure(err)) {
+      return { friends: [] }
+    }
+    throw err
   }
-  return response.json()
 }
 
 export async function requestFriend(username: any) {
-  const response = await fetch('/api/social/friends', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ username }),
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Request failed')
-  }
-  return response.json().catch(() => ({}))
+  return (await postJson('/api/social/friends', { username }, { label: 'Request failed' })) ?? {}
 }
 
 export async function acceptFriend(id: any) {
-  const response = await fetch(`/api/social/friends/${id}/accept`, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-  })
-  return response.ok
+  const result = await sendResult(`/api/social/friends/${id}/accept`, { method: 'POST' })
+  return result.ok
 }
 
 export async function rejectFriend(id: any) {
-  const response = await fetch(`/api/social/friends/${id}/reject`, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-  })
-  return response.ok
+  const result = await sendResult(`/api/social/friends/${id}/reject`, { method: 'POST' })
+  return result.ok
 }
 
 export async function removeFriend(id: any) {
-  const response = await fetch(`/api/social/friends/${id}`, {
-    method: 'DELETE',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-  })
-  return response.ok
+  const result = await sendResult(`/api/social/friends/${id}`, { method: 'DELETE' })
+  return result.ok
 }
 
 export async function fetchMemberProfile(userId: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/users/${userId}/profile`, {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Profile')
-  }
-  return response.json()
+  return getJson(`/api/users/${userId}/profile`, { signal, label: 'Profile' })
 }

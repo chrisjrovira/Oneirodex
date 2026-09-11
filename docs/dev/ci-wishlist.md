@@ -247,6 +247,9 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
 - [PR-5b] `frontend/member-app/tsconfig.json` local `"strict": true`. Did not
   flip `tsconfig.base.json`. Same split as admin-app (#72 then #74).
 - [PR-6] member-app `src/api/client.ts` sits on `createBrowserRequester`
-  (same shape as admin `adminApi.ts`). First covered groups rewired:
-  collections, wishlist, discover, discoverPins, playtime, favorites.
-  Remaining `src/api/` modules still hand-roll `fetch`. No workflow change.
+  (same shape as admin `adminApi.ts`). **Done:** remaining `src/api/` JSON
+  wrappers rewired onto those verbs (`send` / `sendResult` for FormData and
+  fire-and-forget). Chat / voice / space-rail and the other leftover inlined
+  `fetch` sites use the same verbs. `preferences.ts` HTML and EventSource stay
+  off this path. Typed resource modules are still not wired into the SPA. No
+  workflow change.

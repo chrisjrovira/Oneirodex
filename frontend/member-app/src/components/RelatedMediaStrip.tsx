@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { errorFromBody } from '@oneirodex/ui'
+import { fetchRelatedMedia } from '../api/gameDetails'
 import './RelatedMediaStrip.css'
 
 /**
@@ -33,11 +33,7 @@ export function RelatedMediaStrip({ gameUuid }: LooseProps) {
     if (!gameUuid) return
     setLoading(true)
     try {
-      const response = await fetch(`/api/games/${gameUuid}/related_media`, {
-        credentials: 'same-origin',
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'related media')
+      const data = (await fetchRelatedMedia(gameUuid)) ?? {}
       setItems(Array.isArray(data.items) ? data.items : [])
       setKinds(Array.isArray(data.kinds) ? data.kinds : [])
     } catch {

@@ -6,42 +6,47 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { ActivityPage } from './ActivityPage'
+import { jsonFrom } from '../testJsonResponse'
 import { ShellHarness } from '../testShell'
 
 beforeEach(() => {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/activity')) {
-        return {
-          ok: true,
-          json: async () => ({
-            now_playing: [],
-            activity: [],
-            restricted: false,
-          }),
-        }
-      }
-      if (url.includes('/api/social/status')) {
-        return {
-          ok: true,
-          json: async () => ({
-            friend_count: 0,
-            pending_incoming: 0,
-            now_playing: [],
-            presence: [],
-          }),
-        }
-      }
-      if (url.includes('/api/social/friends')) {
-        return { ok: true, json: async () => ({ friends: [] }) }
-      }
-      if (url.includes('/api/rtc/status')) {
-        return { ok: true, json: async () => ({ enabled: false }) }
-      }
-      return { ok: true, json: async () => ({}) }
-    }),
+    vi.fn(async (input) =>
+      jsonFrom(
+        (() => {
+          const url = String(input)
+          if (url.includes('/api/activity')) {
+            return {
+              ok: true,
+              json: async () => ({
+                now_playing: [],
+                activity: [],
+                restricted: false,
+              }),
+            }
+          }
+          if (url.includes('/api/social/status')) {
+            return {
+              ok: true,
+              json: async () => ({
+                friend_count: 0,
+                pending_incoming: 0,
+                now_playing: [],
+                presence: [],
+              }),
+            }
+          }
+          if (url.includes('/api/social/friends')) {
+            return { ok: true, json: async () => ({ friends: [] }) }
+          }
+          if (url.includes('/api/rtc/status')) {
+            return { ok: true, json: async () => ({ enabled: false }) }
+          }
+          return { ok: true, json: async () => ({}) }
+        })(),
+      ),
+    ),
   )
   vi.stubGlobal(
     'EventSource',

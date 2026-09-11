@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ChatPanel } from './ChatPanel'
+import { stubFetch } from '../testJsonResponse'
 
 function jsonOk(body, status = 200) {
   return {
@@ -25,7 +26,7 @@ function baseFetch({
       mine: [],
     },
   ]
-  return vi.fn(async (input, init) => {
+  return async (input, init) => {
     const url = String(input)
     const method = (init?.method || 'GET').toUpperCase()
     if (url.includes('/api/chat/emoji')) {
@@ -62,7 +63,7 @@ function baseFetch({
       return jsonOk({ room: 'household:lobby', url: 'wss://livekit.example' })
     }
     return jsonOk({})
-  })
+  }
 }
 
 beforeEach(() => {
@@ -79,7 +80,7 @@ afterEach(() => {
 })
 
 test('composer shows attach button and soft-disables when upload 404', async () => {
-  vi.stubGlobal('fetch', baseFetch({ attachStatus: 404 }))
+  stubFetch(baseFetch({ attachStatus: 404 }))
   render(<ChatPanel />)
 
   expect(await screen.findByRole('button', { name: /household/i })).toBeInTheDocument()
@@ -91,8 +92,7 @@ test('composer shows attach button and soft-disables when upload 404', async () 
 })
 
 test('renders image attachment thumb and file download link', async () => {
-  vi.stubGlobal(
-    'fetch',
+  stubFetch(
     baseFetch({
       attachStatus: 404,
       messages: [
@@ -138,7 +138,7 @@ test('renders image attachment thumb and file download link', async () => {
 
 test('room header exposes Voice and Screenshare entry without Discord branding', async () => {
   const user = userEvent.setup()
-  vi.stubGlobal('fetch', baseFetch({ attachStatus: 404 }))
+  stubFetch(baseFetch({ attachStatus: 404 }))
   const { container } = render(<ChatPanel />)
 
   expect(await screen.findByRole('button', { name: /^voice$/i })).toBeInTheDocument()
@@ -152,7 +152,7 @@ test('room header exposes Voice and Screenshare entry without Discord branding',
 
 test('emoji picker inserts into composer', async () => {
   const user = userEvent.setup()
-  vi.stubGlobal('fetch', baseFetch({ attachStatus: 404 }))
+  stubFetch(baseFetch({ attachStatus: 404 }))
   render(<ChatPanel />)
 
   expect(await screen.findByPlaceholderText(/message household/i)).toBeInTheDocument()

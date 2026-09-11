@@ -67,6 +67,16 @@ def test_support_ticket_title_only_optional_symptom_logs(client, app, db_session
     assert ticket['github_sync'] == 'skipped'
 
 
+def test_support_ticket_missing_title_is_422(client, app, db_session, member_user):
+    _login(client, app, member_user)
+    created = client.post('/api/support/tickets', json={'area': 'companion'})
+    assert created.status_code == 422, created.get_data(as_text=True)
+    body = created.get_json()
+    assert body['error'] == 'Invalid request.'
+    assert body['error_code'] == 'unprocessable'
+    assert 'title' in body['detail']
+
+
 def test_support_ticket_truncates_huge_logs_and_list_is_compact(client, app, db_session, member_user):
     _login(client, app, member_user)
     huge = 'L' * 9000

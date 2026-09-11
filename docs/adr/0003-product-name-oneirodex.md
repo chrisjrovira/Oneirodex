@@ -1,7 +1,7 @@
 # ADR: Product name Oneirodex
 
 **Date:** 2026-08-26  
-**Status:** Accepted — **Phase 1 (public string) landed 2026-08-26**. **Phase 2 (ops identifiers) started 2026-08-27**. **Phase 3a landed 2026-08-27.** **Phase 3b landed 2026-08-31:** package `oneirodex/`, `.od-*` / `--od-*`, Compose `oneirodex-*`, Postgres `oneirodex`. `RESET GAMETHECA` remains accepted one release. Git history is not rewritten.  
+**Status:** Accepted — **Phase 1 (public string) landed 2026-08-26**. **Phase 2 (ops identifiers) started 2026-08-27**. **Phase 3a landed 2026-08-27.** **Phase 3b landed 2026-08-31.** **Clean break (env): `ONEIRODEX_*` is the only prefix; `GT_*` is not read; `RESET GAMETHECA` is not accepted.** Git history is not rewritten.  
 **Owners:** `maintainer` · `agent-docs`
 
 ## Context
@@ -24,8 +24,8 @@ Phase 1 (this wave):
 - User-facing copy, Help, README, user/admin docs, and CHANGELOG going forward say **Oneirodex**.
 - Package path stays `oneirodex/`. Docker / Compose / Unraid container **names** stay `oneirodex-*` by default so existing installs keep working.
 - GitHub is `chrisjrovira/oneirodex` (the old `chrisjrovira/gametheca` URL redirects).
-- Env: `ONEIRODEX_*` wins when set; `GT_*` still works. CSS: `--od-*` is canonical (P3b). Do not invent `OD_*` env aliases.
-- Danger-zone confirm is `"RESET ONEIRODEX"`. `"RESET GAMETHECA"` remains accepted so existing runbooks cannot lock an operator out.
+- Env: `ONEIRODEX_*` is the only prefix. The former `GT_*` fallback is gone (`product_env.PREFIX`). Do not invent `OD_*` env aliases.
+- Danger-zone confirm is `"RESET ONEIRODEX"`. `"RESET GAMETHECA"` is not accepted.
 
 Do not mix **OneiroDex** or **ONEIRODEX** into UI. Historical CHANGELOG entries and git history keep the old public string.
 
@@ -54,7 +54,7 @@ Web search found no USPTO / EUIPO hit for Oneirodex as a live software mark. Tha
 
 1. **Public string** — UI, Help, README, user/admin docs, CHANGELOG going forward. Package and Docker unchanged. **Done 2026-08-26.**
 2. **Ops identifiers** — image `chrisjrovira/oneirodex`, containers, Unraid template, GitHub repo. Keep redirects / dual names for existing installs. **GitHub rename done.** Compose `APP_IMAGE` / `APP_CONTAINER_NAME` defaults are **`oneirodex:1.0.0-beta` / `oneirodex-app`** (P3b). Live Unraid may pin `APP_CONTAINER_NAME=oneirodex-app` until the scan FIFO is idle. OCI title label **Oneirodex**; `SUPPORT_GITHUB_REPO` defaults to `chrisjrovira/oneirodex`. Hub image still operator-publish. Do not rename running Unraid containers mid-scan.
-3. **Code identifiers** — Python package, remaining `GT_*` / `.gt-*` classes. **Phase 3a started 2026-08-27:** dual env + `--od-*` token aliases. **Phase 3b landed 2026-08-31:** package `oneirodex/`, `.od-*` / `--od-*`, live `oneirodex-*` containers, Postgres `oneirodex`. `GT_*` env and `RESET GAMETHECA` remain dual for one release. Do not rewrite git history.
+3. **Code identifiers** — Python package, remaining `GT_*` / `.gt-*` classes. **Phase 3a started 2026-08-27:** dual env + `--od-*` token aliases. **Phase 3b landed 2026-08-31:** package `oneirodex/`, `.od-*` / `--od-*`, live `oneirodex-*` containers, Postgres `oneirodex`. **Clean break after that:** `ONEIRODEX_*` only; `RESET GAMETHECA` retired. Do not rewrite git history.
 
 Existing installs must keep working through (2) and (3). Do not rewrite git history for the old name.
 

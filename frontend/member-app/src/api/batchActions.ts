@@ -1,15 +1,14 @@
-import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
+import { errorFromBody } from '@oneirodex/ui'
+import { sendResult } from './client'
 import { toggleFavorite as defaultToggleFavorite } from './userActions'
 
-async function postJson(url: any, body: any) {
-  const response = await fetch(url, {
+async function postJson(url: string, body: unknown) {
+  const { ok, status, data } = await sendResult(url, {
     method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  const data = await response.json().catch(() => ({}))
-  return { response, data }
+  return { ok, status, data: data ?? {} }
 }
 
 export const BATCH_FAVORITE_URL = '/api/games/batch/favorite'
@@ -47,12 +46,12 @@ export async function batchSetFavorite(
     return { ok: true, updated: [], skipped: [], errors: [], mode: 'noop' }
   }
 
-  const { response, data } = await postJson(BATCH_FAVORITE_URL, {
+  const { ok, status, data } = await postJson(BATCH_FAVORITE_URL, {
     uuids: list,
     favorite: Boolean(favorite),
   })
 
-  if (response.ok) {
+  if (ok) {
     return {
       ok: data.ok !== false,
       updated: data.updated || list,
@@ -63,8 +62,8 @@ export async function batchSetFavorite(
     }
   }
 
-  if (response.status !== 404 && response.status !== 501) {
-    const error: LooseProps = errorFromBody(data, response.status, 'batch favorite')
+  if (status !== 404 && status !== 501) {
+    const error: LooseProps = errorFromBody(data, status, 'batch favorite')
     error.payload = data
     throw error
   }
@@ -121,12 +120,12 @@ export async function batchCheckFreshness(uuids: any) {
   }
 
   // The sticky bar always re-probes the selection; the API defaults to stale-only.
-  const { response, data } = await postJson(BATCH_FRESHNESS_URL, {
+  const { ok, status, data } = await postJson(BATCH_FRESHNESS_URL, {
     uuids: list,
     only_stale: false,
   })
 
-  if (response.ok) {
+  if (ok) {
     return {
       ok: data.ok !== false,
       updated: data.updated || [],
@@ -137,14 +136,14 @@ export async function batchCheckFreshness(uuids: any) {
     }
   }
 
-  if (response.status === 404 || response.status === 501) {
+  if (status === 404 || status === 501) {
     const error: LooseProps = new Error('Bulk freshness check is not available yet')
-    error.status = response.status
+    error.status = status
     error.unavailable = true
     throw error
   }
 
-  const error: LooseProps = errorFromBody(data, response.status, 'batch freshness')
+  const error: LooseProps = errorFromBody(data, status, 'batch freshness')
   error.payload = data
   throw error
 }
@@ -156,9 +155,9 @@ export async function batchCheckFreshness(uuids: any) {
  * @param {string[]} uuids
  * @param {string} status — `unplayed` | `unfinished` | `beaten` | `completed` | ``
  */
-export async function batchSetPlayStatus(uuids: any, status: any) {
+export async function batchSetPlayStatus(uuids: any, playStatus: any) {
   const list = Array.from(new Set((uuids || []).filter(Boolean)))
-  const nextStatus = typeof status === 'string' ? status : ''
+  const nextStatus = typeof playStatus === 'string' ? playStatus : ''
   if (list.length === 0) {
     return {
       ok: true,
@@ -170,12 +169,12 @@ export async function batchSetPlayStatus(uuids: any, status: any) {
     }
   }
 
-  const { response, data } = await postJson(BATCH_STATUS_URL, {
+  const { ok, status, data } = await postJson(BATCH_STATUS_URL, {
     uuids: list,
     status: nextStatus,
   })
 
-  if (response.ok) {
+  if (ok) {
     return {
       ok: data.ok !== false,
       updated: data.updated || [],
@@ -186,14 +185,14 @@ export async function batchSetPlayStatus(uuids: any, status: any) {
     }
   }
 
-  if (response.status === 404 || response.status === 501) {
+  if (status === 404 || status === 501) {
     const error: LooseProps = new Error('Bulk play status is not available yet')
-    error.status = response.status
+    error.status = status
     error.unavailable = true
     throw error
   }
 
-  const error: LooseProps = errorFromBody(data, response.status, 'batch status')
+  const error: LooseProps = errorFromBody(data, status, 'batch status')
   error.payload = data
   throw error
 }
@@ -212,9 +211,9 @@ export async function batchAddToWishlist(uuids: any, opts: LooseProps = {}) {
   }
 
   const action = opts.action === 'remove' ? 'remove' : 'add'
-  const { response, data } = await postJson(BATCH_WISHLIST_URL, { uuids: list, action })
+  const { ok, status, data } = await postJson(BATCH_WISHLIST_URL, { uuids: list, action })
 
-  if (response.ok) {
+  if (ok) {
     return {
       ok: data.ok !== false,
       updated: data.updated || [],
@@ -225,14 +224,14 @@ export async function batchAddToWishlist(uuids: any, opts: LooseProps = {}) {
     }
   }
 
-  if (response.status === 404 || response.status === 501) {
+  if (status === 404 || status === 501) {
     const error: LooseProps = new Error('Bulk wishlist is not available yet')
-    error.status = response.status
+    error.status = status
     error.unavailable = true
     throw error
   }
 
-  const error: LooseProps = errorFromBody(data, response.status, 'batch wishlist')
+  const error: LooseProps = errorFromBody(data, status, 'batch wishlist')
   error.payload = data
   throw error
 }
@@ -259,9 +258,9 @@ export async function batchRefreshImages(uuids: any) {
     throw error
   }
 
-  const { response, data } = await postJson(BATCH_REFRESH_IMAGES_URL, { uuids: list })
+  const { ok, status, data } = await postJson(BATCH_REFRESH_IMAGES_URL, { uuids: list })
 
-  if (response.ok || response.status === 202) {
+  if (ok) {
     return {
       ok: data.ok !== false,
       queued: data.queued || [],
@@ -272,14 +271,14 @@ export async function batchRefreshImages(uuids: any) {
     }
   }
 
-  if (response.status === 404 || response.status === 501) {
+  if (status === 404 || status === 501) {
     const error: LooseProps = new Error('Batch cover refresh is not available yet')
-    error.status = response.status
+    error.status = status
     error.unavailable = true
     throw error
   }
 
-  const error: LooseProps = errorFromBody(data, response.status, 'batch refresh images')
+  const error: LooseProps = errorFromBody(data, status, 'batch refresh images')
   error.payload = data
   throw error
 }

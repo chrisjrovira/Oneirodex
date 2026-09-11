@@ -1,12 +1,14 @@
-import { csrfHeaders, errorFromResponse, getCsrfToken } from '@oneirodex/ui'
+import { getCsrfToken } from '@oneirodex/ui'
+import { getJson, postJson, send } from './client'
+
 /**
  * Download failures carry an operator `hint` (e.g. "files were removed from
  * disk") that is a better sentence for a member than the generic `error`, so it
  * is promoted to the headline. Everything else — status, error_code, data —
  * comes from the shared helper rather than being rebuilt here.
  */
-async function raiseDownloadError(response: any, fallback: any) {
-  const error: LooseProps = await errorFromResponse(response, fallback)
+function raiseDownloadError(err: any) {
+  const error: LooseProps = err
   const hint = error.data?.hint
   if (typeof hint === 'string' && hint.trim()) {
     error.message = hint
@@ -30,47 +32,24 @@ export async function initiateGameDownload(
     body.version_uuid = versionUuid
   }
 
-  const response = await fetch(`/api/downloads/games/${encodeURIComponent(gameUuid)}`, {
-    method: 'POST',
-    signal,
-    credentials: 'same-origin',
-    headers: csrfHeaders({
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    }),
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    throw await raiseDownloadError(response, 'download')
+  try {
+    return (
+      (await postJson(`/api/downloads/games/${encodeURIComponent(gameUuid)}`, body, {
+        signal,
+        label: 'download',
+      })) ?? {}
+    )
+  } catch (err: any) {
+    throw raiseDownloadError(err)
   }
-  return response.json().catch(() => ({}))
 }
 
 export async function fetchMyDownloads({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/my_downloads', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'my_downloads')
-  }
-
-  return response.json()
+  return getJson('/api/my_downloads', { signal, label: 'my_downloads' })
 }
 
 export async function checkStatus(id: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/check_download_status/${id}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'check_download_status')
-  }
-
-  return response.json()
+  return getJson(`/check_download_status/${id}`, { signal, label: 'check_download_status' })
 }
 
 export async function deleteDownload(id: any) {
@@ -80,15 +59,12 @@ export async function deleteDownload(id: any) {
     body.append('csrf_token', csrf)
   }
 
-  const response = await fetch(`/delete_download/${id}`, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-    body,
-  })
-
-  if (!response.ok && response.status !== 302) {
-    throw await errorFromResponse(response, 'delete_download')
+  try {
+    await send(`/delete_download/${id}`, { method: 'POST', body, label: 'delete_download' })
+  } catch (err: any) {
+    if (err?.status !== 302) {
+      throw err
+    }
   }
 
   return true

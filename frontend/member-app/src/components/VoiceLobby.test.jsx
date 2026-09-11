@@ -1,18 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { VoiceLobby } from './VoiceLobby'
+import { stubFetch } from '../testJsonResponse'
 
 beforeEach(() => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/rtc/status')) {
-        return { ok: true, json: async () => ({ enabled: false }) }
-      }
-      return { ok: true, json: async () => ({}) }
-    }),
-  )
+  stubFetch(async (input) => {
+    const url = String(input)
+    if (url.includes('/api/rtc/status')) {
+      return { ok: true, json: async () => ({ enabled: false }) }
+    }
+    return { ok: true, json: async () => ({}) }
+  })
 })
 
 afterEach(() => {
@@ -42,19 +40,16 @@ test('compact mode hides disabled lobby entirely', async () => {
 
 test('token failure uses PageStatus', async () => {
   const user = userEvent.setup()
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/rtc/status')) {
-        return { ok: true, json: async () => ({ enabled: true }) }
-      }
-      if (url.includes('/api/rtc/token')) {
-        return { ok: false, status: 500, json: async () => ({ error: 'Token failed' }) }
-      }
-      return { ok: true, json: async () => ({}) }
-    }),
-  )
+  stubFetch(async (input) => {
+    const url = String(input)
+    if (url.includes('/api/rtc/status')) {
+      return { ok: true, json: async () => ({ enabled: true }) }
+    }
+    if (url.includes('/api/rtc/token')) {
+      return { ok: false, status: 500, json: async () => ({ error: 'Token failed' }) }
+    }
+    return { ok: true, json: async () => ({}) }
+  })
 
   render(<VoiceLobby />)
   await user.click(await screen.findByRole('button', { name: /get voice token/i }))

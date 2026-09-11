@@ -9,7 +9,11 @@
  * design — the handler calls `load()` again afterwards — so they resolve to the
  * response's `ok` flag rather than throwing into a `void`-ed handler.
  */
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, sendResult } from './client'
+
+function httpFailure(err: any) {
+  return typeof err?.status === 'number'
+}
 
 /**
  * @param {'inbox'|'archive'} view  the inbox is server-side "unread=1"; archive
@@ -17,44 +21,41 @@ import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
  */
 export async function fetchNotifications({ view = 'inbox', signal }: LooseProps = {}) {
   const query = view === 'inbox' ? '?unread=1&limit=100' : '?limit=100'
-  const response = await fetch(`/api/notifications${query}`, {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'notifications')
+  return getJson(`/api/notifications${query}`, { signal, label: 'notifications' })
+}
+
+/** Soft poll for library-scan toasts — HTTP failures resolve to null. */
+export async function fetchNotificationSnapshot({ limit = 20, signal }: LooseProps = {}) {
+  try {
+    return await getJson(`/api/notifications?limit=${encodeURIComponent(limit)}`, {
+      signal,
+      label: 'notifications',
+    })
+  } catch (err: any) {
+    if (httpFailure(err)) return null
+    throw err
   }
-  return response.json()
 }
 
 export async function fetchNotificationPreferences({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/notifications/preferences', {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'preferences')
-  }
-  return response.json()
+  return getJson('/api/notifications/preferences', { signal, label: 'preferences' })
 }
 
 export async function markNotificationsRead({ all = false, ids }: LooseProps = {}) {
   const body = all ? { all: true } : { ids: ids || [] }
-  const response = await fetch('/api/notifications/read', {
+  const result = await sendResult('/api/notifications/read', {
     method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  return response.ok
+  return result.ok
 }
 
 export async function saveNotificationPreferences(patch: any) {
-  const response = await fetch('/api/notifications/preferences', {
+  const result = await sendResult('/api/notifications/preferences', {
     method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   })
-  return response.ok
+  return result.ok
 }

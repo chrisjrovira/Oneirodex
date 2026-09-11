@@ -1,15 +1,7 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, postJson } from './client'
+
 export async function fetchUpdatesInbox({ signal, limit = 100 }: LooseProps = {}) {
-  const response = await fetch(`/api/updates/inbox?limit=${limit}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'updates/inbox')
-  }
-
-  return response.json()
+  return getJson(`/api/updates/inbox?limit=${limit}`, { signal, label: 'updates/inbox' })
 }
 
 /**
@@ -20,20 +12,14 @@ export async function fetchUpdatesInbox({ signal, limit = 100 }: LooseProps = {}
  * their library is still unswept rather than implying one press did all of it.
  */
 export async function scanLibraryUpdates({ limit, libraryUuid, signal }: LooseProps = {}) {
-  const response = await fetch('/api/updates/scan', {
-    method: 'POST',
-    credentials: 'same-origin',
-    signal,
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({
+  return postJson(
+    '/api/updates/scan',
+    {
       ...(limit ? { limit } : {}),
       ...(libraryUuid ? { library_uuid: libraryUuid } : {}),
-    }),
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'updates/scan')
-  }
-  return response.json()
+    },
+    { signal, label: 'updates/scan' },
+  )
 }
 
 export async function fetchStoreSearch({ q, source = 'all', limit = 8, signal }: LooseProps = {}) {
@@ -42,62 +28,24 @@ export async function fetchStoreSearch({ q, source = 'all', limit = 8, signal }:
     source,
     limit: String(limit),
   })
-  const response = await fetch(`/api/updates/store_search?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'updates/store_search')
-  }
-
-  return response.json()
+  return getJson(`/api/updates/store_search?${params}`, { signal, label: 'updates/store_search' })
 }
 
 export async function addWantedUpdate(payload: any) {
-  const response = await fetch('/api/updates/wanted', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'wanted')
-  }
-  return response.json().catch(() => ({}))
+  return (await postJson('/api/updates/wanted', payload, { label: 'wanted' })) ?? {}
 }
 
 export async function fetchAcquireStatus({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/acquire/status', {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'acquire/status')
-  }
-  return response.json()
+  return getJson('/api/acquire/status', { signal, label: 'acquire/status' })
 }
 
 export async function searchAcquire(q: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/acquire/search?q=${encodeURIComponent(q || '')}`, {
+  return getJson(`/api/acquire/search?q=${encodeURIComponent(q || '')}`, {
     signal,
-    credentials: 'same-origin',
+    label: 'acquire/search',
   })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'acquire/search')
-  }
-  return response.json()
 }
 
 export async function sendAcquireDownload({ url, provider }: LooseProps = {}) {
-  const response = await fetch('/api/acquire/download', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ url, provider }),
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'acquire')
-  }
-  return response.json().catch(() => ({}))
+  return (await postJson('/api/acquire/download', { url, provider }, { label: 'acquire' })) ?? {}
 }

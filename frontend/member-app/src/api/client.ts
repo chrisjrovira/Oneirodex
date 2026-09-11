@@ -9,7 +9,8 @@
  * Wrappers keep their exported names so pages do not move.
  *
  * 401 from modules not yet on these verbs still goes through
- * `installUnauthorizedRedirect` in `http.ts`.
+ * `installUnauthorizedRedirect` in `http.ts`. FormData and “return ok
+ * rather than throw” paths use `send` / `sendResult`.
  */
 import { getCsrfToken, errorFromBody } from '@oneirodex/ui'
 import { createBrowserRequester, OneirodexApiError } from '@oneirodex/api-client'
@@ -106,5 +107,38 @@ export async function deleteJson(url: string, body?: unknown, { signal, label }:
     return await request<any>(url, init)
   } catch (err) {
     return rethrowAsMemberError(err, label ?? url)
+  }
+}
+
+/**
+ * Arbitrary `RequestInit` on the browser transport (FormData, body-less POST).
+ * CSRF and 401 handling still come from `createBrowserRequester`.
+ */
+export async function send(url: string, init: RequestInit & { label?: string } = {}) {
+  const { label, ...rest } = init
+  try {
+    return await request<any>(url, rest)
+  } catch (err) {
+    return rethrowAsMemberError(err, label ?? url)
+  }
+}
+
+/**
+ * POST/PUT/PATCH/DELETE that returns `{ ok, status, data }` instead of throwing
+ * on 4xx/5xx (401 still redirects). Matches admin `postJsonResult`, and is what
+ * batch / fire-and-forget social writes need.
+ */
+export async function sendResult(url: string, init: RequestInit = {}) {
+  try {
+    const data = await request<any>(url, init)
+    return { ok: true, status: 200, data: data ?? {} }
+  } catch (err) {
+    if (err instanceof OneirodexApiError) {
+      const body = err.body
+      const data =
+        body && typeof body === 'object' ? (body as unknown as Record<string, unknown>) : {}
+      return { ok: false, status: err.status, data }
+    }
+    throw err
   }
 }

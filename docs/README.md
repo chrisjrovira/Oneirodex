@@ -2,7 +2,7 @@
 
 **Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
-Hub for product, ops, and developer docs. Public name **Oneirodex** (phase 1 landed; phase 2 ops dual names; GitHub `chrisjrovira/oneirodex`; phase 3a `ONEIRODEX_*` / `--od-*`). Package `oneirodex/`, Compose defaults `oneirodex-*`, preferred Hub image `chrisjrovira/oneirodex` once published. [ADR 0003](adr/0003-product-name-oneirodex.md).
+Hub for product, ops, and developer docs. Public name **Oneirodex**. Runtime env is `ONEIRODEX_*` only ([ADR 0003](adr/0003-product-name-oneirodex.md)). Package `oneirodex/`, Compose defaults `oneirodex-*`, preferred Hub image `chrisjrovira/oneirodex` once published.
 
 Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs/assets/readme/`), quick start, and troubleshooting.
 
@@ -27,6 +27,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Maintainers / disk hygiene | [runbooks/workspace-disk-hygiene.md](runbooks/workspace-disk-hygiene.md) — safe cache deletes vs WebRetro / `.git` |
 | Maintainers / desktop installers | [runbooks/local-installers.md](runbooks/local-installers.md) — build Windows · macOS · Linux bundles without GitHub Actions; a `.dmg` still needs a Mac |
 | Admins | [admin/libraries-and-scans.md](admin/libraries-and-scans.md) · [members-and-invites.md](admin/members-and-invites.md) (invites without email · local accounts) · [privacy-data-handling.md](admin/privacy-data-handling.md) (what the host stores · child ACL · optional outbound) · [webretro-core-clauses.md](admin/webretro-core-clauses.md) (snes9x / genesis_plus_gx quotes — **not counsel**) · [settings-modules.md](admin/settings-modules.md) · [discover-sections.md](admin/discover-sections.md) (storefront shelves · layouts · timed events) · [theme-fonts-and-images.md](admin/theme-fonts-and-images.md) (fonts · batch artwork) · [ops-summary.md](admin/ops-summary.md) · [support-inbox.md](admin/support-inbox.md) · [troubleshooting.md](admin/troubleshooting.md) · [themes-reset.md](admin/themes-reset.md) |
+| Maintainers / architecture | [dev/architecture.md](dev/architecture.md) · [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Support triage (maintainers) | [dev/ui-debt-log.md](dev/ui-debt-log.md) · [dev/api-envelope-keeps.md](dev/api-envelope-keeps.md) |
 | Test harness (maintainers) | [dev/test-harness-2026-09-10.md](dev/test-harness-2026-09-10.md) — per-test SAVEPOINT isolation · savepoint-restart listener · `database` / `slow` markers · [dev/test-harness-2026-08-07.md](dev/test-harness-2026-08-07.md) (lock-storm) · [dev/test-harness-failures.md](dev/test-harness-failures.md) |
 | Writing an API route (maintainers) | [dev/pydantic-adoption.md](dev/pydantic-adoption.md) — `@validate_body` request models · which routes are migrated · adoption backlog |
@@ -56,7 +57,7 @@ docs/
 | Surface | Value |
 |---|---|
 | Product (shipped today) | Oneirodex (public string) |
-| Ops / code identifiers | P3b: Compose defaults `oneirodex-*`; npm `@oneirodex/api-client`. Package / `.gt-*` still `oneirodex` — [ADR 0003](adr/0003-product-name-oneirodex.md) |
+| Ops / code identifiers | Compose defaults `oneirodex-*`; npm `@oneirodex/api-client`; env `ONEIRODEX_*` only — [ADR 0003](adr/0003-product-name-oneirodex.md) |
 | Version | 1.0.0-beta |
 | GitHub | chrisjrovira/oneirodex |
 | App / DB containers | oneirodex-app · oneirodex-db |
