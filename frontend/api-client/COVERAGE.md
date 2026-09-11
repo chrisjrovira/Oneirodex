@@ -72,16 +72,15 @@ typed) matching the `src/types.ts` house style — tighten per group as
   admin-app actually calls — none of admin-app's own hooks/components were
   rewired onto them yet (still call `getJson`/`postJson`/`postJsonResult`
   directly); that adoption is a separate follow-up.
-- **member-app browser-transport adoption — started (PR-6).** `member-app/src/api/client.ts`
-  now sits on `createBrowserRequester` with the same verb names plus `patchJson`.
-  First covered groups rewired onto those verbs (function signatures unchanged,
-  pages did not move): collections, wishlist, discover, discoverPins, playtime,
-  favorites. Typed resource modules (`createCollectionsApi` etc.) are not wired
-  into the SPA yet — same follow-up shape as admin. Remaining member wrappers
-  (chat/social, notifications, ownership, cheats, browse `/browse_games`,
-  preferences HTML, SSE) still hand-roll `fetch`. Vitest mocks for the rewired
-  paths need `content-type: application/json` and `.text()` for the same reason
-  admin did.
+- **member-app browser-transport adoption — done (PR-6 remainder).** `member-app/src/api/client.ts`
+  sits on `createBrowserRequester` with `getJson` / `postJson` / `putJson` /
+  `patchJson` / `deleteJson` plus `send` (FormData / body-less POST) and
+  `sendResult` (4xx without throw). Every `src/api/` JSON wrapper uses those
+  verbs. Typed resource modules (`createCollectionsApi` etc.) are not wired
+  into the SPA yet — same follow-up shape as admin. Still off this path:
+  `preferences.ts` HTML `POST /settings_panel`, `EventSource` streams, and
+  inlined `fetch` in Chat / voice / space-rail components. Vitest mocks need
+  `content-type: application/json` and `.text()` for the same reason admin did.
 - Account `uploadAvatar` — done (this PR). Moved from `@oneirodex/ui`'s
   `accountApi.ts` (PR-4 sub-wave d) into `account.ts` here as a multipart
   `FormData` POST; `AccountModal.tsx` now calls it through a scoped
