@@ -16,6 +16,7 @@ function renderDiscover(props = {}) {
 }
 
 function jsonResponse(body) {
+  const payload = JSON.stringify(body)
   return {
     ok: true,
     headers: {
@@ -24,6 +25,7 @@ function jsonResponse(body) {
       },
     },
     json: async () => body,
+    text: async () => payload,
   }
 }
 
@@ -84,7 +86,7 @@ test('renders discover section titles and games as horizontal shelves', async ()
   expect(screen.getByTitle('Virtual Reality')).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/discover/sections',
-    expect.objectContaining({ credentials: 'same-origin' }),
+    expect.objectContaining({ credentials: 'include' }),
   )
 })
 
@@ -148,15 +150,7 @@ test('shows Loading Discover while sections fetch', async () => {
   // shared resolver would be reassigned by whichever request went out last.
   global.fetch = vi.fn((url) => {
     if (String(url).includes('/pins')) {
-      return Promise.resolve({
-        ok: true,
-        headers: {
-          get(name) {
-            return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
-          },
-        },
-        json: async () => ({ ok: true, pins: [], max_pins: 3, available: [] }),
-      })
+      return Promise.resolve(jsonResponse({ ok: true, pins: [], max_pins: 3, available: [] }))
     }
     return new Promise((resolve) => {
       resolveFetch = resolve
@@ -166,15 +160,7 @@ test('shows Loading Discover while sections fetch', async () => {
   renderDiscover()
   expect(screen.getByText('Loading Discover')).toBeInTheDocument()
 
-  resolveFetch({
-    ok: true,
-    headers: {
-      get(name) {
-        return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
-      },
-    },
-    json: async () => ({ sections: [] }),
-  })
+  resolveFetch(jsonResponse({ sections: [] }))
 
   await waitFor(() => {
     expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()

@@ -17,6 +17,7 @@
     "lint:css:update": "node ../../scripts/css-token-lint.mjs --update"
   },
   "dependencies": {
+    "@oneirodex/api-client": "*",
     "@tanstack/react-query": "5.102.8",
     "@tanstack/react-virtual": "^3.14.8",
     "cmdk": "^1.1.1",

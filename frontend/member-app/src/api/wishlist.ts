@@ -1,44 +1,18 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { deleteJson, getJson, patchJson, postJson } from './client'
+
 export async function fetchRequests({ all = false, signal }: LooseProps = {}) {
-  const response = await fetch(all ? '/api/requests?all=1' : '/api/requests', {
+  return getJson(all ? '/api/requests?all=1' : '/api/requests', {
     signal,
-    credentials: 'same-origin',
+    label: 'requests',
   })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'requests')
-  }
-
-  return response.json()
 }
 
 export async function createRequest({ title, notes }: LooseProps = {}) {
-  const response = await fetch('/api/requests', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ title, notes: notes || '' }),
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'create request')
-  }
-
-  return response.json()
+  return postJson('/api/requests', { title, notes: notes || '' }, { label: 'create request' })
 }
 
 export async function deleteRequest(id: any) {
-  const response = await fetch(`/api/requests/${id}`, {
-    method: 'DELETE',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'delete request')
-  }
-
-  return response.json()
+  return deleteJson(`/api/requests/${id}`, undefined, { label: 'delete request' })
 }
 
 export async function resolveRequest(id: any, { status, notes, linkedGameUuid }: LooseProps = {}) {
@@ -50,16 +24,5 @@ export async function resolveRequest(id: any, { status, notes, linkedGameUuid }:
     payload.linked_game_uuid = linkedGameUuid
   }
 
-  const response = await fetch(`/api/requests/${id}`, {
-    method: 'PATCH',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'resolve request')
-  }
-
-  return response.json()
+  return patchJson(`/api/requests/${id}`, payload, { label: 'resolve request' })
 }

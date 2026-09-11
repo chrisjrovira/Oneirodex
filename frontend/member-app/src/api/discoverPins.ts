@@ -1,4 +1,5 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, putJson } from './client'
+
 /**
  * How this member has arranged their Discover feed.
  *
@@ -7,15 +8,7 @@ import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
  * arrangement — see the route's docstring.
  */
 export async function fetchDiscoverPins({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/discover/pins', {
-    credentials: 'same-origin',
-    signal,
-    headers: { Accept: 'application/json' },
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'discover pins')
-  }
-  const data = await response.json()
+  const data = await getJson('/api/discover/pins', { signal, label: 'discover pins' })
   return {
     pins: Array.isArray(data.pins) ? data.pins : [],
     hidden: Array.isArray(data.hidden) ? data.hidden : [],
@@ -40,20 +33,10 @@ export async function fetchDiscoverPins({ signal }: LooseProps = {}) {
  */
 export async function saveDiscoverPins(arrangement: any, { signal }: LooseProps = {}) {
   const body = Array.isArray(arrangement) ? { pins: arrangement } : arrangement || {}
-  const response = await fetch('/api/discover/pins', {
-    method: 'PUT',
-    credentials: 'same-origin',
+  const data = await putJson('/api/discover/pins', body, {
     signal,
-    headers: csrfHeaders({
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    }),
-    body: JSON.stringify(body),
+    label: 'save discover pins',
   })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'save discover pins')
-  }
-  const data = await response.json()
   return {
     pins: Array.isArray(data.pins) ? data.pins : [],
     hidden: Array.isArray(data.hidden) ? data.hidden : [],

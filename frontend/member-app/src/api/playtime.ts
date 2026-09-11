@@ -1,14 +1,5 @@
-﻿import { errorFromResponse } from '@oneirodex/ui'
+﻿import { getJson } from './client'
 
 export async function fetchMyPlaytime({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/playtime/me', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'playtime/me')
-  }
-
-  return response.json()
+  return getJson('/api/playtime/me', { signal, label: 'playtime/me' })
 }

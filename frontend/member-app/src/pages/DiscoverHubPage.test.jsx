@@ -4,6 +4,7 @@ import { DiscoverHubPage } from './DiscoverHubPage'
 import { ShellHarness } from '../testShell'
 
 function jsonResponse(body, status = 200) {
+  const payload = JSON.stringify(body)
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -13,6 +14,7 @@ function jsonResponse(body, status = 200) {
       },
     },
     json: async () => body,
+    text: async () => payload,
   }
 }
 

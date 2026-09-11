@@ -1,4 +1,4 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 export async function fetchFavoriteGames(params: LooseProps = {}, { signal }: LooseProps = {}) {
   const qs = new URLSearchParams(
@@ -7,14 +7,5 @@ export async function fetchFavoriteGames(params: LooseProps = {}, { signal }: Lo
     ),
   )
   const suffix = qs.toString() ? `?${qs}` : ''
-  const response = await fetch(`/api/favorites${suffix}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'favorites')
-  }
-
-  return response.json()
+  return getJson(`/api/favorites${suffix}`, { signal, label: 'favorites' })
 }
