@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { expect, test } from 'vitest'
+import { jsonResponse } from '../testJsonResponse'
 import { ReportIssuePage } from './ReportIssuePage'
 
 test('keeps logs and context collapsed by default', () => {
@@ -49,11 +50,7 @@ test('submit failure uses PageStatus', async () => {
   const user = userEvent.setup()
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => ({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: 'Submit failed' }),
-    })),
+    vi.fn(() => jsonResponse({ error: 'Submit failed' }, { ok: false, status: 500 })),
   )
 
   render(
