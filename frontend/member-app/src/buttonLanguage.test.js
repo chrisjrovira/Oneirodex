@@ -52,7 +52,8 @@ function sourceFiles(dir, out = []) {
       continue
     }
     // Tests render throwaway markup to assert against; they are not shipped UI.
-    if (!/\.jsx?$/.test(entry) || /\.test\.jsx?$/.test(entry)) continue
+    if (!/\.[jt]sx?$/.test(entry) || /\.test\.[jt]sx?$/.test(entry) || entry.endsWith('.d.ts'))
+      continue
     out.push(full)
   }
   return out

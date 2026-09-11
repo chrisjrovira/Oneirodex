@@ -41,7 +41,7 @@ export default [
       // this seat's scope.
       'tests/**',
       // Generated — the source of truth is scripts/gen_loading_motifs.py.
-      'frontend/member-app/src/components/systemMotifCatalogue.js',
+      'frontend/member-app/src/components/systemMotifCatalogue.ts',
     ],
   },
 
@@ -114,12 +114,16 @@ export default [
     languageOptions: { globals: { ...TEST_GLOBALS } },
   },
 
-  // TypeScript surface owned by this seat: `@oneirodex/ui` (frontend/shared)
-  // and the ops-glance SPA, both converted to `.ts`/`.tsx` with `strict: true`
-  // in Phase 3.3. Same non-type-checked recommended set as the api-client block
-  // above, plus the React plugins because these files carry components/hooks.
+  // TypeScript surface owned by this seat: `@oneirodex/ui` (frontend/shared),
+  // ops-glance, and member-app (PR-5a). Same non-type-checked recommended set
+  // as the api-client block above, plus the React plugins because these files
+  // carry components/hooks.
   ...tseslint.config({
-    files: ['frontend/shared/**/*.{ts,tsx}', 'frontend/ops-glance/**/*.{ts,tsx}'],
+    files: [
+      'frontend/shared/**/*.{ts,tsx}',
+      'frontend/ops-glance/**/*.{ts,tsx}',
+      'frontend/member-app/**/*.{ts,tsx}',
+    ],
     extends: [tseslint.configs.recommended],
     plugins: { react: reactPlugin, 'react-hooks': reactHooks },
     settings: { react: { version: 'detect' } },

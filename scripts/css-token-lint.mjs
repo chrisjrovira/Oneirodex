@@ -219,10 +219,19 @@ function collectCssFiles(dir, out = []) {  // also collects .jsx/.js — see bel
     const full = join(dir, entry)
     const st = statSync(full)
     if (st.isDirectory()) collectCssFiles(full, out)
-    // .jsx/.js join the walk so inline styles are linted too — see
-    // lintJsxInlineStyles. Tests are excluded: a fixture may need a literal.
+    // .jsx/.js/.tsx/.ts join the walk so inline styles are linted too — see
+    // lintJsxInlineStyles. Tests and ambient `.d.ts` are excluded: a fixture
+    // may need a literal, and declarations have no runtime styles.
     else if (entry.endsWith('.css')) out.push(full)
-    else if ((entry.endsWith('.jsx') || entry.endsWith('.js')) && !entry.includes('.test.')) out.push(full)
+    else if (
+      (entry.endsWith('.jsx') ||
+        entry.endsWith('.js') ||
+        entry.endsWith('.tsx') ||
+        entry.endsWith('.ts')) &&
+      !entry.includes('.test.') &&
+      !entry.endsWith('.d.ts')
+    )
+      out.push(full)
   }
   return out
 }

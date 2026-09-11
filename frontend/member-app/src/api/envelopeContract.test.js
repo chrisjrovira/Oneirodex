@@ -24,15 +24,15 @@ const API_DIR = path.dirname(fileURLToPath(import.meta.url))
  * short and reasoned — it is the escape hatch that could hollow out the guard.
  */
 const EXEMPT = new Map([
-  ['preferences.js', '/settings_panel renders HTML, so there is no envelope to parse'],
-  ['discover.js', 'guards the content-type after an ok response, not a failed one'],
+  ['preferences.ts', '/settings_panel renders HTML, so there is no envelope to parse'],
+  ['discover.ts', 'guards the content-type after an ok response, not a failed one'],
 ])
 
 function sourceFiles() {
   return fs
     .readdirSync(API_DIR)
-    .filter((name) => name.endsWith('.js') && !name.endsWith('.test.js'))
-    .filter((name) => name !== 'envelopeError.js' && name !== 'csrf.js')
+    .filter((name) => name.endsWith('.ts') && !name.endsWith('.test.ts') && !name.endsWith('.d.ts'))
+    .filter((name) => name !== 'envelopeError.ts' && name !== 'csrf.ts')
 }
 
 describe('CSRF handling lives in one module', () => {
@@ -77,12 +77,19 @@ function walkSrcFiles(dir = SRC_ROOT, acc = []) {
       walkSrcFiles(full, acc)
       continue
     }
-    if (!/\.(js|jsx)$/.test(entry.name)) continue
+    if (!/\.(js|jsx|ts|tsx)$/.test(entry.name)) continue
     // Production modules only. Tests may set a meta tag or assert the header
     // object csrfHeaders() produced; those are not local lookup copies.
-    if (/\.test\.(js|jsx)$/.test(entry.name)) continue
+    if (/\.test\.(js|jsx|ts|tsx)$/.test(entry.name)) continue
+    if (entry.name.endsWith('.d.ts')) continue
     const rel = path.relative(SRC_ROOT, full).split(path.sep).join('/')
-    if (rel === 'api/csrf.js' || rel === 'api/envelopeError.js') continue
+    if (
+      rel === 'api/csrf.js' ||
+      rel === 'api/csrf.ts' ||
+      rel === 'api/envelopeError.js' ||
+      rel === 'api/envelopeError.ts'
+    )
+      continue
     acc.push(rel)
   }
   return acc
@@ -108,7 +115,9 @@ describe('CSRF handling lives in one module across src/', () => {
   test('the walk finds production modules', () => {
     expect(files.length).toBeGreaterThan(20)
     expect(files).not.toContain('api/csrf.js')
+    expect(files).not.toContain('api/csrf.ts')
     expect(files).not.toContain('api/envelopeError.js')
+    expect(files).not.toContain('api/envelopeError.ts')
   })
 
   test.each(files)('%s has no local CSRF lookup', (rel) => {

@@ -67,13 +67,13 @@ describe('the context bar title is the page heading', () => {
   const jsx = (name) => readFileSync(join(HERE, name), 'utf8')
 
   it('TopBar renders the section name as an h1, not a span', () => {
-    const src = jsx('TopBar.jsx')
+    const src = jsx('TopBar.tsx')
     expect(src).toMatch(/<h1 className="od-topbar__section">\{pageTitle\}<\/h1>/)
     expect(src).not.toMatch(/<span className="od-topbar__section">/)
   })
 
   it('ContextBar renders its portalled title as an h1 too', () => {
-    const src = jsx('ContextBar.jsx')
+    const src = jsx('ContextBar.tsx')
     expect(src).toMatch(/<h1 className="od-topbar__section">\{title\}<\/h1>/)
     expect(src).not.toMatch(/<span className="od-topbar__section">/)
   })
@@ -81,7 +81,7 @@ describe('the context bar title is the page heading', () => {
   it('the heading is not gated on rail state', () => {
     // It used to render only when the rail was collapsed, which is what left
     // the expanded-rail case — the default — with no heading at all.
-    const src = jsx('TopBar.jsx')
+    const src = jsx('TopBar.tsx')
     expect(src).not.toMatch(/railState === 'collapsed' && pageTitle/)
   })
 })

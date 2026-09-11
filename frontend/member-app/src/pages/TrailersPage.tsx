@@ -1,0 +1,854 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ContextBar, Popover } from '../chrome/ContextBar'
+import {
+  fetchAttractModeSettings,
+  fetchRandomTrailer,
+  fetchTrailerFilters,
+  saveAttractModePreferences,
+} from '../api/trailers'
+import { PageStatus } from '../components/PageStatus'
+import { LoadingOverlay } from '../components/LoadingOverlay'
+import { showToast } from '../utils/toast'
+import '../components/libraryFilters.css'
+import './TrailersPage.css'
+import { Button, useShellConfig } from '@oneirodex/ui'
+
+const SETTINGS_STORAGE_KEY = 'trailerAutoplaySettings'
+const ATTRACT_RETURN_KEY = 'attractModeReturnUrl'
+const DEFAULT_SETTINGS = { enabled: true, skipFirst: 0, skipAfter: 0 }
+const EMPTY_FILTERS = { library: '', genres: [], themes: [], dateFrom: '', dateTo: '' }
+
+/** Mirrors the server-side whitelist in convert_to_embed_url; anything else is rejected. */
+const YOUTUBE_ID_PATTERNS = [
+  /youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+  /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/,
+  /youtu\.be\/([a-zA-Z0-9_-]+)/,
+]
+
+function youTubeVideoId(url) {
+  if (typeof url !== 'string') {
+    return null
+  }
+  for (const pattern of YOUTUBE_ID_PATTERNS) {
+    const match = url.match(pattern)
+    if (match?.[1]) {
+      return match[1]
+    }
+  }
+  return null
+}
+
+function buildEmbedSrc(videoId, skipFirst) {
+  const params = new URLSearchParams({
+    autoplay: '1',
+    rel: '0',
+    modestbranding: '1',
+    enablejsapi: '1',
+  })
+  if (skipFirst > 0) {
+    params.set('start', String(skipFirst))
+  }
+  if (window.location?.origin) {
+    params.set('origin', window.location.origin)
+  }
+  return `https://www.youtube.com/embed/${videoId}?${params}`
+}
+
+let youTubeApiPromise = null
+
+function loadYouTubeApi() {
+  if (window.YT?.Player) {
+    return Promise.resolve(window.YT)
+  }
+  if (youTubeApiPromise) {
+    return youTubeApiPromise
+  }
+
+  youTubeApiPromise = new Promise((resolve) => {
+    const previousCallback = window.onYouTubeIframeAPIReady
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof previousCallback === 'function') {
+        previousCallback()
+      }
+      resolve(window.YT)
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://www.youtube.com/iframe_api'
+    script.async = true
+    script.onerror = () => resolve(null)
+    document.head.appendChild(script)
+  })
+
+  return youTubeApiPromise
+}
+
+function normalizeSettings(raw) {
+  return {
+    enabled: raw?.enabled !== false,
+    skipFirst: Math.max(0, Number(raw?.skipFirst) || 0),
+    skipAfter: Math.max(0, Number(raw?.skipAfter) || 0),
+  }
+}
+
+function readStoredSettings() {
+  try {
+    const saved = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
+    return saved ? normalizeSettings(JSON.parse(saved)) : DEFAULT_SETTINGS
+  } catch {
+    return DEFAULT_SETTINGS
+  }
+}
+
+function fromServerFilters(raw) {
+  return {
+    library: raw?.library_uuid ? String(raw.library_uuid) : '',
+    genres: Array.isArray(raw?.genres) ? raw.genres.map(String) : [],
+    themes: Array.isArray(raw?.themes) ? raw.themes.map(String) : [],
+    dateFrom: raw?.date_from ? String(raw.date_from) : '',
+    dateTo: raw?.date_to ? String(raw.date_to) : '',
+  }
+}
+
+function toServerFilters(filters) {
+  return {
+    library_uuid: filters.library || null,
+    genres: filters.genres.map((id) => Number(id)),
+    themes: filters.themes.map((id) => Number(id)),
+    date_from: filters.dateFrom ? Number(filters.dateFrom) : null,
+    date_to: filters.dateTo ? Number(filters.dateTo) : null,
+  }
+}
+
+function selectedValues(select: EventTarget | null) {
+  if (!(select instanceof HTMLSelectElement)) return []
+  return Array.from(select.selectedOptions).map((option) => option.value)
+}
+
+function labelsFor(options, ids) {
+  const wanted = new Set(ids.map(String))
+  return (options || [])
+    .filter((option) => wanted.has(String(option.id)))
+    .map((option) => option.name)
+}
+
+/**
+ * Renders the embed as a plain iframe so playback works even when the IFrame API
+ * is unavailable, then binds a YT.Player to that same frame for the auto-advance
+ * behaviour the Jinja page relied on.
+ */
+function TrailerPlayer({
+  videoId,
+  skipFirst,
+  settingsRef,
+  onAdvance,
+  title,
+  gameUuid,
+}: LooseProps) {
+  const frameRef = useRef(null)
+  const advanceRef = useRef(onAdvance)
+  const [src] = useState(() => buildEmbedSrc(videoId, skipFirst))
+
+  useEffect(() => {
+    advanceRef.current = onAdvance
+  }, [onAdvance])
+
+  useEffect(() => {
+    let cancelled = false
+    let player = null
+    let timer = null
+    let playedSeconds = 0
+    let isPlaying = false
+
+    function stopTimer() {
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+      playedSeconds = 0
+      isPlaying = false
+    }
+
+    function startTimer() {
+      if (timer) {
+        return
+      }
+      timer = setInterval(() => {
+        if (!isPlaying) {
+          return
+        }
+        playedSeconds += 1
+        const { skipAfter } = settingsRef.current
+        if (skipAfter > 0 && playedSeconds >= skipAfter) {
+          stopTimer()
+          advanceRef.current?.()
+        }
+      }, 1000)
+    }
+
+    loadYouTubeApi().then((YT) => {
+      if (cancelled || !YT?.Player || !frameRef.current) {
+        return
+      }
+
+      player = new YT.Player(frameRef.current, {
+        events: {
+          onStateChange: (event) => {
+            if (event.data === YT.PlayerState.PLAYING) {
+              isPlaying = true
+              startTimer()
+            } else if (event.data === YT.PlayerState.PAUSED) {
+              isPlaying = false
+            } else if (event.data === YT.PlayerState.ENDED) {
+              stopTimer()
+              if (settingsRef.current.enabled) {
+                advanceRef.current?.()
+              }
+            }
+          },
+        },
+      })
+    })
+
+    return () => {
+      cancelled = true
+      stopTimer()
+      try {
+        player?.destroy?.()
+      } catch {
+        // The frame is already gone when React unmounted it first.
+      }
+    }
+  }, [videoId, settingsRef])
+
+  return (
+    /* The set, not just a rectangle.
+       Trailers are the one page that is purely about watching something, and a
+       bare iframe on a flat panel is the least evocative way to present that in
+       an app about games. The cabinet is drawn entirely from theme tokens — no
+       image — so it recolours with whatever preset is chosen instead of pinning
+       the page to one palette. Decorative parts are aria-hidden; the iframe is
+       still just an iframe to a screen reader. */
+    <div className="od-trailers__set">
+      {/* The title leads the set.
+          It sat under the cabinet, below the bezel and the knobs, so on a tall
+          player you were watching something for several seconds before the page
+          told you what it was — and on a short window it fell below the fold
+          entirely. Above the frame it is the first thing read, which is the
+          order a title and its video belong in. Still a link, because "what am
+          I watching" and "take me to it" are the same question. */}
+      {title ? (
+        <p className="od-trailers__caption">
+          <a className="od-trailers__title-link" href={`/game_details/${gameUuid}`}>
+            {title}
+          </a>
+        </p>
+      ) : null}
+      <div className="od-trailers__video">
+        <span className="od-trailers__scanlines" aria-hidden="true" />
+        <span className="od-trailers__glare" aria-hidden="true" />
+        <iframe
+          ref={frameRef}
+          title={title ? `Trailer — ${title}` : 'Game trailer'}
+          src={src}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          allowFullScreen
+        />
+      </div>
+      {/* Bezel without the wordmark.
+          "Oneirodex" printed under the player was the product naming itself on
+          a page the member reached from a nav that already says Oneirodex, on a
+          screen inside an app called Oneirodex — and it sat exactly where a
+          video's title belongs, which is where the title is now. The knobs stay:
+          they are what makes the frame read as a cabinet rather than as a grey
+          bar, and they claim nothing. */}
+      <div className="od-trailers__bezel" aria-hidden="true">
+        <span className="od-trailers__knobs">
+          <span className="od-trailers__knob" />
+          <span className="od-trailers__knob" />
+          <span className="od-trailers__led" />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function FilterPanel({ options, optionsError, filters, onChange, onClear, onApply }: LooseProps) {
+  const dateRange = options?.date_range || {}
+
+  /* Same shape as Library's FilterBar: Apply/Clear fused at the top, fields in
+     `.library-filters__body`, no nested box. The popover frame is the only
+     surface when this opens under new chrome (chromeless + bare panel). */
+  return (
+    <form
+      className="container-filtersandsort library-filters od-trailers-filters"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onApply()
+      }}
+    >
+      <div className="library-filters__actions">
+        <div className="od-cbtn-group od-cbtn-group--fill">
+          <button type="submit" className="od-cbtn od-cbtn--primary">
+            Apply
+          </button>
+          <button type="button" className="od-cbtn" onClick={onClear}>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div className="library-filters__body">
+        {optionsError ? (
+          <p className="od-trailers__filter-error">Filter options are unavailable right now.</p>
+        ) : null}
+
+        <label htmlFor="od-trailers-library">
+          Library
+          <select
+            id="od-trailers-library"
+            className="form-control"
+            value={filters.library}
+            onChange={(event) => onChange({ library: event.target.value })}
+          >
+            <option value="">All Libraries</option>
+            {(options?.libraries || []).map((library) => (
+              <option key={library.uuid} value={library.uuid}>
+                {library.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label htmlFor="od-trailers-date-from">
+          Release year from
+          <input
+            id="od-trailers-date-from"
+            className="form-control"
+            type="number"
+            min={dateRange.min_year || 1970}
+            max={dateRange.max_year || 2030}
+            placeholder={`e.g., ${dateRange.min_year || 1990}`}
+            value={filters.dateFrom}
+            onChange={(event) => onChange({ dateFrom: event.target.value })}
+          />
+        </label>
+
+        <label htmlFor="od-trailers-date-to">
+          Release year to
+          <input
+            id="od-trailers-date-to"
+            className="form-control"
+            type="number"
+            min={dateRange.min_year || 1970}
+            max={dateRange.max_year || 2030}
+            placeholder={`e.g., ${dateRange.max_year || 2024}`}
+            value={filters.dateTo}
+            onChange={(event) => onChange({ dateTo: event.target.value })}
+          />
+        </label>
+
+        <label htmlFor="od-trailers-genres">
+          Genres
+          <select
+            id="od-trailers-genres"
+            className="form-control"
+            multiple
+            size={8}
+            value={filters.genres}
+            onChange={(event) => onChange({ genres: selectedValues(event.target) })}
+          >
+            {(options?.genres || []).map((genre) => (
+              <option key={genre.id} value={String(genre.id)}>
+                {genre.name}
+              </option>
+            ))}
+          </select>
+          <small>Hold Ctrl/Cmd to select multiple</small>
+        </label>
+
+        <label htmlFor="od-trailers-themes">
+          Themes
+          <select
+            id="od-trailers-themes"
+            className="form-control"
+            multiple
+            size={8}
+            value={filters.themes}
+            onChange={(event) => onChange({ themes: selectedValues(event.target) })}
+          >
+            {(options?.themes || []).map((theme) => (
+              <option key={theme.id} value={String(theme.id)}>
+                {theme.name}
+              </option>
+            ))}
+          </select>
+          <small>Hold Ctrl/Cmd to select multiple</small>
+        </label>
+      </div>
+    </form>
+  )
+}
+
+function SettingsModal({ settings, onCancel, onSave }: LooseProps) {
+  const [draft, setDraft] = useState(settings)
+
+  return (
+    <div
+      className="od-trailers__modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Auto-Play Settings"
+    >
+      <div className="od-trailers__modal">
+        <h2>Auto-Play Settings</h2>
+
+        <label className="od-trailers__toggle">
+          <input
+            type="checkbox"
+            checked={draft.enabled}
+            onChange={(event) => setDraft({ ...draft, enabled: event.target.checked })}
+          />
+          Auto-play next video
+        </label>
+
+        <label htmlFor="od-trailers-skip-first">Skip first (seconds)</label>
+        <input
+          id="od-trailers-skip-first"
+          type="number"
+          min={0}
+          max={300}
+          value={draft.skipFirst}
+          onChange={(event) => setDraft({ ...draft, skipFirst: event.target.value })}
+        />
+
+        <label htmlFor="od-trailers-skip-after">Skip to next after playing (seconds)</label>
+        <input
+          id="od-trailers-skip-after"
+          type="number"
+          min={0}
+          max={600}
+          value={draft.skipAfter}
+          onChange={(event) => setDraft({ ...draft, skipAfter: event.target.value })}
+        />
+        <small>Load next video after watching for this long (0 to disable)</small>
+
+        <div className="od-trailers__modal-actions">
+          <Button variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button className="od-btn--accent" onClick={() => onSave(draft)}>
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function TrailersPage() {
+  const shellConfig = useShellConfig()
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
+  const [attractMode] = useState(() =>
+    new URLSearchParams(window.location.search).has('attract_mode'),
+  )
+  const [options, setOptions] = useState(null)
+  const [optionsError, setOptionsError] = useState(null)
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [request, setRequest] = useState({ id: 0, filters: EMPTY_FILTERS })
+  const [trailer, setTrailer] = useState(null)
+  const [emptyMessage, setEmptyMessage] = useState(null)
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const filtersRef = useRef(filters)
+  const settingsRef = useRef(settings)
+  const trailerRef = useRef(null)
+
+  useEffect(() => {
+    filtersRef.current = filters
+  }, [filters])
+
+  useEffect(() => {
+    settingsRef.current = settings
+  }, [settings])
+
+  useEffect(() => {
+    trailerRef.current = trailer
+  }, [trailer])
+
+  const requestTrailer = useCallback(() => {
+    setRequest((current) => ({ id: current.id + 1, filters: filtersRef.current }))
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+    setLoading(true)
+    setError(null)
+    setEmptyMessage(null)
+    // Keep the last trailer on screen until a replacement arrives so
+    // "Another one" does not collapse the player (UX-B6).
+
+    fetchRandomTrailer({ signal: controller.signal, filters: request.filters })
+      .then((data) => {
+        if (!active) {
+          return
+        }
+        if (data?.has_videos) {
+          setTrailer(data)
+        } else {
+          setTrailer(null)
+          setEmptyMessage(
+            data?.message ||
+              (data?.code === 'no_trailers'
+                ? 'No trailers in your library yet.'
+                : 'No games with trailers found matching your filters'),
+          )
+        }
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (!active || err.name === 'AbortError') {
+          return
+        }
+        setError(err)
+        setLoading(false)
+        if (trailerRef.current) {
+          showToast('Unable to load trailers.', 'error')
+        }
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [request])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+
+    fetchTrailerFilters({ signal: controller.signal })
+      .then((data) => {
+        if (active) {
+          setOptions(data)
+        }
+      })
+      .catch((err) => {
+        if (active && err.name !== 'AbortError') {
+          setOptionsError(err)
+        }
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!attractMode) {
+      setSettings(readStoredSettings())
+      return undefined
+    }
+
+    const controller = new AbortController()
+    let active = true
+
+    fetchAttractModeSettings({ signal: controller.signal })
+      .then((data) => {
+        if (!active) {
+          return
+        }
+        if (data?.settings?.autoplay) {
+          setSettings(normalizeSettings(data.settings.autoplay))
+        }
+        if (data?.settings?.filters) {
+          setFilters(fromServerFilters(data.settings.filters))
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSettings(readStoredSettings())
+        }
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [attractMode])
+
+  const openBigPicture = useCallback(() => {
+    const uuid = trailerRef.current?.game_uuid
+    window.location.href = uuid ? `/big-picture?game=${encodeURIComponent(uuid)}` : '/big-picture'
+  }, [])
+
+  useEffect(() => {
+    if (!attractMode) {
+      return undefined
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key !== 'b' && event.key !== 'B') {
+        return
+      }
+      const tag = event.target?.tagName || ''
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        return
+      }
+      event.preventDefault()
+      openBigPicture()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [attractMode, openBigPicture])
+
+  const activeFilterBadges = useMemo(() => {
+    const badges = []
+    const library = (options?.libraries || []).find((item) => item.uuid === filters.library)
+    if (library) {
+      badges.push(library.name)
+    }
+    badges.push(...labelsFor(options?.genres, filters.genres))
+    badges.push(...labelsFor(options?.themes, filters.themes))
+    if (filters.dateFrom || filters.dateTo) {
+      badges.push(`${filters.dateFrom || '...'}-${filters.dateTo || '...'}`)
+    }
+    return badges
+  }, [options, filters])
+
+  function handleFilterChange(patch) {
+    setFilters((current) => ({ ...current, ...patch }))
+  }
+
+  function handleApply() {
+    requestTrailer()
+  }
+
+  function handleClear() {
+    setFilters(EMPTY_FILTERS)
+  }
+
+  function exitAttractMode() {
+    let returnUrl = null
+    try {
+      returnUrl = window.sessionStorage.getItem(ATTRACT_RETURN_KEY)
+      if (returnUrl) {
+        window.sessionStorage.removeItem(ATTRACT_RETURN_KEY)
+      }
+    } catch {
+      returnUrl = null
+    }
+    window.location.href = returnUrl || '/discover'
+  }
+
+  async function handleSaveSettings(draft) {
+    const next = normalizeSettings(draft)
+    setSettings(next)
+    setSettingsOpen(false)
+
+    try {
+      window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next))
+    } catch {
+      // Private-mode storage failures should not block the in-memory setting.
+    }
+
+    try {
+      await saveAttractModePreferences({
+        autoplay: next,
+        filters: toServerFilters(filtersRef.current),
+      })
+    } catch {
+      // Server-side persistence is a bonus; localStorage already holds the value.
+    }
+  }
+
+  const videoId = trailer ? youTubeVideoId(trailer.video_url) : null
+
+  return (
+    <>
+      {useNewChrome ? (
+        /* Title moved out of the bar and onto the player card (W27-F1) — the
+           name belongs to the video you are watching, not to the page. Filters
+           join Settings and "Another one" here for the same reason they are
+           grouped on Calendar: one Filters popover per page, in the same place
+           on every page. */
+        <ContextBar
+          /* Filters · Another one · More are one outlined cluster (Library
+             Apply/Clear shape). Leaving Filters in the lead slot and the other
+             two in the centre left three peer pills that did not read as the
+             same control. */
+          actions={
+            <div className="od-cbtn-group" role="group" aria-label="Trailers">
+              <Popover label="Filters" count={activeFilterBadges.length} align="start" chromeless>
+                {({ close }) => (
+                  <div className="library-filters-stack">
+                    <FilterPanel
+                      options={options}
+                      optionsError={optionsError}
+                      filters={filters}
+                      onChange={handleFilterChange}
+                      onClear={handleClear}
+                      onApply={() => {
+                        handleApply()
+                        close()
+                      }}
+                    />
+                  </div>
+                )}
+              </Popover>
+              <button type="button" className="od-cbtn" onClick={requestTrailer}>
+                Another one
+              </button>
+              <Popover label="More" align="end">
+                <div className="od-trailers__overflow">
+                  <button
+                    type="button"
+                    className="menu-button"
+                    onClick={() => setSettingsOpen(true)}
+                  >
+                    Settings
+                  </button>
+                  {attractMode ? (
+                    <>
+                      <button type="button" className="menu-button" onClick={openBigPicture}>
+                        Big Picture
+                      </button>
+                      <button type="button" className="menu-button" onClick={exitAttractMode}>
+                        Exit Attract Mode
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </Popover>
+            </div>
+          }
+        />
+      ) : null}
+      <div className="od-more-page od-trailers">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              {trailer ? (
+                <a className="od-trailers__title-link" href={`/game_details/${trailer.game_uuid}`}>
+                  <h1>{trailer.game_name}</h1>
+                </a>
+              ) : (
+                <h1>Trailers</h1>
+              )}
+
+              <div className="od-trailers__actions">
+                {attractMode ? (
+                  <>
+                    <Button onClick={exitAttractMode}>Exit Attract Mode</Button>
+                    <Button onClick={openBigPicture}>Big Picture</Button>
+                  </>
+                ) : null}
+                <Button onClick={() => setSettingsOpen(true)}>Settings</Button>
+                <Button className="od-btn--accent" onClick={requestTrailer}>
+                  Another one
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Not rendered under the new chrome (W27-F1): the bar owns the one
+          Filters popover, and a second toggle on the page was the duplication
+          the two-bar layout exists to remove.
+
+          Conditional render rather than the `hidden` attribute, which did
+          nothing here: `.od-trailers__filters` sets `display: flex`, and an
+          author rule always beats the UA stylesheet's `[hidden]`. Both controls
+          were showing. */}
+        {useNewChrome ? null : (
+          <div className="od-trailers__filters">
+            <Button
+              className="od-trailers__filter-toggle"
+              aria-expanded={panelOpen}
+              onClick={() => setPanelOpen((open) => !open)}
+            >
+              Filters
+            </Button>
+
+            {!panelOpen && activeFilterBadges.length > 0 ? (
+              <div className="od-trailers__badges">
+                {activeFilterBadges.map((badge, index) => (
+                  <span key={`${index}-${badge}`} className="od-trailers__badge">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            {panelOpen ? (
+              <FilterPanel
+                options={options}
+                optionsError={optionsError}
+                filters={filters}
+                onChange={handleFilterChange}
+                onClear={handleClear}
+                onApply={handleApply}
+              />
+            ) : null}
+          </div>
+        )}
+
+        <LoadingOverlay
+          active={loading && Boolean(trailer)}
+          delayMs={250}
+          label="Loading random trailer…"
+        />
+
+        {loading && !trailer ? (
+          <PageStatus loading loadingMessage="Loading random trailer…" />
+        ) : null}
+
+        {!loading && error && !trailer ? (
+          <PageStatus
+            error={error}
+            errorMessage="Unable to load trailers."
+            onRetry={requestTrailer}
+            retryLabel="Retry"
+          />
+        ) : null}
+
+        {!loading && !error && emptyMessage ? (
+          <p className="od-trailers__empty" role="status">
+            {emptyMessage}
+          </p>
+        ) : null}
+
+        {!loading && !error && trailer && !videoId ? (
+          <PageStatus error errorMessage="Invalid video URL format" />
+        ) : null}
+
+        {trailer && videoId ? (
+          <TrailerPlayer
+            key={videoId}
+            videoId={videoId}
+            skipFirst={settings.skipFirst}
+            settingsRef={settingsRef}
+            onAdvance={requestTrailer}
+            title={useNewChrome ? trailer.game_name : null}
+            gameUuid={trailer.game_uuid}
+          />
+        ) : null}
+
+        {settingsOpen ? (
+          <SettingsModal
+            settings={settings}
+            onCancel={() => setSettingsOpen(false)}
+            onSave={handleSaveSettings}
+          />
+        ) : null}
+      </div>
+    </>
+  )
+}

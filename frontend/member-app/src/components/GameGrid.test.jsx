@@ -140,7 +140,7 @@ test('rows are positioned, not transformed, so cards can stack on their own', ()
   // per-row stacking context, and `.game-card:hover { z-index: 40 }` plus
   // `.game-card-container:has(.game-card:hover) { z-index: 25 }` in the theme
   // lift exactly one tile.
-  const source = readFileSync(join(HERE, 'GameGrid.jsx'), 'utf8')
+  const source = readFileSync(join(HERE, 'GameGrid.tsx'), 'utf8')
   expect(source).toContain("position: 'absolute'")
   expect(source).toContain('top: `${virtualRow.start')
   // A transform here would silently restore the stacking context.

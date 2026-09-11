@@ -13,7 +13,7 @@ from typing import Any
 
 from flask import current_app, url_for
 
-# Semantic keys mirrored from icons.html / icons.jsx (subset for image overrides).
+# Semantic keys mirrored from icons.html / icons.tsx (subset for image overrides).
 CORE_ICON_KEYS = (
     'discover', 'library', 'download', 'favorites', 'settings', 'systems',
     'user', 'menu', 'more', 'play', 'collections', 'news', 'wishlist',

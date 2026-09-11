@@ -240,3 +240,7 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   selects ~3699 tests (nearly the whole tree), so the flip needs its own wave
   with a CI-time budget review on runner hardware before it lands. Not done in
   `chore/modz-ci3` by design — 3c is a note only.
+- [PR-5a] `frontend/member-app` source renamed `.js`→`.ts` / `.jsx`→`.tsx`
+  (tests stay `.js`/`.jsx`). No workflow change — `member-app-vitest` already
+  runs `npm run typecheck`. `strict: true` is the follow-up (PR-5b); do not
+  flip `tsconfig.base.json`.

@@ -1,4 +1,7 @@
 {
+  // member-app SPA — files renamed to .ts/.tsx in PR-5a. `strict: true` is
+  // PR-5b; until then this extends the shared on-ramp (`strict: false`,
+  // `allowJs: true`) so tests that stay `.js`/`.jsx` still typecheck as JS.
   "extends": "../../tsconfig.base.json",
   "include": ["src"]
 }

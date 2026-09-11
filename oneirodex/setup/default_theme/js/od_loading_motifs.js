@@ -2,7 +2,7 @@
  * Loading motif picker (Wave 2d).
  * Consumes GET /api/loading-icon — rotate catalogue or lock to one id.
  * Ids: dpad | disc | stick | handheld | cart | crt (GT-B23).
- * Markup is generated from LoadingMotif.jsx so the SPA and the Jinja pages
+ * Markup is generated from LoadingMotif.tsx so the SPA and the Jinja pages
  * cannot drift — that drift is what left classic pages on the old set.
  */
 (function (global) {

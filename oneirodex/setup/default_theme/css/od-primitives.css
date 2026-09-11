@@ -369,7 +369,7 @@
    One rule for every glyph, applied from the interactive ancestor rather than
    from the icon, because an icon does not know whether it is inside a button.
    `.od-icon` is the shared class on every SVG we ship (see `base` in
-   frontend/member-app/src/chrome/icons.jsx and partials/icons.html), so the
+   frontend/member-app/src/chrome/icons.tsx and partials/icons.html), so the
    SPA glyphs and the Jinja ones move identically without either side opting in.
 
    The ease overshoots on the way up and settles: that small bounce is what

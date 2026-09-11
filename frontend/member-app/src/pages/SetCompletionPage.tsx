@@ -1,0 +1,234 @@
+import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { useResource, useShellConfig } from '@oneirodex/ui'
+import { fetchSetCompletion } from '../api/systems'
+import { createRequest } from '../api/wishlist'
+import { ContextBar } from '../chrome/ContextBar'
+import { REGION_PREF_ORDER } from '../chrome/regions'
+import { PageStatus } from '../components/PageStatus'
+import './SystemsPage.css'
+import './SetCompletionPage.css'
+
+const REGIONS = REGION_PREF_ORDER
+
+export function SetCompletionPage() {
+  const shellConfig = useShellConfig()
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
+  const region = (searchParams.get('region') || 'USA').trim().toUpperCase()
+
+  const [busyTitle, setBusyTitle] = useState(null)
+  const [actionMsg, setActionMsg] = useState(null)
+
+  const {
+    data: report,
+    loading,
+    error,
+    reload,
+  } = useResource(
+    ['set-completion', libraryPlatform, region],
+    ({ signal }) => fetchSetCompletion({ libraryPlatform, region, signal }),
+    { enabled: Boolean(libraryPlatform) },
+  )
+
+  const missing = useMemo(() => (Array.isArray(report?.missing) ? report.missing : []), [report])
+
+  function setRegion(nextRegion) {
+    const next = new URLSearchParams(searchParams)
+    next.set('region', nextRegion)
+    setSearchParams(next)
+  }
+
+  async function addToWishlist(title) {
+    setBusyTitle(title)
+    setActionMsg(null)
+    try {
+      await createRequest({
+        title,
+        notes: `Missing from ${libraryPlatform} ${region} reference set`,
+      })
+      setActionMsg(`Added “${title}” to wishlist`)
+    } catch (err) {
+      setActionMsg(err.message || 'Wishlist request failed')
+    } finally {
+      setBusyTitle(null)
+    }
+  }
+
+  const identity = libraryPlatform
+    ? `${libraryPlatform} · ${(report && report.region) || region}`
+    : 'Set completion'
+  const regionSelect = (
+    <label className="od-set-completion-region">
+      Region
+      <select
+        aria-label="Region"
+        value={region}
+        onChange={(event) => setRegion(event.target.value)}
+      >
+        {REGIONS.map((r) => (
+          <option key={r} value={r}>
+            {r}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+  const libraryLinks = libraryPlatform ? (
+    <>
+      <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
+        Systems
+      </Link>
+      <Link
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
+        to={`/library?library_platform=${encodeURIComponent(libraryPlatform)}`}
+      >
+        Browse library
+      </Link>
+      <Link
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
+        to={`/systems/catalog?library_platform=${encodeURIComponent(libraryPlatform)}`}
+      >
+        Licensed catalog
+      </Link>
+    </>
+  ) : (
+    <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
+      Back to Systems
+    </Link>
+  )
+
+  const chrome = useNewChrome ? (
+    <ContextBar
+      title={identity}
+      summary={report ? `${report.owned} / ${report.total} owned (${report.percent}%)` : null}
+      filterCount={libraryPlatform && region !== 'USA' ? 1 : 0}
+      filters={libraryPlatform ? regionSelect : null}
+      actions={libraryLinks}
+    />
+  ) : null
+
+  if (!libraryPlatform) {
+    return (
+      <>
+        {chrome}
+        <div className="od-more-page od-set-completion-page">
+          {useNewChrome ? null : (
+            <div className="od-page-header">
+              <h1>Set completion</h1>
+            </div>
+          )}
+          <p className="od-more-page__lede">
+            Open this page from Systems after an admin uploads a reference DAT.
+          </p>
+          {useNewChrome ? null : libraryLinks}
+        </div>
+      </>
+    )
+  }
+
+  if (error && !report) {
+    const isMissingSet = (error as LooseProps).status === 404
+    return (
+      <>
+        {chrome}
+        <div className="od-more-page od-set-completion-page">
+          {useNewChrome ? null : (
+            <div className="od-page-header">
+              <h1>
+                {libraryPlatform} · {region}
+              </h1>
+            </div>
+          )}
+          {isMissingSet ? (
+            <div role="alert">
+              <p>{`No reference set uploaded for ${libraryPlatform}/${region}.`}</p>
+              {useNewChrome ? null : (
+                <Link className="od-btn" to="/systems">
+                  Systems
+                </Link>
+              )}
+            </div>
+          ) : (
+            <PageStatus
+              error={error}
+              errorMessage="Unable to load set completion."
+              onRetry={reload}
+            />
+          )}
+        </div>
+      </>
+    )
+  }
+
+  if (!report) {
+    return (
+      <>
+        {chrome}
+        <div className="od-more-page od-set-completion-page">
+          {useNewChrome ? null : (
+            <div className="od-page-header">
+              <h1>
+                {libraryPlatform} · {region}
+              </h1>
+            </div>
+          )}
+          <PageStatus loading={loading} loadingMessage="Loading set completion…" />
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      {chrome}
+      <div className="od-more-page od-set-completion-page">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              <h1>
+                {libraryPlatform} · {report.region}
+              </h1>
+            </div>
+            <p className="od-more-page__lede">
+              {report.set_name || 'Reference set'} — {report.owned} / {report.total} owned (
+              {report.percent}%). Title match only; CRC matching comes later. Missing:{' '}
+              {report.missing_count}.
+            </p>
+            <div className="od-set-completion-toolbar">
+              {libraryLinks}
+              {regionSelect}
+            </div>
+          </>
+        )}
+        {useNewChrome ? (
+          <p className="od-more-page__lede">
+            {report.set_name || 'Reference set'}. Title match only; CRC matching comes later.
+            Missing: {report.missing_count}.
+          </p>
+        ) : null}
+        {actionMsg ? <p className="od-set-completion-msg">{actionMsg}</p> : null}
+        {missing.length === 0 ? (
+          <p className="od-more-page__lede">No missing titles for this set — nice.</p>
+        ) : (
+          <ul className="od-set-completion-missing">
+            {missing.map((row) => (
+              <li key={row.normalized_name || row.name}>
+                <span>{row.name}</span>
+                <button
+                  type="button"
+                  className="od-btn"
+                  disabled={busyTitle === row.name}
+                  onClick={() => addToWishlist(row.name)}
+                >
+                  Wishlist
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
+  )
+}
