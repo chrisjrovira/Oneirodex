@@ -1,8 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { deleteJson, getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { MetricStrip } from '../components/opsWidgets'
 import { showToast } from '../utils/toast'
+
+type ExtGroupId = 'archives' | 'disc' | 'cart' | 'other'
+
+interface ExtensionItem {
+  id: string
+  value: string
+}
 
 /** Capability-language hint groups for scan recognition (no Class A brands). */
 export const EXT_GROUPS = [
@@ -54,25 +62,25 @@ export const EXT_GROUPS = [
 
 const API = '/api/file_types/allowed'
 
-function normalizeExt(raw) {
+function normalizeExt(raw: unknown): string {
   return String(raw || '')
     .trim()
     .replace(/^\.+/, '')
     .toLowerCase()
 }
 
-function groupForValue(value) {
+function groupForValue(value: string): ExtGroupId {
   const v = normalizeExt(value)
   for (const group of EXT_GROUPS) {
-    if (group.members.includes(v)) return group.id
+    if (group.members.includes(v)) return group.id as ExtGroupId
   }
   return 'other'
 }
 
 export function ExtensionsPage() {
-  const [items, setItems] = useState([])
+  const [items, setItems] = useState<ExtensionItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [filter, setFilter] = useState('')
   const [busy, setBusy] = useState(false)
@@ -102,7 +110,7 @@ export function ExtensionsPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message || 'Failed to load extensions')
+          setError(errorText(err) || 'Failed to load extensions')
         }
       })
       .finally(() => {
@@ -125,7 +133,7 @@ export function ExtensionsPage() {
   // search filter, and a summary strip that shrinks as you type would be
   // describing the search rather than the configuration.
   const totals = useMemo(() => {
-    const counts = { archives: 0, disc: 0, cart: 0, other: 0 }
+    const counts: Record<ExtGroupId, number> = { archives: 0, disc: 0, cart: 0, other: 0 }
     for (const item of items) {
       counts[groupForValue(item.value)] += 1
     }
@@ -133,7 +141,7 @@ export function ExtensionsPage() {
   }, [items])
 
   const grouped = useMemo(() => {
-    const buckets = {
+    const buckets: Record<ExtGroupId, ExtensionItem[]> = {
       archives: [],
       disc: [],
       cart: [],
@@ -146,7 +154,7 @@ export function ExtensionsPage() {
   }, [filtered])
 
   const suggestions = useMemo(() => {
-    const out = []
+    const out: { value: string; groupId: string; groupLabel: string }[] = []
     for (const group of EXT_GROUPS) {
       for (const member of group.members) {
         if (!known.has(member)) {
@@ -157,7 +165,7 @@ export function ExtensionsPage() {
     return out.slice(0, 12)
   }, [known])
 
-  async function addExtension(raw) {
+  async function addExtension(raw: unknown) {
     const value = normalizeExt(raw)
     if (!value || busy) return
     if (known.has(value)) {
@@ -172,7 +180,7 @@ export function ExtensionsPage() {
       setDraft('')
       showToast(`Added .${value}`, 'success')
     } catch (err) {
-      const msg = err.message || 'Add failed'
+      const msg = errorText(err) || 'Add failed'
       setError(msg)
       showToast(msg, 'error')
     } finally {
@@ -180,7 +188,7 @@ export function ExtensionsPage() {
     }
   }
 
-  async function removeExtension(item) {
+  async function removeExtension(item: ExtensionItem | null | undefined) {
     if (!item?.id || busy) return
     setBusy(true)
     setError(null)
@@ -189,7 +197,7 @@ export function ExtensionsPage() {
       await reload()
       showToast(`Removed .${item.value}`, 'success')
     } catch (err) {
-      const msg = err.message || 'Remove failed'
+      const msg = errorText(err) || 'Remove failed'
       setError(msg)
       showToast(msg, 'error')
     } finally {
@@ -197,7 +205,7 @@ export function ExtensionsPage() {
     }
   }
 
-  function onAddSubmit(event) {
+  function onAddSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     addExtension(draft)
   }
@@ -224,7 +232,7 @@ export function ExtensionsPage() {
   }
 
   const sections = [
-    ...EXT_GROUPS.map((g) => ({ ...g, rows: grouped[g.id] || [] })),
+    ...EXT_GROUPS.map((g) => ({ ...g, rows: grouped[g.id as ExtGroupId] || [] })),
     {
       id: 'other',
       label: 'Other',
@@ -349,7 +357,7 @@ export function ExtensionsPage() {
               <p className="od-admin-lede od-admin-lede--flush">{section.hint}</p>
             </header>
             <div className="od-ext-chip-row" role="list">
-              {section.rows.map((item) => (
+              {section.rows.map((item: ExtensionItem) => (
                 <span key={item.id} className="od-ext-chip" role="listitem">
                   <span className="od-ext-chip__label">.{item.value}</span>
                   <button
