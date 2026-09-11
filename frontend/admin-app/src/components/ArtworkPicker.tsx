@@ -1,6 +1,31 @@
 import { useCallback, useEffect, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
+
+interface ArtworkProviderMeta {
+  id: string
+  enabled?: boolean
+}
+
+interface IdentifySource {
+  id: string
+  name?: string
+  note?: string
+  ownership_only?: boolean
+  needs_key?: boolean
+  key_configured?: boolean
+}
+
+interface ArtworkResult {
+  id?: string
+  url?: string
+  thumb_url?: string
+  game_name?: string
+  name?: string
+  provider?: string
+  ownership_only?: boolean
+}
 
 const ARTWORK_PROVIDERS = [
   { id: 'steamgriddb', label: 'SteamGridDB', kinds: ['cover', 'logo', 'hero'] },
@@ -24,16 +49,26 @@ const IDENTIFY_CHIP_IDS = new Set([
  * Identify chips: GET /api/search_metadata/sources + GET /api/search_metadata?source=
  * Logo/hero: GET /api/providers/steamgriddb/search + POST /api/games/:uuid/artwork/steamgriddb.
  */
-export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = false }) {
+export function ArtworkPicker({
+  gameUuid,
+  gameName = '',
+  onApplied,
+  compact = false,
+}: {
+  gameUuid?: string
+  gameName?: string
+  onApplied?: (data: any) => void
+  compact?: boolean
+}) {
   const [provider, setProvider] = useState('steamgriddb')
   const [imageType, setImageType] = useState('cover')
   const [query, setQuery] = useState(gameName || '')
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<ArtworkResult[]>([])
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
-  const [providersMeta, setProvidersMeta] = useState(null)
-  const [identifySources, setIdentifySources] = useState([])
+  const [providersMeta, setProvidersMeta] = useState<ArtworkProviderMeta[] | null>(null)
+  const [identifySources, setIdentifySources] = useState<IdentifySource[]>([])
   const [identifySource, setIdentifySource] = useState('')
 
   useEffect(() => {
@@ -53,7 +88,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
       .then((data) => {
         if (cancelled) return
         const sources = Array.isArray(data.sources) ? data.sources : []
-        setIdentifySources(sources.filter((s) => IDENTIFY_CHIP_IDS.has(s.id)))
+        setIdentifySources(sources.filter((s: IdentifySource) => IDENTIFY_CHIP_IDS.has(s.id)))
       })
       .catch(() => {
         if (!cancelled) setIdentifySources([])
@@ -75,7 +110,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
     }
   }, [provider, providerMeta.kinds, imageType])
 
-  const selectIdentifyChip = (sourceId) => {
+  const selectIdentifyChip = (sourceId: string) => {
     setIdentifySource((prev) => (prev === sourceId ? '' : sourceId))
     setResults([])
     setStatus('')
@@ -99,7 +134,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
     setStatus('Searching…')
     setResults([])
     try {
-      let rows = []
+      let rows: ArtworkResult[] = []
       if (identifyMode) {
         const qs = new URLSearchParams({
           name: q || gameName || '',
@@ -113,7 +148,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
             : []
         const softNote = typeof data.note === 'string' ? data.note.trim() : ''
         rows = hits
-          .map((hit, idx) => ({
+          .map((hit: any, idx: number) => ({
             id: hit.id || hit.app_id || hit.store_id || `${identifySource}-${idx}`,
             url: hit.cover_url || hit.image_url || hit.url || '',
             thumb_url: hit.cover_url || hit.image_url || hit.thumb_url || '',
@@ -121,7 +156,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
             provider: identifySource,
             ownership_only: Boolean(hit.ownership_only ?? data.ownership_only),
           }))
-          .filter((r) => r.url || r.thumb_url)
+          .filter((r: ArtworkResult) => r.url || r.thumb_url)
         if (!rows.length && hits.length) {
           setStatus(
             softNote ||
@@ -152,7 +187,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
         }
         rows = data.candidates || data.results || []
         if (!rows.length && Array.isArray(data.by_provider)) {
-          rows = data.by_provider.flatMap((p) => p.results || p.candidates || [])
+          rows = data.by_provider.flatMap((p: any) => p.results || p.candidates || [])
         }
       } else {
         const qs = new URLSearchParams({
@@ -170,7 +205,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
           : 'No results for that query.',
       )
     } catch (err) {
-      setError(err.message || String(err))
+      setError(errorText(err) || String(err))
       setStatus('')
     } finally {
       setBusy('')
@@ -189,7 +224,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
   ])
 
   const applyResult = useCallback(
-    async (item) => {
+    async (item: ArtworkResult) => {
       if (!gameUuid) {
         setError('Select a game first.')
         return
@@ -228,7 +263,7 @@ export function ArtworkPicker({ gameUuid, gameName = '', onApplied, compact = fa
         )
         onApplied?.(data)
       } catch (err) {
-        setError(err.message || String(err))
+        setError(errorText(err) || String(err))
         setStatus('')
       } finally {
         setBusy('')
