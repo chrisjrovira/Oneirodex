@@ -39,6 +39,8 @@ from oneirodex.utils.custom_emoji import (
     list_custom_emoji,
     upload_custom_emoji,
 )
+from oneirodex.schemas.chat import MuteChannelBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -163,15 +165,13 @@ def chat_open_dm():
 
 @apis_bp.route('/chat/channels/<int:channel_id>/mute', methods=['POST'])
 @login_required
-def chat_channel_mute(channel_id: int):
+@validate_body(MuteChannelBody)
+def chat_channel_mute(channel_id: int, body: MuteChannelBody):
     ch, refusal = _visible_channel(channel_id)
     if refusal is not None:
         return refusal
-    data = request.get_json(silent=True) or {}
-    if 'muted' not in data:
-        return api_error('muted is required', code='bad_request')
     try:
-        muted = set_channel_muted(current_user, ch, bool(data.get('muted')))
+        muted = set_channel_muted(current_user, ch, body.muted)
     except PermissionError:
         return _refuse_not_found()
     return api_ok({'channel_id': ch.id, 'muted': muted})

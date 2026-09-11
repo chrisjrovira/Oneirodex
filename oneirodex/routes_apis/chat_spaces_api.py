@@ -34,6 +34,8 @@ from oneirodex.utils.chat_spaces import (
 )
 from oneirodex.utils.livekit_rtc import voice_room_name
 from oneirodex.utils.rbac import normalize_role
+from oneirodex.schemas.chat_spaces import AddSpaceMemberBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -136,16 +138,13 @@ def chat_space_members(space_id: int):
 @apis_bp.route('/chat/spaces/<int:space_id>/members', methods=['POST'])
 @login_required
 @admin_required
-def chat_space_member_add(space_id: int):
+@validate_body(AddSpaceMemberBody)
+def chat_space_member_add(space_id: int, body: AddSpaceMemberBody):
     space = db.session.get(ChatSpace, space_id)
     refusal = _refuse_missing_space(space)
     if refusal is not None:
         return refusal
-    data = request.get_json(silent=True) or {}
-    user_id = data.get('user_id')
-    if not user_id:
-        return api_error('user_id is required', code='bad_request')
-    member = add_space_member(space, int(user_id), role=(data.get('role') or 'member'))
+    member = add_space_member(space, body.user_id, role=(body.role or 'member'))
     return api_ok({'user_id': member.user_id, 'role': member.role})
 
 
