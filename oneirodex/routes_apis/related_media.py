@@ -9,14 +9,15 @@ outward action is a link to where the thing legitimately lives.
 from __future__ import annotations
 
 from oneirodex.utils.api_response import api_error, api_ok
-from flask import jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, GameRelatedMedia
+from oneirodex.schemas.related_media import CreateRelatedMediaBody
 from oneirodex.utils.library_acl import user_can_access_game
 from oneirodex.utils.rbac import librarian_required
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -91,31 +92,28 @@ def related_media_list(game_uuid: str):
 @apis_bp.route('/games/<game_uuid>/related_media', methods=['POST'])
 @login_required
 @librarian_required
-def related_media_create(game_uuid: str):
+@validate_body(CreateRelatedMediaBody)
+def related_media_create(game_uuid: str, body: CreateRelatedMediaBody):
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return api_error('Game not found', code='not_found')
 
-    data = request.get_json(silent=True) or {}
-    title = (data.get('title') or '').strip()
-    if not title:
-        return api_error('A title is required', code='bad_request')
-
-    kind = (data.get('media_kind') or '').strip().lower()
+    title = body.title
+    kind = (body.media_kind or '').strip().lower()
     if kind not in MEDIA_KINDS:
         return api_error(f"media_kind must be one of: {', '.join(sorted(MEDIA_KINDS))}", code='bad_request')
 
-    relation = (data.get('relation') or 'tie_in').strip().lower()
+    relation = (body.relation or 'tie_in').strip().lower()
     if relation not in RELATIONS:
         return api_error(f"relation must be one of: {', '.join(sorted(RELATIONS))}", code='bad_request')
 
     try:
-        external_url = _clean_url(data.get('external_url'))
-        cover_url = _clean_url(data.get('cover_url'))
+        external_url = _clean_url(body.external_url)
+        cover_url = _clean_url(body.cover_url)
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
 
-    year = data.get('year')
+    year = body.year
     if year not in (None, ''):
         try:
             year = int(year)
@@ -129,12 +127,12 @@ def related_media_create(game_uuid: str):
         media_kind=kind,
         relation=relation,
         title=title[:240],
-        creator=(data.get('creator') or '').strip()[:160] or None,
+        creator=(body.creator or '').strip()[:160] or None,
         year=year,
-        summary=(data.get('summary') or '').strip()[:1000] or None,
+        summary=(body.summary or '').strip()[:1000] or None,
         external_url=external_url,
         cover_url=cover_url,
-        display_order=int(data.get('display_order') or 0),
+        display_order=int(body.display_order or 0),
         created_by_user_id=getattr(current_user, 'id', None),
     )
     db.session.add(row)

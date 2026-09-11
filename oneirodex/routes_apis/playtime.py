@@ -1,27 +1,26 @@
 """Playtime session APIs."""
 
-from flask import jsonify, request
+from flask import jsonify
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, PlaySession, UserGameProgress
+from oneirodex.schemas.playtime import StartPlaytimeSessionBody
 from oneirodex.utils.api_response import api_error
 from oneirodex.utils.library_acl import user_can_access_game
 from oneirodex.utils.playtime import end_session, heartbeat_session, start_session
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
 
 @apis_bp.route('/playtime/sessions', methods=['POST'])
 @login_required
-def playtime_start():
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
-    if not game_uuid:
-        return api_error('game_uuid required', code='bad_request')
+@validate_body(StartPlaytimeSessionBody)
+def playtime_start(body: StartPlaytimeSessionBody):
     try:
-        session = start_session(current_user.id, game_uuid, client=data.get('client'))
+        session = start_session(current_user.id, body.game_uuid, client=body.client)
     except PermissionError:
         return api_error('Forbidden', code='forbidden')
     except ValueError as exc:

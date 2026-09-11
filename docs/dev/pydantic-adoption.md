@@ -64,6 +64,11 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/playtime.py` | `POST /api/playtime/sessions` (`playtime_start`) | `StartPlaytimeSessionBody` |
+| `routes_apis/wishlist.py` | `POST /api/requests` (`create_request`) | `CreateWishlistRequestBody` |
+| `routes_apis/wishlist.py` | `PATCH /api/requests/<id>` (`resolve_request`) | `ResolveWishlistRequestBody` |
+| `routes_apis/tokens.py` | `POST /api/tokens` (`create_api_token`) | `CreateApiTokenBody` |
+| `routes_apis/related_media.py` | `POST /api/games/<uuid>/related_media` (`related_media_create`) | `CreateRelatedMediaBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +87,28 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`playtime_start`** — missing/blank `game_uuid` was `400 "game_uuid required"`,
+  now `422 {detail:{game_uuid:"..."}}`. Frontend playtime wrappers only GET
+  `/api/playtime/me`; nothing branches on the old 400 sentence.
+- **`create_request`** — missing/blank `title` was `400 "A title is required"`,
+  now `422 {detail:{title:"..."}}`. `can_request_games` (child → 403) runs
+  *after* body validation, same ordering note as collections / steam. Title
+  truncation to 255 and the pending-duplicate lookup stay in the view.
+- **`resolve_request`** — missing/blank `status` was `400` from the membership
+  check ("That status is not one this request can move to"). Presence is now
+  422 naming `status`; an *unknown* status still 400 with that sentence.
+  `is_librarian` (403) and the row 404 run *after* validation. `tests/test_pydantic_request_bodies.py`
+  asserts `PATCH /api/requests/1` with `{}` as admin is 422, not 404.
+- **`create_api_token`** — missing/blank `name` was `400 "name is required"`,
+  now `422 {detail:{name:"..."}}`. Unknown `preset` stays 400; role/scope
+  denials stay 403. Frontend (`@oneirodex/ui` / `tokensApi.ts`) always sends
+  a trimmed name from the form.
+- **`related_media_create`** — blank title was `400 "A title is required"`, now
+  `422 {detail:{title:"..."}}`. `@librarian_required` sits *above*
+  `@validate_body`, so a non-librarian still gets 403 even with a malformed
+  body. Game 404 runs after validation (empty body against a missing game is
+  422, not 404). `media_kind` / `relation` membership, URL hygiene, and
+  `year='soon'` stay 400 in the view.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +154,25 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### Other JSON bodies left on purpose (this wave)
+
+- `routes_apis/social.py` friends POST — a missing username is an **opaque
+  success** (anti-enumeration). A required-field 422 would change that.
+- `routes_apis/rtc.py` — every field optional with defaults.
+- `routes_apis/assists.py` PUT — every field optional.
+- `routes_apis/locale.py` — also reads `request.form`.
+- `routes_apis/notifications.py` — all-optional toggles.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 110 | 42 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **146** | **53** |
 
 Highest-count files still to do, roughly in priority order:
 

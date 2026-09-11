@@ -1,12 +1,13 @@
 """Personal access token management and OpenAPI document endpoints."""
 
 from oneirodex.utils.api_response import api_error, api_ok
-from flask import current_app, jsonify, request, send_file
+from flask import current_app, jsonify, send_file
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import ApiToken
+from oneirodex.schemas.tokens import CreateApiTokenBody
 from oneirodex.utils.api_tokens import (
     TOKEN_SCOPE_PRESETS,
     VALID_SCOPES,
@@ -15,6 +16,7 @@ from oneirodex.utils.api_tokens import (
     is_raw_api_token,
     revoke_api_token,
 )
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -43,13 +45,11 @@ def list_api_tokens():
 
 @apis_bp.route('/tokens', methods=['POST'])
 @login_required
-def create_api_token():
-    data = request.get_json(silent=True) or {}
-    name = (data.get('name') or '').strip()
-    if not name:
-        return api_error('name is required', code='bad_request')
-    preset = (data.get('preset') or '').strip().lower()
-    scopes = data.get('scopes')
+@validate_body(CreateApiTokenBody)
+def create_api_token(body: CreateApiTokenBody):
+    name = body.name
+    preset = (body.preset or '').strip().lower()
+    scopes = body.scopes
     if preset:
         preset_def = TOKEN_SCOPE_PRESETS.get(preset)
         if preset_def is None:

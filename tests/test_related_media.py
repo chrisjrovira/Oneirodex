@@ -122,7 +122,11 @@ class TestAuthoring:
 
     def test_title_is_required(self, client, admin_user, game):
         _login(client, admin_user)
-        assert _add(client, game, title='   ').status_code == 400
+        response = _add(client, game, title='   ')
+        assert response.status_code == 422
+        body = response.get_json()
+        assert body['error_code'] == 'unprocessable'
+        assert 'title' in body['detail']
 
     def test_year_must_be_numeric(self, client, admin_user, game):
         _login(client, admin_user)
