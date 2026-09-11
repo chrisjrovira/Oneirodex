@@ -11,6 +11,10 @@
  */
 import { getJson, sendResult } from './client'
 
+function httpFailure(err: any) {
+  return typeof err?.status === 'number'
+}
+
 /**
  * @param {'inbox'|'archive'} view  the inbox is server-side "unread=1"; archive
  *   takes a deeper page because the read rows are the bulk of it.
@@ -18,6 +22,19 @@ import { getJson, sendResult } from './client'
 export async function fetchNotifications({ view = 'inbox', signal }: LooseProps = {}) {
   const query = view === 'inbox' ? '?unread=1&limit=100' : '?limit=100'
   return getJson(`/api/notifications${query}`, { signal, label: 'notifications' })
+}
+
+/** Soft poll for library-scan toasts — HTTP failures resolve to null. */
+export async function fetchNotificationSnapshot({ limit = 20, signal }: LooseProps = {}) {
+  try {
+    return await getJson(`/api/notifications?limit=${encodeURIComponent(limit)}`, {
+      signal,
+      label: 'notifications',
+    })
+  } catch (err: any) {
+    if (httpFailure(err)) return null
+    throw err
+  }
 }
 
 export async function fetchNotificationPreferences({ signal }: LooseProps = {}) {

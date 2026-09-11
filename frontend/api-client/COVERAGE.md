@@ -78,8 +78,9 @@ typed) matching the `src/types.ts` house style — tighten per group as
   `sendResult` (4xx without throw). Every `src/api/` JSON wrapper uses those
   verbs. Typed resource modules (`createCollectionsApi` etc.) are not wired
   into the SPA yet — same follow-up shape as admin. Still off this path:
-  `preferences.ts` HTML `POST /settings_panel`, `EventSource` streams, and
-  inlined `fetch` in Chat / voice / space-rail components. Vitest mocks need
+  `preferences.ts` HTML `POST /settings_panel` and `EventSource` streams.
+  Chat / voice / space-rail / PC cheats / related media / loading-icon / the
+  library-scan toast poll now use the same verbs. Vitest mocks need
   `content-type: application/json` and `.text()` for the same reason admin did.
 - Account `uploadAvatar` — done (this PR). Moved from `@oneirodex/ui`'s
   `accountApi.ts` (PR-4 sub-wave d) into `account.ts` here as a multipart

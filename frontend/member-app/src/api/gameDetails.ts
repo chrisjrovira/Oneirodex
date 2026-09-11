@@ -51,3 +51,12 @@ export async function cleanupOrphanVersions(gameUuid: any) {
     )) ?? {}
   )
 }
+
+export async function fetchRelatedMedia(gameUuid: any) {
+  return (
+    (await getJson(`/api/games/${gameUuid}/related_media`, { label: 'related media' })) ?? {
+      items: [],
+      kinds: [],
+    }
+  )
+}

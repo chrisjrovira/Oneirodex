@@ -5,6 +5,7 @@ import {
   markLibraryScanToastSeen,
   pickUnseenLibraryScanToasts,
 } from '@oneirodex/ui'
+import { fetchNotificationSnapshot } from '../api/notifications'
 import { showToast } from '../utils/toast'
 
 const POLL_MS = 45000
@@ -24,14 +25,10 @@ export function useLibraryScanToasts({ enabled = true, intervalMs = POLL_MS }: L
 
     async function poll() {
       try {
-        const res = await fetch('/api/notifications?limit=20', {
-          credentials: 'same-origin',
-          headers: { Accept: 'application/json' },
-        })
-        if (cancelled || !res.ok) {
+        const data = await fetchNotificationSnapshot({ limit: 20 })
+        if (cancelled || !data) {
           return
         }
-        const data = await res.json().catch(() => null)
         const rows = Array.isArray(data?.notifications)
           ? data.notifications
           : Array.isArray(data)

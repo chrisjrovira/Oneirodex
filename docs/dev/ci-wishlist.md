@@ -249,5 +249,7 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
 - [PR-6] member-app `src/api/client.ts` sits on `createBrowserRequester`
   (same shape as admin `adminApi.ts`). **Done:** remaining `src/api/` JSON
   wrappers rewired onto those verbs (`send` / `sendResult` for FormData and
-  fire-and-forget). `preferences.ts` HTML and EventSource stay off this path.
-  Typed resource modules are still not wired into the SPA. No workflow change.
+  fire-and-forget). Chat / voice / space-rail and the other leftover inlined
+  `fetch` sites use the same verbs. `preferences.ts` HTML and EventSource stay
+  off this path. Typed resource modules are still not wired into the SPA. No
+  workflow change.

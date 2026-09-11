@@ -41,7 +41,7 @@ export function jsonFrom(result) {
 
 export function stubFetch(impl) {
   const fn = vi.fn((...args) => jsonFrom(impl(...args)))
-  globalThis.fetch = fn
+  vi.stubGlobal('fetch', fn)
   return fn
 }
 

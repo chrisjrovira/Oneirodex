@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@oneirodex/ui'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
+import { fetchRtcStatus, mintRtcToken } from '../api/rtc'
 
 function partyRoomForGame(gameUuid: any) {
   const id = (gameUuid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
@@ -43,10 +42,7 @@ export function VoiceLobby({
   }, [defaultScreenshare])
 
   useEffect(() => {
-    fetch('/api/rtc/status', { credentials: 'same-origin' })
-      .then((r) => r.json())
-      .then(setStatus)
-      .catch(() => setStatus({ enabled: false }))
+    void fetchRtcStatus().then(setStatus)
   }, [])
 
   async function joinLobby() {
@@ -54,18 +50,11 @@ export function VoiceLobby({
     setError(null)
     setTokenInfo(null)
     try {
-      const response = await fetch('/api/rtc/token', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({
-          room,
-          screenshare: screenshare || undefined,
-          spectator: spectator || undefined,
-        }),
+      const data = await mintRtcToken({
+        room,
+        screenshare: screenshare || undefined,
+        spectator: spectator || undefined,
       })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Token failed')
       setTokenInfo(data)
     } catch (err: any) {
       setError(err.message || 'Join failed')

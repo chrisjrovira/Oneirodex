@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { errorFromResponse } from '@oneirodex/ui'
 import { pickLoadingMotifId } from './LoadingMotif'
+import { getJson } from '../api/client'
 
 let cachedSettings: any = null
 let inflight: any = null
@@ -55,16 +55,7 @@ export async function fetchLoadingIconSettings() {
       })
     return inflight
   }
-  inflight = fetch('/api/loading-icon', {
-    credentials: 'same-origin',
-    headers: { Accept: 'application/json' },
-  })
-    .then(async (res) => {
-      if (!res.ok) {
-        throw await errorFromResponse(res, 'loading-icon')
-      }
-      return res.json()
-    })
+  inflight = getJson('/api/loading-icon', { label: 'loading-icon' })
     .then((data) => {
       cachedSettings = data || {}
       try {

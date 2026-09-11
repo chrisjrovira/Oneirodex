@@ -23,8 +23,7 @@ Admin, member, and ops sit on `createBrowserRequester`: `credentials: 'include'`
 Member leftovers that are not JSON verbs:
 
 - `preferences.ts` — HTML `POST /settings_panel` (FormData)
-- Activity / scan toasts — `EventSource`
-- Chat / voice / space rail — still inlined `fetch` in those components
+- Activity / scan toasts — `EventSource` (`/api/activity/stream`)
 
 Request bodies adopt `@validate_body` **file-by-file** — [pydantic-adoption.md](pydantic-adoption.md). Do not wrap partial-success batch routes.
 

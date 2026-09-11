@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@oneirodex/ui'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
+import { fetchChatSpaces, joinChatSpace } from '../api/chat'
 
 /**
  * Space rail — the spaces ("servers") a member belongs to, each expanding into
@@ -34,12 +33,7 @@ export function SpaceRail({
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/chat/spaces', {
-        credentials: 'same-origin',
-        signal: controller.signal,
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Could not load spaces')
+      const data = (await fetchChatSpaces({ signal: controller.signal })) ?? {}
       setSpaces(Array.isArray(data.spaces) ? data.spaces : [])
     } catch (err: any) {
       if (err.name === 'AbortError') return
@@ -62,14 +56,7 @@ export function SpaceRail({
     setJoinBusy(true)
     setJoinMsg('')
     try {
-      const response = await fetch('/api/chat/spaces/join', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ token }),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Could not join')
+      const data = await joinChatSpace(token)
       setInviteToken('')
       setJoinMsg(`Joined ${data.space?.name || 'space'}.`)
       await loadSpaces()

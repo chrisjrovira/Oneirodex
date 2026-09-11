@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { SocialCompanionDock } from './SocialCompanionDock'
+import { stubFetch } from '../testJsonResponse'
 
 beforeEach(() => {
   try {
@@ -9,43 +10,40 @@ beforeEach(() => {
   } catch {
     // jsdom may lack localStorage
   }
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/social/friends')) {
-        return {
-          ok: true,
-          json: async () => ({
-            friends: [
-              {
-                id: 1,
-                status: 'accepted',
-                direction: 'outgoing',
-                user: {
-                  id: 9,
-                  name: 'Alex',
-                  presence: { status: 'online', game_uuid: null, game_name: null },
-                },
+  stubFetch(async (input) => {
+    const url = String(input)
+    if (url.includes('/api/social/friends')) {
+      return {
+        ok: true,
+        json: async () => ({
+          friends: [
+            {
+              id: 1,
+              status: 'accepted',
+              direction: 'outgoing',
+              user: {
+                id: 9,
+                name: 'Alex',
+                presence: { status: 'online', game_uuid: null, game_name: null },
               },
-            ],
-          }),
-        }
+            },
+          ],
+        }),
       }
-      if (url.includes('/api/social/status')) {
-        return {
-          ok: true,
-          json: async () => ({
-            friend_count: 1,
-            pending_incoming: 0,
-            now_playing: [],
-            presence: [],
-          }),
-        }
+    }
+    if (url.includes('/api/social/status')) {
+      return {
+        ok: true,
+        json: async () => ({
+          friend_count: 1,
+          pending_incoming: 0,
+          now_playing: [],
+          presence: [],
+        }),
       }
-      return { ok: false, json: async () => ({}) }
-    }),
-  )
+    }
+    return { ok: false, json: async () => ({}) }
+  })
   globalThis.__odEventSourceCalls = []
   vi.stubGlobal(
     'EventSource',
@@ -134,46 +132,43 @@ test('open dock connects activity EventSource after defer', async () => {
 test('failed friends load uses PageStatus with Retry', async () => {
   const user = userEvent.setup()
   let failFriends = true
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input) => {
-      const url = String(input)
-      if (url.includes('/api/social/friends')) {
-        if (failFriends) {
-          throw new Error('network')
-        }
-        return {
-          ok: true,
-          json: async () => ({
-            friends: [
-              {
-                id: 1,
-                status: 'accepted',
-                direction: 'outgoing',
-                user: {
-                  id: 9,
-                  name: 'Alex',
-                  presence: { status: 'online', game_uuid: null, game_name: null },
-                },
+  stubFetch(async (input) => {
+    const url = String(input)
+    if (url.includes('/api/social/friends')) {
+      if (failFriends) {
+        throw new Error('network')
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          friends: [
+            {
+              id: 1,
+              status: 'accepted',
+              direction: 'outgoing',
+              user: {
+                id: 9,
+                name: 'Alex',
+                presence: { status: 'online', game_uuid: null, game_name: null },
               },
-            ],
-          }),
-        }
+            },
+          ],
+        }),
       }
-      if (url.includes('/api/social/status')) {
-        return {
-          ok: true,
-          json: async () => ({
-            friend_count: 1,
-            pending_incoming: 0,
-            now_playing: [],
-            presence: [],
-          }),
-        }
+    }
+    if (url.includes('/api/social/status')) {
+      return {
+        ok: true,
+        json: async () => ({
+          friend_count: 1,
+          pending_incoming: 0,
+          now_playing: [],
+          presence: [],
+        }),
       }
-      return { ok: false, json: async () => ({}) }
-    }),
-  )
+    }
+    return { ok: false, json: async () => ({}) }
+  })
 
   render(
     <MemoryRouter>

@@ -1,4 +1,8 @@
-import { csrfHeaders } from '@oneirodex/ui'
+export {
+  chatAttachmentUploadUrl,
+  probeChatAttachmentUpload,
+  uploadChatAttachment,
+} from '../api/chat'
 
 const STORAGE_OPEN = 'od-chat-panel-open'
 /** CustomEvent — TopNav / CommandPalette / deep-link open chat without a full-page takeover. */
@@ -71,11 +75,6 @@ export function canLeaveChannel(channel: any) {
   return Boolean(channel?.id)
 }
 
-/** Soft-wired upload path — Backend may land in parallel; UI feature-detects 404. */
-export function chatAttachmentUploadUrl(channelId: any) {
-  return `/api/chat/channels/${channelId}/attachments`
-}
-
 export function isImageAttachment(att: any) {
   if (!att || typeof att !== 'object') return false
   const ct = String(att.content_type || att.mime || att.mime_type || '').toLowerCase()
@@ -96,72 +95,6 @@ export function normalizeAttachments(raw: any) {
       size: row.size ?? row.byte_size ?? null,
     }))
     .filter((row) => row.url || row.id != null)
-}
-
-/**
- * Probe whether channel attachment upload exists (OPTIONS or empty POST → 404 = off).
- * @returns {Promise<'yes'|'no'|'unknown'>}
- */
-export async function probeChatAttachmentUpload(channelId: any) {
-  if (!channelId) return 'unknown'
-  const url = chatAttachmentUploadUrl(channelId)
-  try {
-    const optionsRes = await fetch(url, { method: 'OPTIONS', credentials: 'same-origin' })
-    if (optionsRes.status === 404) return 'no'
-    if (optionsRes.ok || optionsRes.status === 204 || optionsRes.status === 405) return 'yes'
-  } catch {
-    // Fall through to a no-body POST probe.
-  }
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: csrfHeaders(),
-      body: new FormData(),
-    })
-    if (response.status === 404 || response.status === 405) return 'no'
-    // 400/401/403/413/415 → route exists
-    if (response.status !== 404) return 'yes'
-  } catch {
-    return 'unknown'
-  }
-  return 'no'
-}
-
-/**
- * Multipart upload for chat attach. Soft-degrades on 404.
- * @returns {Promise<{ ok: boolean, unavailable?: boolean, attachment?: object, error?: string, status: number }>}
- */
-export async function uploadChatAttachment(channelId: any, file: any) {
-  if (!channelId || !file) {
-    return { ok: false, status: 0, error: 'Missing channel or file' }
-  }
-  const form = new FormData()
-  form.append('file', file)
-  const response = await fetch(chatAttachmentUploadUrl(channelId), {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-    body: form,
-  })
-  const data = await response.json().catch(() => ({}))
-  if (response.status === 404 || response.status === 405) {
-    return {
-      ok: false,
-      unavailable: true,
-      status: response.status,
-      error: data.error || 'File attach isn’t available yet',
-    }
-  }
-  if (!response.ok) {
-    return {
-      ok: false,
-      status: response.status,
-      error: data.error || 'Upload failed',
-    }
-  }
-  const attachment = data.attachment || data.file || data
-  return { ok: true, status: response.status, attachment }
 }
 
 /**

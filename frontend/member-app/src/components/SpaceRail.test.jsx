@@ -7,6 +7,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { SpaceRail } from './SpaceRail'
+import { stubFetch } from '../testJsonResponse'
 
 const SPACES = {
   ok: true,
@@ -29,10 +30,7 @@ const SPACES = {
 }
 
 beforeEach(() => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => ({ ok: true, json: async () => SPACES })),
-  )
+  stubFetch(async () => ({ ok: true, json: async () => SPACES }))
 })
 
 afterEach(() => {
@@ -80,35 +78,26 @@ test('text selection reports the channel to the parent', async () => {
 })
 
 test('honest empty state when the member is in no spaces', async () => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => ({ ok: true, json: async () => ({ ok: true, spaces: [] }) })),
-  )
+  stubFetch(async () => ({ ok: true, json: async () => ({ ok: true, spaces: [] }) }))
   render(<SpaceRail />)
   expect(await screen.findByText(/No spaces yet/i)).toBeInTheDocument()
 })
 
 test('surfaces the server error rather than rendering an empty rail', async () => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => ({ ok: false, json: async () => ({ error: 'Nope' }) })),
-  )
+  stubFetch(async () => ({ ok: false, json: async () => ({ error: 'Nope' }) }))
   render(<SpaceRail />)
   expect(await screen.findByRole('alert')).toHaveTextContent('Nope')
 })
 
 test('invite redemption posts the token and refreshes', async () => {
   const calls = []
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (url, opts) => {
-      calls.push({ url, opts })
-      if (String(url).endsWith('/join')) {
-        return { ok: true, json: async () => ({ ok: true, space: { id: 3, name: 'Joined' } }) }
-      }
-      return { ok: true, json: async () => SPACES }
-    }),
-  )
+  stubFetch(async (url, opts) => {
+    calls.push({ url, opts })
+    if (String(url).endsWith('/join')) {
+      return { ok: true, json: async () => ({ ok: true, space: { id: 3, name: 'Joined' } }) }
+    }
+    return { ok: true, json: async () => SPACES }
+  })
   const user = userEvent.setup()
   render(<SpaceRail />)
 
@@ -126,15 +115,12 @@ test('invite redemption posts the token and refreshes', async () => {
 test('failed spaces load uses PageStatus with Retry', async () => {
   const user = userEvent.setup()
   let failSpaces = true
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async () => {
-      if (failSpaces) {
-        return { ok: false, status: 500, json: async () => ({ error: 'Could not load spaces' }) }
-      }
-      return { ok: true, json: async () => SPACES }
-    }),
-  )
+  stubFetch(async () => {
+    if (failSpaces) {
+      return { ok: false, status: 500, json: async () => ({ error: 'Could not load spaces' }) }
+    }
+    return { ok: true, json: async () => SPACES }
+  })
 
   render(<SpaceRail />)
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not load spaces')

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { csrfHeaders } from '@oneirodex/ui'
-import { errorFromBody, errorFromResponse } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
+import { createPcCheat, deletePcCheat, fetchPcCheats } from '../api/pcCheats'
 import './PcCheatsPanel.css'
 
 /**
@@ -35,11 +34,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
     setLoading(true)
     setError('')
     try {
-      const response = await fetch(`/api/games/${gameUuid}/pc_cheats`, {
-        credentials: 'same-origin',
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Could not load cheats')
+      const data = (await fetchPcCheats(gameUuid)) ?? {}
       setCheats(Array.isArray(data.cheats) ? data.cheats : [])
       setMethods(Array.isArray(data.methods) ? data.methods : [])
       setStance(data.stance || '')
@@ -67,14 +62,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
     setSaving(true)
     setError('')
     try {
-      const response = await fetch(`/api/games/${gameUuid}/pc_cheats`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(draft),
-      })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw errorFromBody(data, response.status, 'Could not save')
+      await createPcCheat(gameUuid, draft)
       setDraft({ label: '', method: draft.method, payload: '', notes: '' })
       await load()
     } catch (err: any) {
@@ -87,14 +75,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
   async function removeCheat(cheatId: any) {
     setError('')
     try {
-      const response = await fetch(`/api/games/${gameUuid}/pc_cheats/${cheatId}`, {
-        method: 'DELETE',
-        credentials: 'same-origin',
-        headers: csrfHeaders(),
-      })
-      if (!response.ok) {
-        throw await errorFromResponse(response, 'Could not remove')
-      }
+      await deletePcCheat(gameUuid, cheatId)
       await load()
     } catch (err: any) {
       setError(err.message || 'Could not remove')
