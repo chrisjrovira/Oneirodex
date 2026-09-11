@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { AdminPageActions } from './AdminPageActions'
 import {
   DASH_RESIZE_PX_PER_COL,
@@ -14,9 +23,29 @@ import {
   saveBoardLayout,
   saveDashboardLayout,
   widgetMins,
+  type WidgetItem,
+  type WidgetMinsFn,
 } from './dashboardLayout'
 
-function isInteractiveTarget(target) {
+interface DragState {
+  mode: 'move' | 'resize'
+  id: string
+  originX: number
+  originY: number
+  lastX: number
+  lastY: number
+  grabX?: number
+  grabY?: number
+  start: WidgetItem
+  colPitch: number
+  rowPitch: number
+}
+
+type PreviewState =
+  | { id: string; mode: 'move'; dx: number; dy: number }
+  | { id: string; mode: 'resize'; w: number; h: number; start: WidgetItem }
+
+function isInteractiveTarget(target: EventTarget | null) {
   if (!(target instanceof Element)) return true
   return Boolean(
     target.closest(
@@ -53,20 +82,34 @@ export function DashboardBoard({
   statusLabel = 'Dashboard status',
   refreshAriaLabel = 'Refresh dashboard',
   boardAriaLabel = null,
+}: {
+  widgets: Record<string, ReactNode>
+  hasErrors?: boolean
+  asOf?: string | null
+  onRefresh?: (() => void) | null
+  refreshing?: boolean
+  refreshDisabled?: boolean
+  storageKey?: string | null
+  defaultLayout?: (() => WidgetItem[]) | null
+  minsFn?: WidgetMinsFn
+  layoutLabel?: string
+  statusLabel?: string
+  refreshAriaLabel?: string
+  boardAriaLabel?: string | null
 }) {
   const asOfId = useId()
   const isCustom = Boolean(storageKey && typeof defaultLayout === 'function')
 
-  const [layout, setLayout] = useState(() => {
-    if (isCustom) {
+  const [layout, setLayout] = useState<WidgetItem[]>(() => {
+    if (isCustom && storageKey && defaultLayout) {
       return loadBoardLayout({ storageKey, defaultLayout, minsFn })
     }
     return loadDashboardLayout(hasErrors)
   })
-  const [activeId, setActiveId] = useState(null)
-  const [preview, setPreview] = useState(null)
-  const boardRef = useRef(null)
-  const dragRef = useRef(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [preview, setPreview] = useState<PreviewState | null>(null)
+  const boardRef = useRef<HTMLDivElement | null>(null)
+  const dragRef = useRef<DragState | null>(null)
 
   const visibleKey = useMemo(
     () =>
@@ -78,7 +121,7 @@ export function DashboardBoard({
   )
 
   useEffect(() => {
-    if (!isCustom) return
+    if (!isCustom || !defaultLayout) return
     setLayout((prev) => mergeBoardLayout(prev, defaultLayout(), minsFn))
   }, [isCustom, visibleKey, defaultLayout, minsFn])
 
@@ -97,7 +140,7 @@ export function DashboardBoard({
   }, [hasErrors, isCustom])
 
   useEffect(() => {
-    if (isCustom) {
+    if (isCustom && storageKey) {
       saveBoardLayout(storageKey, layout, minsFn)
       return
     }
@@ -143,7 +186,7 @@ export function DashboardBoard({
       const req =
         typeof requestAnimationFrame === 'function'
           ? requestAnimationFrame
-          : (cb) => setTimeout(cb, 0)
+          : (cb: () => void) => setTimeout(cb, 0)
       raf = req(measureAndCommit)
     }
 
@@ -163,7 +206,7 @@ export function DashboardBoard({
   }, [visibleKey, minsFn])
 
   const byId = useMemo(() => {
-    const map = new Map()
+    const map = new Map<string, WidgetItem>()
     layout.forEach((item) => map.set(item.id, item))
     return map
   }, [layout])
@@ -180,8 +223,8 @@ export function DashboardBoard({
       if (!board) return
       const rect = board.getBoundingClientRect()
       const { colPitch, rowPitch } = boardCellMetrics(board)
-      const left = drag.lastX - drag.grabX
-      const top = drag.lastY - drag.grabY
+      const left = drag.lastX - (drag.grabX ?? 0)
+      const top = drag.lastY - (drag.grabY ?? 0)
       const x = Math.round((left - rect.left) / colPitch)
       const y = Math.round((top - rect.top) / rowPitch)
       setLayout((prev) => commitMove(prev, drag.id, x, y, minsFn))
@@ -196,7 +239,7 @@ export function DashboardBoard({
   }, [minsFn])
 
   useEffect(() => {
-    function onMove(event) {
+    function onMove(event: PointerEvent) {
       const drag = dragRef.current
       if (!drag) return
       drag.lastX = event.clientX
@@ -235,7 +278,7 @@ export function DashboardBoard({
   }, [endDrag])
 
   const beginMove = useCallback(
-    (id, event) => {
+    (id: string, event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return
       if (isInteractiveTarget(event.target)) return
       const board = boardRef.current
@@ -265,7 +308,7 @@ export function DashboardBoard({
   )
 
   const beginResize = useCallback(
-    (id, event) => {
+    (id: string, event: ReactPointerEvent<HTMLButtonElement>) => {
       if (event.button !== 0) return
       const board = boardRef.current
       const item = byId.get(id)
@@ -291,7 +334,7 @@ export function DashboardBoard({
   )
 
   function resetLayout() {
-    if (isCustom) {
+    if (isCustom && storageKey && defaultLayout) {
       try {
         window.localStorage?.removeItem(storageKey)
       } catch {
