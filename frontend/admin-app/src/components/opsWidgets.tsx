@@ -418,11 +418,11 @@ export function formatLibraryWatchStatus(watch: unknown) {
 }
 
 /** Detail line: note when off / not started; else roots · pending · debounce. */
-export function formatLibraryWatchDetail(watch: unknown) {
+export function formatLibraryWatchDetail(watch: unknown): string {
   if (!watch || typeof watch !== 'object') return 'n/a'
   const row = watch as OpsRow
   if (!row.enabled) {
-    return row.note || 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable.'
+    return String(row.note || 'Set ONEIRODEX_LIBRARY_WATCH=1 to enable.')
   }
   const roots = row.roots ?? 0
   const pending = row.pending_libraries ?? 0
