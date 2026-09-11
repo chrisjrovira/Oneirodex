@@ -197,7 +197,7 @@ def test_art_studio_api_requires_admin(client, db_session, admin_user):
     assert 'preview' in ok.get_json()
 
     bad = client.post('/admin/api/art-studio/preview', json={'title': ''})
-    assert bad.status_code == 400
+    assert bad.status_code == 422
 
 
 def test_art_studio_generate_surfaces_permission_error(client, db_session, admin_user):
