@@ -25,7 +25,7 @@ DEFAULT_LOADING_ICON_ID = None
 #
 # GT-B23: the abstract set (ring/orbit/pulse/blocks/scan/arcade) is retired for
 # consoles and controllers. The ids are the contract shared with
-# LoadingMotif.jsx and od_loading_motifs.js — all three must list the same six,
+# LoadingMotif.tsx and od_loading_motifs.js — all three must list the same six,
 # or a member's saved pick resolves to nothing.
 BUILTIN_LOADING_ICONS: list[dict[str, Any]] = [
     {

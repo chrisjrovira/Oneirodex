@@ -5,9 +5,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / 'oneirodex' / 'routes_apis' / 'collections.py'
-SPA_API = ROOT / 'frontend' / 'member-app' / 'src' / 'api' / 'collections.js'
-DETAIL = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionDetailPage.jsx'
-LIST = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionsPage.jsx'
+SPA_API = ROOT / 'frontend' / 'member-app' / 'src' / 'api' / 'collections.ts'
+DETAIL = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionDetailPage.tsx'
+LIST = ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'CollectionsPage.tsx'
 
 
 def test_collections_api_exposes_delete_and_counts():

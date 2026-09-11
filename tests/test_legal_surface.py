@@ -123,7 +123,7 @@ class TestSourceOffer:
 
     def _help_page_source(self) -> str:
         return (
-            REPO_ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'HelpPage.jsx'
+            REPO_ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'HelpPage.tsx'
         ).read_text(encoding='utf-8')
 
     def test_help_renders_the_offer(self):
@@ -154,7 +154,7 @@ class TestSourceOffer:
 class TestAttribution:
     def _help_page(self) -> str:
         return (
-            REPO_ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'HelpPage.jsx'
+            REPO_ROOT / 'frontend' / 'member-app' / 'src' / 'pages' / 'HelpPage.tsx'
         ).read_text(encoding='utf-8')
 
     @pytest.mark.parametrize('provider', ['IGDB', 'Giant Bomb', 'SteamGridDB'])

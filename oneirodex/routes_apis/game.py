@@ -221,7 +221,7 @@ def games_batch_favorite():
 
     # Deliberately not api_ok: `ok` here answers "did every item succeed",
     # not "did the request succeed". The SPA reads `data.ok !== false`
-    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # (api/batchActions.ts) to flag a partial batch, and api_ok would stamp it
     # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
@@ -372,7 +372,7 @@ def games_batch_status():
 
     # Deliberately not api_ok: `ok` here answers "did every item succeed",
     # not "did the request succeed". The SPA reads `data.ok !== false`
-    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # (api/batchActions.ts) to flag a partial batch, and api_ok would stamp it
     # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
@@ -535,7 +535,7 @@ def games_batch_wishlist():
 
     # Deliberately not api_ok: `ok` here answers "did every item succeed",
     # not "did the request succeed". The SPA reads `data.ok !== false`
-    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # (api/batchActions.ts) to flag a partial batch, and api_ok would stamp it
     # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
@@ -629,7 +629,7 @@ def games_batch_freshness_check():
 
     # Deliberately not api_ok: `ok` here answers "did every item succeed",
     # not "did the request succeed". The SPA reads `data.ok !== false`
-    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # (api/batchActions.ts) to flag a partial batch, and api_ok would stamp it
     # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,
@@ -708,7 +708,7 @@ def games_batch_refresh_images():
 
     # Deliberately not api_ok: `ok` here answers "did every item succeed",
     # not "did the request succeed". The SPA reads `data.ok !== false`
-    # (api/batchActions.js) to flag a partial batch, and api_ok would stamp it
+    # (api/batchActions.ts) to flag a partial batch, and api_ok would stamp it
     # True and hide the failures. Recorded in the envelope baseline on purpose.
     return jsonify({
         'ok': len(errors) == 0,

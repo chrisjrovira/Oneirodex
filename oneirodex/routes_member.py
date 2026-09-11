@@ -39,7 +39,7 @@ def browse_games():
     :func:`oneirodex.utils.browse_payload.build_browse_payload`.
 
     Kept at the exact path ``/browse_games`` -- the member SPA
-    (``frontend/member-app/src/api/browse.js``) hits the raw URL, never
+    (``frontend/member-app/src/api/browse.ts``) hits the raw URL, never
     ``url_for``. Moved off the retired ``'main'`` blueprint in wave A2.1f.
     """
     result = run_browse_query(request.args, current_user)

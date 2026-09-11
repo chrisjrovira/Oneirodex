@@ -55,14 +55,14 @@ def test_drawing_packs_ship_pack_drawing_key_svgs():
 
 
 def test_member_rail_icon_exposes_data_icon():
-    text = (REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'railIcons.jsx').read_text(
+    text = (REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'railIcons.tsx').read_text(
         encoding='utf-8'
     )
     assert 'data-icon={name}' in text
 
 
 def test_chrome_icon_components_expose_leftover_data_icons():
-    text = (REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'icons.jsx').read_text(
+    text = (REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'icons.tsx').read_text(
         encoding='utf-8'
     )
     for key in ('user', 'menu', 'more'):

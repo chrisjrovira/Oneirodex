@@ -309,7 +309,7 @@ button.od-seg__item:hover {
 }
 
 /* Each ContextBar owns a host div inside the shared slot so it can guarantee
-   its own removal (see ContextBar.jsx). `display: contents` keeps that
+   its own removal (see ContextBar.tsx). `display: contents` keeps that
    ownership invisible to layout — without it the host becomes a flex item and
    the strip inside it stops participating in the bar's own alignment. */
 .od-contextbar__host {

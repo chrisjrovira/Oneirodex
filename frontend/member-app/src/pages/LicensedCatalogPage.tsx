@@ -1,0 +1,170 @@
+import { Link, useSearchParams } from 'react-router-dom'
+import { useResource, useShellConfig } from '@oneirodex/ui'
+import { fetchLicensedCatalog } from '../api/systems'
+import { ContextBar } from '../chrome/ContextBar'
+import { REGION_LABELS } from '../chrome/regions'
+import { PageStatus } from '../components/PageStatus'
+import './SystemsPage.css'
+import './SetCompletionPage.css'
+
+export function LicensedCatalogPage() {
+  const shellConfig = useShellConfig()
+  const useNewChrome = Boolean(shellConfig.enableNewChrome)
+  const [searchParams] = useSearchParams()
+  const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
+
+  const {
+    data: report,
+    loading,
+    error,
+    reload,
+  } = useResource(
+    ['licensed-catalog', libraryPlatform],
+    ({ signal }) => fetchLicensedCatalog({ libraryPlatform, signal }),
+    { enabled: Boolean(libraryPlatform) },
+  )
+
+  const identity = libraryPlatform ? `${libraryPlatform} · licensed catalog` : 'Licensed catalog'
+  const libraryLinks = libraryPlatform ? (
+    <>
+      <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
+        Systems
+      </Link>
+      <Link
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
+        to={`/library?library_platform=${encodeURIComponent(libraryPlatform)}`}
+      >
+        Browse library
+      </Link>
+      <Link
+        className={useNewChrome ? 'od-cbtn' : 'od-btn'}
+        to={`/systems/completion?library_platform=${encodeURIComponent(libraryPlatform)}`}
+      >
+        Set completeness
+      </Link>
+    </>
+  ) : (
+    <Link className={useNewChrome ? 'od-cbtn' : 'od-btn'} to="/systems">
+      Back to Systems
+    </Link>
+  )
+
+  const chrome = useNewChrome ? (
+    <ContextBar
+      title={identity}
+      summary={
+        report
+          ? report.empty
+            ? 'Cache empty'
+            : `${report.owned_titles} / ${report.unique_titles} titles in cache`
+          : null
+      }
+      actions={libraryLinks}
+    />
+  ) : null
+
+  if (!libraryPlatform) {
+    return (
+      <>
+        {chrome}
+        <div className="od-more-page od-set-completion-page">
+          {useNewChrome ? null : (
+            <div className="od-page-header">
+              <h1>Licensed catalog</h1>
+            </div>
+          )}
+          <p className="od-more-page__lede">
+            Open this page from a Systems tile. It shows IGDB regional release counts for that
+            console or computer — not Wikipedia, and not a DAT.
+          </p>
+          {useNewChrome ? null : libraryLinks}
+        </div>
+      </>
+    )
+  }
+
+  if (error && !report) {
+    return (
+      <>
+        {chrome}
+        <div className="od-more-page od-set-completion-page">
+          {useNewChrome ? null : (
+            <div className="od-page-header">
+              <h1>{libraryPlatform} · licensed catalog</h1>
+            </div>
+          )}
+          <PageStatus
+            error={error}
+            errorMessage="Unable to load licensed catalog."
+            onRetry={reload}
+          />
+        </div>
+      </>
+    )
+  }
+
+  if (!report) {
+    return (
+      <>
+        {chrome}
+        <div className="od-more-page od-set-completion-page">
+          {useNewChrome ? null : (
+            <div className="od-page-header">
+              <h1>{libraryPlatform} · licensed catalog</h1>
+            </div>
+          )}
+          <PageStatus loading={loading} loadingMessage="Loading licensed catalog…" />
+        </div>
+      </>
+    )
+  }
+
+  const rows = Array.isArray(report.by_region) ? report.by_region : []
+
+  return (
+    <>
+      {chrome}
+      <div className="od-more-page od-set-completion-page">
+        {useNewChrome ? null : (
+          <>
+            <div className="od-page-header">
+              <h1>{libraryPlatform} · licensed catalog</h1>
+            </div>
+            <div className="od-set-completion-toolbar">{libraryLinks}</div>
+          </>
+        )}
+        <p className="od-more-page__lede">{report.note}</p>
+        {report.fetched_at ? (
+          <p className="od-set-completion-msg">Last refresh {report.fetched_at}</p>
+        ) : null}
+        <table className="od-licensed-catalog-table">
+          <thead>
+            <tr>
+              <th scope="col">Region</th>
+              <th scope="col">Titles in cache</th>
+              <th scope="col">Owned here</th>
+              <th scope="col">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row: any) => {
+              const code = row.region_code
+              const label = row.label || REGION_LABELS[code] || code
+              const source = row.source === 'dat_only' ? 'DAT only' : 'IGDB'
+              return (
+                <tr key={code}>
+                  <th scope="row">
+                    {label} ({code})
+                  </th>
+                  <td>{row.titles}</td>
+                  <td>{row.owned}</td>
+                  <td>{source}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}

@@ -22,7 +22,7 @@ SEARCH_ROOTS = [
     ROOT / "frontend" / "member-app" / "src",
     ROOT / "frontend" / "admin-app" / "src",
 ]
-SEARCH_SUFFIXES = {".py", ".jsx", ".js", ".html"}
+SEARCH_SUFFIXES = {".py", ".jsx", ".js", ".html", ".ts", ".tsx"}
 SKIP_DIRS = {"__pycache__", "node_modules", "dist", "vendor", "static"}
 
 

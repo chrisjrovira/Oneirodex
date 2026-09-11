@@ -6,7 +6,7 @@ Nothing is adopted here yet. The JSON routes in ``game.py`` are:
   ``games_batch_freshness_check`` / ``games_batch_refresh_images`` — partial
   success routes whose *rejection* body carries ``updated`` / ``skipped`` /
   ``errors`` / ``limit`` and whose ``ok`` means "did every item succeed". The
-  member SPA (``api/batchActions.js``) branches on that shape, so the uniform
+  member SPA (``api/batchActions.ts``) branches on that shape, so the uniform
   ``@validate_body`` 422 (``{ok:false, error, detail}``) would regress it. Left
   on purpose; recorded in the api-envelope baseline.
 * ``move_game_to_library`` — ``tests/test_routes_apis_game.py`` asserts a 400

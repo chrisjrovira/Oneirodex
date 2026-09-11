@@ -1085,7 +1085,7 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
 }
 
 /* The section name. Styled as an eyebrow, but it IS the page heading — it
-   renders as an <h1> (TopBar.jsx / ContextBar.jsx). The page's own h1 is
+   renders as an <h1> (TopBar.tsx / ContextBar.tsx). The page's own h1 is
    retired under the v2 chrome, so without this a route had no heading at all
    and heading navigation found nothing. Looking like a label and being a
    heading are not in conflict: the styling is the eyebrow, the element is the
@@ -1389,7 +1389,7 @@ body.od-shell-host:has(.game-card :focus-visible) > #admin-legacy-content {
   }
 
   /* `expanded`, not `open`. The shell only ever sets data-rail to `expanded`
-     or `collapsed` (App.jsx `data-rail={railState}`), so `[data-rail='open']`
+     or `collapsed` (App.tsx `data-rail={railState}`), so `[data-rail='open']`
      matched nothing and the drawer could never be opened on mobile — the
      hamburger appeared to do nothing. Mapping it to the real state makes the
      toggle work: expanded slides the drawer in, collapsed slides it out, and
@@ -1655,7 +1655,7 @@ body.od-shell-host .od-admin-main::-webkit-scrollbar-thumb:hover {
 
 /* Chat inside the shell has no page controls, so bar two would be an empty
    strip above the conversation. The row is removed rather than hidden — see
-   App.jsx, which also stops rendering the bar so nothing portals into a slot
+   App.tsx, which also stops rendering the bar so nothing portals into a slot
    that is not on screen.
  *
  * Desktop only, and deliberately so. This rule is more specific than the

@@ -1,4 +1,4 @@
-"""Badge / chip filters for /browse_games (aligned with badgeSignals.js)."""
+"""Badge / chip filters for /browse_games (aligned with badgeSignals.ts)."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ _PATH_STATUS_ALLOWED = frozenset({
     PATH_STATUS_EMPTY,
 })
 
-# Keep in sync with frontend/member-app/src/utils/badgeSignals.js
+# Keep in sync with frontend/member-app/src/utils/badgeSignals.ts
 NEW_IMPORT_WINDOW_DAYS = 14
 RELEASE_WINDOW_DAYS = 30
 

@@ -1,0 +1,1274 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import {
+  checkGameFreshness,
+  cleanupOrphanVersions,
+  fetchGameDetails,
+  fetchGameVersions,
+} from '../api/gameDetails'
+import { attachPatchCatalogGuide, searchPatchCatalog } from '../api/patchCatalog'
+import { initiateGameDownload } from '../api/downloads'
+import { queueClientCommand } from '../api/clientCommands'
+import { BadgeStack } from '../components/BadgeStack'
+import { DetailsMediaStage } from '../components/DetailsMediaStage'
+import { DetailsMoreFrom } from '../components/DetailsMoreFrom'
+import { DetailsStoreSpecs } from '../components/DetailsStoreSpecs'
+import { CheatsPanel } from '../components/CheatsPanel'
+import { PcCheatsPanel } from '../components/PcCheatsPanel'
+import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
+import { ExternalStoreLinks } from '../components/ExternalStoreLinks'
+import { GameActionBar } from '../components/GameActionBar'
+import { OpenPathModal } from '../components/OpenPathModal'
+import { AddToCollection } from '../components/AddToCollection'
+import { PageStatus } from '../components/PageStatus'
+import { ScreenshotLightbox } from '../components/ScreenshotLightbox'
+import { coverUrl } from '../utils/coverUrl'
+import {
+  adminPathRows,
+  detailsDiscChips,
+  extrasPanelModel,
+  formatVersionSize,
+  isVersionDownloadable,
+  isVersionPathMissing,
+  showsRetroarchCheats,
+  trailerEmbedUrls,
+  youtubeDemoLink,
+} from '../utils/detailsMedia'
+import { formatLocaleDate } from '../utils/formatLocaleDate'
+import { ITEM_KIND_LABEL, resolveItemKind } from '../utils/itemKind'
+import {
+  FIRMWARE_ADMIN_HREF,
+  FIRMWARE_HELP_HREF,
+  firmwareBlockHint,
+  firmwareBlockMessage,
+  honestyApiErrorMessage,
+  isFirmwarePlayBlocked,
+} from '../utils/playHonesty'
+import { recordRecentTitle } from '../utils/recentTitles'
+import { detailsRootCrumb, primaryGenreName, taxonomyHref } from '../utils/detailsTaxonomy'
+import { showToast } from '../utils/toast'
+import './GameDetailsPage.css'
+
+function formatPlaytime(seconds: any) {
+  const total = Number(seconds) || 0
+  if (total <= 0) {
+    return 'Not played yet'
+  }
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  if (hours <= 0) {
+    return `${minutes}m`
+  }
+  return `${hours}h ${minutes}m`
+}
+
+function TaxonomyChip({ kind, name }: LooseProps) {
+  return (
+    <Link className="chip od-chip" to={taxonomyHref(kind, name)}>
+      {name}
+    </Link>
+  )
+}
+
+export function GameDetailsPage() {
+  const { gameUuid } = useParams()
+  const [game, setGame] = useState<any>(null)
+  const [versions, setVersions] = useState<any[]>([])
+  const [error, setError] = useState<any>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const [freshnessBusy, setFreshnessBusy] = useState(false)
+  const [freshnessError, setFreshnessError] = useState<any>(null)
+  const [busyVersionKey, setBusyVersionKey] = useState<any>(null)
+  const [versionActionStatus, setVersionActionStatus] = useState<any>(null)
+  const [cleanupBusy, setCleanupBusy] = useState(false)
+  const [selectedCore, setSelectedCore] = useState('')
+  const [catalogHits, setCatalogHits] = useState<any[]>([])
+  const [catalogBusy, setCatalogBusy] = useState(false)
+  const [catalogStatus, setCatalogStatus] = useState<any>(null)
+  const [shotIndex, setShotIndex] = useState<any>(null)
+  /* Screenshot URLs the browser could not load.
+   *
+   * The payload no longer lists art it cannot serve, which fixes the common
+   * case. It cannot fix the other one: a remote IGDB URL that has since gone,
+   * or a local file deleted after the row was written. Either renders a broken
+   * image, and a gallery of broken images is worse than no gallery — so a shot
+   * that fails to load leaves the list, and a section left with nothing does
+   * not render at all. */
+  const [brokenShots, setBrokenShots] = useState<Set<any>>(() => new Set())
+
+  const markShotBroken = useCallback((url: any) => {
+    setBrokenShots((current) => {
+      if (current.has(url)) return current
+      const next = new Set(current)
+      next.add(url)
+      return next
+    })
+  }, [])
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false)
+  const [summaryExpanded, setSummaryExpanded] = useState(false)
+  // Whether the summary is actually clipped by the 8-line clamp. Measured rather
+  // than guessed from character count: a character threshold disagrees with the
+  // clamp at both ends — short-but-wrapped text got no toggle, and long text that
+  // happened to fit still offered one.
+  const summaryRef = useRef<any>(null)
+  const [summaryOverflows, setSummaryOverflows] = useState(false)
+  const [pathModal, setPathModal] = useState<any>(null)
+  const [versionsLoading, setVersionsLoading] = useState(true)
+  const adminMenuRef = useRef<any>(null)
+
+  // Re-measure on mount, on summary change, and on resize — a summary that fits
+  // on a wide screen can clip on a narrow one.
+  useEffect(() => {
+    const node = summaryRef.current
+    if (!node) {
+      return undefined
+    }
+    if (summaryExpanded) {
+      // Expanded, nothing is clipped; keep the toggle so "Show less" survives.
+      return undefined
+    }
+    const measure = () => {
+      setSummaryOverflows(node.scrollHeight > node.clientHeight + 1)
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [summaryExpanded])
+
+  useEffect(() => {
+    if (!gameUuid) {
+      return undefined
+    }
+    const controller = new AbortController()
+    let active = true
+    setError(null)
+    setGame(null)
+    setVersionsLoading(true)
+
+    Promise.all([
+      fetchGameDetails(gameUuid, { signal: controller.signal }),
+      fetchGameVersions(gameUuid, { signal: controller.signal }).catch(() => ({ versions: [] })),
+    ])
+      .then(([details, versionData]) => {
+        if (!active) {
+          return
+        }
+        setGame(details)
+        recordRecentTitle({ uuid: details.uuid || gameUuid, name: details.name })
+        setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
+        setVersionsLoading(false)
+      })
+      .catch((err: any) => {
+        if (active && err.name !== 'AbortError') {
+          setError(err)
+          setVersionsLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [gameUuid, retryCount])
+
+  useEffect(() => {
+    if (game?.emulator_core) {
+      setSelectedCore(game.emulator_core)
+    }
+  }, [game?.emulator_core, game?.uuid])
+
+  useEffect(() => {
+    if (!adminMenuOpen) return undefined
+    function onDocClick(event: any) {
+      if (!adminMenuRef.current?.contains(event.target)) {
+        setAdminMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [adminMenuOpen])
+
+  const videoEmbeds = useMemo(() => trailerEmbedUrls(game), [game])
+
+  /** Screenshots that are actually renderable — see `brokenShots`. */
+  const shownShots = useMemo(
+    () => (game?.screenshots || []).filter((url: any) => !brokenShots.has(url)),
+    [game?.screenshots, brokenShots],
+  )
+
+  const demoLink = useMemo(() => youtubeDemoLink(game), [game])
+  const pathRows = useMemo(() => adminPathRows(game), [game])
+  const extrasModel = useMemo(
+    () => extrasPanelModel(game, versions, { loading: versionsLoading }),
+    [game, versions, versionsLoading],
+  )
+  const discChips = useMemo(() => detailsDiscChips(game), [game])
+  const baseAndUpdates = useMemo(
+    () => versions.filter((row) => row.kind === 'base' || row.kind === 'update'),
+    [versions],
+  )
+  const hasMissingVersions = useMemo(
+    () => baseAndUpdates.some((row) => isVersionPathMissing(row)),
+    [baseAndUpdates],
+  )
+
+  const playHref = useMemo(() => {
+    if (!game?.can_play_in_browser || isFirmwarePlayBlocked(game)) {
+      return null
+    }
+    const cores = Array.isArray(game.emulator_cores) ? game.emulator_cores : []
+    const core = selectedCore || game.emulator_core || cores[0]
+    // Prefer the server play_url (WebRetro or BP-1 Nostalgist NES host) and
+    // only rewrite query params when the member picks another core.
+    const base = game.play_url || null
+    if (!core || !game.uuid) {
+      return base
+    }
+    try {
+      const url = new URL(base || '/static/vendor/webretro/webretro.html', window.location.origin)
+      url.searchParams.set('guid', game.uuid)
+      url.searchParams.set('core', core)
+      if (game.library_platform) {
+        url.searchParams.set('platform', game.library_platform)
+      }
+      if (showsRetroarchCheats(game)) {
+        url.searchParams.set('cheat_surface', 'retroarch')
+      } else {
+        url.searchParams.delete('cheat_surface')
+      }
+      return `${url.pathname}${url.search}`
+    } catch {
+      return base
+    }
+  }, [game, selectedCore])
+
+  const firmwareBlocked = isFirmwarePlayBlocked(game)
+  const firmwareMessage = firmwareBlocked ? firmwareBlockMessage(game) : null
+  const firmwareHint = firmwareBlocked ? firmwareBlockHint(game) : null
+
+  async function handleVersionDownload({ kind = 'base', versionUuid, label }: LooseProps) {
+    if (!game?.uuid || busyVersionKey) {
+      return
+    }
+    const versionKey = `download:${kind}:${versionUuid || 'base'}`
+    setBusyVersionKey(versionKey)
+    setVersionActionStatus(null)
+    try {
+      await initiateGameDownload(game.uuid, { kind, versionUuid })
+      setVersionActionStatus(`${label || 'Download'} ready - opening Downloads`)
+      showToast(`${label || 'Download'} ready - opening Downloads`, 'success')
+      window.location.assign('/downloads')
+    } catch (err: any) {
+      const message = honestyApiErrorMessage(err, 'Download failed')
+      setVersionActionStatus(message)
+      showToast(message, 'error')
+    } finally {
+      setBusyVersionKey(null)
+    }
+  }
+
+  async function handleFreshnessCheck() {
+    if (!gameUuid || freshnessBusy) {
+      return
+    }
+    setFreshnessBusy(true)
+    setFreshnessError(null)
+    try {
+      const result = await checkGameFreshness(gameUuid)
+      setGame((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              freshness_status: result.status || prev.freshness_status,
+              freshness_confidence: result.confidence ?? prev.freshness_confidence,
+            }
+          : prev,
+      )
+    } catch (err: any) {
+      setFreshnessError(err)
+      showToast(err?.message || 'Freshness check failed', 'error')
+    } finally {
+      setFreshnessBusy(false)
+    }
+  }
+
+  async function handleCleanupOrphans() {
+    if (!gameUuid || cleanupBusy || !game?.is_admin) {
+      return
+    }
+    setCleanupBusy(true)
+    setVersionActionStatus(null)
+    try {
+      const result = await cleanupOrphanVersions(gameUuid)
+      const removed = Number(result.removed ?? result.removed_count ?? result.count ?? 0) || 0
+      const message =
+        result.message ||
+        (removed > 0
+          ? `Removed ${removed} missing version${removed === 1 ? '' : 's'}`
+          : 'No missing versions to remove')
+      setVersionActionStatus(message)
+      showToast(message, 'success')
+      const versionData = await fetchGameVersions(gameUuid).catch(() => ({ versions: [] }))
+      setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
+    } catch (err: any) {
+      const message =
+        err?.status === 404
+          ? 'Orphan cleanup is not available on this server yet'
+          : err?.message || 'Failed to remove missing versions'
+      setVersionActionStatus(message)
+      showToast(message, err?.status === 404 ? 'info' : 'error')
+    } finally {
+      setCleanupBusy(false)
+    }
+  }
+
+  if (!game) {
+    return (
+      <div className="od-more-page od-details-page">
+        <PageStatus
+          loading={!error}
+          error={error}
+          errorMessage="Unable to load game details."
+          loadingMessage="Loading game…"
+          onRetry={() => setRetryCount((n) => n + 1)}
+        />
+      </div>
+    )
+  }
+
+  const itemKind = resolveItemKind(game)
+  const rootCrumb = detailsRootCrumb(game)
+  const genreName = primaryGenreName(game)
+  const hasMedia = videoEmbeds.length > 0 || shownShots.length > 0
+
+  return (
+    <div className="od-more-page od-details-page">
+      {/* Wide, title-free art behind the page.
+          Two rules make this work as atmosphere rather than as a picture the
+          content is sitting on top of: it is never the cover (the cover carries
+          the title, and the title is already on the page in readable type), and
+          it is obscured on three axes at once — blurred, desaturated, and faded
+          out under a gradient that reaches full opacity well before the text
+          starts. Aria-hidden and `pointer-events: none` because it is a surface,
+          not content: nothing here is announced and nothing here is clickable.
+          Absent when a title has no wide art, which leaves the page on its flat
+          surface exactly as before. */}
+      {game.backdrop_url ? (
+        <div className="od-details-page__backdrop" aria-hidden="true">
+          <img src={game.backdrop_url} alt="" loading="lazy" />
+        </div>
+      ) : null}
+      <nav className="od-details-page__crumbs" aria-label="Breadcrumb">
+        <ol>
+          <li>
+            <Link to={rootCrumb.to}>{rootCrumb.label}</Link>
+          </li>
+          {genreName ? (
+            <li>
+              <Link to={taxonomyHref('genre', genreName)}>{genreName}</Link>
+            </li>
+          ) : null}
+          <li aria-current="page">
+            <span>{game.name}</span>
+          </li>
+        </ol>
+      </nav>
+
+      <div className="od-details-page__hero">
+        <div
+          className={`od-details-page__cover-wrap${adminMenuOpen ? ' od-details-page__cover-wrap--menu-open' : ''}`}
+        >
+          <img className="od-details-page__cover" src={coverUrl(game.cover_url)} alt="" />
+          <BadgeStack game={game} preferredCorner="top-left" maxVisible={2} />
+          {game.is_admin ? (
+            <div className="od-details-page__admin-menu" ref={adminMenuRef}>
+              <button
+                type="button"
+                className="od-details-page__admin-menu-btn"
+                data-chrome-anchor="top-right"
+                aria-expanded={adminMenuOpen}
+                aria-haspopup="menu"
+                aria-controls={adminMenuOpen ? 'od-details-admin-menu' : undefined}
+                aria-label="Admin actions"
+                onClick={() => setAdminMenuOpen((open) => !open)}
+              >
+                <span aria-hidden="true">⋮</span>
+              </button>
+              {adminMenuOpen ? (
+                <div
+                  id="od-details-admin-menu"
+                  className="od-details-page__admin-menu-panel"
+                  role="menu"
+                >
+                  <a
+                    className="od-details-page__admin-menu-item"
+                    role="menuitem"
+                    href={`/game_edit/${game.uuid}`}
+                  >
+                    Edit Details
+                  </a>
+                  <a
+                    className="od-details-page__admin-menu-item"
+                    role="menuitem"
+                    href={`/edit_game_images/${game.uuid}`}
+                  >
+                    Edit Images
+                  </a>
+                  {pathRows[0] ? (
+                    <button
+                      type="button"
+                      className="od-details-page__admin-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setAdminMenuOpen(false)
+                        setPathModal(pathRows[0])
+                      }}
+                    >
+                      Open path
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+        <div className="od-details-page__hero-main">
+          <h1>{game.name}</h1>
+          <p className="od-details-page__meta-line">
+            {[
+              game.developer,
+              game.publisher,
+              game.category,
+              game.first_release_date
+                ? formatLocaleDate(game.first_release_date, { fallback: null })
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+          {game.game_modes?.length || game.player_perspectives?.length ? (
+            <div className="od-details-page__features" aria-label="How this plays">
+              {(game.game_modes || []).map((name: any) => (
+                <TaxonomyChip key={`mode:${name}`} kind="game_mode" name={name} />
+              ))}
+              {(game.player_perspectives || []).map((name: any) => (
+                <TaxonomyChip key={`persp:${name}`} kind="player_perspective" name={name} />
+              ))}
+            </div>
+          ) : null}
+          <div className="od-details-page__chips">
+            {itemKind !== 'game' ? (
+              <span
+                className="chip od-chip"
+                title="Library item kind - gaming software, not a main-game catalog match"
+              >
+                {ITEM_KIND_LABEL[itemKind]}
+              </span>
+            ) : null}
+            {game.local_version ? (
+              <span className="chip od-chip" title="Installed / library version">
+                Version {game.local_version}
+              </span>
+            ) : null}
+            {game.remote_version_summary ? (
+              <span className="chip od-chip" title="Remote / store version summary">
+                Remote {game.remote_version_summary}
+              </span>
+            ) : null}
+            {game.size ? <span className="chip od-chip">{game.size}</span> : null}
+            {discChips.map((chip) => (
+              <span key={chip.key} className="chip od-chip" title={chip.title}>
+                {chip.text}
+              </span>
+            ))}
+            {game.status_label ? <span className="chip od-chip">{game.status_label}</span> : null}
+            {game.rom_region || game.rom_languages ? (
+              <span className="chip od-chip" title="ROM region / languages from filename">
+                {[game.rom_region, game.rom_languages].filter(Boolean).join(' · ') || 'ROM lang'}
+                {game.preferred_locale_matches === true
+                  ? ` · matches ${game.preferred_game_locale || 'en-US'}`
+                  : null}
+                {game.preferred_locale_matches === false
+                  ? ` · no ${game.preferred_game_locale || 'en-US'}`
+                  : null}
+                {game.has_english === false ? ' · no EN' : null}
+              </span>
+            ) : null}
+            {game.freshness_status ? (
+              <span className="chip od-chip">Freshness: {game.freshness_status}</span>
+            ) : null}
+            {/* Companion presence reads as status, so it belongs on the status
+                row rather than floating above the action buttons. */}
+            <span
+              className={`chip od-chip${game.client_connected ? '' : ' od-chip--muted'}`}
+              title={
+                game.client_connected
+                  ? 'Companion client is online'
+                  : 'Companion client offline — install/update/uninstall need it'
+              }
+            >
+              {game.client_connected ? 'Companion online' : 'Companion offline'}
+            </span>
+            {game.hltb_main_story != null ? (
+              <span className="chip od-chip">
+                HLTB main {Number(game.hltb_main_story).toFixed(1)}h
+              </span>
+            ) : null}
+            {game.is_favorite ? <span className="chip od-chip">Favorite</span> : null}
+          </div>
+          <GameActionBar
+            gameUuid={game.uuid}
+            gameName={game.name}
+            lifecycleState={game.lifecycle_state || 'not_downloaded'}
+            clientConnected={Boolean(game.client_connected)}
+            variant="full"
+            showPresence={false}
+          />
+          {/* Three rows, one per question, instead of one flex-wrap blob.
+              As a single wrapping row the break points moved with the content:
+              a title with four store links put "Check updates & DLC" alone on
+              a third line, one with two links left it hanging half-way along
+              the second, and "Add to collection" sat in a gap beside Play. The
+              groups answer different questions — play it · find it elsewhere ·
+              go and look for changes — so each owns a row and wraps inside
+              itself. Narrow panes reflow within a group rather than shuffling
+              buttons between groups. */}
+          <div className="od-details-page__quick">
+            <div className="od-details-page__quick-row od-details-page__quick-row--seg">
+              {playHref ? (
+                <>
+                  {Array.isArray(game.emulator_cores) && game.emulator_cores.length > 1 ? (
+                    <label className="od-details-page__core-picker">
+                      Core{' '}
+                      <select
+                        value={selectedCore || game.emulator_core || game.emulator_cores[0]}
+                        onChange={(event) => setSelectedCore(event.target.value)}
+                      >
+                        {game.emulator_cores.map((core: any) => (
+                          <option key={core} value={core}>
+                            {core}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  <a className="od-btn od-btn--primary" href={playHref}>
+                    Play in browser
+                  </a>
+                </>
+              ) : firmwareBlocked || game.play_blocker === 'unsupported_archive' ? (
+                <button
+                  type="button"
+                  className="od-btn od-btn--primary"
+                  disabled
+                  title={
+                    firmwareBlocked
+                      ? firmwareMessage
+                      : game.companion_hint ||
+                        'This archive type cannot be extracted for browser play. Use .zip / .7z / .rar / ROM.gz or a raw ROM.'
+                  }
+                >
+                  Play in browser
+                </button>
+              ) : null}
+              {/* Same control as the tile menu's, at the other place the "where
+                does this go" decision gets made. */}
+              <AddToCollection gameUuid={game.uuid} gameName={game.name} variant="inline" />
+            </div>
+
+            <div className="od-details-page__quick-row">
+              <ExternalStoreLinks
+                urls={game.urls}
+                steamUrl={game.steam_url}
+                igdbUrl={game.url_igdb || game.url}
+              />
+              {/* Launch Steam closes the "elsewhere" row.
+                  It used to lead the actions, right after Play in browser —
+                  two "start the game" buttons side by side, one of which only
+                  works if you own it on Steam and have the client installed.
+                  Grouped with the store links it reads as the last of the
+                  elsewhere actions, which is what it is. */}
+              {game.steam_app_id ? (
+                <a className="od-btn" href={`steam://run/${game.steam_app_id}`}>
+                  Launch Steam
+                </a>
+              ) : null}
+            </div>
+
+            <div className="od-details-page__quick-row od-details-page__quick-row--seg">
+              <button
+                type="button"
+                className="od-btn"
+                disabled={freshnessBusy}
+                title="Re-read the store listing for a newer version, updates, or DLC"
+                onClick={() => {
+                  void handleFreshnessCheck()
+                }}
+              >
+                {/* "Check stores" read like a store-availability lookup; it
+                    actually re-reads the listing for updates/DLC. */}
+                {freshnessBusy ? 'Checking…' : 'Check updates & DLC'}
+              </button>
+            </div>
+          </div>
+          {firmwareBlocked ? (
+            <p className="od-details-page__play-honesty" role="status">
+              <span>{firmwareMessage}</span>
+              {firmwareHint ? (
+                <span className="od-details-page__muted"> {firmwareHint}</span>
+              ) : null}{' '}
+              <Link to={FIRMWARE_HELP_HREF}>Help → Browser play</Link>
+              {game.is_admin ? (
+                <>
+                  {' '}
+                  · <a href={FIRMWARE_ADMIN_HREF}>Admin → Emulators</a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
+          {freshnessError ? (
+            <PageStatus
+              error={freshnessError}
+              errorMessage={`Update check failed: ${String(freshnessError.message || freshnessError)}`}
+              className="od-details-page__muted"
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <div className={`od-details-page__fold${hasMedia ? ' od-details-page__fold--media' : ''}`}>
+        <div className="od-details-page__content-grid">
+          {game.summary ? (
+            <section className="od-details-page__section od-details-page__section--summary">
+              <h2>Summary</h2>
+              <p
+                ref={summaryRef}
+                className={`od-details-page__summary${summaryExpanded ? ' is-expanded' : ''}`}
+              >
+                {game.summary}
+              </p>
+              {summaryOverflows ? (
+                <button
+                  type="button"
+                  className="od-btn od-details-page__summary-toggle"
+                  onClick={() => setSummaryExpanded((open) => !open)}
+                >
+                  {summaryExpanded ? 'Show less' : 'Show more'}
+                </button>
+              ) : null}
+            </section>
+          ) : null}
+
+          {/* Open path rides the section heading, not the path row.
+              A full-height `.od-btn` in the row's third grid column squeezed
+              the path into roughly half the panel, so a normal library path
+              wrapped over six lines inside a box taller than the rest of the
+              facts list — and the button's own column sat mostly empty. The
+              heading line already has unused width, and the action belongs to
+              the section rather than to one line of it. */}
+          <section className="od-details-page__section od-details-page__section--facts">
+            <h2 className="od-details-page__section-head">
+              <span>Details</span>
+              {pathRows.length > 0 ? (
+                <span className="od-details-page__section-actions">
+                  {pathRows.map((row) => (
+                    <button
+                      key={`open-${row.label}-${row.path}`}
+                      type="button"
+                      className="od-btn od-btn--sm od-btn--pill"
+                      onClick={() => setPathModal(row)}
+                    >
+                      {pathRows.length > 1 ? `Open ${row.label.toLowerCase()}` : 'Open path'}
+                    </button>
+                  ))}
+                </span>
+              ) : null}
+            </h2>
+            {pathRows.length > 0 ? (
+              <div className="od-details-page__paths" aria-label="Admin paths">
+                {pathRows.map((row) => (
+                  <div key={`${row.label}-${row.path}`} className="od-details-page__path-row">
+                    <span className="od-details-page__path-label">{row.label}</span>
+                    <code className="od-details-page__path-value" title={row.path}>
+                      {row.path}
+                    </code>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <dl className="od-details-page__facts">
+              {game.rating != null ? (
+                <>
+                  <dt>Rating</dt>
+                  <dd>
+                    {Number(game.rating).toFixed(0)}
+                    {game.rating_count ? ` (${game.rating_count})` : ''}
+                  </dd>
+                </>
+              ) : null}
+              {game.genres?.length ? (
+                <>
+                  <dt>Genres</dt>
+                  <dd>
+                    {game.genres.map((name: any) => (
+                      <TaxonomyChip key={name} kind="genre" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              {game.themes?.length ? (
+                <>
+                  <dt>Themes</dt>
+                  <dd>
+                    {game.themes.map((name: any) => (
+                      <TaxonomyChip key={name} kind="theme" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              {game.platforms?.length ? (
+                <>
+                  <dt>IGDB platforms</dt>
+                  <dd>{game.platforms.join(', ')}</dd>
+                </>
+              ) : null}
+              {game.game_modes?.length ? (
+                <>
+                  <dt>Modes</dt>
+                  <dd>
+                    {game.game_modes.map((name: any) => (
+                      <TaxonomyChip key={name} kind="game_mode" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              {game.player_perspectives?.length ? (
+                <>
+                  <dt>Perspectives</dt>
+                  <dd>
+                    {game.player_perspectives.map((name: any) => (
+                      <TaxonomyChip key={name} kind="player_perspective" name={name} />
+                    ))}
+                  </dd>
+                </>
+              ) : null}
+              <dt>Playtime</dt>
+              <dd>
+                {formatPlaytime(game.playtime?.total_seconds)}
+                {game.playtime?.session_count
+                  ? ` · ${game.playtime.session_count} session${game.playtime.session_count === 1 ? '' : 's'}`
+                  : ''}
+              </dd>
+              {game.times_downloaded != null ? (
+                <>
+                  <dt>Downloads</dt>
+                  <dd>{game.times_downloaded}</dd>
+                </>
+              ) : null}
+            </dl>
+          </section>
+        </div>
+
+        {hasMedia ? (
+          <DetailsMediaStage
+            videoEmbeds={videoEmbeds}
+            shownShots={shownShots}
+            onFullscreen={setShotIndex}
+            onShotBroken={markShotBroken}
+          />
+        ) : null}
+      </div>
+
+      <div className="od-details-page__flow">
+        {game.storyline ? (
+          <section className="od-details-page__section">
+            <h2>About</h2>
+            <p className="od-details-page__about">{game.storyline}</p>
+          </section>
+        ) : null}
+
+        <DetailsStoreSpecs storeSpecs={game.store_specs} />
+
+        {game.show_translations_block ? (
+          <section className="od-details-page__section" id="translations">
+            <h2>Translations &amp; patches</h2>
+            <p className="od-details-page__muted">
+              {game.needs_translation
+                ? `This ROM may not match your preferred game language (${game.preferred_game_locale || 'en-US'}).`
+                : 'Translation patches available for this title.'}{' '}
+              Always keep a backup of the original ROM. See the in-app{' '}
+              <Link to="/help#translations">Help → Translations</Link> guide or{' '}
+              <code>docs/user/translation-patches.md</code>.
+            </p>
+            {Array.isArray(game.translation_patches) && game.translation_patches.length > 0 ? (
+              <ul className="od-details-page__versions">
+                {game.translation_patches.map((patch: any) => {
+                  const versionKey = `patch:${patch.uuid}`
+                  const applyBusy = busyVersionKey === versionKey
+                  const canApplyPatch =
+                    Boolean(game.client_connected) && Boolean(game.rom_patch_apply_enabled)
+                  return (
+                    <li key={patch.uuid}>
+                      <div className="od-details-page__version-row">
+                        <div>
+                          <strong>{patch.label}</strong>
+                          <span className="od-details-page__muted">
+                            {' '}
+                            · {(patch.patch_format || 'patch').toUpperCase()}
+                            {patch.target_language ? ` · → ${patch.target_language}` : ''}
+                          </span>
+                        </div>
+                        <div className="od-details-page__version-actions">
+                          <a className="od-btn" href={patch.download_url}>
+                            Download patch
+                          </a>
+                          {patch.source_url ? (
+                            <a
+                              className="od-btn"
+                              href={patch.source_url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Guide
+                            </a>
+                          ) : null}
+                          {canApplyPatch ? (
+                            <button
+                              type="button"
+                              className="od-btn"
+                              disabled={Boolean(busyVersionKey)}
+                              onClick={() => {
+                                setBusyVersionKey(versionKey)
+                                setVersionActionStatus(null)
+                                void queueClientCommand(game.uuid, 'apply_patch', {
+                                  kind: 'extra',
+                                  versionUuid: patch.uuid,
+                                })
+                                  .then(() => {
+                                    setVersionActionStatus(
+                                      `${patch.label} queued for companion apply`,
+                                    )
+                                    showToast(
+                                      `${patch.label} queued for companion apply`,
+                                      'success',
+                                    )
+                                  })
+                                  .catch((err: any) => {
+                                    setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                    showToast(err?.message || 'Queue failed', 'error')
+                                  })
+                                  .finally(() => {
+                                    setBusyVersionKey(null)
+                                  })
+                              }}
+                            >
+                              {applyBusy ? 'Queuing…' : 'Apply with companion'}
+                            </button>
+                          ) : (
+                            <Link className="od-btn" to="/help#translations">
+                              How to apply
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="od-details-page__muted">
+                No patch files in extras yet. Ask a librarian to add a curated <code>.ips</code>/
+                <code>.bps</code>/<code>.ups</code> under the game extras folder, or follow the
+                how-to for applying a patch you already have.
+              </p>
+            )}
+            {game.rom_ai_translate?.show_panel ? (
+              <div className="od-details-page__ai-translate">
+                <h3>Live translate (RetroArch AI)</h3>
+                <p className="od-details-page__muted">
+                  {game.rom_ai_translate.note} Target language hint:{' '}
+                  <code>{game.rom_ai_translate.target_lang || 'en'}</code>
+                  {game.rom_ai_translate.service_url_hint
+                    ? ` · service ${game.rom_ai_translate.service_url_hint}`
+                    : ''}
+                  . Offline dump→rebuild is not available for this system yet.
+                </p>
+                <Link className="od-btn" to="/help#translations">
+                  Setup guide
+                </Link>
+              </div>
+            ) : null}
+            {game.is_admin && game.patch_catalog_enabled ? (
+              <div className="od-details-page__catalog">
+                <h3>Operator catalog</h3>
+                <p className="od-details-page__muted">
+                  Search your local YAML/JSON patch guide catalog (metadata only - no third-party
+                  scrape).
+                </p>
+                <button
+                  type="button"
+                  className="od-btn"
+                  disabled={catalogBusy}
+                  onClick={() => {
+                    setCatalogBusy(true)
+                    setCatalogStatus(null)
+                    void searchPatchCatalog({ gameUuid: game.uuid })
+                      .then((data) => {
+                        setCatalogHits(Array.isArray(data.hits) ? data.hits : [])
+                        setCatalogStatus(
+                          data.hits?.length ? `${data.hits.length} hit(s)` : 'No catalog matches',
+                        )
+                      })
+                      .catch((err: any) => {
+                        setCatalogHits([])
+                        setCatalogStatus(err?.message || 'Catalog search failed')
+                      })
+                      .finally(() => {
+                        setCatalogBusy(false)
+                      })
+                  }}
+                >
+                  {catalogBusy ? 'Searching…' : 'Search catalog'}
+                </button>
+                {catalogStatus ? (
+                  <p className="od-details-page__muted" role="status">
+                    {catalogStatus}
+                  </p>
+                ) : null}
+                {catalogHits.length > 0 ? (
+                  <ul className="od-details-page__versions">
+                    {catalogHits.map((hit) => (
+                      <li key={hit.id}>
+                        <div className="od-details-page__version-row">
+                          <div>
+                            <strong>{hit.title}</strong>
+                            <span className="od-details-page__muted">
+                              {' '}
+                              · {hit.provider}
+                              {hit.patch_format ? ` · ${hit.patch_format}` : ''}
+                              {hit.target_language ? ` · → ${hit.target_language}` : ''}
+                            </span>
+                            {hit.notes ? (
+                              <p className="od-details-page__muted">{hit.notes}</p>
+                            ) : null}
+                          </div>
+                          <div className="od-details-page__version-actions">
+                            {hit.source_url ? (
+                              <a
+                                className="od-btn"
+                                href={hit.source_url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Open guide
+                              </a>
+                            ) : null}
+                            <button
+                              type="button"
+                              className="od-btn"
+                              disabled={catalogBusy}
+                              onClick={() => {
+                                setCatalogBusy(true)
+                                void attachPatchCatalogGuide({
+                                  game_uuid: game.uuid,
+                                  source_url: hit.source_url,
+                                  notes: hit.notes,
+                                  target_language: hit.target_language,
+                                  patch_format: hit.patch_format,
+                                })
+                                  .then(() => {
+                                    setCatalogStatus('Guide attached to game')
+                                    showToast('Guide attached', 'success')
+                                    setRetryCount((n) => n + 1)
+                                  })
+                                  .catch((err: any) => {
+                                    setCatalogStatus(err?.message || 'Attach failed')
+                                  })
+                                  .finally(() => {
+                                    setCatalogBusy(false)
+                                  })
+                              }}
+                            >
+                              Attach guide
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {baseAndUpdates.length > 0 ? (
+          <section className="od-details-page__section" id="updates">
+            <div className="od-details-page__section-head">
+              <h2>Versions</h2>
+              {game.is_admin ? (
+                <button
+                  type="button"
+                  className="od-btn od-btn--pill"
+                  disabled={cleanupBusy}
+                  onClick={() => void handleCleanupOrphans()}
+                  title={
+                    hasMissingVersions
+                      ? 'Remove version rows whose files are missing on disk'
+                      : 'Scan and remove orphaned version rows'
+                  }
+                >
+                  {cleanupBusy ? 'Removing…' : 'Remove missing versions'}
+                </button>
+              ) : null}
+            </div>
+            {versionActionStatus ? (
+              <p className="od-details-page__muted" role="status">
+                {versionActionStatus}
+              </p>
+            ) : null}
+            <ul className="od-details-page__versions">
+              {baseAndUpdates.map((row) => {
+                const versionKey = `${row.kind}:${row.uuid}`
+                const downloadKey = `download:${row.kind}:${row.uuid || 'base'}`
+                const canDownload = isVersionDownloadable(row)
+                const pathMissing = isVersionPathMissing(row)
+                const sizeLabel = formatVersionSize(row.size)
+                const canApply =
+                  Boolean(game.client_connected) && row.kind === 'update' && canDownload
+                const applyBusy = busyVersionKey === versionKey
+                const downloadBusy = busyVersionKey === downloadKey
+                return (
+                  <li key={`${row.kind}-${row.id || row.uuid}`}>
+                    <div className="od-details-page__version-row">
+                      <div className="od-details-page__version-meta">
+                        <strong>{row.label}</strong>
+                        {row.is_default ? (
+                          <span className="chip od-chip" title="Default download version">
+                            Default
+                          </span>
+                        ) : null}
+                        <span className="od-details-page__muted">
+                          {' '}
+                          · {row.kind}
+                          {sizeLabel ? ` · ${sizeLabel}` : ''}
+                        </span>
+                        {pathMissing ? (
+                          <span className="od-details-page__muted od-details-page__version-missing">
+                            {' '}
+                            · Missing on disk
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="od-details-page__version-actions">
+                        {/* Updates get a Download; the base row does not.
+                          Downloading the base game is what the action bar at
+                          the top of the page is for, and it is the *primary*
+                          action there — so this row was a second, quieter copy
+                          of the page's loudest button, sitting under a heading
+                          about versions. Per-update download stays, because
+                          that is the one thing the action bar genuinely cannot
+                          express: "I have the game, I only need patch 1.03". */}
+                        {canDownload && row.kind === 'update' ? (
+                          <button
+                            type="button"
+                            className="od-btn"
+                            disabled={Boolean(busyVersionKey)}
+                            onClick={() => {
+                              void handleVersionDownload({
+                                kind: 'update',
+                                versionUuid: row.uuid,
+                                label: row.label,
+                              })
+                            }}
+                          >
+                            {downloadBusy ? 'Queuing…' : 'Download'}
+                          </button>
+                        ) : null}
+                        {canApply ? (
+                          <button
+                            type="button"
+                            className="od-btn"
+                            disabled={Boolean(busyVersionKey)}
+                            onClick={() => {
+                              setBusyVersionKey(versionKey)
+                              setVersionActionStatus(null)
+                              void queueClientCommand(game.uuid, 'update', {
+                                kind: row.kind,
+                                versionUuid: row.uuid,
+                              })
+                                .then(() => {
+                                  setVersionActionStatus(`${row.label} queued for companion`)
+                                  showToast(`${row.label} queued for companion`, 'success')
+                                })
+                                .catch((err: any) => {
+                                  setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                  showToast(err?.message || 'Queue failed', 'error')
+                                })
+                                .finally(() => {
+                                  setBusyVersionKey(null)
+                                })
+                            }}
+                          >
+                            {applyBusy ? 'Queuing…' : 'Apply with companion'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        ) : null}
+
+        {showsRetroarchCheats(game) ? (
+          <CheatsPanel gameUuid={game.uuid} playHref={playHref} cheatSurface={game.cheat_surface} />
+        ) : null}
+
+        {/* FEAT-D2 — the PC counterpart. Self-gates on cheat_surface, so the two
+          panels can never both render for one title. */}
+        <PcCheatsPanel
+          gameUuid={game.uuid}
+          cheatSurface={game.cheat_surface}
+          canEdit={Boolean(game.can_edit)}
+        />
+
+        <section className="od-details-page__section" id="extras">
+          <h2>Extras &amp; DLC</h2>
+          {extrasModel.loading ? (
+            <p className="od-details-page__muted">Loading extras…</p>
+          ) : extrasModel.rows.length === 0 ? (
+            <p className="od-details-page__muted">No extras or DLC listed for this title yet.</p>
+          ) : (
+            <ul className="od-details-page__versions">
+              {extrasModel.rows.map((row: any) => {
+                const versionKey = `extra:${row.uuid || row.id}`
+                const applyBusy = busyVersionKey === versionKey
+                const onServer =
+                  row.on_server === true
+                    ? 'On server'
+                    : row.on_server === false
+                      ? 'Not on server'
+                      : null
+                const sizeLabel = formatVersionSize(row.size)
+                const pathMissing = row.path_missing === true || isVersionPathMissing(row)
+                return (
+                  <li key={row.id || row.uuid || row.label}>
+                    <div className="od-details-page__version-row">
+                      <div className="od-details-page__version-meta">
+                        <strong>{row.label}</strong>
+                        <span className="od-details-page__muted">
+                          {' '}
+                          · {row.kind}
+                          {row.kind === 'disc' && row.disc_index != null
+                            ? ` ${row.disc_index}`
+                            : ''}
+                          {sizeLabel ? ` · ${sizeLabel}` : ''}
+                          {onServer ? ` · ${onServer}` : ''}
+                        </span>
+                        {pathMissing ? (
+                          <span className="od-details-page__muted od-details-page__version-missing">
+                            {' '}
+                            · Missing on disk
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="od-details-page__version-actions">
+                        {row.download_url && !pathMissing ? (
+                          <button
+                            type="button"
+                            className="od-btn"
+                            disabled={Boolean(busyVersionKey)}
+                            onClick={() => {
+                              void handleVersionDownload({
+                                kind: 'extra',
+                                versionUuid: row.uuid,
+                                label: row.label,
+                              })
+                            }}
+                          >
+                            {busyVersionKey === `download:extra:${row.uuid || 'base'}`
+                              ? 'Queuing…'
+                              : 'Download'}
+                          </button>
+                        ) : null}
+                        {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
+                          <button
+                            type="button"
+                            className="od-btn"
+                            disabled={Boolean(busyVersionKey)}
+                            onClick={() => {
+                              setBusyVersionKey(versionKey)
+                              setVersionActionStatus(null)
+                              void queueClientCommand(game.uuid, 'update', {
+                                kind: 'extra',
+                                versionUuid: row.uuid,
+                              })
+                                .then(() => {
+                                  setVersionActionStatus(`${row.label} queued for companion`)
+                                  showToast(`${row.label} queued for companion`, 'success')
+                                })
+                                .catch((err: any) => {
+                                  setVersionActionStatus(err?.message || 'Failed to queue apply')
+                                  showToast(err?.message || 'Queue failed', 'error')
+                                })
+                                .finally(() => {
+                                  setBusyVersionKey(null)
+                                })
+                            }}
+                          >
+                            {applyBusy ? 'Queuing…' : 'Apply with companion'}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* Related media sits above screenshots and trailer by request — it is
+          context about the game, so it reads before the gallery. Renders
+          nothing when a title has none. */}
+        <RelatedMediaStrip gameUuid={game.uuid} />
+        <DetailsMoreFrom gameUuid={game.uuid} />
+
+        {/* The stage carries every embedded trailer, so this is only the
+          no-embed case: point at the external video instead. */}
+        {videoEmbeds.length === 0 && demoLink ? (
+          <section className="od-details-page__section">
+            <h2>Trailers &amp; videos</h2>
+            <p className="od-details-page__muted">
+              No embedded trailer yet.{' '}
+              <a className="od-btn" href={demoLink.href} target="_blank" rel="noreferrer">
+                {demoLink.label}
+              </a>
+            </p>
+          </section>
+        ) : null}
+      </div>
+
+      <ScreenshotLightbox
+        urls={shownShots}
+        openIndex={shotIndex}
+        onClose={() => setShotIndex(null)}
+      />
+
+      <OpenPathModal
+        open={Boolean(pathModal)}
+        path={pathModal?.path || ''}
+        label={pathModal?.label || 'Path'}
+        gameUuid={game.uuid}
+        clientConnected={Boolean(game.client_connected)}
+        onClose={() => setPathModal(null)}
+      />
+    </div>
+  )
+}

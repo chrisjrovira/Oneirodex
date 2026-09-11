@@ -35,7 +35,7 @@ OUT_JSON = REPO / 'oneirodex' / 'data' / 'loading_motifs.json'
 # to be staged explicitly in the Dockerfile and broke the image build once
 # (see dockerStagedImports.test.js). A generated file inside member-app/src is
 # picked up by the normal `COPY frontend/member-app/` with no special casing.
-OUT_JS = REPO / 'frontend' / 'member-app' / 'src' / 'components' / 'systemMotifCatalogue.js'
+OUT_JS = REPO / 'frontend' / 'member-app' / 'src' / 'components' / 'systemMotifCatalogue.ts'
 
 # Family → the vendor grouping a member actually thinks in. Drives the grouped
 # picker; a flat 117-row list is unusable.
@@ -163,7 +163,7 @@ def js_module(payload: dict) -> str:
         "export const SYSTEM_MOTIF_FAMILIES = SYSTEM_MOTIFS.reduce((acc, motif) => {",
         "  ;(acc[motif.family] ||= []).push(motif)",
         "  return acc",
-        "}, {})",
+        "}, {} as Record<string, any[]>)",
         "",
         "export const SYSTEM_MOTIF_IDS = SYSTEM_MOTIFS.map((m) => m.id)",
         "",

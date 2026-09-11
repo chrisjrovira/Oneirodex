@@ -20,7 +20,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 CSS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'od-appbar.css'
 JINJA = ROOT / 'oneirodex' / 'templates' / 'partials' / 'chrome.html'
-REACT = ROOT / 'frontend' / 'member-app' / 'src' / 'chrome' / 'ContextBar.jsx'
+REACT = ROOT / 'frontend' / 'member-app' / 'src' / 'chrome' / 'ContextBar.tsx'
 
 # The contract: every class the context bar is built from.
 CONTEXT_BAR_CLASSES = (

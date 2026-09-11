@@ -68,7 +68,7 @@ model: a model with required fields → 422 naming them; an all-optional model
 ### Contract notes for the adopted routes
 
 - **`create_collection`** — missing/blank `name` was `400 "A name is required"`,
-  now `422 {detail:{name:"..."}}`. Frontend (`member-app/src/api/collections.js`)
+  now `422 {detail:{name:"..."}}`. Frontend (`member-app/src/api/collections.ts`)
   renders `data.error`; no code branches on the 400 or the message.
 - **`add_collection_item`** — an absent/empty `game_uuid` previously fell
   through to `404 "Game not found"`; now `422 {detail:{game_uuid:"..."}}`.
@@ -93,7 +93,7 @@ Leave these until the contract can be preserved; do not force them.
   `games_batch_freshness_check`, `games_batch_refresh_images` — partial-success
   routes. The **rejection** body carries `updated` / `skipped` / `errors` /
   `limit`, and `ok` means "did every item succeed", not "did the request
-  succeed". `member-app/src/api/batchActions.js` branches on that shape; the
+  succeed". `member-app/src/api/batchActions.ts` branches on that shape; the
   flat `@validate_body` 422 would regress it. Recorded in the api-envelope
   baseline on purpose.
 - `move_game_to_library` — `tests/test_routes_apis_game.py` asserts `400` +
@@ -158,7 +158,7 @@ Do **not** attempt a single sweep. Each file: model → decorate → delete guar
 
 - A `@validate_body`-style helper that preserves the **partial-success**
   envelope (`updated`/`skipped`/`errors`/`limit`) so the batch routes can be
-  migrated without regressing `batchActions.js`.
+  migrated without regressing `batchActions.ts`.
 - Optional: a lint that flags a new `request.get_json(` in `routes_apis/`
   without a matching `@validate_body`, on the `api_envelope_lint` /
   `print_lint` ratchet model.

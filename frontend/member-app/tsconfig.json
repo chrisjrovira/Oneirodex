@@ -1,4 +1,8 @@
 {
+  // member-app SPA — files renamed to .ts/.tsx in PR-5a, `strict: true` in
+  // PR-5b. Local override only — tsconfig.base.json stays strict:false for
+  // the other workspaces until each does its own pass.
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "strict": true },
   "include": ["src"]
 }
