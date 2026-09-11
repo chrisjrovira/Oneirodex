@@ -5,7 +5,7 @@
  */
 export const DEFAULT_COVER_URL = '/static/newstyle/default_cover.jpg'
 
-export function coverUrl(coverUrlPath) {
+export function coverUrl(coverUrlPath: any) {
   if (!coverUrlPath) {
     return DEFAULT_COVER_URL
   }

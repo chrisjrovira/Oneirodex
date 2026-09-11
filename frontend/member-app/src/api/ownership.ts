@@ -1,5 +1,5 @@
 import { csrfHeaders, errorFromResponse, getCsrfToken } from '@oneirodex/ui'
-async function mutate(url, label, { method = 'POST', json, body }: LooseProps = {}) {
+async function mutate(url: any, label: any, { method = 'POST', json, body }: LooseProps = {}) {
   const headers =
     json === undefined ? csrfHeaders() : csrfHeaders({ 'Content-Type': 'application/json' })
 
@@ -31,7 +31,7 @@ export async function fetchOwnership({ signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function connectSteam(steamId) {
+export async function connectSteam(steamId: any) {
   return mutate('/api/ownership/steam', 'connect_steam', {
     json: { steam_id: steamId },
   })
@@ -45,7 +45,7 @@ export async function syncSteam() {
   return mutate('/api/ownership/steam/sync', 'sync_steam', { json: {} })
 }
 
-export async function connectGog(gogUserId, { refreshToken, accessToken }: LooseProps = {}) {
+export async function connectGog(gogUserId: any, { refreshToken, accessToken }: LooseProps = {}) {
   return mutate('/api/ownership/gog', 'connect_gog', {
     json: {
       gog_user_id: gogUserId,
@@ -63,7 +63,7 @@ export async function syncGog() {
   return mutate('/api/ownership/gog/sync', 'sync_gog', { json: {} })
 }
 
-export async function connectEpic(epicAccountId, { deviceAuth }: LooseProps = {}) {
+export async function connectEpic(epicAccountId: any, { deviceAuth }: LooseProps = {}) {
   return mutate('/api/ownership/epic', 'connect_epic', {
     json: {
       epic_account_id: epicAccountId,
@@ -81,7 +81,7 @@ export async function syncEpic() {
 }
 
 export async function connectAmazon(
-  amazonUserId,
+  amazonUserId: any,
   { credential, refreshToken, deviceSerial }: LooseProps = {},
 ) {
   return mutate('/api/ownership/amazon', 'connect_amazon', {
@@ -106,7 +106,7 @@ export async function syncAmazon() {
  * The CSV endpoints accept either a JSON `csv` string or a multipart upload
  * under the `file` field, so pass whichever the member supplied.
  */
-export async function importCsv(store, { csv, file }: LooseProps = {}) {
+export async function importCsv(store: any, { csv, file }: LooseProps = {}) {
   const url = `/api/ownership/${store}/csv`
   const label = `import_${store}_csv`
 

@@ -19,7 +19,7 @@ import { roomIdForPlatform, roomStyle } from './playRooms'
  */
 
 /** Era face per family, matching the server-side PLATFORM_FONT_HINTS grouping. */
-const FAMILY_FACE = {
+const FAMILY_FACE: Record<string, string> = {
   nintendo: "'Press Start 2P', 'Silkscreen', monospace",
   sega: "'Share Tech Mono', monospace",
   sony: "'Orbitron', 'Arial Black', sans-serif",

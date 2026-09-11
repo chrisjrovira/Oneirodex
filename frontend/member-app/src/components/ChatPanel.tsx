@@ -81,14 +81,14 @@ function MessageAttachments({ attachments }: LooseProps) {
   )
 }
 
-function mergeById(existing, incoming) {
+function mergeById(existing: any, incoming: any) {
   if (!incoming.length) return existing
-  const seen = new Set(existing.map((m) => m.id))
-  const added = incoming.filter((m) => !seen.has(m.id))
+  const seen = new Set(existing.map((m: any) => m.id))
+  const added = incoming.filter((m: any) => !seen.has(m.id))
   return added.length ? [...existing, ...added] : existing
 }
 
-function formatMsgTime(iso) {
+function formatMsgTime(iso: any) {
   if (!iso) return ''
   try {
     const d = new Date(iso)
@@ -112,38 +112,38 @@ export function ChatPanel({
   onExpandToggle,
   expanded = false,
 }: LooseProps) {
-  const [channels, setChannels] = useState([])
+  const [channels, setChannels] = useState<any[]>([])
   const [channelsLoading, setChannelsLoading] = useState(true)
   const [activeId, setActiveId] = useState(initialChannelId)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<any[]>([])
   const [body, setBody] = useState('')
   const [dmName, setDmName] = useState('')
   const [searchQ, setSearchQ] = useState('')
-  const [searchHits, setSearchHits] = useState([])
-  const [replyTo, setReplyTo] = useState(null)
-  const [error, setError] = useState(null)
-  const [msg, setMsg] = useState(null)
+  const [searchHits, setSearchHits] = useState<any[]>([])
+  const [replyTo, setReplyTo] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
+  const [msg, setMsg] = useState<any>(null)
   const [msgIsError, setMsgIsError] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
   const [creatingRoom, setCreatingRoom] = useState(false)
   const [roomActionBusy, setRoomActionBusy] = useState(false)
   const [showTools, setShowTools] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [pendingAttachments, setPendingAttachments] = useState([])
-  const [attachAvailable, setAttachAvailable] = useState(null) // null | true | false
+  const [pendingAttachments, setPendingAttachments] = useState<any[]>([])
+  const [attachAvailable, setAttachAvailable] = useState<any>(null) // null | true | false
   const [attachBusy, setAttachBusy] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [preferScreenshare, setPreferScreenshare] = useState(false)
   // Voice is scoped to the channel the member picked. Null = the household
   // lobby; the server refuses any room it cannot resolve to real membership.
-  const [voiceChannel, setVoiceChannel] = useState(null)
+  const [voiceChannel, setVoiceChannel] = useState<any>(null)
   const [reactionItems, setReactionItems] = useState(
     FIXED_REACTION_EMOJIS.map((emoji) => ({ emoji, label: emoji })),
   )
-  const messagesRef = useRef([])
-  const listEndRef = useRef(null)
-  const composerRef = useRef(null)
-  const fileInputRef = useRef(null)
+  const messagesRef = useRef<any[]>([])
+  const listEndRef = useRef<any>(null)
+  const composerRef = useRef<any>(null)
+  const fileInputRef = useRef<any>(null)
   const emojiPickerId = useId()
   const viewerIsChild = String(viewer?.role || '').toLowerCase() === 'child'
 
@@ -182,7 +182,7 @@ export function ChatPanel({
     }
   }, [activeId, attachAvailable, viewerIsChild])
 
-  function showStatus(text, { isError = false }: LooseProps = {}) {
+  function showStatus(text: any, { isError = false }: LooseProps = {}) {
     setMsg(text)
     setMsgIsError(isError)
   }
@@ -193,12 +193,12 @@ export function ChatPanel({
       if (!response.ok) return
       const data = await response.json()
       const fixed = (Array.isArray(data.fixed) ? data.fixed : FIXED_REACTION_EMOJIS).map(
-        (emoji) => ({
+        (emoji: any) => ({
           emoji,
           label: emoji,
         }),
       )
-      const custom = (Array.isArray(data.custom) ? data.custom : []).map((row) => ({
+      const custom = (Array.isArray(data.custom) ? data.custom : []).map((row: any) => ({
         emoji: row.emoji || `:${row.slug}:`,
         label: row.label || row.slug,
         url: row.url,
@@ -215,15 +215,16 @@ export function ChatPanel({
     const data = await response.json()
     const list = Array.isArray(data.channels) ? data.channels : []
     setChannels(list)
-    setActiveId((prev) => {
-      if (prev && list.some((c) => c.id === prev)) return prev
-      if (initialChannelId && list.some((c) => c.id === initialChannelId)) return initialChannelId
+    setActiveId((prev: any) => {
+      if (prev && list.some((c: any) => c.id === prev)) return prev
+      if (initialChannelId && list.some((c: any) => c.id === initialChannelId))
+        return initialChannelId
       return list.length ? list[0].id : null
     })
     return list
   }
 
-  async function loadMessages(channelId, { sinceId }: LooseProps = {}) {
+  async function loadMessages(channelId: any, { sinceId }: LooseProps = {}) {
     if (!channelId) return
     const params = new URLSearchParams()
     if (sinceId) params.set('since', String(sinceId))
@@ -294,7 +295,7 @@ export function ChatPanel({
     }
   }, [activeId])
 
-  function insertEmoji(item) {
+  function insertEmoji(item: any) {
     const insert = item.url ? `:${item.label || item.emoji}:` : item.emoji
     const el = composerRef.current
     if (el && typeof el.selectionStart === 'number') {
@@ -313,7 +314,7 @@ export function ChatPanel({
     setShowEmojiPicker(false)
   }
 
-  async function handleAttachFiles(event) {
+  async function handleAttachFiles(event: any) {
     const files = Array.from(event.target.files || [])
     event.target.value = ''
     if (!files.length || !activeId) return
@@ -361,7 +362,7 @@ export function ChatPanel({
     }
   }
 
-  async function sendMessage(event) {
+  async function sendMessage(event: any) {
     event.preventDefault()
     if (!activeId) return
     const trimmed = body.trim()
@@ -391,7 +392,7 @@ export function ChatPanel({
     await loadMessages(activeId)
   }
 
-  async function openDm(event) {
+  async function openDm(event: any) {
     event.preventDefault()
     const username = dmName.trim()
     if (!username) return
@@ -411,7 +412,7 @@ export function ChatPanel({
     if (data.channel?.id) setActiveId(data.channel.id)
   }
 
-  async function createRoom(event) {
+  async function createRoom(event: any) {
     event.preventDefault()
     const name = newRoomName.trim()
     if (!name) return
@@ -442,7 +443,7 @@ export function ChatPanel({
     }
   }
 
-  async function runSearch(event) {
+  async function runSearch(event: any) {
     event.preventDefault()
     const q = searchQ.trim()
     if (q.length < 2) {
@@ -460,7 +461,7 @@ export function ChatPanel({
     setSearchHits(Array.isArray(data.results) ? data.results : [])
   }
 
-  async function toggleReaction(messageId, emoji) {
+  async function toggleReaction(messageId: any, emoji: any) {
     const response = await fetch(`/api/chat/messages/${messageId}/reactions`, {
       method: 'POST',
       credentials: 'same-origin',
@@ -770,11 +771,11 @@ export function ChatPanel({
 
           <SpaceRail
             activeChannelId={activeId}
-            onSelectTextChannel={(channel) => {
+            onSelectTextChannel={(channel: any) => {
               setActiveId(channel.id)
               void loadChannels()
             }}
-            onSelectVoiceChannel={(channel) => {
+            onSelectVoiceChannel={(channel: any) => {
               setVoiceChannel(channel)
               setPreferScreenshare(false)
               setVoiceOpen(true)

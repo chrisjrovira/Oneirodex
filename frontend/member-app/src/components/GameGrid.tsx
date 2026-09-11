@@ -30,7 +30,7 @@ const TILE_REMEASURE_DEBOUNCE_MS = 160
  * coordinates when the window scrolls, and content coordinates (i.e. what
  * `scrollTop` counts) when an element does.
  */
-function measureScrollMargin(el, scrollEl) {
+function measureScrollMargin(el: any, scrollEl: any) {
   const top = el.getBoundingClientRect?.().top
   if (!Number.isFinite(top)) {
     return el.offsetTop || 0
@@ -43,7 +43,7 @@ function measureScrollMargin(el, scrollEl) {
   return Math.max(0, top - box.top - borderTop + (scrollEl.scrollTop || 0))
 }
 
-function measureGridMetrics(el, scrollEl) {
+function measureGridMetrics(el: any, scrollEl: any) {
   if (!el) {
     return { width: 0, tileMin: 180, gap: 10, titleH: 0, scrollMargin: 0 }
   }
@@ -56,7 +56,7 @@ function measureGridMetrics(el, scrollEl) {
   return { width, tileMin, gap, titleH, scrollMargin: measureScrollMargin(el, scrollEl) }
 }
 
-function metricsEqual(a, b) {
+function metricsEqual(a: any, b: any) {
   return (
     a.width === b.width &&
     a.tileMin === b.tileMin &&
@@ -84,9 +84,9 @@ export function GameGrid({
   filters = null,
 }: LooseProps) {
   const catalogLayout = normalizeCatalogLayout(layout)
-  const listRef = useRef(null)
+  const listRef = useRef<any>(null)
   // `undefined` = not resolved yet, `null` = resolved to "the window scrolls".
-  const [scrollEl, setScrollEl] = useState(undefined)
+  const [scrollEl, setScrollEl] = useState<any>(undefined)
   const [metrics, setMetrics] = useState(() => ({
     width: 0,
     tileMin: 180,
@@ -107,7 +107,7 @@ export function GameGrid({
     let tileTimer = 0
     let resizeRaf = 0
 
-    const commit = (next) => {
+    const commit = (next: any) => {
       setMetrics((current) => (metricsEqual(current, next) ? current : next))
     }
 
@@ -137,7 +137,7 @@ export function GameGrid({
 
     updateNow()
 
-    let resizeObserver
+    let resizeObserver: ResizeObserver | undefined
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(updateResize)
       resizeObserver.observe(el)
@@ -216,7 +216,7 @@ export function GameGrid({
     overscan: 3,
     scrollMargin: metrics.scrollMargin,
     gap: catalogLayout === 'rows' ? 1 : metrics.gap,
-  })
+  } as any)
 
   useEffect(() => {
     virtualizer.measure()
@@ -328,7 +328,7 @@ export function GameGrid({
               width: '100%',
             }}
           >
-            {rowGames.map((game) => (
+            {rowGames.map((game: any) => (
               <GameCard
                 key={game.uuid}
                 game={game}

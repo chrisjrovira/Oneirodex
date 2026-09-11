@@ -18,14 +18,14 @@ export function SpaceRail({
   onSelectVoiceChannel,
   onJoined,
 }: LooseProps) {
-  const [spaces, setSpaces] = useState([])
+  const [spaces, setSpaces] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [collapsed, setCollapsed] = useState({})
+  const [collapsed, setCollapsed] = useState<any>({})
   const [inviteToken, setInviteToken] = useState('')
   const [joinBusy, setJoinBusy] = useState(false)
   const [joinMsg, setJoinMsg] = useState('')
-  const loadAbortRef = useRef(null)
+  const loadAbortRef = useRef<any>(null)
 
   const loadSpaces = useCallback(async () => {
     loadAbortRef.current?.abort()
@@ -41,7 +41,7 @@ export function SpaceRail({
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw errorFromBody(data, response.status, 'Could not load spaces')
       setSpaces(Array.isArray(data.spaces) ? data.spaces : [])
-    } catch (err) {
+    } catch (err: any) {
       if (err.name === 'AbortError') return
       setError(err.message || 'Could not load spaces')
       setSpaces([])
@@ -55,7 +55,7 @@ export function SpaceRail({
     return () => loadAbortRef.current?.abort()
   }, [loadSpaces])
 
-  async function redeemInvite(event) {
+  async function redeemInvite(event: any) {
     event.preventDefault()
     const token = inviteToken.trim()
     if (!token) return
@@ -74,15 +74,15 @@ export function SpaceRail({
       setJoinMsg(`Joined ${data.space?.name || 'space'}.`)
       await loadSpaces()
       onJoined?.(data.space)
-    } catch (err) {
+    } catch (err: any) {
       setJoinMsg(err.message || 'Could not join')
     } finally {
       setJoinBusy(false)
     }
   }
 
-  function toggleSpace(spaceId) {
-    setCollapsed((prev) => ({ ...prev, [spaceId]: !prev[spaceId] }))
+  function toggleSpace(spaceId: any) {
+    setCollapsed((prev: any) => ({ ...prev, [spaceId]: !prev[spaceId] }))
   }
 
   if (loading) {
@@ -140,7 +140,7 @@ export function SpaceRail({
                     <>
                       <p className="od-space-rail__group">Text</p>
                       <ul className="od-space-rail__channels">
-                        {textChannels.map((channel) => (
+                        {textChannels.map((channel: any) => (
                           <li key={channel.id}>
                             <button
                               type="button"
@@ -162,7 +162,7 @@ export function SpaceRail({
                     <>
                       <p className="od-space-rail__group">Voice</p>
                       <ul className="od-space-rail__channels">
-                        {voiceChannels.map((channel) => (
+                        {voiceChannels.map((channel: any) => (
                           <li key={channel.id}>
                             <button
                               type="button"

@@ -32,7 +32,7 @@ export function LibrarySelectionBar({
   onPlayStatus,
   onSelectPage,
   onClear,
-  t = (s) => s,
+  t = (s: any) => s,
   /** When true, drop sticky/card chrome — the top bar already frames it. */
   inTopBar = false,
 }: LooseProps) {
@@ -117,7 +117,7 @@ export function LibrarySelectionBar({
             disabled={playStatusDisabled}
             title={playStatusTitle}
           >
-            {({ close }) => (
+            {({ close }: LooseProps) => (
               <div
                 className="od-library-selection__menu od-pop__menu"
                 role="group"
@@ -143,7 +143,7 @@ export function LibrarySelectionBar({
           </Popover>
         ) : null}
         <Popover label={t('More')} align="end" chromeless>
-          {({ close }) => (
+          {({ close }: LooseProps) => (
             <div
               className="od-library-selection__menu od-pop__menu"
               role="group"

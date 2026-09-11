@@ -11,7 +11,7 @@ import './Collections.css'
 // same cache entry `useResource` reads.
 const COLLECTIONS_QUERY_KEY = ['collections']
 
-function itemCountLabel(collection) {
+function itemCountLabel(collection: any) {
   const count = Number(collection.item_count)
   if (!Number.isFinite(count)) {
     return null
@@ -37,10 +37,10 @@ export function CollectionsPage() {
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [creating, setCreating] = useState(false)
-  const [createError, setCreateError] = useState(null)
-  const [deletingUuid, setDeletingUuid] = useState(null)
+  const [createError, setCreateError] = useState<any>(null)
+  const [deletingUuid, setDeletingUuid] = useState<any>(null)
 
-  async function handleCreate(event) {
+  async function handleCreate(event: any) {
     event.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName || creating) {
@@ -62,14 +62,14 @@ export function CollectionsPage() {
       setName('')
       setDescription('')
       setIsPublic(true)
-    } catch (submitError) {
+    } catch (submitError: any) {
       setCreateError(submitError)
     } finally {
       setCreating(false)
     }
   }
 
-  async function handleDelete(collection) {
+  async function handleDelete(collection: any) {
     if (!collection?.can_edit || collection.is_system || deletingUuid) {
       return
     }
@@ -88,7 +88,7 @@ export function CollectionsPage() {
       queryClient.setQueryData(COLLECTIONS_QUERY_KEY, (current: LooseProps[] | undefined) =>
         (current || []).filter((row) => row.uuid !== collection.uuid),
       )
-    } catch (deleteError) {
+    } catch (deleteError: any) {
       window.alert(deleteError.message || 'Unable to delete that collection.')
     } finally {
       setDeletingUuid(null)
@@ -226,7 +226,7 @@ export function CollectionsPage() {
 
         {!error && collections && collections.length > 0 ? (
           <ul className="od-collections__list">
-            {collections.map((collection) => {
+            {collections.map((collection: any) => {
               const countLabel = itemCountLabel(collection)
               return (
                 <li key={collection.uuid} className="od-collections__row">

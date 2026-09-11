@@ -28,8 +28,8 @@ export const BADGE_FILTER_PARAMS = [
  * @param {URLSearchParams} searchParams
  * @returns {Record<string, string>}
  */
-export function badgeFiltersFromSearchParams(searchParams) {
-  const next = {}
+export function badgeFiltersFromSearchParams(searchParams: any) {
+  const next: Record<string, string> = {}
   for (const param of BADGE_FILTER_PARAMS) {
     const value = searchParams.get(param)
     if (value === '1' || value === 'true' || value === 'yes') {
@@ -46,7 +46,7 @@ export function badgeFiltersFromSearchParams(searchParams) {
  * @param {(next: object) => void} onApply
  * @param {(filters: object) => object} cleanFilters
  */
-export function toggleBadgeFilter(filters, param, onApply, cleanFilters) {
+export function toggleBadgeFilter(filters: any, param: any, onApply: any, cleanFilters: any) {
   const active = filters[param] === '1'
   const next = { ...filters }
   if (active) {
@@ -57,7 +57,12 @@ export function toggleBadgeFilter(filters, param, onApply, cleanFilters) {
   onApply(cleanFilters(next))
 }
 
-export function BadgeFilterChips({ filters, onApply, cleanFilters, t = (key) => key }: LooseProps) {
+export function BadgeFilterChips({
+  filters,
+  onApply,
+  cleanFilters,
+  t = (key: any) => key,
+}: LooseProps) {
   return (
     <div className="od-badge-filter-chips" role="group" aria-label={t('Badge filters')}>
       {BADGE_FILTER_CHIPS.map((chip) => {

@@ -15,14 +15,14 @@ import './DiscoverShelf.css'
  * carry `items`. The server sends one or the other rather than both, because
  * mirroring the list would serialize every tile twice.
  */
-export function rowItems(section) {
+export function rowItems(section: any) {
   if (Array.isArray(section?.games)) return section.games
   if (Array.isArray(section?.items)) return section.items
   return []
 }
 
 /** Stable key for a tile of any kind. Games have uuids, articles have ids. */
-function itemKey(item, index = 0) {
+function itemKey(item: any, index = 0) {
   return item?.uuid || item?.id || String(index)
 }
 
@@ -62,8 +62,8 @@ export function DiscoverShelf({
   const [loadError, setLoadError] = useState(false)
   /** Custom bar metrics — native scrollbar is hidden so hover bleed can stay. */
   const [hbar, setHbar] = useState({ max: 0, thumbPx: 0, leftPx: 0, scrollLeft: 0 })
-  const abortRef = useRef(null)
-  const hbarDragRef = useRef(null)
+  const abortRef = useRef<any>(null)
+  const hbarDragRef = useRef<any>(null)
   // Arrows + bottom slider. Vertical wheel on tiles/title scrolls the page;
   // horizontal / shift-wheel and wheel on the slider pan the track both ways.
   // The lane always mounts so spacing matches every row, even when the track
@@ -140,7 +140,7 @@ export function DiscoverShelf({
     // Assume fully visible until the observer reports otherwise so News tiles
     // (which only cancel enlarge when the attribute is absent) can hover-scale
     // on the first paint the way game tiles do via theme CSS.
-    items.forEach((node) => {
+    items.forEach((node: any) => {
       node.toggleAttribute('data-fully-visible', true)
       observer.observe(node)
     })
@@ -161,16 +161,16 @@ export function DiscoverShelf({
       signal: controller.signal,
     })
       .then((page) => {
-        setGames((current) => {
+        setGames((current: any) => {
           // Concurrent loads and a re-render can both land here; keying by
           // identity means an overlapping window adds nothing rather than
           // duplicating a tile halfway down the shelf.
-          const seen = new Set(current.map((item) => itemKey(item)))
-          return current.concat(page.items.filter((item) => !seen.has(itemKey(item))))
+          const seen = new Set(current.map((item: any) => itemKey(item)))
+          return current.concat(page.items.filter((item: any) => !seen.has(itemKey(item))))
         })
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (err?.name === 'AbortError') return
         // A shelf that cannot fill itself keeps what it has and stops asking.
         // The tiles already there still work.
@@ -191,7 +191,7 @@ export function DiscoverShelf({
   }, [loadMore, measure, syncHbar, trackRef])
 
   const onHbarPointerDown = useCallback(
-    (event) => {
+    (event: any) => {
       const track = trackRef.current
       const rail = event.currentTarget
       if (!track) return
@@ -222,7 +222,7 @@ export function DiscoverShelf({
         grab = start.thumbPx / 2
       }
 
-      const scrollFromClientX = (clientX) => {
+      const scrollFromClientX = (clientX: any) => {
         const layout = liveLayout()
         if (layout.max <= 1 || layout.usable <= 0) return
         const box = rail.getBoundingClientRect()
@@ -239,7 +239,7 @@ export function DiscoverShelf({
 
       scrollFromClientX(event.clientX)
       hbarDragRef.current = { scrollFromClientX }
-      const onMove = (ev) => hbarDragRef.current?.scrollFromClientX(ev.clientX)
+      const onMove = (ev: any) => hbarDragRef.current?.scrollFromClientX(ev.clientX)
       const onUp = () => {
         hbarDragRef.current = null
         window.removeEventListener('pointermove', onMove)
@@ -345,7 +345,7 @@ export function DiscoverShelf({
             role="list"
             aria-label={section.title}
           >
-            {games.map((item, index) => (
+            {games.map((item: any, index: any) => (
               <div className="od-shelf__item" role="listitem" key={itemKey(item, index)}>
                 {itemKind === 'articles' ? (
                   <NewsCard item={item} />
@@ -421,7 +421,7 @@ export function DiscoverShelf({
 }
 
 /** " · ends in 3 days" — omitted entirely when there is no honest end date. */
-export function formatEventEnds(endsAt) {
+export function formatEventEnds(endsAt: any) {
   if (!endsAt) return ''
   const end = new Date(endsAt)
   if (Number.isNaN(end.getTime())) return ''

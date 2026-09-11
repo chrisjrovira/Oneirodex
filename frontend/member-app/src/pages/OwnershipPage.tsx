@@ -50,7 +50,7 @@ const STORES = [
     tokenKind: 'password',
     numericField: false,
     saveLabel: 'Save GOG link',
-    connect: (id, extras) => connectGog(id, extras),
+    connect: (id: any, extras: any) => connectGog(id, extras),
     sync: syncGog,
     disconnect: disconnectGog,
     disconnectBody: 'Your imported ownership is cleared — your games stay put.',
@@ -70,7 +70,7 @@ const STORES = [
     tokenKind: 'textarea',
     numericField: false,
     saveLabel: 'Save Epic link',
-    connect: (id, extras) => connectEpic(id, extras),
+    connect: (id: any, extras: any) => connectEpic(id, extras),
     sync: syncEpic,
     disconnect: disconnectEpic,
     disconnectBody: 'Your imported ownership is cleared — your games stay put.',
@@ -90,7 +90,7 @@ const STORES = [
     tokenKind: 'textarea',
     numericField: false,
     saveLabel: 'Save Amazon link',
-    connect: (id, extras) => connectAmazon(id, extras),
+    connect: (id: any, extras: any) => connectAmazon(id, extras),
     sync: syncAmazon,
     disconnect: disconnectAmazon,
     disconnectBody: 'Your imported ownership is cleared — your games stay put.',
@@ -100,10 +100,10 @@ const STORES = [
   },
 ]
 
-const EMPTY_DRAFTS = { steam: '', gog: '', epic: '', amazon: '' }
-const EMPTY_TOKENS = { steam: '', gog: '', epic: '', amazon: '' }
+const EMPTY_DRAFTS: Record<string, string> = { steam: '', gog: '', epic: '', amazon: '' }
+const EMPTY_TOKENS: Record<string, string> = { steam: '', gog: '', epic: '', amazon: '' }
 
-function accountDraftsFrom(summary, current) {
+function accountDraftsFrom(summary: any, current: any) {
   const stores = summary?.stores || {}
   const next = { ...current }
   for (const store of STORES) {
@@ -120,16 +120,16 @@ export function OwnershipPage() {
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   // Nothing selected on arrival: the summary is what most visits are for, and
   // opening a connect form nobody asked for buries it again.
-  const [activeStore, setActiveStore] = useState(null)
-  const [summary, setSummary] = useState(null)
-  const [error, setError] = useState(null)
+  const [activeStore, setActiveStore] = useState<any>(null)
+  const [summary, setSummary] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [busyAction, setBusyAction] = useState(null)
-  const [messages, setMessages] = useState({})
+  const [busyAction, setBusyAction] = useState<any>(null)
+  const [messages, setMessages] = useState<any>({})
   const [accountDrafts, setAccountDrafts] = useState(EMPTY_DRAFTS)
   const [tokenDrafts, setTokenDrafts] = useState(EMPTY_TOKENS)
   const [csvDrafts, setCsvDrafts] = useState(EMPTY_DRAFTS)
-  const fileInputs = useRef({})
+  const fileInputs = useRef<any>({})
 
   useEffect(() => {
     const controller = new AbortController()
@@ -144,7 +144,7 @@ export function OwnershipPage() {
           setAccountDrafts((current) => accountDraftsFrom(data, current))
         }
       })
-      .catch((requestError) => {
+      .catch((requestError: any) => {
         if (active && requestError.name !== 'AbortError') {
           setError(requestError)
         }
@@ -156,11 +156,11 @@ export function OwnershipPage() {
     }
   }, [retryCount])
 
-  function setMessage(storeKey, message) {
-    setMessages((current) => ({ ...current, [storeKey]: message }))
+  function setMessage(storeKey: any, message: any) {
+    setMessages((current: any) => ({ ...current, [storeKey]: message }))
   }
 
-  async function runAction(actionKey, storeKey, run) {
+  async function runAction(actionKey: any, storeKey: any, run: any) {
     setBusyAction(actionKey)
     setMessage(storeKey, null)
     try {
@@ -170,7 +170,7 @@ export function OwnershipPage() {
         setAccountDrafts((current) => accountDraftsFrom(result.summary, current))
       }
       return result || {}
-    } catch (actionError) {
+    } catch (actionError: any) {
       setMessage(storeKey, { tone: 'error', text: actionError.message })
       return null
     } finally {
@@ -178,7 +178,7 @@ export function OwnershipPage() {
     }
   }
 
-  async function handleConnect(store, event) {
+  async function handleConnect(store: any, event: any) {
     event.preventDefault()
     const extras: LooseProps = {}
     if (store.key === 'gog' && tokenDrafts.gog.trim()) {
@@ -199,7 +199,7 @@ export function OwnershipPage() {
     }
   }
 
-  async function handleDisconnect(store) {
+  async function handleDisconnect(store: any) {
     const ok = await confirmAction({
       title: `Disconnect ${store.label}?`,
       body: store.disconnectBody,
@@ -217,7 +217,7 @@ export function OwnershipPage() {
     }
   }
 
-  async function handleSync(store) {
+  async function handleSync(store: any) {
     const result = await runAction(`${store.key}:sync`, store.key, () => store.sync())
     if (result) {
       setMessage(store.key, {
@@ -227,7 +227,7 @@ export function OwnershipPage() {
     }
   }
 
-  async function handleCsv(store, event) {
+  async function handleCsv(store: any, event: any) {
     event.preventDefault()
     const fileInput = fileInputs.current[store.key]
     const file = fileInput?.files?.[0] || null
@@ -286,7 +286,7 @@ export function OwnershipPage() {
         <ContextBar
           views={STORES.map((store) => ({ id: store.key, label: store.label }))}
           activeView={activeStore || ''}
-          onSelectView={(id) => setActiveStore((current) => (current === id ? null : id))}
+          onSelectView={(id: any) => setActiveStore((current: any) => (current === id ? null : id))}
           summary={
             summary && enabled
               ? `${summary.total_owned ?? 0} owned · ${summary.total_matched ?? 0} matched`

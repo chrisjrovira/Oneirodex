@@ -8,7 +8,7 @@ nobody has playtime yet.
 export const RECENT_TITLES_KEY = 'od.palette.recent'
 export const RECENT_TITLES_MAX = 8
 
-export function normalizeRecentTitle(row) {
+export function normalizeRecentTitle(row: any) {
   const uuid = String(row?.uuid || '').trim()
   const name = String(row?.name || '').trim()
   if (!uuid || !name) return null
@@ -26,10 +26,10 @@ export function readRecentTitles() {
   }
 }
 
-export function recordRecentTitle(row) {
+export function recordRecentTitle(row: any) {
   const next = normalizeRecentTitle(row)
   if (!next) return readRecentTitles()
-  const rest = readRecentTitles().filter((item) => item.uuid !== next.uuid)
+  const rest = readRecentTitles().filter((item: any) => item.uuid !== next.uuid)
   const list = [next, ...rest].slice(0, RECENT_TITLES_MAX)
   try {
     window.localStorage?.setItem(RECENT_TITLES_KEY, JSON.stringify(list))
@@ -40,7 +40,7 @@ export function recordRecentTitle(row) {
 }
 
 /** Server played-rows first; local opened-rows fill unused slots. */
-export function mergeSuggestRecent(serverRows, localRows, limit = RECENT_TITLES_MAX) {
+export function mergeSuggestRecent(serverRows: any, localRows: any, limit = RECENT_TITLES_MAX) {
   const cap = Number(limit) > 0 ? Number(limit) : RECENT_TITLES_MAX
   const merged = []
   const seen = new Set()

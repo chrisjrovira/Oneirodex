@@ -5,7 +5,7 @@ import { csrfHeaders, errorFromResponse, getCsrfToken } from '@oneirodex/ui'
  * is promoted to the headline. Everything else — status, error_code, data —
  * comes from the shared helper rather than being rebuilt here.
  */
-async function raiseDownloadError(response, fallback) {
+async function raiseDownloadError(response: any, fallback: any) {
   const error: LooseProps = await errorFromResponse(response, fallback)
   const hint = error.data?.hint
   if (typeof hint === 'string' && hint.trim()) {
@@ -22,7 +22,7 @@ async function raiseDownloadError(response, fallback) {
  * @param {{ kind?: 'base' | 'update' | 'extra', versionUuid?: string, signal?: AbortSignal }} [options]
  */
 export async function initiateGameDownload(
-  gameUuid,
+  gameUuid: any,
   { kind = 'base', versionUuid, signal }: LooseProps = {},
 ) {
   const body: LooseProps = { kind: kind || 'base' }
@@ -60,7 +60,7 @@ export async function fetchMyDownloads({ signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function checkStatus(id, { signal }: LooseProps = {}) {
+export async function checkStatus(id: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/check_download_status/${id}`, {
     signal,
     credentials: 'same-origin',
@@ -73,7 +73,7 @@ export async function checkStatus(id, { signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function deleteDownload(id) {
+export async function deleteDownload(id: any) {
   const csrf = getCsrfToken()
   const body = new FormData()
   if (csrf) {

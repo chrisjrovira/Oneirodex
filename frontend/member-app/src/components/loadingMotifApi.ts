@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { errorFromResponse } from '@oneirodex/ui'
 import { pickLoadingMotifId } from './LoadingMotif'
 
-let cachedSettings = null
-let inflight = null
-let sessionMotif = null
+let cachedSettings: any = null
+let inflight: any = null
+let sessionMotif: any = null
 
 /**
  * The shell's own loading-motif script may already have these.

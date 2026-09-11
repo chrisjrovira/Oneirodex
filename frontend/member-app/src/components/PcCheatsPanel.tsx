@@ -16,12 +16,12 @@ import './PcCheatsPanel.css'
  * rather than leaving the reader to assume a trainer.
  */
 export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: LooseProps) {
-  const [cheats, setCheats] = useState([])
-  const [methods, setMethods] = useState([])
+  const [cheats, setCheats] = useState<any[]>([])
+  const [methods, setMethods] = useState<any[]>([])
   const [stance, setStance] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [copied, setCopied] = useState(null)
+  const [copied, setCopied] = useState<any>(null)
   const [draft, setDraft] = useState({ label: '', method: 'console', payload: '', notes: '' })
   const [saving, setSaving] = useState(false)
 
@@ -43,7 +43,7 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
       setCheats(Array.isArray(data.cheats) ? data.cheats : [])
       setMethods(Array.isArray(data.methods) ? data.methods : [])
       setStance(data.stance || '')
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Could not load cheats')
       setCheats([])
     } finally {
@@ -59,9 +59,9 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
     return null
   }
 
-  const methodLabel = (id) => methods.find((m) => m.id === id)?.label || id
+  const methodLabel = (id: any) => methods.find((m) => m.id === id)?.label || id
 
-  async function addCheat(event) {
+  async function addCheat(event: any) {
     event.preventDefault()
     if (!draft.label.trim()) return
     setSaving(true)
@@ -77,14 +77,14 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
       if (!response.ok) throw errorFromBody(data, response.status, 'Could not save')
       setDraft({ label: '', method: draft.method, payload: '', notes: '' })
       await load()
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Could not save')
     } finally {
       setSaving(false)
     }
   }
 
-  async function removeCheat(cheatId) {
+  async function removeCheat(cheatId: any) {
     setError('')
     try {
       const response = await fetch(`/api/games/${gameUuid}/pc_cheats/${cheatId}`, {
@@ -96,12 +96,12 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
         throw await errorFromResponse(response, 'Could not remove')
       }
       await load()
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Could not remove')
     }
   }
 
-  async function copyPayload(cheat) {
+  async function copyPayload(cheat: any) {
     if (!cheat.payload) return
     try {
       await navigator.clipboard.writeText(cheat.payload)

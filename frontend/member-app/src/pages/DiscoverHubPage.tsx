@@ -15,9 +15,9 @@ export function DiscoverHubPage() {
   const { isAdmin } = useViewer()
   const shellConfig = useShellConfig()
   const { genre } = useParams()
-  const [hub, setHub] = useState(null)
+  const [hub, setHub] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<any>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -31,7 +31,7 @@ export function DiscoverHubPage() {
         setHub(next)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (cancelled || err?.name === 'AbortError') return
         setError(err)
         setLoading(false)
@@ -85,7 +85,7 @@ export function DiscoverHubPage() {
         {catalogHref ? <Link to={catalogHref}>Browse the catalog</Link> : null} for the full list.
         These rows cannot be pinned.
       </p>
-      {sections.map((section) => (
+      {sections.map((section: any) => (
         <DiscoverShelf
           key={section.identifier}
           section={section}

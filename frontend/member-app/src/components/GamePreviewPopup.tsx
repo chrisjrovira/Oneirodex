@@ -20,7 +20,7 @@ const PREVIEW_OPENED = 'od-preview-opened'
  * they are shown as one title with a choice of how to play it.
  */
 /** Shared date shape, so "Released" and "Added" cannot drift apart. */
-function formatDate(value) {
+function formatDate(value: any) {
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
@@ -32,7 +32,7 @@ function formatDate(value) {
 }
 
 /** "Added" is the one date people scan for and it was not shown at all. */
-export function formatAdded(value) {
+export function formatAdded(value: any) {
   const text = formatDate(value)
   return text ? `Added ${text}` : null
 }
@@ -45,7 +45,7 @@ export function formatAdded(value) {
  * The payload carries `first_release_date`; read that, and show the same
  * precision as Added so the pair reads as a pair.
  */
-export function formatReleased(game) {
+export function formatReleased(game: any) {
   const text = formatDate(game?.first_release_date)
   if (text) return `Released ${text}`
   const year = game?.first_release_year
@@ -60,7 +60,7 @@ export function formatReleased(game) {
  * available" and repeat none of it. Tone matters: `warn` is for things that
  * stop you playing, not decoration.
  */
-export function previewBadges(game) {
+export function previewBadges(game: any) {
   const badges = []
   if (game.path_missing) {
     badges.push({ id: 'missing', label: 'Files missing on disk', tone: 'warn' })
@@ -92,10 +92,10 @@ export function previewBadges(game) {
 }
 
 /** Facet labels from the editions payload, falling back to browse genres. */
-export function mergePreviewTags(gameGenres, editionTags, limit = 8) {
-  const labels = []
+export function mergePreviewTags(gameGenres: any, editionTags: any, limit = 8) {
+  const labels: any[] = []
   const seen = new Set()
-  const push = (raw) => {
+  const push = (raw: any) => {
     const label = typeof raw === 'string' ? raw.trim() : String(raw?.label || '').trim()
     const key = label.toLowerCase()
     if (!label || seen.has(key) || labels.length >= limit) return
@@ -108,8 +108,8 @@ export function mergePreviewTags(gameGenres, editionTags, limit = 8) {
 }
 
 /** Household friends who played or favourited a copy — never a store social graph. */
-export function friendsSentence(friends) {
-  const names = (friends || []).map((row) => String(row?.name || '').trim()).filter(Boolean)
+export function friendsSentence(friends: any) {
+  const names = (friends || []).map((row: any) => String(row?.name || '').trim()).filter(Boolean)
   if (!names.length) return null
   if (names.length === 1) return `${names[0]} in this house`
   if (names.length === 2) return `${names[0]} and ${names[1]} in this house`
@@ -124,13 +124,13 @@ export function friendsSentence(friends) {
  * console. Returns null below two, because "1 systems" next to a list of one is
  * both wrong and pointless.
  */
-export function systemCountLabel(editions) {
-  const systems = new Set((editions || []).map((row) => row.library_platform).filter(Boolean))
+export function systemCountLabel(editions: any) {
+  const systems = new Set((editions || []).map((row: any) => row.library_platform).filter(Boolean))
   return systems.size > 1 ? `${systems.size} systems` : null
 }
 
 /** Why a copy cannot be launched in the browser, in the member's words. */
-export function editionBlockerText(edition) {
+export function editionBlockerText(edition: any) {
   if (!edition || edition.can_play_in_browser) {
     return null
   }
@@ -153,23 +153,23 @@ export function editionBlockerText(edition) {
 }
 
 export function GamePreviewPopup({ game, reason = '', onClose }: LooseProps) {
-  const panelRef = useRef(null)
-  const closeRef = useRef(null)
+  const panelRef = useRef<any>(null)
+  const closeRef = useRef<any>(null)
   // `null` while loading; `[]` once we know there is nothing to add. The two
   // are different on screen: a spinner versus no section at all.
-  const [editions, setEditions] = useState(null)
+  const [editions, setEditions] = useState<any>(null)
   const [editionsFailed, setEditionsFailed] = useState(false)
   // GOG / Epic live on Game.urls, which browse still does not send per tile.
   // Browse may send one `trailer_embed_url` for muted tile hover; the YouTube
   // mark here still rides the editions request so the popup matches details
   // without becoming a second player.
-  const [editionUrls, setEditionUrls] = useState([])
-  const [editionTags, setEditionTags] = useState([])
-  const [editionFriends, setEditionFriends] = useState([])
+  const [editionUrls, setEditionUrls] = useState<any[]>([])
+  const [editionTags, setEditionTags] = useState<any[]>([])
+  const [editionFriends, setEditionFriends] = useState<any[]>([])
 
   useEffect(() => {
     closeRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: any) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
         onClose?.()
@@ -188,7 +188,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }: LooseProps) {
   // tile re-render when any one of them was previewed.
   useEffect(() => {
     const token = {}
-    const onOther = (event) => {
+    const onOther = (event: any) => {
       if (event.detail !== token) onClose?.()
     }
     window.addEventListener(PREVIEW_OPENED, onOther)
@@ -218,7 +218,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }: LooseProps) {
         setEditionTags(Array.isArray(data.tags) ? data.tags : [])
         setEditionFriends(Array.isArray(data.friends) ? data.friends : [])
       })
-      .catch((error) => {
+      .catch((error: any) => {
         if (error?.name !== 'AbortError') {
           // A failed lookup costs the systems list and nothing else — the
           // preview is still a preview without it. Steam / IGDB from the
@@ -380,7 +380,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }: LooseProps) {
             </p>
           ) : (
             <ul className="od-preview__system-list">
-              {editions.map((edition) => {
+              {editions.map((edition: any) => {
                 const blocker = editionBlockerText(edition)
                 return (
                   <li
@@ -410,7 +410,7 @@ export function GamePreviewPopup({ game, reason = '', onClose }: LooseProps) {
 
                     {edition.launchers?.length ? (
                       <div className="od-preview__launchers">
-                        {edition.launchers.map((launcher) => (
+                        {edition.launchers.map((launcher: any) => (
                           <a
                             key={`${edition.uuid}:${launcher.core}`}
                             className={`od-btn od-btn--secondary od-preview__launcher${

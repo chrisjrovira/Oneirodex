@@ -99,6 +99,6 @@ export const SYSTEM_MOTIFS = [
 export const SYSTEM_MOTIF_FAMILIES = SYSTEM_MOTIFS.reduce((acc, motif) => {
   ;(acc[motif.family] ||= []).push(motif)
   return acc
-}, {})
+}, {} as Record<string, any[]>)
 
 export const SYSTEM_MOTIF_IDS = SYSTEM_MOTIFS.map((m) => m.id)

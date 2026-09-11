@@ -12,7 +12,7 @@ import './RelatedMediaStrip.css'
  * does not grow an empty section for the overwhelming majority of titles.
  */
 
-const KIND_ICON = {
+const KIND_ICON: Record<string, string> = {
   film: '🎬',
   series: '📺',
   anime: '🌸',
@@ -23,10 +23,10 @@ const KIND_ICON = {
 }
 
 export function RelatedMediaStrip({ gameUuid }: LooseProps) {
-  const [items, setItems] = useState([])
-  const [kinds, setKinds] = useState([])
+  const [items, setItems] = useState<any[]>([])
+  const [kinds, setKinds] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [active, setActive] = useState(null)
+  const [active, setActive] = useState<any>(null)
   const [filter, setFilter] = useState('all')
 
   const load = useCallback(async () => {
@@ -55,7 +55,7 @@ export function RelatedMediaStrip({ gameUuid }: LooseProps) {
 
   useEffect(() => {
     if (!active) return undefined
-    const onKey = (event) => {
+    const onKey = (event: any) => {
       if (event.key === 'Escape') setActive(null)
     }
     document.addEventListener('keydown', onKey)
@@ -66,7 +66,7 @@ export function RelatedMediaStrip({ gameUuid }: LooseProps) {
     return null
   }
 
-  const kindLabel = (id) => kinds.find((k) => k.id === id)?.label || id
+  const kindLabel = (id: any) => kinds.find((k) => k.id === id)?.label || id
   const present = [...new Set(items.map((i) => i.media_kind))]
   const shown = filter === 'all' ? items : items.filter((i) => i.media_kind === filter)
 

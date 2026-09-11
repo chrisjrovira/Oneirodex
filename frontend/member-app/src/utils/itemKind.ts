@@ -6,7 +6,7 @@ export const ITEM_KINDS = Object.freeze(['game', 'experience', 'emulator', 'tool
 export const NON_GAME_KINDS = Object.freeze(['experience', 'emulator', 'tool'])
 
 /** Compact tile badge descriptors keyed by canonical kind. */
-export const ITEM_KIND_BADGE = Object.freeze({
+export const ITEM_KIND_BADGE: Record<string, any> = Object.freeze({
   experience: {
     kind: 'EXP',
     label: 'EXP',
@@ -28,7 +28,7 @@ export const ITEM_KIND_BADGE = Object.freeze({
 })
 
 /** Human labels for details chips / toasts (API tokens unchanged). */
-export const ITEM_KIND_LABEL = Object.freeze({
+export const ITEM_KIND_LABEL: Record<string, string> = Object.freeze({
   game: 'Game',
   experience: 'Soft title',
   emulator: 'Emulator',
@@ -36,7 +36,7 @@ export const ITEM_KIND_LABEL = Object.freeze({
 })
 
 /** Plural chip labels for Kind filter row. */
-export const ITEM_KIND_LABEL_PLURAL = Object.freeze({
+export const ITEM_KIND_LABEL_PLURAL: Record<string, string> = Object.freeze({
   game: 'Games',
   experience: 'Soft titles',
   emulator: 'Emulators',
@@ -47,7 +47,7 @@ export const ITEM_KIND_LABEL_PLURAL = Object.freeze({
  * @param {object | null | undefined} game
  * @returns {'game' | 'experience' | 'emulator' | 'tool'}
  */
-export function resolveItemKind(game) {
+export function resolveItemKind(game: any) {
   const raw = game?.item_kind ?? game?.content_kind ?? 'game'
   const kind = String(raw).trim().toLowerCase()
   if (kind === 'experience' || kind === 'emulator' || kind === 'tool') {
@@ -60,7 +60,7 @@ export function resolveItemKind(game) {
  * @param {string | null | undefined} path
  * @returns {string}
  */
-export function folderBasename(path) {
+export function folderBasename(path: any) {
   const parts = String(path || '')
     .replace(/\\/g, '/')
     .split('/')

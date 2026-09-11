@@ -3,7 +3,7 @@
  * @param {unknown} raw
  * @returns {string[]}
  */
-export function parseVideoUrls(raw) {
+export function parseVideoUrls(raw: any) {
   if (raw == null || raw === '') return []
   if (Array.isArray(raw)) {
     return raw.map((u) => String(u).trim()).filter(Boolean)
@@ -21,7 +21,7 @@ export function parseVideoUrls(raw) {
  * @param {string} url
  * @returns {string | null} YouTube embed URL
  */
-export function youtubeEmbed(url) {
+export function youtubeEmbed(url: any) {
   if (!url || typeof url !== 'string') return null
   const embedMatch = url.match(/youtube\.com\/embed\/([\w-]{6,})/i)
   if (embedMatch) {
@@ -35,7 +35,7 @@ export function youtubeEmbed(url) {
  * @param {string} url
  * @returns {boolean}
  */
-export function isDirectVideoUrl(url) {
+export function isDirectVideoUrl(url: any) {
   if (!url || typeof url !== 'string') return false
   const path = url.split('?')[0].toLowerCase()
   return /\.(mp4|webm|ogv|ogg)$/.test(path)
@@ -47,7 +47,7 @@ export function isDirectVideoUrl(url) {
  * @param {string} url
  * @returns {string | null}
  */
-export function mutedHoverTrailerSrc(url) {
+export function mutedHoverTrailerSrc(url: any) {
   if (!url || typeof url !== 'string') return null
   const trimmed = url.trim()
   if (!trimmed) return null
@@ -88,13 +88,13 @@ export function prefersReducedMotion() {
  * @param {object} game
  * @returns {string[]} Embeddable iframe src URLs
  */
-export function trailerEmbedUrls(game) {
+export function trailerEmbedUrls(game: any) {
   if (!game) return []
 
   const structured = Array.isArray(game.trailers) ? game.trailers : []
   if (structured.length > 0 || game.has_trailers === true) {
     const fromTrailers = structured
-      .map((row) => {
+      .map((row: any) => {
         if (!row || typeof row !== 'object') {
           return youtubeEmbed(String(row || ''))
         }
@@ -113,7 +113,7 @@ export function trailerEmbedUrls(game) {
  * @param {object} game
  * @returns {{ href: string, label: string } | null}
  */
-export function youtubeDemoLink(game) {
+export function youtubeDemoLink(game: any) {
   if (!game) return null
   if (game.youtube_demo_url && /youtu(\.be|be\.com)/i.test(game.youtube_demo_url)) {
     return { href: game.youtube_demo_url, label: 'YouTube demo' }
@@ -123,7 +123,7 @@ export function youtubeDemoLink(game) {
   }
   const urls = Array.isArray(game.urls) ? game.urls : []
   const yt = urls.find(
-    (row) =>
+    (row: any) =>
       String(row?.type || '')
         .toLowerCase()
         .includes('youtube') || /youtu(\.be|be\.com)/i.test(String(row?.url || '')),
@@ -140,7 +140,7 @@ export function youtubeDemoLink(game) {
  * @param {object | null | undefined} game
  * @returns {boolean}
  */
-export function showsRetroarchCheats(game) {
+export function showsRetroarchCheats(game: any) {
   if (!game || typeof game !== 'object') return false
   return (
     String(game.cheat_surface || '')
@@ -155,12 +155,12 @@ export function showsRetroarchCheats(game) {
  * @param {object} game
  * @returns {{ label: string, path: string }[]}
  */
-export function adminPathRows(game) {
+export function adminPathRows(game: any) {
   if (!game?.is_admin) return []
-  const rows = []
+  const rows: any[] = []
   const seen = new Set()
 
-  function push(label, path) {
+  function push(label: any, path: any) {
     const trimmed = String(path || '').trim()
     if (!trimmed || seen.has(trimmed)) return
     seen.add(trimmed)
@@ -194,7 +194,7 @@ export function adminPathRows(game) {
  * @param {object | null | undefined} row
  * @returns {boolean}
  */
-export function isVersionDownloadable(row) {
+export function isVersionDownloadable(row: any) {
   if (!row || typeof row !== 'object') return false
   if (row.downloadable === false) return false
   if (row.path_missing === true) return false
@@ -206,7 +206,7 @@ export function isVersionDownloadable(row) {
  * @param {object | null | undefined} row
  * @returns {boolean}
  */
-export function isVersionPathMissing(row) {
+export function isVersionPathMissing(row: any) {
   if (!row || typeof row !== 'object') return false
   return row.path_missing === true || row.downloadable === false
 }
@@ -216,7 +216,7 @@ export function isVersionPathMissing(row) {
  * @param {unknown} size
  * @returns {string | null}
  */
-export function formatVersionSize(size) {
+export function formatVersionSize(size: any) {
   if (size == null || size === '') return null
   if (typeof size === 'string') {
     const trimmed = size.trim()
@@ -241,7 +241,7 @@ export function formatVersionSize(size) {
  * @param {object} game
  * @returns {{ key: string, text: string, title: string }[]}
  */
-export function detailsDiscChips(game) {
+export function detailsDiscChips(game: any) {
   if (!game) return []
   const discs = Array.isArray(game.discs) ? game.discs : []
   const parsedCount = Number(game.disc_count)
@@ -282,13 +282,13 @@ export function detailsDiscChips(game) {
  * @param {object[]} versions
  * @returns {{ rows: object[], source: 'extras' | 'versions' | 'empty', loading: boolean }}
  */
-export function extrasPanelModel(game, versions, { loading = false }: LooseProps = {}) {
+export function extrasPanelModel(game: any, versions: any, { loading = false }: LooseProps = {}) {
   if (loading) {
     return { rows: [], source: 'empty', loading: true }
   }
 
   if (Array.isArray(game?.extras)) {
-    const rows = game.extras.map((row) => ({
+    const rows = game.extras.map((row: any) => ({
       id: row.uuid || row.id || row.name || row.label,
       label: row.name || row.label || 'Extra',
       kind: row.extra_kind || row.type || row.kind || 'extra',

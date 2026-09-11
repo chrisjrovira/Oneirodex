@@ -147,7 +147,7 @@ export function LicensedCatalogPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {rows.map((row: any) => {
               const code = row.region_code
               const label = row.label || REGION_LABELS[code] || code
               const source = row.source === 'dat_only' ? 'DAT only' : 'IGDB'

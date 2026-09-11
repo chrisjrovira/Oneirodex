@@ -17,7 +17,7 @@ export async function searchPatchCatalog({ gameUuid, q, signal }: LooseProps = {
   return response.json().catch(() => ({}))
 }
 
-export async function attachPatchCatalogGuide(body) {
+export async function attachPatchCatalogGuide(body: any) {
   const response = await fetch('/api/patch-catalog/attach', {
     method: 'POST',
     credentials: 'same-origin',

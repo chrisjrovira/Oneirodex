@@ -49,7 +49,7 @@ import { detailsRootCrumb, primaryGenreName, taxonomyHref } from '../utils/detai
 import { showToast } from '../utils/toast'
 import './GameDetailsPage.css'
 
-function formatPlaytime(seconds) {
+function formatPlaytime(seconds: any) {
   const total = Number(seconds) || 0
   if (total <= 0) {
     return 'Not played yet'
@@ -72,20 +72,20 @@ function TaxonomyChip({ kind, name }: LooseProps) {
 
 export function GameDetailsPage() {
   const { gameUuid } = useParams()
-  const [game, setGame] = useState(null)
-  const [versions, setVersions] = useState([])
-  const [error, setError] = useState(null)
+  const [game, setGame] = useState<any>(null)
+  const [versions, setVersions] = useState<any[]>([])
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [freshnessBusy, setFreshnessBusy] = useState(false)
-  const [freshnessError, setFreshnessError] = useState(null)
-  const [busyVersionKey, setBusyVersionKey] = useState(null)
-  const [versionActionStatus, setVersionActionStatus] = useState(null)
+  const [freshnessError, setFreshnessError] = useState<any>(null)
+  const [busyVersionKey, setBusyVersionKey] = useState<any>(null)
+  const [versionActionStatus, setVersionActionStatus] = useState<any>(null)
   const [cleanupBusy, setCleanupBusy] = useState(false)
   const [selectedCore, setSelectedCore] = useState('')
-  const [catalogHits, setCatalogHits] = useState([])
+  const [catalogHits, setCatalogHits] = useState<any[]>([])
   const [catalogBusy, setCatalogBusy] = useState(false)
-  const [catalogStatus, setCatalogStatus] = useState(null)
-  const [shotIndex, setShotIndex] = useState(null)
+  const [catalogStatus, setCatalogStatus] = useState<any>(null)
+  const [shotIndex, setShotIndex] = useState<any>(null)
   /* Screenshot URLs the browser could not load.
    *
    * The payload no longer lists art it cannot serve, which fixes the common
@@ -94,9 +94,9 @@ export function GameDetailsPage() {
    * image, and a gallery of broken images is worse than no gallery — so a shot
    * that fails to load leaves the list, and a section left with nothing does
    * not render at all. */
-  const [brokenShots, setBrokenShots] = useState(() => new Set())
+  const [brokenShots, setBrokenShots] = useState<Set<any>>(() => new Set())
 
-  const markShotBroken = useCallback((url) => {
+  const markShotBroken = useCallback((url: any) => {
     setBrokenShots((current) => {
       if (current.has(url)) return current
       const next = new Set(current)
@@ -110,11 +110,11 @@ export function GameDetailsPage() {
   // than guessed from character count: a character threshold disagrees with the
   // clamp at both ends — short-but-wrapped text got no toggle, and long text that
   // happened to fit still offered one.
-  const summaryRef = useRef(null)
+  const summaryRef = useRef<any>(null)
   const [summaryOverflows, setSummaryOverflows] = useState(false)
-  const [pathModal, setPathModal] = useState(null)
+  const [pathModal, setPathModal] = useState<any>(null)
   const [versionsLoading, setVersionsLoading] = useState(true)
-  const adminMenuRef = useRef(null)
+  const adminMenuRef = useRef<any>(null)
 
   // Re-measure on mount, on summary change, and on resize — a summary that fits
   // on a wide screen can clip on a narrow one.
@@ -162,7 +162,7 @@ export function GameDetailsPage() {
         setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
         setVersionsLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
           setVersionsLoading(false)
@@ -183,7 +183,7 @@ export function GameDetailsPage() {
 
   useEffect(() => {
     if (!adminMenuOpen) return undefined
-    function onDocClick(event) {
+    function onDocClick(event: any) {
       if (!adminMenuRef.current?.contains(event.target)) {
         setAdminMenuOpen(false)
       }
@@ -196,7 +196,7 @@ export function GameDetailsPage() {
 
   /** Screenshots that are actually renderable — see `brokenShots`. */
   const shownShots = useMemo(
-    () => (game?.screenshots || []).filter((url) => !brokenShots.has(url)),
+    () => (game?.screenshots || []).filter((url: any) => !brokenShots.has(url)),
     [game?.screenshots, brokenShots],
   )
 
@@ -262,7 +262,7 @@ export function GameDetailsPage() {
       setVersionActionStatus(`${label || 'Download'} ready - opening Downloads`)
       showToast(`${label || 'Download'} ready - opening Downloads`, 'success')
       window.location.assign('/downloads')
-    } catch (err) {
+    } catch (err: any) {
       const message = honestyApiErrorMessage(err, 'Download failed')
       setVersionActionStatus(message)
       showToast(message, 'error')
@@ -279,7 +279,7 @@ export function GameDetailsPage() {
     setFreshnessError(null)
     try {
       const result = await checkGameFreshness(gameUuid)
-      setGame((prev) =>
+      setGame((prev: any) =>
         prev
           ? {
               ...prev,
@@ -288,7 +288,7 @@ export function GameDetailsPage() {
             }
           : prev,
       )
-    } catch (err) {
+    } catch (err: any) {
       setFreshnessError(err)
       showToast(err?.message || 'Freshness check failed', 'error')
     } finally {
@@ -314,7 +314,7 @@ export function GameDetailsPage() {
       showToast(message, 'success')
       const versionData = await fetchGameVersions(gameUuid).catch(() => ({ versions: [] }))
       setVersions(Array.isArray(versionData.versions) ? versionData.versions : [])
-    } catch (err) {
+    } catch (err: any) {
       const message =
         err?.status === 404
           ? 'Orphan cleanup is not available on this server yet'
@@ -452,10 +452,10 @@ export function GameDetailsPage() {
           </p>
           {game.game_modes?.length || game.player_perspectives?.length ? (
             <div className="od-details-page__features" aria-label="How this plays">
-              {(game.game_modes || []).map((name) => (
+              {(game.game_modes || []).map((name: any) => (
                 <TaxonomyChip key={`mode:${name}`} kind="game_mode" name={name} />
               ))}
-              {(game.player_perspectives || []).map((name) => (
+              {(game.player_perspectives || []).map((name: any) => (
                 <TaxonomyChip key={`persp:${name}`} kind="player_perspective" name={name} />
               ))}
             </div>
@@ -548,7 +548,7 @@ export function GameDetailsPage() {
                         value={selectedCore || game.emulator_core || game.emulator_cores[0]}
                         onChange={(event) => setSelectedCore(event.target.value)}
                       >
-                        {game.emulator_cores.map((core) => (
+                        {game.emulator_cores.map((core: any) => (
                           <option key={core} value={core}>
                             {core}
                           </option>
@@ -714,7 +714,7 @@ export function GameDetailsPage() {
                 <>
                   <dt>Genres</dt>
                   <dd>
-                    {game.genres.map((name) => (
+                    {game.genres.map((name: any) => (
                       <TaxonomyChip key={name} kind="genre" name={name} />
                     ))}
                   </dd>
@@ -724,7 +724,7 @@ export function GameDetailsPage() {
                 <>
                   <dt>Themes</dt>
                   <dd>
-                    {game.themes.map((name) => (
+                    {game.themes.map((name: any) => (
                       <TaxonomyChip key={name} kind="theme" name={name} />
                     ))}
                   </dd>
@@ -740,7 +740,7 @@ export function GameDetailsPage() {
                 <>
                   <dt>Modes</dt>
                   <dd>
-                    {game.game_modes.map((name) => (
+                    {game.game_modes.map((name: any) => (
                       <TaxonomyChip key={name} kind="game_mode" name={name} />
                     ))}
                   </dd>
@@ -750,7 +750,7 @@ export function GameDetailsPage() {
                 <>
                   <dt>Perspectives</dt>
                   <dd>
-                    {game.player_perspectives.map((name) => (
+                    {game.player_perspectives.map((name: any) => (
                       <TaxonomyChip key={name} kind="player_perspective" name={name} />
                     ))}
                   </dd>
@@ -806,7 +806,7 @@ export function GameDetailsPage() {
             </p>
             {Array.isArray(game.translation_patches) && game.translation_patches.length > 0 ? (
               <ul className="od-details-page__versions">
-                {game.translation_patches.map((patch) => {
+                {game.translation_patches.map((patch: any) => {
                   const versionKey = `patch:${patch.uuid}`
                   const applyBusy = busyVersionKey === versionKey
                   const canApplyPatch =
@@ -857,7 +857,7 @@ export function GameDetailsPage() {
                                       'success',
                                     )
                                   })
-                                  .catch((err) => {
+                                  .catch((err: any) => {
                                     setVersionActionStatus(err?.message || 'Failed to queue apply')
                                     showToast(err?.message || 'Queue failed', 'error')
                                   })
@@ -923,7 +923,7 @@ export function GameDetailsPage() {
                           data.hits?.length ? `${data.hits.length} hit(s)` : 'No catalog matches',
                         )
                       })
-                      .catch((err) => {
+                      .catch((err: any) => {
                         setCatalogHits([])
                         setCatalogStatus(err?.message || 'Catalog search failed')
                       })
@@ -985,7 +985,7 @@ export function GameDetailsPage() {
                                     showToast('Guide attached', 'success')
                                     setRetryCount((n) => n + 1)
                                   })
-                                  .catch((err) => {
+                                  .catch((err: any) => {
                                     setCatalogStatus(err?.message || 'Attach failed')
                                   })
                                   .finally(() => {
@@ -1105,7 +1105,7 @@ export function GameDetailsPage() {
                                   setVersionActionStatus(`${row.label} queued for companion`)
                                   showToast(`${row.label} queued for companion`, 'success')
                                 })
-                                .catch((err) => {
+                                .catch((err: any) => {
                                   setVersionActionStatus(err?.message || 'Failed to queue apply')
                                   showToast(err?.message || 'Queue failed', 'error')
                                 })
@@ -1146,7 +1146,7 @@ export function GameDetailsPage() {
             <p className="od-details-page__muted">No extras or DLC listed for this title yet.</p>
           ) : (
             <ul className="od-details-page__versions">
-              {extrasModel.rows.map((row) => {
+              {extrasModel.rows.map((row: any) => {
                 const versionKey = `extra:${row.uuid || row.id}`
                 const applyBusy = busyVersionKey === versionKey
                 const onServer =
@@ -1213,7 +1213,7 @@ export function GameDetailsPage() {
                                   setVersionActionStatus(`${row.label} queued for companion`)
                                   showToast(`${row.label} queued for companion`, 'success')
                                 })
-                                .catch((err) => {
+                                .catch((err: any) => {
                                   setVersionActionStatus(err?.message || 'Failed to queue apply')
                                   showToast(err?.message || 'Queue failed', 'error')
                                 })

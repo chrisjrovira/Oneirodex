@@ -22,7 +22,7 @@ const PREF_ROWS = [
   ['share_activity', 'Let friends see what I am playing', 'privacy'],
 ]
 
-function formatWhen(value) {
+function formatWhen(value: any) {
   if (!value) return ''
   try {
     return new Date(value).toLocaleString(undefined, {
@@ -51,10 +51,10 @@ const NOTIFICATION_VIEWS = [
 export function NotificationsPage() {
   const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [items, setItems] = useState([])
+  const [items, setItems] = useState<any[]>([])
   const [unread, setUnread] = useState(0)
-  const [prefs, setPrefs] = useState(null)
-  const [error, setError] = useState(null)
+  const [prefs, setPrefs] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const [filter, setFilter] = useState('inbox')
   const [busy, setBusy] = useState(false)
@@ -77,7 +77,7 @@ export function NotificationsPage() {
         setPrefs(p)
         setError(null)
       })
-      .catch((err) => setError(err))
+      .catch((err: any) => setError(err))
   }
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export function NotificationsPage() {
     }
   }
 
-  async function markOne(id) {
+  async function markOne(id: any) {
     if (busy || !id) return
     setBusy(true)
     try {
@@ -109,7 +109,7 @@ export function NotificationsPage() {
     }
   }
 
-  async function togglePref(key) {
+  async function togglePref(key: any) {
     if (!prefs) return
     const next = { ...prefs, [key]: !prefs[key] }
     setPrefs(next)

@@ -15,7 +15,7 @@ import { applyPlatformSkin, clearPlatformSkin, sharedPlatform } from '../chrome/
 import { PageStatus } from '../components/PageStatus'
 import './Collections.css'
 
-function loadErrorMessage(error) {
+function loadErrorMessage(error: any) {
   if (error?.status === 404) {
     return 'That collection does not exist.'
   }
@@ -30,21 +30,21 @@ export function CollectionDetailPage() {
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
   const { collectionUuid } = useParams()
   const navigate = useNavigate()
-  const [collection, setCollection] = useState(null)
-  const [error, setError] = useState(null)
+  const [collection, setCollection] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<any[]>([])
   const [searching, setSearching] = useState(false)
-  const [addingUuid, setAddingUuid] = useState(null)
-  const [addError, setAddError] = useState(null)
-  const [removingUuid, setRemovingUuid] = useState(null)
+  const [addingUuid, setAddingUuid] = useState<any>(null)
+  const [addError, setAddError] = useState<any>(null)
+  const [removingUuid, setRemovingUuid] = useState<any>(null)
   const [deleting, setDeleting] = useState(false)
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editIsPublic, setEditIsPublic] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState(null)
+  const [saveError, setSaveError] = useState<any>(null)
   const [reordering, setReordering] = useState(false)
   const searchSeq = useRef(0)
 
@@ -63,7 +63,7 @@ export function CollectionDetailPage() {
           setEditIsPublic(Boolean(data.is_public))
         }
       })
-      .catch((requestError) => {
+      .catch((requestError: any) => {
         if (active && requestError.name !== 'AbortError') {
           setError(requestError)
         }
@@ -105,7 +105,7 @@ export function CollectionDetailPage() {
             setResults(rows)
           }
         })
-        .catch((searchError) => {
+        .catch((searchError: any) => {
           if (searchError.name !== 'AbortError' && seq === searchSeq.current) {
             setResults([])
             setAddError(searchError)
@@ -124,7 +124,7 @@ export function CollectionDetailPage() {
     }
   }, [query])
 
-  async function handleSave(event) {
+  async function handleSave(event: any) {
     event.preventDefault()
     if (!collection?.can_edit || collection.is_system || saving) {
       return
@@ -146,14 +146,14 @@ export function CollectionDetailPage() {
       setEditName(updated.name || '')
       setEditDescription(updated.description || '')
       setEditIsPublic(Boolean(updated.is_public))
-    } catch (submitError) {
+    } catch (submitError: any) {
       setSaveError(submitError)
     } finally {
       setSaving(false)
     }
   }
 
-  async function handleAdd(game) {
+  async function handleAdd(game: any) {
     if (!game?.uuid || addingUuid || !collection?.can_edit) {
       return
     }
@@ -161,12 +161,12 @@ export function CollectionDetailPage() {
     setAddError(null)
     try {
       const item = await addCollectionItem(collectionUuid, game.uuid)
-      setCollection((current) => {
+      setCollection((current: any) => {
         if (!current) {
           return current
         }
         const items = current.items || []
-        if (items.some((row) => row.game_uuid === item.game_uuid || row.id === item.id)) {
+        if (items.some((row: any) => row.game_uuid === item.game_uuid || row.id === item.id)) {
           return current
         }
         return {
@@ -177,39 +177,39 @@ export function CollectionDetailPage() {
       })
       setQuery('')
       setResults([])
-    } catch (submitError) {
+    } catch (submitError: any) {
       setAddError(submitError)
     } finally {
       setAddingUuid(null)
     }
   }
 
-  async function handleRemove(gameUuid) {
+  async function handleRemove(gameUuid: any) {
     if (!gameUuid || removingUuid || !collection?.can_edit) {
       return
     }
     setRemovingUuid(gameUuid)
     try {
       await removeCollectionItem(collectionUuid, gameUuid)
-      setCollection((current) => {
+      setCollection((current: any) => {
         if (!current) {
           return current
         }
-        const items = (current.items || []).filter((row) => row.game_uuid !== gameUuid)
+        const items = (current.items || []).filter((row: any) => row.game_uuid !== gameUuid)
         return {
           ...current,
           items,
           item_count: items.length,
         }
       })
-    } catch (removeError) {
+    } catch (removeError: any) {
       window.alert(removeError.message || 'Unable to remove that game.')
     } finally {
       setRemovingUuid(null)
     }
   }
 
-  async function handleMove(index, direction) {
+  async function handleMove(index: any, direction: any) {
     if (!collection?.can_edit || reordering) {
       return
     }
@@ -226,7 +226,7 @@ export function CollectionDetailPage() {
     try {
       const updated = await reorderCollectionItems(collectionUuid, gameUuids)
       setCollection(updated)
-    } catch (reorderError) {
+    } catch (reorderError: any) {
       window.alert(reorderError.message || 'Unable to reorder games.')
     } finally {
       setReordering(false)
@@ -250,14 +250,14 @@ export function CollectionDetailPage() {
     try {
       await deleteCollection(collectionUuid)
       navigate('/collections')
-    } catch (deleteError) {
+    } catch (deleteError: any) {
       window.alert(deleteError.message || 'Unable to delete that collection.')
       setDeleting(false)
     }
   }
 
   const items = collection?.items || []
-  const existingUuids = new Set(items.map((item) => item.game_uuid))
+  const existingUuids = new Set(items.map((item: any) => item.game_uuid))
   const canEditMeta = Boolean(collection?.can_edit && !collection.is_system)
 
   return (
@@ -364,7 +364,7 @@ export function CollectionDetailPage() {
 
         {!error && items.length > 0 ? (
           <ul className="od-collection__items">
-            {items.map((item, index) => (
+            {items.map((item: any, index: any) => (
               <li key={item.id} className="od-collection__item">
                 <a href={`/game_details/${item.game_uuid}`}>
                   <strong>{item.game_name || item.game_uuid}</strong>

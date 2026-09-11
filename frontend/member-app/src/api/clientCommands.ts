@@ -5,7 +5,7 @@ import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
  * @param {'install' | 'update' | 'uninstall' | 'apply_patch' | 'apply_mod_pack' | 'open_path' | 'download'} action
  * @param {{ kind?: 'base' | 'update' | 'extra', versionUuid?: string, path?: string, select?: boolean }} [options]
  */
-export async function queueClientCommand(gameUuid, action, options: LooseProps = {}) {
+export async function queueClientCommand(gameUuid: any, action: any, options: LooseProps = {}) {
   const body: LooseProps = { game_uuid: gameUuid || '', action }
   if (options.kind) {
     body.kind = options.kind

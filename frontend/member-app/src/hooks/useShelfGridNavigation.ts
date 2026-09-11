@@ -35,7 +35,7 @@ const SHELF = '.od-shelf'
 const CELL = '.od-shelf__item'
 
 /** The thing that actually takes focus inside a cell. */
-function targetIn(cell) {
+function targetIn(cell: any) {
   if (!cell) return null
   // `.od-shelf__more` ("See all") is a link that *is* the cell.
   if (cell.matches('a[href], button')) return cell
@@ -57,7 +57,7 @@ function readGrid(root: Element) {
   )
 }
 
-function locate(grid, element) {
+function locate(grid: any, element: any) {
   for (let r = 0; r < grid.length; r += 1) {
     const c = grid[r].indexOf(element)
     if (c !== -1) return { row: r, col: c }
@@ -65,7 +65,7 @@ function locate(grid, element) {
   return null
 }
 
-export function useShelfGridNavigation(rootRef, { enabled = true }: LooseProps = {}) {
+export function useShelfGridNavigation(rootRef: any, { enabled = true }: LooseProps = {}) {
   useEffect(() => {
     const root = rootRef?.current
     if (!root || !enabled) return undefined
@@ -107,7 +107,7 @@ export function useShelfGridNavigation(rootRef, { enabled = true }: LooseProps =
       })
     }
 
-    function moveTo(grid, row, col) {
+    function moveTo(grid: any, row: any, col: any) {
       const clampedRow = Math.max(0, Math.min(row, grid.length - 1))
       const shelf = grid[clampedRow]
       const clampedCol = Math.max(0, Math.min(col, shelf.length - 1))
@@ -129,7 +129,7 @@ export function useShelfGridNavigation(rootRef, { enabled = true }: LooseProps =
       moving = false
     }
 
-    function onKeyDown(event) {
+    function onKeyDown(event: any) {
       if (event.altKey || event.metaKey) return
       const grid = readGrid(root)
       if (!grid.length) return
@@ -181,7 +181,7 @@ export function useShelfGridNavigation(rootRef, { enabled = true }: LooseProps =
     }
 
     /** Clicking or tabbing into a cell makes that cell the caret. */
-    function onFocusIn(event) {
+    function onFocusIn(event: any) {
       if (moving) return
       const grid = readGrid(root)
       const here = locate(grid, event.target)

@@ -29,11 +29,11 @@ export function ChatSlideOut({
     return readChatPanelOpen(false)
   })
   const open = controlled ? openProp : uncontrolledOpen
-  const [channelId, setChannelId] = useState(null)
+  const [channelId, setChannelId] = useState<any>(null)
   const [expanded, setExpanded] = useState(false)
   const titleId = useId()
 
-  function setOpen(next) {
+  function setOpen(next: any) {
     const value = typeof next === 'function' ? next(open) : next
     if (!controlled) setUncontrolledOpen(value)
     onOpenChange?.(value)
@@ -46,7 +46,7 @@ export function ChatSlideOut({
   }, [open, controlled])
 
   useEffect(() => {
-    function onOpenRequest(event) {
+    function onOpenRequest(event: any) {
       const detail = event?.detail || {}
       if (detail.channelId != null) setChannelId(detail.channelId)
       if (detail.expanded) setExpanded(true)
@@ -65,7 +65,7 @@ export function ChatSlideOut({
 
   useEffect(() => {
     if (!open) return undefined
-    function onKey(event) {
+    function onKey(event: any) {
       if (event.key === 'Escape') {
         if (event.target?.closest?.('input, textarea, select, [contenteditable]')) return
         event.preventDefault()

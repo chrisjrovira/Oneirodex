@@ -1,5 +1,5 @@
 import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
-export async function fetchGameDetails(gameUuid, { signal }: LooseProps = {}) {
+export async function fetchGameDetails(gameUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/details`, {
     signal,
     credentials: 'same-origin',
@@ -10,7 +10,7 @@ export async function fetchGameDetails(gameUuid, { signal }: LooseProps = {}) {
   return response.json().catch(() => ({}))
 }
 
-export async function fetchGameMoreFrom(gameUuid, { signal }: LooseProps = {}) {
+export async function fetchGameMoreFrom(gameUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/more_from`, {
     signal,
     credentials: 'same-origin',
@@ -21,7 +21,7 @@ export async function fetchGameMoreFrom(gameUuid, { signal }: LooseProps = {}) {
   return response.json().catch(() => ({ sections: [] }))
 }
 
-export async function fetchGameVersions(gameUuid, { signal }: LooseProps = {}) {
+export async function fetchGameVersions(gameUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/versions`, {
     signal,
     credentials: 'same-origin',
@@ -32,7 +32,7 @@ export async function fetchGameVersions(gameUuid, { signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function checkGameFreshness(gameUuid) {
+export async function checkGameFreshness(gameUuid: any) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/freshness/check`, {
     method: 'POST',
     credentials: 'same-origin',
@@ -50,7 +50,7 @@ export async function checkGameFreshness(gameUuid) {
  * @param {string} gameUuid
  * @returns {Promise<object>}
  */
-export async function cleanupOrphanVersions(gameUuid) {
+export async function cleanupOrphanVersions(gameUuid: any) {
   const response = await fetch(
     `/api/games/${encodeURIComponent(gameUuid)}/versions/cleanup_orphans`,
     {

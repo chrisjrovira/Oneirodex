@@ -9,7 +9,7 @@ const base = {
   focusable: 'false',
 }
 
-export function MarkNintendo(props) {
+export function MarkNintendo(props: any) {
   return (
     <svg {...base} {...props}>
       <rect x="3" y="8" width="22" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
@@ -20,7 +20,7 @@ export function MarkNintendo(props) {
   )
 }
 
-export function MarkSony(props) {
+export function MarkSony(props: any) {
   return (
     <svg {...base} {...props}>
       <path d="M6 18c4-8 12-8 16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -29,7 +29,7 @@ export function MarkSony(props) {
   )
 }
 
-export function MarkXbox(props) {
+export function MarkXbox(props: any) {
   return (
     <svg {...base} {...props}>
       <circle cx="14" cy="14" r="9" stroke="currentColor" strokeWidth="2" />
@@ -43,7 +43,7 @@ export function MarkXbox(props) {
   )
 }
 
-export function MarkSega(props) {
+export function MarkSega(props: any) {
   return (
     <svg {...base} {...props}>
       <path
@@ -57,7 +57,7 @@ export function MarkSega(props) {
   )
 }
 
-export function MarkPc(props) {
+export function MarkPc(props: any) {
   return (
     <svg {...base} {...props}>
       <rect x="4" y="6" width="20" height="13" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -66,7 +66,7 @@ export function MarkPc(props) {
   )
 }
 
-export function MarkRetro(props) {
+export function MarkRetro(props: any) {
   return (
     <svg {...base} {...props}>
       <rect x="5" y="7" width="18" height="14" rx="1" stroke="currentColor" strokeWidth="2" />
@@ -75,7 +75,7 @@ export function MarkRetro(props) {
   )
 }
 
-const BY_FAMILY = {
+const BY_FAMILY: Record<string, any> = {
   nintendo: MarkNintendo,
   sony: MarkSony,
   xbox: MarkXbox,

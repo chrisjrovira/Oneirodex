@@ -19,7 +19,7 @@ export function readLibraryFilters() {
   }
 }
 
-export function writeLibraryFilters(filters) {
+export function writeLibraryFilters(filters: any) {
   const value = encodeURIComponent(JSON.stringify(filters))
   document.cookie = `${LIBRARY_FILTERS_COOKIE}=${value}; path=/; SameSite=Lax`
 }

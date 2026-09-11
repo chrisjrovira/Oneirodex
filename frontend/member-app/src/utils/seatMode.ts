@@ -29,7 +29,7 @@ function readStoredSeat() {
   }
 }
 
-function persistSeat(seat) {
+function persistSeat(seat: any) {
   try {
     sessionStorage.setItem(SEAT_STORAGE_KEY, seat)
   } catch {

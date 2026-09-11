@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './NewsCard.css'
 
-const STORE_LABELS = {
+const STORE_LABELS: Record<string, string> = {
   steam: 'Steam',
   epic: 'Epic',
   gog: 'GOG',
@@ -14,14 +14,14 @@ const STORE_LABELS = {
 /** Wider than this → letterbox on a blurred fill (true 3:4 cover is 0.75). */
 const LETTERBOX_RATIO = 0.9
 
-function whenLabel(value) {
+function whenLabel(value: any) {
   if (!value) return ''
   const when = new Date(value)
   if (Number.isNaN(when.getTime())) return ''
   return when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function badgeFor(item) {
+function badgeFor(item: any) {
   if (item.kind === 'deal') {
     const store = STORE_LABELS[item.store] || 'Deal'
     const savings = Number(item.savings)
@@ -54,7 +54,7 @@ export function NewsCard({ item }: LooseProps) {
   const href = item.href || '/news'
   const external = /^https?:\/\//i.test(href)
 
-  const onArtLoad = useCallback((event) => {
+  const onArtLoad = useCallback((event: any) => {
     const img = event.currentTarget
     const w = img.naturalWidth
     const h = img.naturalHeight

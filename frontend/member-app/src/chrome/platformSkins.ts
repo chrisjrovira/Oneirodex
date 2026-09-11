@@ -97,7 +97,7 @@ const FAMILY_BY_PLATFORM = {
   pc: PC,
 }
 
-const FAMILY_META = {
+const FAMILY_META: Record<string, any> = {
   nintendo: {
     family: 'nintendo',
     accent: '#e60012',
@@ -136,7 +136,7 @@ const FAMILY_META = {
   },
 }
 
-export function platformFamily(platformId) {
+export function platformFamily(platformId: any) {
   if (!platformId) {
     return null
   }
@@ -149,7 +149,7 @@ export function platformFamily(platformId) {
   return 'pc'
 }
 
-export function skinForPlatform(platformId) {
+export function skinForPlatform(platformId: any) {
   const family = platformFamily(platformId)
   if (!family) {
     return null
@@ -157,7 +157,7 @@ export function skinForPlatform(platformId) {
   return { ...FAMILY_META[family], platform: String(platformId).toUpperCase() }
 }
 
-export function familyForPlatform(platformId) {
+export function familyForPlatform(platformId: any) {
   return platformFamily(platformId) || 'pc'
 }
 
@@ -165,7 +165,7 @@ export function familyForPlatform(platformId) {
  * Apply or clear platform skin on documentElement.
  * @param {string|null|undefined} platformId LibraryPlatform enum name
  */
-export function applyPlatformSkin(platformId) {
+export function applyPlatformSkin(platformId: any) {
   const root = document.documentElement
   const skin = skinForPlatform(platformId)
   if (!skin || !platformId) {
@@ -194,7 +194,7 @@ export function clearPlatformSkin() {
 }
 
 /** Shared library_platform across items, or null if mixed/empty. */
-export function sharedPlatform(items) {
+export function sharedPlatform(items: any) {
   if (!Array.isArray(items) || items.length === 0) {
     return null
   }

@@ -29,7 +29,7 @@ function CatalogGenreShelf({
   onNeeded = null,
 }: LooseProps) {
   const [hbar, setHbar] = useState({ max: 0, thumbPx: 0, leftPx: 0, scrollLeft: 0 })
-  const hbarDragRef = useRef(null)
+  const hbarDragRef = useRef<any>(null)
   const {
     ref: trackRef,
     viewportRef,
@@ -85,7 +85,7 @@ function CatalogGenreShelf({
     )
 
     const items = track.querySelectorAll('.od-shelf__item')
-    items.forEach((node) => {
+    items.forEach((node: any) => {
       node.toggleAttribute('data-fully-visible', true)
       observer.observe(node)
     })
@@ -98,7 +98,7 @@ function CatalogGenreShelf({
   }, [measure, syncHbar])
 
   const onHbarPointerDown = useCallback(
-    (event) => {
+    (event: any) => {
       const track = trackRef.current
       const rail = hbarRef.current
       if (!track || !rail || event.button !== 0) return
@@ -114,7 +114,7 @@ function CatalogGenreShelf({
           ? 0
           : event.clientX - rail.getBoundingClientRect().left - layout.leftPx
 
-      const scrollFromClientX = (clientX) => {
+      const scrollFromClientX = (clientX: any) => {
         const box = rail.getBoundingClientRect()
         track.scrollLeft = scrollLeftFromPointer({
           clientX,
@@ -129,7 +129,7 @@ function CatalogGenreShelf({
 
       scrollFromClientX(event.clientX)
       hbarDragRef.current = { scrollFromClientX }
-      const onMove = (ev) => hbarDragRef.current?.scrollFromClientX(ev.clientX)
+      const onMove = (ev: any) => hbarDragRef.current?.scrollFromClientX(ev.clientX)
       const onUp = () => {
         hbarDragRef.current = null
         window.removeEventListener('pointermove', onMove)
@@ -144,7 +144,7 @@ function CatalogGenreShelf({
   /* Fetch when the shelf is near the viewport, not on mount.
      Forty-one genres would otherwise be forty-one requests fired at once for
      a page where the reader will look at three of them. */
-  const rootRef = useRef(null)
+  const rootRef = useRef<any>(null)
   useEffect(() => {
     if (!onNeeded) return undefined
     const node = rootRef.current
@@ -209,7 +209,7 @@ function CatalogGenreShelf({
             role="list"
             aria-label={title}
           >
-            {games.map((game) => (
+            {games.map((game: any) => (
               <div className="od-shelf__item" role="listitem" key={game.uuid}>
                 <GameCard
                   game={game}
@@ -311,11 +311,11 @@ export function CatalogGridSections({
   listRef = null,
   selecting = false,
 }: LooseProps) {
-  const [genres, setGenres] = useState(null)
+  const [genres, setGenres] = useState<any>(null)
   const [genresFailed, setGenresFailed] = useState(false)
-  const [shelves, setShelves] = useState({})
-  const [requested, setRequested] = useState(() => new Set())
-  const gridRootRef = useRef(null)
+  const [shelves, setShelves] = useState<any>({})
+  const [requested, setRequested] = useState<Set<any>>(() => new Set())
+  const gridRootRef = useRef<any>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -326,7 +326,7 @@ export function CatalogGridSections({
       .then((names) => {
         if (active) setGenres(names)
       })
-      .catch((error) => {
+      .catch((error: any) => {
         if (active && error?.name !== 'AbortError') setGenresFailed(true)
       })
     return () => {
@@ -349,7 +349,7 @@ export function CatalogGridSections({
      cancels them instead of leaving forty orphaned requests to land against a
      view that has moved on. The ASGI bridge in front of Flask raises on a
      client disconnect mid-request, so orphaned fetches are not free. */
-  const inFlightRef = useRef(null)
+  const inFlightRef = useRef<any>(null)
   const attemptsRef = useRef(new Map())
   useEffect(() => {
     const controller = new AbortController()
@@ -359,16 +359,16 @@ export function CatalogGridSections({
   }, [filterKey])
 
   const loadShelf = useCallback(
-    (genre) => {
+    (genre: any) => {
       setRequested((current) => {
         if (current.has(genre)) return current
         const next = new Set(current)
         next.add(genre)
         fetchShelfGames(filters || {}, genre, { signal: inFlightRef.current?.signal })
           .then((payload) => {
-            setShelves((rows) => ({ ...rows, [genre]: payload }))
+            setShelves((rows: any) => ({ ...rows, [genre]: payload }))
           })
-          .catch((error) => {
+          .catch((error: any) => {
             if (error?.name === 'AbortError') return
             /* Retry once, then give up quietly.
                Writing `{ total: 0 }` on the first failure would hide the
@@ -381,7 +381,7 @@ export function CatalogGridSections({
             const attempts = (attemptsRef.current.get(genre) || 0) + 1
             attemptsRef.current.set(genre, attempts)
             if (attempts >= MAX_SHELF_ATTEMPTS) {
-              setShelves((rows) => ({ ...rows, [genre]: { games: [], total: 0 } }))
+              setShelves((rows: any) => ({ ...rows, [genre]: { games: [], total: 0 } }))
               return
             }
             setRequested((pending) => {
@@ -418,7 +418,7 @@ export function CatalogGridSections({
      measures scroll position from it). Fanning one node out to both keeps that
      contract and avoids asking the caller for a second ref it has no use for. */
   const setRoot = useCallback(
-    (node) => {
+    (node: any) => {
       gridRootRef.current = node
       if (typeof listRef === 'function') listRef(node)
       else if (listRef) listRef.current = node
@@ -445,7 +445,7 @@ export function CatalogGridSections({
               selectedIds={selectedIds}
             />
           ))
-        : (genres || []).map((genre) => {
+        : (genres || []).map((genre: any) => {
             const shelf = shelves[genre]
             // A genre the current filters empty out is not a shelf. The bundle
             // lists every genre in the library; under `library_platform=NES`

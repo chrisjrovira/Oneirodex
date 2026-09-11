@@ -16,7 +16,7 @@ const PREF_SAVE_DEBOUNCE_MS = 320
  *  drag stops, not wait for the round-trip that persists it. */
 const TILE_RESIZE_SETTLE_MS = 120
 
-export function applyTileSizeCssVars(sizeOrPercent, showTitles = undefined) {
+export function applyTileSizeCssVars(sizeOrPercent: any, showTitles?: boolean) {
   // Omitted means "leave the title preference alone". The slider calls this on
   // every drag with only a size; defaulting to `true` there would turn the
   // strip back on for anyone who had switched it off, which is the same
@@ -50,9 +50,9 @@ export function TileSizeControl({
   const percent = normalizeTilePercent(value)
   const saveTimerRef = useRef(0)
   const resizeTimerRef = useRef(0)
-  const pendingSaveRef = useRef(null)
+  const pendingSaveRef = useRef<any>(null)
 
-  async function persist(normalized) {
+  async function persist(normalized: any) {
     try {
       await savePreferences(preferencesFromShell(shellConfig, { tile_size: String(normalized) }))
     } catch {
@@ -89,7 +89,7 @@ export function TileSizeControl({
     [],
   )
 
-  function handleChange(nextPercent) {
+  function handleChange(nextPercent: any) {
     const normalized = normalizeTilePercent(nextPercent)
 
     // Suppress the tile-size transition while the slider is moving (W27-B2).

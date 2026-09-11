@@ -272,7 +272,7 @@ const FAQ_SECTIONS = [
    topic is the one that covers "how do I use this at all", so it is open. */
 const DEFAULT_SECTION_ID = 'getting-started'
 
-function sectionById(id) {
+function sectionById(id: any) {
   return FAQ_SECTIONS.find((section) => section.id === id) || null
 }
 
@@ -281,7 +281,7 @@ function HelpSectionBody({ section, shellConfig }: LooseProps) {
   return (
     <>
       <ul>
-        {section.items.map((item) => (
+        {section.items.map((item: any) => (
           <li key={item}>{item}</li>
         ))}
       </ul>
@@ -291,12 +291,12 @@ function HelpSectionBody({ section, shellConfig }: LooseProps) {
             // A link whose href comes from config is dropped when that config
             // is empty rather than rendered dead — an offer of source that
             // goes nowhere is worse than none.
-            .map((link) => ({
+            .map((link: any) => ({
               ...link,
               href: link.fromConfig ? shellConfig[link.fromConfig] : link.href,
             }))
-            .filter((link) => link.href)
-            .map((link) => (
+            .filter((link: any) => link.href)
+            .map((link: any) => (
               <a
                 key={link.key}
                 className="od-help__link"
@@ -350,7 +350,7 @@ export function HelpPage() {
     document.getElementById('od-help-panel')?.scrollIntoView?.({ block: 'start' })
   }, [])
 
-  function selectSection(id) {
+  function selectSection(id: any) {
     if (!sectionById(id)) return
     setActiveId(id)
     // Choosing a card while reading straight through means "just this one".
@@ -360,7 +360,7 @@ export function HelpPage() {
   const activeSection = sectionById(activeId) || FAQ_SECTIONS[0]
   const foldLabel = readAll ? 'Collapse all' : 'Expand all'
 
-  const foldButton = (className) => (
+  const foldButton = (className: any) => (
     <button
       type="button"
       className={className}

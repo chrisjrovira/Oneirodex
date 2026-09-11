@@ -40,10 +40,10 @@ export function AddToCollection({
   onAdded,
 }: LooseProps) {
   const [open, setOpen] = useState(false)
-  const [collections, setCollections] = useState(null)
-  const [error, setError] = useState(null)
-  const [busyUuid, setBusyUuid] = useState(null)
-  const abortRef = useRef(null)
+  const [collections, setCollections] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
+  const [busyUuid, setBusyUuid] = useState<any>(null)
+  const abortRef = useRef<any>(null)
 
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -59,9 +59,9 @@ export function AddToCollection({
         // System shelves (Favorites and friends) are maintained by the product,
         // not by hand — offering to add to one would be a control that either
         // fails or quietly does something else.
-        setCollections(rows.filter((row) => !row.is_system && row.can_edit !== false))
+        setCollections(rows.filter((row: any) => !row.is_system && row.can_edit !== false))
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (err?.name === 'AbortError') return
         setError(err)
       })
@@ -74,7 +74,7 @@ export function AddToCollection({
     })
   }
 
-  async function add(collection) {
+  async function add(collection: any) {
     setBusyUuid(collection.uuid)
     try {
       await addCollectionItem(collection.uuid, gameUuid)
@@ -84,7 +84,7 @@ export function AddToCollection({
       )
       setOpen(false)
       onAdded?.()
-    } catch (err) {
+    } catch (err: any) {
       showToast(err?.message || 'Could not add to that shelf.', 'error')
     } finally {
       setBusyUuid(null)
@@ -126,7 +126,7 @@ export function AddToCollection({
             <p className="od-add-collection__note">No shelves yet — make one from Collections.</p>
           ) : null}
 
-          {collections?.map((collection) => (
+          {collections?.map((collection: any) => (
             <button
               key={collection.uuid}
               type="button"

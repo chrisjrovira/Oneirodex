@@ -27,7 +27,7 @@ export async function createRequest({ title, notes }: LooseProps = {}) {
   return response.json()
 }
 
-export async function deleteRequest(id) {
+export async function deleteRequest(id: any) {
   const response = await fetch(`/api/requests/${id}`, {
     method: 'DELETE',
     credentials: 'same-origin',
@@ -41,7 +41,7 @@ export async function deleteRequest(id) {
   return response.json()
 }
 
-export async function resolveRequest(id, { status, notes, linkedGameUuid }: LooseProps = {}) {
+export async function resolveRequest(id: any, { status, notes, linkedGameUuid }: LooseProps = {}) {
   const payload: LooseProps = { status }
   if (notes) {
     payload.notes = notes

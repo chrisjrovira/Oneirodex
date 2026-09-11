@@ -35,7 +35,7 @@ export async function fetchDiscoverSections({ signal }: LooseProps = {}) {
  * first window, and the row page paging through the whole thing.
  */
 export async function fetchDiscoverRow(
-  identifier,
+  identifier: any,
   { offset = 0, limit, feedToken, signal }: LooseProps = {},
 ) {
   const params = new URLSearchParams({ offset: String(offset) })
@@ -81,7 +81,7 @@ export async function fetchDiscoverRow(
 /**
  * One zone: the feed narrowed to the rows that belong to that surface.
  */
-export async function fetchDiscoverZone(slug, { signal }: LooseProps = {}) {
+export async function fetchDiscoverZone(slug: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/discover/zones/${encodeURIComponent(slug)}`, {
     credentials: 'same-origin',
     signal,
@@ -115,7 +115,7 @@ export async function fetchDiscoverZone(slug, { signal }: LooseProps = {}) {
 /**
  * Virtual Discover shelves for one genre (unplayed / newest / loved).
  */
-export async function fetchGenreHub(genre, { signal }: LooseProps = {}) {
+export async function fetchGenreHub(genre: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/discover/hubs/genre/${encodeURIComponent(genre)}`, {
     credentials: 'same-origin',
     signal,

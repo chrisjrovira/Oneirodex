@@ -13,14 +13,17 @@ import { PageStatus } from './components/PageStatus'
  * immediately. The feed only honours arrangement on the next load, which made
  * the heading buttons look dead.
  */
-export function arrangeDiscoverSections(sections, { pins = [], hidden = [] }: LooseProps = {}) {
+export function arrangeDiscoverSections(
+  sections: any,
+  { pins = [], hidden = [] }: LooseProps = {},
+) {
   const hiddenSet = new Set(hidden.map(String))
-  const shown = sections.filter((section) => {
+  const shown = sections.filter((section: any) => {
     if (hiddenSet.has(String(section.identifier || ''))) return false
     return rowItems(section).length > 0
   })
   if (!pins.length) return shown
-  const pinIndex = new Map(pins.map((id, i) => [String(id), i]))
+  const pinIndex = new Map(pins.map((id: any, i: any) => [String(id), i]))
   const pinned = []
   const rest = []
   for (const section of shown) {
@@ -37,19 +40,19 @@ export function arrangeDiscoverSections(sections, { pins = [], hidden = [] }: Lo
 export function DiscoverApp() {
   const { isAdmin } = useViewer()
   const shellConfig = useShellConfig()
-  const [sections, setSections] = useState([])
+  const [sections, setSections] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [pins, setPins] = useState([])
-  const [hidden, setHidden] = useState([])
+  const [error, setError] = useState<any>(null)
+  const [pins, setPins] = useState<any[]>([])
+  const [hidden, setHidden] = useState<any[]>([])
   const [maxPins, setMaxPins] = useState(0)
   // Every row the feed can show, hidden ones included. The sections payload
   // only carries what is actually rendered, so a hidden row is absent from it
   // by construction — which is exactly the row the settings panel has to be
   // able to list. Kept from the arrangement response, which is derived from
   // `resolve_feed` and therefore always the complete set.
-  const [known, setKnown] = useState([])
-  const [zones, setZones] = useState([])
+  const [known, setKnown] = useState<any[]>([])
+  const [zones, setZones] = useState<any[]>([])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -63,7 +66,7 @@ export function DiscoverApp() {
         setZones(next.zones)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (cancelled || err?.name === 'AbortError') return
         setError(true)
         setLoading(false)
@@ -74,7 +77,7 @@ export function DiscoverApp() {
     }
   }, [])
 
-  const loadArrangement = useCallback((signal) => {
+  const loadArrangement = useCallback((signal: any) => {
     return fetchDiscoverPins({ signal })
       .then((state) => {
         setPins(state.pins)
@@ -114,7 +117,7 @@ export function DiscoverApp() {
   }, [])
 
   const commit = useCallback(
-    (next, previous) => {
+    (next: any, previous: any) => {
       saveDiscoverPins(next)
         .then(() => reloadFeed())
         .catch(() => {
@@ -126,7 +129,7 @@ export function DiscoverApp() {
   )
 
   const togglePin = useCallback(
-    (identifier) => {
+    (identifier: any) => {
       setPins((current) => {
         const next = current.includes(identifier)
           ? current.filter((pin) => pin !== identifier)
@@ -139,7 +142,7 @@ export function DiscoverApp() {
   )
 
   const toggleHidden = useCallback(
-    (identifier) => {
+    (identifier: any) => {
       setHidden((current) => {
         const next = current.includes(identifier)
           ? current.filter((row) => row !== identifier)
@@ -163,7 +166,7 @@ export function DiscoverApp() {
 
   /** Move a pinned row one place up (-1) or down (+1) in the member's order. */
   const movePin = useCallback(
-    (identifier, delta) => {
+    (identifier: any, delta: any) => {
       setPins((current) => {
         const from = current.indexOf(identifier)
         const to = from + delta
@@ -252,7 +255,7 @@ export function DiscoverApp() {
     <>
       {bar}
       <DiscoverZoneStrip zones={zones} />
-      {visible.map((section) => {
+      {visible.map((section: any) => {
         const identifier = String(section.identifier || section.title || 'section')
         return (
           <DiscoverShelf
@@ -273,7 +276,7 @@ export function DiscoverApp() {
 }
 
 /** "free_this_week" → "Free this week". Only used for a row we cannot name. */
-export function prettifyIdentifier(identifier) {
+export function prettifyIdentifier(identifier: any) {
   const words = String(identifier || '')
     .replace(/[_:-]+/g, ' ')
     .trim()

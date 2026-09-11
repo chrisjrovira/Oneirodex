@@ -4,7 +4,7 @@ const OS_TABS = [
   ['linux', 'Linux'],
 ]
 
-function flagCell(on) {
+function flagCell(on: any) {
   return on ? 'Yes' : '—'
 }
 
@@ -72,7 +72,7 @@ export function DetailsStoreSpecs({ storeSpecs }: LooseProps) {
                 </tr>
               </thead>
               <tbody>
-                {languages.map((row) => (
+                {languages.map((row: any) => (
                   <tr key={row.name}>
                     <th scope="row">{row.name}</th>
                     <td>{flagCell(row.interface)}</td>

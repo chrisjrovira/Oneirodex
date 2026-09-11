@@ -4,7 +4,7 @@ import { csrfHeaders } from '@oneirodex/ui'
 import { errorFromBody } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
 
-function partyRoomForGame(gameUuid) {
+function partyRoomForGame(gameUuid: any) {
   const id = (gameUuid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
   return id ? `household:party:${id}` : 'household:lobby'
 }
@@ -26,12 +26,12 @@ export function VoiceLobby({
   roomLabel = '',
 }: LooseProps) {
   const initialRoom = fixedRoom || (gameUuid ? partyRoomForGame(gameUuid) : defaultRoom)
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState<any>(null)
   const [room, setRoom] = useState(initialRoom)
   const [screenshare, setScreenshare] = useState(Boolean(defaultScreenshare))
   const [spectator, setSpectator] = useState(false)
-  const [tokenInfo, setTokenInfo] = useState(null)
-  const [error, setError] = useState(null)
+  const [tokenInfo, setTokenInfo] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function VoiceLobby({
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw errorFromBody(data, response.status, 'Token failed')
       setTokenInfo(data)
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Join failed')
     } finally {
       setBusy(false)

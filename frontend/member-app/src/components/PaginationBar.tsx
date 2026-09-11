@@ -22,7 +22,7 @@ export function PaginationBar({
   perPage,
   onPageChange,
   onPerPageChange,
-  t = (key, vars: LooseProps = {}) => {
+  t = (key: any, vars: LooseProps = {}) => {
     if (key === 'Page {page} of {pages}') {
       return `Page ${vars.page} of ${vars.pages}`
     }

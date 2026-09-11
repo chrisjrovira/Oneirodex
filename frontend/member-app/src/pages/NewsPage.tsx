@@ -9,15 +9,15 @@ import { PageStatus } from '../components/PageStatus'
 import './NewsPage.css'
 import { useShellConfig } from '@oneirodex/ui'
 
-function formatEndsAt(value) {
+function formatEndsAt(value: any) {
   if (!value) {
     return null
   }
   return formatLocaleDate(value, { fallback: null })
 }
 
-function storeLabel(store) {
-  const map = {
+function storeLabel(store: any) {
+  const map: Record<string, string> = {
     steam: 'Steam',
     epic: 'Epic',
     gog: 'GOG',
@@ -29,7 +29,7 @@ function storeLabel(store) {
   return map[store] || store || 'Store'
 }
 
-function truncate(text, max = 140) {
+function truncate(text: any, max = 140) {
   const value = String(text || '').trim()
   if (value.length <= max) return value
   return `${value.slice(0, max - 1).trim()}…`
@@ -70,7 +70,7 @@ function readNewsLayout() {
   return 'card'
 }
 
-function persistNewsLayout(value) {
+function persistNewsLayout(value: any) {
   try {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, value)
   } catch {
@@ -81,10 +81,10 @@ function persistNewsLayout(value) {
 export function NewsPage() {
   const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [announcements, setAnnouncements] = useState(null)
-  const [freeGames, setFreeGames] = useState(null)
-  const [headlines, setHeadlines] = useState(null)
-  const [sources, setSources] = useState([])
+  const [announcements, setAnnouncements] = useState<any>(null)
+  const [freeGames, setFreeGames] = useState<any>(null)
+  const [headlines, setHeadlines] = useState<any>(null)
+  const [sources, setSources] = useState<any[]>([])
   // Which sites the reader has switched off. Kept client-side: this is a view
   // preference over a list the operator controls, not account state, and a
   // schema column for "I do not care for that site" would be heavier than the
@@ -96,24 +96,24 @@ export function NewsPage() {
       return new Set()
     }
   })
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [assistMsg, setAssistMsg] = useState({})
+  const [assistMsg, setAssistMsg] = useState<any>({})
   const [activeTab, setActiveTab] = useState(() => tabFromHash() || 'all')
   const [layout, setLayout] = useState(readNewsLayout)
 
-  function handleLayout(next) {
+  function handleLayout(next: any) {
     setLayout(next)
     persistNewsLayout(next)
   }
 
-  async function claimAssist(item) {
+  async function claimAssist(item: any) {
     if (!item?.id) {
       return
     }
     try {
       const result = await claimFreeGameAssist(item.id)
-      setAssistMsg((prev) => ({
+      setAssistMsg((prev: any) => ({
         ...prev,
         [item.id]: result.message || (result.ok ? 'Ownership updated.' : result.error || 'Failed'),
       }))
@@ -121,8 +121,8 @@ export function NewsPage() {
       if (href && result.ok) {
         window.open(href, '_blank', 'noopener,noreferrer')
       }
-    } catch (err) {
-      setAssistMsg((prev) => ({
+    } catch (err: any) {
+      setAssistMsg((prev: any) => ({
         ...prev,
         [item.id]: err?.message || 'Claim assist failed',
       }))
@@ -184,7 +184,7 @@ export function NewsPage() {
     }
   }, [retryCount])
 
-  function toggleSource(source) {
+  function toggleSource(source: any) {
     setMutedSources((previous) => {
       const next = new Set(previous)
       if (next.has(source)) next.delete(source)
@@ -202,7 +202,7 @@ export function NewsPage() {
   // hero — a muted source promoted to the featured slot would be the one story
   // you asked not to see, in the largest box.
   const visibleHeadlines = useMemo(
-    () => (headlines || []).filter((item) => !mutedSources.has(item.source)),
+    () => (headlines || []).filter((item: any) => !mutedSources.has(item.source)),
     [headlines, mutedSources],
   )
 
@@ -380,7 +380,7 @@ export function NewsPage() {
                 ) : null}
                 {adminRest.length > 0 ? (
                   <ul className="od-news__rail">
-                    {adminRest.map((item) => (
+                    {adminRest.map((item: any) => (
                       <li key={item.id} className="od-news__rail-item od-news__rail-item--admin">
                         <article>
                           <header className="od-news__rail-head">
@@ -422,7 +422,7 @@ export function NewsPage() {
               ) : layout === 'rss' ? (
                 <div className="od-news__panel-body">
                   <ul className="od-news__magazine">
-                    {freeItems.map((item) => {
+                    {freeItems.map((item: any) => {
                       const https = item.links?.https || item.claim_url || item.store_url
                       const protocol = item.links?.protocol
                       const ends = formatEndsAt(item.ends_at)
@@ -471,7 +471,7 @@ export function NewsPage() {
               ) : (
                 <div className="od-news__panel-body">
                   <ul className="od-news__free-strip">
-                    {freeItems.map((item) => {
+                    {freeItems.map((item: any) => {
                       const https = item.links?.https || item.claim_url || item.store_url
                       const protocol = item.links?.protocol
                       const ends = formatEndsAt(item.ends_at)
@@ -605,7 +605,7 @@ export function NewsPage() {
               ) : layout === 'rss' ? (
                 <div className="od-news__panel-body">
                   <ul className="od-news__magazine">
-                    {headlineItems.map((item) => (
+                    {headlineItems.map((item: any) => (
                       <li key={item.url} className="od-news__mag-row">
                         <article>
                           <a
@@ -636,7 +636,7 @@ export function NewsPage() {
                a broken frame. Grid mode keeps this markup and densifies in CSS. */
                 <div className="od-news__panel-body">
                   <ul className="od-news__cards">
-                    {headlineItems.map((item) => (
+                    {headlineItems.map((item: any) => (
                       <li key={item.url} className="od-news__card">
                         <a
                           className="od-news__card-link"

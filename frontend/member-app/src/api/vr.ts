@@ -17,7 +17,7 @@ export async function fetchVrCatalog({ signal, page = 1, perPage = 48 }: LoosePr
   return response.json()
 }
 
-export async function fetchVrGame(gameUuid, { signal }: LooseProps = {}) {
+export async function fetchVrGame(gameUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/vr/games/${encodeURIComponent(gameUuid)}`, {
     signal,
     credentials: 'same-origin',

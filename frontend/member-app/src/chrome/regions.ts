@@ -16,7 +16,7 @@ export const REGION_PREF_ORDER = Object.freeze([
   'OTHER',
 ])
 
-export const REGION_LABELS = Object.freeze({
+export const REGION_LABELS: Record<string, string> = Object.freeze({
   USA: 'United States',
   EUR: 'Europe',
   JPN: 'Japan',
@@ -35,6 +35,6 @@ export const REGION_LABELS = Object.freeze({
 /** Store libraries — not DAT / licensed-catalog surfaces. */
 export const NATIVE_PC_PLATFORMS = Object.freeze(['PCWIN', 'PCDOS', 'MAC', 'OTHER'])
 
-export function isNativePcPlatform(value) {
+export function isNativePcPlatform(value: any) {
   return NATIVE_PC_PLATFORMS.includes(String(value || '').toUpperCase())
 }

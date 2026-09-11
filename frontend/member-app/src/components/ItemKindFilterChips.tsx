@@ -9,7 +9,7 @@ export const ITEM_KIND_FILTER_CHIPS = ITEM_KINDS.map((kind) => ({
   title: ITEM_KIND_LABEL[kind],
 }))
 
-const KIND_ALIASES = Object.freeze({
+const KIND_ALIASES: Record<string, string> = Object.freeze({
   game: 'game',
   games: 'game',
   experience: 'experience',
@@ -33,7 +33,7 @@ const KIND_ALIASES = Object.freeze({
  * @param {string} raw
  * @returns {'game' | 'experience' | 'emulator' | 'tool' | null}
  */
-export function normalizeItemKindToken(raw) {
+export function normalizeItemKindToken(raw: any) {
   const key = String(raw || '')
     .trim()
     .toLowerCase()
@@ -45,7 +45,7 @@ export function normalizeItemKindToken(raw) {
  * @param {string | null | undefined} value
  * @returns {Array<'game' | 'experience' | 'emulator' | 'tool'>}
  */
-export function parseItemKindFilter(value) {
+export function parseItemKindFilter(value: any) {
   if (value == null || value === '') {
     return []
   }
@@ -66,7 +66,7 @@ export function parseItemKindFilter(value) {
  * @param {Iterable<string>} kinds
  * @returns {string}
  */
-export function formatItemKindFilter(kinds) {
+export function formatItemKindFilter(kinds: any) {
   const selected = new Set(parseItemKindFilter([...kinds].join(',')))
   return ITEM_KINDS.filter((kind) => selected.has(kind)).join(',')
 }
@@ -75,7 +75,7 @@ export function formatItemKindFilter(kinds) {
  * @param {URLSearchParams} searchParams
  * @returns {Record<string, string>}
  */
-export function itemKindFromSearchParams(searchParams) {
+export function itemKindFromSearchParams(searchParams: any) {
   const raw = searchParams.get('item_kind') ?? searchParams.get('content_kind')
   const formatted = formatItemKindFilter(parseItemKindFilter(raw))
   return formatted ? { item_kind: formatted } : {}
@@ -89,7 +89,7 @@ export function itemKindFromSearchParams(searchParams) {
  * @param {(next: object) => void} onApply
  * @param {(filters: object) => object} cleanFilters
  */
-export function toggleItemKindFilter(filters, kind, onApply, cleanFilters) {
+export function toggleItemKindFilter(filters: any, kind: any, onApply: any, cleanFilters: any) {
   const canonical = normalizeItemKindToken(kind)
   if (!canonical) {
     onApply(cleanFilters({ ...filters }))
@@ -116,7 +116,7 @@ export function ItemKindFilterChips({
   filters,
   onApply,
   cleanFilters,
-  t = (key) => key,
+  t = (key: any) => key,
 }: LooseProps) {
   const selected = new Set(parseItemKindFilter(filters.item_kind))
   return (

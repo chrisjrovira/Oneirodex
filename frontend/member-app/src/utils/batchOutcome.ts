@@ -3,7 +3,7 @@
  * @param {unknown} list
  * @returns {number}
  */
-export function countBatchItems(list) {
+export function countBatchItems(list: any) {
   return Array.isArray(list) ? list.length : 0
 }
 
@@ -11,7 +11,7 @@ export function countBatchItems(list) {
  * @param {unknown} list
  * @returns {string[]}
  */
-export function batchItemUuids(list) {
+export function batchItemUuids(list: any) {
   if (!Array.isArray(list)) {
     return []
   }
@@ -35,8 +35,8 @@ export function batchItemUuids(list) {
  * @param {{ actionLabel?: string, successVerb?: string, t?: (s: string) => string }} [options]
  * @returns {{ message: string, tone: 'success'|'warn'|'error'|'info', updated: number, skipped: number, errors: number }}
  */
-export function summarizeBatchOutcome(outcome, options: LooseProps = {}) {
-  const t = options.t || ((s) => s)
+export function summarizeBatchOutcome(outcome: any, options: LooseProps = {}) {
+  const t = options.t || ((s: any) => s)
   const successList =
     outcome?.updated !== undefined && outcome?.updated !== null ? outcome.updated : outcome?.queued
   const updated = countBatchItems(successList)

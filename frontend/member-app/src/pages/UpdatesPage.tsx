@@ -23,27 +23,30 @@ const CALENDAR_TEASER_LIMIT = 5
 export function UpdatesPage() {
   const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [items, setItems] = useState(null)
-  const [error, setError] = useState(null)
+  const [items, setItems] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [query, setQuery] = useState('')
   const [source, setSource] = useState('all')
   const [searching, setSearching] = useState(false)
-  const [hits, setHits] = useState(null)
-  const [searchError, setSearchError] = useState(null)
-  const [busyKey, setBusyKey] = useState(null)
-  const [statusByUuid, setStatusByUuid] = useState({})
+  const [hits, setHits] = useState<any>(null)
+  const [searchError, setSearchError] = useState<any>(null)
+  const [busyKey, setBusyKey] = useState<any>(null)
+  const [statusByUuid, setStatusByUuid] = useState<any>({})
   const [manualRefreshing, setManualRefreshing] = useState(false)
-  const [lastUpdatedAt, setLastUpdatedAt] = useState(null)
-  const [calendarTeaser, setCalendarTeaser] = useState(null)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<any>(null)
+  const [calendarTeaser, setCalendarTeaser] = useState<any>(null)
   // Library sweep, separate from the inbox refresh. Refresh re-reads what the
   // last probe found; this makes a new probe happen. Conflating them is what
   // left a member with no way to fill an empty inbox — see POST /api/updates/scan.
   const [scanning, setScanning] = useState(false)
-  const [scanResult, setScanResult] = useState(null)
+  const [scanResult, setScanResult] = useState<any>(null)
   const searchRequestId = useRef(0)
   const hasItemsRef = useRef(false)
-  const inboxRequestRef = useRef({ id: 0, controller: null })
+  const inboxRequestRef = useRef<{ id: number; controller: AbortController | null }>({
+    id: 0,
+    controller: null,
+  })
 
   const refreshInbox = useCallback((sourceMode = 'boot') => {
     const isManual = sourceMode === 'manual'
@@ -68,7 +71,7 @@ export function UpdatesPage() {
         setLastUpdatedAt(new Date())
         hasItemsRef.current = true
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (err.name === 'AbortError') return
         if (inboxRequestRef.current.id !== id) return
         setError(err)
@@ -138,7 +141,7 @@ export function UpdatesPage() {
         const releases = Array.isArray(data.releases) ? data.releases : []
         setCalendarTeaser(releases.slice(0, CALENDAR_TEASER_LIMIT))
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (!active || err.name === 'AbortError') return
         setCalendarTeaser([])
       })
@@ -148,7 +151,7 @@ export function UpdatesPage() {
     }
   }, [])
 
-  async function handleSearch(event) {
+  async function handleSearch(event: any) {
     event.preventDefault()
     const q = query.trim()
     if (!q) {
@@ -164,7 +167,7 @@ export function UpdatesPage() {
         return
       }
       setHits(Array.isArray(data.results) ? data.results : [])
-    } catch (err) {
+    } catch (err: any) {
       if (requestId !== searchRequestId.current) {
         return
       }
@@ -176,7 +179,7 @@ export function UpdatesPage() {
     }
   }
 
-  async function applyPack(game, pack) {
+  async function applyPack(game: any, pack: any) {
     if (!pack?.uuid) {
       return
     }
@@ -187,13 +190,13 @@ export function UpdatesPage() {
         kind: pack.kind,
         versionUuid: pack.uuid,
       })
-      setStatusByUuid((prev) => ({
+      setStatusByUuid((prev: any) => ({
         ...prev,
         [game.uuid]: `${pack.kind} queued for companion`,
       }))
       showToast(`${pack.label} queued for companion`, 'success')
-    } catch (err) {
-      setStatusByUuid((prev) => ({
+    } catch (err: any) {
+      setStatusByUuid((prev: any) => ({
         ...prev,
         [game.uuid]: err?.message || 'Failed to queue apply',
       }))
@@ -221,7 +224,7 @@ export function UpdatesPage() {
       // member sees a toast saying titles are behind and a list that has not
       // changed.
       await refreshInbox('manual')
-    } catch (err) {
+    } catch (err: any) {
       showToast(err?.message || 'Could not check for updates.', 'error')
     } finally {
       setScanning(false)
@@ -347,7 +350,7 @@ export function UpdatesPage() {
 
           {!error && items && items.length > 0 ? (
             <ul className="od-updates__list od-updates__inbox-list">
-              {items.map((game) => {
+              {items.map((game: any) => {
                 const pack = game.latest_update || game.latest_extra
                 const applyKey = pack ? `${game.uuid}:${pack.uuid}` : null
                 return (
@@ -442,7 +445,7 @@ export function UpdatesPage() {
           {hits && hits.length === 0 ? <p>No store hits.</p> : null}
           {hits && hits.length > 0 ? (
             <ul className="od-updates__list">
-              {hits.map((hit, index) => (
+              {hits.map((hit: any, index: any) => (
                 <li key={`${hit.source}-${hit.steam_app_id || hit.gog_id || hit.url || index}`}>
                   <div className="od-updates__inbox-item">
                     <div className="od-updates__inbox-main">
@@ -484,7 +487,7 @@ export function UpdatesPage() {
                               .then(() => {
                                 showToast('Added to wanted updates', 'success')
                               })
-                              .catch((err) => {
+                              .catch((err: any) => {
                                 showToast(err?.message || 'Wanted failed', 'error')
                               })
                           }}
@@ -522,7 +525,7 @@ export function UpdatesPage() {
           ) : null}
           {calendarTeaser && calendarTeaser.length > 0 ? (
             <ul className="od-updates__calendar-list">
-              {calendarTeaser.map((item, index) => (
+              {calendarTeaser.map((item: any, index: any) => (
                 <li
                   key={`${item.igdb_id || item.slug || item.name}-${item.first_release_date || index}`}
                 >

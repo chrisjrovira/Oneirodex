@@ -12,16 +12,16 @@ const TERMINAL_STATUSES = new Set([
 ])
 const POLL_INTERVAL_MS = 5000
 
-function isTerminal(status) {
+function isTerminal(status: any) {
   return TERMINAL_STATUSES.has(String(status || '').toLowerCase())
 }
 
 export function DownloadsPage() {
-  const [downloads, setDownloads] = useState(null)
-  const [error, setError] = useState(null)
+  const [downloads, setDownloads] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [deletingId, setDeletingId] = useState(null)
-  const downloadsRef = useRef([])
+  const [deletingId, setDeletingId] = useState<any>(null)
+  const downloadsRef = useRef<any[]>([])
 
   useEffect(() => {
     downloadsRef.current = downloads || []
@@ -40,7 +40,7 @@ export function DownloadsPage() {
           setDownloads(Array.isArray(result) ? result : [])
         }
       })
-      .catch((requestError) => {
+      .catch((requestError: any) => {
         if (active && requestError.name !== 'AbortError') {
           setError(requestError)
         }
@@ -57,7 +57,7 @@ export function DownloadsPage() {
       return undefined
     }
 
-    const needsPolling = downloads.some((item) => !isTerminal(item.status))
+    const needsPolling = downloads.some((item: any) => !isTerminal(item.status))
     if (!needsPolling) {
       return undefined
     }
@@ -88,13 +88,13 @@ export function DownloadsPage() {
         return
       }
 
-      const byId = new Map(updates.filter(Boolean).map((item) => [item.id, item.status]))
+      const byId = new Map(updates.filter(Boolean).map((item: any) => [item.id, item.status]))
       if (byId.size === 0) {
         return
       }
 
-      setDownloads((current) =>
-        (current || []).map((row) => {
+      setDownloads((current: any) =>
+        (current || []).map((row: any) => {
           if (!byId.has(row.id)) {
             return row
           }
@@ -118,12 +118,12 @@ export function DownloadsPage() {
     }
   }, [downloads])
 
-  async function handleDelete(id) {
+  async function handleDelete(id: any) {
     setDeletingId(id)
     try {
       await deleteDownload(id)
-      setDownloads((current) => (current || []).filter((row) => row.id !== id))
-    } catch (deleteError) {
+      setDownloads((current: any) => (current || []).filter((row: any) => row.id !== id))
+    } catch (deleteError: any) {
       setError(deleteError)
     } finally {
       setDeletingId(null)
@@ -159,7 +159,7 @@ export function DownloadsPage() {
           </tr>
         </thead>
         <tbody>
-          {downloads.map((row) => (
+          {downloads.map((row: any) => (
             <tr key={row.id} data-download-id={row.id}>
               <td>{row.game_name || 'Unknown game'}</td>
               <td>{row.file_name || '—'}</td>

@@ -33,7 +33,7 @@ function useCollapsedGroups() {
     }
   }, [collapsed])
 
-  const toggle = useCallback((id) => {
+  const toggle = useCallback((id: any) => {
     setCollapsed((previous) => {
       const next = new Set(previous)
       if (next.has(id)) next.delete(id)
@@ -87,7 +87,7 @@ export function SideRail({
   // to live before the panel moved into the rail (W27-A6). Hiding the slot
   // rather than the filters themselves keeps LibraryApp's portal working — the
   // rail never has to know what a filter is.
-  const onLibraryClick = (event) => {
+  const onLibraryClick = (event: any) => {
     if (pathname === '/library' || pathname.startsWith('/library/')) {
       event.preventDefault()
       setFiltersHidden((hidden) => !hidden)
@@ -96,7 +96,7 @@ export function SideRail({
     onCloseDrawer?.()
   }
 
-  function renderLink(link) {
+  function renderLink(link: any) {
     // Action entries (Chat, Friends) open panels rather than routing. They are
     // still destinations from the member's point of view, so they belong in the
     // rail next to the routed ones rather than in a separate control.

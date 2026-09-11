@@ -14,7 +14,7 @@
 
 import type { CSSProperties } from 'react'
 
-export const ROOMS = {
+export const ROOMS: Record<string, any> = {
   wood_den_80s: {
     label: '1980s wood den',
     blurb: 'Family television, wood panel, harvest lamp.',
@@ -67,7 +67,7 @@ export const ROOMS = {
 
 export const DEFAULT_ROOM = 'wood_den_80s'
 
-export const LCD_PLATFORMS = {
+export const LCD_PLATFORMS: Record<string, number> = {
   GB: 1,
   GBC: 1,
   GBA: 1,
@@ -86,7 +86,7 @@ export const LCD_PLATFORMS = {
   GAME_WATCH: 1,
 }
 
-const PLATFORM_ROOMS = {
+const PLATFORM_ROOMS: Record<string, string> = {
   NES: 'wood_den_80s',
   SEGA_MS: 'wood_den_80s',
   SEGA_SG1000: 'wood_den_80s',
@@ -178,18 +178,18 @@ const PLATFORM_ROOMS = {
   BBC_MICRO: 'desk',
 }
 
-export function roomIdForPlatform(platformId) {
+export function roomIdForPlatform(platformId: any) {
   const key = String(platformId || '')
     .trim()
     .toUpperCase()
   return PLATFORM_ROOMS[key] || DEFAULT_ROOM
 }
 
-export function roomForPlatform(platformId) {
+export function roomForPlatform(platformId: any) {
   return ROOMS[roomIdForPlatform(platformId)]
 }
 
-export function isLcdPlatform(platformId) {
+export function isLcdPlatform(platformId: any) {
   const key = String(platformId || '')
     .trim()
     .toUpperCase()
@@ -200,7 +200,7 @@ export function isLcdPlatform(platformId) {
  * Inline style for a surface. Returns custom properties only, so the caller
  * decides what to paint with them — nothing is applied globally.
  */
-export function roomStyle(platformId) {
+export function roomStyle(platformId: any) {
   const room = roomForPlatform(platformId)
   return {
     '--od-room-backdrop': room.backdrop,

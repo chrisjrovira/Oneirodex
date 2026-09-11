@@ -16,7 +16,7 @@ function toastHost() {
   return host
 }
 
-function visibleStackable(host) {
+function visibleStackable(host: any) {
   return [...host.children].filter(
     (el) =>
       !el.classList.contains('od-toast--out') &&
@@ -24,12 +24,12 @@ function visibleStackable(host) {
   )
 }
 
-function stackCountOf(el) {
+function stackCountOf(el: any) {
   const n = Number(el.dataset.toastCount)
   return Number.isFinite(n) && n > 0 ? n : 1
 }
 
-function bindToastLifecycle(el, host) {
+function bindToastLifecycle(el: any, host: any) {
   let removeTimer = 0
   let outTimer = 0
 
@@ -63,7 +63,7 @@ function bindToastLifecycle(el, host) {
   return remove
 }
 
-function paintToast(host, message, safeTone, { count, stacked }: LooseProps = {}) {
+function paintToast(host: any, message: any, safeTone: any, { count, stacked }: LooseProps = {}) {
   const el = document.createElement('div')
   el.className = `od-toast od-toast--${safeTone}`
   if (stacked) {
@@ -89,7 +89,7 @@ function paintToast(host, message, safeTone, { count, stacked }: LooseProps = {}
   return dismiss
 }
 
-export function showToast(message, tone = 'info', options: LooseProps = {}) {
+export function showToast(message: any, tone = 'info', options: LooseProps = {}) {
   if (typeof document === 'undefined' || !message) {
     return
   }

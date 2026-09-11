@@ -6,13 +6,13 @@ import './VrPage.css'
 const PER_PAGE = 48
 
 export function VrPage() {
-  const [catalog, setCatalog] = useState(null)
-  const [error, setError] = useState(null)
+  const [catalog, setCatalog] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [page, setPage] = useState(1)
   const [retryCount, setRetryCount] = useState(0)
-  const [selectedUuid, setSelectedUuid] = useState(null)
-  const [detail, setDetail] = useState(null)
-  const [detailError, setDetailError] = useState(null)
+  const [selectedUuid, setSelectedUuid] = useState<any>(null)
+  const [detail, setDetail] = useState<any>(null)
+  const [detailError, setDetailError] = useState<any>(null)
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) {
@@ -35,7 +35,7 @@ export function VrPage() {
           setCatalog(data)
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
         }
@@ -63,7 +63,7 @@ export function VrPage() {
           setDetail(data)
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setDetailError(err)
         }
@@ -103,7 +103,7 @@ export function VrPage() {
 
       {!error && games.length > 0 ? (
         <div className="od-vr__grid">
-          {games.map((game) => (
+          {games.map((game: any) => (
             <button
               key={game.uuid}
               type="button"

@@ -5,7 +5,7 @@ import { PageStatus } from '../components/PageStatus'
 import './PlaytimePage.css'
 import { useResource, useShellConfig } from '@oneirodex/ui'
 
-function formatDuration(totalSeconds) {
+function formatDuration(totalSeconds: any) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
@@ -81,7 +81,7 @@ export function PlaytimePage() {
                   <span className="od-playtime__count">{games.length}</span>
                 </div>
                 <ul className="od-playtime__list">
-                  {games.map((row) => (
+                  {games.map((row: any) => (
                     <li key={row.game_uuid} className="od-playtime__row">
                       <a
                         className="od-playtime__title-link"

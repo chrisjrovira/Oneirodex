@@ -22,12 +22,12 @@ export function DiscoverRowPage() {
   const { isAdmin } = useViewer()
   const shellConfig = useShellConfig()
   const { identifier } = useParams()
-  const [row, setRow] = useState(null)
-  const [games, setGames] = useState([])
+  const [row, setRow] = useState<any>(null)
+  const [games, setGames] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [error, setError] = useState(null)
-  const abortRef = useRef(null)
+  const [error, setError] = useState<any>(null)
+  const abortRef = useRef<any>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -43,7 +43,7 @@ export function DiscoverRowPage() {
         setGames(page.items)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (cancelled || err?.name === 'AbortError') return
         setError(err)
         setLoading(false)
@@ -68,16 +68,16 @@ export function DiscoverRowPage() {
     })
       .then((page) => {
         setGames((current) => {
-          const keyOf = (item) => item.uuid || item.id
+          const keyOf = (item: any) => item.uuid || item.id
           const seen = new Set(current.map(keyOf).filter(Boolean))
           return current.concat(
-            page.items.filter((item) => {
+            page.items.filter((item: any) => {
               const key = keyOf(item)
               return key ? !seen.has(key) : true
             }),
           )
         })
-        setRow((current) => ({
+        setRow((current: any) => ({
           ...current,
           hasMore: page.hasMore,
           total: page.total,
@@ -85,7 +85,7 @@ export function DiscoverRowPage() {
         }))
         setLoadingMore(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (err?.name === 'AbortError') return
         setError(err)
         setLoadingMore(false)

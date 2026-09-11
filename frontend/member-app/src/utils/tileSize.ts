@@ -5,7 +5,7 @@
 
 import type { CSSProperties } from 'react'
 
-const LEGACY_MAP = { S: 25, M: 50, L: 75, XL: 100 }
+const LEGACY_MAP: Record<string, number> = { S: 25, M: 50, L: 75, XL: 100 }
 
 export const TILE_PERCENT_MIN = 0
 export const TILE_PERCENT_MAX = 100
@@ -28,7 +28,7 @@ export const TILE_PX_MIN = 110
 export const TILE_PX_MAX = 300
 
 /** Round to 2 decimal places without leaving trailing-zero float noise. */
-function roundFine(value) {
+function roundFine(value: any) {
   return Math.round(value * 100) / 100
 }
 
@@ -38,7 +38,7 @@ function roundFine(value) {
  * preference / display label) so a `step="any"` slider can feel smooth
  * instead of visibly snapping between integer percents while dragging.
  */
-export function normalizeTilePercent(value) {
+export function normalizeTilePercent(value: any) {
   if (value == null || value === '') return TILE_PERCENT_DEFAULT
   if (typeof value === 'string' && LEGACY_MAP[value.toUpperCase()] != null) {
     return LEGACY_MAP[value.toUpperCase()]
@@ -75,13 +75,13 @@ export const TILE_HOVER_SCALE = 1.25
  * 300px one — but stays a fixed value per size so GameGrid's row estimate and
  * the rendered row agree exactly.
  */
-export function tileTitleHeightPx(percent, showTitles) {
+export function tileTitleHeightPx(percent: any, showTitles: any) {
   if (!showTitles) return 0
   const p = normalizeTilePercent(percent) / 100
   return Math.round(22 + 8 * p)
 }
 
-export function tilePercentToCssVars(percent, showTitles = true) {
+export function tilePercentToCssVars(percent: any, showTitles = true) {
   const p = normalizeTilePercent(percent) / 100
   const minPx = roundFine(TILE_PX_MIN + (TILE_PX_MAX - TILE_PX_MIN) * p)
   const gapPx = roundFine(6 + 10 * p)
@@ -94,12 +94,12 @@ export function tilePercentToCssVars(percent, showTitles = true) {
 }
 
 /** @deprecated Prefer tilePercentToCssVars — kept for older call sites during migrate. */
-export function tileSizeToCssVars(size) {
+export function tileSizeToCssVars(size: any) {
   return tilePercentToCssVars(size)
 }
 
 /** Cap oversized tiles on narrow viewports without changing the saved preference. */
-export function clampTileVarsForNarrowViewport(vars, isNarrow) {
+export function clampTileVarsForNarrowViewport(vars: any, isNarrow: any) {
   if (!isNarrow || !vars) {
     return vars
   }

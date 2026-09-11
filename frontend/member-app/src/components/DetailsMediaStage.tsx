@@ -8,7 +8,7 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function embedWithoutAutoplay(src) {
+function embedWithoutAutoplay(src: any) {
   try {
     const url = new URL(src, window.location.origin)
     url.searchParams.delete('autoplay')
@@ -18,12 +18,12 @@ function embedWithoutAutoplay(src) {
   }
 }
 
-function stageItems(videoEmbeds, shownShots) {
-  const items = []
-  videoEmbeds.forEach((src, index) => {
+function stageItems(videoEmbeds: any, shownShots: any) {
+  const items: any[] = []
+  videoEmbeds.forEach((src: any, index: any) => {
     items.push({ kind: 'video', src, index, key: `v:${src}` })
   })
-  shownShots.forEach((url, index) => {
+  shownShots.forEach((url: any, index: any) => {
     items.push({ kind: 'shot', src: url, index, key: `s:${url}` })
   })
   return items

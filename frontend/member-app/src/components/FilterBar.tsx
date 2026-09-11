@@ -8,7 +8,7 @@ import {
   toggleItemKindFilter,
 } from './ItemKindFilterChips'
 
-const EMPTY_OPTIONS = {
+const EMPTY_OPTIONS: Record<string, any[]> = {
   libraries: [],
   libraryPlatforms: [],
   igdbPlatforms: [],
@@ -51,7 +51,7 @@ export function readFiltersVisible() {
   return true
 }
 
-export function writeFiltersVisible(visible) {
+export function writeFiltersVisible(visible: any) {
   try {
     window.localStorage?.setItem(FILTERS_VISIBLE_KEY, visible ? '1' : '0')
   } catch {
@@ -59,7 +59,7 @@ export function writeFiltersVisible(visible) {
   }
 }
 
-export function cleanFilters(filters) {
+export function cleanFilters(filters: any) {
   return Object.fromEntries(
     Object.entries(filters).filter(([key, value]) => {
       if (value === '' || value === undefined || value === null) {
@@ -109,7 +109,7 @@ export function LibraryFiltersCollapseToggle({
   collapsed,
   onToggle,
   controlsId,
-  t = (key) => key,
+  t = (key: any) => key,
 }: LooseProps) {
   return (
     <button
@@ -131,7 +131,7 @@ export function FilterBar({
   onApply,
   onClear,
   onLiveSearch,
-  t = (key) => key,
+  t = (key: any) => key,
   // UIR-2: the two-bar chrome promotes Kind to a segmented control in the
   // context bar. Rendering it here as well would give one filter two controls,
   // so the panel yields ownership rather than duplicating it.
@@ -140,7 +140,7 @@ export function FilterBar({
   const [draft, setDraft] = useState(filters)
   const [options, setOptions] = useState(EMPTY_OPTIONS)
   const [loadError, setLoadError] = useState(false)
-  const searchTimerRef = useRef(null)
+  const searchTimerRef = useRef<any>(null)
   const draftRef = useRef(draft)
   draftRef.current = draft
 
@@ -152,7 +152,7 @@ export function FilterBar({
     const controller = new AbortController()
     fetchFilterOptions({ signal: controller.signal })
       .then(setOptions)
-      .catch((error) => {
+      .catch((error: any) => {
         if (error.name !== 'AbortError') {
           setLoadError(true)
         }
@@ -170,14 +170,14 @@ export function FilterBar({
     [],
   )
 
-  const update = (event) => {
-    setDraft((current) => ({
+  const update = (event: any) => {
+    setDraft((current: any) => ({
       ...current,
       [event.target.name]: event.target.value,
     }))
   }
 
-  const applyLiveName = (nameValue) => {
+  const applyLiveName = (nameValue: any) => {
     const next = cleanFilters({
       ...draftRef.current,
       name: typeof nameValue === 'string' ? nameValue.trim() : nameValue,
@@ -189,9 +189,9 @@ export function FilterBar({
     }
   }
 
-  const onSearchChange = (event) => {
+  const onSearchChange = (event: any) => {
     const value = event.target.value
-    setDraft((current) => ({
+    setDraft((current: any) => ({
       ...current,
       name: value,
     }))
@@ -203,7 +203,7 @@ export function FilterBar({
     }, LIBRARY_SEARCH_DEBOUNCE_MS)
   }
 
-  const submit = (event) => {
+  const submit = (event: any) => {
     event.preventDefault()
     if (searchTimerRef.current) {
       clearTimeout(searchTimerRef.current)
@@ -221,7 +221,7 @@ export function FilterBar({
     onClear()
   }
 
-  const applyBadgeToggle = (next) => {
+  const applyBadgeToggle = (next: any) => {
     setDraft(next)
     onApply(next)
   }
@@ -311,7 +311,7 @@ export function FilterBar({
               onChange={update}
             >
               <option value="">{emptyLabel}</option>
-              {options[source].map((option) => (
+              {options[source].map((option: any) => (
                 <option key={option.id ?? option[valueField]} value={option[valueField]}>
                   {option[textField]}
                 </option>

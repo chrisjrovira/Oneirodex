@@ -49,7 +49,7 @@ export async function markNotificationsRead({ all = false, ids }: LooseProps = {
   return response.ok
 }
 
-export async function saveNotificationPreferences(patch) {
+export async function saveNotificationPreferences(patch: any) {
   const response = await fetch('/api/notifications/preferences', {
     method: 'POST',
     credentials: 'same-origin',

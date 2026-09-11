@@ -12,9 +12,9 @@ import {
  */
 const PINNED_BADGE_KINDS = new Set(['VR', 'MISSING'])
 
-function capWithPinnedStatus(badges, maxVisible = 2) {
-  const pinned = badges.filter((badge) => PINNED_BADGE_KINDS.has(badge.kind))
-  const rest = badges.filter((badge) => !PINNED_BADGE_KINDS.has(badge.kind))
+function capWithPinnedStatus(badges: any, maxVisible = 2) {
+  const pinned = badges.filter((badge: any) => PINNED_BADGE_KINDS.has(badge.kind))
+  const rest = badges.filter((badge: any) => !PINNED_BADGE_KINDS.has(badge.kind))
   const { visible: restVisible, overflow } = capBadges(rest, maxVisible)
   if (pinned.length === 0) {
     return { visible: restVisible, overflow }
@@ -71,7 +71,7 @@ export function BadgeStack({
 
   const { hasVr, hasMissing } = layout
 
-  function handleDismiss(kind, event) {
+  function handleDismiss(kind: any, event: any) {
     if (PINNED_BADGE_KINDS.has(kind)) {
       return
     }
@@ -81,7 +81,7 @@ export function BadgeStack({
     setDismissTick((n) => n + 1)
   }
 
-  function handleRestore(event) {
+  function handleRestore(event: any) {
     event.preventDefault()
     event.stopPropagation()
     clearDismissedBadges(game?.uuid)
@@ -123,7 +123,7 @@ export function BadgeStack({
           data-vr-in-stack={hasVr && slot.corner === 'top-left' ? 'top-left' : undefined}
           data-missing-in-stack={hasMissing && slot.corner === 'top-left' ? 'top-left' : undefined}
         >
-          {slot.badges.map((badge) => (
+          {slot.badges.map((badge: any) => (
             <span
               key={badge.kind}
               className={`od-badge od-badge--${badge.tone}`}

@@ -1,5 +1,5 @@
 import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
-function requestError(label, response, data = undefined) {
+function requestError(label: any, response: any, data = undefined) {
   return errorFromBody(data, response.status, label)
 }
 
@@ -16,7 +16,7 @@ export async function fetchCollections({ signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function fetchCollection(collectionUuid, { signal }: LooseProps = {}) {
+export async function fetchCollection(collectionUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/collections/${encodeURIComponent(collectionUuid)}`, {
     signal,
     credentials: 'same-origin',
@@ -51,7 +51,7 @@ export async function createCollection({ name, description = '', isPublic = true
 }
 
 export async function updateCollection(
-  collectionUuid,
+  collectionUuid: any,
   { name, description, isPublic }: LooseProps = {},
 ) {
   const body: LooseProps = {}
@@ -81,7 +81,7 @@ export async function updateCollection(
   return data
 }
 
-export async function deleteCollection(collectionUuid) {
+export async function deleteCollection(collectionUuid: any) {
   const response = await fetch(`/api/collections/${encodeURIComponent(collectionUuid)}`, {
     method: 'DELETE',
     credentials: 'same-origin',
@@ -97,7 +97,7 @@ export async function deleteCollection(collectionUuid) {
   return data
 }
 
-export async function reorderCollectionItems(collectionUuid, gameUuids) {
+export async function reorderCollectionItems(collectionUuid: any, gameUuids: any) {
   const response = await fetch(
     `/api/collections/${encodeURIComponent(collectionUuid)}/items/order`,
     {
@@ -117,7 +117,7 @@ export async function reorderCollectionItems(collectionUuid, gameUuids) {
   return data
 }
 
-export async function addCollectionItem(collectionUuid, gameUuid) {
+export async function addCollectionItem(collectionUuid: any, gameUuid: any) {
   const response = await fetch(`/api/collections/${encodeURIComponent(collectionUuid)}/items`, {
     method: 'POST',
     credentials: 'same-origin',
@@ -134,7 +134,7 @@ export async function addCollectionItem(collectionUuid, gameUuid) {
   return data
 }
 
-export async function removeCollectionItem(collectionUuid, gameUuid) {
+export async function removeCollectionItem(collectionUuid: any, gameUuid: any) {
   const response = await fetch(
     `/api/collections/${encodeURIComponent(collectionUuid)}/items/${encodeURIComponent(gameUuid)}`,
     {
@@ -153,7 +153,7 @@ export async function removeCollectionItem(collectionUuid, gameUuid) {
   return data
 }
 
-export async function searchGames(query, { signal, limit = 20 }: LooseProps = {}) {
+export async function searchGames(query: any, { signal, limit = 20 }: LooseProps = {}) {
   const trimmed = (query || '').trim()
   if (!trimmed) {
     return []

@@ -14,7 +14,7 @@ const DEFAULT_PER_PAGE = 48
 const GAMEPAD_DEADZONE = 0.5
 const GAMEPAD_REPEAT_MS = 220
 
-function badgeBits(game) {
+function badgeBits(game: any) {
   const bits = []
   if (game.owned || game.store_owned) {
     bits.push('OWNED')
@@ -38,15 +38,15 @@ function badgeBits(game) {
   return bits
 }
 
-function gameDetailsUrl(uuid) {
+function gameDetailsUrl(uuid: any) {
   return `/game_details/${encodeURIComponent(uuid)}`
 }
 
-function downloadUrl(uuid) {
+function downloadUrl(uuid: any) {
   return `/download_game/${encodeURIComponent(uuid)}`
 }
 
-function attractUrl(uuid) {
+function attractUrl(uuid: any) {
   const qs = new URLSearchParams({ attract_mode: 'true' })
   if (uuid) {
     qs.set('game', uuid)
@@ -57,7 +57,7 @@ function attractUrl(uuid) {
 function focusGameFromQuery() {
   try {
     return new URLSearchParams(window.location.search).get('game') || ''
-  } catch (_err) {
+  } catch (_err: any) {
     return ''
   }
 }
@@ -65,13 +65,13 @@ function focusGameFromQuery() {
 export function BigPicturePage() {
   const shellConfig = useShellConfig()
   const perPage = Number(shellConfig.perPage) || DEFAULT_PER_PAGE
-  const [games, setGames] = useState(null)
-  const [error, setError] = useState(null)
+  const [games, setGames] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [index, setIndex] = useState(0)
   // Default closed so /api/activity/stream is not held open on enter (SSE gate).
   const [socialOpen, setSocialOpen] = useState(false)
-  const tileRefs = useRef([])
+  const tileRefs = useRef<any[]>([])
   const autoFocused = useRef(false)
   const padState = useRef<{
     games: LooseProps[]
@@ -95,12 +95,12 @@ export function BigPicturePage() {
         }
         const list = Array.isArray(data.games) ? data.games : []
         const wanted = focusGameFromQuery()
-        const found = wanted ? list.findIndex((game) => game.uuid === wanted) : -1
+        const found = wanted ? list.findIndex((game: any) => game.uuid === wanted) : -1
         tileRefs.current = []
         setGames(list)
         setIndex(found >= 0 ? found : 0)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
         }
@@ -116,7 +116,7 @@ export function BigPicturePage() {
   const selected = list[index] || null
   const loading = !error && games === null
 
-  const select = (nextIndex) => {
+  const select = (nextIndex: any) => {
     if (!list.length) {
       return
     }
@@ -209,7 +209,7 @@ export function BigPicturePage() {
     return () => cancelAnimationFrame(frame)
   }, [])
 
-  const onKeyDown = (event) => {
+  const onKeyDown = (event: any) => {
     if (event.key === 'b' || event.key === 'B') {
       event.preventDefault()
       window.location.href = attractUrl(selected?.uuid)
@@ -369,7 +369,7 @@ export function BigPicturePage() {
               aria-label="Game rail"
               onKeyDown={onKeyDown}
             >
-              {list.map((game, i) => (
+              {list.map((game: any, i: any) => (
                 <a
                   key={game.uuid}
                   ref={(element) => {

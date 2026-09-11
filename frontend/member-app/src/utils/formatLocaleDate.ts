@@ -4,7 +4,7 @@
  * @param {{ fallback?: string, includeTime?: boolean, compact?: boolean }} [options]
  * @returns {string}
  */
-export function formatLocaleDate(value, options: LooseProps = {}) {
+export function formatLocaleDate(value: any, options: LooseProps = {}) {
   const fallback = options.fallback ?? '—'
   if (value === null || value === undefined || value === '') {
     return fallback

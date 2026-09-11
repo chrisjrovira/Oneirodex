@@ -32,7 +32,7 @@ function useCollapsedFamilies() {
     }
   }, [collapsed])
 
-  const toggle = useCallback((id) => {
+  const toggle = useCallback((id: any) => {
     setCollapsed((previous) => {
       const next = new Set(previous)
       if (next.has(id)) next.delete(id)
@@ -77,7 +77,7 @@ function SystemMark({ platformValue, family }: LooseProps) {
 
 const FAMILY_ORDER = ['nintendo', 'sony', 'xbox', 'sega', 'pc', 'atari']
 
-const FAMILY_LABELS = {
+const FAMILY_LABELS: Record<string, string> = {
   nintendo: 'Nintendo',
   sony: 'Sony',
   xbox: 'Xbox',
@@ -86,7 +86,7 @@ const FAMILY_LABELS = {
   atari: 'Retro & Classic',
 }
 
-function playModeLabel(mode) {
+function playModeLabel(mode: any) {
   if (mode === 'browser') {
     return 'Browser'
   }
@@ -99,7 +99,7 @@ function playModeLabel(mode) {
   return null
 }
 
-function groupPlatforms(platforms) {
+function groupPlatforms(platforms: any) {
   const groups = new Map()
   for (const platform of platforms) {
     const family = familyForPlatform(platform.value || platform.id)
@@ -116,8 +116,8 @@ function groupPlatforms(platforms) {
 }
 
 export function SystemsPage() {
-  const [platforms, setPlatforms] = useState(null)
-  const [error, setError] = useState(null)
+  const [platforms, setPlatforms] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [collapsedFamilies, toggleFamily] = useCollapsedFamilies()
 
@@ -132,7 +132,7 @@ export function SystemsPage() {
           setPlatforms(Array.isArray(data) ? data : [])
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
           // Keep platforms null so the error/retry UI wins over empty-state.
@@ -215,7 +215,7 @@ export function SystemsPage() {
             </h2>
             {folded ? null : (
               <div className="od-systems-grid">
-                {group.platforms.map((platform) => {
+                {group.platforms.map((platform: any) => {
                   const value = platform.value || platform.id
                   const count = Number(platform.game_count) || 0
                   const modeLabel = playModeLabel(platform.play_mode)
@@ -264,7 +264,7 @@ export function SystemsPage() {
                               className="od-systems-tile__regions"
                               aria-label="Set completion by region"
                             >
-                              {platform.set_completion_regions.map((regionRow) => {
+                              {platform.set_completion_regions.map((regionRow: any) => {
                                 const pct = Number(regionRow.percent) || 0
                                 const heat =
                                   pct >= 90 ? 'high' : pct >= 50 ? 'mid' : pct > 0 ? 'low' : 'empty'

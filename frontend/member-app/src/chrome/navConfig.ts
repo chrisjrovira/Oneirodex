@@ -106,7 +106,7 @@ export function getMoreGroups(options: LooseProps = {}) {
 
   // Anything not named above still has to appear somewhere: a link added to
   // getMoreLinks without being grouped must not silently vanish from the menu.
-  const placed = new Set(grouped.flatMap((g) => g.links.map((l) => l.id)))
+  const placed = new Set(grouped.flatMap((g) => g.links.map((l) => l?.id)))
   const rest = [...byId.values()].filter((link) => !placed.has(link.id))
   if (rest.length > 0) {
     grouped.push({ id: 'other', label: 'More', links: rest })
@@ -131,13 +131,13 @@ export function getMoreGroups(options: LooseProps = {}) {
 export const TILE_SIZE_PATHS = ['/discover', '/library', '/favorites']
 
 /** @param {string} pathname */
-export function hasTileSizeControl(pathname) {
+export function hasTileSizeControl(pathname: any) {
   const path = (pathname || '/').replace(/\/+$/, '') || '/'
   if (path.startsWith('/discover/hub')) return false
   return TILE_SIZE_PATHS.some((base) => path === base || path.startsWith(`${base}/`))
 }
 
-const SECTION_HOME = {
+const SECTION_HOME: Record<string, { to: string; label: string }> = {
   '/discover': { to: '/discover', label: 'Home' },
   '/library': { to: '/library', label: 'Game Catalog home' },
   '/systems': { to: '/systems', label: 'Systems home' },
@@ -169,7 +169,7 @@ const SECTION_HOME = {
  * @param {string} pathname
  * @param {{ isAdmin?: boolean }} [opts]
  */
-export function getContextLinks(pathname, { isAdmin = false }: LooseProps = {}) {
+export function getContextLinks(pathname: any, { isAdmin = false }: LooseProps = {}) {
   const path = (pathname || '/').replace(/\/$/, '') || '/'
   const links: LooseProps[] = [{ id: 'home', to: '/discover', label: 'Home' }]
 
@@ -206,7 +206,7 @@ export function getContextLinks(pathname, { isAdmin = false }: LooseProps = {}) 
  * @returns {string} '' when nothing matches — the bar then shows no title
  *   rather than guessing one from the URL.
  */
-export function getPageTitle(pathname, options: LooseProps = {}) {
+export function getPageTitle(pathname: any, options: LooseProps = {}) {
   const path = (pathname || '/').replace(/\/+$/, '') || '/'
   const all = [...getPrimaryLinks(), ...getMoreLinks(options)]
 

@@ -80,7 +80,7 @@ function EmptyState({ initialConfig, t }: LooseProps) {
   return <p>{t('No games match the current filters.')}</p>
 }
 
-function filtersFromSearchParams(searchParams) {
+function filtersFromSearchParams(searchParams: any) {
   const next: LooseProps = {
     ...badgeFiltersFromSearchParams(searchParams),
     ...itemKindFromSearchParams(searchParams),
@@ -116,7 +116,7 @@ function filtersFromSearchParams(searchParams) {
   return next
 }
 
-function searchParamsHaveLibraryFilters(searchParams) {
+function searchParamsHaveLibraryFilters(searchParams: any) {
   if (
     searchParams.has('library_platform') ||
     searchParams.has('play_mode') ||
@@ -146,7 +146,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
   // The rail is rendered by the shell, not by this tree, so the slot only
   // exists after mount. Resolving it in state (rather than a ref read during
   // render) makes the first paint correct instead of one frame late.
-  const [railSlot, setRailSlot] = useState(null)
+  const [railSlot, setRailSlot] = useState<any>(null)
   useEffect(() => {
     setRailSlot(document.getElementById('od-rail-slot'))
   }, [])
@@ -166,18 +166,18 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
       ...filtersFromSearchParams(searchParams),
     }),
   )
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [selectedIds, setSelectedIds] = useState(() => new Set<string>())
   /** UUIDs known to have a pending wishlist request (session + batch skips). */
-  const [wishlistPendingIds, setWishlistPendingIds] = useState(() => new Set())
+  const [wishlistPendingIds, setWishlistPendingIds] = useState<Set<any>>(() => new Set())
   const [selectionBusy, setSelectionBusy] = useState(false)
   const [wishlistAvailable, setWishlistAvailable] = useState(true)
   const [playStatusAvailable, setPlayStatusAvailable] = useState(true)
   const [refreshImagesAvailable, setRefreshImagesAvailable] = useState(true)
-  const selectionAnchorRef = useRef(null)
+  const selectionAnchorRef = useRef<any>(null)
 
   useEffect(() => {
     const fromUrl = filtersFromSearchParams(searchParams)
@@ -236,7 +236,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
           setLoading(false)
         }
       })
-      .catch((requestError) => {
+      .catch((requestError: any) => {
         if (active && requestError.name !== 'AbortError') {
           setError(requestError)
           setLoading(false)
@@ -250,7 +250,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
   }, [filters, page, perPage, retryCount])
 
   useEffect(() => {
-    function onKeyDown(event) {
+    function onKeyDown(event: any) {
       if (event.key !== 'Escape') {
         return
       }
@@ -289,7 +289,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     setRetryCount((count) => count + 1)
   }
 
-  const applyFilters = (nextFilters) => {
+  const applyFilters = (nextFilters: any) => {
     writeLibraryFilters(nextFilters)
     setPage(1)
     setFilters(nextFilters)
@@ -297,7 +297,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
   }
 
   /** Live title search — same filter apply, keep mobile LHN open while typing. */
-  const applyLiveSearch = (nextFilters) => {
+  const applyLiveSearch = (nextFilters: any) => {
     writeLibraryFilters(nextFilters)
     setPage(1)
     setFilters(nextFilters)
@@ -314,15 +314,15 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     }
   }
 
-  const handleSelectionToggle = (uuid, opts: LooseProps = {}) => {
+  const handleSelectionToggle = (uuid: any, opts: LooseProps = {}) => {
     const games = result?.games ?? []
     setSelectedIds((prev) => {
       const next = new Set(prev)
 
       if (opts.range && games.length > 0) {
         const anchor = selectionAnchorRef.current
-        const endIndex = games.findIndex((game) => game.uuid === uuid)
-        const startIndex = anchor ? games.findIndex((game) => game.uuid === anchor) : endIndex
+        const endIndex = games.findIndex((game: any) => game.uuid === uuid)
+        const startIndex = anchor ? games.findIndex((game: any) => game.uuid === anchor) : endIndex
         if (endIndex >= 0 && startIndex >= 0) {
           const from = Math.min(startIndex, endIndex)
           const to = Math.max(startIndex, endIndex)
@@ -359,22 +359,22 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     return map
   }, [result])
 
-  const applyFavoriteResults = (uuids, favorite) => {
+  const applyFavoriteResults = (uuids: any, favorite: any) => {
     const idSet = new Set(uuids)
-    setResult((prev) => {
+    setResult((prev: any) => {
       if (!prev?.games) {
         return prev
       }
       return {
         ...prev,
-        games: prev.games.map((game) =>
+        games: prev.games.map((game: any) =>
           idSet.has(game.uuid) ? { ...game, is_favorite: favorite } : game,
         ),
       }
     })
   }
 
-  const applyPlayStatusResults = (updatedRows, status) => {
+  const applyPlayStatusResults = (updatedRows: any, status: any) => {
     const byUuid = new Map()
     if (Array.isArray(updatedRows)) {
       for (const row of updatedRows) {
@@ -390,20 +390,20 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     if (byUuid.size === 0) {
       return
     }
-    setResult((prev) => {
+    setResult((prev: any) => {
       if (!prev?.games) {
         return prev
       }
       return {
         ...prev,
-        games: prev.games.map((game) =>
+        games: prev.games.map((game: any) =>
           byUuid.has(game.uuid) ? { ...game, user_status: byUuid.get(game.uuid) || '' } : game,
         ),
       }
     })
   }
 
-  const runBatchFavorite = async (favorite) => {
+  const runBatchFavorite = async (favorite: any) => {
     const uuids = Array.from(selectedIds)
     if (uuids.length === 0 || selectionBusy) {
       return
@@ -417,7 +417,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
         t,
       })
       showToast(summary.message, summary.tone)
-    } catch (err) {
+    } catch (err: any) {
       showToast(err?.message || t('Favorite update failed'), 'error')
     } finally {
       setSelectionBusy(false)
@@ -438,13 +438,13 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
           updatedRows.filter((row) => row && row.uuid).map((row) => [row.uuid, row]),
         )
         if (byUuid.size > 0) {
-          setResult((prev) => {
+          setResult((prev: any) => {
             if (!prev?.games) {
               return prev
             }
             return {
               ...prev,
-              games: prev.games.map((game) => {
+              games: prev.games.map((game: any) => {
                 const row = byUuid.get(game.uuid)
                 if (!row) {
                   return game
@@ -465,7 +465,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
         t,
       })
       showToast(summary.message, summary.tone)
-    } catch (err) {
+    } catch (err: any) {
       showToast(err?.message || t('Freshness refresh failed'), 'error')
     } finally {
       setSelectionBusy(false)
@@ -485,8 +485,8 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
       const touched = new Set([
         ...batchItemUuids(outcome.updated),
         ...(outcome.skipped || [])
-          .filter((row) => row?.reason === 'already_pending' && row.uuid)
-          .map((row) => row.uuid),
+          .filter((row: any) => row?.reason === 'already_pending' && row.uuid)
+          .map((row: any) => row.uuid),
       ])
       if (touched.size) {
         setWishlistPendingIds((prev) => {
@@ -503,7 +503,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
         t,
       })
       showToast(summary.message, summary.tone)
-    } catch (err) {
+    } catch (err: any) {
       if (err?.unavailable) {
         setWishlistAvailable(false)
       }
@@ -513,7 +513,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     }
   }
 
-  const runBatchPlayStatus = async (status) => {
+  const runBatchPlayStatus = async (status: any) => {
     const uuids = Array.from(selectedIds)
     if (uuids.length === 0 || selectionBusy || !playStatusAvailable) {
       return
@@ -527,7 +527,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
         t,
       })
       showToast(summary.message, summary.tone)
-    } catch (err) {
+    } catch (err: any) {
       if (err?.unavailable) {
         setPlayStatusAvailable(false)
       }
@@ -551,7 +551,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
         t,
       })
       showToast(summary.message, summary.tone)
-    } catch (err) {
+    } catch (err: any) {
       if (err?.unavailable) {
         setRefreshImagesAvailable(false)
       }
@@ -624,11 +624,11 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
             page={page}
             pages={1}
             perPage={perPage}
-            onPageChange={(nextPage) => {
+            onPageChange={(nextPage: any) => {
               clearSelection()
               setPage(nextPage)
             }}
-            onPerPageChange={(nextPerPage) => {
+            onPerPageChange={(nextPerPage: any) => {
               clearSelection()
               setPage(1)
               setPerPage(nextPerPage)
@@ -665,7 +665,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
             onRefreshImages={canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined}
             onWishlist={() => void runBatchWishlist(false)}
             onWishlistRemove={() => void runBatchWishlist(true)}
-            onPlayStatus={(status) => void runBatchPlayStatus(status)}
+            onPlayStatus={(status: any) => void runBatchPlayStatus(status)}
             onSelectPage={selectPage}
             onClear={clearSelection}
             t={t}
@@ -686,11 +686,11 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
             page={page}
             pages={pages}
             perPage={perPage}
-            onPageChange={(nextPage) => {
+            onPageChange={(nextPage: any) => {
               clearSelection()
               setPage(nextPage)
             }}
-            onPerPageChange={(nextPerPage) => {
+            onPerPageChange={(nextPerPage: any) => {
               clearSelection()
               setPage(1)
               setPerPage(nextPerPage)
@@ -705,7 +705,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
   // The label already rides along on the game rows, so the backdrop needs no
   // extra fetch and no 70-entry name table to stay in step with the enum.
   const selectedSystemLabel =
-    (result?.games ?? []).find((game) => game.library_platform === filters.library_platform)
+    (result?.games ?? []).find((game: any) => game.library_platform === filters.library_platform)
       ?.library_platform_label ||
     filters.library_platform ||
     ''
@@ -720,7 +720,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     ...ITEM_KIND_FILTER_CHIPS.map((chip) => ({ id: chip.kind, label: t(chip.label) })),
   ]
 
-  function selectKindView(kind) {
+  function selectKindView(kind: any) {
     applyFilters(cleanFilters({ ...filters, item_kind: kind || '' }))
   }
 
@@ -751,7 +751,7 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
       onRefreshImages={canBatchRefreshImages ? () => void runBatchRefreshImages() : undefined}
       onWishlist={() => void runBatchWishlist(false)}
       onWishlistRemove={() => void runBatchWishlist(true)}
-      onPlayStatus={(status) => void runBatchPlayStatus(status)}
+      onPlayStatus={(status: any) => void runBatchPlayStatus(status)}
       onSelectPage={selectPage}
       onClear={clearSelection}
       t={t}

@@ -25,9 +25,9 @@ export function buildPaletteCommands(shellConfig: LooseProps = {}) {
   } = shellConfig
 
   const seen = new Set()
-  const commands = []
+  const commands: any[] = []
 
-  function push(cmd) {
+  function push(cmd: any) {
     if (!cmd?.id || seen.has(cmd.id)) return
     seen.add(cmd.id)
     commands.push(cmd)
@@ -113,7 +113,7 @@ export function isLibrarySearchRoute(pathname = '') {
  * Exported for tests: the exclusions are the whole feature, and they are much
  * easier to state as cases than to drive through a rendered palette.
  */
-export function typeToSearchKey(event) {
+export function typeToSearchKey(event: any) {
   if (event.metaKey || event.ctrlKey || event.altKey) return false
   if (!event.key || event.key.length !== 1 || event.key === ' ') return false
 
@@ -136,12 +136,15 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
   openRef.current = open
 
   const [query, setQuery] = useState('')
-  const [libraryHits, setLibraryHits] = useState([])
+  const [libraryHits, setLibraryHits] = useState<any[]>([])
   const [libraryStatus, setLibraryStatus] = useState('idle') // idle | loading | ready | error
-  const [suggest, setSuggest] = useState({ recent: [], popular: [] })
+  const [suggest, setSuggest] = useState<{ recent: any[]; popular: any[] }>({
+    recent: [],
+    popular: [],
+  })
 
   const setOpen = useCallback(
-    (next) => {
+    (next: any) => {
       const value = typeof next === 'function' ? next(openRef.current) : next
       if (!controlled) setUncontrolledOpen(value)
       onOpenChange?.(value)
@@ -155,10 +158,10 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
   )
 
   useEffect(() => {
-    function onKeyDown(event) {
+    function onKeyDown(event: any) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setOpen((prev) => !prev)
+        setOpen((prev: any) => !prev)
         return
       }
       // Type-to-search: any printable key opens the palette with that character
@@ -195,7 +198,7 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
           popular: Array.isArray(data.popular) ? data.popular : [],
         })
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (err?.name === 'AbortError') return
         setSuggest({
           recent: mergeSuggestRecent([], readRecentTitles()),
@@ -224,7 +227,7 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
           setLibraryHits(Array.isArray(rows) ? rows : [])
           setLibraryStatus('ready')
         })
-        .catch((err) => {
+        .catch((err: any) => {
           if (err?.name === 'AbortError') return
           setLibraryHits([])
           setLibraryStatus('error')
@@ -237,7 +240,7 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
     }
   }, [open, query])
 
-  async function runCommand(cmd) {
+  async function runCommand(cmd: any) {
     setOpen(false)
     if (cmd.action === 'preferences') {
       try {
@@ -281,7 +284,7 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
     ? suggest.popular.filter((row) => !recentTiles.some((recent) => recent.uuid === row.uuid))
     : []
 
-  function openTitle(hit) {
+  function openTitle(hit: any) {
     const uuid = hit?.uuid || hit?.id
     if (!uuid) return
     recordRecentTitle({ uuid, name: hit.name || 'Untitled' })
@@ -382,7 +385,7 @@ export function CommandPalette({ open: openProp, onOpenChange, defaultOpen = fal
 
         {groups.map(([heading, items]) => (
           <Command.Group key={heading} heading={heading} className="od-cmdk__group">
-            {items.map((cmd) => (
+            {items.map((cmd: any) => (
               <Command.Item
                 key={cmd.id}
                 value={`${cmd.label} ${cmd.id}`}

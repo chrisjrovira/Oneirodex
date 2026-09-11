@@ -28,7 +28,7 @@ export function AppBar({
       </Link>
 
       <nav className="od-appbar__nav" aria-label="Primary">
-        {links.map((link) => (
+        {links.map((link: any) => (
           <NavLink
             key={link.id}
             to={link.to}

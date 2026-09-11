@@ -4,7 +4,7 @@ import { queueClientCommand } from '../api/clientCommands'
 import { showToast } from '../utils/toast'
 import './OpenPathModal.css'
 
-async function copyPath(path) {
+async function copyPath(path: any) {
   if (navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(path)
     return
@@ -35,15 +35,15 @@ export function OpenPathModal({
   onClose,
 }: LooseProps) {
   const titleId = useId()
-  const closeRef = useRef(null)
+  const closeRef = useRef<any>(null)
   const [busy, setBusy] = useState(false)
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState<any>(null)
 
   useEffect(() => {
     if (!open) return undefined
     setStatus(null)
     closeRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: any) => {
       if (event.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', onKey)
@@ -81,7 +81,7 @@ export function OpenPathModal({
       await copyPath(path)
       setStatus('Companion offline — path copied. Open it on the host.')
       showToast('Companion offline — path copied', 'info')
-    } catch (err) {
+    } catch (err: any) {
       try {
         await copyPath(path)
         setStatus(

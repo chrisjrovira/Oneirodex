@@ -27,7 +27,7 @@ const SYSTEM_BY_ID = new Map(SYSTEM_MOTIFS.map((row) => [row.id, row]))
 export const LOADING_MOTIF_IDS = ['dpad', 'disc', 'stick', 'handheld', 'cart', 'crt']
 
 /** Retired abstract set → nearest replacement, so stored settings keep working. */
-const LEGACY_MOTIF_ALIASES = {
+const LEGACY_MOTIF_ALIASES: Record<string, string> = {
   // 'arcade' is deliberately absent: it is now a real system id (the Arcade
   // platform), and the per-system lookup shadows this map. That is the better
   // outcome — someone who picked "arcade" gets a cabinet, not a d-pad — but it
@@ -40,7 +40,7 @@ const LEGACY_MOTIF_ALIASES = {
   scan: 'crt',
 }
 
-const MARKUP = {
+const MARKUP: Record<string, any> = {
   // NES / SNES era — the d-pad presses around its axis.
   dpad: (
     <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -119,7 +119,7 @@ const MARKUP = {
   ),
 }
 
-export function normalizeLoadingMotifId(id) {
+export function normalizeLoadingMotifId(id: any) {
   const text = String(id || '')
     .trim()
     .toLowerCase()
@@ -132,7 +132,7 @@ export function normalizeLoadingMotifId(id) {
   return LEGACY_MOTIF_ALIASES[text] || null
 }
 
-export function pickLoadingMotifId(settings, sessionPick) {
+export function pickLoadingMotifId(settings: any, sessionPick: any) {
   const mode = settings?.loading_icon_mode || 'rotate'
   const locked = normalizeLoadingMotifId(settings?.resolved_id || settings?.loading_icon_id)
   if (mode === 'lock' && locked) {
@@ -144,7 +144,7 @@ export function pickLoadingMotifId(settings, sessionPick) {
   let pool = LOADING_MOTIF_IDS
   if (Array.isArray(settings?.catalogue) && settings.catalogue.length) {
     const fromApi = settings.catalogue
-      .map((row) => normalizeLoadingMotifId(row?.id))
+      .map((row: any) => normalizeLoadingMotifId(row?.id))
       .filter(Boolean)
     if (fromApi.length) {
       pool = fromApi
@@ -176,8 +176,8 @@ export function LoadingMotif({
     >
       {SYSTEM_BY_ID.has(id) ? (
         <SystemMotifArt
-          archetype={SYSTEM_BY_ID.get(id).archetype}
-          variant={SYSTEM_BY_ID.get(id).variant}
+          archetype={SYSTEM_BY_ID.get(id)?.archetype}
+          variant={SYSTEM_BY_ID.get(id)?.variant}
         />
       ) : (
         MARKUP[id] || MARKUP.dpad

@@ -36,7 +36,7 @@ export function readCalendarView() {
   return 'list'
 }
 
-export function writeCalendarView(view) {
+export function writeCalendarView(view: any) {
   try {
     if (view === 'list' || view === 'month') {
       window.localStorage?.setItem(VIEW_STORAGE_KEY, view)
@@ -46,18 +46,18 @@ export function writeCalendarView(view) {
   }
 }
 
-function igdbHref(item) {
+function igdbHref(item: any) {
   if (item?.url) return item.url
   if (item?.slug) return `https://www.igdb.com/games/${encodeURIComponent(item.slug)}`
   return null
 }
 
-function releaseKey(item, index) {
+function releaseKey(item: any, index: any) {
   return `${item.igdb_id || item.slug || item.name || 'release'}-${item.first_release_date || index}`
 }
 
 /** Parse YYYY-MM-DD (or ISO) to a noon-local Date; invalid → null. */
-export function parseReleaseDate(value) {
+export function parseReleaseDate(value: any) {
   if (value === null || value === undefined || value === '') return null
   const text = String(value).trim()
   const dateOnly = text.match(/^(\d{4})-(\d{2})-(\d{2})/)
@@ -76,7 +76,7 @@ export function parseReleaseDate(value) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-export function toDateKey(date) {
+export function toDateKey(date: any) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -84,7 +84,7 @@ export function toDateKey(date) {
   return `${y}-${m}-${d}`
 }
 
-export function monthLabel(year, monthIndex) {
+export function monthLabel(year: any, monthIndex: any) {
   return new Date(year, monthIndex, 1, 12).toLocaleDateString(undefined, {
     month: 'long',
     year: 'numeric',
@@ -92,7 +92,7 @@ export function monthLabel(year, monthIndex) {
 }
 
 /** Build a 6×7 month grid; each cell is { dateKey, day, inMonth, releases }. */
-export function buildMonthCells(year, monthIndex, byDate) {
+export function buildMonthCells(year: any, monthIndex: any, byDate: any) {
   const first = new Date(year, monthIndex, 1, 12)
   const startOffset = first.getDay()
   const cells = []
@@ -110,7 +110,7 @@ export function buildMonthCells(year, monthIndex, byDate) {
   return cells
 }
 
-function indexByDate(releases) {
+function indexByDate(releases: any) {
   const map = new Map()
   for (const item of releases) {
     const date = parseReleaseDate(item.first_release_date)
@@ -142,7 +142,7 @@ function ReleaseTitle({ item }: LooseProps) {
  * showed the same blank panel for all three and left you to guess. It now
  * carries `empty_reason`, and this turns it into something actionable.
  */
-export function calendarEmptyMessage(reason) {
+export function calendarEmptyMessage(reason: any) {
   if (reason === 'not_configured') {
     return 'No release data — IGDB is not set up. Add IGDB credentials under Admin → Integrations to fill this calendar.'
   }
@@ -163,7 +163,7 @@ function ListView({ releases, emptyReason }: LooseProps) {
   }
   return (
     <ul className="od-calendar__list">
-      {releases.map((item, index) => {
+      {releases.map((item: any, index: any) => {
         const dateLabel = formatLocaleDate(item.first_release_date, { fallback: '' })
         return (
           <li key={releaseKey(item, index)} className="od-calendar__row">
@@ -190,7 +190,7 @@ function ListView({ releases, emptyReason }: LooseProps) {
 function DayArt({ releases }: LooseProps) {
   return (
     <span className="od-calendar__day-stack">
-      {releases.map((item, index) => {
+      {releases.map((item: any, index: any) => {
         const cover = item?.cover_url
         const key = `${item?.igdb_id || item?.slug || item?.name || 'release'}-${index}`
         return (
@@ -218,7 +218,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
     () => buildMonthCells(focusYear, focusMonth, byDate),
     [focusYear, focusMonth, byDate],
   )
-  const [selectedKey, setSelectedKey] = useState(null)
+  const [selectedKey, setSelectedKey] = useState<any>(null)
 
   // Today, hoisted out of the effect below.
   // It was computed there and thrown away, so the one date every calendar marks
@@ -330,7 +330,7 @@ function MonthView({ releases, focusYear, focusMonth, onFocusChange, emptyReason
               <p className="od-calendar__empty">No releases on this day.</p>
             ) : (
               <ul className="od-calendar__day-list">
-                {selectedReleases.map((item, index) => (
+                {selectedReleases.map((item: any, index: any) => (
                   <li key={releaseKey(item, index)} className="od-calendar__day-item">
                     <ReleaseTitle item={item} />
                     <ReleaseMeta item={item} />
@@ -372,7 +372,7 @@ export function CalendarPage() {
 
   const releases = Array.isArray(payload?.releases) ? payload.releases : []
 
-  function selectView(next) {
+  function selectView(next: any) {
     setView(next)
     writeCalendarView(next)
   }
@@ -502,7 +502,7 @@ export function CalendarPage() {
                 emptyReason={payload?.empty_reason}
                 focusYear={focusYear}
                 focusMonth={focusMonth}
-                onFocusChange={(y, m) => {
+                onFocusChange={(y: any, m: any) => {
                   setFocusYear(y)
                   setFocusMonth(m)
                 }}

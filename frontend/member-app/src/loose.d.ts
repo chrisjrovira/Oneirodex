@@ -1,5 +1,4 @@
-// PR-5a on-ramp: destructured props and option bags from the JS sources have
-// no annotations, so `tsc` infers `{}` / required keys from defaults. Real
-// prop types land in PR-5b with `strict: true`. `any` here is the same
-// nested-payload escape hatch admin used on `adminApi`.
+// PR-5b: destructured props and nested API payloads stay on LooseProps
+// (`Record<string, any>`), the same escape hatch admin used on `adminApi`.
+// Real per-component prop types can land later without flipping `strict`.
 type LooseProps = Record<string, any>

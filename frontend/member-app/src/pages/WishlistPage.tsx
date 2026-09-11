@@ -21,13 +21,13 @@ export function WishlistPage() {
   const [showAll, setShowAll] = useState(false)
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
-  const [actionError, setActionError] = useState(null)
+  const [actionError, setActionError] = useState<any>(null)
   // Separate from actionError on purpose: the create form lives inside a
   // popover and shows its own failure there, while approve / reject / cancel
   // fail against a row in the list. One state for both meant a failed request
   // painted an alert in two places at once.
-  const [createError, setCreateError] = useState(null)
-  const [busyId, setBusyId] = useState(null)
+  const [createError, setCreateError] = useState<any>(null)
+  const [busyId, setBusyId] = useState<any>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const all = isLibrarian && showAll
@@ -65,7 +65,7 @@ export function WishlistPage() {
    *   dismissing the panel on a failed submit would take the error message
    *   with it, and the field the member has to correct.
    */
-  async function handleCreate(event, onDone = undefined) {
+  async function handleCreate(event: any, onDone: any = undefined) {
     event.preventDefault()
     const trimmed = title.trim()
     if (!trimmed) {
@@ -79,31 +79,31 @@ export function WishlistPage() {
       setTitle('')
       setNotes('')
       onDone?.()
-    } catch (err) {
+    } catch (err: any) {
       setCreateError(err)
     } finally {
       setSubmitting(false)
     }
   }
 
-  async function handleCancel(id) {
+  async function handleCancel(id: any) {
     setBusyId(id)
     setActionError(null)
     try {
       await cancelMutation.mutateAsync(id)
-    } catch (err) {
+    } catch (err: any) {
       setActionError(err)
     } finally {
       setBusyId(null)
     }
   }
 
-  async function handleResolve(id, status) {
+  async function handleResolve(id: any, status: any) {
     setBusyId(id)
     setActionError(null)
     try {
       await resolveMutation.mutateAsync({ id, status })
-    } catch (err) {
+    } catch (err: any) {
       setActionError(err)
     } finally {
       setBusyId(null)
@@ -143,7 +143,7 @@ export function WishlistPage() {
               ) : null}
               {/* Quiet like Library bar peers: wash only while open. */}
               <Popover label="Request a title">
-                {({ close }) => (
+                {({ close }: LooseProps) => (
                   <form
                     className="od-wishlist__form"
                     onSubmit={(event) => handleCreate(event, close)}
@@ -264,7 +264,7 @@ export function WishlistPage() {
               <span className="od-wishlist__count">{requests.length}</span>
             </div>
             <ul className="od-wishlist__list">
-              {requests.map((item) => (
+              {requests.map((item: any) => (
                 <li key={item.id} className="od-wishlist__row" data-request-id={item.id}>
                   <article>
                     <div className="od-wishlist__row-head">

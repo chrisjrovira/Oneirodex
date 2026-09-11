@@ -49,7 +49,7 @@ function prefersReducedMotion() {
   )
 }
 
-function IconChevronUp(props) {
+function IconChevronUp(props: any) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -70,7 +70,7 @@ function IconChevronUp(props) {
   )
 }
 
-function IconChevronDown(props) {
+function IconChevronDown(props: any) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -95,7 +95,7 @@ function IconChevronDown(props) {
  * Jump-to-top / jump-to-bottom for the scrolling content pane. Hidden entirely
  * when there is nothing to scroll, so it never sits over content for no reason.
  */
-export function ScrollJump({ t = (key) => key, label = 'Page scroll' }: LooseProps = {}) {
+export function ScrollJump({ t = (key: any) => key, label = 'Page scroll' }: LooseProps = {}) {
   const [metrics, setMetrics] = useState(() => ({
     scrollable: false,
     atTop: true,

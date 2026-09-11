@@ -25,7 +25,7 @@ const YOUTUBE_ID_PATTERNS = [
   /youtu\.be\/([a-zA-Z0-9_-]+)/,
 ]
 
-function youTubeVideoId(url) {
+function youTubeVideoId(url: any) {
   if (typeof url !== 'string') {
     return null
   }
@@ -38,7 +38,7 @@ function youTubeVideoId(url) {
   return null
 }
 
-function buildEmbedSrc(videoId, skipFirst) {
+function buildEmbedSrc(videoId: any, skipFirst: any) {
   const params = new URLSearchParams({
     autoplay: '1',
     rel: '0',
@@ -54,7 +54,7 @@ function buildEmbedSrc(videoId, skipFirst) {
   return `https://www.youtube.com/embed/${videoId}?${params}`
 }
 
-let youTubeApiPromise = null
+let youTubeApiPromise: any = null
 
 function loadYouTubeApi() {
   if (window.YT?.Player) {
@@ -83,7 +83,7 @@ function loadYouTubeApi() {
   return youTubeApiPromise
 }
 
-function normalizeSettings(raw) {
+function normalizeSettings(raw: any) {
   return {
     enabled: raw?.enabled !== false,
     skipFirst: Math.max(0, Number(raw?.skipFirst) || 0),
@@ -100,7 +100,7 @@ function readStoredSettings() {
   }
 }
 
-function fromServerFilters(raw) {
+function fromServerFilters(raw: any) {
   return {
     library: raw?.library_uuid ? String(raw.library_uuid) : '',
     genres: Array.isArray(raw?.genres) ? raw.genres.map(String) : [],
@@ -110,11 +110,11 @@ function fromServerFilters(raw) {
   }
 }
 
-function toServerFilters(filters) {
+function toServerFilters(filters: any) {
   return {
     library_uuid: filters.library || null,
-    genres: filters.genres.map((id) => Number(id)),
-    themes: filters.themes.map((id) => Number(id)),
+    genres: filters.genres.map((id: any) => Number(id)),
+    themes: filters.themes.map((id: any) => Number(id)),
     date_from: filters.dateFrom ? Number(filters.dateFrom) : null,
     date_to: filters.dateTo ? Number(filters.dateTo) : null,
   }
@@ -125,11 +125,11 @@ function selectedValues(select: EventTarget | null) {
   return Array.from(select.selectedOptions).map((option) => option.value)
 }
 
-function labelsFor(options, ids) {
+function labelsFor(options: any, ids: any) {
   const wanted = new Set(ids.map(String))
   return (options || [])
-    .filter((option) => wanted.has(String(option.id)))
-    .map((option) => option.name)
+    .filter((option: any) => wanted.has(String(option.id)))
+    .map((option: any) => option.name)
 }
 
 /**
@@ -145,7 +145,7 @@ function TrailerPlayer({
   title,
   gameUuid,
 }: LooseProps) {
-  const frameRef = useRef(null)
+  const frameRef = useRef<any>(null)
   const advanceRef = useRef(onAdvance)
   const [src] = useState(() => buildEmbedSrc(videoId, skipFirst))
 
@@ -155,8 +155,8 @@ function TrailerPlayer({
 
   useEffect(() => {
     let cancelled = false
-    let player = null
-    let timer = null
+    let player: any = null
+    let timer: any = null
     let playedSeconds = 0
     let isPlaying = false
 
@@ -186,14 +186,14 @@ function TrailerPlayer({
       }, 1000)
     }
 
-    loadYouTubeApi().then((YT) => {
+    loadYouTubeApi().then((YT: any) => {
       if (cancelled || !YT?.Player || !frameRef.current) {
         return
       }
 
       player = new YT.Player(frameRef.current, {
         events: {
-          onStateChange: (event) => {
+          onStateChange: (event: any) => {
             if (event.data === YT.PlayerState.PLAYING) {
               isPlaying = true
               startTimer()
@@ -312,7 +312,7 @@ function FilterPanel({ options, optionsError, filters, onChange, onClear, onAppl
             onChange={(event) => onChange({ library: event.target.value })}
           >
             <option value="">All Libraries</option>
-            {(options?.libraries || []).map((library) => (
+            {(options?.libraries || []).map((library: any) => (
               <option key={library.uuid} value={library.uuid}>
                 {library.name}
               </option>
@@ -358,7 +358,7 @@ function FilterPanel({ options, optionsError, filters, onChange, onClear, onAppl
             value={filters.genres}
             onChange={(event) => onChange({ genres: selectedValues(event.target) })}
           >
-            {(options?.genres || []).map((genre) => (
+            {(options?.genres || []).map((genre: any) => (
               <option key={genre.id} value={String(genre.id)}>
                 {genre.name}
               </option>
@@ -377,7 +377,7 @@ function FilterPanel({ options, optionsError, filters, onChange, onClear, onAppl
             value={filters.themes}
             onChange={(event) => onChange({ themes: selectedValues(event.target) })}
           >
-            {(options?.themes || []).map((theme) => (
+            {(options?.themes || []).map((theme: any) => (
               <option key={theme.id} value={String(theme.id)}>
                 {theme.name}
               </option>
@@ -452,21 +452,21 @@ export function TrailersPage() {
   const [attractMode] = useState(() =>
     new URLSearchParams(window.location.search).has('attract_mode'),
   )
-  const [options, setOptions] = useState(null)
-  const [optionsError, setOptionsError] = useState(null)
+  const [options, setOptions] = useState<any>(null)
+  const [optionsError, setOptionsError] = useState<any>(null)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [panelOpen, setPanelOpen] = useState(false)
   const [request, setRequest] = useState({ id: 0, filters: EMPTY_FILTERS })
-  const [trailer, setTrailer] = useState(null)
-  const [emptyMessage, setEmptyMessage] = useState(null)
-  const [error, setError] = useState(null)
+  const [trailer, setTrailer] = useState<any>(null)
+  const [emptyMessage, setEmptyMessage] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const filtersRef = useRef(filters)
   const settingsRef = useRef(settings)
-  const trailerRef = useRef(null)
+  const trailerRef = useRef<any>(null)
 
   useEffect(() => {
     filtersRef.current = filters
@@ -511,7 +511,7 @@ export function TrailersPage() {
         }
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (!active || err.name === 'AbortError') {
           return
         }
@@ -538,7 +538,7 @@ export function TrailersPage() {
           setOptions(data)
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setOptionsError(err)
         }
@@ -593,7 +593,7 @@ export function TrailersPage() {
       return undefined
     }
 
-    const onKeyDown = (event) => {
+    const onKeyDown = (event: any) => {
       if (event.key !== 'b' && event.key !== 'B') {
         return
       }
@@ -611,7 +611,7 @@ export function TrailersPage() {
 
   const activeFilterBadges = useMemo(() => {
     const badges = []
-    const library = (options?.libraries || []).find((item) => item.uuid === filters.library)
+    const library = (options?.libraries || []).find((item: any) => item.uuid === filters.library)
     if (library) {
       badges.push(library.name)
     }
@@ -623,7 +623,7 @@ export function TrailersPage() {
     return badges
   }, [options, filters])
 
-  function handleFilterChange(patch) {
+  function handleFilterChange(patch: any) {
     setFilters((current) => ({ ...current, ...patch }))
   }
 
@@ -648,7 +648,7 @@ export function TrailersPage() {
     window.location.href = returnUrl || '/discover'
   }
 
-  async function handleSaveSettings(draft) {
+  async function handleSaveSettings(draft: any) {
     const next = normalizeSettings(draft)
     setSettings(next)
     setSettingsOpen(false)
@@ -687,7 +687,7 @@ export function TrailersPage() {
           actions={
             <div className="od-cbtn-group" role="group" aria-label="Trailers">
               <Popover label="Filters" count={activeFilterBadges.length} align="start" chromeless>
-                {({ close }) => (
+                {({ close }: LooseProps) => (
                   <div className="library-filters-stack">
                     <FilterPanel
                       options={options}

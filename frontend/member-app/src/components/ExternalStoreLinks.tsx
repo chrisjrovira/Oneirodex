@@ -23,7 +23,7 @@ import './ExternalStoreLinks.css'
 const BRANDS = [
   {
     id: 'steam',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /steam/i.test(type || '') || /steampowered\.com|steamcommunity\.com/i.test(url || ''),
     label: 'Steam',
     color: 'var(--od-brand-steam)',
@@ -34,7 +34,7 @@ const BRANDS = [
   },
   {
     id: 'gog',
-    match: (type, url) => /gog/i.test(type || '') || /gog\.com/i.test(url || ''),
+    match: (type: any, url: any) => /gog/i.test(type || '') || /gog\.com/i.test(url || ''),
     label: 'GOG',
     color: 'var(--od-brand-gog)',
     // GOG.com wordmark-style monogram
@@ -44,7 +44,7 @@ const BRANDS = [
   },
   {
     id: 'epic',
-    match: (type, url) => /epic/i.test(type || '') || /epicgames\.com/i.test(url || ''),
+    match: (type: any, url: any) => /epic/i.test(type || '') || /epicgames\.com/i.test(url || ''),
     label: 'Epic',
     color: 'var(--od-brand-epic)',
     // Epic Games stylized "E" shield silhouette
@@ -52,7 +52,7 @@ const BRANDS = [
   },
   {
     id: 'playstation',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /playstation|\bpsn\b/i.test(type || '') ||
       /store\.playstation|playstation\.com/i.test(url || ''),
     label: 'PlayStation',
@@ -61,7 +61,7 @@ const BRANDS = [
   },
   {
     id: 'xbox',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /xbox|microsoft/i.test(type || '') || /xbox\.com|microsoft\.com\/.*xbox/i.test(url || ''),
     label: 'Xbox',
     color: 'var(--od-brand-xbox)',
@@ -69,7 +69,7 @@ const BRANDS = [
   },
   {
     id: 'amazon',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /amazon|luna|prime\s*gaming|primegaming/i.test(type || '') ||
       /amazon\.com|luna\.amazon|primegaming|gaming\.amazon/i.test(url || ''),
     label: 'Amazon',
@@ -78,21 +78,22 @@ const BRANDS = [
   },
   {
     id: 'humble',
-    match: (type, url) => /humble/i.test(type || '') || /humblebundle\.com/i.test(url || ''),
+    match: (type: any, url: any) =>
+      /humble/i.test(type || '') || /humblebundle\.com/i.test(url || ''),
     label: 'Humble',
     color: 'var(--od-brand-humble)',
     mask: maskHumble,
   },
   {
     id: 'itch',
-    match: (type, url) => /itch/i.test(type || '') || /itch\.io/i.test(url || ''),
+    match: (type: any, url: any) => /itch/i.test(type || '') || /itch\.io/i.test(url || ''),
     label: 'itch.io',
     color: 'var(--od-brand-itch)',
     mask: maskItch,
   },
   {
     id: 'ea',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /\bea\b|origin|ea\s*play|eaplay/i.test(type || '') ||
       /ea\.com|origin\.com|store\.ea\.com/i.test(url || ''),
     label: 'EA',
@@ -101,7 +102,7 @@ const BRANDS = [
   },
   {
     id: 'ubisoft',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /ubisoft|uplay|ubi\s*connect/i.test(type || '') ||
       /ubisoft\.com|store\.ubi\.com|uplay/i.test(url || ''),
     label: 'Ubisoft',
@@ -113,7 +114,7 @@ const BRANDS = [
   },
   {
     id: 'fandom',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /fandom|wikia/i.test(type || '') || /fandom\.com|wikia\.com/i.test(url || ''),
     label: 'Fandom',
     color: 'var(--od-brand-fandom)',
@@ -121,14 +122,14 @@ const BRANDS = [
   },
   {
     id: 'igdb',
-    match: (type, url) => /igdb/i.test(type || '') || /igdb\.com/i.test(url || ''),
+    match: (type: any, url: any) => /igdb/i.test(type || '') || /igdb\.com/i.test(url || ''),
     label: 'IGDB',
     color: 'var(--od-brand-igdb)',
     paths: ['M3.5 4.5h4.2v15H3.5zm6.2 0h4.2v6.2H9.7zm0 8.8h4.2v6.2H9.7zm6.2-8.8H20v15h-4.1z'],
   },
   {
     id: 'youtube',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /youtube|youtu\.be/i.test(type || '') || /youtube\.com|youtu\.be/i.test(url || ''),
     label: 'YouTube',
     color: 'var(--od-brand-youtube)',
@@ -138,7 +139,8 @@ const BRANDS = [
   },
   {
     id: 'wikipedia',
-    match: (type, url) => /wikipedia/i.test(type || '') || /wikipedia\.org/i.test(url || ''),
+    match: (type: any, url: any) =>
+      /wikipedia/i.test(type || '') || /wikipedia\.org/i.test(url || ''),
     label: 'Wikipedia',
     color: 'var(--od-brand-wikipedia)',
     // Wikipedia "W"
@@ -148,7 +150,7 @@ const BRANDS = [
   },
   {
     id: 'official',
-    match: (type) => /official|website|homepage/i.test(type || ''),
+    match: (type: any) => /official|website|homepage/i.test(type || ''),
     label: 'Official site',
     color: 'var(--od-brand-official)',
     paths: [
@@ -157,7 +159,8 @@ const BRANDS = [
   },
   {
     id: 'facebook',
-    match: (type, url) => /facebook/i.test(type || '') || /facebook\.com|fb\.com/i.test(url || ''),
+    match: (type: any, url: any) =>
+      /facebook/i.test(type || '') || /facebook\.com|fb\.com/i.test(url || ''),
     label: 'Facebook',
     color: 'var(--od-brand-facebook)',
     paths: [
@@ -166,7 +169,7 @@ const BRANDS = [
   },
   {
     id: 'twitter',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /twitter|x\.com/i.test(type || '') ||
       /twitter\.com|(?:^|\/\/)(?:www\.)?x\.com/i.test(url || ''),
     label: 'X',
@@ -177,7 +180,7 @@ const BRANDS = [
   },
   {
     id: 'twitch',
-    match: (type, url) => /twitch/i.test(type || '') || /twitch\.tv/i.test(url || ''),
+    match: (type: any, url: any) => /twitch/i.test(type || '') || /twitch\.tv/i.test(url || ''),
     label: 'Twitch',
     color: 'var(--od-brand-twitch)',
     paths: [
@@ -186,7 +189,8 @@ const BRANDS = [
   },
   {
     id: 'instagram',
-    match: (type, url) => /instagram/i.test(type || '') || /instagram\.com/i.test(url || ''),
+    match: (type: any, url: any) =>
+      /instagram/i.test(type || '') || /instagram\.com/i.test(url || ''),
     label: 'Instagram',
     color: 'var(--od-brand-instagram)',
     paths: [
@@ -195,7 +199,7 @@ const BRANDS = [
   },
   {
     id: 'reddit',
-    match: (type, url) => /reddit/i.test(type || '') || /reddit\.com/i.test(url || ''),
+    match: (type: any, url: any) => /reddit/i.test(type || '') || /reddit\.com/i.test(url || ''),
     label: 'Reddit',
     color: 'var(--od-brand-reddit)',
     paths: [
@@ -204,7 +208,8 @@ const BRANDS = [
   },
   {
     id: 'android',
-    match: (type, url) => /android/i.test(type || '') || /play\.google\.com/i.test(url || ''),
+    match: (type: any, url: any) =>
+      /android/i.test(type || '') || /play\.google\.com/i.test(url || ''),
     label: 'Android',
     color: 'var(--od-brand-android)',
     paths: [
@@ -213,7 +218,7 @@ const BRANDS = [
   },
   {
     id: 'apple',
-    match: (type, url) =>
+    match: (type: any, url: any) =>
       /iphone|ipad|apple|ios/i.test(type || '') ||
       /apps\.apple\.com|itunes\.apple\.com/i.test(url || ''),
     label: 'App Store',
@@ -231,7 +236,7 @@ const UNKNOWN_FALLBACK = {
   mask: maskUnknown,
 }
 
-function brandFor(row) {
+function brandFor(row: any) {
   const type = row?.type || ''
   const url = row?.url || ''
   const matched = BRANDS.find((brand) => brand.match(type, url))
@@ -254,7 +259,7 @@ function BrandIcon({ brand }: LooseProps) {
   }
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="od-store-link__icon">
-      {brand.paths.map((d) => (
+      {brand.paths.map((d: any) => (
         <path key={d.slice(0, 24)} fill="currentColor" d={d} />
       ))}
     </svg>
@@ -265,10 +270,10 @@ function BrandIcon({ brand }: LooseProps) {
  * Compact brand logo buttons for store / catalog links on details.
  */
 export function ExternalStoreLinks({ urls = [], steamUrl, igdbUrl }: LooseProps) {
-  const rows = []
+  const rows: any[] = []
   const seen = new Set()
 
-  function push(row) {
+  function push(row: any) {
     const href = safeHttpUrl(row.url)
     if (!href || seen.has(href)) return
     seen.add(href)

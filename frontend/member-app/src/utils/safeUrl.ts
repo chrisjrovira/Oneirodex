@@ -1,7 +1,7 @@
 /**
  * Allow only http(s) absolute URLs for external links (blocks javascript: etc.).
  */
-export function safeHttpUrl(url) {
+export function safeHttpUrl(url: any) {
   if (!url || typeof url !== 'string') {
     return null
   }

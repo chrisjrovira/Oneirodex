@@ -16,7 +16,7 @@ const DEFAULT_PATH_MISSING =
  * True when browse/details say firmware is required but not present on the host.
  * @param {object | null | undefined} game
  */
-export function isFirmwarePlayBlocked(game) {
+export function isFirmwarePlayBlocked(game: any) {
   return game?.firmware_missing === true
 }
 
@@ -24,7 +24,7 @@ export function isFirmwarePlayBlocked(game) {
  * Quiet blocker copy from `bios.message` / `bios.hint` (never invent a BIOS download link).
  * @param {object | null | undefined} game
  */
-export function firmwareBlockMessage(game) {
+export function firmwareBlockMessage(game: any) {
   const bios = game?.bios && typeof game.bios === 'object' ? game.bios : null
   if (bios?.message) {
     return String(bios.message)
@@ -42,7 +42,7 @@ export function firmwareBlockMessage(game) {
  * Optional longer operator hint when distinct from the short message.
  * @param {object | null | undefined} game
  */
-export function firmwareBlockHint(game) {
+export function firmwareBlockHint(game: any) {
   const bios = game?.bios && typeof game.bios === 'object' ? game.bios : null
   const hint = typeof bios?.hint === 'string' ? bios.hint.trim() : ''
   if (!hint) {
@@ -57,7 +57,7 @@ export function firmwareBlockHint(game) {
  * @param {Error & { code?: string, hint?: string, data?: { error?: string, code?: string, hint?: string } }} err
  * @param {string} [fallback]
  */
-export function honestyApiErrorMessage(err, fallback = 'Request failed') {
+export function honestyApiErrorMessage(err: any, fallback = 'Request failed') {
   const data = err?.data && typeof err.data === 'object' ? err.data : null
   const hint = err?.hint || data?.hint
   if (hint) {

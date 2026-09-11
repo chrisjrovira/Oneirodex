@@ -38,16 +38,16 @@ const HOST_ATTR = 'data-od-contextbar-host'
  * Jinja admin renders the identical bar (UIR-4) without duplicating anything.
  */
 
-function useDismiss(open, onClose, refs) {
+function useDismiss(open: any, onClose: any, refs: any) {
   useEffect(() => {
     if (!open) return undefined
 
-    function onKey(event) {
+    function onKey(event: any) {
       if (event.key === 'Escape') onClose()
     }
-    function onPointer(event) {
+    function onPointer(event: any) {
       // Clicking the trigger toggles; the trigger handles that itself.
-      const inside = refs.some((ref) => ref.current?.contains(event.target))
+      const inside = refs.some((ref: any) => ref.current?.contains(event.target))
       if (!inside) onClose()
     }
 
@@ -81,7 +81,7 @@ export function SegmentedViews({
   unfurl = null,
 }: LooseProps) {
   const [unfurlOpen, setUnfurlOpen] = useState(false)
-  const rootRef = useRef(null)
+  const rootRef = useRef<any>(null)
   const closeUnfurl = useCallback(() => setUnfurlOpen(false), [])
   useDismiss(unfurlOpen, closeUnfurl, [rootRef])
 
@@ -90,7 +90,9 @@ export function SegmentedViews({
   if (!hasViews && !hasUnfurl) return null
 
   const menuLabel = unfurl?.triggerLabel || 'View'
-  const activeUnfurlView = hasUnfurl ? unfurl.views.find((view) => view.id === unfurl.active) : null
+  const activeUnfurlView = hasUnfurl
+    ? unfurl.views.find((view: any) => view.id === unfurl.active)
+    : null
   const triggerLabel = activeUnfurlView?.label || menuLabel
 
   return (
@@ -128,7 +130,7 @@ export function SegmentedViews({
             </button>
             {unfurlOpen ? (
               <div className="od-contextbar__views-unfurl" role="group" aria-label={menuLabel}>
-                {unfurl.views.map((view) => {
+                {unfurl.views.map((view: any) => {
                   const selected = view.id === unfurl.active
                   return (
                     <button
@@ -177,8 +179,8 @@ export function Popover({
   title = undefined,
 }: LooseProps) {
   const [open, setOpen] = useState(false)
-  const triggerRef = useRef(null)
-  const panelRef = useRef(null)
+  const triggerRef = useRef<any>(null)
+  const panelRef = useRef<any>(null)
   const panelId = useId()
   const close = useCallback(() => setOpen(false), [])
 
@@ -253,9 +255,9 @@ export function ContextBar({
   viewUnfurl = null,
   actions = null,
   overflow = null,
-  t = (key) => key,
+  t = (key: any) => key,
 }: LooseProps) {
-  const [slots, setSlots] = useState(null)
+  const [slots, setSlots] = useState<any>(null)
   const instanceId = useId()
 
   // Own the nodes we portal into, and evict anyone else's.

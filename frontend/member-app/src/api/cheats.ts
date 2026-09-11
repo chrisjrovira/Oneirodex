@@ -9,7 +9,7 @@ export const CHEAT_DIALECTS = Object.freeze([
   { value: 'gameshark', label: 'GS-style' },
 ])
 
-function cheatsUrl(gameUuid, filename = undefined) {
+function cheatsUrl(gameUuid: any, filename = undefined) {
   const base = `/api/games/${encodeURIComponent(gameUuid)}/cheats`
   if (!filename) {
     return base
@@ -17,7 +17,7 @@ function cheatsUrl(gameUuid, filename = undefined) {
   return `${base}/${encodeURIComponent(filename)}`
 }
 
-function raiseApiError(data, fallback, status) {
+function raiseApiError(data: any, fallback: any, status: any) {
   // `code` is cheats-specific (the panel branches on it); everything else is
   // the shared shape. Status comes from the response now — it used to be read
   // out of the body, which left it undefined whenever the body omitted it.
@@ -29,7 +29,7 @@ function raiseApiError(data, fallback, status) {
 /**
  * @returns {Promise<{ game_uuid: string, cheats: Array<{ name: string, size: number, url: string }> }>}
  */
-export async function listCheats(gameUuid, { signal }: LooseProps = {}) {
+export async function listCheats(gameUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(cheatsUrl(gameUuid), {
     credentials: 'same-origin',
     signal,
@@ -50,7 +50,7 @@ export async function listCheats(gameUuid, { signal }: LooseProps = {}) {
  *
  * @throws {Error} with `code: 'create_unavailable'` when the create API is not shipped yet
  */
-export async function createCheat(gameUuid, { name, codes, dialect }: LooseProps = {}) {
+export async function createCheat(gameUuid: any, { name, codes, dialect }: LooseProps = {}) {
   const response = await fetch(cheatsUrl(gameUuid), {
     method: 'POST',
     credentials: 'same-origin',
@@ -84,7 +84,7 @@ export async function createCheat(gameUuid, { name, codes, dialect }: LooseProps
 }
 
 /** Legacy / operator path — multipart `.cht` upload. */
-export async function uploadCheat(gameUuid, file) {
+export async function uploadCheat(gameUuid: any, file: any) {
   const body = new FormData()
   body.append('file', file)
   const response = await fetch(cheatsUrl(gameUuid), {
@@ -100,7 +100,7 @@ export async function uploadCheat(gameUuid, file) {
   return data
 }
 
-export async function deleteCheat(gameUuid, filename) {
+export async function deleteCheat(gameUuid: any, filename: any) {
   const response = await fetch(cheatsUrl(gameUuid, filename), {
     method: 'DELETE',
     credentials: 'same-origin',

@@ -35,8 +35,10 @@ export function DiscoverRowSettings({
   onMovePin,
 }: LooseProps) {
   const hiddenSet = new Set(hidden)
-  const pinned = pins.map((id) => rows.find((row) => row.identifier === id)).filter(Boolean)
-  const rest = rows.filter((row) => !pins.includes(row.identifier))
+  const pinned = pins
+    .map((id: any) => rows.find((row: any) => row.identifier === id))
+    .filter(Boolean)
+  const rest = rows.filter((row: any) => !pins.includes(row.identifier))
   const canPin = pins.length < maxPins
 
   return (
@@ -56,7 +58,7 @@ export function DiscoverRowSettings({
             </p>
           ) : (
             <ol className="od-rowsettings__list">
-              {pinned.map((row, index) => (
+              {pinned.map((row: any, index: any) => (
                 <li className="od-rowsettings__row" key={row.identifier}>
                   <span className="od-rowsettings__title">{row.title}</span>
                   <div className="od-cbtn-group">
@@ -96,7 +98,7 @@ export function DiscoverRowSettings({
       <section className="od-rowsettings__group">
         <h3 className="od-rowsettings__heading">All rows</h3>
         <ul className="od-rowsettings__list">
-          {rest.map((row) => {
+          {rest.map((row: any) => {
             const isHidden = hiddenSet.has(row.identifier)
             return (
               <li

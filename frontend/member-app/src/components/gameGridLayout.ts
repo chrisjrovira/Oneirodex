@@ -3,7 +3,7 @@
  * Matches CSS `repeat(auto-fill, minmax(var(--od-tile-min), 1fr))` + gap.
  */
 
-export function readCssPx(el, varName, fallback) {
+export function readCssPx(el: any, varName: any, fallback: any) {
   if (!el || typeof getComputedStyle !== 'function') {
     return fallback
   }
@@ -13,7 +13,7 @@ export function readCssPx(el, varName, fallback) {
 }
 
 /** Column count for CSS auto-fill with minmax(tileMin, 1fr) and gap. */
-export function computeGridColumns(width, tileMin = 180, gap = 10) {
+export function computeGridColumns(width: any, tileMin = 180, gap = 10) {
   if (!(width > 0)) {
     return 1
   }
@@ -50,7 +50,7 @@ export function computeGridColumns(width, tileMin = 180, gap = 10) {
  * is a member preference, and a row that ignored it would leave the estimate
  * short of the measured height and reopen the drifting-total-size bug above.
  */
-export function estimateGridRowHeight(width, columnCount, gap = 10, titleH = 0) {
+export function estimateGridRowHeight(width: any, columnCount: any, gap = 10, titleH = 0) {
   const cols = Math.max(1, columnCount)
   const g = Math.max(0, gap)
   const tileWidth = Math.max(1, (Math.max(width, 1) - g * (cols - 1)) / cols)
@@ -66,7 +66,7 @@ export function estimateGridRowHeight(width, columnCount, gap = 10, titleH = 0) 
  * so the window never scrolls at all. Walking up for a real scroller keeps the
  * grid working in both cases without hardcoding a shell class here.
  */
-export function findScrollParent(el) {
+export function findScrollParent(el: any) {
   if (!el || typeof getComputedStyle !== 'function') {
     return null
   }
@@ -81,7 +81,7 @@ export function findScrollParent(el) {
   return null
 }
 
-export function chunkGamesIntoRows(games, columnCount) {
+export function chunkGamesIntoRows(games: any, columnCount: any) {
   const cols = Math.max(1, columnCount)
   const rows = []
   for (let i = 0; i < games.length; i += cols) {

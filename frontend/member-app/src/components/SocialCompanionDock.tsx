@@ -112,14 +112,14 @@ export function SocialCompanionDock({
   })
   const open = controlled ? openProp : uncontrolledOpen
 
-  function setOpen(next) {
+  function setOpen(next: any) {
     const value = typeof next === 'function' ? next(open) : next
     if (!controlled) setUncontrolledOpen(value)
     onOpenChange?.(value)
   }
   const [pinned, setPinned] = useState(() => readCompanionPinned(true))
-  const [busyKey, setBusyKey] = useState(null)
-  const [toast, setToast] = useState(null)
+  const [busyKey, setBusyKey] = useState<any>(null)
+  const [toast, setToast] = useState<any>(null)
   const [addName, setAddName] = useState('')
   // SSE only while the companion is open — closed dock must not hold
   // /api/activity/stream (single-worker uvicorn + sync SSE starved the SPA).
@@ -136,11 +136,11 @@ export function SocialCompanionDock({
 
   useEffect(() => {
     if (!bigPicture) return undefined
-    function onKey(event) {
+    function onKey(event: any) {
       if (event.key === 'y' || event.key === 'Y') {
         if (event.target?.closest?.('input, textarea, select, [contenteditable]')) return
         event.preventDefault()
-        setOpen((value) => !value)
+        setOpen((value: any) => !value)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -156,12 +156,12 @@ export function SocialCompanionDock({
     return () => window.removeEventListener(OPEN_SOCIAL_EVENT, onOpenRequest)
   }, [standalone])
 
-  function notify(message, tone = 'info') {
+  function notify(message: any, tone = 'info') {
     setToast(message)
     showToast(message, tone)
   }
 
-  async function handleMessage(user) {
+  async function handleMessage(user: any) {
     const key = `dm-${user.id}`
     setBusyKey(key)
     try {
@@ -173,14 +173,14 @@ export function SocialCompanionDock({
       } else {
         requestOpenChatPanel(channelId != null ? { channelId } : {})
       }
-    } catch (err) {
+    } catch (err: any) {
       notify(err.message || 'DM failed', 'error')
     } finally {
       setBusyKey(null)
     }
   }
 
-  async function handleInvite(user) {
+  async function handleInvite(user: any) {
     const key = `invite-${user.id}`
     setBusyKey(key)
     try {
@@ -193,7 +193,7 @@ export function SocialCompanionDock({
       } catch {
         notify(`Party room ready: ${token.room}. Open Activity to join voice.`)
       }
-    } catch (err) {
+    } catch (err: any) {
       notify(err.message || 'Party invite unavailable — enable LiveKit or open Activity.', 'warn')
     } finally {
       setBusyKey(null)
@@ -215,7 +215,7 @@ export function SocialCompanionDock({
     }
   }
 
-  async function handleAddFriend(event) {
+  async function handleAddFriend(event: any) {
     event.preventDefault()
     const username = addName.trim()
     if (!username) return
@@ -232,7 +232,7 @@ export function SocialCompanionDock({
       setAddName('')
       notify(data.sent ? 'Friend request sent' : data.message || 'Request sent')
       await social.reload()
-    } catch (err) {
+    } catch (err: any) {
       notify(err.message || 'Could not add friend', 'error')
     } finally {
       setBusyKey(null)
@@ -354,7 +354,7 @@ export function SocialCompanionDock({
         <section className="od-social-dock__section">
           <h3>Now playing</h3>
           <ul className="od-social-dock__now">
-            {social.nowPlaying.slice(0, 6).map((row) => (
+            {social.nowPlaying.slice(0, 6).map((row: any) => (
               <li key={`np-${row.session_id || row.user_id}-${row.game_uuid}`}>
                 <strong>{row.user}</strong>
                 {' — '}

@@ -11,8 +11,8 @@ export function FavoritesApp({ initialConfig }: LooseProps = {}) {
   // perPage rides in on initialConfig now (App builds it from useShellConfig()),
   // so this view stays purely initialConfig-driven — no context of its own.
   const defaultPerPage = Number(initialConfig?.perPage) || 50
-  const [games, setGames] = useState(null)
-  const [error, setError] = useState(null)
+  const [games, setGames] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(defaultPerPage)
@@ -47,7 +47,7 @@ export function FavoritesApp({ initialConfig }: LooseProps = {}) {
         setPages(Number(result.pages) || 1)
         setTotal(Number(result.total) || 0)
       })
-      .catch((requestError) => {
+      .catch((requestError: any) => {
         if (active && requestError.name !== 'AbortError') {
           setError(requestError)
         }
@@ -76,12 +76,12 @@ export function FavoritesApp({ initialConfig }: LooseProps = {}) {
     <ContextBar
       views={kindViews}
       activeView={itemKind}
-      onSelectView={(kind) => {
+      onSelectView={(kind: any) => {
         setPage(1)
         setItemKind(kind || '')
       }}
       filterCount={filterCount}
-      filters={({ close }) => (
+      filters={({ close }: LooseProps) => (
         <form
           className="od-favorites__filters"
           onSubmit={(event) => {
@@ -171,9 +171,11 @@ export function FavoritesApp({ initialConfig }: LooseProps = {}) {
         showPlayStatus={initialConfig.showPlayStatus}
         isAdmin={initialConfig.isAdmin}
         layout={layout}
-        onToggleFavorite={(gameUuid, isFavorite) => {
+        onToggleFavorite={(gameUuid: any, isFavorite: any) => {
           if (!isFavorite) {
-            setGames((currentGames) => currentGames.filter((game) => game.uuid !== gameUuid))
+            setGames((currentGames: any) =>
+              currentGames.filter((game: any) => game.uuid !== gameUuid),
+            )
             setTotal((n) => Math.max(0, n - 1))
           }
         }}
@@ -183,7 +185,7 @@ export function FavoritesApp({ initialConfig }: LooseProps = {}) {
         pages={pages}
         perPage={perPage}
         onPageChange={setPage}
-        onPerPageChange={(next) => {
+        onPerPageChange={(next: any) => {
           setPage(1)
           setPerPage(next)
         }}

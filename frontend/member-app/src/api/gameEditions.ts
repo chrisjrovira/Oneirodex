@@ -7,7 +7,7 @@ import { errorFromResponse } from '@oneirodex/ui'
  * two unrelated tiles. This is what lets the preview say "also on SNES" and
  * offer a launcher for each core the member could actually play it with.
  */
-export async function fetchGameEditions(gameUuid, { signal }: LooseProps = {}) {
+export async function fetchGameEditions(gameUuid: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/editions`, {
     signal,
     credentials: 'same-origin',

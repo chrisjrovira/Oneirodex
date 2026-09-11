@@ -24,7 +24,7 @@ export function DiscoverZoneStrip({ zones = [] }: LooseProps) {
 
   return (
     <nav className="od-zone-strip" aria-label="Discover zones">
-      {zones.map((zone) => (
+      {zones.map((zone: any) => (
         <Link
           key={zone.slug}
           className="od-btn od-btn--sm od-btn--pill od-zone-strip__link"

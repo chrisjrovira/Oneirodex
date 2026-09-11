@@ -54,7 +54,7 @@ export async function fetchStoreSearch({ q, source = 'all', limit = 8, signal }:
   return response.json()
 }
 
-export async function addWantedUpdate(payload) {
+export async function addWantedUpdate(payload: any) {
   const response = await fetch('/api/updates/wanted', {
     method: 'POST',
     credentials: 'same-origin',
@@ -78,7 +78,7 @@ export async function fetchAcquireStatus({ signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function searchAcquire(q, { signal }: LooseProps = {}) {
+export async function searchAcquire(q: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/acquire/search?q=${encodeURIComponent(q || '')}`, {
     signal,
     credentials: 'same-origin',

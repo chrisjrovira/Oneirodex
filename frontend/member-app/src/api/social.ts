@@ -49,7 +49,7 @@ export async function fetchFriends({ signal }: LooseProps = {}) {
   return response.json()
 }
 
-export async function requestFriend(username) {
+export async function requestFriend(username: any) {
   const response = await fetch('/api/social/friends', {
     method: 'POST',
     credentials: 'same-origin',
@@ -62,7 +62,7 @@ export async function requestFriend(username) {
   return response.json().catch(() => ({}))
 }
 
-export async function acceptFriend(id) {
+export async function acceptFriend(id: any) {
   const response = await fetch(`/api/social/friends/${id}/accept`, {
     method: 'POST',
     credentials: 'same-origin',
@@ -71,7 +71,7 @@ export async function acceptFriend(id) {
   return response.ok
 }
 
-export async function rejectFriend(id) {
+export async function rejectFriend(id: any) {
   const response = await fetch(`/api/social/friends/${id}/reject`, {
     method: 'POST',
     credentials: 'same-origin',
@@ -80,7 +80,7 @@ export async function rejectFriend(id) {
   return response.ok
 }
 
-export async function removeFriend(id) {
+export async function removeFriend(id: any) {
   const response = await fetch(`/api/social/friends/${id}`, {
     method: 'DELETE',
     credentials: 'same-origin',
@@ -89,7 +89,7 @@ export async function removeFriend(id) {
   return response.ok
 }
 
-export async function fetchMemberProfile(userId, { signal }: LooseProps = {}) {
+export async function fetchMemberProfile(userId: any, { signal }: LooseProps = {}) {
   const response = await fetch(`/api/users/${userId}/profile`, {
     credentials: 'same-origin',
     signal,

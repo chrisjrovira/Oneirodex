@@ -16,7 +16,7 @@ export async function fetchFreeGames({ signal, store }: LooseProps = {}) {
   return response.json()
 }
 
-export async function claimFreeGameAssist(offerId) {
+export async function claimFreeGameAssist(offerId: any) {
   const response = await fetch(`/api/news/free-games/${offerId}/claim-assist`, {
     method: 'POST',
     credentials: 'same-origin',

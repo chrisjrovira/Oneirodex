@@ -33,8 +33,8 @@ const INHERITED_FILTER_KEYS = [
   'signal',
 ]
 
-export function shelfQuery(filters, genre) {
-  const query = { genre, page: 1, per_page: SHELF_SIZE }
+export function shelfQuery(filters: any, genre: any) {
+  const query: Record<string, any> = { genre, page: 1, per_page: SHELF_SIZE }
   for (const key of INHERITED_FILTER_KEYS) {
     const value = filters?.[key]
     if (value !== undefined && value !== null && value !== '') {
@@ -54,11 +54,11 @@ export function shelfQuery(filters, genre) {
 export async function fetchShelfGenres({ signal }: LooseProps = {}) {
   const options = await fetchFilterOptions({ signal })
   return (options.genres || [])
-    .map((entry) => (typeof entry === 'string' ? entry : entry?.name))
-    .filter((name) => typeof name === 'string' && name.trim() !== '')
+    .map((entry: any) => (typeof entry === 'string' ? entry : entry?.name))
+    .filter((name: any) => typeof name === 'string' && name.trim() !== '')
 }
 
-export async function fetchShelfGames(filters, genre, { signal }: LooseProps = {}) {
+export async function fetchShelfGames(filters: any, genre: any, { signal }: LooseProps = {}) {
   const payload = await fetchBrowseGames(shelfQuery(filters, genre), { signal })
   return {
     games: Array.isArray(payload?.games) ? payload.games : [],

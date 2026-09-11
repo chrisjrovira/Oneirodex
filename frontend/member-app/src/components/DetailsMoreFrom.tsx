@@ -7,7 +7,7 @@ import { DiscoverShelf } from './DiscoverShelf'
  * Hidden when the API returns fewer than two others (or none).
  */
 export function DetailsMoreFrom({ gameUuid }: LooseProps) {
-  const [sections, setSections] = useState([])
+  const [sections, setSections] = useState<any[]>([])
 
   useEffect(() => {
     if (!gameUuid) {

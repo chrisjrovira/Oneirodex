@@ -1,7 +1,8 @@
 {
-  // member-app SPA — files renamed to .ts/.tsx in PR-5a. `strict: true` is
-  // PR-5b; until then this extends the shared on-ramp (`strict: false`,
-  // `allowJs: true`) so tests that stay `.js`/`.jsx` still typecheck as JS.
+  // member-app SPA — files renamed to .ts/.tsx in PR-5a, `strict: true` in
+  // PR-5b. Local override only — tsconfig.base.json stays strict:false for
+  // the other workspaces until each does its own pass.
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "strict": true },
   "include": ["src"]
 }

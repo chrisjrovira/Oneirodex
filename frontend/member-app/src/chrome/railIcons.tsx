@@ -13,7 +13,7 @@
  */
 import { base } from './icons'
 
-export const railIconPaths = {
+export const railIconPaths: Record<string, any> = {
   acquire: (
     <>
       <path d="M5 8h14l-1.3 11.2a2 2 0 0 1-2 1.8H8.3a2 2 0 0 1-2-1.8L5 8z" />

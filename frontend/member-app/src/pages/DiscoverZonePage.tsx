@@ -22,9 +22,9 @@ export function DiscoverZonePage() {
   const { isAdmin } = useViewer()
   const shellConfig = useShellConfig()
   const { slug } = useParams()
-  const [zone, setZone] = useState(null)
+  const [zone, setZone] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<any>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -38,7 +38,7 @@ export function DiscoverZonePage() {
         setZone(next)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (cancelled || err?.name === 'AbortError') return
         setError(err)
         setLoading(false)
@@ -87,7 +87,7 @@ export function DiscoverZonePage() {
     <>
       {bar}
       {zone?.lede ? <p className="od-more-page__lede">{zone.lede}</p> : null}
-      {sections.map((section) => (
+      {sections.map((section: any) => (
         <DiscoverShelf
           key={section.identifier}
           section={section}

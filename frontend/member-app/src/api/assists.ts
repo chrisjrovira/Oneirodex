@@ -6,7 +6,7 @@
  */
 import { errorFromResponse } from '@oneirodex/ui'
 
-export async function fetchGameAssists(gameUuid, options: LooseProps = {}) {
+export async function fetchGameAssists(gameUuid: any, options: LooseProps = {}) {
   const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/assists`, {
     credentials: 'same-origin',
     signal: options.signal,

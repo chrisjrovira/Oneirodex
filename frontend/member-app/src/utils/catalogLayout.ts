@@ -16,7 +16,7 @@ export const CATALOG_ROW_MIN_PX = 56
 export const CATALOG_ROW_MAX_PX = 144
 export const CATALOG_ROW_SCALE = 0.42
 
-export function catalogRowHeightPx(tileMin) {
+export function catalogRowHeightPx(tileMin: any) {
   const base = Number(tileMin)
   if (!Number.isFinite(base) || base <= 0) return CATALOG_ROW_HEIGHT
   return Math.round(
@@ -24,7 +24,7 @@ export function catalogRowHeightPx(tileMin) {
   )
 }
 
-export function normalizeCatalogLayout(value) {
+export function normalizeCatalogLayout(value: any) {
   if (value === 'tile' || value === 'rows' || value === 'grid') return value
   return 'tile'
 }
@@ -37,7 +37,7 @@ export function readCatalogLayout() {
   }
 }
 
-export function persistCatalogLayout(value) {
+export function persistCatalogLayout(value: any) {
   const next = normalizeCatalogLayout(value)
   try {
     window.localStorage.setItem(CATALOG_LAYOUT_KEY, next)
@@ -49,7 +49,7 @@ export function persistCatalogLayout(value) {
 
 export function useCatalogLayout() {
   const [layout, setLayoutState] = useState(readCatalogLayout)
-  function setLayout(next) {
+  function setLayout(next: any) {
     setLayoutState(persistCatalogLayout(next))
   }
   return [layout, setLayout]

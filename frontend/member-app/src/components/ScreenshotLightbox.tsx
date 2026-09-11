@@ -14,9 +14,9 @@ import './ScreenshotLightbox.css'
  */
 export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }: LooseProps) {
   const titleId = useId()
-  const stageRef = useRef(null)
+  const stageRef = useRef<any>(null)
   const [index, setIndex] = useState(0)
-  const [fsError, setFsError] = useState(null)
+  const [fsError, setFsError] = useState<any>(null)
   const items = urls
   const open = openIndex != null && items.length > 0
 
@@ -24,7 +24,7 @@ export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }: Loo
     if (!open) return undefined
     setIndex(openIndex)
     setFsError(null)
-    const onKey = (event) => {
+    const onKey = (event: any) => {
       if (event.key === 'Escape') onClose?.()
       if (event.key === 'ArrowRight') {
         setIndex((current) => (current + 1) % items.length)
@@ -59,7 +59,7 @@ export function ScreenshotLightbox({ urls = [], openIndex = null, onClose }: Loo
     }
     try {
       await node.requestFullscreen()
-    } catch (err) {
+    } catch (err: any) {
       setFsError(err?.message || 'Unable to enter fullscreen')
     }
   }

@@ -18,8 +18,8 @@ export function SetCompletionPage() {
   const libraryPlatform = (searchParams.get('library_platform') || '').trim().toUpperCase()
   const region = (searchParams.get('region') || 'USA').trim().toUpperCase()
 
-  const [busyTitle, setBusyTitle] = useState(null)
-  const [actionMsg, setActionMsg] = useState(null)
+  const [busyTitle, setBusyTitle] = useState<any>(null)
+  const [actionMsg, setActionMsg] = useState<any>(null)
 
   const {
     data: report,
@@ -34,13 +34,13 @@ export function SetCompletionPage() {
 
   const missing = useMemo(() => (Array.isArray(report?.missing) ? report.missing : []), [report])
 
-  function setRegion(nextRegion) {
+  function setRegion(nextRegion: any) {
     const next = new URLSearchParams(searchParams)
     next.set('region', nextRegion)
     setSearchParams(next)
   }
 
-  async function addToWishlist(title) {
+  async function addToWishlist(title: any) {
     setBusyTitle(title)
     setActionMsg(null)
     try {
@@ -49,7 +49,7 @@ export function SetCompletionPage() {
         notes: `Missing from ${libraryPlatform} ${region} reference set`,
       })
       setActionMsg(`Added “${title}” to wishlist`)
-    } catch (err) {
+    } catch (err: any) {
       setActionMsg(err.message || 'Wishlist request failed')
     } finally {
       setBusyTitle(null)
@@ -213,7 +213,7 @@ export function SetCompletionPage() {
           <p className="od-more-page__lede">No missing titles for this set — nice.</p>
         ) : (
           <ul className="od-set-completion-missing">
-            {missing.map((row) => (
+            {missing.map((row: any) => (
               <li key={row.normalized_name || row.name}>
                 <span>{row.name}</span>
                 <button

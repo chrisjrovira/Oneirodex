@@ -32,7 +32,7 @@ const AREAS = [
  * allowed values — a link is untrusted input like any other, and a bad `area`
  * would put the select into a state its own options cannot represent.
  */
-export function prefillFromSearch(params) {
+export function prefillFromSearch(params: any) {
   const area = params.get('area')
   return {
     title: params.get('title') || '',
@@ -53,13 +53,13 @@ export function ReportIssuePage() {
   const [client, setClient] = useState('')
   const [url, setUrl] = useState(seeded.url)
   const [logs, setLogs] = useState('')
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
+  const [result, setResult] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [busy, setBusy] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [logsOpen, setLogsOpen] = useState(false)
 
-  async function submit(event) {
+  async function submit(event: any) {
     event.preventDefault()
     setBusy(true)
     setError(null)
@@ -82,7 +82,7 @@ export function ReportIssuePage() {
       setLogs('')
       setDetailsOpen(false)
       setLogsOpen(false)
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Submit failed')
     } finally {
       setBusy(false)

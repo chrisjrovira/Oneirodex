@@ -54,9 +54,9 @@ function FaceButtons({ variant }: LooseProps) {
   )
 }
 
-const ARCHETYPES = {
+const ARCHETYPES: Record<string, any> = {
   /** Controller — grips, d-pad, face buttons pressing in sequence. */
-  pad: (variant) => (
+  pad: (variant: any) => (
     <svg {...svgProps}>
       <path
         className="od-sysmotif__shell"
@@ -72,7 +72,7 @@ const ARCHETYPES = {
   ),
 
   /** Console deck — power LED pulses, cartridge/disc slot reads. */
-  console: (variant) => (
+  console: (variant: any) => (
     <svg {...svgProps}>
       <rect
         className="od-sysmotif__shell"
@@ -92,7 +92,7 @@ const ARCHETYPES = {
   ),
 
   /** Handheld — screen refresh line, d-pad, power LED. */
-  handheld: (variant) => (
+  handheld: (variant: any) => (
     <svg {...svgProps}>
       <rect
         className="od-sysmotif__shell"
@@ -117,7 +117,7 @@ const ARCHETYPES = {
   ),
 
   /** Arcade cabinet — marquee glows, screen rasters. */
-  cabinet: (variant) => (
+  cabinet: (variant: any) => (
     <svg {...svgProps}>
       <path className="od-sysmotif__shell" d="M12 6h24v34a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2z" />
       <rect className="od-sysmotif__marquee" x="15" y="9" width="18" height="5" rx="1" />
@@ -128,7 +128,7 @@ const ARCHETYPES = {
   ),
 
   /** Home computer / PC — monitor raster over a keyboard. */
-  computer: (variant) => (
+  computer: (variant: any) => (
     <svg {...svgProps}>
       <rect className="od-sysmotif__shell" x="8" y="8" width="32" height="21" rx="2" />
       <rect className="od-sysmotif__scanline" x="11" y="11" width="26" height="3" />
@@ -151,7 +151,7 @@ const ARCHETYPES = {
 
   /** Cartridge — slots home, lifts, repeats. Also the honest fallback for the
    *  handful of entries that are not consoles at all (Daphne, Pinball). */
-  cart: (variant) => (
+  cart: (variant: any) => (
     <svg {...svgProps}>
       <path className="od-sysmotif__slot" d="M11 32h26v9H11z" />
       <g className="od-sysmotif__cart">
@@ -192,7 +192,7 @@ export function SystemMotifArt({ archetype, variant = 0 }: LooseProps) {
  * @param {string} platformValue
  * @returns {{ id: string, name: string, archetype: string, variant: number } | null}
  */
-export function motifForPlatform(platformValue) {
+export function motifForPlatform(platformValue: any) {
   const id = String(platformValue || '').toLowerCase()
   if (!id) return null
   return SYSTEM_MOTIFS.find((motif) => motif.id === id) || null

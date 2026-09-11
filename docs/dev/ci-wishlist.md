@@ -244,3 +244,5 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   (tests stay `.js`/`.jsx`). No workflow change — `member-app-vitest` already
   runs `npm run typecheck`. `strict: true` is the follow-up (PR-5b); do not
   flip `tsconfig.base.json`.
+- [PR-5b] `frontend/member-app/tsconfig.json` local `"strict": true`. Did not
+  flip `tsconfig.base.json`. Same split as admin-app (#72 then #74).

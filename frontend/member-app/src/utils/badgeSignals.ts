@@ -12,7 +12,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  */
 
 /** @type {Record<BadgeKind, number>} */
-export const BADGE_PRIORITY = {
+export const BADGE_PRIORITY: Record<string, number> = {
   UPDATE: 100,
   MISSING: 85,
   NEW: 80,
@@ -27,7 +27,7 @@ export const BADGE_PRIORITY = {
 }
 
 /** Preferred corner per kind (operator layout map for UID-001). */
-export const BADGE_CORNER_PREFERENCE = {
+export const BADGE_CORNER_PREFERENCE: Record<string, string> = {
   UPDATE: 'top-left',
   MISSING: 'top-left',
   NEW: 'top-left',
@@ -49,7 +49,7 @@ export const BADGE_CORNER_FALLBACK = ['top-left', 'bottom-left', 'bottom-right',
  * Accepts `path_status=missing` or boolean `path_missing`.
  * @param {object | null | undefined} game
  */
-export function isPathMissing(game) {
+export function isPathMissing(game: any) {
   if (!game || typeof game !== 'object') {
     return false
   }
@@ -66,7 +66,7 @@ export function isPathMissing(game) {
  * @param {string | number | Date | null | undefined} value
  * @returns {Date | null}
  */
-export function parseDate(value) {
+export function parseDate(value: any) {
   if (value == null || value === '') {
     return null
   }
@@ -79,7 +79,7 @@ export function parseDate(value) {
  * @param {number} windowDays
  * @param {Date} [now]
  */
-export function isWithinDays(date, windowDays, now = new Date()) {
+export function isWithinDays(date: any, windowDays: any, now = new Date()) {
   if (!date) {
     return false
   }
@@ -94,7 +94,7 @@ export function isWithinDays(date, windowDays, now = new Date()) {
  * @param {{ now?: Date, newWindowDays?: number }} [options]
  * @returns {{ kind: BadgeKind, label: string, title: string, tone: string }[]}
  */
-export function collectBadgeSignals(game, options: LooseProps = {}) {
+export function collectBadgeSignals(game: any, options: LooseProps = {}) {
   const now = options.now || new Date()
   const newWindow = options.newWindowDays ?? NEW_IMPORT_WINDOW_DAYS
   const badges = []
@@ -214,7 +214,7 @@ export function collectBadgeSignals(game, options: LooseProps = {}) {
  * @param {ReturnType<typeof collectBadgeSignals>} badges
  * @param {number} [maxVisible=2]
  */
-export function capBadges(badges, maxVisible = 2) {
+export function capBadges(badges: any, maxVisible = 2) {
   if (badges.length <= maxVisible) {
     return { visible: badges, overflow: 0 }
   }
@@ -255,7 +255,7 @@ export function availableBadgeCorners(options: LooseProps = {}) {
  *   hasMissing: boolean,
  * }}
  */
-export function layoutBadgesByCorner(badges, options: LooseProps = {}) {
+export function layoutBadgesByCorner(badges: any, options: LooseProps = {}) {
   const { hasPlatformChip = false, collidesWithTitle = false, maxPerCorner = 2 } = options
 
   const corners = availableBadgeCorners({ hasPlatformChip })
@@ -265,11 +265,11 @@ export function layoutBadgesByCorner(badges, options: LooseProps = {}) {
   /** @type {string | null} */
   let overflowAt = null
 
-  function room(corner) {
+  function room(corner: any) {
     return (buckets.get(corner)?.length || 0) < maxPerCorner
   }
 
-  function pickCorner(preferred, forceTopLeft = false) {
+  function pickCorner(preferred: any, forceTopLeft = false) {
     if (forceTopLeft && corners.includes('top-left') && room('top-left')) {
       return 'top-left'
     }
@@ -284,7 +284,7 @@ export function layoutBadgesByCorner(badges, options: LooseProps = {}) {
     return null
   }
 
-  function place(badge, forceTopLeft = false) {
+  function place(badge: any, forceTopLeft = false) {
     const preferred = BADGE_CORNER_PREFERENCE[badge.kind] || 'top-left'
     const corner = pickCorner(preferred, forceTopLeft)
     if (!corner) {

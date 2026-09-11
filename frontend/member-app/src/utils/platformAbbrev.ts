@@ -3,7 +3,7 @@
  * Display abbrev on tiles; keep full name in title/tooltip.
  */
 
-const PLATFORM_ABBREV = Object.freeze({
+const PLATFORM_ABBREV: Record<string, string> = Object.freeze({
   NES: 'NES',
   SNES: 'SNES',
   N64: 'N64',
@@ -67,7 +67,7 @@ const PLATFORM_ABBREV = Object.freeze({
  * @param {string|null|undefined} platformId library_platform enum
  * @returns {string} short tile label (falls back to first letters of unknown ids)
  */
-export function abbreviatePlatform(platformId) {
+export function abbreviatePlatform(platformId: any) {
   if (platformId == null || platformId === '') {
     return ''
   }
@@ -90,7 +90,7 @@ export function abbreviatePlatform(platformId) {
  * @param {{ library_platform?: string, library_platform_label?: string }|null|undefined} game
  * @returns {{ abbrev: string, full: string }}
  */
-export function platformChipLabels(game) {
+export function platformChipLabels(game: any) {
   const id = game?.library_platform || ''
   const full = (game?.library_platform_label || id || '').trim()
   const abbrev = abbreviatePlatform(id) || full
@@ -116,7 +116,7 @@ export function platformChipLabels(game) {
  * @param {string} [activePlatform] the `library_platform` filter, when set
  * @returns {{abbrev: string, full: string, extra: number} | null}
  */
-export function editionChipLabels(game, activePlatform = '') {
+export function editionChipLabels(game: any, activePlatform = '') {
   const platforms = Array.isArray(game?.edition_platforms)
     ? game.edition_platforms.filter(Boolean)
     : []

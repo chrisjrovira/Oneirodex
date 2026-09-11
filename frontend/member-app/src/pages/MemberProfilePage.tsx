@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { fetchMemberProfile } from '../api/social'
 import { PageStatus } from '../components/PageStatus'
 
-function formatDuration(totalSeconds) {
+function formatDuration(totalSeconds: any) {
   const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0))
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
@@ -14,14 +14,14 @@ function formatDuration(totalSeconds) {
 
 export function MemberProfilePage() {
   const { userId } = useParams()
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
+  const [data, setData] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
 
   useEffect(() => {
     const controller = new AbortController()
     fetchMemberProfile(userId, { signal: controller.signal })
       .then(setData)
-      .catch((err) => {
+      .catch((err: any) => {
         if (err.name !== 'AbortError') setError(err)
       })
     return () => controller.abort()
@@ -64,7 +64,7 @@ export function MemberProfilePage() {
           <p className="od-more-page__lede">No recent games visible to you.</p>
         ) : (
           <ul>
-            {data.recent_games.map((row) => (
+            {data.recent_games.map((row: any) => (
               <li key={row.game_uuid}>
                 <Link to={`/game_details/${row.game_uuid}`}>{row.game_name}</Link>
                 {' — '}

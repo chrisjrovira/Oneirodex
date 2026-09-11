@@ -14,7 +14,7 @@ const PC_LIBRARY_PLATFORMS = new Set(['PCWIN', 'PCDOS', 'MAC', 'OTHER'])
  * @param {'genre' | 'theme' | 'game_mode' | 'player_perspective'} kind
  * @param {string} name
  */
-export function taxonomyHref(kind, name) {
+export function taxonomyHref(kind: any, name: any) {
   const value = encodeURIComponent(name)
   switch (kind) {
     case 'genre':
@@ -30,7 +30,7 @@ export function taxonomyHref(kind, name) {
   }
 }
 
-export function detailsRootCrumb(game) {
+export function detailsRootCrumb(game: any) {
   const key = String(game?.library_platform || '').toUpperCase()
   if (key && !PC_LIBRARY_PLATFORMS.has(key)) {
     return { to: '/systems', label: 'Systems' }
@@ -38,7 +38,7 @@ export function detailsRootCrumb(game) {
   return { to: '/library', label: 'Game Catalog' }
 }
 
-export function primaryGenreName(game) {
+export function primaryGenreName(game: any) {
   const names = Array.isArray(game?.genres) ? game.genres : []
   return names[0] || ''
 }

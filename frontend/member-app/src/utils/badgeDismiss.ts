@@ -13,7 +13,7 @@ function readStore() {
   }
 }
 
-function writeStore(store) {
+function writeStore(store: any) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
   } catch {
@@ -21,7 +21,7 @@ function writeStore(store) {
   }
 }
 
-export function listDismissedKinds(gameUuid) {
+export function listDismissedKinds(gameUuid: any) {
   if (!gameUuid) {
     return []
   }
@@ -30,7 +30,7 @@ export function listDismissedKinds(gameUuid) {
   return Array.isArray(list) ? list : []
 }
 
-export function dismissBadge(gameUuid, kind) {
+export function dismissBadge(gameUuid: any, kind: any) {
   // VR / MISSING join the top-left transitional stack — never dismissable.
   if (!gameUuid || !kind || kind === 'VR' || kind === 'MISSING') {
     return
@@ -42,7 +42,7 @@ export function dismissBadge(gameUuid, kind) {
   writeStore(store)
 }
 
-export function clearDismissedBadges(gameUuid) {
+export function clearDismissedBadges(gameUuid: any) {
   if (!gameUuid) {
     return
   }
@@ -51,12 +51,12 @@ export function clearDismissedBadges(gameUuid) {
   writeStore(store)
 }
 
-export function filterDismissedBadges(gameUuid, badges) {
+export function filterDismissedBadges(gameUuid: any, badges: any) {
   const dismissed = new Set(listDismissedKinds(gameUuid))
   if (dismissed.size === 0) {
     return badges
   }
   return badges.filter(
-    (badge) => badge.kind === 'VR' || badge.kind === 'MISSING' || !dismissed.has(badge.kind),
+    (badge: any) => badge.kind === 'VR' || badge.kind === 'MISSING' || !dismissed.has(badge.kind),
   )
 }

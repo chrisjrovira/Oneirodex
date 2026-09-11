@@ -63,17 +63,17 @@ export function TopBar({
   const pageTitle = getPageTitle(pathname, { showTrailers, showHelp, enableVr, enableActivity })
   const showTileSize = hasTileSizeControl(pathname)
   const [accountOpen, setAccountOpen] = useState(false)
-  const [accountModal, setAccountModal] = useState(null)
+  const [accountModal, setAccountModal] = useState<any>(null)
   const accountId = useId()
-  const rootRef = useRef(null)
+  const rootRef = useRef<any>(null)
   const paletteHint = commandPaletteHint()
 
   useEffect(() => {
     if (!accountOpen) return undefined
-    function onPointerDown(event) {
+    function onPointerDown(event: any) {
       if (!rootRef.current?.contains(event.target)) setAccountOpen(false)
     }
-    function onKey(event) {
+    function onKey(event: any) {
       if (event.key === 'Escape') setAccountOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
@@ -84,7 +84,7 @@ export function TopBar({
     }
   }, [accountOpen])
 
-  async function handlePreferencesClick(event) {
+  async function handlePreferencesClick(event: any) {
     event.preventDefault()
     setAccountOpen(false)
     try {
@@ -100,8 +100,8 @@ export function TopBar({
      in front of a menu, with the drawer adding nothing but a second click and a
      second visual language. The drawer is gone; every entry here lands on its
      panel. */
-  function openAccountModal(panel) {
-    return (event) => {
+  function openAccountModal(panel: any) {
+    return (event: any) => {
       event.preventDefault()
       setAccountOpen(false)
       setAccountModal(panel)

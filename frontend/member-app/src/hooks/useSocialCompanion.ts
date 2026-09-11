@@ -5,9 +5,9 @@ import { fetchFriendsList, fetchSocialStatus } from './socialCompanionApi'
  * Live friends + presence for the stay-open social companion.
  */
 export function useSocialCompanion({ enabled = true, sseEnabled = false }: LooseProps = {}) {
-  const [friends, setFriends] = useState([])
-  const [status, setStatus] = useState(null)
-  const [error, setError] = useState(null)
+  const [friends, setFriends] = useState<any[]>([])
+  const [status, setStatus] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [loading, setLoading] = useState(Boolean(enabled))
 
   const reload = useCallback(
@@ -21,7 +21,7 @@ export function useSocialCompanion({ enabled = true, sseEnabled = false }: Loose
         setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
         setStatus(socialStatus)
         setError(null)
-      } catch (err) {
+      } catch (err: any) {
         if (err?.name !== 'AbortError') {
           setError(err)
         }
@@ -38,7 +38,7 @@ export function useSocialCompanion({ enabled = true, sseEnabled = false }: Loose
     setLoading(true)
     void reload({ signal: controller.signal })
 
-    let source
+    let source: EventSource | null | undefined
     let sseLive = false
     let timer = 0
     let sseTimer = 0

@@ -15,7 +15,7 @@ import { PageStatus } from '../components/PageStatus'
 import { VoiceLobby } from '../components/VoiceLobby'
 import '../styles/panelGrid.css'
 
-function presenceLabel(status) {
+function presenceLabel(status: any) {
   if (status === 'in-game') return 'In game'
   if (status === 'online') return 'Online'
   if (status === 'away') return 'Away'
@@ -30,12 +30,12 @@ const ACTIVITY_VIEWS = [
 export function ActivityPage() {
   const shellConfig = useShellConfig()
   const useNewChrome = Boolean(shellConfig.enableNewChrome)
-  const [data, setData] = useState(null)
-  const [social, setSocial] = useState(null)
-  const [friends, setFriends] = useState([])
+  const [data, setData] = useState<any>(null)
+  const [social, setSocial] = useState<any>(null)
+  const [friends, setFriends] = useState<any[]>([])
   const [friendName, setFriendName] = useState('')
-  const [error, setError] = useState(null)
-  const [friendMsg, setFriendMsg] = useState(null)
+  const [error, setError] = useState<any>(null)
+  const [friendMsg, setFriendMsg] = useState<any>(null)
   const [friendsOnly, setFriendsOnly] = useState(false)
 
   function reload() {
@@ -50,7 +50,7 @@ export function ActivityPage() {
         setSocial(socialStatus)
         setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (err.name !== 'AbortError') setError(err)
       })
     return () => controller.abort()
@@ -58,7 +58,7 @@ export function ActivityPage() {
 
   useEffect(() => {
     const cleanup = reload()
-    let source
+    let source: EventSource | null | undefined
     let sseLive = false
     let timer = 0
 
@@ -128,7 +128,7 @@ export function ActivityPage() {
     }
   }, [friendsOnly])
 
-  async function requestFriend(event) {
+  async function requestFriend(event: any) {
     event.preventDefault()
     const username = friendName.trim()
     if (!username) return
@@ -145,24 +145,24 @@ export function ActivityPage() {
       }
       const friendData = await fetchFriends()
       setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
-    } catch (err) {
+    } catch (err: any) {
       setFriendMsg(err.message || 'Friend request failed')
     }
   }
 
-  async function acceptFriend(id) {
+  async function acceptFriend(id: any) {
     await apiAcceptFriend(id)
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
   }
 
-  async function rejectFriend(id) {
+  async function rejectFriend(id: any) {
     await apiRejectFriend(id)
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
   }
 
-  async function removeFriend(id) {
+  async function removeFriend(id: any) {
     await apiRemoveFriend(id)
     const friendData = await fetchFriends()
     setFriends(Array.isArray(friendData?.friends) ? friendData.friends : [])
@@ -174,7 +174,7 @@ export function ActivityPage() {
         <ContextBar
           views={ACTIVITY_VIEWS}
           activeView={friendsOnly ? 'friends' : 'all'}
-          onSelectView={(id) => setFriendsOnly(id === 'friends')}
+          onSelectView={(id: any) => setFriendsOnly(id === 'friends')}
         />
       ) : null}
       <div className="od-more-page od-panels">
@@ -297,7 +297,7 @@ export function ActivityPage() {
                 <PageStatus emptyMessage="Nobody is playing right now." />
               ) : (
                 <ul>
-                  {data.now_playing.map((row) => (
+                  {data.now_playing.map((row: any) => (
                     <li key={`np-${row.session_id}`}>
                       {row.user_id ? (
                         <Link to={`/members/${row.user_id}`}>
@@ -315,7 +315,7 @@ export function ActivityPage() {
             <section>
               <h2>Recent</h2>
               <ul>
-                {(data.activity || []).map((row) => (
+                {(data.activity || []).map((row: any) => (
                   <li key={row.session_id}>
                     {row.user_id ? (
                       <Link to={`/members/${row.user_id}`}>

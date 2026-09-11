@@ -4,7 +4,7 @@ import { primaryGenreName } from './detailsTaxonomy'
  * Group catalog games into Steam-style genre shelves for Grid view.
  * Order of sections follows first appearance in the current page.
  */
-export function groupCatalogGamesByGenre(games) {
+export function groupCatalogGamesByGenre(games: any) {
   const list = Array.isArray(games) ? games : []
   const order = []
   const buckets = new Map()

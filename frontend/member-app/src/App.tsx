@@ -96,7 +96,7 @@ const SetCompletionPage = lazy(() =>
 )
 
 // Pure — fed the `useShellConfig()` value at the call site (Wave B1.6).
-function libraryInitialConfig(shellConfig) {
+function libraryInitialConfig(shellConfig: any) {
   return {
     perPage: Number(shellConfig.perPage) || 50,
     defaultSort: shellConfig.defaultSort || 'name',
@@ -188,7 +188,7 @@ function Layout({ tileSize, onTileSizeChange }: LooseProps) {
       <SideRail
         railState={railState}
         onCloseDrawer={closeDrawer}
-        onNavigate={(link) => {
+        onNavigate={(link: any) => {
           // Chat and Friends are panels, not routes, but they are destinations
           // to the member so the rail lists them alongside the routed ones.
           if (link.action === 'open-chat') requestOpenChatPanel()

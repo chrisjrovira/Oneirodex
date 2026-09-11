@@ -8,6 +8,6 @@
  */
 export const SHELF_FULLY_VISIBLE_RATIO = 0.99
 
-export function isShelfItemFullyVisible(intersectionRatio) {
+export function isShelfItemFullyVisible(intersectionRatio: any) {
   return Number(intersectionRatio) >= SHELF_FULLY_VISIBLE_RATIO
 }

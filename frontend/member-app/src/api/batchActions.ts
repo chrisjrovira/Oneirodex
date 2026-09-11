@@ -1,7 +1,7 @@
 import { csrfHeaders, errorFromBody } from '@oneirodex/ui'
 import { toggleFavorite as defaultToggleFavorite } from './userActions'
 
-async function postJson(url, body) {
+async function postJson(url: any, body: any) {
   const response = await fetch(url, {
     method: 'POST',
     credentials: 'same-origin',
@@ -37,7 +37,11 @@ export const BATCH_PLAY_STATUS_OPTIONS = [
  * @param {boolean} favorite
  * @param {{ favoriteByUuid?: Record<string, boolean>, toggleFavorite?: (uuid: string) => Promise<{ is_favorite?: boolean }> }} [options]
  */
-export async function batchSetFavorite(uuids: string[] = [], favorite, options: LooseProps = {}) {
+export async function batchSetFavorite(
+  uuids: string[] = [],
+  favorite: any,
+  options: LooseProps = {},
+) {
   const list: string[] = Array.from(new Set((uuids || []).filter(Boolean)))
   if (list.length === 0) {
     return { ok: true, updated: [], skipped: [], errors: [], mode: 'noop' }
@@ -90,7 +94,7 @@ export async function batchSetFavorite(uuids: string[] = [], favorite, options: 
           errors.push({ uuid, error: 'favorite state mismatch' })
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       errors.push({ uuid, error: err?.message || String(err) })
     }
   }
@@ -110,7 +114,7 @@ export async function batchSetFavorite(uuids: string[] = [], favorite, options: 
  *
  * @param {string[]} uuids
  */
-export async function batchCheckFreshness(uuids) {
+export async function batchCheckFreshness(uuids: any) {
   const list = Array.from(new Set((uuids || []).filter(Boolean)))
   if (list.length === 0) {
     return { ok: true, updated: [], skipped: [], errors: [], mode: 'noop' }
@@ -152,7 +156,7 @@ export async function batchCheckFreshness(uuids) {
  * @param {string[]} uuids
  * @param {string} status — `unplayed` | `unfinished` | `beaten` | `completed` | ``
  */
-export async function batchSetPlayStatus(uuids, status) {
+export async function batchSetPlayStatus(uuids: any, status: any) {
   const list = Array.from(new Set((uuids || []).filter(Boolean)))
   const nextStatus = typeof status === 'string' ? status : ''
   if (list.length === 0) {
@@ -201,7 +205,7 @@ export async function batchSetPlayStatus(uuids, status) {
  * @param {string[]} uuids
  * @param {{ action?: 'add' | 'remove' }} [opts]
  */
-export async function batchAddToWishlist(uuids, opts: LooseProps = {}) {
+export async function batchAddToWishlist(uuids: any, opts: LooseProps = {}) {
   const list = Array.from(new Set((uuids || []).filter(Boolean)))
   if (list.length === 0) {
     return { ok: true, updated: [], skipped: [], errors: [], mode: 'noop' }
@@ -239,7 +243,7 @@ export async function batchAddToWishlist(uuids, opts: LooseProps = {}) {
  *
  * @param {string[]} uuids
  */
-export async function batchRefreshImages(uuids) {
+export async function batchRefreshImages(uuids: any) {
   const list = Array.from(new Set((uuids || []).filter(Boolean)))
   if (list.length === 0) {
     return { ok: true, queued: [], skipped: [], errors: [], mode: 'noop' }

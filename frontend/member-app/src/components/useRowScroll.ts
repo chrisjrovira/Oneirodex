@@ -18,12 +18,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
  *   re-run an effect).
  */
 export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: LooseProps = {}) {
-  const ref = useRef(null)
+  const ref = useRef<any>(null)
   /** Outer hover zone (viewport / scroller). Wheel binds here so the lane under
    *  the custom scrollbar and the arrow fades do not become accidental row scroll. */
-  const viewportRef = useRef(null)
+  const viewportRef = useRef<any>(null)
   /** Custom horizontal scrollbar — wheel here pans the track. */
-  const hbarRef = useRef(null)
+  const hbarRef = useRef<any>(null)
   const frameRef = useRef(0)
   const directionRef = useRef(0)
   const [overflow, setOverflow] = useState({ start: false, end: false })
@@ -73,7 +73,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
   useEffect(() => stopEdgeScroll, [stopEdgeScroll])
 
   const startEdgeScroll = useCallback(
-    (direction) => {
+    (direction: any) => {
       if (directionRef.current === direction) return
       directionRef.current = direction
       if (frameRef.current) return
@@ -106,7 +106,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
    *  A click while the hover loop is already running must not also page-jump —
    *  that was the bumper that skipped instead of easing. */
   const scrollByPage = useCallback(
-    (direction) => {
+    (direction: any) => {
       const wasHovering = directionRef.current !== 0
       stopEdgeScroll()
       if (wasHovering) return
@@ -124,7 +124,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
     [measure, step, stopEdgeScroll],
   )
 
-  const wheelDeltaPx = useCallback((event, fallbackPage) => {
+  const wheelDeltaPx = useCallback((event: any, fallbackPage: any) => {
     let delta =
       event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)
         ? event.deltaX || event.deltaY
@@ -138,7 +138,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
 
   /** Wheel over the bottom slider pans the shelf track. */
   const panTrackByWheel = useCallback(
-    (event) => {
+    (event: any) => {
       const node = ref.current
       if (!node) return false
       if (node.scrollWidth <= node.clientWidth + 1) return false
@@ -155,7 +155,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
     [measure, step, wheelDeltaPx],
   )
 
-  const wheelOverHbar = useCallback((event) => {
+  const wheelOverHbar = useCallback((event: any) => {
     const bar = hbarRef.current
     if (!bar) return false
     if (bar === event.target || bar.contains(event.target)) return true
@@ -177,7 +177,7 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
    * the scroller so the track padding cannot steal the bar.
    */
   const onWheel = useCallback(
-    (event) => {
+    (event: any) => {
       const node = ref.current
       if (!node) return
 

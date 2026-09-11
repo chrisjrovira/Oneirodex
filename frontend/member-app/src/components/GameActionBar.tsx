@@ -31,7 +31,7 @@ export function GameActionBar({
   thinSeat,
 }: LooseProps) {
   const isThin = thinSeat === undefined ? isThinSeat() : thinSeat
-  const [busyAction, setBusyAction] = useState(null)
+  const [busyAction, setBusyAction] = useState<any>(null)
   const [statusMessage, setStatusMessage] = useState('')
   const [assistPack, setAssistPack] = useState(assistPackProp === undefined ? null : assistPackProp)
   const [remotePlay, setRemotePlay] = useState(remotePlayProp === undefined ? null : remotePlayProp)
@@ -113,12 +113,12 @@ export function GameActionBar({
       ? 'Nothing local to uninstall yet'
       : 'Remove local install only (server library kept)'
 
-  function explain(message) {
+  function explain(message: any) {
     setStatusMessage(message)
     showToast(message, 'warn')
   }
 
-  async function sendCommand(action) {
+  async function sendCommand(action: any) {
     if (!gameUuid || busyAction) {
       return
     }
@@ -137,7 +137,7 @@ export function GameActionBar({
       setStatusMessage(label)
       onCommandQueued?.(action)
       showToast(label, 'success')
-    } catch (err) {
+    } catch (err: any) {
       const message = err?.message || `Failed to queue ${action}`
       setStatusMessage(message)
       showToast(message, 'error')
@@ -163,7 +163,7 @@ export function GameActionBar({
     explain('Already installed on this device. Use Update if a newer pack is available.')
   }
 
-  function onUpdateClick(event) {
+  function onUpdateClick(event: any) {
     if (busyAction) {
       event?.preventDefault?.()
       return
@@ -196,7 +196,7 @@ export function GameActionBar({
     void sendCommand('uninstall')
   }
 
-  async function onDownloadClick(event) {
+  async function onDownloadClick(event: any) {
     if (useLegacyDownloadHref) {
       return
     }
@@ -211,7 +211,7 @@ export function GameActionBar({
       setStatusMessage('Download ready — opening Downloads')
       showToast('Download ready — opening Downloads', 'success')
       window.location.assign('/downloads')
-    } catch (err) {
+    } catch (err: any) {
       const message = honestyApiErrorMessage(err, 'Download failed')
       setStatusMessage(message)
       showToast(message, 'error')

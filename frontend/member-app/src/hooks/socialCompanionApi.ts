@@ -6,7 +6,7 @@ const STORAGE_PINNED = 'od-social-companion-pinned'
 /** CustomEvent name — TopNav / CommandPalette open the dock without SPA navigation. */
 export const OPEN_SOCIAL_EVENT = 'od-open-social-companion'
 
-export function presenceLabel(status) {
+export function presenceLabel(status: any) {
   if (status === 'in-game') return 'In game'
   if (status === 'online') return 'Online'
   if (status === 'away') return 'Away'
@@ -23,7 +23,7 @@ export function readCompanionOpen(defaultOpen = false) {
   }
 }
 
-export function writeCompanionOpen(open) {
+export function writeCompanionOpen(open: any) {
   try {
     localStorage.setItem(STORAGE_OPEN, open ? '1' : '0')
   } catch {
@@ -41,7 +41,7 @@ export function readCompanionPinned(defaultPinned = true) {
   }
 }
 
-export function writeCompanionPinned(pinned) {
+export function writeCompanionPinned(pinned: any) {
   try {
     localStorage.setItem(STORAGE_PINNED, pinned ? '1' : '0')
   } catch {
@@ -98,14 +98,14 @@ export async function mintPartyToken({ gameUuid, spectator = false }: LooseProps
   return { ...data, room }
 }
 
-export function partyInvitePath(gameUuid) {
+export function partyInvitePath(gameUuid: any) {
   const id = (gameUuid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
   const qs = new URLSearchParams({ room: id ? `household:party:${id}` : 'household:lobby' })
   if (gameUuid) qs.set('game', gameUuid)
   return `/activity?${qs.toString()}`
 }
 
-export function shareGamePath(gameUuid) {
+export function shareGamePath(gameUuid: any) {
   if (!gameUuid) return '/library'
   return `/game_details/${encodeURIComponent(gameUuid)}`
 }

@@ -7,7 +7,7 @@ import { showToast } from '../utils/toast'
 import '../styles/panelGrid.css'
 import './TokensPage.css'
 
-const PRESET_FALLBACK = {
+const PRESET_FALLBACK: Record<string, any> = {
   companion: {
     label: 'Desktop companion',
     scopes: ['read:library', 'write:download'],
@@ -20,7 +20,7 @@ const PRESET_FALLBACK = {
   },
 }
 
-function formatWhen(iso) {
+function formatWhen(iso: any) {
   if (!iso) return '—'
   try {
     return new Date(iso).toLocaleString()
@@ -30,16 +30,16 @@ function formatWhen(iso) {
 }
 
 export function TokensPage() {
-  const [tokens, setTokens] = useState([])
+  const [tokens, setTokens] = useState<any[]>([])
   const [presets, setPresets] = useState(PRESET_FALLBACK)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<any>(null)
   const [busy, setBusy] = useState(false)
   const [name, setName] = useState('')
   const [preset, setPreset] = useState('companion')
-  const [createdSecret, setCreatedSecret] = useState(null)
+  const [createdSecret, setCreatedSecret] = useState<any>(null)
   const [copyState, setCopyState] = useState('idle')
   const [retryCount, setRetryCount] = useState(0)
-  const secretInputRef = useRef(null)
+  const secretInputRef = useRef<any>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -54,7 +54,7 @@ export function TokensPage() {
           setPresets({ ...PRESET_FALLBACK, ...data.scope_presets })
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (active && err.name !== 'AbortError') {
           setError(err)
         }
@@ -74,7 +74,7 @@ export function TokensPage() {
     }
   }
 
-  async function onCreate(event) {
+  async function onCreate(event: any) {
     event.preventDefault()
     const trimmed = name.trim()
     if (!trimmed || busy) return
@@ -98,14 +98,14 @@ export function TokensPage() {
       })
       setName('')
       await refresh()
-    } catch (err) {
+    } catch (err: any) {
       setError(err)
     } finally {
       setBusy(false)
     }
   }
 
-  async function onRevoke(tokenId, tokenName) {
+  async function onRevoke(tokenId: any, tokenName: any) {
     if (busy) return
     const ok = await confirmAction({
       title: `Revoke token “${tokenName}”?`,
@@ -119,7 +119,7 @@ export function TokensPage() {
     try {
       await revokeToken(tokenId)
       await refresh()
-    } catch (err) {
+    } catch (err: any) {
       setError(err)
     } finally {
       setBusy(false)

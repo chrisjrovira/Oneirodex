@@ -40,7 +40,7 @@ const NO_STATUS = {
   label: 'No Status',
 }
 
-function statusConfig(status) {
+function statusConfig(status: any) {
   if (!status) {
     return NO_STATUS
   }
@@ -62,7 +62,7 @@ const LONG_PRESS_MS = 480
  */
 const TILE_OVERLAY_OPENED = 'od-tile-overlay-opened'
 
-function releaseYear(value) {
+function releaseYear(value: any) {
   if (!value) return ''
   const match = String(value).match(/^(\d{4})/)
   return match ? match[1] : ''
@@ -85,7 +85,7 @@ export function GameCard({
   layout = 'tile',
   discoverReason = '',
 }: LooseProps) {
-  const cardRef = useRef(null)
+  const cardRef = useRef<any>(null)
   const longPressTimer = useRef(0)
   const longPressFired = useRef(false)
   const trailerTimer = useRef(0)
@@ -100,7 +100,7 @@ export function GameCard({
   // GameCard. GameCard.test.jsx renders bare on purpose — "a badge does not
   // [need a router]" — so that broke 27 tests across two suites. Clicking the
   // anchor keeps the href as the single source of truth and needs no context.
-  const coverLinkRef = useRef(null)
+  const coverLinkRef = useRef<any>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [status, setStatus] = useState(game.user_status || '')
   const [statusPending, setStatusPending] = useState(false)
@@ -168,7 +168,7 @@ export function GameCard({
   }, [])
 
   // One tile overlay at a time, across the whole grid.
-  const overlayToken = useRef({})
+  const overlayToken = useRef<any>({})
   const anyOverlayOpen = menuOpen || statusOpen || playInfoOpen
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export function GameCard({
       return undefined
     }
     const token = overlayToken.current
-    const onOther = (event) => {
+    const onOther = (event: any) => {
       if (event.detail === token) return
       setMenuOpen(false)
       setStatusOpen(false)
@@ -191,7 +191,7 @@ export function GameCard({
     if (!menuOpen && !statusOpen && !playInfoOpen) {
       return undefined
     }
-    const closeMenus = (event) => {
+    const closeMenus = (event: any) => {
       if (!cardRef.current?.contains(event.target)) {
         setMenuOpen(false)
         setStatusOpen(false)
@@ -203,7 +203,7 @@ export function GameCard({
     return () => document.removeEventListener('click', closeMenus)
   }, [menuOpen, statusOpen, playInfoOpen])
 
-  const handleFavoriteClick = async (event) => {
+  const handleFavoriteClick = async (event: any) => {
     event.preventDefault()
     event.stopPropagation()
     if (favoritePending) {
@@ -220,7 +220,7 @@ export function GameCard({
     }
   }
 
-  const handleStatusSelect = async (nextStatus) => {
+  const handleStatusSelect = async (nextStatus: any) => {
     if (statusPending) {
       return
     }
@@ -261,13 +261,13 @@ export function GameCard({
     disarmTrailer()
   }
 
-  const handleBlurCapture = (event) => {
+  const handleBlurCapture = (event: any) => {
     if (!event.currentTarget.contains(event.relatedTarget)) {
       disarmTrailer()
     }
   }
 
-  const handleSelectPointerDown = (event) => {
+  const handleSelectPointerDown = (event: any) => {
     if (!selectionEnabled || !onSelectionToggle) {
       return
     }
@@ -286,7 +286,7 @@ export function GameCard({
     }, LONG_PRESS_MS)
   }
 
-  const handleSelectClick = (event) => {
+  const handleSelectClick = (event: any) => {
     if (!selectionEnabled || !onSelectionToggle) {
       return
     }

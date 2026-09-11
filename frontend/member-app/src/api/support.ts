@@ -7,7 +7,7 @@
  */
 import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
 
-export async function submitSupportTicket(payload) {
+export async function submitSupportTicket(payload: any) {
   const response = await fetch('/api/support/tickets', {
     method: 'POST',
     credentials: 'same-origin',

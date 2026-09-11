@@ -11,7 +11,7 @@ function emptyCodeRow() {
   return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, desc: '', code: '' }
 }
 
-function formatSize(bytes) {
+function formatSize(bytes: any) {
   const n = Number(bytes) || 0
   if (n < 1024) return `${n} B`
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
@@ -24,15 +24,15 @@ function formatSize(bytes) {
  */
 export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroarch' }: LooseProps) {
   const formId = useId()
-  const [cheats, setCheats] = useState([])
+  const [cheats, setCheats] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState(null)
-  const [error, setError] = useState(null)
+  const [status, setStatus] = useState<any>(null)
+  const [error, setError] = useState<any>(null)
   const [busy, setBusy] = useState(false)
   const [name, setName] = useState('')
   const [dialect, setDialect] = useState(CHEAT_DIALECTS[0].value)
   const [codeRows, setCodeRows] = useState(() => [emptyCodeRow()])
-  const [uploadFile, setUploadFile] = useState(null)
+  const [uploadFile, setUploadFile] = useState<any>(null)
   const [reloadTick, setReloadTick] = useState(0)
 
   const allowed = showsRetroarchCheats({ cheat_surface: cheatSurface })
@@ -51,7 +51,7 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
         setCheats(data.cheats)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: any) => {
         if (!active || err.name === 'AbortError') return
         setError(err)
         setCheats([])
@@ -67,7 +67,7 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
     return null
   }
 
-  function refresh(message) {
+  function refresh(message: any) {
     if (message) {
       setStatus(message)
       showToast(message, 'success')
@@ -75,7 +75,7 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
     setReloadTick((n) => n + 1)
   }
 
-  async function handleCreate(event) {
+  async function handleCreate(event: any) {
     event.preventDefault()
     if (busy) return
     const trimmedName = name.trim()
@@ -105,7 +105,7 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
       setDialect(CHEAT_DIALECTS[0].value)
       setCodeRows([emptyCodeRow()])
       refresh(row?.name ? `Saved ${row.name}` : 'Cheat saved')
-    } catch (err) {
+    } catch (err: any) {
       setStatus(err?.message || 'Could not save cheat')
       if (err?.code !== 'create_unavailable') {
         showToast(err?.message || 'Could not save cheat', 'error')
@@ -115,7 +115,7 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
     }
   }
 
-  async function handleUpload(event) {
+  async function handleUpload(event: any) {
     event.preventDefault()
     if (busy || !uploadFile) return
     setBusy(true)
@@ -126,7 +126,7 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
       const input = event.currentTarget?.querySelector?.('input[type="file"]')
       if (input) input.value = ''
       refresh(row?.name ? `Uploaded ${row.name}` : 'Cheat uploaded')
-    } catch (err) {
+    } catch (err: any) {
       setStatus(err?.message || 'Upload failed')
       showToast(err?.message || 'Upload failed', 'error')
     } finally {
@@ -134,14 +134,14 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
     }
   }
 
-  async function handleDelete(filename) {
+  async function handleDelete(filename: any) {
     if (busy || !filename) return
     setBusy(true)
     setStatus(null)
     try {
       await deleteCheat(gameUuid, filename)
       refresh(`Deleted ${filename}`)
-    } catch (err) {
+    } catch (err: any) {
       setStatus(err?.message || 'Delete failed')
       showToast(err?.message || 'Delete failed', 'error')
     } finally {

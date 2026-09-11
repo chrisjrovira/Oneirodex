@@ -18,7 +18,7 @@ const DEBRID_BUTTONS = [
   { id: 'torbox', label: 'TorBox' },
 ]
 
-function formatSize(bytes) {
+function formatSize(bytes: any) {
   if (typeof bytes !== 'number' || bytes <= 0) return null
   const gib = bytes / 1024 ** 3
   if (gib >= 1) return `${gib.toFixed(1)} GiB`
@@ -27,7 +27,7 @@ function formatSize(bytes) {
 }
 
 /** True when status explicitly says no native/hub indexers are ready. */
-function indexersNotReady(status) {
+function indexersNotReady(status: any) {
   if (!status?.arr_enabled) return false
   if (typeof status.indexers_ready === 'boolean') return !status.indexers_ready
   if (typeof status.native_ready === 'boolean' || typeof status.hubs_ready === 'boolean') {
@@ -38,11 +38,11 @@ function indexersNotReady(status) {
 }
 
 export function AcquirePage() {
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState<any>(null)
   const [query, setQuery] = useState('')
-  const [hits, setHits] = useState(null)
-  const [warnings, setWarnings] = useState([])
-  const [error, setError] = useState(null)
+  const [hits, setHits] = useState<any>(null)
+  const [warnings, setWarnings] = useState<any[]>([])
+  const [error, setError] = useState<any>(null)
   const [busy, setBusy] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
 
@@ -51,7 +51,7 @@ export function AcquirePage() {
     setError(null)
     fetchAcquireStatus({ signal: controller.signal })
       .then(setStatus)
-      .catch((err) => {
+      .catch((err: any) => {
         if (err.name !== 'AbortError') setError(err)
       })
     return () => controller.abort()
@@ -65,7 +65,7 @@ export function AcquirePage() {
       ? status.warnings
       : []
 
-  async function onSearch(event) {
+  async function onSearch(event: any) {
     event.preventDefault()
     const q = query.trim()
     if (!q) {
@@ -78,7 +78,7 @@ export function AcquirePage() {
       const data = await searchAcquire(q)
       setHits(Array.isArray(data.results) ? data.results : [])
       setWarnings(Array.isArray(data.warnings) ? data.warnings : [])
-    } catch (err) {
+    } catch (err: any) {
       setError(err)
       setHits(null)
     } finally {
@@ -86,7 +86,7 @@ export function AcquirePage() {
     }
   }
 
-  async function sendHit(hit, provider) {
+  async function sendHit(hit: any, provider: any) {
     setBusy(true)
     try {
       await sendAcquireDownload({
@@ -94,7 +94,7 @@ export function AcquirePage() {
         provider,
       })
       showToast(`Sent to ${provider}`, 'success')
-    } catch (err) {
+    } catch (err: any) {
       showToast(err?.message || 'Send failed', 'error')
     } finally {
       setBusy(false)
@@ -153,7 +153,7 @@ export function AcquirePage() {
       {hits && hits.length === 0 ? <p>No indexer hits.</p> : null}
       {hits && hits.length > 0 ? (
         <ul className="od-updates__list">
-          {hits.map((hit, index) => (
+          {hits.map((hit: any, index: any) => (
             <li key={`${hit.title}-${hit.indexer || ''}-${index}`}>
               <strong>{hit.title}</strong>
               <span>

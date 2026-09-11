@@ -15,7 +15,7 @@ export function readChatPanelOpen(defaultOpen = false) {
   }
 }
 
-export function writeChatPanelOpen(open) {
+export function writeChatPanelOpen(open: any) {
   try {
     localStorage.setItem(STORAGE_OPEN, open ? '1' : '0')
   } catch {
@@ -40,7 +40,7 @@ export function requestCloseChatPanel() {
 }
 
 /** Slug for create-room POST — lowercase alnum + hyphens. */
-export function slugifyRoomName(name) {
+export function slugifyRoomName(name: any) {
   return String(name || '')
     .toLowerCase()
     .trim()
@@ -49,7 +49,7 @@ export function slugifyRoomName(name) {
     .slice(0, 64)
 }
 
-function channelKind(channel) {
+function channelKind(channel: any) {
   return channel?.kind || channel?.type || ''
 }
 
@@ -58,7 +58,7 @@ function channelKind(channel) {
  * @param {object|null} channel
  * @param {{ isLibrarian?: boolean, isAdmin?: boolean, userId?: number|string|null }} [viewer]
  */
-export function canArchiveChannel(channel, viewer: LooseProps = {}) {
+export function canArchiveChannel(channel: any, viewer: LooseProps = {}) {
   if (!channel || channelKind(channel) === 'dm') return false
   if (viewer.isLibrarian || viewer.isAdmin) return true
   const uid = Number(viewer.userId)
@@ -67,16 +67,16 @@ export function canArchiveChannel(channel, viewer: LooseProps = {}) {
 }
 
 /** Leave is available for any active room (DM drop / channel mute per API). */
-export function canLeaveChannel(channel) {
+export function canLeaveChannel(channel: any) {
   return Boolean(channel?.id)
 }
 
 /** Soft-wired upload path — Backend may land in parallel; UI feature-detects 404. */
-export function chatAttachmentUploadUrl(channelId) {
+export function chatAttachmentUploadUrl(channelId: any) {
   return `/api/chat/channels/${channelId}/attachments`
 }
 
-export function isImageAttachment(att) {
+export function isImageAttachment(att: any) {
   if (!att || typeof att !== 'object') return false
   const ct = String(att.content_type || att.mime || att.mime_type || '').toLowerCase()
   if (ct.startsWith('image/')) return true
@@ -84,7 +84,7 @@ export function isImageAttachment(att) {
   return /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(name)
 }
 
-export function normalizeAttachments(raw) {
+export function normalizeAttachments(raw: any) {
   if (!Array.isArray(raw)) return []
   return raw
     .filter((row) => row && typeof row === 'object')
@@ -102,7 +102,7 @@ export function normalizeAttachments(raw) {
  * Probe whether channel attachment upload exists (OPTIONS or empty POST → 404 = off).
  * @returns {Promise<'yes'|'no'|'unknown'>}
  */
-export async function probeChatAttachmentUpload(channelId) {
+export async function probeChatAttachmentUpload(channelId: any) {
   if (!channelId) return 'unknown'
   const url = chatAttachmentUploadUrl(channelId)
   try {
@@ -132,7 +132,7 @@ export async function probeChatAttachmentUpload(channelId) {
  * Multipart upload for chat attach. Soft-degrades on 404.
  * @returns {Promise<{ ok: boolean, unavailable?: boolean, attachment?: object, error?: string, status: number }>}
  */
-export async function uploadChatAttachment(channelId, file) {
+export async function uploadChatAttachment(channelId: any, file: any) {
   if (!channelId || !file) {
     return { ok: false, status: 0, error: 'Missing channel or file' }
   }
@@ -176,7 +176,7 @@ export async function uploadChatAttachment(channelId, file) {
  * showing a 13.5rem navigation rail would leave almost nothing for the
  * conversation.
  */
-export function openChatPopoutWindow(channelId) {
+export function openChatPopoutWindow(channelId: any) {
   const params = new URLSearchParams({ popout: '1' })
   if (channelId != null) params.set('channel', String(channelId))
   const features = 'width=420,height=760,menubar=no,toolbar=no,location=no,status=no,resizable=yes'

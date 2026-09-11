@@ -38,7 +38,7 @@ export async function fetchDiscoverPins({ signal }: LooseProps = {}) {
  * @param {{pins?: string[], hidden?: string[]}|string[]} arrangement A bare
  *   array is read as `pins`, which is how every existing caller uses this.
  */
-export async function saveDiscoverPins(arrangement, { signal }: LooseProps = {}) {
+export async function saveDiscoverPins(arrangement: any, { signal }: LooseProps = {}) {
   const body = Array.isArray(arrangement) ? { pins: arrangement } : arrangement || {}
   const response = await fetch('/api/discover/pins', {
     method: 'PUT',
