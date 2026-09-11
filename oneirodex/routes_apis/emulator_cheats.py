@@ -37,6 +37,8 @@ from oneirodex.utils.library_acl import user_can_access_game
 from oneirodex.utils.play_url import library_platform_key
 from oneirodex.utils.rbac import librarian_required
 from oneirodex.utils.security import is_safe_path
+from oneirodex.schemas.emulator_cheats import CreatePcCheatBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -336,7 +338,8 @@ def pc_cheats_list(game_uuid: str):
 @apis_bp.route('/games/<game_uuid>/pc_cheats', methods=['POST'])
 @login_required
 @librarian_required
-def pc_cheats_create(game_uuid: str):
+@validate_body(CreatePcCheatBody)
+def pc_cheats_create(game_uuid: str, body: CreatePcCheatBody):
     """Record a cheat note. Librarian+, because it is shared household content."""
     from oneirodex.models import PcCheat
 
@@ -348,12 +351,9 @@ def pc_cheats_create(game_uuid: str):
     if error:
         return error
 
-    data = request.get_json(silent=True) or {}
-    label = (data.get('label') or '').strip()
-    if not label:
-        return api_error('A label is required', code='bad_request')
+    label = body.label
 
-    method = (data.get('method') or 'note').strip().lower()
+    method = (body.method or 'note').strip().lower()
     if method not in PC_CHEAT_METHODS:
         return api_error(
             f"method must be one of: {', '.join(sorted(PC_CHEAT_METHODS))}",
@@ -364,9 +364,9 @@ def pc_cheats_create(game_uuid: str):
         game_uuid=game_uuid,
         method=method,
         label=label[:160],
-        payload=(data.get('payload') or '').strip() or None,
-        notes=(data.get('notes') or '').strip()[:1000] or None,
-        single_player_only=bool(data.get('single_player_only', True)),
+        payload=(body.payload or '').strip() or None,
+        notes=(body.notes or '').strip()[:1000] or None,
+        single_player_only=bool(body.single_player_only),
         created_by_user_id=getattr(current_user, 'id', None),
     )
     db.session.add(row)

@@ -25,6 +25,8 @@ from oneirodex.utils.client_commands import (
 from oneirodex.utils.client_lifecycle import load_lifecycle_map, save_lifecycle_records
 from oneirodex.utils.client_presence import record_client_heartbeat
 from oneirodex.utils.library_acl import user_can_access_game
+from oneirodex.schemas.client import ClientLifecycleBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -89,7 +91,8 @@ def client_lifecycle_get():
 
 @apis_bp.route('/client/lifecycle', methods=['POST'])
 @login_required
-def client_lifecycle_post():
+@validate_body(ClientLifecycleBody)
+def client_lifecycle_post(body: ClientLifecycleBody):
     # Sec-B: Bearer-only — CSRF-exempt endpoint must not accept session cookie alone.
     if not _has_companion_token():
         return api_error('Companion API token required', code='forbidden')
@@ -99,12 +102,9 @@ def client_lifecycle_post():
         or user_has_scope('write:library')
     ):
         return api_error('Missing scope: write:download or write:library', code='forbidden')
-    data = request.get_json(silent=True) or {}
-    records = data.get('records')
-    if not isinstance(records, list):
-        return api_error('records must be a list', code='bad_request')
-    replace = bool(data.get('replace'))
-    mapping = save_lifecycle_records(current_user.id, records, replace=replace)
+    mapping = save_lifecycle_records(
+        current_user.id, body.records, replace=bool(body.replace),
+    )
     return api_ok({
                 'count': len(mapping),
         'records': [{'game_uuid': uuid, 'state': state} for uuid, state in mapping.items()],

@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/emulator_cheats.py` | `POST /api/games/<uuid>/pc_cheats` (`pc_cheats_create`) | `CreatePcCheatBody` |
+| `routes_apis/client.py` | `POST /api/client/lifecycle` (`client_lifecycle_post`) | `ClientLifecycleBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,15 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`pc_cheats_create`** — missing/blank `label` was `400 "A label is required"`,
+  now `422 {detail:{label:"..."}}`. `@librarian_required` sits above validation;
+  game 404 and the RetroArch-surface refusal run after. Unknown `method` still
+  400.
+- **`client_lifecycle_post`** — missing/non-list `records` was `400 "records
+  must be a list"`, now 422 naming `records`. An empty list is valid. The
+  companion-token 403 (in-view, not a decorator) runs *after* validation, so a
+  session-cookie `{}` is 422 rather than 403. A well-formed body without a
+  Bearer token is still 403.
 
 ## Deliberately not adopted (and why)
 
@@ -127,24 +138,43 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/emulator_cheats.py`
+
+- `.cht` create — JSON *or* file upload.
+- Firmware plan/install — `source` falls back to `BIOS_IMPORT_SOURCE`;
+  `selections` / `skipped` are optional type checks on a default empty map/list.
+
+### `routes_apis/client.py`
+
+- `client_heartbeat` — missing `device_id` mints a UUID.
+- `client_commands_post` — missing `game_uuid` is 404 (and `open_path` may omit it).
+- ack/nack — missing `ids` is `[]`.
+
+### `routes_apis/library.py`
+
+- Watch GET+PUT share one view; `@validate_body` on GET would 422. Batch scan /
+  edit / delete are partial-success.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 113 | 46 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
 - `routes_apis/scan.py` (11) — most are partial-success; needs a batch-aware
   companion to `@validate_body` first.
 - `routes_apis/library_tools.py` (11)
-- `routes_apis/quality_stats.py` (5), `routes_apis/client.py` (5),
+- `routes_apis/quality_stats.py` (5), `routes_apis/client.py` (4 remaining),
   `routes_apis/chat_spaces_api.py` (5), `routes_apis/chat.py` (5)
+- `routes_apis/library.py` (4 — GET+PUT watch + batch), `routes_apis/emulator_cheats.py`
+  (3 remaining — file/JSON dual-input and firmware), `routes_apis/ai_assist.py` (4)
 - `routes_apis/library.py` (4), `routes_apis/emulator_cheats.py` (4),
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
