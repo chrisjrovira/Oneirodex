@@ -39,6 +39,20 @@ class AddCollectionItemBody(BaseModel):
     game_uuid: _RequiredUuid
 
 
+class CreateAnnouncementBody(BaseModel):
+    """``POST /api/announcements``.
+
+    Replaces ``title`` / ``body`` strip-then-empty 400s. ``published``
+    defaults to True, matching ``data.get('published', True)``.
+    """
+
+    model_config = ConfigDict(extra='forbid')
+
+    title: _RequiredName
+    body: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+    published: bool = True
+
+
 class ReorderCollectionItemsBody(BaseModel):
     """``PUT /api/collections/<uuid>/items/order``.
 

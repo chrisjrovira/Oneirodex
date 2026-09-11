@@ -6,6 +6,7 @@ from oneirodex.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from oneirodex.schemas.acquire import AcquireDownloadBody
 from oneirodex.utils.acquire_scoring import rank_acquire_hits, title_looks_like_newer_repack
 from oneirodex.utils.arr_connectors import get_arr_config, search_indexers, send_to_download_client
 from oneirodex.utils.debrid_connectors import (
@@ -19,6 +20,7 @@ from oneirodex.utils.debrid_connectors import (
 from oneirodex.utils.indexer_registry import indexer_status_summary
 from oneirodex.utils.module_status import arr_module_on
 from oneirodex.utils.rbac import is_librarian, normalize_role
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -111,15 +113,13 @@ def acquire_search():
 
 @apis_bp.route('/acquire/download', methods=['POST'])
 @login_required
-def acquire_download():
+@validate_body(AcquireDownloadBody)
+def acquire_download(body: AcquireDownloadBody):
     """Send magnet/URL to download client or debrid — librarian/admin only."""
     if not is_librarian(current_user):
         return api_error('Librarian or admin required', code='forbidden')
-    data = request.get_json(silent=True) or {}
-    url = (data.get('url') or data.get('magnet') or '').strip()
-    provider = (data.get('provider') or 'qbittorrent').strip().lower()
-    if not url:
-        return api_error('url or magnet required', code='bad_request')
+    url = (body.url or body.magnet or '').strip()
+    provider = (body.provider or 'qbittorrent').strip().lower()
     if url.lower().startswith('http://') or url.lower().startswith('https://'):
         from oneirodex.utils.security import validate_user_outbound_http_url
         ok, result = validate_user_outbound_http_url(url)
