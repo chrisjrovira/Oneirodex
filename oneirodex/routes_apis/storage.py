@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from oneirodex.utils.api_response import api_error, api_ok
-from flask import current_app, jsonify, request
+from flask import current_app, jsonify
 from flask_login import login_required
 
 from oneirodex.utils.auth import admin_required
@@ -14,6 +14,8 @@ from oneirodex.utils.hardlinks import (
     preview_hardlink,
 )
 from oneirodex.utils.security import get_allowed_base_directories, is_safe_path
+from oneirodex.schemas.storage import HardlinkBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -63,14 +65,12 @@ def storage_status():
 @apis_bp.route('/storage/hardlink/preview', methods=['POST'])
 @login_required
 @admin_required
-def hardlink_preview():
+@validate_body(HardlinkBody)
+def hardlink_preview(body: HardlinkBody):
     if not _helpers_enabled():
         return api_error('Hardlink helpers are disabled', code='forbidden')
-    data = request.get_json(silent=True) or {}
-    source = (data.get('source') or '').strip()
-    dest = (data.get('dest') or '').strip()
-    if not source or not dest:
-        return api_error('source and dest are required', code='bad_request')
+    source = body.source
+    dest = body.dest
     ok, err = _paths_allowed(source, dest)
     if not ok:
         return api_error(err, code='forbidden')
@@ -83,14 +83,12 @@ def hardlink_preview():
 @apis_bp.route('/storage/hardlink/apply', methods=['POST'])
 @login_required
 @admin_required
-def hardlink_apply():
+@validate_body(HardlinkBody)
+def hardlink_apply(body: HardlinkBody):
     if not _apply_allowed():
         return api_error('Hardlink apply is disabled. Set ALLOW_HARDLINK_APPLY=true.', code='forbidden')
-    data = request.get_json(silent=True) or {}
-    source = (data.get('source') or '').strip()
-    dest = (data.get('dest') or '').strip()
-    if not source or not dest:
-        return api_error('source and dest are required', code='bad_request')
+    source = body.source
+    dest = body.dest
     ok, err = _paths_allowed(source, dest)
     if not ok:
         return api_error(err, code='forbidden')

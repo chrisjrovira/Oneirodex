@@ -11,6 +11,8 @@ from oneirodex import db
 from oneirodex.models import Game, GameServer
 from oneirodex.utils.game_servers import probe_server_health
 from oneirodex.utils.rbac import is_admin, normalize_role
+from oneirodex.schemas.game_servers import CreateGameServerBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -77,27 +79,25 @@ def get_game_server_status(server_uuid: str):
 
 @apis_bp.route('/game-servers', methods=['POST'])
 @login_required
-def create_game_server():
+@validate_body(CreateGameServerBody)
+def create_game_server(body: CreateGameServerBody):
     denied = _require_admin()
     if denied:
         return denied
-    data = request.get_json(silent=True) or {}
-    display_name = (data.get('display_name') or '').strip()
-    connect_string = (data.get('connect_string') or '').strip()
-    if not display_name or not connect_string:
-        return api_error('display_name and connect_string required', code='bad_request')
+    display_name = body.display_name
+    connect_string = body.connect_string
     try:
-        game_uuid = _validate_game_uuid((data.get('game_uuid') or '').strip() or None)
+        game_uuid = _validate_game_uuid((body.game_uuid or '').strip() or None)
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
     server = GameServer(
         display_name=display_name,
         connect_string=connect_string,
         game_uuid=game_uuid,
-        health_url=(data.get('health_url') or '').strip() or None,
-        compose_project=(data.get('compose_project') or '').strip() or None,
-        container_id=(data.get('container_id') or '').strip() or None,
-        invite_note=(data.get('invite_note') or '').strip() or None,
+        health_url=(body.health_url or '').strip() or None,
+        compose_project=(body.compose_project or '').strip() or None,
+        container_id=(body.container_id or '').strip() or None,
+        invite_note=(body.invite_note or '').strip() or None,
     )
     db.session.add(server)
     db.session.commit()

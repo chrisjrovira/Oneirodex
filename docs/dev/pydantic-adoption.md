@@ -64,6 +64,12 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/wanted.py` | `POST /api/updates/wanted` (`updates_wanted_add`) | `AddWantedBody` |
+| `routes_apis/wanted.py` | `POST /api/updates/wanted/fulfill` (`updates_wanted_fulfill`) | `FulfillWantedBody` |
+| `routes_apis/storage.py` | `POST /api/storage/hardlink/preview` (`hardlink_preview`) | `HardlinkBody` |
+| `routes_apis/storage.py` | `POST /api/storage/hardlink/apply` (`hardlink_apply`) | `HardlinkBody` |
+| `routes_apis/game_servers.py` | `POST /api/game-servers` (`create_game_server`) | `CreateGameServerBody` |
+| `routes_apis/malware_scan.py` | `POST /api/admin/malware-scan` (`malware_scan_run`) | `MalwareScanBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +88,21 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`updates_wanted_add`** — empty `game_uuid` previously fell through to
+  `404 Game not found`; now `422 {detail:{game_uuid:"..."}}`. Unknown uuid
+  still 404.
+- **`updates_wanted_fulfill`** — missing `game_uuid` was `400 "game_uuid is
+  required"`, now 422 naming `game_uuid`.
+- **`hardlink_preview` / `hardlink_apply`** — missing `source`/`dest` was
+  `400 "source and dest are required"`, now 422 naming the fields.
+  `@admin_required` sits above validation; the helpers/apply feature-flag 403
+  runs after, so a well-formed body with helpers off is still 403
+  (`tests/test_storage_helpers.py`).
+- **`create_game_server`** — missing name/connect was `400 "display_name and
+  connect_string required"`, now 422 naming each. In-view admin check runs
+  after: a child sending `{}` is 422; a well-formed body is still 403.
+- **`malware_scan_run`** — missing `path` was `400 "path is required"`, now
+  422. Path sandbox 403 stays in the view.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +148,21 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/game_servers.py`
+
+- `update_game_server` — empty `display_name` is refused only when that key is
+  present; other fields are optional patches.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 109 | 43 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **145** | **54** |
 
 Highest-count files still to do, roughly in priority order:
 
@@ -145,6 +171,8 @@ Highest-count files still to do, roughly in priority order:
 - `routes_apis/library_tools.py` (11)
 - `routes_apis/quality_stats.py` (5), `routes_apis/client.py` (5),
   `routes_apis/chat_spaces_api.py` (5), `routes_apis/chat.py` (5)
+- `routes_apis/library.py` (4), `routes_apis/emulator_cheats.py` (4),
+  `routes_apis/ai_assist.py` (4)
 - `routes_apis/library.py` (4), `routes_apis/emulator_cheats.py` (4),
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`

@@ -1,6 +1,6 @@
 """Wanted update/DLC queue APIs."""
 
-from flask import jsonify, request
+from flask import jsonify
 
 from oneirodex.utils.api_response import api_error, api_ok
 from flask_login import current_user, login_required
@@ -10,6 +10,8 @@ from oneirodex import db
 from oneirodex.models import Game
 from oneirodex.utils.library_acl import user_can_access_game
 from oneirodex.utils.wanted_updates import add_wanted, list_wanted, mark_fulfilled
+from oneirodex.schemas.wanted import AddWantedBody, FulfillWantedBody
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -22,9 +24,9 @@ def updates_wanted_list():
 
 @apis_bp.route('/updates/wanted', methods=['POST'])
 @login_required
-def updates_wanted_add():
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
+@validate_body(AddWantedBody)
+def updates_wanted_add(body: AddWantedBody):
+    game_uuid = body.game_uuid
     game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
     if not game:
         return api_error('Game not found', code='not_found')
@@ -34,10 +36,10 @@ def updates_wanted_add():
         item = add_wanted(
             current_user.id,
             game_uuid=game_uuid,
-            kind=data.get('kind') or 'update',
-            label=data.get('label') or game.name,
-            store=data.get('store'),
-            store_id=data.get('store_id'),
+            kind=body.kind or 'update',
+            label=body.label or game.name,
+            store=body.store,
+            store_id=body.store_id,
         )
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
@@ -46,11 +48,8 @@ def updates_wanted_add():
 
 @apis_bp.route('/updates/wanted/fulfill', methods=['POST'])
 @login_required
-def updates_wanted_fulfill():
+@validate_body(FulfillWantedBody)
+def updates_wanted_fulfill(body: FulfillWantedBody):
     """Mark wanted rows available when a local pack appears (member or scan hook)."""
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip()
-    if not game_uuid:
-        return api_error('game_uuid is required', code='bad_request')
-    count = mark_fulfilled(current_user.id, game_uuid, kind=data.get('kind'))
+    count = mark_fulfilled(current_user.id, body.game_uuid, kind=body.kind)
     return api_ok({'updated': count})
