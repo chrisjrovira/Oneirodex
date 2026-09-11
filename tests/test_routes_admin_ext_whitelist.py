@@ -92,7 +92,7 @@ def registered_user_for_whitelist(db_session, whitelist_entries):
 class TestWhitelistRoutes:
     """Tests for whitelist management routes."""
 
-    def test_whitelist_route_requires_authentication(self, client):
+    def test_whitelist_route_requires_authentication(self, client, configured_install):
         """Test that whitelist route requires user to be logged in."""
         response = client.get('/admin/whitelist')
         assert response.status_code == 302
@@ -276,7 +276,7 @@ class TestWhitelistRoutes:
         assert 'already in the whitelist' in response_text
 
     @patch('oneirodex.routes_admin_ext.whitelist.log_system_event')
-    def test_whitelist_post_handles_database_error(self, mock_log, client, db_session, admin_user):
+    def test_whitelist_post_handles_database_error(self, mock_log, client, db_session, admin_user, global_settings):
         """Test POST /admin/whitelist handles database errors gracefully."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
@@ -305,7 +305,7 @@ class TestWhitelistRoutes:
 class TestDeleteWhitelistRoute:
     """Tests for DELETE /admin/whitelist/<id> route."""
 
-    def test_delete_whitelist_requires_authentication(self, client, whitelist_entries):
+    def test_delete_whitelist_requires_authentication(self, client, whitelist_entries, configured_install):
         """Test that delete whitelist route requires authentication."""
         response = client.delete(f'/admin/whitelist/{whitelist_entries[0].id}')
         assert response.status_code == 302
@@ -376,7 +376,7 @@ class TestDeleteWhitelistRoute:
         )
 
     @patch('oneirodex.routes_admin_ext.whitelist.log_system_event')
-    def test_delete_whitelist_handles_database_error(self, mock_log, client, db_session, admin_user, whitelist_entries):
+    def test_delete_whitelist_handles_database_error(self, mock_log, client, db_session, admin_user, whitelist_entries, global_settings):
         """Test DELETE /admin/whitelist/<id> handles database errors gracefully."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)

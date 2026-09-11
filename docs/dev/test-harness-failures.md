@@ -113,3 +113,14 @@ python -m pytest -q --tb=no
 
 To re-measure a single file honestly, truncate first — otherwise "fails alone"
 and "fails against residue" are the same result.
+
+## 2026-09-10: per-test isolation landed, so residue is no longer the variable
+
+`db_session` now wraps each test in a rolled-back SAVEPOINT (see
+[test-harness-2026-09-10.md](test-harness-2026-09-10.md)). "Fails alone" and
+"fails in a full run" converge, because no file leaves rows for the next one.
+The classes above did not come back; what the empty-per-test database exposed
+instead was a set of `..._requires_login` and `..._database_error` tests that
+had been inheriting a user row or a `GlobalSettings` row from an earlier file —
+the same "Setup wizard vs login" shape as the 2026-08-07 cluster, fixed the
+same way (`configured_install` / `global_settings` as an explicit precondition).

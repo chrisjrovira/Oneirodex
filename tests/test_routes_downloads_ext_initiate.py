@@ -246,7 +246,7 @@ class TestDownloadGameRoute:
 class TestDownloadOtherRoute:
     """Test cases for download_other route."""
     
-    def test_download_other_requires_login(self, client, test_game):
+    def test_download_other_requires_login(self, client, test_game, configured_install):
         """Test that download_other requires authentication."""
         response = client.get(f'/download_other/update/{test_game.uuid}/1')
         assert response.status_code == 302  # Redirect to login

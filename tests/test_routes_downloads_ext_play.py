@@ -185,7 +185,7 @@ class TestPlayGameRoute:
 class TestPlayRomTestRoute:
     """Test the /playromtest route."""
     
-    def test_playromtest_requires_login(self, client):
+    def test_playromtest_requires_login(self, client, configured_install):
         """Test that playromtest requires login."""
         response = client.get('/playromtest')
         assert response.status_code == 302  # Should redirect to login

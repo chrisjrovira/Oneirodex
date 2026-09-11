@@ -499,7 +499,7 @@ class TestManageThemesRoute:
 class TestThemeReadmeRoute:
     """Tests for the theme_readme route."""
 
-    def test_theme_readme_requires_login(self, client):
+    def test_theme_readme_requires_login(self, client, configured_install):
         """Test that theme readme page requires login."""
         response = client.get('/admin/themes/readme')
         assert response.status_code == 302
@@ -542,7 +542,7 @@ class TestThemeReadmeRoute:
 class TestDeleteThemeRoute:
     """Tests for the delete_theme route."""
 
-    def test_delete_theme_requires_login(self, client):
+    def test_delete_theme_requires_login(self, client, configured_install):
         """Test that delete theme requires login."""
         response = client.post('/admin/themes/delete/test_theme')
         assert response.status_code == 302
@@ -614,7 +614,7 @@ class TestDeleteThemeRoute:
 class TestResetDefaultThemesRoute:
     """Tests for the reset_default_themes route."""
 
-    def test_reset_default_themes_requires_login(self, client):
+    def test_reset_default_themes_requires_login(self, client, configured_install):
         """Test that reset default themes requires login."""
         response = client.post('/admin/themes/reset')
         assert response.status_code == 302
@@ -770,7 +770,7 @@ class TestThemeRoutesIntegration:
             assert url_for('admin2.reset_default_themes') == '/admin/themes/reset'
             # admin2.apply_theme is deliberately absent — see TestApplyThemeRoute.
 
-    def test_theme_routes_require_authentication(self, client):
+    def test_theme_routes_require_authentication(self, client, configured_install):
         """Test that all theme routes require authentication."""
         routes = [
             '/admin/themes',

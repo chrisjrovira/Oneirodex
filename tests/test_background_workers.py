@@ -131,7 +131,7 @@ def test_worker_failure_does_not_escape_to_the_caller(app):
     assert not thread.is_alive()
 
 
-def test_library_deletion_worker_actually_deletes(app, db_session):
+def test_library_deletion_worker_actually_deletes(app, no_savepoint_db):
     """End-to-end through the real worker, on its own session.
 
     Nothing covered this before: the route test asserts only that the job is
@@ -139,6 +139,13 @@ def test_library_deletion_worker_actually_deletes(app, db_session):
     in integration tests". That was survivable while the worker shared the
     request's session — running it in a test would have been the very hazard
     being fixed — and is worth having now that it does not.
+
+    Bucket E (docs/dev/test-harness-2026-09-10.md): `delete_library_background`
+    runs on a real daemon thread that pushes its own `app.app_context()`
+    (`run_in_background`), so it needs its own DBAPI connection from the
+    engine's pool — exactly what `run_in_background` exists to guarantee.
+    `db_session`'s single shared connection can't serve two threads at once,
+    so this test opts out with `no_savepoint_db` instead.
     """
     from oneirodex.models import Game
     from oneirodex.routes_admin_ext.library_delete import (

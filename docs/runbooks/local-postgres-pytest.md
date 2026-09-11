@@ -44,44 +44,45 @@ TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/oneirodextest
 `conftest.py` hard-fails if that variable is missing, or if its database name
 does not contain `test`. That guard is deliberate and should not be relaxed.
 
-## Each run starts from an empty database
+## Every test starts from an empty database
 
-`conftest.py` truncates every table once per run, after the schema is built and
-before the first test.
+Since 2026-09-10 the `db_session` fixture wraps each test in a **rolled-back
+SAVEPOINT** on a single bound connection: whatever a test writes — directly or
+through the Flask test client — is visible for that test and discarded on
+teardown. Nothing is ever committed to `oneirodextest`. Schema DDL still runs
+once per process, and a single process-start `TRUNCATE` sweeps rows an older
+harness left behind.
 
-It did not always. `db.drop_all()` sat commented out "for performance", so
-`oneirodextest` kept every row any test had ever committed, going back months.
-That is not inert — it silently changes what a test measures:
+The model, why it needs a savepoint-restart listener and exception-safe
+teardown, and the per-clean-database fallout are in
+[../dev/test-harness-2026-09-10.md](../dev/test-harness-2026-09-10.md).
 
-| Symptom | Cause |
-|---|---|
-| A shelf assertion never sees its own fixtures | The query has a `LIMIT`. `latest_games` returns eight rows, so fixtures dated in years sort below hundreds of accumulated games. |
-| `POST /api/updates/scan` reported `checked == 22` against two fixtures | The sweep was unscoped, so it processed the whole table. |
+**Fixtures declare their preconditions.** A test that needs setup to be past the
+wizard requests `configured_install`; one that needs the settings singleton
+requests `global_settings`. Do not assume an earlier file left a user or a
+`GlobalSettings` row — it didn't.
 
-Both of those failed **locally only**, because CI starts from an empty database.
-The two environments disagreed about what the same test meant, and the green one
-was the liar. Starting every run clean is what makes a local run and a CI run
-the same experiment.
-
-**Per run, not per test.** This suite is built on a shared database:
-`configured_install` and `global_settings` create their rows only if absent, and
-`configured_install`'s docstring records tests that pass in a full run *only*
-because an earlier file left a user row behind. Emptying between tests would
-expose all of those at once — a project, not a fix. It is also once for a
-mechanical reason: `TRUNCATE` takes an ACCESS EXCLUSIVE lock, and doing it
-between tests would reintroduce the lock storm the session-scoped schema build
-exists to avoid.
-
-**Rows still accumulate *within* a run.** A test that asserts on a global query
-must still scope it — pass `library_uuid`, filter by a fixture's own ids, or
-assert on relative order rather than absolute position. Do not assume your
-fixtures are the only rows in the table.
-
-To keep the leftovers — when the rows themselves are what you are investigating:
+**Scoping assertions still matters** for anything a *previous process* committed
+before the sweep, and for tests that opt out with `ONEIRODEX_KEEP_TEST_DATA=1`
+(which skips the process-start `TRUNCATE` — for when the leftover rows are what
+you are investigating):
 
 ```bash
 ONEIRODEX_KEEP_TEST_DATA=1 python -m pytest tests/test_whatever.py
 ```
+
+## Markers
+
+`conftest.py` tags tests at collection:
+
+```bash
+python -m pytest -m database          # only tests that reach Postgres (need the container up)
+python -m pytest -m "not database"    # pure unit tests, no database
+python -m pytest -m "not slow"        # drop the ~10 filesystem / mocked-network slugs
+```
+
+`database` is derived from the fixture graph (anything that pulls in
+`db_session`); `slow` is a short hand-kept list from `--durations`.
 
 ## Running
 

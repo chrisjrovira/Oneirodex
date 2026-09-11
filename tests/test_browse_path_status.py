@@ -94,6 +94,58 @@ def path_library(db_session):
     return library
 
 
+@pytest.fixture
+def nosp_admin_staff(no_savepoint_db):
+    """`admin_staff`, committed for real — bucket-E opt-out.
+
+    The digest tests below build state inside a nested `with
+    app.app_context():` and flush it from a context nested inside that one;
+    `db_session`'s single shared connection cannot survive the inner
+    context's teardown rolling back the outer one's SAVEPOINT (see
+    docs/dev/test-harness-2026-09-10.md), so these rows are committed against
+    the real engine session instead. Cleaned up by `no_savepoint_db`'s own
+    teardown.
+    """
+    tag = uuid4().hex[:8]
+    admin = User(
+        name=f'adm-{tag}',
+        email=f'adm-{tag}@example.com',
+        password_hash='unused',
+        role='admin',
+        user_id=str(uuid4()),
+        state=True,
+    )
+    librarian = User(
+        name=f'lib-{tag}',
+        email=f'lib-{tag}@example.com',
+        password_hash='unused',
+        role='librarian',
+        user_id=str(uuid4()),
+        state=True,
+    )
+    no_savepoint_db.add_all([admin, librarian])
+    no_savepoint_db.commit()
+    return admin, librarian
+
+
+@pytest.fixture
+def nosp_path_library(no_savepoint_db):
+    """`path_library`, committed for real — bucket-E opt-out (see above)."""
+    settings = GlobalSettings()
+    settings.admin_notify_new_games = True
+    no_savepoint_db.add(settings)
+    no_savepoint_db.commit()
+
+    library = Library(
+        name=f'Path Lib {uuid4().hex[:8]}',
+        platform=LibraryPlatform.PCWIN,
+        display_order=1,
+    )
+    no_savepoint_db.add(library)
+    no_savepoint_db.commit()
+    return library
+
+
 def _login(client, user):
     with client.session_transaction() as sess:
         sess['_user_id'] = str(user.id)
@@ -193,8 +245,9 @@ def test_library_watch_get_put(client, db_session, admin_staff, path_library, mo
     assert path_library.watch_enabled is False
 
 
-def test_library_add_digest_notifies_staff(app, db_session, admin_staff, path_library):
-    admin, librarian = admin_staff
+def test_library_add_digest_notifies_staff(app, no_savepoint_db, nosp_admin_staff, nosp_path_library):
+    admin, librarian = nosp_admin_staff
+    path_library = nosp_path_library
     g1 = Game(
         uuid=str(uuid4()),
         name='Digest One',
@@ -209,8 +262,8 @@ def test_library_add_digest_notifies_staff(app, db_session, admin_staff, path_li
         full_disk_path=f'/test/digest/{uuid4().hex}',
         path_status=PATH_STATUS_OK,
     )
-    db_session.add_all([g1, g2])
-    db_session.commit()
+    no_savepoint_db.add_all([g1, g2])
+    no_savepoint_db.commit()
 
     with app.app_context():
         schedule_library_add_digest(
@@ -231,7 +284,7 @@ def test_library_add_digest_notifies_staff(app, db_session, admin_staff, path_li
         )
         _flush_library_add_digest(path_library.uuid, app)
 
-    rows = db_session.execute(select(UserNotification)).scalars().all()
+    rows = no_savepoint_db.execute(select(UserNotification)).scalars().all()
     staff_ids = {admin.id, librarian.id}
     digests = [r for r in rows if r.kind == 'library_added' and r.user_id in staff_ids]
     assert len(digests) >= 2
@@ -241,7 +294,8 @@ def test_library_add_digest_notifies_staff(app, db_session, admin_staff, path_li
     assert path_library.name in sample.title
 
 
-def test_notify_admins_new_game_schedules_digest(app, db_session, admin_staff, path_library):
+def test_notify_admins_new_game_schedules_digest(app, no_savepoint_db, nosp_admin_staff, nosp_path_library):
+    path_library = nosp_path_library
     game = Game(
         uuid=str(uuid4()),
         name='Notify Path',
@@ -249,15 +303,15 @@ def test_notify_admins_new_game_schedules_digest(app, db_session, admin_staff, p
         full_disk_path=f'/test/notify/{uuid4().hex}',
         path_status=PATH_STATUS_OK,
     )
-    db_session.add(game)
-    db_session.commit()
+    no_savepoint_db.add(game)
+    no_savepoint_db.commit()
 
     with app.app_context():
         _reset_library_add_digests_for_tests()
         notify_admins_new_game(game.uuid, game.name)
         _flush_library_add_digest(path_library.uuid, app)
 
-    rows = db_session.execute(
+    rows = no_savepoint_db.execute(
         select(UserNotification).where(
             UserNotification.kind == 'library_added',
         )
@@ -271,7 +325,7 @@ def test_notify_admins_new_game_schedules_digest(app, db_session, admin_staff, p
     assert matching, f'expected digest for {path_library.uuid}; got {[r.payload for r in rows]}'
 
 
-def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_staff, path_library):
+def test_scan_completion_flush_cancels_the_pending_timer(app, no_savepoint_db, nosp_admin_staff, nosp_path_library):
     """A finished scan emits the digest once, with the finished count.
 
     The five-second debounce alone never satisfied "only show games when a
@@ -286,7 +340,8 @@ def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_
         flush_library_add_digest,
     )
 
-    admin, librarian = admin_staff
+    admin, librarian = nosp_admin_staff
+    path_library = nosp_path_library
     game = Game(
         uuid=str(uuid4()),
         name='Flush On Complete',
@@ -294,8 +349,8 @@ def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_
         full_disk_path=f'/test/flush/{uuid4().hex}',
         path_status=PATH_STATUS_OK,
     )
-    db_session.add(game)
-    db_session.commit()
+    no_savepoint_db.add(game)
+    no_savepoint_db.commit()
 
     with app.app_context():
         # A long debounce stands in for "the scan is still running".
@@ -314,7 +369,7 @@ def test_scan_completion_flush_cancels_the_pending_timer(app, db_session, admin_
         # The timer is gone, so it cannot fire a second alert ten minutes later.
         assert path_library.uuid not in _library_add_timers
 
-    rows = db_session.execute(select(UserNotification)).scalars().all()
+    rows = no_savepoint_db.execute(select(UserNotification)).scalars().all()
     staff_ids = {admin.id, librarian.id}
     digests = [r for r in rows if r.kind == 'library_added' and r.user_id in staff_ids]
     assert digests, 'completion did not emit the digest'
@@ -330,7 +385,7 @@ def test_flushing_an_idle_library_is_harmless(app, db_session, path_library):
         flush_library_add_digest('', app)
 
 
-def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff, path_library):
+def test_running_scan_holds_the_digest_until_flush(app, no_savepoint_db, nosp_admin_staff, nosp_path_library):
     """Debounce must not fire while a scan for this library is still Running.
 
     The five-second window is right for watch/import. During a scan it is how
@@ -342,7 +397,8 @@ def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff,
         schedule_library_add_digest,
     )
 
-    admin, librarian = admin_staff
+    admin, librarian = nosp_admin_staff
+    path_library = nosp_path_library
     job = ScanJob(
         folders={'/games': True},
         content_type='Games',
@@ -351,8 +407,8 @@ def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff,
         library_uuid=path_library.uuid,
         scan_folder='/games',
     )
-    db_session.add(job)
-    db_session.commit()
+    no_savepoint_db.add(job)
+    no_savepoint_db.commit()
 
     game = Game(
         uuid=str(uuid4()),
@@ -361,8 +417,8 @@ def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff,
         full_disk_path=f'/test/held/{uuid4().hex}',
         path_status=PATH_STATUS_OK,
     )
-    db_session.add(game)
-    db_session.commit()
+    no_savepoint_db.add(game)
+    no_savepoint_db.commit()
 
     with app.app_context():
         schedule_library_add_digest(
@@ -378,7 +434,7 @@ def test_running_scan_holds_the_digest_until_flush(app, db_session, admin_staff,
         )
         flush_library_add_digest(path_library.uuid, app)
 
-    rows = db_session.execute(select(UserNotification)).scalars().all()
+    rows = no_savepoint_db.execute(select(UserNotification)).scalars().all()
     staff_ids = {admin.id, librarian.id}
     digests = [r for r in rows if r.kind == 'library_added' and r.user_id in staff_ids]
     assert digests, 'holding the timer also swallowed the digest'

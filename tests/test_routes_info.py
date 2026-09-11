@@ -77,7 +77,7 @@ class TestContextProcessor:
 class TestAdminServerStatusRoute:
     """The standalone page is retired; Ops is the one health surface (W27-D1)."""
 
-    def test_admin_server_status_requires_login(self, client):
+    def test_admin_server_status_requires_login(self, client, configured_install):
         """Test that admin server status route requires authentication."""
         response = client.get('/admin/server_status_page')
 
@@ -171,7 +171,7 @@ class TestOpsLogsApi:
     the reason it was retired. These pin the contract the console depends on.
     """
 
-    def test_requires_login(self, client):
+    def test_requires_login(self, client, configured_install):
         response = client.get('/admin/api/ops/logs')
 
         assert response.status_code == 302

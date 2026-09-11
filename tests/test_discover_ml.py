@@ -503,7 +503,7 @@ def because_shelf_section():
 
 
 class TestRebuildJob:
-    def test_a_rebuild_reports_what_it_did(self, app, db_session, ml_library, genres):
+    def test_a_rebuild_reports_what_it_did(self, app, db_session, ml_library, genres, configured_install):
         from oneirodex.utils.discover_ml.job import rebuild_all
 
         _game(db_session, ml_library, 'Job One', genres=[genres[0]])

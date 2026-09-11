@@ -70,7 +70,7 @@ def clean_db(db_session):
 
 class TestIGDBSettingsRoute:
     
-    def test_igdb_settings_requires_login(self, client):
+    def test_igdb_settings_requires_login(self, client, configured_install):
         """Test that IGDB settings requires login."""
         response = client.get('/admin/igdb_settings')
         assert response.status_code == 302
@@ -205,7 +205,7 @@ class TestIGDBSettingsRoute:
         assert response_data['status'] == 'success'
     
     @patch('oneirodex.routes_admin_ext.igdb.db.session.commit')
-    def test_igdb_settings_post_database_error(self, mock_commit, client, admin_user):
+    def test_igdb_settings_post_database_error(self, mock_commit, client, admin_user, global_settings):
         """Test POST request handles database errors."""
         mock_commit.side_effect = Exception("Database error")
         
@@ -244,7 +244,7 @@ class TestIGDBSettingsRoute:
 
 class TestIGDBTestRoute:
     
-    def test_test_igdb_requires_login(self, client):
+    def test_test_igdb_requires_login(self, client, configured_install):
         """Test that IGDB test requires login."""
         response = client.post('/admin/test_igdb')
         assert response.status_code == 302
