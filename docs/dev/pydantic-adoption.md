@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/account.py` | `POST /api/account/avatar/stock` (`account_stock_avatar`) | `StockAvatarBody` |
+| `routes_apis/account.py` | `POST /api/account/password` (`account_password`) | `ChangePasswordBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,16 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`account_stock_avatar`** — missing/blank `id` was 400 from
+  `set_stock_avatar` ("not one of the avatars we ship"); now 422 naming `id`.
+  Unknown ids and path-shaped ids still 400.
+- **`account_password`** — missing fields previously fell through to 401
+  (empty current password fails `check_password`) or the min-length 422.
+  `{}` is now 422 naming the three fields. A well-formed body with the wrong
+  current password is still 401. The 8-character floor, mismatch, and reuse
+  checks stay in the view (`tests/test_routes_apis_account.py`). Frontend
+  (`shared/src/accountApi.ts`, `@oneirodex/api-client`) renders the envelope
+  error; it does not branch on the old 401-for-missing-fields shape.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +139,21 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/account.py`
+
+- `create_account_invite` — `email` is optional; `{}` is a valid create.
+- Avatar upload is multipart, not JSON.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 113 | 46 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 

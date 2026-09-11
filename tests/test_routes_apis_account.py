@@ -132,6 +132,16 @@ class TestPasswordChange:
         assert member.check_password('a brand new one')
         assert not member.check_password('correct horse battery')
 
+    def test_missing_fields_are_unprocessable(self, client, member):
+        login(client, member)
+        response = client.post('/api/account/password', json={})
+        assert response.status_code == 422
+        body = response.get_json()
+        assert body['error_code'] == 'unprocessable'
+        assert 'current_password' in body['detail']
+        assert 'new_password' in body['detail']
+        assert 'confirm_password' in body['detail']
+
 
 class TestInvites:
     def test_invite_without_an_email_is_created_and_returns_its_link(self, client, member):
@@ -259,6 +269,14 @@ class TestStockAvatars:
 
         assert response.status_code == 400
         assert member.avatarpath == DEFAULT_AVATAR
+
+    def test_missing_id_is_unprocessable(self, client, member):
+        login(client, member)
+        response = client.post('/api/account/avatar/stock', json={})
+        assert response.status_code == 422
+        body = response.get_json()
+        assert body['error_code'] == 'unprocessable'
+        assert 'id' in body['detail']
 
     def test_a_path_is_not_an_id(self, client, member):
         """The set is closed on purpose — a path here would set any static file."""

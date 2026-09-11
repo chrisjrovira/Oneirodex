@@ -250,3 +250,7 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   (same shape as admin `adminApi.ts`). First covered groups rewired:
   collections, wishlist, discover, discoverPins, playtime, favorites.
   Remaining `src/api/` modules still hand-roll `fetch`. No workflow change.
+- [A2.4-account-json] `tests/test_pydantic_account.py` added to the
+  `pytest-core` hand list (stock-avatar / password-change
+  `@validate_body` 422 contracts). `tests/test_routes_apis_account.py`
+  was already on the list.
