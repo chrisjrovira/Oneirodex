@@ -64,6 +64,7 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/ai_assist.py` | `POST /api/ai/apply-triage` (`ai_apply_triage`) | `ApplyTriageBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +83,11 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`ai_apply_triage`** — missing `game_uuid` / `title` (or `name`) was 400
+  from the helper after the auto-apply flag. Now 422 naming `game_uuid` /
+  `__root__`. `@admin_required` sits above validation. The auto-apply 403
+  (with `auto_apply_enabled=False`) runs after, so `{}` is 422; a well-formed
+  body is still 403 (`tests/test_ops_followons.py`).
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +133,28 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/ai_assist.py`
+
+- `ai_config` — GET+PUT share one view; wrapping would 422 GET.
+- `ai_triage` — `name` can come from `folder_id` / `folder_path`; no single
+  required JSON field.
+- `ai_doctor_notes` — all-optional context bag.
+
+### `routes_apis/library.py`
+
+- `library_watch` — GET+PUT share one view; wrapping would 422 GET.
+- Batch scan/edit/delete — partial-success envelopes.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 114 | 46 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **150** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 

@@ -11,6 +11,7 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, Library, UnmatchedFolder
+from oneirodex.schemas.ai_assist import ApplyTriageBody
 from oneirodex.utils.ai_assist import (
     ai_auto_apply_enabled,
     ai_enabled,
@@ -22,6 +23,7 @@ from oneirodex.utils.ai_assist import (
     triage_folder,
 )
 from oneirodex.utils.auth import admin_required
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -121,7 +123,8 @@ def ai_doctor_notes():
 @apis_bp.route('/ai/apply-triage', methods=['POST'])
 @login_required
 @admin_required
-def ai_apply_triage():
+@validate_body(ApplyTriageBody)
+def ai_apply_triage(body: ApplyTriageBody):
     """Apply a chosen triage title to an existing game (never silent)."""
     if not ai_auto_apply_enabled():
         return api_error(
@@ -129,11 +132,10 @@ def ai_apply_triage():
             code='forbidden',
             auto_apply_enabled=False,
         )
-    data = request.get_json(silent=True) or {}
     try:
         result = apply_triage_title(
-            (data.get('game_uuid') or '').strip(),
-            (data.get('title') or data.get('name') or '').strip(),
+            body.game_uuid,
+            body.title or body.name or '',
         )
     except ValueError as exc:
         return api_error(str(exc), code='bad_request')
