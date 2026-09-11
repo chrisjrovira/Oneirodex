@@ -348,7 +348,10 @@ class TestCustomDiscoveryZones:
             json={'name': '', 'mode': 'manual', 'game_uuids': ['abc']},
             content_type='application/json',
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
+        body = response.get_json()
+        assert body['error_code'] == 'unprocessable'
+        assert 'name' in body['detail']
 
     def test_create_manual_zone_rejects_unknown_uuids(self, client, admin_user):
         self._login(client, admin_user)
