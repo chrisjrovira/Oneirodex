@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { createOneirodexBrowserClient } from '@oneirodex/api-client'
 
 import {
   changePassword,
@@ -16,7 +17,6 @@ import {
   getAccountSummary,
   listInvites,
   revokeInvite,
-  uploadAvatar,
   type AccountSummary,
   type ListInvitesResponse,
 } from './accountApi.js'
@@ -28,8 +28,26 @@ import {
   type ApiToken,
 } from './tokensApi.js'
 import { copyText } from './copyText.js'
+import { getCsrfToken } from './csrf.js'
 import { PageStatus } from './pageStatus.js'
 import './AccountModal.css'
+
+/**
+ * Same-origin browser client (ADR 0005), scoped to this modal's one
+ * multipart call (`uploadAvatar`) — every other account/token verb here still
+ * goes through `accountApi.js` / `tokensApi.js`'s own hand-rolled `fetch`.
+ * `fetchImpl` is a thin wrapper, not a bare `fetch` reference, so a test that
+ * `vi.stubGlobal('fetch', ...)` after this module has already loaded still
+ * reaches the stub (see `admin-app/src/api/adminApi.ts`, which hit this first).
+ */
+const accountClient = createOneirodexBrowserClient({
+  baseUrl: '',
+  fetchImpl: (input, init) => fetch(input, init),
+  csrfToken: getCsrfToken,
+  onUnauthorized: () => {
+    window.location.href = '/login'
+  },
+})
 
 /**
  * Account modals: profile, avatar, password, invites, API tokens.
@@ -192,7 +210,7 @@ function AvatarPanel({ summary, onUpdated }: AvatarPanelProps): ReactNode {
     setError('')
     setDone('')
     try {
-      const data = await uploadAvatar(file)
+      const data = await accountClient.account.uploadAvatar(file)
       setDone('Avatar updated.')
       setFile(null)
       onUpdated?.(data.avatar_path)

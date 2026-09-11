@@ -1,4 +1,4 @@
-import { csrfHeaders, getCsrfToken } from './csrf.js'
+import { csrfHeaders } from './csrf.js'
 import { errorFromResponse } from './envelopeError.js'
 
 /**
@@ -92,30 +92,6 @@ export async function getAccountSummary({
     throw await errorFromResponse(response, 'Load account')
   }
   return response.json() as Promise<AccountSummary>
-}
-
-/**
- * Multipart, so the CSRF token rides as a form field as well as a header —
- * `fetch` must not be given a Content-Type here or the boundary is lost.
- */
-export async function uploadAvatar(file: File): Promise<AvatarChangeResponse> {
-  const body = new FormData()
-  body.append('avatar', file)
-  const token = getCsrfToken()
-  if (token) {
-    body.append('csrf_token', token)
-  }
-
-  const response = await fetch('/api/account/avatar', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders(),
-    body,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'Upload avatar')
-  }
-  return response.json() as Promise<AvatarChangeResponse>
 }
 
 /**
