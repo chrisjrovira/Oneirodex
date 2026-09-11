@@ -36,11 +36,55 @@ export interface OpsSummaryOptions {
   signal?: AbortSignal
 }
 
+/**
+ * `GET /admin/api/ops/system` — the admin Ops page's detail panels (System,
+ * Database, Logs, Config). Same loose Backend field map as `OpsSummaryResponse`
+ * and the same nullable-section convention; panel ids are this payload's keys.
+ */
+export interface OpsSystemDetail {
+  system?: Record<string, unknown> | null
+  database?: Record<string, unknown> | null
+  logs?: Record<string, unknown> | null
+  config?: Record<string, unknown> | null
+  [key: string]: unknown
+}
+
+/** One row of `GET /admin/api/ops/logs` — shape is a loose Backend log event. */
+export interface OpsLogEvent {
+  id?: string | number
+  timestamp?: string | null
+  level?: string
+  message?: string
+  [key: string]: unknown
+}
+
+export interface OpsLogsResponse {
+  events?: OpsLogEvent[]
+  [key: string]: unknown
+}
+
+export interface OpsLogsOptions {
+  /** Row cap; omitted sends no `limit` (Backend default applies). */
+  limit?: number
+  signal?: AbortSignal
+}
+
 export function createOpsApi(request: Requester) {
   return {
     /** The operations snapshot (`GET /admin/api/ops/summary`). */
     getSummary(options: OpsSummaryOptions = {}): Promise<OpsSummaryResponse> {
       return request<OpsSummaryResponse>('/admin/api/ops/summary', { signal: options.signal })
+    },
+
+    /** System / database / logs / config detail panels (`GET /admin/api/ops/system`). */
+    getSystemDetail(options: OpsSummaryOptions = {}): Promise<OpsSystemDetail> {
+      return request<OpsSystemDetail>('/admin/api/ops/system', { signal: options.signal })
+    },
+
+    /** Recent log events (`GET /admin/api/ops/logs`). */
+    getLogs(options: OpsLogsOptions = {}): Promise<OpsLogsResponse> {
+      const qs = options.limit ? `?limit=${encodeURIComponent(String(options.limit))}` : ''
+      return request<OpsLogsResponse>(`/admin/api/ops/logs${qs}`, { signal: options.signal })
     },
   }
 }

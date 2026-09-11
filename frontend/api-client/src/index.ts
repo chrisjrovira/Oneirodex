@@ -15,7 +15,15 @@ export type { TokensApi } from './tokens.js'
 export type { PlaytimeApi } from './playtime.js'
 export type { BrowseApi, SearchOptions } from './browse.js'
 export type { UpdatesApi } from './updates.js'
-export type { OpsApi, OpsSummaryResponse, OpsSummaryOptions } from './ops.js'
+export type {
+  OpsApi,
+  OpsSummaryResponse,
+  OpsSummaryOptions,
+  OpsSystemDetail,
+  OpsLogEvent,
+  OpsLogsResponse,
+  OpsLogsOptions,
+} from './ops.js'
 export type {
   DownloadsApi,
   GameVersionItem,
@@ -35,7 +43,23 @@ export type {
   LibrarySummary,
   GetLibrariesResponse,
   LibraryWatchState,
+  ScanQueueFields,
+  StartLibraryScanRequest,
+  ScanStartResponse,
+  BatchLibraryScanRequest,
+  BatchLibraryEditRequest,
+  BatchLibraryResult,
+  RefreshAllLibrariesRequest,
+  ScanJobRow,
 } from './library.js'
+export type {
+  LibraryToolsApi,
+  ProposeLeafLibrariesRequest,
+  ProposeLeafLibrariesResponse,
+  LeafLibraryCandidate,
+  ImportLeafLibrariesPreviewResponse,
+  ImportLeafLibrariesPreviewError,
+} from './library-tools.js'
 export type { GameApi, GameDetails, MoreFromResponse, EditionsResponse } from './game.js'
 export type {
   CollectionsApi,
@@ -67,3 +91,33 @@ export type {
   FavoritesPage,
   FavoritesOptions,
 } from './wishlist.js'
+export type {
+  AdminUsersApi,
+  AdminUserRow,
+  AdminUsersResponse,
+  UpsertAdminUserRequest,
+  AdminUserResult,
+  AdminInviteQuotaRow,
+  AdminInviteQuotasResponse,
+} from './admin-users.js'
+export type {
+  AdminArtApi,
+  ArtStudioPreviewRequest,
+  ArtStudioPreviewResponse,
+  ArtStudioGenerateRequest,
+  ArtStudioGenerateResponse,
+  ArtStudioApplyRequest,
+  ArtStudioApplyResponse,
+  ArtStudioBatchGenerateRequest,
+  ArtStudioBatchResult,
+  StockGenerateRequest,
+  SystemMarksGenerateRequest,
+  SystemMarksGenerateResponse,
+  CoversSearchRequest,
+  CoversApplyRequest,
+  CoversBatchRequest,
+  CoversBatchResult,
+  ArtworkGenerateRequest,
+  DownloadImagesRequest,
+  DownloadImagesResult,
+} from './admin-art.js'
