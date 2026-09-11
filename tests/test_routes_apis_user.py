@@ -129,11 +129,12 @@ class TestCheckUsernameEndpoint:
             sess['_fresh'] = True
         
         response = client.post('/api/check_username', json={})
-        assert response.status_code == 400
-        
+        assert response.status_code == 422
+
         data = json.loads(response.data)
-        assert 'error' in data
-        assert data['error'] == 'Missing username parameter'
+        assert data['error'] == 'Invalid request.'
+        assert data['error_code'] == 'unprocessable'
+        assert 'username' in data['detail']
     
     def test_check_username_exists(self, client, regular_user):
         """Test check_username with existing username."""

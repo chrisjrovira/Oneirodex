@@ -24,8 +24,10 @@ from oneirodex.utils.play_url import browse_play_fields, library_platform_key
 from oneirodex.utils.secondary_scrapers import game_card_flags
 from oneirodex.utils.cover_url import resolve_game_cover_url
 from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_game
+from oneirodex.schemas.user import CheckUsernameBody
 from oneirodex.utils.icon_themes import icon_pack_css_url, list_icon_packs
 from oneirodex.utils.presence import accepted_friend_ids, presence_for_user
+from oneirodex.utils.validation import validate_body
 from sqlalchemy import func, select, and_, delete
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timezone
@@ -152,13 +154,10 @@ def list_icon_packs_api():
 
 @apis_bp.route('/check_username', methods=['POST'])
 @login_required
-def check_username():
+@validate_body(CheckUsernameBody)
+def check_username(body: CheckUsernameBody):
     print(F"Route: /api/check_username - {current_user.name} - {current_user.role}")    
-    data = request.get_json()
-    username = data.get('username')
-    if not username:
-        print(f"Check username: Missing username")
-        return api_error('Missing username parameter', code='bad_request')
+    username = body.username
     print(f"Checking username: {username}")
     existing_user = db.session.execute(select(User).filter(func.lower(User.name) == func.lower(username))).scalars().first()
     return jsonify({"exists": existing_user is not None})

@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_apis/user.py` | `POST /api/check_username` (`check_username`) | `CheckUsernameBody` |
+| `routes_apis/layouts.py` | `POST /api/layouts/detail/presets` (`layouts_detail_presets_post`) | `CreateLayoutPresetBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,14 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`check_username`** — missing/empty `username` was
+  `400 "Missing username parameter"`, now 422 naming `username`. Whitespace-only
+  names are still accepted (the hand-rolled check did not strip).
+  `tests/test_routes_apis_user.py` updated 400 → 422.
+- **`layouts_detail_presets_post`** — missing/blank `name` was 400
+  `"Preset name is required"` from the helper; missing/non-object `layout`
+  was 400 `"Layout payload must be an object"`. Both are now 422 naming the
+  field. Unknown section ids and names over 64 characters stay 400.
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +137,30 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_apis/user.py`
+
+- `set_game_status` — empty `status` is a valid clear; unknown values stay
+  400 in the view. Nothing required to delete.
+
+### `routes_apis/layouts.py`
+
+- `layouts_detail_put` / `layouts_detail_mine_put` — pass the whole JSON bag
+  to `save_*`. `extra='forbid'` would reject keys those helpers keep.
+
+### `routes_apis/discover.py`
+
+- Member pin/hide PUT shares a view with GET. Wrapping would 422 GET.
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_apis/` | 113 | 46 |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 12 | 2 |
+| **total** | **149** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
