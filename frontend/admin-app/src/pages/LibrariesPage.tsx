@@ -10,8 +10,8 @@ import { useLibraryRefreshAll } from '../hooks/useLibraryRefreshAll'
 import { useLibraryScan } from '../hooks/useLibraryScan'
 
 export function LibrariesPage() {
-  const [rows, setRows] = useState(null)
-  const [error, setError] = useState(null)
+  const [rows, setRows] = useState<Record<string, unknown>[] | null>(null)
+  const [error, setError] = useState<unknown>(null)
   const { conflictOpen, refreshing, startRefreshAll, onConflictChoose, onConflictClose } =
     useLibraryRefreshAll()
   const {

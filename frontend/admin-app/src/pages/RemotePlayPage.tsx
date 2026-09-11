@@ -2,11 +2,22 @@
 // inline message only, which is easy to miss when the control that triggered
 // it has scrolled away — and invisible when the save happens from the bottom
 // of a long form.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { showToast } from '../utils/toast'
 
-const EMPTY = {
+interface RemotePlayForm {
+  enabled: boolean
+  provider: string
+  sunshine_base_url: string
+  wolf_base_url: string
+  token_hint: string
+  pin_hint: string
+  app_hint: string
+  host_label: string
+}
+
+const EMPTY: RemotePlayForm = {
   enabled: false,
   provider: 'sunshine',
   sunshine_base_url: '',
@@ -51,11 +62,11 @@ export function RemotePlayPage() {
     }
   }, [])
 
-  function updateField(key, value) {
+  function updateField<K extends keyof RemotePlayForm>(key: K, value: RemotePlayForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  async function save(event) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setBusy(true)
     setMessage('')
