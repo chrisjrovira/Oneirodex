@@ -1,4 +1,4 @@
-﻿import { errorFromResponse } from '@oneirodex/ui'
+﻿import { getJson } from './client'
 
 export async function fetchCalendar({
   signal,
@@ -11,14 +11,5 @@ export async function fetchCalendar({
     days_behind: String(daysBehind),
     limit: String(limit),
   })
-  const response = await fetch(`/api/calendar?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'calendar')
-  }
-
-  return response.json()
+  return getJson(`/api/calendar?${params}`, { signal, label: 'calendar' })
 }

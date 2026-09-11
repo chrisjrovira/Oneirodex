@@ -1,4 +1,4 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 export async function fetchBrowseGames(params: LooseProps, { signal }: LooseProps = {}) {
   const qs = new URLSearchParams(
@@ -6,14 +6,5 @@ export async function fetchBrowseGames(params: LooseProps, { signal }: LooseProp
       ([, value]) => value !== undefined && value !== null && value !== '',
     ),
   )
-  const response = await fetch(`/browse_games?${qs}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'browse_games')
-  }
-
-  return response.json()
+  return getJson(`/browse_games?${qs}`, { signal, label: 'browse_games' })
 }

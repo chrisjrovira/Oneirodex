@@ -1,4 +1,5 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { postJson } from './client'
+
 /**
  * Queue Install / Update / Uninstall / Apply patch / Open path for the desktop companion.
  * @param {string} gameUuid
@@ -19,15 +20,5 @@ export async function queueClientCommand(gameUuid: any, action: any, options: Lo
   if (options.select != null) {
     body.select = Boolean(options.select)
   }
-  const response = await fetch('/api/client/commands', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'client/commands')
-  }
-  return response.json().catch(() => ({}))
+  return (await postJson('/api/client/commands', body, { label: 'client/commands' })) ?? {}
 }

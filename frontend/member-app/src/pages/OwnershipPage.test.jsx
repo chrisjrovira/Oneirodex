@@ -27,11 +27,18 @@ function summaryPayload(overrides = {}) {
 }
 
 function jsonResponse(body, { ok = true, status = 200 } = {}) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
     ok,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
   })
+}
+
+function requestHeaders(call) {
+  return new Headers(call?.[1]?.headers)
 }
 
 function ownedTitlesCounts() {
@@ -77,7 +84,7 @@ test('renders ownership summary after loading', async () => {
   ).toBeInTheDocument()
   expect(global.fetch).toHaveBeenCalledWith(
     '/api/ownership',
-    expect.objectContaining({ credentials: 'same-origin' }),
+    expect.objectContaining({ credentials: 'include' }),
   )
   expect(screen.getByLabelText('Steam ID (64-bit)')).toHaveValue('76561190000000000')
   expect(screen.getByRole('button', { name: 'Disconnect Steam' })).toBeEnabled()
@@ -155,11 +162,12 @@ test('sync posts to the steam sync endpoint with the CSRF header', async () => {
       '/api/ownership/steam/sync',
       expect.objectContaining({
         method: 'POST',
-        credentials: 'same-origin',
-        headers: expect.objectContaining({ 'X-CSRFToken': 'token-abc' }),
+        credentials: 'include',
       }),
     )
   })
+  const syncCall = global.fetch.mock.calls.find(([url]) => url === '/api/ownership/steam/sync')
+  expect(requestHeaders(syncCall).get('X-CSRFToken')).toBe('token-abc')
 
   expect(await screen.findByText('Synced 10 titles (4 matched to library).')).toBeInTheDocument()
 })
@@ -192,13 +200,12 @@ test('csv import posts the pasted rows as JSON', async () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ csv: '123,Some Game' }),
-        headers: expect.objectContaining({
-          'X-CSRFToken': 'token-abc',
-          'Content-Type': 'application/json',
-        }),
       }),
     )
   })
+  const csvCall = global.fetch.mock.calls.find(([url]) => url === '/api/ownership/gog/csv')
+  expect(requestHeaders(csvCall).get('X-CSRFToken')).toBe('token-abc')
+  expect(requestHeaders(csvCall).get('Content-Type')).toBe('application/json')
 
   expect(await screen.findByText('Imported 3 GOG titles (2 matched).')).toBeInTheDocument()
 })

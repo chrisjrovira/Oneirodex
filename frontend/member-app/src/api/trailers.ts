@@ -1,4 +1,5 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, postJson } from './client'
+
 export function buildTrailerParams(filters: LooseProps = {}) {
   const params = new URLSearchParams()
   const { library, genres, themes, dateFrom, dateTo } = filters
@@ -23,16 +24,7 @@ export function buildTrailerParams(filters: LooseProps = {}) {
 }
 
 export async function fetchTrailerFilters({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/trailers/filters', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'trailers/filters')
-  }
-
-  return response.json()
+  return getJson('/api/trailers/filters', { signal, label: 'trailers/filters' })
 }
 
 /**
@@ -42,53 +34,34 @@ export async function fetchTrailerFilters({ signal }: LooseProps = {}) {
  */
 export async function fetchRandomTrailer({ signal, filters }: LooseProps = {}) {
   const query = buildTrailerParams(filters).toString()
-  const response = await fetch(`/api/trailers/random${query ? `?${query}` : ''}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (response.status === 404) {
-    const data = await response.json().catch(() => ({}))
-    return {
-      has_videos: false,
-      empty: true,
-      code: data.code || 'no_trailers',
-      message: data.message || 'No games with trailers found matching your filters',
-      cta: data.cta || null,
+  try {
+    return await getJson(`/api/trailers/random${query ? `?${query}` : ''}`, {
+      signal,
+      label: 'trailers/random',
+    })
+  } catch (err: any) {
+    if (err?.status === 404) {
+      const data = err.data && typeof err.data === 'object' ? err.data : {}
+      return {
+        has_videos: false,
+        empty: true,
+        code: data.code || 'no_trailers',
+        message: data.message || 'No games with trailers found matching your filters',
+        cta: data.cta || null,
+      }
     }
+    throw err
   }
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'trailers/random')
-  }
-
-  return response.json()
 }
 
 export async function fetchAttractModeSettings({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/attract-mode/settings', {
-    signal,
-    credentials: 'same-origin',
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'attract-mode/settings')
-  }
-
-  return response.json()
+  return getJson('/api/attract-mode/settings', { signal, label: 'attract-mode/settings' })
 }
 
 export async function saveAttractModePreferences({ autoplay, filters }: LooseProps) {
-  const response = await fetch('/api/attract-mode/user-override', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ autoplay, filters }),
-  })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'attract-mode/user-override')
-  }
-
-  return response.json()
+  return postJson(
+    '/api/attract-mode/user-override',
+    { autoplay, filters },
+    { label: 'attract-mode/user-override' },
+  )
 }

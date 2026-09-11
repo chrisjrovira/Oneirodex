@@ -5,9 +5,13 @@ import { LibraryApp } from './LibraryApp'
 import { ShellHarness } from './testShell'
 
 function jsonResponse(body) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
   })
 }
 

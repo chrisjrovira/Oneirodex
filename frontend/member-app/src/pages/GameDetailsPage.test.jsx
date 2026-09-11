@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { GameDetailsPage } from './GameDetailsPage'
+import { stubFetch } from '../testJsonResponse'
 import { showToast } from '../utils/toast'
 
 vi.mock('../utils/toast', () => ({
@@ -35,7 +36,7 @@ const detailsPayload = {
 beforeEach(() => {
   showToast.mockReset()
   initiateGameDownload.mockReset()
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -102,7 +103,7 @@ test('loads game details into SPA page with action bar', async () => {
 })
 
 test('shows Cheats panel only when cheat_surface is retroarch', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -141,7 +142,7 @@ test('shows Cheats panel only when cheat_surface is retroarch', async () => {
 })
 
 test('Play link keeps the Nostalgist NES host from play_url', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -181,7 +182,7 @@ test('Play link keeps the Nostalgist NES host from play_url', async () => {
 })
 
 test('shows disc chips on details, not as a tile badge', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -215,7 +216,7 @@ test('shows disc chips on details, not as a tile badge', async () => {
 
 test('admin path rows show the full library folder string', async () => {
   const fullPath = '/mnt/user/games/PCWIN/Indie Puzzle/Very Long Folder Name/Celeste'
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -252,7 +253,7 @@ test('admin path rows show the full library folder string', async () => {
 
 test('admin ⋮ menu exposes Edit Details / Edit Images', async () => {
   const user = userEvent.setup()
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -354,7 +355,7 @@ test('the screenshot viewer portals out of the details page', async () => {
 })
 
 test('prefers trailers[].embed_url and shows extras from details payload', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -412,7 +413,7 @@ test('prefers trailers[].embed_url and shows extras from details payload', async
 })
 
 test('shows youtube_demo_url when no trailers exist', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -464,7 +465,7 @@ test('shows youtube_demo_url when no trailers exist', async () => {
  * once: base (never), update-downloadable (yes), update-missing (no).
  */
 test('versions: base has no Download; a downloadable update does; missing hides it', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -537,7 +538,7 @@ test('versions: base has no Download; a downloadable update does; missing hides 
 })
 
 test('firmware_missing blocks Play and shows quiet honesty with Help link', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -601,7 +602,7 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
   err.data = { code: 'path_missing', hint: err.hint, error: 'Version file is missing on disk' }
   initiateGameDownload.mockRejectedValue(err)
 
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -661,7 +662,7 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
 
 test('admin can remove missing versions via cleanup_orphans', async () => {
   const user = userEvent.setup()
-  global.fetch = vi.fn((url, options = {}) => {
+  stubFetch((url, options = {}) => {
     const href = String(url)
     if (href.includes('/details')) {
       return Promise.resolve({
@@ -758,7 +759,7 @@ test('summary and facts share the fold with the media stage', async () => {
 })
 
 test('facts rail stays in the grid when there is no summary', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -811,7 +812,7 @@ test('breadcrumb is Catalog then primary genre then title', async () => {
 })
 
 test('console leaf breadcrumb starts at Systems', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -833,7 +834,7 @@ test('console leaf breadcrumb starts at Systems', async () => {
 })
 
 test('renders About, capability chips, and store specs when present', async () => {
-  global.fetch = vi.fn((url) => {
+  stubFetch((url) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,

@@ -9,29 +9,18 @@
  * "no reference set" branch on SetCompletionPage depends on it) and
  * `error_code` on the Error.
  */
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 export async function fetchLibraryPlatforms({ signal }: LooseProps = {}) {
-  const response = await fetch('/api/library_platforms?include_completion=1', {
+  return getJson('/api/library_platforms?include_completion=1', {
     signal,
-    credentials: 'same-origin',
+    label: 'library_platforms',
   })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'library_platforms')
-  }
-  return response.json()
 }
 
 export async function fetchLicensedCatalog({ libraryPlatform, signal }: LooseProps = {}) {
   const params = new URLSearchParams({ library_platform: libraryPlatform })
-  const response = await fetch(`/api/licensed-catalog?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'licensed-catalog')
-  }
-  return response.json()
+  return getJson(`/api/licensed-catalog?${params}`, { signal, label: 'licensed-catalog' })
 }
 
 export async function fetchSetCompletion({ libraryPlatform, region, signal }: LooseProps = {}) {
@@ -39,12 +28,5 @@ export async function fetchSetCompletion({ libraryPlatform, region, signal }: Lo
     library_platform: libraryPlatform,
     region,
   })
-  const response = await fetch(`/api/set-completion?${params}`, {
-    signal,
-    credentials: 'same-origin',
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'set-completion')
-  }
-  return response.json()
+  return getJson(`/api/set-completion?${params}`, { signal, label: 'set-completion' })
 }

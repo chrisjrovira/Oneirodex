@@ -1,13 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { DetailsMoreFrom } from './DetailsMoreFrom'
+import { stubFetch } from '../testJsonResponse'
 
 vi.mock('./DiscoverShelf', () => ({
   DiscoverShelf: ({ section }) => <div>{section.title}</div>,
 }))
 
 test('renders vault shelves and hides when the API is empty', async () => {
-  global.fetch = vi.fn(() =>
+  stubFetch(() =>
     Promise.resolve({
       ok: true,
       json: () =>
@@ -36,13 +37,13 @@ test('renders vault shelves and hides when the API is empty', async () => {
   await waitFor(() => {
     expect(global.fetch).toHaveBeenCalledWith(
       '/api/games/abc/more_from',
-      expect.objectContaining({ credentials: 'same-origin' }),
+      expect.objectContaining({ credentials: 'include' }),
     )
   })
 })
 
 test('renders nothing when there are no siblings', async () => {
-  global.fetch = vi.fn(() =>
+  stubFetch(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ ok: true, sections: [] }),

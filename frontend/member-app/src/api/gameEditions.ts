@@ -1,4 +1,4 @@
-import { errorFromResponse } from '@oneirodex/ui'
+import { getJson } from './client'
 
 /**
  * Every system this title exists on in the library, with per-core launchers.
@@ -8,14 +8,8 @@ import { errorFromResponse } from '@oneirodex/ui'
  * offer a launcher for each core the member could actually play it with.
  */
 export async function fetchGameEditions(gameUuid: any, { signal }: LooseProps = {}) {
-  const response = await fetch(`/api/games/${encodeURIComponent(gameUuid)}/editions`, {
+  return getJson(`/api/games/${encodeURIComponent(gameUuid)}/editions`, {
     signal,
-    credentials: 'same-origin',
+    label: 'game editions',
   })
-
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'game editions')
-  }
-
-  return response.json()
 }

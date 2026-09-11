@@ -13,10 +13,13 @@ import {
 } from './batchActions'
 
 function jsonResponse(body, status = 200) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
   })
 }
 

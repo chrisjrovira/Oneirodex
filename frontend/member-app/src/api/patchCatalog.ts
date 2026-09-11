@@ -1,4 +1,5 @@
-import { csrfHeaders, errorFromResponse } from '@oneirodex/ui'
+import { getJson, postJson } from './client'
+
 export async function searchPatchCatalog({ gameUuid, q, signal }: LooseProps = {}) {
   const params = new URLSearchParams()
   if (gameUuid) {
@@ -7,25 +8,16 @@ export async function searchPatchCatalog({ gameUuid, q, signal }: LooseProps = {
   if (q) {
     params.set('q', q)
   }
-  const response = await fetch(`/api/patch-catalog/search?${params}`, {
-    credentials: 'same-origin',
-    signal,
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'patch-catalog search')
-  }
-  return response.json().catch(() => ({}))
+  return (
+    (await getJson(`/api/patch-catalog/search?${params}`, {
+      signal,
+      label: 'patch-catalog search',
+    })) ?? {}
+  )
 }
 
 export async function attachPatchCatalogGuide(body: any) {
-  const response = await fetch('/api/patch-catalog/attach', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify(body),
-  })
-  if (!response.ok) {
-    throw await errorFromResponse(response, 'patch-catalog attach')
-  }
-  return response.json().catch(() => ({}))
+  return (
+    (await postJson('/api/patch-catalog/attach', body, { label: 'patch-catalog attach' })) ?? {}
+  )
 }

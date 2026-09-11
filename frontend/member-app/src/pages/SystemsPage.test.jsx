@@ -7,11 +7,15 @@ beforeEach(() => {
 })
 
 function mockFetch(payload, ok = true) {
+  const payloadJson = payload
+  const body = JSON.stringify(payloadJson)
   global.fetch = vi.fn(() =>
     Promise.resolve({
       ok,
       status: ok ? 200 : 500,
-      json: () => Promise.resolve(payload),
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve(payloadJson),
+      text: () => Promise.resolve(body),
     }),
   )
 }

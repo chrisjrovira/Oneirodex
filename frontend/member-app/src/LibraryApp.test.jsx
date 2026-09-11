@@ -8,10 +8,14 @@ afterEach(() => {
   window.localStorage.removeItem('od.library.layout')
 })
 
-function jsonResponse(body) {
+function jsonResponse(body, { ok = true, status = 200 } = {}) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
-    ok: true,
+    ok,
+    status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
   })
 }
 

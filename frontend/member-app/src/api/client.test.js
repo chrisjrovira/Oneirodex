@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { deleteJson, getJson, patchJson, postJson } from './client'
+import { deleteJson, getJson, patchJson, postJson, send, sendResult } from './client'
 
 function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const payload = typeof body === 'string' ? body : JSON.stringify(body)
@@ -62,5 +62,25 @@ describe('member browser-transport verbs', () => {
     expect(new Headers(patchCall[1].headers).get('X-CSRFToken')).toBe('test-csrf-token')
     expect(deleteCall[0]).toBe('/api/requests/7')
     expect(new Headers(deleteCall[1].headers).get('X-CSRFToken')).toBe('test-csrf-token')
+  })
+
+  test('send posts FormData without a JSON content type', async () => {
+    const body = new FormData()
+    body.append('file', new Blob(['x']), 'cheat.cht')
+    await send('/api/games/g1/cheats', { method: 'POST', body, label: 'cheat upload' })
+    const [, init] = global.fetch.mock.calls[0]
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe(body)
+    expect(new Headers(init.headers).get('X-CSRFToken')).toBe('test-csrf-token')
+    expect(new Headers(init.headers).get('Content-Type')).toBeNull()
+  })
+
+  test('sendResult returns ok/status/data on 4xx without throwing', async () => {
+    global.fetch.mockReturnValue(jsonResponse({ error: 'missing' }, { ok: false, status: 404 }))
+    await expect(sendResult('/api/games/batch/favorite', { method: 'POST' })).resolves.toEqual({
+      ok: false,
+      status: 404,
+      data: { error: 'missing' },
+    })
   })
 })

@@ -23,10 +23,18 @@ const game = {
 }
 
 function jsonResponse(body) {
+  const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
   })
+}
+
+function requestHeaders(call) {
+  return new Headers(call?.[1]?.headers)
 }
 
 beforeEach(() => {
@@ -49,14 +57,13 @@ test('favorite toggle posts with CSRF and updates the card', async () => {
   await waitFor(() => expect(favorite).toHaveAttribute('aria-pressed', 'true'))
   expect(fetchMock).toHaveBeenCalledWith(
     `/api/toggle_favorite/${game.uuid}`,
-    expect.objectContaining({
-      method: 'POST',
-      headers: expect.objectContaining({
-        'Content-Type': 'application/json',
-        'X-CSRFToken': 'test-csrf',
-      }),
-    }),
+    expect.objectContaining({ method: 'POST' }),
   )
+  const favoriteCall = fetchMock.mock.calls.find(([url]) =>
+    String(url).includes('/api/toggle_favorite/'),
+  )
+  expect(requestHeaders(favoriteCall).get('Content-Type')).toBe('application/json')
+  expect(requestHeaders(favoriteCall).get('X-CSRFToken')).toBe('test-csrf')
 })
 
 test('status selection posts with CSRF and updates the status button', async () => {
@@ -78,9 +85,12 @@ test('status selection posts with CSRF and updates the status button', async () 
     expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({ status: 'completed' }),
-      headers: expect.objectContaining({ 'X-CSRFToken': 'test-csrf' }),
     }),
   )
+  const statusCall = fetchMock.mock.calls.find(([url]) =>
+    String(url).includes('/api/set_game_status/'),
+  )
+  expect(requestHeaders(statusCall).get('X-CSRFToken')).toBe('test-csrf')
 })
 
 test('popup exposes navigation actions and gates admin actions', async () => {
