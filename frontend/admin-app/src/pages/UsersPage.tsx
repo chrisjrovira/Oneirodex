@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 
 import { getJson, putJson } from '../api/adminApi'
 import { AdminPageActions } from '../components/AdminPageActions'
@@ -7,25 +7,43 @@ import { DataTable } from '../components/DataTable'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { MetricStrip } from '../components/opsWidgets'
 import { PM_IGNORE } from '../components/formIgnore'
+import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
 
 const ROLES = ['user', 'librarian', 'child', 'admin']
 
+interface AdminUser {
+  id: string
+  name: string
+  email?: string
+  role: string
+  state?: boolean
+  is_email_verified?: boolean
+}
+
 /** Roster counts for the metric strip (GT-C2). Pure so it can be tested directly. */
-export function summarizeUsers(users) {
-  const rows = Array.isArray(users) ? users : []
+export function summarizeUsers(users: unknown) {
+  const rows: AdminUser[] = Array.isArray(users) ? users : []
   const admins = rows.filter((u) => u.role === 'admin').length
   const inactive = rows.filter((u) => !u.state).length
   const unverified = rows.filter((u) => !u.is_email_verified).length
   return { total: rows.length, admins, inactive, unverified }
 }
 
-function UserEditor({ user, onClose, onSaved }) {
+function UserEditor({
+  user,
+  onClose,
+  onSaved,
+}: {
+  user: AdminUser
+  onClose?: () => void
+  onSaved?: () => void
+}) {
   const [role, setRole] = useState(user.role)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setBusy(true)
@@ -36,7 +54,7 @@ function UserEditor({ user, onClose, onSaved }) {
       onSaved?.()
       onClose?.()
     } catch (err) {
-      setError(err?.message || 'Could not save that account.')
+      setError(errorText(err) || 'Could not save that account.')
     } finally {
       setBusy(false)
     }
@@ -74,12 +92,12 @@ function UserEditor({ user, onClose, onSaved }) {
 }
 
 export function UsersPage() {
-  const [users, setUsers] = useState([])
-  const [error, setError] = useState(null)
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [error, setError] = useState<unknown>(null)
   // Distinct from "empty" on purpose — the old copy said "Loading or no users",
   // which left an admin unable to tell a slow request from an empty household.
   const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(null)
+  const [editing, setEditing] = useState<AdminUser | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)

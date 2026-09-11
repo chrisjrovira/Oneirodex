@@ -1,16 +1,25 @@
 // Toasts on every mutation (GT-B25). Outcomes were reported inline only,
 // which is easy to miss when the triggering control has scrolled away.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { getJson, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
 
+interface Announcement {
+  id: string
+  title?: string
+  body?: string
+  published?: boolean
+  created_at?: string
+}
+
 export function AnnouncementsPage() {
-  const [rows, setRows] = useState(null)
+  const [rows, setRows] = useState<Announcement[] | null>(null)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [publishNow, setPublishNow] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<unknown>(null)
   const [saving, setSaving] = useState(false)
   const [tick, setTick] = useState(0)
 
@@ -30,7 +39,7 @@ export function AnnouncementsPage() {
     }
   }, [tick])
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSaving(true)
     setError(null)
@@ -47,7 +56,7 @@ export function AnnouncementsPage() {
       showToast(publishNow ? 'Announcement published.' : 'Announcement saved as draft.', 'success')
     } catch (err) {
       setError(err)
-      showToast(err.message || 'Could not save the announcement.', 'error')
+      showToast(errorText(err) || 'Could not save the announcement.', 'error')
     } finally {
       setSaving(false)
     }

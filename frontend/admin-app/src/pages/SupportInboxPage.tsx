@@ -4,11 +4,23 @@ import { Button, PageStatus } from '@oneirodex/ui'
 import { DataTable } from '../components/DataTable'
 import { MetricStrip } from '../components/opsWidgets'
 import { csrfHeaders } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
 
+interface SupportTicket {
+  id: string
+  severity?: string
+  area?: string
+  title?: string
+  status?: string
+  github_issue_number?: number
+  github_issue_url?: string
+  github_sync?: string
+}
+
 export function SupportInboxPage() {
-  const [tickets, setTickets] = useState([])
-  const [error, setError] = useState(null)
+  const [tickets, setTickets] = useState<SupportTicket[]>([])
+  const [error, setError] = useState<unknown>(null)
 
   // Derived rather than stored: a second piece of state would be one more thing
   // to keep in step with the list it counts.
@@ -29,7 +41,7 @@ export function SupportInboxPage() {
     load()
   }, [])
 
-  async function resolve(id) {
+  async function resolve(id: string) {
     // Resolving used to give no feedback at all — the row simply vanished on
     // reload, which is indistinguishable from the click not registering.
     try {
@@ -43,7 +55,7 @@ export function SupportInboxPage() {
       }
       showToast('Ticket resolved.', 'success')
     } catch (err) {
-      showToast(err.message || 'Could not resolve the ticket.', 'error')
+      showToast(errorText(err) || 'Could not resolve the ticket.', 'error')
     }
     await load()
   }
