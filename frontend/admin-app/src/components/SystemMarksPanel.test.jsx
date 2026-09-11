@@ -27,6 +27,7 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           ok: true,
           items: [
@@ -45,6 +46,7 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           ok: true,
           theme: 'default',
@@ -61,10 +63,16 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
       return {
         ok: true,
         status: 201,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({ ok: true, generated: 1, skipped: 0, errors: [] }),
       }
     }
-    return { ok: false, status: 404, json: async () => ({ error: path }) }
+    return {
+      ok: false,
+      status: 404,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ error: path }),
+    }
   })
 
   try {
@@ -96,6 +104,7 @@ test('lab generates one forced pair and records the attempt', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           ok: true,
           items: [{ theme: 'aurora', generated: 0, total: 72, complete: false }],
@@ -108,6 +117,7 @@ test('lab generates one forced pair and records the attempt', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           ok: true,
           theme: 'aurora',
@@ -123,10 +133,16 @@ test('lab generates one forced pair and records the attempt', async () => {
       return {
         ok: true,
         status: 201,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({ ok: true, generated: 1, skipped: 0, errors: [] }),
       }
     }
-    return { ok: false, status: 404, json: async () => ({ error: path }) }
+    return {
+      ok: false,
+      status: 404,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ error: path }),
+    }
   })
 
   try {

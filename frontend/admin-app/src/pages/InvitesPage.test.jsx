@@ -3,7 +3,12 @@ import { render, screen, within } from '@testing-library/react'
 import { InvitesPage } from './InvitesPage'
 
 function mockFetch(body) {
-  return vi.fn(async () => ({ ok: true, status: 200, json: async () => body }))
+  return vi.fn(async () => ({
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: async () => body,
+  }))
 }
 
 /**

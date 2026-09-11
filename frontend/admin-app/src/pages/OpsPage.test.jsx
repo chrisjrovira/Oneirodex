@@ -65,11 +65,17 @@ function ancillaryOpsResponse(url) {
     return {
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({ system: {}, database: {}, logs: {}, config: {} }),
     }
   }
   if (href.includes('/admin/api/ops/logs')) {
-    return { ok: true, status: 200, json: async () => ({ events: [] }) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ events: [] }),
+    }
   }
   return null
 }
@@ -149,6 +155,7 @@ test('OpsPage shows library health score and top factors when present', async ()
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () =>
           mockOpsSummary({
             library: {
@@ -193,6 +200,7 @@ test('OpsPage library health is honest n/a when Backend field absent', async () 
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => mockOpsSummary(),
       }
     }
@@ -218,6 +226,7 @@ test('OpsPage Scans tile renders honest counters', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => mockOpsSummary(),
       }
     }
@@ -241,6 +250,7 @@ test('OpsPage shows library watch off honestly', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => mockOpsSummary(),
       }
     }
@@ -277,6 +287,7 @@ test('OpsPage shows library watch running with roots and pending', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () =>
           mockOpsSummary({
             services: {
@@ -314,6 +325,7 @@ test('OpsPage status banner lists issues with href', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => mockOpsSummary(),
       }
     }
@@ -345,6 +357,7 @@ test('OpsPage splits action and warning folds; category maps to action', async (
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () =>
           mockOpsSummary({
             issues: {
@@ -397,6 +410,7 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () =>
           mockOpsSummary({
             issues: {
@@ -449,6 +463,7 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => mockOpsSummary(),
       }
     }
@@ -456,6 +471,7 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
     return {
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: async () =>
         mockOpsSummary({
           host: {
@@ -494,12 +510,18 @@ function mockOpsWithSystemDetail() {
   return vi.fn(async (url) => {
     const href = String(url)
     if (href.includes('/admin/api/ops/summary')) {
-      return { ok: true, status: 200, json: async () => mockOpsSummary() }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => mockOpsSummary(),
+      }
     }
     if (href.includes('/admin/api/ops/system')) {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           system: { OS: 'Linux' },
           database: { Engine: 'PostgreSQL' },
@@ -509,7 +531,12 @@ function mockOpsWithSystemDetail() {
       }
     }
     if (href.includes('/admin/api/ops/logs')) {
-      return { ok: true, status: 200, json: async () => ({ events: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ events: [] }),
+      }
     }
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary

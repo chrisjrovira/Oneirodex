@@ -15,7 +15,12 @@ import { ScansPage } from './ScansPage'
  */
 
 function jsonResponse(data, { ok = true, status = 200 } = {}) {
-  return { ok, status, json: async () => data }
+  return {
+    ok,
+    status,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: async () => data,
+  }
 }
 
 const LIBRARIES = [

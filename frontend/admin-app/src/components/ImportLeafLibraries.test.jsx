@@ -66,6 +66,7 @@ describe('ImportLeafLibraries', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({
             status: 'ok',
             auto_create: false,
@@ -89,6 +90,7 @@ describe('ImportLeafLibraries', () => {
           status: 200,
           redirected: true,
           url: 'http://localhost/libraries',
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({}),
         }
       }
@@ -96,6 +98,7 @@ describe('ImportLeafLibraries', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => [{ uuid: 'lib-switch-1', name: 'Nintendo Switch' }],
         }
       }
@@ -108,10 +111,16 @@ describe('ImportLeafLibraries', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({ status: 'queued', job_id: 'job-1' }),
         }
       }
-      return { ok: false, status: 404, json: async () => ({}) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({}),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -153,6 +162,7 @@ describe('ImportLeafLibraries', () => {
       vi.fn(async () => ({
         ok: false,
         status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({}),
       })),
     )
@@ -172,6 +182,7 @@ describe('ImportLeafLibraries', () => {
       vi.fn(async () => ({
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           status: 'ok',
           auto_create: true,
@@ -200,6 +211,7 @@ describe('ImportLeafLibraries', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({
             status: 'ok',
             auto_create: false,
@@ -210,7 +222,12 @@ describe('ImportLeafLibraries', () => {
           }),
         }
       }
-      return { ok: false, status: 404, json: async () => ({}) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({}),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -231,6 +248,7 @@ describe('ImportLeafLibraries', () => {
       vi.fn(async () => ({
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           status: 'ok',
           auto_create: false,
@@ -259,6 +277,7 @@ describe('ImportLeafLibraries', () => {
         return {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({
             status: 'ok',
             auto_create: false,
@@ -269,7 +288,12 @@ describe('ImportLeafLibraries', () => {
           }),
         }
       }
-      return { ok: false, status: 404, json: async () => ({}) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({}),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 

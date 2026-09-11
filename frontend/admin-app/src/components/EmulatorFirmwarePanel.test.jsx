@@ -20,6 +20,7 @@ function mockGet(payload = SUMMARY) {
   global.fetch = vi.fn(async () => ({
     ok: true,
     status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => payload,
   }))
 }
@@ -79,6 +80,7 @@ test('surfaces the backend rejection message on a failed upload', async () => {
   global.fetch = vi.fn(async () => ({
     ok: false,
     status: 422,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => ({
       ok: false,
       error: 'Unsupported firmware file type ".exe". Allowed: .bin, .rom',
@@ -106,6 +108,7 @@ test('upload carries the CSRF token', async () => {
   const postFetch = vi.fn(async () => ({
     ok: true,
     status: 201,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => ({ ok: true, data: { name: 'scph5500.bin', size: 524288 } }),
   }))
   global.fetch = postFetch
@@ -126,6 +129,7 @@ test('read failure offers a retry rather than an empty page', async () => {
   global.fetch = vi.fn(async () => ({
     ok: false,
     status: 500,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => ({ error: 'Volume not mounted' }),
   }))
   render(<EmulatorFirmwarePanel />)
@@ -178,19 +182,35 @@ function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) 
     const method = (init.method || 'GET').toUpperCase()
     const path = String(url)
     if (method === 'POST' && path.includes('/scan')) {
-      return { ok: true, status: 200, json: async () => ({ ok: true, ...scan }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ ok: true, ...scan }),
+      }
     }
     if (method === 'POST' && path.includes('/install')) {
-      return { ok: true, status: 200, json: async () => ({ ok: true, ...install }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ ok: true, ...install }),
+      }
     }
     if (method === 'POST') {
       return {
         ok: true,
         status: 201,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({ ok: true, name: 'scph5500.bin', size: 524288 }),
       }
     }
-    return { ok: true, status: 200, json: async () => get }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => get,
+    }
   })
 }
 

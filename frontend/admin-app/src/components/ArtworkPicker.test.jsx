@@ -9,6 +9,7 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           providers: [
             { id: 'steamgriddb', enabled: true },
@@ -21,6 +22,7 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           sources: [
             { id: 'meta_quest', name: 'Meta Quest Store', ownership_only: true },
@@ -49,6 +51,7 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           candidates: [
             {
@@ -66,10 +69,16 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
       return {
         ok: false,
         status: 502,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({ error: 'Download blocked: permission denied on IMAGE_SAVE_PATH' }),
       }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
 
   render(
@@ -100,12 +109,18 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
     calls.push({ url: String(url), method: opts?.method || 'GET' })
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
-      return { ok: true, status: 200, json: async () => ({ providers: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ providers: [] }),
+      }
     }
     if (u.includes('/api/search_metadata/sources')) {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           sources: [{ id: 'meta_quest', name: 'Meta Quest Store', ownership_only: true }],
         }),
@@ -115,6 +130,7 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           results: [
             {
@@ -127,7 +143,12 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
         }),
       }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
 
   render(
@@ -152,12 +173,18 @@ test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
     calls.push({ url: String(url), method: opts?.method || 'GET' })
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
-      return { ok: true, status: 200, json: async () => ({ providers: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ providers: [] }),
+      }
     }
     if (u.includes('/api/search_metadata/sources')) {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           sources: [
             {
@@ -175,6 +202,7 @@ test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           source: 'mobygames',
           results: [],
@@ -184,7 +212,12 @@ test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
         }),
       }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
 
   render(
@@ -211,12 +244,18 @@ test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
     calls.push({ url: String(url), method: opts?.method || 'GET' })
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
-      return { ok: true, status: 200, json: async () => ({ providers: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ providers: [] }),
+      }
     }
     if (u.includes('/api/search_metadata/sources')) {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           sources: [
             {
@@ -234,6 +273,7 @@ test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           source: 'thegamesdb',
           results: [],
@@ -243,7 +283,12 @@ test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
         }),
       }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
 
   render(

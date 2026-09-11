@@ -80,12 +80,27 @@ test('StockPicker renders stock grid from mock catalog and apply posts pack_id',
     const u = String(url)
     if (u.includes('/admin/api/art-studio/apply') && method === 'POST') {
       posts.push(JSON.parse(init.body))
-      return { ok: true, status: 200, json: async () => ({ ok: true, mode: 'fallback' }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ ok: true, mode: 'fallback' }),
+      }
     }
     if (u.includes('/admin/api/art-studio/stock') && method === 'GET') {
-      return { ok: true, status: 200, json: async () => MOCK_CATALOG }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => MOCK_CATALOG,
+      }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
 
   try {
@@ -123,17 +138,24 @@ test('StockPicker generates then applies when pack not on disk', async () => {
       return {
         ok: true,
         status: 201,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({ count: 1, generated: [{ pack_id: 'stock-neon-court' }] }),
       }
     }
     if (u.includes('/admin/api/art-studio/apply') && method === 'POST') {
       posts.push({ url: u, body: JSON.parse(init.body) })
-      return { ok: true, status: 200, json: async () => ({ mode: 'fallback' }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ mode: 'fallback' }),
+      }
     }
     if (u.includes('/admin/api/art-studio/stock') && method === 'GET') {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           items: [
             {
@@ -152,7 +174,12 @@ test('StockPicker generates then applies when pack not on disk', async () => {
         }),
       }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
 
   try {
@@ -174,9 +201,19 @@ test('StockPicker soft-empty when catalog API returns 404', async () => {
   const originalFetch = global.fetch
   global.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/art-studio/stock')) {
-      return { ok: false, status: 404, json: async () => ({ error: 'not found' }) }
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ error: 'not found' }),
+      }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
   try {
     render(<StockPicker />)

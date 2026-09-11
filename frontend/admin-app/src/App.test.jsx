@@ -71,6 +71,7 @@ test('integrations hub shows grouped cards', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           integrations: [
             {
@@ -186,6 +187,7 @@ test('users route shows React roster', async () => {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           users: [
             {

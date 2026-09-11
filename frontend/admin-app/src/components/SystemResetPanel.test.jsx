@@ -27,6 +27,7 @@ function mockApi({ onPerform } = {}) {
         onPerform?.(body) ?? {
           ok: true,
           status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({
             ok: true,
             performed: true,
@@ -41,6 +42,7 @@ function mockApi({ onPerform } = {}) {
     return {
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({
         ok: true,
         performed: false,

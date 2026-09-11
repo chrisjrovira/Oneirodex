@@ -51,6 +51,7 @@ function jsonOk(body, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => body,
   }
 }

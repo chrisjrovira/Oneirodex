@@ -16,6 +16,7 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({ applied: 2, failed: 0, policy: ['steamgriddb', 'igdb', 'generate'] }),
       }
     }
@@ -23,6 +24,7 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           images: [
             {
@@ -46,12 +48,18 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       }
     }
     if (String(url).includes('/api/get_libraries')) {
-      return { ok: true, status: 200, json: async () => [{ uuid: 'lib-1', name: 'SNES' }] }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => [{ uuid: 'lib-1', name: 'SNES' }],
+      }
     }
     if (String(url).includes('/api/library_platforms')) {
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => [{ id: 'SNES', name: 'Super Nintendo', value: 'SNES' }],
       }
     }
@@ -59,6 +67,7 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       return {
         ok: true,
         status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
         json: async () => ({
           sources: [
             { id: 'steam', name: 'Steam' },
@@ -69,12 +78,27 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       }
     }
     if (String(url).includes('/api/health/library')) {
-      return { ok: true, status: 200, json: async () => ({ worst: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ worst: [] }),
+      }
     }
     if (String(url).includes('/api/providers')) {
-      return { ok: true, status: 200, json: async () => ({ providers: [] }) }
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ providers: [] }),
+      }
     }
-    return { ok: true, status: 200, json: async () => ({}) }
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({}),
+    }
   })
   try {
     render(

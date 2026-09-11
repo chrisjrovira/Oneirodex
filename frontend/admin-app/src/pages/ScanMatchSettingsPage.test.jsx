@@ -13,6 +13,7 @@ function jsonOk(body, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => body,
   }
 }
@@ -21,6 +22,7 @@ function jsonErr(status, body = {}) {
   return {
     ok: false,
     status,
+    headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => body,
   }
 }
