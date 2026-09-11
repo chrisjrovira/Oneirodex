@@ -66,6 +66,10 @@ function ancillaryOpsResponse(url) {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({ system: {}, database: {}, logs: {}, config: {} }),
     }
   }
@@ -74,6 +78,10 @@ function ancillaryOpsResponse(url) {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({ events: [] }),
     }
   }
@@ -156,6 +164,10 @@ test('OpsPage shows library health score and top factors when present', async ()
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () =>
           mockOpsSummary({
             library: {
@@ -201,6 +213,10 @@ test('OpsPage library health is honest n/a when Backend field absent', async () 
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => mockOpsSummary(),
       }
     }
@@ -227,6 +243,10 @@ test('OpsPage Scans tile renders honest counters', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => mockOpsSummary(),
       }
     }
@@ -251,6 +271,10 @@ test('OpsPage shows library watch off honestly', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => mockOpsSummary(),
       }
     }
@@ -288,6 +312,10 @@ test('OpsPage shows library watch running with roots and pending', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () =>
           mockOpsSummary({
             services: {
@@ -326,6 +354,10 @@ test('OpsPage status banner lists issues with href', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => mockOpsSummary(),
       }
     }
@@ -358,6 +390,10 @@ test('OpsPage splits action and warning folds; category maps to action', async (
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () =>
           mockOpsSummary({
             issues: {
@@ -411,6 +447,10 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () =>
           mockOpsSummary({
             issues: {
@@ -464,6 +504,10 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => mockOpsSummary(),
       }
     }
@@ -472,6 +516,10 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () =>
         mockOpsSummary({
           host: {
@@ -514,6 +562,10 @@ function mockOpsWithSystemDetail() {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => mockOpsSummary(),
       }
     }
@@ -522,6 +574,10 @@ function mockOpsWithSystemDetail() {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           system: { OS: 'Linux' },
           database: { Engine: 'PostgreSQL' },
@@ -535,6 +591,10 @@ function mockOpsWithSystemDetail() {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ events: [] }),
       }
     }

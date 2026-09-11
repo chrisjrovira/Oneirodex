@@ -6,12 +6,24 @@ import { SettingsPage } from './SettingsPage'
 function stubModuleStatus(payload, { ok = true, status = 200 } = {}) {
   const fetchMock = vi.fn(async (url) => {
     if (String(url).includes('/api/settings/module-status')) {
-      return { ok, status, json: async () => payload }
+      return {
+        ok,
+        status,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
+        json: async () => payload,
+      }
     }
     return {
       ok: false,
       status: 404,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })

@@ -16,6 +16,10 @@ describe('ScansPage queued jobs', () => {
             ok: true,
             status: 200,
             headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => [
               {
                 id: 'aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb',
@@ -40,6 +44,10 @@ describe('ScansPage queued jobs', () => {
           ok: false,
           status: 404,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({}),
         }
       }),
@@ -82,6 +90,10 @@ describe('ScansPage queued jobs', () => {
             ok: true,
             status: 200,
             headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => [
               { id: 'q1', library_name: 'PS2', status: 'Queued', queue_position: 1 },
             ],
@@ -91,6 +103,10 @@ describe('ScansPage queued jobs', () => {
           ok: false,
           status: 404,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({}),
         }
       }),
@@ -118,6 +134,10 @@ describe('ScansPage queued jobs', () => {
             ok: true,
             status: 200,
             headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => [
               {
                 id: 'f1',
@@ -136,6 +156,10 @@ describe('ScansPage queued jobs', () => {
           ok: false,
           status: 404,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({}),
         }
       }),
@@ -160,6 +184,10 @@ describe('ScansPage queued jobs', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [{ id: '1', status: 'Running', library_name: 'PCWIN' }],
         }
       }
@@ -168,6 +196,10 @@ describe('ScansPage queued jobs', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ status: 'queued', position: 2, count: 1 }),
         }
       }
@@ -175,6 +207,10 @@ describe('ScansPage queued jobs', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })
@@ -219,6 +255,10 @@ describe('LibrariesPage refresh all', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [{ uuid: 'lib-1', name: 'PCWIN' }],
         }
       }
@@ -227,6 +267,10 @@ describe('LibrariesPage refresh all', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [],
         }
       }
@@ -235,6 +279,10 @@ describe('LibrariesPage refresh all', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ status: 'started', count: 1, message: 'started' }),
         }
       }
@@ -242,6 +290,10 @@ describe('LibrariesPage refresh all', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })

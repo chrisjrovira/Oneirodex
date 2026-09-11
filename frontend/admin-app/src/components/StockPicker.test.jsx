@@ -84,6 +84,10 @@ test('StockPicker renders stock grid from mock catalog and apply posts pack_id',
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ ok: true, mode: 'fallback' }),
       }
     }
@@ -92,6 +96,10 @@ test('StockPicker renders stock grid from mock catalog and apply posts pack_id',
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => MOCK_CATALOG,
       }
     }
@@ -99,6 +107,10 @@ test('StockPicker renders stock grid from mock catalog and apply posts pack_id',
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })
@@ -139,6 +151,10 @@ test('StockPicker generates then applies when pack not on disk', async () => {
         ok: true,
         status: 201,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ count: 1, generated: [{ pack_id: 'stock-neon-court' }] }),
       }
     }
@@ -148,6 +164,10 @@ test('StockPicker generates then applies when pack not on disk', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ mode: 'fallback' }),
       }
     }
@@ -156,6 +176,10 @@ test('StockPicker generates then applies when pack not on disk', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           items: [
             {
@@ -178,6 +202,10 @@ test('StockPicker generates then applies when pack not on disk', async () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })
@@ -205,6 +233,10 @@ test('StockPicker soft-empty when catalog API returns 404', async () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ error: 'not found' }),
       }
     }
@@ -212,6 +244,10 @@ test('StockPicker soft-empty when catalog API returns 404', async () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })

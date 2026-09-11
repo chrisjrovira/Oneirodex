@@ -67,6 +67,10 @@ describe('ImportLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({
             status: 'ok',
             auto_create: false,
@@ -91,6 +95,10 @@ describe('ImportLeafLibraries', () => {
           redirected: true,
           url: 'http://localhost/libraries',
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({}),
         }
       }
@@ -99,6 +107,10 @@ describe('ImportLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [{ uuid: 'lib-switch-1', name: 'Nintendo Switch' }],
         }
       }
@@ -112,6 +124,10 @@ describe('ImportLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ status: 'queued', job_id: 'job-1' }),
         }
       }
@@ -119,6 +135,10 @@ describe('ImportLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })
@@ -163,6 +183,10 @@ describe('ImportLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       })),
     )
@@ -183,6 +207,10 @@ describe('ImportLeafLibraries', () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           status: 'ok',
           auto_create: true,
@@ -212,6 +240,10 @@ describe('ImportLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({
             status: 'ok',
             auto_create: false,
@@ -226,6 +258,10 @@ describe('ImportLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })
@@ -249,6 +285,10 @@ describe('ImportLeafLibraries', () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           status: 'ok',
           auto_create: false,
@@ -278,6 +318,10 @@ describe('ImportLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({
             status: 'ok',
             auto_create: false,
@@ -292,6 +336,10 @@ describe('ImportLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })

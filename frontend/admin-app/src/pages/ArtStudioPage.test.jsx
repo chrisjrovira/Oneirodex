@@ -18,6 +18,10 @@ function mockFetch(handlers) {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => payload,
         }
       }
@@ -26,6 +30,10 @@ function mockFetch(handlers) {
       ok: false,
       status: 404,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({ error: `unexpected ${key}` }),
     }
   })
@@ -102,6 +110,10 @@ test('title input triggers live preview fetch', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           preview: 'data:image/webp;base64,AAA',
           artistic: true,
@@ -113,6 +125,10 @@ test('title input triggers live preview fetch', async () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })
@@ -154,6 +170,10 @@ test('Preview button fetches tile sizes and Generate pack posts generate', async
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ preview: 'data:image/webp;base64,AAA' }),
       }
     }
@@ -162,6 +182,10 @@ test('Preview button fetches tile sizes and Generate pack posts generate', async
         ok: true,
         status: 201,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           pack_id: 'pack-1',
           preview_url: '/static/library/generated/pack-1/tile_400x600.webp',
@@ -173,6 +197,10 @@ test('Preview button fetches tile sizes and Generate pack posts generate', async
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })
@@ -232,6 +260,10 @@ test('Backup & stock tab renders catalog and apply posts pack_id', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           items: [
             {
@@ -252,6 +284,10 @@ test('Backup & stock tab renders catalog and apply posts pack_id', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ mode: 'fallback' }),
       }
     }
@@ -259,6 +295,10 @@ test('Backup & stock tab renders catalog and apply posts pack_id', async () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })
@@ -300,6 +340,10 @@ test('batch placeholders prefer art-studio/batch-generate', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           worst: [
             { uuid: 'g1', name: 'No Cover Game', score: 1, issues: [{ code: 'missing_cover' }] },
@@ -312,6 +356,10 @@ test('batch placeholders prefer art-studio/batch-generate', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           applied: 1,
           failed: 0,
@@ -324,6 +372,10 @@ test('batch placeholders prefer art-studio/batch-generate', async () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })

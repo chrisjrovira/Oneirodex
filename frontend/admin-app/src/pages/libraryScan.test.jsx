@@ -19,6 +19,10 @@ function jsonResponse(data, { ok = true, status = 200 } = {}) {
     ok,
     status,
     headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => data,
   }
 }

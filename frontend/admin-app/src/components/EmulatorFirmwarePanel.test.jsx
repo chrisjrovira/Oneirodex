@@ -21,6 +21,10 @@ function mockGet(payload = SUMMARY) {
     ok: true,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => payload,
   }))
 }
@@ -81,6 +85,10 @@ test('surfaces the backend rejection message on a failed upload', async () => {
     ok: false,
     status: 422,
     headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => ({
       ok: false,
       error: 'Unsupported firmware file type ".exe". Allowed: .bin, .rom',
@@ -109,6 +117,10 @@ test('upload carries the CSRF token', async () => {
     ok: true,
     status: 201,
     headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => ({ ok: true, data: { name: 'scph5500.bin', size: 524288 } }),
   }))
   global.fetch = postFetch
@@ -130,6 +142,10 @@ test('read failure offers a retry rather than an empty page', async () => {
     ok: false,
     status: 500,
     headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => ({ error: 'Volume not mounted' }),
   }))
   render(<EmulatorFirmwarePanel />)
@@ -186,6 +202,10 @@ function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) 
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ ok: true, ...scan }),
       }
     }
@@ -194,6 +214,10 @@ function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) 
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ ok: true, ...install }),
       }
     }
@@ -202,6 +226,10 @@ function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) 
         ok: true,
         status: 201,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ ok: true, name: 'scph5500.bin', size: 524288 }),
       }
     }
@@ -209,6 +237,10 @@ function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) 
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => get,
     }
   })
@@ -248,7 +280,9 @@ test('scan posts the folder and opens markdown the operator can copy', async () 
   )
   expect(scanCall).toBeTruthy()
   expect(JSON.parse(scanCall[1].body)).toEqual({ source: 'E:\\_bios' })
-  expect(scanCall[1].headers['X-CSRFToken']).toBe('test-csrf')
+  // The browser transport (PR-4c) builds a `Headers` instance rather than a
+  // plain object, so bracket access no longer reads it — use `.get()`.
+  expect(new Headers(scanCall[1].headers).get('X-CSRFToken')).toBe('test-csrf')
 
   await userEvent.click(screen.getByRole('button', { name: 'Copy markdown' }))
   await waitFor(() => {

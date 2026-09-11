@@ -27,6 +27,10 @@ function mockFetch(users = [ADA], putOk = true) {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ users }),
         }
       }
@@ -35,6 +39,10 @@ function mockFetch(users = [ADA], putOk = true) {
           ok: putOk,
           status: putOk ? 200 : 400,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () =>
             putOk ? { ok: true, error: null } : { ok: false, error: 'Cannot modify your own role' },
         }

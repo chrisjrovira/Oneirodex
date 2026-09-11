@@ -52,6 +52,10 @@ function jsonOk(body, status = 200) {
     ok: status >= 200 && status < 300,
     status,
     headers: new Headers({ 'content-type': 'application/json' }),
+
+    text: async function () {
+      return JSON.stringify(await this.json())
+    },
     json: async () => body,
   }
 }

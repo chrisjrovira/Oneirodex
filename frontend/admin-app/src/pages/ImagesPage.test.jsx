@@ -17,6 +17,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ applied: 2, failed: 0, policy: ['steamgriddb', 'igdb', 'generate'] }),
       }
     }
@@ -25,6 +29,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           images: [
             {
@@ -52,6 +60,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => [{ uuid: 'lib-1', name: 'SNES' }],
       }
     }
@@ -60,6 +72,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => [{ id: 'SNES', name: 'Super Nintendo', value: 'SNES' }],
       }
     }
@@ -68,6 +84,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           sources: [
             { id: 'steam', name: 'Steam' },
@@ -82,6 +102,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ worst: [] }),
       }
     }
@@ -90,6 +114,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ providers: [] }),
       }
     }
@@ -97,6 +125,10 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })

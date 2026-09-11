@@ -28,6 +28,10 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           items: [
@@ -47,6 +51,10 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           theme: 'default',
@@ -64,6 +72,10 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
         ok: true,
         status: 201,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ ok: true, generated: 1, skipped: 0, errors: [] }),
       }
     }
@@ -71,6 +83,10 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
       ok: false,
       status: 404,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({ error: path }),
     }
   })
@@ -105,6 +121,10 @@ test('lab generates one forced pair and records the attempt', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           items: [{ theme: 'aurora', generated: 0, total: 72, complete: false }],
@@ -118,6 +138,10 @@ test('lab generates one forced pair and records the attempt', async () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           theme: 'aurora',
@@ -134,6 +158,10 @@ test('lab generates one forced pair and records the attempt', async () => {
         ok: true,
         status: 201,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ ok: true, generated: 1, skipped: 0, errors: [] }),
       }
     }
@@ -141,6 +169,10 @@ test('lab generates one forced pair and records the attempt', async () => {
       ok: false,
       status: 404,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({ error: path }),
     }
   })

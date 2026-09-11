@@ -16,6 +16,10 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     }
@@ -24,6 +28,10 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           nostalgist_nes_pilot: getPilot,
@@ -39,6 +47,10 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
           ok: false,
           status: 400,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ ok: false, error: 'not wired' }),
         }
       }
@@ -46,6 +58,10 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           ok: true,
           nostalgist_nes_pilot: Boolean(body.nostalgist_nes_pilot),
@@ -56,6 +72,10 @@ function mockSettings({ getPilot = false, putOk = true } = {}) {
       ok: false,
       status: 405,
       headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
       json: async () => ({}),
     }
   })

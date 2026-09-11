@@ -46,6 +46,10 @@ describe('ProposeLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({
             status: 'ok',
             root: '/storage/games/_console-gaming',
@@ -68,6 +72,10 @@ describe('ProposeLeafLibraries', () => {
           redirected: true,
           url: 'http://localhost/libraries',
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({}),
         }
       }
@@ -76,6 +84,10 @@ describe('ProposeLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => [{ uuid: 'lib-nes-1', name: 'NES ROMs' }],
         }
       }
@@ -89,6 +101,10 @@ describe('ProposeLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({ status: 'queued', job_id: 'job-1' }),
         }
       }
@@ -96,6 +112,10 @@ describe('ProposeLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })
@@ -137,6 +157,10 @@ describe('ProposeLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       })),
     )
@@ -157,6 +181,10 @@ describe('ProposeLeafLibraries', () => {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           status: 'ok',
           root: '/storage/games/_console-gaming',
@@ -185,6 +213,10 @@ describe('ProposeLeafLibraries', () => {
             ok: true,
             status: 200,
             headers: new Headers({ 'content-type': 'application/json' }),
+
+            text: async function () {
+              return JSON.stringify(await this.json())
+            },
             json: async () => ({
               status: 'ok',
               root: '/r',
@@ -198,6 +230,10 @@ describe('ProposeLeafLibraries', () => {
           ok: false,
           status: 404,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({}),
         }
       }),
@@ -221,6 +257,10 @@ describe('ProposeLeafLibraries', () => {
           ok: true,
           status: 200,
           headers: new Headers({ 'content-type': 'application/json' }),
+
+          text: async function () {
+            return JSON.stringify(await this.json())
+          },
           json: async () => ({
             status: 'ok',
             root: '/r',
@@ -234,6 +274,10 @@ describe('ProposeLeafLibraries', () => {
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({}),
       }
     })
@@ -258,6 +302,10 @@ describe('ProposeLeafLibraries', () => {
         ok: false,
         status: 403,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({ status: 'error', message: 'Unsafe path' }),
       })),
     )

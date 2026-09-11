@@ -30,6 +30,10 @@ function mockSummary(overrides = {}) {
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
+
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
         json: async () => ({
           as_of: new Date().toISOString(),
           issues: { overall: 'warn', items: [] },
