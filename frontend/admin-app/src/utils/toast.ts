@@ -4,6 +4,13 @@ import { isStackableTone, planToastStack, stackSummaryMessage } from '@oneirodex
  * Lightweight aurora toast — mirrors member-app showToast (top-right, dismissible).
  */
 
+/** A toast element carries its own lifecycle handles (dismiss/restart/abort). */
+type ToastElement = HTMLDivElement & {
+  _gtAbort?: () => void
+  _gtRestart?: () => void
+  _gtDismiss?: () => void
+}
+
 function toastHost() {
   let host = document.getElementById('od-toast-host')
   if (!host) {
@@ -16,20 +23,20 @@ function toastHost() {
   return host
 }
 
-function visibleStackable(host) {
+function visibleStackable(host: HTMLElement): ToastElement[] {
   return [...host.children].filter(
     (el) =>
       !el.classList.contains('od-toast--out') &&
       (el.classList.contains('od-toast--info') || el.classList.contains('od-toast--success')),
-  )
+  ) as ToastElement[]
 }
 
-function stackCountOf(el) {
+function stackCountOf(el: ToastElement) {
   const n = Number(el.dataset.toastCount)
   return Number.isFinite(n) && n > 0 ? n : 1
 }
 
-function bindToastLifecycle(el, host) {
+function bindToastLifecycle(el: ToastElement, host: HTMLElement) {
   let removeTimer = 0
   let outTimer = 0
 
@@ -64,12 +71,12 @@ function bindToastLifecycle(el, host) {
 }
 
 function paintToast(
-  host: any,
+  host: HTMLElement,
   message: unknown,
   safeTone: string,
   { count, stacked }: { count?: number; stacked?: boolean } = {},
 ) {
-  const el = document.createElement('div')
+  const el = document.createElement('div') as ToastElement
   el.className = `od-toast od-toast--${safeTone}`
   if (stacked) {
     el.dataset.toastStack = '1'
