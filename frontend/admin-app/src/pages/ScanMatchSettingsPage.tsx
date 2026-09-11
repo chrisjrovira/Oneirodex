@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button, PageStatus } from '@oneirodex/ui'
 import {
   PEEL_PROFILES,
@@ -8,8 +8,27 @@ import {
   loadScanMatchConfig,
   saveScanMatchConfig,
 } from '../api/scanMatchSettingsApi'
+import { errorText } from '../utils/errorText'
 
-function FieldNumber({ id, label, hint, value, onChange, min = 0, max = 1, step = 0.01 }) {
+function FieldNumber({
+  id,
+  label,
+  hint,
+  value,
+  onChange,
+  min = 0,
+  max = 1,
+  step = 0.01,
+}: {
+  id: string
+  label: string
+  hint?: string
+  value: number | string
+  onChange: (value: number | '') => void
+  min?: number
+  max?: number
+  step?: number
+}) {
   return (
     <label className="od-admin-field" htmlFor={id}>
       {label}
@@ -29,12 +48,12 @@ function FieldNumber({ id, label, hint, value, onChange, min = 0, max = 1, step 
 
 export function ScanMatchSettingsPage() {
   const [form, setForm] = useState<Record<string, any>>({})
-  const [exposed, setExposed] = useState([])
+  const [exposed, setExposed] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [degradeReason, setDegradeReason] = useState(null)
+  const [degradeReason, setDegradeReason] = useState<string | null>(null)
   const [message, setMessage] = useState('')
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -50,13 +69,13 @@ export function ScanMatchSettingsPage() {
     }
   }, [])
 
-  function updateField(key, value) {
+  function updateField(key: string, value: unknown) {
     setForm((prev) => ({ ...prev, [key]: value }))
     setMessage('')
     setError(null)
   }
 
-  async function save(event) {
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy || !exposed.length) return
     setBusy(true)
@@ -80,7 +99,7 @@ export function ScanMatchSettingsPage() {
       }
       setMessage('Scan/match settings saved.')
     } catch (err) {
-      setError(err.message || 'Save failed.')
+      setError(errorText(err) || 'Save failed.')
     } finally {
       setBusy(false)
     }
@@ -214,7 +233,10 @@ export function ScanMatchSettingsPage() {
                 Optional Backend toggles for Stage C variants. Hidden when not shipped.
               </p>
               {variantKeys.map((key) => {
-                const meta = SAFE_VARIANT_LABELS[key] || { label: key, hint: '' }
+                const meta = SAFE_VARIANT_LABELS[key as keyof typeof SAFE_VARIANT_LABELS] || {
+                  label: key,
+                  hint: '',
+                }
                 return (
                   <label key={key} className="od-admin-field od-admin-field--check" htmlFor={key}>
                     <input
