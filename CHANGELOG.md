@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [architecture.md](docs/dev/architecture.md) and root [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed
+- Playtime start, wishlist create/resolve, API-token create, and related-media create adopt `@validate_body`. Missing required fields (`game_uuid`, `title`, `status`, `name`) are now `422 unprocessable` with `detail` naming the field, not the old `400 bad_request` sentence. Semantic refusals (unknown status / preset / media kind) are unchanged.
 - **Probe endpoints renamed — `/healthz` → `/pulse`, `/readyz` → `/awake`.** **Breaking.** The trailing `z` is a Kubernetes convention and Oneirodex ships on Docker/Unraid, so the paths now say what they do. Response bodies, status codes and the `probe` field are unchanged, so a healthcheck only needs its URL updated. Compose is updated; **an existing Unraid container template pointing at `/healthz` or `/readyz` must be repointed or its healthcheck will fail.** Captured samples renamed to `docs/media/screenshots/pulse.json` / `awake.json`.
 - **Legacy `GameTheca` identifiers removed — clean break, no back-compat ([ADR 0003](docs/adr/0003-product-name-oneirodex.md) finished).** **Breaking.**
   - Env: `ONEIRODEX_*` is the only prefix. The `GT_*` fallback is deleted from `product_env.py`, so **an `.env` still using `GT_*` silently falls back to defaults** — update it before redeploying. `LEGACY_PREFIX` / `NEW_PREFIX` are gone; `product_env.PREFIX` replaces them.

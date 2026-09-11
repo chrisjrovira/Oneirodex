@@ -10,9 +10,11 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, GameRequest, User
+from oneirodex.schemas.wishlist import CreateWishlistRequestBody, ResolveWishlistRequestBody
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.notifications import notify_admins
 from oneirodex.utils.rbac import can_request_games, is_librarian
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -42,19 +44,17 @@ def list_requests():
 
 @apis_bp.route('/requests', methods=['POST'])
 @login_required
-def create_request():
+@validate_body(CreateWishlistRequestBody)
+def create_request(body: CreateWishlistRequestBody):
     if not can_request_games(current_user):
         return api_error(
             'Wishlist requests are not available for this account',
             code='forbidden',
         )
-    data = request.get_json(silent=True) or {}
     # Truncate before the duplicate lookup, not at insert time: the row stores
     # `title[:255]`, so searching on the full string never matched a stored long
     # title and every resubmit opened another pending row.
-    title = (data.get('title') or '').strip()[:_TITLE_MAX]
-    if not title:
-        return api_error('A title is required', code='bad_request')
+    title = body.title[:_TITLE_MAX]
     existing = db.session.execute(
         select(GameRequest).filter_by(user_id=current_user.id, title=title, status='pending')
     ).scalars().first()
@@ -63,7 +63,7 @@ def create_request():
     row = GameRequest(
         user_id=current_user.id,
         title=title,
-        notes=(data.get('notes') or '')[:4000] or None,
+        notes=(body.notes or '')[:4000] or None,
         status='pending',
     )
     db.session.add(row)
@@ -97,18 +97,18 @@ def cancel_request(request_id: int):
 
 @apis_bp.route('/requests/<int:request_id>', methods=['PATCH'])
 @login_required
-def resolve_request(request_id: int):
+@validate_body(ResolveWishlistRequestBody)
+def resolve_request(request_id: int, body: ResolveWishlistRequestBody):
     if not is_librarian(current_user):
         return api_error('Librarian or admin required', code='forbidden')
     row = db.session.get(GameRequest, request_id)
     if not row:
         return api_error('Request not found', code='not_found')
-    data = request.get_json(silent=True) or {}
-    status = (data.get('status') or '').strip()
+    status = body.status
     if status not in VALID_RESOLVE_STATUSES:
         return api_error('That status is not one this request can move to', code='bad_request')
 
-    linked = (data.get('linked_game_uuid') or '').strip() or None
+    linked = (body.linked_game_uuid or '').strip() or None
     if linked:
         game = db.session.execute(select(Game).filter_by(uuid=linked)).scalars().first()
         if not game:
@@ -127,9 +127,9 @@ def resolve_request(request_id: int):
     else:
         row.resolved_at = datetime.now(timezone.utc)
         row.resolved_by_user_id = current_user.id
-    if data.get('notes') is not None:
+    if body.notes is not None:
         # Librarian resolution note appended into notes field (lightweight)
-        note = (data.get('notes') or '').strip()
+        note = (body.notes or '').strip()
         if note:
             existing = row.notes or ''
             suffix = f'\n[staff] {note}'

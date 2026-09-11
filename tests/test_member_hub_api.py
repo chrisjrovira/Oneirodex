@@ -193,11 +193,12 @@ def test_playtime_profile_page_and_api(client, app, db_session, member_user, lib
         assert payload['games'] == []
 
         missing = client.post('/api/playtime/sessions', json={})
-        assert missing.status_code == 400
+        assert missing.status_code == 422
         missing_body = missing.get_json()
         assert missing_body['ok'] is False
-        assert missing_body['error_code'] == 'bad_request'
-        assert missing_body['error'] == 'game_uuid required'
+        assert missing_body['error_code'] == 'unprocessable'
+        assert missing_body['error'] == 'Invalid request.'
+        assert 'game_uuid' in missing_body['detail']
 
         started = client.post(
             '/api/playtime/sessions',
