@@ -362,6 +362,79 @@ def client(app):
     return app.test_client()
 
 
+# ---------------------------------------------------------------------------
+# Bucket-E opt-out: no_savepoint_db (docs/dev/test-harness-2026-09-10.md)
+# ---------------------------------------------------------------------------
+#
+# A handful of tests need `db.session` to behave exactly as it does in
+# production — an ordinary Flask-SQLAlchemy scoped session pulling a fresh
+# connection per app context from the engine's pool — because they exercise a
+# second OS thread pushing its own `app.app_context()`
+# (`run_in_background`, `oneirodex/utils/background.py`) or a debounced digest
+# flushed from a context nested inside another. `db_session` binds every app
+# context onto ONE shared `Connection` object so a test-client request can see
+# a test's own uncommitted rows; a second thread touching that same
+# `Connection` concurrently is exactly the hazard `run_in_background` exists
+# to avoid (a DBAPI connection is not thread-safe), and a nested context's own
+# `teardown_appcontext` -> `.remove()` rolls back its `create_savepoint`
+# savepoint, discarding what an even-more-nested context just committed into
+# it. Neither is fixable with a smarter SAVEPOINT — these tests need a real
+# session against the real engine.
+#
+# Rows committed here are real, so there is no rollback to lean on. Cleanup is
+# a TRUNCATE scoped to the fixed, small set of tables the bucket-E tests
+# actually touch — never a global, cross-test TRUNCATE. That is safe because
+# these are the only tests that request this fixture and pytest runs them one
+# at a time in one process: nothing else can be relying on those tables'
+# contents while one is mid-flight, so a TRUNCATE that also cascades into a
+# handful of unlisted-but-referencing tables (games -> tags, etc.) removes
+# only rows this test itself created.
+_NO_SAVEPOINT_TABLES = (
+    'user_notifications',
+    'scan_jobs',
+    'games',
+    'libraries',
+    'global_settings',
+    'users',
+)
+
+
+@pytest.fixture(scope='function')
+def no_savepoint_db(app):
+    """Opt-out of the per-test SAVEPOINT model for bucket-E tests only.
+
+    Use only for a test that pushes its own nested or cross-thread app
+    context and needs `db.session` to be the app's ordinary engine-bound
+    session, not `db_session`'s single shared connection — see the module
+    comment above and docs/dev/test-harness-2026-09-10.md. Everything the test
+    commits is real; teardown truncates `_NO_SAVEPOINT_TABLES` so the next
+    (SAVEPOINT-isolated) test still starts from an empty database.
+    """
+    from sqlalchemy import text
+
+    with app.app_context():
+        _build_schema_once()
+        try:
+            yield db.session
+        finally:
+            try:
+                db.session.remove()
+            except Exception:  # noqa: BLE001
+                pass
+            cleanup = db.engine.connect()
+            try:
+                with cleanup.begin():
+                    cleanup.execute(
+                        text(
+                            'TRUNCATE TABLE '
+                            + ', '.join(f'"{t}"' for t in _NO_SAVEPOINT_TABLES)
+                            + ' RESTART IDENTITY CASCADE'
+                        )
+                    )
+            finally:
+                cleanup.close()
+
+
 @pytest.fixture(scope='function')
 def configured_install(db_session):
     """An install that is past the setup wizard.

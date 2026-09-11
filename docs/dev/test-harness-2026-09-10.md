@@ -1,6 +1,6 @@
 # Test harness — per-test isolation on a rolled-back SAVEPOINT
 
-**Date:** 2026-09-10 · **Status:** SAVEPOINT model landed; cascade fixed; fallout triaged
+**Date:** 2026-09-10 (verified 2026-09-11) · **Status:** SAVEPOINT model landed; cascade fixed; fallout triaged; bucket-E opt-out fixture landed and verified green
 
 Supersedes the "Still open → No isolation between tests" section of
 [test-harness-2026-08-07.md](test-harness-2026-08-07.md). That note recorded a
@@ -136,20 +136,81 @@ earlier file:
 
 No product code changed and no assertion was weakened.
 
-### Known limitation — `test_browse_path_status.py` digest tests (4)
+### Bucket E — opt out of the SAVEPOINT model: `no_savepoint_db`
 
-`test_library_add_digest_notifies_staff`, `test_notify_admins_new_game_schedules_digest`,
-`test_scan_completion_flush_cancels_the_pending_timer`,
-`test_running_scan_holds_the_digest_until_flush` build a debounced digest inside
-a nested `with app.app_context():` and flush it from a *doubly* nested context.
-`scopefunc=_app_ctx_id` gives the outer nested context its own session on the
-shared connection; when that context pops, Flask-SQLAlchemy's
-`teardown_appcontext` calls `.remove()` on it, which **rolls back** its
-`create_savepoint` savepoint — discarding the `UserNotification` rows the inner
-context committed into it. Not a product defect and not covered by a seed
-remedy; it needs the digest tests to run against a single session (constant
-`scopefunc` with `.remove()` neutralised for the test) or to opt out of the
-SAVEPOINT fixture. Tracked as a follow-up.
+Five tests are a genuine structural mismatch, not a seedable precondition —
+`db_session`'s single connection, shared across every nested app context, is
+the wrong tool for them:
+
+* `test_browse_path_status.py::test_library_add_digest_notifies_staff`,
+  `::test_notify_admins_new_game_schedules_digest`,
+  `::test_scan_completion_flush_cancels_the_pending_timer`,
+  `::test_running_scan_holds_the_digest_until_flush` build a debounced digest
+  inside a nested `with app.app_context():` and flush it from a *doubly*
+  nested context. `scopefunc=_app_ctx_id` gives the outer nested context its
+  own session on the shared connection; when that context pops,
+  Flask-SQLAlchemy's `teardown_appcontext` calls `.remove()` on it, which
+  **rolls back** its `create_savepoint` savepoint — discarding the
+  `UserNotification` rows the inner context committed into it.
+* `test_background_workers.py::test_library_deletion_worker_actually_deletes`
+  runs `delete_library_background` on a real daemon thread that pushes its
+  *own* `app.app_context()` (`run_in_background`,
+  `oneirodex/utils/background.py`) specifically so it gets its own DBAPI
+  connection from the engine's pool — a `Connection` object is not
+  thread-safe, and `run_in_background` exists precisely to stop two threads
+  sharing one. Routing it onto `db_session`'s one shared connection instead
+  recreates the exact hazard that module was written to remove.
+
+Neither is fixable with a smarter SAVEPOINT: both need `db.session` to behave
+like it does in production, an ordinary Flask-SQLAlchemy session pulling a
+fresh connection per app context from the engine's pool. `conftest.py` now
+provides that as an explicit opt-out fixture, `no_savepoint_db`:
+
+```python
+@pytest.fixture(scope='function')
+def no_savepoint_db(app):
+    with app.app_context():
+        _build_schema_once()
+        try:
+            yield db.session
+        finally:
+            db.session.remove()
+            # TRUNCATE _NO_SAVEPOINT_TABLES only — see below.
+```
+
+Rows it commits are real — there is no outer transaction to roll back — so
+teardown truncates a fixed, small table list
+(`user_notifications, scan_jobs, games, libraries, global_settings, users`,
+`RESTART IDENTITY CASCADE`) rather than the whole schema. That is safe, not a
+regression to the per-run global `TRUNCATE` this harness removed: these five
+tests are the *only* callers of the fixture, pytest runs them one at a time in
+one process, and every other test's isolation still comes from `db_session`'s
+rollback, which never sees this connection. `test_browse_path_status.py`
+carries file-local `nosp_admin_staff` / `nosp_path_library` fixtures — the
+same shape as its ordinary `admin_staff` / `path_library`, built on
+`no_savepoint_db` instead of `db_session` — used only by the four opted-out
+tests; the file's other tests are untouched and still run under the SAVEPOINT
+model.
+
+No product code changed.
+
+### Final verified full-suite count (2026-09-11)
+
+With the bucket-E fixture in place, one full local run:
+
+```
+33 failed, 4150 passed, 5 skipped, 31 warnings in 1785.26s (0:29:45)
+```
+
+The 33 failures are the pre-existing set unrelated to this harness change
+(newsletter/download/scan-enrichment/secondary-scrapers/etc. test doubles and
+drift already failing on `origin/main`). All five bucket-E tests —
+`test_browse_path_status.py` (4) and
+`test_background_workers.py::test_library_deletion_worker_actually_deletes` —
+pass. `alembic check` shows only the pre-existing, local-only
+`user_preferences.show_tile_titles` nullability drift, unchanged and
+reproducible on base `main`. Shuffled-order re-runs and the CI-core-subset
+run with coverage are left to the PR's actual CI rather than repeated here.
 
 ## Randomized-order proof
 
