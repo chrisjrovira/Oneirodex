@@ -38,8 +38,11 @@ from oneirodex.utils.module_status import (
     ensure_global_settings,
     env_flag,
 )
+from oneirodex.schemas.arr import ArrDownloadBody, ArrHardlinkPreviewBody
 from oneirodex.utils.quality_profiles import score_release_title
 from oneirodex.utils.security import validate_user_outbound_http_url
+from oneirodex.utils.validation import validate_body
+
 arr_bp = Blueprint('arr', __name__)
 
 
@@ -276,13 +279,11 @@ def arr_search():
 @arr_bp.route('/api/arr/download', methods=['POST'])
 @login_required
 @admin_required
-def arr_download():
+@validate_body(ArrDownloadBody)
+def arr_download(body: ArrDownloadBody):
     if not arr_module_enabled():
         return _arr_disabled()
-    data = request.get_json(silent=True) or {}
-    url = (data.get('download_url') or data.get('url') or '').strip()
-    if not url:
-        return api_error('download_url is required', code='bad_request')
+    url = (body.download_url or body.url or '').strip()
     if url.lower().startswith('http://') or url.lower().startswith('https://'):
         ok, result = validate_user_outbound_http_url(url)
         if not ok:
@@ -300,7 +301,8 @@ def arr_download():
 @arr_bp.route('/api/arr/hardlink/preview', methods=['POST'])
 @login_required
 @admin_required
-def arr_hardlink_preview():
+@validate_body(ArrHardlinkPreviewBody)
+def arr_hardlink_preview(body: ArrHardlinkPreviewBody):
     if not arr_module_enabled():
         return _arr_disabled()
     if not pipeline_enabled():
@@ -308,12 +310,9 @@ def arr_hardlink_preview():
             'Arr-hardlink pipeline is disabled. Set ENABLE_ARR_HARDLINK_PIPELINE=true.',
             code='forbidden',
         )
-    data = request.get_json(silent=True) or {}
-    dest = (data.get('library_dest_dir') or data.get('dest_dir') or '').strip()
-    if not dest:
-        return api_error('library_dest_dir is required', code='bad_request')
+    dest = (body.library_dest_dir or body.dest_dir or '').strip()
     try:
-        limit = min(int(data.get('limit') or 50), 200)
+        limit = min(int(body.limit or 50), 200)
     except (TypeError, ValueError):
         limit = 50
     try:

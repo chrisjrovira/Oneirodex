@@ -64,6 +64,8 @@ model: a model with required fields → 422 naming them; an all-optional model
 | `routes_apis/collections.py` | `POST /api/collections/<uuid>/items` (`add_collection_item`) | `AddCollectionItemBody` |
 | `routes_apis/collections.py` | `PUT /api/collections/<uuid>/items/order` (`reorder_collection_items`) | `ReorderCollectionItemsBody` |
 | `routes_apis/ownership.py` | `POST /api/ownership/steam` (`connect_steam`) | `ConnectSteamBody` |
+| `routes_arr.py` | `POST /api/arr/download` (`arr_download`) | `ArrDownloadBody` |
+| `routes_arr.py` | `POST /api/arr/hardlink/preview` (`arr_hardlink_preview`) | `ArrHardlinkPreviewBody` |
 
 ### Contract notes for the adopted routes
 
@@ -82,6 +84,13 @@ model: a model with required fields → 422 naming them; an all-optional model
   /api/ownership/steam` with a malformed body returns 422 even when sync is
   switched off. A well-formed body still hits the 403. Happy path (valid
   `steam_id`, feature on → 201) is byte-identical.
+- **`arr_download`** — missing/blank `download_url` (or `url`) was 400
+  after the Arr-module flag. Now 422 naming `__root__`. The module 403
+  runs after, so `{}` is 422 even when Arr is off. Admin JS posts
+  `{download_url}` and renders `j.error`.
+- **`arr_hardlink_preview`** — missing dest was 400 after module +
+  pipeline flags. Now 422. A well-formed body is still 403 when the
+  pipeline is off (`tests/test_ops_followons.py`).
 
 ## Deliberately not adopted (and why)
 
@@ -127,16 +136,24 @@ Leave these until the contract can be preserved; do not force them.
 - `import_*_csv` routes — read form-data / file upload as well as JSON
   (`_read_csv_payload`). Not a JSON body.
 
+### `routes_arr.py`
+
+- `arr_module_flag` / `arr_config` / `arr_indexers` / `arr_indexer_one` —
+  GET+PUT share one view; wrapping would 422 GET.
+- `arr_indexers_bulk` — JSON or raw text.
+- `arr_hardlink_apply` — `proposals` list *or* `library_dest_dir`.
+- `arr_indexers_enable_presets` — `preset_ids` optional (empty list is valid).
+
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-09):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11):
 
 | Area | Sites | Files |
 |---|---|---|
 | `routes_apis/` | 115 | 46 |
-| `routes_admin_ext/` | 23 | — |
-| rest of `oneirodex/` | ~13 | — |
-| **total** | **~151** | **57** |
+| `routes_admin_ext/` | 24 | 9 |
+| rest of `oneirodex/` | 10 | 2 |
+| **total** | **149** | **57** |
 
 Highest-count files still to do, roughly in priority order:
 
@@ -149,6 +166,8 @@ Highest-count files still to do, roughly in priority order:
   `routes_apis/ai_assist.py` (4)
 - `routes_apis/game.py` (7) — mostly the batch routes above; `move_game_to_library`
   needs the bespoke-message validator.
+- `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
+- `routes_admin_ext/images.py` (7), `routes_admin_ext/system.py` (7).
 - long tail of 1–3-site files.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards
