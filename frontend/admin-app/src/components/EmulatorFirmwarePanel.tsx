@@ -2,10 +2,56 @@
 // which is easy to miss when the triggering control has scrolled away.
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { csrfHeaders, csrfToken, postJson } from '../api/adminApi'
+import { errorText } from '../utils/errorText'
 import { Button, PageStatus } from '@oneirodex/ui'
 import { MetricStrip } from './opsWidgets'
 import { showToast } from '../utils/toast'
 import './OpenPathModal.css'
+
+interface FirmwareFile {
+  subdir?: string
+  name: string
+  size?: number
+  loadable?: boolean
+}
+
+interface FirmwareMisplaced {
+  subdir: string
+  name: string
+}
+
+interface FirmwareCoreStatus {
+  core: string
+  ready: boolean
+  required?: string[]
+  present?: string[]
+  misplaced?: FirmwareMisplaced[]
+}
+
+interface FirmwareVersion {
+  digest?: string
+  paths?: string[]
+  size?: number
+  count?: number
+}
+
+interface FirmwareMatchSystem {
+  label: string
+}
+
+interface FirmwareMatch {
+  name: string
+  chosen?: string
+  already?: boolean
+  systems?: FirmwareMatchSystem[]
+  versions?: FirmwareVersion[]
+  note?: string
+}
+
+interface FirmwarePlan {
+  matches?: FirmwareMatch[]
+  missing_markdown?: string
+}
 
 /**
  * Firmware / BIOS management for WebRetro cores (GT-B2 · UID-007).
@@ -56,11 +102,11 @@ const CORE_LABELS = {
   vice_x64: 'Commodore 64',
 }
 
-export function coreLabel(core) {
-  return CORE_LABELS[core] || core
+export function coreLabel(core: string): string {
+  return (CORE_LABELS as Record<string, string>)[core] || core
 }
 
-export function formatBytes(size) {
+export function formatBytes(size: unknown): string {
   if (size === null || size === undefined || size === '') return 'n/a'
   const n = Number(size)
   if (!Number.isFinite(n) || n < 0) return 'n/a'
@@ -70,7 +116,7 @@ export function formatBytes(size) {
 }
 
 /** Pull the human sentence out of either envelope shape (see GT-B1). */
-export async function readError(response, fallback) {
+export async function readError(response: Response, fallback: string): Promise<string> {
   try {
     const body = await response.json()
     const text = body?.error || body?.message
@@ -81,7 +127,7 @@ export async function readError(response, fallback) {
   return fallback
 }
 
-async function copyText(text) {
+async function copyText(text: string): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
     await navigator.clipboard.writeText(text)
     return
@@ -95,20 +141,28 @@ async function copyText(text) {
   document.body.removeChild(input)
 }
 
-function versionChoice(version) {
+function versionChoice(version: FirmwareVersion): string {
   return version.digest || (version.paths && version.paths[0]) || ''
 }
 
-function FirmwareMissingDialog({ open, markdown, onClose }) {
+function FirmwareMissingDialog({
+  open,
+  markdown,
+  onClose,
+}: {
+  open: boolean
+  markdown: string
+  onClose?: () => void
+}) {
   const titleId = useId()
-  const closeRef = useRef(null)
+  const closeRef = useRef<HTMLButtonElement | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!open) return undefined
     setCopied(false)
     closeRef.current?.focus()
-    const onKey = (event) => {
+    const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose?.()
     }
     document.addEventListener('keydown', onKey)
@@ -171,20 +225,20 @@ function FirmwareMissingDialog({ open, markdown, onClose }) {
 }
 
 export function EmulatorFirmwarePanel() {
-  const [files, setFiles] = useState([])
-  const [cores, setCores] = useState([])
+  const [files, setFiles] = useState<FirmwareFile[]>([])
+  const [cores, setCores] = useState<FirmwareCoreStatus[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [notice, setNotice] = useState(null)
-  const [busy, setBusy] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
   const [sourceFolder, setSourceFolder] = useState('')
   const [volumeMarkdown, setVolumeMarkdown] = useState('')
-  const [plan, setPlan] = useState(null)
-  const [selections, setSelections] = useState({})
-  const [skipped, setSkipped] = useState(() => new Set())
+  const [plan, setPlan] = useState<FirmwarePlan | null>(null)
+  const [selections, setSelections] = useState<Record<string, string>>({})
+  const [skipped, setSkipped] = useState<Set<string>>(() => new Set())
   const [overwrite, setOverwrite] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   const reportMarkdown = plan?.missing_markdown || volumeMarkdown
 
@@ -204,7 +258,7 @@ export function EmulatorFirmwarePanel() {
         setSourceFolder((prev) => prev || data.import_source)
       }
     } catch (err) {
-      setError(err.message || 'Could not read the firmware volume.')
+      setError(errorText(err) || 'Could not read the firmware volume.')
     } finally {
       setLoading(false)
     }
@@ -214,9 +268,9 @@ export function EmulatorFirmwarePanel() {
     load()
   }, [load])
 
-  const applyPlan = useCallback((next) => {
-    const picks = {}
-    const skip = new Set()
+  const applyPlan = useCallback((next: FirmwarePlan) => {
+    const picks: Record<string, string> = {}
+    const skip = new Set<string>()
     for (const match of next.matches || []) {
       picks[match.name] = match.chosen || ''
       if (match.already) skip.add(match.name)
@@ -235,8 +289,9 @@ export function EmulatorFirmwarePanel() {
       applyPlan(data)
       setReportOpen(true)
     } catch (err) {
-      setError(err.message || 'Could not scan that folder.')
-      showToast(err.message || 'Firmware scan failed.', 'error')
+      const text = errorText(err) || 'Could not scan that folder.'
+      setError(text)
+      showToast(text, 'error')
     } finally {
       setBusy(null)
     }
@@ -263,15 +318,16 @@ export function EmulatorFirmwarePanel() {
       setReportOpen(true)
       await load()
     } catch (err) {
-      setError(err.message || 'Could not install firmware from that folder.')
-      showToast(err.message || 'Firmware install failed.', 'error')
+      const text = errorText(err) || 'Could not install firmware from that folder.'
+      setError(text)
+      showToast(text, 'error')
     } finally {
       setBusy(null)
     }
   }, [applyPlan, load, overwrite, selections, skipped, sourceFolder])
 
   const upload = useCallback(
-    async (file) => {
+    async (file: File | null | undefined) => {
       if (!file) return
       setBusy('upload')
       setError(null)
@@ -299,8 +355,9 @@ export function EmulatorFirmwarePanel() {
         if (inputRef.current) inputRef.current.value = ''
         await load()
       } catch (err) {
-        setError(err.message || 'Upload failed.')
-        showToast(err.message || 'Firmware upload failed.', 'error')
+        const text = errorText(err) || 'Upload failed.'
+        setError(text)
+        showToast(text, 'error')
       } finally {
         setBusy(null)
       }
@@ -501,7 +558,7 @@ export function EmulatorFirmwarePanel() {
                               />{' '}
                               {formatBytes(version.size)} ·{' '}
                               {version.digest ? version.digest.slice(0, 12) : 'single copy'}
-                              {version.count > 1 ? ` · ${version.count} copies` : ''}
+                              {(version.count ?? 0) > 1 ? ` · ${version.count} copies` : ''}
                               {version.paths?.length
                                 ? ` · ${(version.paths || []).join(', ')}`
                                 : ''}
