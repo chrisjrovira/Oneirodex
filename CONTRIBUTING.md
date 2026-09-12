@@ -32,7 +32,7 @@ Full-tree pytest is **not** all-green today; CI `core` is the gate. See [test-ha
 ## API changes
 
 - JSON replies: `api_ok` / `api_error`. Do not shrink the envelope keep-list.
-- New JSON POST/PUT/PATCH bodies: `@validate_body` on a model in `oneirodex/schemas/` — [pydantic-adoption.md](docs/dev/pydantic-adoption.md). Never batch a file. Never wrap partial-success routes with the flat 422 helper.
+- New JSON POST/PUT/PATCH bodies: `@validate_body` on a model in `oneirodex/schemas/` — [pydantic-adoption.md](docs/dev/pydantic-adoption.md). Never batch a file. Partial-success batch routes use `@validate_batch_body` (keeps `updated`/`skipped`/`errors`/`limit` on the 422). Do not wrap those with the flat 422 helper.
 - SPA `src/api/` wrappers go through `createBrowserRequester` (member `client.ts`, admin `adminApi.ts`). Do not hand-roll `fetch` + CSRF. Vitest mocks need `content-type: application/json` and `.text()`.
 - Typed `create*Api` modules: rewire one resource group at a time. Member collections CRUD uses `createCollectionsApi` via `memberResource` + `withMemberError` so page exports stay the same. Leave `preferences.ts` HTML POST `/settings_panel` and EventSource off this path.
 

@@ -25,7 +25,7 @@ Member leftovers that are not JSON verbs:
 - `preferences.ts` — HTML `POST /settings_panel` (FormData)
 - Activity / scan toasts — `EventSource` (`/api/activity/stream`)
 
-Request bodies adopt `@validate_body` **file-by-file** — [pydantic-adoption.md](pydantic-adoption.md). Do not wrap partial-success batch routes.
+Request bodies adopt `@validate_body` **file-by-file** — [pydantic-adoption.md](pydantic-adoption.md). Partial-success batch routes use `@validate_batch_body` so the 422 keeps `updated` / `skipped` / `errors` / `limit`. Do not wrap those with the flat helper.
 
 ## Identifiers (ADR 0003)
 

@@ -17,6 +17,7 @@ from oneirodex.models import (
     user_favorites,
     user_game_status,
 )
+from oneirodex.schemas.game import BatchFavoriteBody
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.background import run_in_background
 from oneirodex.utils.event_logging import log_system_event
@@ -34,6 +35,7 @@ from oneirodex.utils.image_kinds import (
 from oneirodex.utils.rbac import can_request_games, librarian_required
 from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_game, user_can_access_library
 from oneirodex.utils.scanning import refresh_images_in_background
+from oneirodex.utils.validation import validate_batch_body
 from sqlalchemy import and_, delete, func, select
 from . import apis_bp
 
@@ -136,26 +138,21 @@ def search():
 
 @apis_bp.route('/games/batch/favorite', methods=['POST'])
 @login_required
-def games_batch_favorite():
+@validate_batch_body(BatchFavoriteBody, limit=BATCH_FAVORITE_MAX)
+def games_batch_favorite(body: BatchFavoriteBody):
     """Set favorite on/off for many library titles (member multi-select).
 
     Body JSON:
-      uuids (list[str], required, max 100)
+      uuids (list, required, max 100)
       favorite (bool, required) — true = add, false = remove
 
     Partial success: ``{ ok, updated, skipped, errors, limit }``.
     Skips not-found / forbidden / already-set; does not invent download queues.
     """
-    data = request.get_json(silent=True) or {}
-    uuids, err, status = _normalize_batch_uuids(data.get('uuids'), max_size=BATCH_FAVORITE_MAX)
+    uuids, err, status = _normalize_batch_uuids(body.uuids, max_size=BATCH_FAVORITE_MAX)
     if err is not None:
         return jsonify(err), status
-    if 'favorite' not in data:
-        return api_error(
-            'favorite boolean required', code='bad_request',
-            updated=[], skipped=[], errors=[], limit=BATCH_FAVORITE_MAX,
-        )
-    favorite = bool(data.get('favorite'))
+    favorite = body.favorite
 
     if not uuids:
         return api_ok({

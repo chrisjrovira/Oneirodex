@@ -1,6 +1,6 @@
-"""Unit tests for ``oneirodex.utils.validation.validate_body`` (wave A2.4).
+"""Unit tests for ``validate_body`` and ``validate_batch_body`` (wave A2.4).
 
-DB-free: a throwaway Flask app with one decorated route exercises the decorator
+DB-free: a throwaway Flask app with decorated routes exercises the helpers
 in isolation from any real API surface.
 """
 
@@ -12,7 +12,11 @@ import pytest
 from flask import Flask
 from pydantic import BaseModel, ConfigDict, Field
 
-from oneirodex.utils.validation import format_validation_errors, validate_body
+from oneirodex.utils.validation import (
+    format_validation_errors,
+    validate_batch_body,
+    validate_body,
+)
 
 
 class _Body(BaseModel):
@@ -148,3 +152,76 @@ def test_format_validation_errors_dotted_nested_loc():
         raise AssertionError('expected ValidationError')
 
     assert 'items[1].id' in formatted
+
+
+class _Batch(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    uuids: list
+    favorite: bool
+
+
+@pytest.fixture
+def batch_app():
+    app = Flask(__name__)
+    app.config.update(TESTING=True)
+
+    @app.post('/batch')
+    @validate_batch_body(_Batch, limit=100)
+    def batch(body: _Batch):  # noqa: D401 - test route
+        return {
+            'ok': True,
+            'uuids': body.uuids,
+            'favorite': body.favorite,
+            'updated': [],
+            'skipped': [],
+            'errors': [],
+            'limit': 100,
+        }
+
+    return app
+
+
+@pytest.fixture
+def batch_client(batch_app):
+    return batch_app.test_client()
+
+
+def test_batch_valid_body_passes_through(batch_client):
+    resp = batch_client.post('/batch', json={'uuids': ['a'], 'favorite': False})
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['favorite'] is False
+    assert body['uuids'] == ['a']
+
+
+def test_batch_missing_field_is_422_with_partial_success_keys(batch_client):
+    resp = batch_client.post('/batch', json={'uuids': ['a']})
+    assert resp.status_code == 422
+    body = resp.get_json()
+    assert body['ok'] is False
+    assert body['error'] == 'Invalid request.'
+    assert body['error_code'] == 'unprocessable'
+    assert 'favorite' in body['detail']
+    assert body['updated'] == []
+    assert body['skipped'] == []
+    assert body['errors'] == []
+    assert body['limit'] == 100
+
+
+def test_batch_non_list_uuids_is_422_not_400(batch_client):
+    resp = batch_client.post('/batch', json={'uuids': 'nope', 'favorite': True})
+    assert resp.status_code == 422
+    body = resp.get_json()
+    assert 'uuids' in body['detail']
+    assert body['limit'] == 100
+
+
+def test_batch_flat_validate_body_does_not_stamp_partial_keys(client):
+    """The companion exists because the flat helper would drop these keys."""
+    resp = client.post('/echo', json={})
+    assert resp.status_code == 422
+    body = resp.get_json()
+    assert 'updated' not in body
+    assert 'skipped' not in body
+    assert 'errors' not in body
+    assert 'limit' not in body

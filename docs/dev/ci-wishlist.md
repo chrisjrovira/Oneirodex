@@ -266,3 +266,6 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
 - [A2.4-named-leftovers] `tests/test_pydantic_named_leftovers.py` added to
   the `pytest-core` hand list (discovery order/visibility, cover search,
   quality set-active `@validate_body` 422 contracts).
+- [A2.4-batch] `tests/test_pydantic_batch.py`, `tests/test_utils_validation.py`,
+  and `tests/test_get_json_lint.py` added to the `pytest-core` hand list.
+  `python scripts/get_json_lint.py` runs after the print ratchet.

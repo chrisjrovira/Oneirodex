@@ -176,6 +176,9 @@ jobs:
           tests/test_pydantic_patch_artwork.py
           tests/test_pydantic_request_bodies.py
           tests/test_pydantic_user_layouts.py
+          tests/test_pydantic_batch.py
+          tests/test_utils_validation.py
+          tests/test_get_json_lint.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
       # the problem then grew from ~699 call sites to 1194 — new routes reached
@@ -188,6 +191,11 @@ jobs:
       # print() count climbs above its recorded baseline in scripts/print_lint.py.
       - name: Run print() ratchet
         run: python scripts/print_lint.py
+
+      # Per-file request.get_json() baseline. Fails only when a file's count
+      # climbs above scripts/get_json_lint.baseline.json.
+      - name: Run get_json() ratchet
+        run: python scripts/get_json_lint.py
 
   alembic-check:
     name: Alembic (upgrade + check)
