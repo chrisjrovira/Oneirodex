@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [architecture.md](docs/dev/architecture.md) and root [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed
+- Browser emulator: a display-refresh sample that finished during boot is no longer dropped. `afterStart()` now calls `tryApplyConfig()`, and the first `retroarch.cfg` write waits briefly for `measureRefreshHz` so `video_refresh_rate` can land before `callMain`. Does not rewrite cores; `audio_max_timing_skew = "0.15"` stays the WASM pin. Human console check on a high-Hz panel still required (EMU-AUDIO).
 - Discovery shelves admin delete uses the house confirm dialog instead of `window.confirm` (UID-060). Theme JS cannot import `frontend/shared`, so the dialog is copied in-file (named buttons, danger tone, Cancel focused). `GENERATOR_VERSION` **31** — Reset Themes required so the volume copy of `discovery_sections.js` / `admin_discovery_sections.css` picks it up.
 - `@validate_batch_body` lands for partial-success JSON. `POST /api/games/batch/favorite` uses it: missing `favorite` / `uuids` is `422 unprocessable` with `detail` naming the field **and** `updated` / `skipped` / `errors` / `limit` so the member batch bar does not go blank. Over-limit is still 400. Success `ok` is still "did every item succeed".
 - Member collections CRUD goes through `@oneirodex/api-client`'s `createCollectionsApi` on the existing browser requester. Page exports (`fetchCollections`, `createCollection`, …) and error shape are unchanged. `searchGames` still hits `/api/search`.
