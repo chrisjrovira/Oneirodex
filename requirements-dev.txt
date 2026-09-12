@@ -10,4 +10,4 @@ pytest==9.1.1
 # Coverage for the marker-based CI core (`pytest -m "not integration" --cov`).
 # Pinned for the same reason as pytest: an unpinned plugin turns a green branch
 # red with no repo change behind it.
-pytest-cov==7.0.0
+pytest-cov==7.1.0
