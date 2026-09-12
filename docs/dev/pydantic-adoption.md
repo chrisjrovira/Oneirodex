@@ -11,6 +11,12 @@ api_error('Invalid request.', code='unprocessable', detail={field: message})   #
 On success the parsed, typed model is passed to the view as the **`body`
 keyword argument**.
 
+Partial-success batch routes (`ok` means "did every item succeed") use
+`@validate_batch_body` instead. The 422 is the same `unprocessable` +
+`detail={field: message}` shape, plus `updated=[]` / `skipped=[]` /
+`errors=[]` and optional `limit`, so `batchActions.ts` does not see a blank
+envelope. Do **not** wrap those routes with the flat helper.
+
 ## Writing a route with `@validate_body`
 
 1. Add the model to `oneirodex/schemas/<surface>.py` (one module per route
@@ -39,6 +45,10 @@ keyword argument**.
    *rejection* shape (ad-hoc `code='bad_request'` → uniform `code='unprocessable'`,
    400 → 422) and only for genuinely malformed input.
 
+Partial-success batch routes use `@validate_batch_body(Model, limit=N)` the
+same way (innermost, under auth). Pass `extra_on_error=` when the refusal
+also carries `cap` / `requested` / per-id `results`.
+
 ### `detail` shape
 
 `{field: message}` (or `{field: [messages]}` when a field has more than one
@@ -58,8 +68,9 @@ model: a model with required fields → 422 naming them; an all-optional model
 
 ## Adopted so far
 
-52 routes (PRs #80–#96 plus named-field leftovers). Prefixes
-below match the Flask blueprints (`/api` for `routes_apis/`).
+52 routes (PRs #80–#96 plus named-field leftovers) on `@validate_body`, plus
+`games_batch_favorite` on `@validate_batch_body`. Prefixes below match the
+Flask blueprints (`/api` for `routes_apis/`).
 
 | File | Route | Model |
 |---|---|---|
@@ -115,6 +126,7 @@ below match the Flask blueprints (`/api` for `routes_apis/`).
 | `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/apply` (`art_studio_apply`) | `ArtStudioApplyBody` |
 | `routes_arr.py` | `POST /api/arr/download` (`arr_download`) | `ArrDownloadBody` |
 | `routes_arr.py` | `POST /api/arr/hardlink/preview` (`arr_hardlink_preview`) | `ArrHardlinkPreviewBody` |
+| `routes_apis/game.py` | `POST /api/games/batch/favorite` (`games_batch_favorite`) | `BatchFavoriteBody` (`@validate_batch_body`) |
 
 ### Contract notes for the adopted routes
 
@@ -154,6 +166,10 @@ below match the Flask blueprints (`/api` for `routes_apis/`).
   naming `__root__`. Unknown uuid still 404 after a well-formed body.
 - **`quality_profiles_set_active`** — missing `id` / `active_id` /
   `profile_id` was 400, now 422 naming `__root__`. Unknown ids still 404.
+- **`games_batch_favorite`** — missing `favorite` / `uuids` was 400 with
+  `updated`/`skipped`/`errors`/`limit`. Now 422 `unprocessable` with the
+  same extra keys plus `detail` naming the field. Over-limit is still 400.
+  Happy-path `ok` is still "did every item succeed" (not `api_ok`).
 
 ## Deliberately not adopted (and why)
 
@@ -161,13 +177,11 @@ Leave these until the contract can be preserved; do not force them.
 
 ### `routes_apis/game.py`
 
-- `games_batch_favorite`, `games_batch_status`, `games_batch_wishlist`,
-  `games_batch_freshness_check`, `games_batch_refresh_images` — partial-success
-  routes. The **rejection** body carries `updated` / `skipped` / `errors` /
-  `limit`, and `ok` means "did every item succeed", not "did the request
-  succeed". `member-app/src/api/batchActions.ts` branches on that shape; the
-  flat `@validate_body` 422 would regress it. Recorded in the api-envelope
-  baseline on purpose.
+- `games_batch_favorite` — **adopted** via `@validate_batch_body(BatchFavoriteBody, limit=100)`. Missing `favorite` / `uuids` is 422 with the partial-success keys; over-limit is still 400 from `_normalize_batch_uuids`; success `ok` is still "did every item succeed".
+- `games_batch_status`, `games_batch_wishlist`,
+  `games_batch_freshness_check`, `games_batch_refresh_images` — same
+  partial-success family; take the companion next, one wrap per PR. The
+  flat `@validate_body` 422 would still regress `batchActions.ts`.
 - `move_game_to_library` — `tests/test_routes_apis_game.py` asserts `400` +
   `'target_library_uuid' in message` for a missing field and `400` for
   malformed JSON. Needs a bespoke validator to keep that; not a generic
@@ -345,23 +359,26 @@ Leave these until the contract can be preserved; do not force them.
 
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-12):
+`request.get_json(` still hand-rolled across `oneirodex/` (AST census
+2026-09-12, `scripts/get_json_lint.py`; docstring examples are not counted):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 82 | 35 |
+| `routes_apis/` | 81 | 35 |
 | `routes_admin_ext/` | 14 | 7 |
-| rest of `oneirodex/` | 10 | 2 |
-| **total** | **106** | **44** |
+| rest of `oneirodex/` | 8 | 2 |
+| **total** | **103** | **44** |
 
-`utils/validation.py` (3) is the decorator helper, not a wrap candidate.
-`routes_arr.py` (7 remaining) is the other rest-of-package file.
+`utils/validation.py` (1, the shared `_json_object` reader) is the decorator
+helper, not a wrap candidate. `routes_arr.py` (7 remaining) is the other
+rest-of-package file.
 
 Highest-count files still to do, roughly in priority order:
 
-- `routes_apis/scan.py` (11) — most are partial-success; needs a batch-aware
-  companion to `@validate_body` first.
-- `routes_apis/game.py` (7) — mostly the batch routes above;
+- `routes_apis/scan.py` (11) — most are partial-success; use
+  `@validate_batch_body` (now landed) with `extra_on_error` for `cap` /
+  `requested` / per-id `results`.
+- `routes_apis/game.py` (6 remaining) — the other batch routes above;
   `move_game_to_library` needs the bespoke-message validator.
 - `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
 - `routes_apis/library_tools.py` (5 remaining — propose/import dual-input,
@@ -377,19 +394,17 @@ Highest-count files still to do, roughly in priority order:
 - `routes_admin_ext/art_studio.py` (1 helper, still used by stock/batch/marks).
 - long tail of 1–2-site files (GET+PUT config, all-optional, dual-input).
 
-Named-field JSON with a real presence/type guard is exhausted until the
-skip-list items get a different validator. Next wrap candidates once a
-bespoke helper exists: leftover `images.py` search/batch, leftover
-`library_tools` / `chat` / `quality_stats` pass-through bags.
+Named-field JSON with a real presence/type guard is exhausted on the flat
+helper. Next wrap candidates on the companion: remaining `game.py` batch
+routes, leftover `images.py` batch, leftover `library_tools` / `chat` /
+`quality_stats` pass-through bags.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards
 → run that file's tests → confirm the happy-path body is unchanged.
 
 ### Nice-to-have infra
 
-- A `@validate_body`-style helper that preserves the **partial-success**
-  envelope (`updated`/`skipped`/`errors`/`limit`) so the batch routes can be
-  migrated without regressing `batchActions.ts`.
-- Optional: a lint that flags a new `request.get_json(` in `routes_apis/`
-  without a matching `@validate_body`, on the `api_envelope_lint` /
-  `print_lint` ratchet model.
+- `@validate_batch_body` — **landed**. Same 422 as `@validate_body` plus
+  `updated` / `skipped` / `errors` / optional `limit`.
+- `scripts/get_json_lint.py` — **landed**. Per-file `request.get_json`
+  ratchet on the `print_lint` model; CI runs it next to the print ratchet.

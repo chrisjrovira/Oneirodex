@@ -25,6 +25,10 @@ argument::
         name = body.name[:120]
         ...
 
+Partial-success batch routes use ``@validate_batch_body`` instead, which is
+the same 422 plus ``updated`` / ``skipped`` / ``errors`` (and optional
+``limit``) so the SPA's batch envelope does not go blank.
+
 Decorator order
 ---------------
 ``@validate_body`` must sit **innermost** — directly above ``def`` and below
@@ -55,6 +59,7 @@ filesystem path can ride out in the envelope — the same rule
 from __future__ import annotations
 
 import functools
+from collections.abc import Mapping
 from typing import Any, Callable
 
 from pydantic import BaseModel, ValidationError
@@ -66,7 +71,7 @@ try:  # pragma: no cover - trivial import shim
 except Exception:  # pragma: no cover
     request = None  # type: ignore[assignment]
 
-__all__ = ['validate_body', 'format_validation_errors']
+__all__ = ['validate_body', 'validate_batch_body', 'format_validation_errors']
 
 
 def _loc_to_field(loc: tuple[Any, ...]) -> str:
@@ -110,6 +115,24 @@ def format_validation_errors(exc: ValidationError) -> dict[str, Any]:
     return out
 
 
+def _json_object() -> Any:
+    """``request.get_json(silent=True)`` or ``{}`` when the body is missing."""
+    payload = request.get_json(silent=True) if request is not None else None
+    return payload if payload is not None else {}
+
+
+def _refuse_unprocessable(
+    exc: ValidationError, extra: Mapping[str, Any] | None = None
+):
+    kwargs: dict[str, Any] = dict(extra) if extra else {}
+    return api_error(
+        'Invalid request.',
+        code='unprocessable',
+        detail=format_validation_errors(exc),
+        **kwargs,
+    )
+
+
 def validate_body(model: type[BaseModel]) -> Callable:
     """Validate the JSON request body against ``model`` before the view runs.
 
@@ -122,15 +145,58 @@ def validate_body(model: type[BaseModel]) -> Callable:
     def decorator(view: Callable) -> Callable:
         @functools.wraps(view)
         def wrapper(*args: Any, **kwargs: Any):
-            payload = request.get_json(silent=True) if request is not None else None
             try:
-                validated = model.model_validate(payload if payload is not None else {})
+                validated = model.model_validate(_json_object())
             except ValidationError as exc:
-                return api_error(
-                    'Invalid request.',
-                    code='unprocessable',
-                    detail=format_validation_errors(exc),
-                )
+                return _refuse_unprocessable(exc)
+            kwargs['body'] = validated
+            return view(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def validate_batch_body(
+    model: type[BaseModel],
+    *,
+    limit: int | None = None,
+    extra_on_error: Mapping[str, Any] | None = None,
+) -> Callable:
+    """Like :func:`validate_body`, but a 422 keeps partial-success keys.
+
+    Batch routes (``/api/games/batch/*``, unmatched ``batch/*``, …) put
+    ``updated`` / ``skipped`` / ``errors`` (and usually ``limit``) on *every*
+    response, including a malformed-body refusal. ``member-app``
+    ``api/batchActions.ts`` reads those keys. The flat ``@validate_body`` 422
+    would drop them.
+
+    Do **not** use this on ordinary named-field routes — those stay on
+    ``validate_body``. Do **not** wrap a skip-list partial-success route with
+    ``validate_body``.
+
+    ``limit`` is stamped on the 422 when the route has a documented cap.
+    ``extra_on_error`` merges extra keys (``cap``, ``requested``, …) onto that
+    same refusal. Semantic / over-limit checks stay in the view.
+    """
+
+    extras: dict[str, Any] = {
+        'updated': [],
+        'skipped': [],
+        'errors': [],
+    }
+    if limit is not None:
+        extras['limit'] = limit
+    if extra_on_error:
+        extras.update(dict(extra_on_error))
+
+    def decorator(view: Callable) -> Callable:
+        @functools.wraps(view)
+        def wrapper(*args: Any, **kwargs: Any):
+            try:
+                validated = model.model_validate(_json_object())
+            except ValidationError as exc:
+                return _refuse_unprocessable(exc, extras)
             kwargs['body'] = validated
             return view(*args, **kwargs)
 

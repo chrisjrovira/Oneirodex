@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [architecture.md](docs/dev/architecture.md) and root [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed
+- `@validate_batch_body` lands for partial-success JSON. `POST /api/games/batch/favorite` uses it: missing `favorite` / `uuids` is `422 unprocessable` with `detail` naming the field **and** `updated` / `skipped` / `errors` / `limit` so the member batch bar does not go blank. Over-limit is still 400. Success `ok` is still "did every item succeed".
 - Playtime start, wishlist create/resolve, API-token create, and related-media create adopt `@validate_body`. Missing required fields (`game_uuid`, `title`, `status`, `name`) are now `422 unprocessable` with `detail` naming the field, not the old `400 bad_request` sentence. Semantic refusals (unknown status / preset / media kind) are unchanged.
 - Library-tools JSON routes with a real presence/type guard (`proposals/approve`, `proposals/scan_roots`, doctor dry-run / write / apply-renames, `check_freshness`) adopt `@validate_body`. Missing `library_uuid` / `roots` is now `422 unprocessable`. Dual-input propose/import and the all-optional Steam backfill stay unwrapped.
 - Chat mute, space-member add, and quality-profile score adopt `@validate_body`. Missing `muted` / `user_id` / `title` are now `422 unprocessable`. Channel/space 404 still follows a well-formed body.
