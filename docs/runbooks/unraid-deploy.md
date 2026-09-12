@@ -24,7 +24,68 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 > hard refresh still changes what you see, that is a defect to report rather than a step to keep —
 > [themes-reset.md](../admin/themes-reset.md).
 
-### After Stage A0–A8 lands on origin
+## Repair the live git checkout
+
+The live stack is the git checkout, not a Hub pull. When `git pull` used to
+work and now does not, fix it **on Unraid or on `Z:\_projects\Oneirodex`**.
+Cloud agents cannot open SSH, HTTP, or ping to `192.168.50.116` (RFC1918).
+Do **not** `git reset --hard` — that can destroy a live `.env`.
+
+Typical causes: `fatal: detected dubious ownership` (pass
+`-c safe.directory=` per command; do not write git config), Windows SMB
+CRLF making every file look modified, a leftover `.git/index.lock`, a
+dirty tracked file with a real edit, a diverged local `main`, or the array
+at ~99% full.
+
+If this tree already has `scripts/ops/unraid_sync_main.py`:
+
+```bash
+cd /mnt/user/infernal-data-streams/_projects/Oneirodex
+python3 scripts/ops/unraid_sync_main.py
+# then, on Unraid:
+python3 scripts/ops/unraid_ship_update_now.py
+```
+
+Otherwise paste this on the Unraid terminal (Git Bash on `Z:` works if you
+set `REPO` to that path):
+
+```bash
+REPO=/mnt/user/infernal-data-streams/_projects/Oneirodex
+cd "$REPO" || exit 1
+GIT="git -c safe.directory=$REPO"
+df -h / /mnt/user /mnt/cache /var/lib/docker 2>/dev/null || df -h | head
+$GIT status -sb
+$GIT remote -v
+$GIT diff --name-only --diff-filter=ACMRD > /tmp/od-diff-all.txt
+$GIT diff --ignore-cr-at-eol --name-only --diff-filter=ACMRD > /tmp/od-diff-real.txt
+if [ -s /tmp/od-diff-real.txt ]; then
+  echo "REFUSING: tracked files have real diffs (not only CRLF):"
+  cat /tmp/od-diff-real.txt
+  exit 2
+fi
+if [ -s /tmp/od-diff-all.txt ]; then
+  while IFS= read -r f; do
+    [ -n "$f" ] && $GIT checkout -- "$f"
+  done < /tmp/od-diff-all.txt
+fi
+$GIT fetch origin --prune
+$GIT checkout main
+$GIT merge --ff-only origin/main
+$GIT log -1 --oneline
+$GIT rev-parse HEAD origin/main
+```
+
+`HEAD` must equal `origin/main` after that. Then rebuild from Unraid
+(`python3 scripts/ops/unraid_ship_update_now.py` or Compose Manager). Theme
+reset after ship reads `scripts/ops/unraid_reset_themes.py` (the old
+`scripts/_unraid_*.py` names are gone). Confirm `curl -f http://127.0.0.1:5006/awake`.
+
+If `df` shows a listed mount at 99%, stop and free array/cache/Docker space
+first. If `git fetch` fails, `git remote -v` should be
+`https://github.com/chrisjrovira/oneirodex.git` (the previous GitHub URL still
+redirects); fix host credentials — do not put a token in the repo.
+
+## After Stage A0–A8 lands on origin
 
 Only when the human has **shipped** the name-resolution code and the image is running that build:
 

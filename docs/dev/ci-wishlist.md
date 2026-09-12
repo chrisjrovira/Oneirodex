@@ -266,3 +266,6 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
 - [A2.4-named-leftovers] `tests/test_pydantic_named_leftovers.py` added to
   the `pytest-core` hand list (discovery order/visibility, cover search,
   quality set-active `@validate_body` 422 contracts).
+- [Unraid checkout] `tests/test_unraid_sync_main.py` added to the
+  `pytest-core` hand list (CRLF-only dirt vs real diffs, ff-only to
+  `origin/main`, no `reset --hard`, live `.env` left alone).

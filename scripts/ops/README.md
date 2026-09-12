@@ -15,6 +15,7 @@ Several of these act on the **live NAS**, not a test environment:
 
 | Script | What it does to the host |
 |---|---|
+| `unraid_sync_main.py` | Fast-forward the live checkout to `origin/main` (CRLF/mode dirt only; never `reset --hard`) |
 | `unraid_rebuild_and_reset.py` | Compose rebuild from the live NAS tree, then resets themes |
 | `unraid_reset_themes.py` | Drops and reseeds default + preset themes in `oneirodex-app` |
 | `unraid_ship_update_now.py` | Compose rebuild + themes reset + smoke, skipping git pull |
@@ -27,8 +28,33 @@ The rest are read-only diagnostics: `unraid_status_snapshot.py`,
 `unraid_propose_dump.py`, `unraid_list_spa_dist.py`, `unraid_spa_mtime.py`,
 `unraid_git_*.py`, `unraid_rebuild_preflight.py`, `unraid_post_rebuild_smoke.py`.
 
-None of them write git config; the `unraid_git_*` helpers pass
-`safe.directory` per invocation instead.
+None of them write git config; the `unraid_git_*` helpers and
+`unraid_sync_main.py` pass `safe.directory` per invocation instead.
+
+## `unraid_sync_main.py` — repair the live checkout
+
+The Compose stack **is** the git tree at
+`/mnt/user/infernal-data-streams/_projects/Oneirodex`
+(`Z:\_projects\Oneirodex` on Windows). Cloud agents cannot SSH to
+`192.168.50.116` (RFC1918). Run this on the Unraid terminal or on that
+Windows share — not in a laptop clone.
+
+```bash
+cd /mnt/user/infernal-data-streams/_projects/Oneirodex
+python3 scripts/ops/unraid_sync_main.py          # diagnose + ff-only to origin/main
+python3 scripts/ops/unraid_sync_main.py --dry-run
+python3 scripts/ops/unraid_sync_main.py --ship   # then compose rebuild; Unraid Docker only
+```
+
+If the tree does not yet contain this script, paste the bash from
+[unraid-deploy.md — Repair the live git checkout](../../docs/runbooks/unraid-deploy.md#repair-the-live-git-checkout).
+
+It restores files that differ from HEAD only by CRLF or file mode so a
+Windows SMB checkout can pull. Tracked files with real edits are refused.
+`.env` is gitignored and is never restored. Disk at or over 99% on the
+Unraid mounts refuses too. After HEAD matches `origin/main`, ship with
+`unraid_ship_update_now.py` (theme reset now pipes
+`scripts/ops/unraid_reset_themes.py`).
 
 ## `unraid_patch_env.py` — two defects fixed 2026-09-02
 

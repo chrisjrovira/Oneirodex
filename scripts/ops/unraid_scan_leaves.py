@@ -8,7 +8,7 @@ process when it would *start* work — the job is reclaimed as Failed when we
 exit. Always insert Queued rows via create_scan_job_row; the live app's
 scan_scheduler promotes FIFO.
 
-Run: docker exec -i oneirodex-app python - < scripts/_unraid_scan_leaves.py
+Run: docker exec -i oneirodex-app python - < scripts/ops/unraid_scan_leaves.py
 """
 from __future__ import annotations
 

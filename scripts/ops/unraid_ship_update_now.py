@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-SSH = ["ssh", "-o", "BatchMode=yes", "root@192.168.50.116"]
+SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "root@192.168.50.116"]
 REPO = "/mnt/user/infernal-data-streams/_projects/Oneirodex"
 SCRIPT = rf"""
 set -eu
@@ -29,7 +29,7 @@ for i in $(seq 1 90); do
 done
 test "$ok" = 1
 echo '=== reset default themes ==='
-docker exec -i oneirodex-app python - < {REPO}/scripts/_unraid_reset_themes.py
+docker exec -i oneirodex-app python - < {REPO}/scripts/ops/unraid_reset_themes.py
 echo '=== flags ==='
 docker exec oneirodex-app sh -c 'printf "OIDC_ENABLED=%s\nENABLE_AI_AUTO_APPLY=%s\nALLOW_HARDLINK_APPLY=%s\nENABLE_LIVEKIT=%s\nENABLE_CHALLENGE_SOLVER=%s\n" "$OIDC_ENABLED" "$ENABLE_AI_AUTO_APPLY" "$ALLOW_HARDLINK_APPLY" "$ENABLE_LIVEKIT" "$ENABLE_CHALLENGE_SOLVER"'
 echo '=== login SSO ==='

@@ -22,7 +22,7 @@ $GIT ls-files --others --exclude-standard | wc -l
 echo '=== sample first 5 diffs (stat) ==='
 $GIT diff --stat -- docker-compose.yml frontend/admin-app/src/pages.jsx frontend/admin-app/src/styles.css docs/runbooks/unraid-deploy.md docs/runbooks/oidc-authentik-unraid.md docs/strategy/progress.md | tail -n 20
 echo '=== porcelain untracked helpers ==='
-$GIT status --short -- scripts/_unraid_compose_rebuild.py scripts/_unraid_enable_oidc_db.py scripts/_ak_create_oneirodex.py scripts/_unraid_patch_env.py docker-compose.yml frontend/admin-app/src/pages.jsx .env
+$GIT status --short -- scripts/ops/unraid_compose_rebuild.py scripts/ops/unraid_enable_oidc_db.py scripts/ops/unraid_patch_env.py docker-compose.yml .env
 """
 
 

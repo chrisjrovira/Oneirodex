@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `scripts/ops/unraid_sync_main.py` fast-forwards the live Unraid/Windows checkout to `origin/main` without `git reset --hard`. CRLF/file-mode dirt is restored; real tracked edits and `.env` are left alone. Run it on the NAS share — cloud agents cannot reach RFC1918. Paste-able steps: [unraid-deploy.md](docs/runbooks/unraid-deploy.md#repair-the-live-git-checkout).
 - Admin shell shows the AGPL source offer again when `source_url` is configured.
 - [architecture.md](docs/dev/architecture.md) and root [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed
+- Unraid ship/rebuild scripts pipe `scripts/ops/unraid_reset_themes.py` into the app container (the old `scripts/_unraid_reset_themes.py` path is gone).
 - Playtime start, wishlist create/resolve, API-token create, and related-media create adopt `@validate_body`. Missing required fields (`game_uuid`, `title`, `status`, `name`) are now `422 unprocessable` with `detail` naming the field, not the old `400 bad_request` sentence. Semantic refusals (unknown status / preset / media kind) are unchanged.
 - Library-tools JSON routes with a real presence/type guard (`proposals/approve`, `proposals/scan_roots`, doctor dry-run / write / apply-renames, `check_freshness`) adopt `@validate_body`. Missing `library_uuid` / `roots` is now `422 unprocessable`. Dual-input propose/import and the all-optional Steam backfill stay unwrapped.
 - Chat mute, space-member add, and quality-profile score adopt `@validate_body`. Missing `muted` / `user_id` / `title` are now `422 unprocessable`. Channel/space 404 still follows a well-formed body.

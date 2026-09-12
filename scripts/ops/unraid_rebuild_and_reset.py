@@ -33,7 +33,7 @@ for i in $(seq 1 90); do
 done
 test "$ok" = 1
 echo '=== reset default themes ==='
-docker exec -i oneirodex-app python - < {REPO}/scripts/_unraid_reset_themes.py
+docker exec -i oneirodex-app python - < {REPO}/scripts/ops/unraid_reset_themes.py
 echo '=== verify hang-fix assets ==='
 curl -sS -o /dev/null -w 'scanJobsDom=%{{http_code}}\n' http://127.0.0.1:5006/static/library/themes/default/js/scanJobsDom.js
 curl -sS http://127.0.0.1:5006/static/library/themes/default/js/admin_manage_scanjobs.js | grep -c 'patchScanJobProgressRows' | awk '{{print "patchScanJobProgressRows_hits="$1}}'

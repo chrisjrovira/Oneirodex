@@ -1,6 +1,6 @@
 """Create every proposed leaf library under /storage and queue first scans.
 
-Unlike ``_unraid_scan_leaves.py`` (small WANTED set), this walks
+Unlike ``unraid_scan_leaves.py`` (small WANTED set), this walks
 ``propose_leaf_libraries('/storage')`` and creates each candidate whose path
 and name are not already a Library row.
 
@@ -9,7 +9,7 @@ process when it would *start* work — the job is reclaimed as Failed when we
 exit. Always insert Queued rows via create_scan_job_row; the live app's
 scan_scheduler promotes FIFO.
 
-Run: docker exec -i oneirodex-app python - < scripts/_unraid_scan_leaves_all.py
+Run: docker exec -i oneirodex-app python - < scripts/ops/unraid_scan_leaves_all.py
 """
 from __future__ import annotations
 

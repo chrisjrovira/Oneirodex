@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-SSH = ["ssh", "-o", "BatchMode=yes", "root@192.168.50.116"]
+SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "root@192.168.50.116"]
 REPO = "/mnt/user/infernal-data-streams/_projects/Oneirodex"
 SCRIPT = rf"""
 set -eu
