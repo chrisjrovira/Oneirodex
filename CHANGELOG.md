@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Docker `frontend-build` stages `tsconfig.base.json` so SPA `tsc --noEmit` keeps jsx/lib/moduleResolution (Unraid `compose up --build` was failing after the TypeScript on-ramp).
 - Unraid ship/rebuild scripts pipe `scripts/ops/unraid_reset_themes.py` (the old `scripts/_unraid_reset_themes.py` path is gone).
+- Dependabot npm groups are minor/patch only — vite/vitest/typescript majors stay manual (closed the open major grouper PRs).
 
 ### Added
 - Admin shell shows the AGPL source offer again when `source_url` is configured.
