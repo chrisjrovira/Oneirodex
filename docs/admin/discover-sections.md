@@ -40,7 +40,7 @@ reads CheapShark (public HTTPS) and never checks out.
 |---|---|
 | `curated_for_you` | Unplayed titles in genres the member already favourites, best-rated first, then most recently added |
 | `upcoming` | Titles whose release date is still ahead, soonest first — reuses the dates the Calendar already keeps; no new scraping |
-| `store_deals` | **Deep discounts** — CheapShark deals ≥75% off across Steam / GOG / Humble / Epic. Article tiles with HTTPS store redirects. Skips titles on the member’s ownership register. No cart, no DRM download queues, no prices on Game tiles. |
+| `store_deals` | **Deep discounts** — CheapShark deals ≥75% off across Steam / GOG / Humble / Epic. Article tiles with HTTPS store redirects. Skips titles on the member’s ownership register. No cart, no DRM download queues, no prices on Game tiles. CheapShark requires an identifying User-Agent (`Oneirodex/1.0 (self-hosted library)`); their Savings sort uses `desc=0` for steepest-first. The shelf hides when a successful pull is empty; a failed pull keeps the last snapshot. Seeded on next init (`display_order` `-8`). |
 
 Honesty rules worth knowing before you go looking for a bug:
 

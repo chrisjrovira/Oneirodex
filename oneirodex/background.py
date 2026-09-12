@@ -117,6 +117,11 @@ def start_background_workers(app):
             except Exception as exc:
                 logger.warning(f"[OWNERSHIP] Could not start: {exc}")
             try:
+                from oneirodex.utils.store_deals_poller import start_store_deals_scheduler
+                _record_handle(start_store_deals_scheduler(app))
+            except Exception as exc:
+                logger.warning(f"[STORE DEALS] Could not start: {exc}")
+            try:
                 from oneirodex.utils.email_digest_scheduler import start_email_digest_scheduler
                 _record_handle(start_email_digest_scheduler(app))
             except Exception as exc:
@@ -134,9 +139,9 @@ def stop_background_workers():
 
     Only handles that expose ``shutdown()`` or ``stop()`` can be stopped — the
     library watcher's ``LibraryWatchController`` does. The plain daemon-thread
-    pollers (scan, free-games, discover-ML, ownership, email-digest) return no
-    handle and expose no stop hook; they are ``daemon=True`` and die with the
-    process. Documented no-op for those.
+    pollers (scan, free-games, discover-ML, ownership, store-deals,
+    email-digest) return no handle and expose no stop hook; they are
+    ``daemon=True`` and die with the process. Documented no-op for those.
     """
     global _STARTED
 
