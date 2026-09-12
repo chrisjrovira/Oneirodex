@@ -1,0 +1,19 @@
+{
+  "name": "Oneirodex",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "oneirodex-app",
+      "command": "cd /workspace && bash .cursor/start.sh && source venv/bin/activate && ./startweb.sh",
+      "description": "Waits for PostgreSQL, runs DB migrations/init, then serves the Flask app via uvicorn on http://localhost:5006"
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 5006
+    }
+  ]
+}
