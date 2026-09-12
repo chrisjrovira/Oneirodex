@@ -21,3 +21,9 @@ def test_dockerfile_builds_admin_app():
     text = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
     assert 'frontend/admin-app' in text
     assert 'dist/admin-app' in text
+
+
+def test_dockerfile_stages_tsconfig_base():
+    """SPA `tsc --noEmit` extends repo-root tsconfig.base.json (Unraid image build)."""
+    text = (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert 'COPY tsconfig.base.json' in text

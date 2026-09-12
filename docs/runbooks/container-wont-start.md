@@ -133,6 +133,14 @@ failing. Check what the image actually has before writing a probe:
 `saladtechnologies/sdnext` ships `wget` and no `curl`, which is why the artwork
 sidecar's healthcheck uses `wget`.
 
+### 9. `docker compose build` fails in `frontend-build` (`tsc --noEmit`)
+
+**Log signature:** hundreds of `TS6142` / `jsx is not set` / `Cannot find name 'Map'` under `npm run build --workspace=member-app`, often with `Cannot read file '/build/tsconfig.base.json'`.
+
+**Cause:** the SPA tsconfigs `extends` repo-root `tsconfig.base.json`. The `frontend-build` stage must `COPY tsconfig.base.json` before the workspace builds.
+
+**Fix:** pull a tree whose Dockerfile stages that file, then `docker compose … up -d --build` again. Local `npm run build` can still pass when the file exists on the host — only the image stage was blind.
+
 ## Collect for support
 
 ```text
