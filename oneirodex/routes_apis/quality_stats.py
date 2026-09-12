@@ -22,7 +22,7 @@ from oneirodex.utils.quality_profiles import (
 )
 from oneirodex.utils.stats_share import build_playtime_share_svg
 from oneirodex.utils.library_acl import user_can_access_game
-from oneirodex.schemas.quality_stats import ScoreReleaseBody
+from oneirodex.schemas.quality_stats import ScoreReleaseBody, SetActiveQualityProfileBody
 from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
@@ -66,11 +66,9 @@ def quality_profiles_put():
 @apis_bp.route('/quality-profiles/active', methods=['PUT', 'POST'])
 @login_required
 @admin_required
-def quality_profiles_set_active():
-    data = request.get_json(silent=True) or {}
-    profile_id = (data.get('id') or data.get('active_id') or data.get('profile_id') or '').strip()
-    if not profile_id:
-        return api_error('id is required', code='bad_request')
+@validate_body(SetActiveQualityProfileBody)
+def quality_profiles_set_active(body: SetActiveQualityProfileBody):
+    profile_id = (body.id or body.active_id or body.profile_id or '').strip()
     try:
         saved = set_active_quality_profile(profile_id)
     except KeyError as exc:

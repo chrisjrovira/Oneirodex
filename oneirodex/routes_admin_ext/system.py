@@ -6,7 +6,11 @@ from oneirodex.utils.auth import admin_required
 from oneirodex.models import SystemEvents, DiscoverySection, Game, Genre, Library, user_favorites
 from oneirodex import db
 from oneirodex.platform import LibraryPlatform
-from oneirodex.schemas.admin_system import DiscoveryShelfBody
+from oneirodex.schemas.admin_system import (
+    DiscoveryShelfBody,
+    UpdateSectionOrderBody,
+    UpdateSectionVisibilityBody,
+)
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.discovery_shelves import (
     count_custom_shelf_games,
@@ -427,7 +431,8 @@ def delete_discovery_section(section_id: int) -> tuple[Dict[str, Any], int]:
 @admin2_bp.route('/admin/api/discovery_sections/order', methods=['POST'])
 @login_required
 @admin_required
-def update_section_order() -> tuple[Dict[str, Any], int]:
+@validate_body(UpdateSectionOrderBody)
+def update_section_order(body: UpdateSectionOrderBody) -> tuple[Dict[str, Any], int]:
     """
     Update the display order of discovery sections.
     
@@ -441,36 +446,16 @@ def update_section_order() -> tuple[Dict[str, Any], int]:
     }
     """
     try:
-        data = request.get_json()
-        
-        # Validate request data
-        is_valid, error_msg = validate_json_request(data, ['sections'])
-        if not is_valid:
-            return api_error(error_msg, code='bad_request')
-        
-        if not isinstance(data['sections'], list):
-            return api_error('sections must be an array', code='bad_request')
-        
         updated_sections = []
-        for section_data in data['sections']:
-            # Validate each section data
-            if not isinstance(section_data, dict) or 'id' not in section_data or 'order' not in section_data:
-                return api_error('Invalid section data format', code='bad_request')
-            
-            try:
-                section_id = int(section_data['id'])
-                order = int(section_data['order'])
-            except (ValueError, TypeError):
-                return api_error('Section ID and order must be integers', code='bad_request')
-            
-            if order < 0:
+        for item in body.sections:
+            if item.order < 0:
                 return api_error('Display order must be non-negative', code='bad_request')
-            
-            section = db.session.get(DiscoverySection, section_id)
+
+            section = db.session.get(DiscoverySection, item.id)
             if not section:
-                return api_error(f'Section with ID {section_id} not found', code='not_found')
-            
-            section.display_order = order
+                return api_error(f'Section with ID {item.id} not found', code='not_found')
+
+            section.display_order = item.order
             updated_sections.append(section.name)
         
         db.session.commit()
@@ -501,7 +486,8 @@ def update_section_order() -> tuple[Dict[str, Any], int]:
 @admin2_bp.route('/admin/api/discovery_sections/visibility', methods=['POST'])
 @login_required
 @admin_required
-def update_section_visibility() -> tuple[Dict[str, Any], int]:
+@validate_body(UpdateSectionVisibilityBody)
+def update_section_visibility(body: UpdateSectionVisibilityBody) -> tuple[Dict[str, Any], int]:
     """
     Update the visibility status of a discovery section.
     
@@ -512,46 +498,28 @@ def update_section_visibility() -> tuple[Dict[str, Any], int]:
     }
     """
     try:
-        data = request.get_json()
-        
-        # Validate request data
-        is_valid, error_msg = validate_json_request(data, ['section_id', 'is_visible'])
-        if not is_valid:
-            return api_error(error_msg, code='bad_request')
-        
-        # Validate section_id
-        try:
-            section_id = int(data['section_id'])
-        except (ValueError, TypeError):
-            return api_error('section_id must be an integer', code='bad_request')
-        
-        # Validate is_visible
-        if not isinstance(data['is_visible'], bool):
-            return api_error('is_visible must be a boolean', code='bad_request')
-        
-        section = db.session.get(DiscoverySection, section_id)
+        section = db.session.get(DiscoverySection, body.section_id)
         if not section:
-            return api_error(f'Section with ID {section_id} not found', code='not_found')
-        
+            return api_error(f'Section with ID {body.section_id} not found', code='not_found')
+
         old_visibility = section.is_visible
-        section.is_visible = data['is_visible']
-        
+        section.is_visible = body.is_visible
+
         db.session.commit()
-        
-        # Log the action for audit trail
-        visibility_status = 'visible' if data['is_visible'] else 'hidden'
+
+        visibility_status = 'visible' if body.is_visible else 'hidden'
         log_system_event(
             f"Changed discovery section '{section.name}' visibility to {visibility_status}",
             event_type='admin_action',
             event_level='information',
             audit_user=current_user.id
         )
-        
+
         return api_ok({
-                        'message': f"Section '{section.name}' is now {'visible' if data['is_visible'] else 'hidden'}",
+                        'message': f"Section '{section.name}' is now {'visible' if body.is_visible else 'hidden'}",
             'section_name': section.name,
             'old_visibility': old_visibility,
-            'new_visibility': data['is_visible']
+            'new_visibility': body.is_visible
         })
         
     except Exception as e:

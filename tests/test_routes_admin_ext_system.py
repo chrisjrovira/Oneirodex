@@ -492,23 +492,22 @@ class TestUpdateSectionOrderAPI:
         # Send request with empty JSON object
         response = client.post('/admin/api/discovery_sections/order',
                              json={}, content_type='application/json')
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'Missing required field: sections' in response_data['error']
+        assert 'sections' in response_data['detail']
     
     def test_update_section_order_no_content_type(self, client, admin_user):
-        """Test API with no content type (Flask raises 415 -> caught as 500)."""
+        """Missing body is 422 (decorator uses silent get_json), not 500."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
         
-        # Send request with no content type - Flask raises 415 error for get_json()
         response = client.post('/admin/api/discovery_sections/order')
-        assert response.status_code == 500
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert response_data['error'] == 'Internal server error'
+        assert 'sections' in response_data['detail']
     
     def test_update_section_order_missing_sections(self, client, admin_user):
         """Test API with missing sections field."""
@@ -520,10 +519,10 @@ class TestUpdateSectionOrderAPI:
         response = client.post('/admin/api/discovery_sections/order', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'Missing required field: sections' in response_data['error']
+        assert 'sections' in response_data['detail']
     
     def test_update_section_order_invalid_sections_type(self, client, admin_user):
         """Test API with invalid sections type."""
@@ -535,10 +534,10 @@ class TestUpdateSectionOrderAPI:
         response = client.post('/admin/api/discovery_sections/order', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'sections must be an array' in response_data['error']
+        assert 'sections' in response_data['detail']
     
     def test_update_section_order_invalid_section_data(self, client, admin_user):
         """Test API with invalid section data format."""
@@ -550,10 +549,10 @@ class TestUpdateSectionOrderAPI:
         response = client.post('/admin/api/discovery_sections/order', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'Invalid section data format' in response_data['error']
+        assert response_data['error_code'] == 'unprocessable'
     
     def test_update_section_order_invalid_id_type(self, client, admin_user):
         """Test API with invalid section ID type."""
@@ -565,10 +564,10 @@ class TestUpdateSectionOrderAPI:
         response = client.post('/admin/api/discovery_sections/order', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'Section ID and order must be integers' in response_data['error']
+        assert response_data['error_code'] == 'unprocessable'
     
     def test_update_section_order_negative_order(self, client, admin_user):
         """Test API with negative display order."""
@@ -656,22 +655,22 @@ class TestUpdateSectionVisibilityAPI:
         
         response = client.post('/admin/api/discovery_sections/visibility',
                              json={}, content_type='application/json')
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'Missing required field: section_id' in response_data['error']
+        assert 'section_id' in response_data['detail']
     
     def test_update_section_visibility_no_content_type(self, client, admin_user):
-        """Test API with no content type (Flask raises 415 -> caught as 500)."""
+        """Missing body is 422, not 500."""
         with client.session_transaction() as sess:
             sess['_user_id'] = str(admin_user.id)
             sess['_fresh'] = True
         
         response = client.post('/admin/api/discovery_sections/visibility')
-        assert response.status_code == 500
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert response_data['error'] == 'Internal server error'
+        assert 'section_id' in response_data['detail']
     
     def test_update_section_visibility_missing_field(self, client, admin_user):
         """Test API with missing required field."""
@@ -683,10 +682,10 @@ class TestUpdateSectionVisibilityAPI:
         response = client.post('/admin/api/discovery_sections/visibility', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'Missing required field: is_visible' in response_data['error']
+        assert 'is_visible' in response_data['detail']
     
     def test_update_section_visibility_invalid_section_id(self, client, admin_user):
         """Test API with invalid section ID."""
@@ -698,10 +697,10 @@ class TestUpdateSectionVisibilityAPI:
         response = client.post('/admin/api/discovery_sections/visibility', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'section_id must be an integer' in response_data['error']
+        assert 'section_id' in response_data['detail']
     
     def test_update_section_visibility_invalid_boolean(self, client, admin_user):
         """Test API with invalid is_visible type."""
@@ -713,10 +712,10 @@ class TestUpdateSectionVisibilityAPI:
         response = client.post('/admin/api/discovery_sections/visibility', 
                              json=data, content_type='application/json')
         
-        assert response.status_code == 400
+        assert response.status_code == 422
         response_data = response.get_json()
         assert response_data['success'] is False
-        assert 'is_visible must be a boolean' in response_data['error']
+        assert 'is_visible' in response_data['detail']
     
     def test_update_section_visibility_nonexistent_section(self, client, admin_user):
         """Test API with nonexistent section ID."""

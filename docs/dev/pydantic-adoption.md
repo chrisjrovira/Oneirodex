@@ -58,7 +58,7 @@ model: a model with required fields → 422 naming them; an all-optional model
 
 ## Adopted so far
 
-48 routes (PRs #80–#96 plus the earlier collections / Steam wave). Prefixes
+52 routes (PRs #80–#96 plus named-field leftovers). Prefixes
 below match the Flask blueprints (`/api` for `routes_apis/`).
 
 | File | Route | Model |
@@ -82,6 +82,7 @@ below match the Flask blueprints (`/api` for `routes_apis/`).
 | `routes_apis/library_tools.py` | `POST /api/library_tools/check_freshness` (`library_tools_check_freshness`) | `CheckFreshnessBody` |
 | `routes_apis/chat.py` | `POST /api/chat/channels/<id>/mute` (`chat_channel_mute`) | `MuteChannelBody` |
 | `routes_apis/chat_spaces_api.py` | `POST /api/chat/spaces/<id>/members` (`chat_space_member_add`) | `AddSpaceMemberBody` |
+| `routes_apis/quality_stats.py` | `PUT /api/quality-profiles/active` (`quality_profiles_set_active`) | `SetActiveQualityProfileBody` |
 | `routes_apis/quality_stats.py` | `POST /api/quality-profiles/score` (`quality_profiles_score`) | `ScoreReleaseBody` |
 | `routes_apis/emulator_cheats.py` | `POST /api/games/<uuid>/pc_cheats` (`pc_cheats_create`) | `CreatePcCheatBody` |
 | `routes_apis/client.py` | `POST /api/client/lifecycle` (`client_lifecycle_post`) | `ClientLifecycleBody` |
@@ -101,9 +102,12 @@ below match the Flask blueprints (`/api` for `routes_apis/`).
 | `routes_apis/ai_assist.py` | `POST /api/ai/apply-triage` (`ai_apply_triage`) | `ApplyTriageBody` |
 | `routes_admin_ext/system.py` | `POST /admin/api/discovery_sections` (`create_discovery_section`) | `DiscoveryShelfBody` |
 | `routes_admin_ext/system.py` | `PUT /admin/api/discovery_sections/<id>` (`update_discovery_section`) | `DiscoveryShelfBody` |
+| `routes_admin_ext/system.py` | `POST /admin/api/discovery_sections/order` (`update_section_order`) | `UpdateSectionOrderBody` |
+| `routes_admin_ext/system.py` | `POST /admin/api/discovery_sections/visibility` (`update_section_visibility`) | `UpdateSectionVisibilityBody` |
 | `routes_admin_ext/game_delete.py` | `POST /delete_full_game` (`delete_full_game`) | `DeleteFullGameBody` |
 | `routes_admin_ext/game_images.py` | `POST /delete_image` (`delete_game_image`) | `DeleteGameImageBody` |
 | `routes_admin_ext/libraries.py` | `POST /api/library/preview-cropped-image` (`preview_cropped_image`) | `PreviewCroppedImageBody` |
+| `routes_admin_ext/images.py` | `POST /admin/api/covers/search` (`covers_search_single`) | `CoverSearchBody` |
 | `routes_admin_ext/images.py` | `POST /admin/api/covers/apply` (`covers_apply_single`) | `ApplyCoverBody` |
 | `routes_admin_ext/images.py` | `POST /admin/api/artwork/generate` (`artwork_generate`) | `GenerateArtworkBody` |
 | `routes_admin_ext/art_studio.py` | `POST /admin/api/art-studio/preview` (`art_studio_preview`) | `ArtStudioPreviewBody` |
@@ -141,6 +145,15 @@ below match the Flask blueprints (`/api` for `routes_apis/`).
   Frontends render `err.message` / `data.error`; they must not branch on the
   old 400 string. Passwords are not stripped. Usernames that historically
   used `if not username` without strip are not stripped.
+- **`update_section_order` / `update_section_visibility`** — missing
+  `sections` / `section_id` / `is_visible` was 400 via
+  `validate_json_request`. Now 422. Negative order still 400; unknown ids
+  still 404. A missing Content-Type is 422 instead of 500 (bare `get_json()`).
+  Theme JS posts dataset string ids; pydantic coerces them.
+- **`covers_search_single`** — missing query and uuid was 400, now 422
+  naming `__root__`. Unknown uuid still 404 after a well-formed body.
+- **`quality_profiles_set_active`** — missing `id` / `active_id` /
+  `profile_id` was 400, now 422 naming `__root__`. Unknown ids still 404.
 
 ## Deliberately not adopted (and why)
 
@@ -213,7 +226,6 @@ Leave these until the contract can be preserved; do not force them.
 ### `routes_apis/quality_stats.py`
 
 - `quality_profiles_create` / `put` / `update_one` — pass-through JSON bags.
-- `quality_profiles_set_active` — `id` / `active_id` / `profile_id` aliases.
 
 ### `routes_apis/emulator_cheats.py`
 
@@ -301,9 +313,6 @@ Leave these until the contract can be preserved; do not force them.
 
 - `update_discovery_section_schedule` / `update_discovery_section_pin` —
   all-optional bags.
-- `update_section_order` / `update_section_visibility` — typed lists;
-  tests assert the old 400 messages; no-content-type currently 500 via bare
-  `get_json()`. Wrapable but noisier.
 - `system_reset_plan_or_perform` — rejection carries `valid_scopes` extra.
 
 ### `routes_admin_ext/game_delete.py`
@@ -312,8 +321,6 @@ Leave these until the contract can be preserved; do not force them.
 
 ### `routes_admin_ext/images.py`
 
-- `covers_search_single` — `query` or `game_uuid` (with `q` / `name`
-  aliases).
 - Batch search/apply, auto-pick, generate-batch — optional bags /
   partial-success.
 
@@ -338,15 +345,14 @@ Leave these until the contract can be preserved; do not force them.
 
 ## Follow-up backlog
 
-`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-11,
-merged #80–#96):
+`request.get_json(` still hand-rolled across `oneirodex/` (census 2026-09-12):
 
 | Area | Sites | Files |
 |---|---|---|
-| `routes_apis/` | 83 | 35 |
-| `routes_admin_ext/` | 17 | 7 |
+| `routes_apis/` | 82 | 35 |
+| `routes_admin_ext/` | 14 | 7 |
 | rest of `oneirodex/` | 10 | 2 |
-| **total** | **110** | **44** |
+| **total** | **106** | **44** |
 
 `utils/validation.py` (3) is the decorator helper, not a wrap candidate.
 `routes_arr.py` (7 remaining) is the other rest-of-package file.
@@ -360,10 +366,9 @@ Highest-count files still to do, roughly in priority order:
 - `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
 - `routes_apis/library_tools.py` (5 remaining — propose/import dual-input,
   rename 404, Steam backfill).
-- `routes_admin_ext/system.py` (5 remaining) — schedule/pin bags, order,
-  visibility, reset extras.
-- `routes_admin_ext/images.py` (5 remaining) — search/batch optional bags.
-- `routes_apis/quality_stats.py` (4 remaining), `routes_apis/client.py` (4),
+- `routes_admin_ext/system.py` (3 remaining) — schedule/pin bags, reset extras.
+- `routes_admin_ext/images.py` (4 remaining) — batch optional bags.
+- `routes_apis/quality_stats.py` (3 remaining), `routes_apis/client.py` (4),
   `routes_apis/chat_spaces_api.py` (4), `routes_apis/chat.py` (4),
   `routes_apis/library.py` (4), `routes_apis/ownership.py` (4).
 - `routes_apis/emulator_cheats.py` (3 remaining), `routes_apis/ai_assist.py`
@@ -374,8 +379,8 @@ Highest-count files still to do, roughly in priority order:
 
 Named-field JSON with a real presence/type guard is exhausted until the
 skip-list items get a different validator. Next wrap candidates once a
-bespoke helper exists: discovery **order/visibility** (`system.py`), leftover
-`images.py` search/batch, leftover `library_tools` / `chat` / `quality_stats`.
+bespoke helper exists: leftover `images.py` search/batch, leftover
+`library_tools` / `chat` / `quality_stats` pass-through bags.
 
 Do **not** attempt a single sweep. Each file: model → decorate → delete guards
 → run that file's tests → confirm the happy-path body is unchanged.

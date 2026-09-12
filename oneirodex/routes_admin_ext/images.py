@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game, Image
-from oneirodex.schemas.admin_images import ApplyCoverBody, GenerateArtworkBody
+from oneirodex.schemas.admin_images import ApplyCoverBody, CoverSearchBody, GenerateArtworkBody
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.cover_art_studio import apply_pack_to_game, save_pack
 from oneirodex.utils.functions import download_stored_image
@@ -271,11 +271,11 @@ def _parse_providers_arg(raw) -> list[str] | None:
 @admin2_bp.route('/admin/api/covers/search', methods=['POST'])
 @login_required
 @admin_required
-def covers_search_single():
+@validate_body(CoverSearchBody)
+def covers_search_single(body: CoverSearchBody):
     """Search cover candidates across providers for one title (or game UUID)."""
-    data = request.get_json(silent=True) or {}
-    game_uuid = (data.get('game_uuid') or '').strip() or None
-    query = (data.get('query') or data.get('q') or data.get('name') or '').strip()
+    game_uuid = (body.game_uuid or '').strip() or None
+    query = (body.query or body.q or body.name or '').strip()
     if game_uuid and not query:
         game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
         if not game:
@@ -284,9 +284,9 @@ def covers_search_single():
     if not query:
         return api_error('query or game_uuid is required', code='bad_request')
 
-    providers = _parse_providers_arg(data.get('providers'))
+    providers = _parse_providers_arg(body.providers)
     try:
-        limit = min(int(data.get('limit') or data.get('limit_per_provider') or 8), 20)
+        limit = min(int(body.limit or body.limit_per_provider or 8), 20)
     except (TypeError, ValueError):
         limit = 8
 

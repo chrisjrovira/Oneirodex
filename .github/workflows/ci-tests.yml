@@ -171,6 +171,7 @@ jobs:
           tests/test_pydantic_chat_quality.py
           tests/test_pydantic_cheats_client.py
           tests/test_pydantic_library_tools.py
+          tests/test_pydantic_named_leftovers.py
           tests/test_pydantic_ops_json.py
           tests/test_pydantic_patch_artwork.py
           tests/test_pydantic_request_bodies.py
