@@ -380,12 +380,17 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   margin-bottom: 0.75rem;
 }
 
+/* Main column fills the shell width. Form hubs keep their own readable
+   measure on inner sheets; boards (Ops / Dashboard) already lock overflow and
+   scroll inside the pane. A second max-width here made SPA pages look like a
+   nested card beside full-bleed Jinja fill pages. */
 .od-admin-main {
   flex: 1;
   padding: 0.75rem 1.25rem 1.5rem;
-  max-width: 1600px;
+  max-width: none;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
+  min-width: 0;
 }
 
 /* Demoted: the top nav already names the active section (active link +

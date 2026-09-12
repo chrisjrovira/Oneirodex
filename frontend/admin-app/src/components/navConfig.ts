@@ -3,10 +3,11 @@ export const ADMIN_NAV = [
   { id: 'dashboard', path: '/admin/dashboard', label: 'Dashboard' },
   // Libraries and scans are one tabbed page (UX-C2) — two top-nav buttons
   // pointing into the same page was the leftover from before they merged.
+  // LHN is the landing only; tab strip stays in the top bar (contextbar).
   { id: 'libraries', path: '/scan_management?active_tab=libraries', label: 'Libraries & scans' },
-  // Landing is Server settings (the first row), not the index hub — operators
-  // almost always want a form, and the hub stays reachable as a rail sub-link.
-  { id: 'settings', path: '/admin/new_server_settings', label: 'Settings' },
+  // Landing is the Settings hub — module forms live on that page, not as a
+  // second copy of every row in the rail (confirmed admin IA).
+  { id: 'settings', path: '/admin/settings', label: 'Settings' },
   { id: 'content', path: '/admin/discovery_sections', label: 'Content' },
   { id: 'users', path: '/admin/users', label: 'Users' },
   { id: 'integrations', path: '/admin/integrations', label: 'Integrations' },
@@ -284,17 +285,40 @@ export function resolveNavSection(pathname: string): string | null {
 }
 
 /**
- * A section's hub links, minus the page actions — what the rail should show.
+ * How the left rail presents each ADMIN_NAV section.
+ *
+ * `landing` — section row is the only LHN control (click goes to ADMIN_NAV.path).
+ *   Used when the page already owns tabs/actions in the top bar, or when the
+ *   hub page is the catalogue of destinations (Settings / Integrations).
+ * `hub` — fold open to show HUB_LINKS destinations (minus page actions).
+ *
+ * HUB_LINKS stays complete for section ownership + command palette; the rail
+ * deliberately shows less so LHN and THN stop restating each other.
+ */
+export const RAIL_SECTION_MODE = {
+  dashboard: 'landing',
+  libraries: 'landing',
+  settings: 'landing',
+  integrations: 'landing',
+  content: 'hub',
+  users: 'hub',
+  system: 'hub',
+} as const
+
+/**
+ * A section's rail destinations — empty when the section is landing-only.
  * @param {string} sectionId
  */
 export function railDestinations(sectionId: string) {
+  const mode = RAIL_SECTION_MODE[sectionId as keyof typeof RAIL_SECTION_MODE] || 'hub'
+  if (mode === 'landing') return []
   const links = HUB_LINKS[sectionId as keyof typeof HUB_LINKS] || []
   return links.filter((link) => !PAGE_ACTION_HREFS.has(link.href))
 }
 
 export const HUB_LINKS = {
-  // One hub for the merged page (UX-C2): library management and scan jobs are
-  // tabs of the same screen, so they share one link list.
+  // Ownership + command-palette catalogue for Libraries & scans (UX-C2).
+  // The rail itself is landing-only — tab strip lives in the top bar.
   libraries: [
     { href: '/scan_management?active_tab=libraries', label: 'Libraries' },
     { href: '/scan_management', label: 'Scan jobs' },
@@ -313,8 +337,9 @@ export const HUB_LINKS = {
     // inline version existed and nothing routed to it.
     { href: '/scan_management?active_tab=image_queue', label: 'Image queue' },
   ],
-  // Every settings row from the hub sheet, plus the index itself. Built from
-  // SETTINGS_GROUPS so a new card cannot forget to register in the rail.
+  // Ownership + command-palette catalogue for Settings. Built from
+  // SETTINGS_GROUPS so a new card cannot forget section membership. The rail
+  // is landing-only — the hub page lists these rows.
   settings: [
     { href: '/admin/settings', label: 'All settings' },
     ...SETTINGS_GROUPS.flatMap((group) =>

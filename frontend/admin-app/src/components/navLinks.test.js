@@ -4,7 +4,9 @@ import {
   ADMIN_NAV,
   HUB_LINKS,
   INTEGRATION_CARDS,
+  RAIL_SECTION_MODE,
   SETTINGS_GROUPS,
+  railDestinations,
   resolveNavSection,
 } from './navConfig'
 
@@ -112,5 +114,35 @@ describe('section ownership', () => {
     // A hub keyed to something the nav does not render would light up nothing,
     // which is the same invisible failure in a different place.
     expect(resolved.filter((id) => !navIds.has(id))).toEqual([])
+  })
+})
+
+describe('rail destinations vs hub catalogue', () => {
+  test('libraries, settings, and integrations are landing-only on the rail', () => {
+    expect(RAIL_SECTION_MODE.libraries).toBe('landing')
+    expect(RAIL_SECTION_MODE.settings).toBe('landing')
+    expect(RAIL_SECTION_MODE.integrations).toBe('landing')
+    expect(railDestinations('libraries')).toEqual([])
+    expect(railDestinations('settings')).toEqual([])
+    expect(railDestinations('integrations')).toEqual([])
+  })
+
+  test('hub catalogue still owns library sub-pages for section highlight', () => {
+    // Rail is landing-only, but HUB_LINKS must keep membership so opening
+    // Extensions / Art studio / Filters still lights Libraries & scans.
+    const hrefs = HUB_LINKS.libraries.map((item) => item.href)
+    expect(hrefs).toContain('/admin/extensions')
+    expect(hrefs).toContain('/scan_management?active_tab=tools')
+  })
+
+  test('content / users / system still expose hub destinations on the rail', () => {
+    expect(railDestinations('users').length).toBeGreaterThan(0)
+    expect(railDestinations('system').length).toBeGreaterThan(0)
+    expect(railDestinations('content').length).toBeGreaterThan(0)
+  })
+
+  test('settings landing points at the hub, not a single module form', () => {
+    const settings = ADMIN_NAV.find((item) => item.id === 'settings')
+    expect(settings.path).toBe('/admin/settings')
   })
 })

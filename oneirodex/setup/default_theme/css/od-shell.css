@@ -229,6 +229,9 @@ body.od-shell-host .od-admin-shell {
   display: contents;
 }
 
+/* Default scroll contract: the main column scrolls. Boards that need a
+   locked pane (Ops / Dashboard / Libraries table / od-admin-fill) opt into
+   overflow:hidden on themselves — do not nest a second scrollport here. */
 body.od-shell-host > #admin-legacy-content,
 body.od-shell-host .od-admin-main {
   grid-area: main;

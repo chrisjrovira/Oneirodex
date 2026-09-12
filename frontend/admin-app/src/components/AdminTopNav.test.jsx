@@ -4,7 +4,7 @@ import { beforeEach, expect, test, vi } from 'vitest'
 
 import { AdminSideRail } from './AdminSideRail'
 import { AdminTopNav } from './AdminTopNav'
-import { ADMIN_NAV, HUB_LINKS } from './navConfig'
+import { ADMIN_NAV, HUB_LINKS, RAIL_SECTION_MODE } from './navConfig'
 
 const COLLAPSED_SECTIONS_KEY = 'od.admin.rail.collapsedSections'
 
@@ -166,11 +166,17 @@ test('top bar exposes the rail toggle and wires it up', async () => {
 test('rail lists every admin section', () => {
   renderRail()
 
-  // Dashboard is a destination link; foldable sections are buttons (member LHN).
-  expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument()
+  // Landing-only sections are destination links; hub sections fold open
+  // (member LHN). Libraries / Settings / Integrations are landing-only so
+  // their tabs and module lists are not duplicated under the rail.
   for (const link of ADMIN_NAV) {
-    if (link.id === 'dashboard') continue
-    expect(screen.getByRole('button', { name: link.label })).toBeInTheDocument()
+    const mode = RAIL_SECTION_MODE[link.id] || 'hub'
+    if (mode === 'landing') {
+      expect(screen.getByRole('link', { name: link.label })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: link.label })).toBeNull()
+    } else {
+      expect(screen.getByRole('button', { name: link.label })).toBeInTheDocument()
+    }
   }
 })
 
@@ -190,15 +196,38 @@ test('rail marks the active section and expands its hub subsections', () => {
   expect(section.querySelector('.od-rail__icon')).toBeNull()
 })
 
-test('rail settings subsections include every settings row', () => {
-  renderRail({ at: '/admin/new_server_settings' })
+test('rail settings is landing-only (hub owns the module list)', () => {
+  const { container } = renderRail({ at: '/admin/settings' })
 
-  expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute('aria-expanded', 'true')
-  expect(screen.getByRole('link', { name: 'All settings' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Server settings' })).toHaveAttribute(
-    'href',
-    '/admin/new_server_settings',
-  )
+  // No fold — Settings is a single destination; module rows live on the hub.
+  expect(screen.queryByRole('button', { name: 'Settings' })).toBeNull()
+  const settings = screen.getByRole('link', { name: 'Settings' })
+  expect(settings).toHaveAttribute('href', '/admin/settings')
+  expect(settings).toHaveClass('is-active')
+  expect(container.querySelector('a[href="/admin/new_server_settings"]')).toBeNull()
+  expect(screen.queryByRole('link', { name: 'All settings' })).toBeNull()
+})
+
+test('rail libraries is landing-only (tabs stay in the top bar)', () => {
+  const { container } = renderRail({ at: '/scan_management' })
+
+  expect(screen.queryByRole('button', { name: 'Libraries & scans' })).toBeNull()
+  const libraries = screen.getByRole('link', { name: 'Libraries & scans' })
+  expect(libraries).toHaveAttribute('href', '/scan_management?active_tab=libraries')
+  expect(libraries).toHaveClass('is-active')
+  // Tab-like destinations must not reappear under the rail fold.
+  expect(container.querySelector('a[href="/scan_management?active_tab=tools"]')).toBeNull()
+  expect(container.querySelector('a[href="/scan_management?active_tab=image_queue"]')).toBeNull()
+})
+
+test('rail integrations is landing-only (hub owns provider links)', () => {
+  const { container } = renderRail({ at: '/admin/integrations' })
+
+  expect(screen.queryByRole('button', { name: 'Integrations' })).toBeNull()
+  const integrations = screen.getByRole('link', { name: 'Integrations' })
+  expect(integrations).toHaveAttribute('href', '/admin/integrations')
+  expect(integrations).toHaveClass('is-active')
+  expect(container.querySelector('a[href="/admin/smtp_settings"]')).toBeNull()
 })
 
 test('rail subsection titles have no bullet markers', () => {
