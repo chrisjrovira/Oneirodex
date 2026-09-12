@@ -1,15 +1,14 @@
 """Request models for ``oneirodex/routes_apis/quality_stats.py``.
 
 Create / PUT / PATCH pass the JSON bag through to the profile helpers, so
-``extra='forbid'`` would break them. ``set_active`` takes ``id`` / ``active_id``
-/ ``profile_id`` aliases. Only the score probe has a real required field.
+those stay unwrapped. ``set_active`` aliases are modelled below.
 """
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Self
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
 
 _RequiredTitle = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -27,3 +26,24 @@ class ScoreReleaseBody(BaseModel):
     size_bytes: Any = None
     profile_id: str | None = None
     id: str | None = None
+
+
+class SetActiveQualityProfileBody(BaseModel):
+    """``PUT/POST /api/quality-profiles/active``.
+
+    Replaces ``(id or active_id or profile_id or '').strip(); if not: 400``.
+    Do not strip the fields themselves — whitespace-only ``id`` does not
+    fall through to ``active_id``, matching the hand-rolled ``or``.
+    """
+
+    model_config = ConfigDict(extra='forbid')
+
+    id: str | None = None
+    active_id: str | None = None
+    profile_id: str | None = None
+
+    @model_validator(mode='after')
+    def require_id_alias(self) -> Self:
+        if not (self.id or self.active_id or self.profile_id or '').strip():
+            raise ValueError('id is required')
+        return self

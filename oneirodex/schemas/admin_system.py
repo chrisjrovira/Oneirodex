@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, StrictBool, StringConstraints
 
 # Hand-rolled create/update did ``str(data.get('name') or '').strip()`` then
 # ``if not name``. strip_whitespace reproduces that; the 50-character cap
@@ -29,3 +29,39 @@ class DiscoveryShelfBody(BaseModel):
     game_uuids: Any = None
     filter_type: str | None = None
     filter_value: Any = None
+
+
+class SectionOrderItem(BaseModel):
+    """One ``{id, order}`` row from the discovery Sortable payload."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    id: int
+    order: int
+
+
+class UpdateSectionOrderBody(BaseModel):
+    """``POST /admin/api/discovery_sections/order``.
+
+    Replaces ``validate_json_request(..., ['sections'])`` plus the
+    ``isinstance(..., list)`` / per-row ``id``+``order`` presence checks.
+    Theme JS posts ``id`` as a dataset string; pydantic coerces it. Negative
+    ``order`` and unknown ids stay 400/404 in the view.
+    """
+
+    model_config = ConfigDict(extra='forbid')
+
+    sections: list[SectionOrderItem]
+
+
+class UpdateSectionVisibilityBody(BaseModel):
+    """``POST /admin/api/discovery_sections/visibility``.
+
+    Replaces required ``section_id`` + ``is_visible`` 400s. Unknown ids
+    still 404 from the view.
+    """
+
+    model_config = ConfigDict(extra='forbid')
+
+    section_id: int
+    is_visible: StrictBool

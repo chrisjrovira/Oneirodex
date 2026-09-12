@@ -263,3 +263,6 @@ package-lock.json`, one `Install workspace (repo-root npm ci)` step
   delete, crop-preview, cover-apply / artwork-generate, Arr download /
   hardlink-preview, art-studio preview/generate/apply). Support-ticket
   coverage stays in `tests/test_wave2c_support_news_notifications.py` (#80).
+- [A2.4-named-leftovers] `tests/test_pydantic_named_leftovers.py` added to
+  the `pytest-core` hand list (discovery order/visibility, cover search,
+  quality set-active `@validate_body` 422 contracts).
