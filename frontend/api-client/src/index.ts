@@ -61,6 +61,7 @@ export type {
   ImportLeafLibrariesPreviewError,
 } from './library-tools.js'
 export type { GameApi, GameDetails, MoreFromResponse, EditionsResponse } from './game.js'
+export { createCollectionsApi } from './collections.js'
 export type {
   CollectionsApi,
   CollectionDetail,
