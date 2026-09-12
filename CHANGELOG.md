@@ -12,11 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [architecture.md](docs/dev/architecture.md) and root [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed
-<<<<<<< HEAD
 - Discovery shelves admin delete uses the house confirm dialog instead of `window.confirm` (UID-060). Theme JS cannot import `frontend/shared`, so the dialog is copied in-file (named buttons, danger tone, Cancel focused). `GENERATOR_VERSION` **31** — Reset Themes required so the volume copy of `discovery_sections.js` / `admin_discovery_sections.css` picks it up.
-=======
 - Member collections CRUD goes through `@oneirodex/api-client`'s `createCollectionsApi` on the existing browser requester. Page exports (`fetchCollections`, `createCollection`, …) and error shape are unchanged. `searchGames` still hits `/api/search`.
->>>>>>> origin/main
 - Playtime start, wishlist create/resolve, API-token create, and related-media create adopt `@validate_body`. Missing required fields (`game_uuid`, `title`, `status`, `name`) are now `422 unprocessable` with `detail` naming the field, not the old `400 bad_request` sentence. Semantic refusals (unknown status / preset / media kind) are unchanged.
 - Library-tools JSON routes with a real presence/type guard (`proposals/approve`, `proposals/scan_roots`, doctor dry-run / write / apply-renames, `check_freshness`) adopt `@validate_body`. Missing `library_uuid` / `roots` is now `422 unprocessable`. Dual-input propose/import and the all-optional Steam backfill stay unwrapped.
 - Chat mute, space-member add, and quality-profile score adopt `@validate_body`. Missing `muted` / `user_id` / `title` are now `422 unprocessable`. Channel/space 404 still follows a well-formed body.
