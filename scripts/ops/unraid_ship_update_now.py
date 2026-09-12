@@ -29,7 +29,7 @@ for i in $(seq 1 90); do
 done
 test "$ok" = 1
 echo '=== reset default themes ==='
-docker exec -i oneirodex-app python - < {REPO}/scripts/_unraid_reset_themes.py
+docker exec -i oneirodex-app python - < {REPO}/scripts/ops/unraid_reset_themes.py
 echo '=== flags ==='
 docker exec oneirodex-app sh -c 'printf "OIDC_ENABLED=%s\nENABLE_AI_AUTO_APPLY=%s\nALLOW_HARDLINK_APPLY=%s\nENABLE_LIVEKIT=%s\nENABLE_CHALLENGE_SOLVER=%s\n" "$OIDC_ENABLED" "$ENABLE_AI_AUTO_APPLY" "$ALLOW_HARDLINK_APPLY" "$ENABLE_LIVEKIT" "$ENABLE_CHALLENGE_SOLVER"'
 echo '=== login SSO ==='

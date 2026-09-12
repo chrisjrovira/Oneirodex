@@ -16,6 +16,12 @@ COPY frontend/shared/package.json frontend/shared/
 COPY clients/desktop/package.json clients/desktop/
 RUN npm ci
 
+# All three SPAs `extends` this from `frontend/<app>/tsconfig.json`
+# (`../../tsconfig.base.json` → `/build/tsconfig.base.json`). Without it,
+# `tsc --noEmit` in the image loses jsx/lib/moduleResolution and the
+# frontend-build stage fails with hundreds of cascading TS errors.
+COPY tsconfig.base.json ./
+
 # App sources plus the shared workspace. frontend/shared is the `@oneirodex/ui`
 # workspace now, but member-app/admin-app still import it by relative path, so it
 # has to be on disk for the vite builds — `COPY frontend/` stages it (and
