@@ -190,6 +190,14 @@ def test_audio_clock_pins_wasm_skew_not_desktop_default():
     assert 'audio_rate_control = "true"' in base
     assert 'video_vsync = "true"' in base
     assert 'measureRefreshHz' in base or 'measuredRefreshHz' in base
+    # A sample that finishes during boot must still reach retroarch.cfg:
+    # afterStart applies once mainCompleted is true, and the first write waits.
+    after_idx = base.index('function afterStart')
+    after_chunk = base[after_idx:after_idx + 900]
+    assert 'mainCompleted = true' in after_chunk
+    assert 'tryApplyConfig()' in after_chunk
+    assert 'waitForMeasuredRefresh' in base
+    assert 'refreshRateWritten' in base
 
 
 def test_free_rom_manifest_platforms_are_real():

@@ -169,3 +169,56 @@
     border: 1px solid color-mix(in srgb, var(--od-info) 35%, transparent);
     color: var(--od-text);
 }
+
+/* House confirm dialog (UID-060). Classic-theme copy of the SPA
+   `.od-confirm` sheet — this page cannot import frontend/shared.
+   Buttons are `.od-btn` so they inherit the one button language. */
+.od-confirm {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(5, 7, 10, 0.82);
+    backdrop-filter: blur(8px);
+}
+
+.od-confirm__panel {
+    width: min(28rem, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.1rem 1.15rem 1.15rem;
+    border-radius: var(--od-radius-2xl);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.od-confirm__panel--danger {
+    border-top: 3px solid var(--od-danger);
+}
+
+.od-confirm__title {
+    margin: 0;
+    font-size: var(--od-font-lg);
+    color: var(--od-text);
+    text-wrap: balance;
+}
+
+.od-confirm__body {
+    margin: 0;
+    font-size: var(--od-font-md);
+    line-height: 1.5;
+    color: var(--od-text-muted);
+}
+
+.od-confirm__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+}

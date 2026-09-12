@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from oneirodex.utils import store_deals
-import pytest
-
-pytestmark = pytest.mark.integration  # A3.1: kept out of the fast `-m "not integration"` core -- store deals / free-games adapter.
+from oneirodex.utils import store_deals_poller
 
 
 class _FakeResponse:
@@ -16,11 +14,13 @@ class _FakeResponse:
         return self._payload
 
 
-def test_list_deep_discount_articles_keeps_steep_savings_and_skips_owned(monkeypatch):
+def _reset_cache():
     store_deals._cache['at'] = 0.0
     store_deals._cache['rows'] = []
 
-    payload = [
+
+def _payload():
+    return [
         {
             'dealID': 'a1',
             'title': 'Owned Steam Hit',
@@ -52,11 +52,18 @@ def test_list_deep_discount_articles_keeps_steep_savings_and_skips_owned(monkeyp
             'thumb': None,
         },
     ]
-    monkeypatch.setattr(
-        store_deals,
-        'request_with_backoff',
-        lambda *args, **kwargs: _FakeResponse(payload),
-    )
+
+
+def test_list_deep_discount_articles_keeps_steep_savings_and_skips_owned(monkeypatch):
+    _reset_cache()
+    captured = {}
+
+    def fake_get(*args, **kwargs):
+        captured['args'] = args
+        captured['kwargs'] = kwargs
+        return _FakeResponse(_payload())
+
+    monkeypatch.setattr(store_deals, 'request_with_backoff', fake_get)
     monkeypatch.setattr(
         store_deals,
         '_owned_keys',
@@ -70,6 +77,67 @@ def test_list_deep_discount_articles_keeps_steep_savings_and_skips_owned(monkeyp
     assert articles[0]['store'] == 'gog'
     assert articles[0]['savings'] == 80
     assert articles[0]['href'].startswith('https://www.cheapshark.com/redirect?dealID=')
+    params = captured['kwargs']['params']
+    assert params['desc'] == '0'
+    assert params['sortBy'] == 'Savings'
+    assert captured['kwargs']['headers']['User-Agent'] == store_deals.USER_AGENT
+    assert 'python-requests' not in captured['kwargs']['headers']['User-Agent']
+
+
+def test_failed_fetch_keeps_stale_snapshot(monkeypatch):
+    _reset_cache()
+    monkeypatch.setattr(
+        store_deals,
+        'request_with_backoff',
+        lambda *args, **kwargs: _FakeResponse(_payload()),
+    )
+    first = store_deals.cached_deep_discounts(force=True)
+    assert [row['deal_id'] for row in first] == ['a1', 'b2']
+
+    monkeypatch.setattr(
+        store_deals,
+        'request_with_backoff',
+        lambda *args, **kwargs: None,
+    )
+    stale = store_deals.cached_deep_discounts(force=True)
+    assert [row['deal_id'] for row in stale] == [row['deal_id'] for row in first]
+
+
+def test_successful_empty_pull_clears_snapshot(monkeypatch):
+    _reset_cache()
+    monkeypatch.setattr(
+        store_deals,
+        'request_with_backoff',
+        lambda *args, **kwargs: _FakeResponse(_payload()),
+    )
+    first = store_deals.cached_deep_discounts(force=True)
+    assert [row['deal_id'] for row in first] == ['a1', 'b2']
+
+    monkeypatch.setattr(
+        store_deals,
+        'request_with_backoff',
+        lambda *args, **kwargs: _FakeResponse([]),
+    )
+    empty = store_deals.cached_deep_discounts(force=True)
+    assert empty == []
+
+
+def test_below_threshold_pull_clears_snapshot(monkeypatch):
+    _reset_cache()
+    monkeypatch.setattr(
+        store_deals,
+        'request_with_backoff',
+        lambda *args, **kwargs: _FakeResponse(_payload()),
+    )
+    assert store_deals.cached_deep_discounts(force=True)
+
+    mild = [row for row in _payload() if float(row['savings']) < 75]
+    monkeypatch.setattr(
+        store_deals,
+        'request_with_backoff',
+        lambda *args, **kwargs: _FakeResponse(mild),
+    )
+    assert store_deals.cached_deep_discounts(force=True) == []
 
 
 def test_store_deals_row_is_registered():
@@ -78,3 +146,20 @@ def test_store_deals_row_is_registered():
     assert 'store_deals' in _REGISTRY
     spec, _selector = _REGISTRY['store_deals']
     assert spec.item_kind == 'articles'
+
+
+def test_store_deals_scheduler_starts_once(monkeypatch):
+    monkeypatch.setattr(store_deals_poller, '_scheduler_started', False)
+    started = []
+
+    class _FakeThread:
+        def __init__(self, *args, **kwargs):
+            self.kwargs = kwargs
+
+        def start(self):
+            started.append(self.kwargs.get('name'))
+
+    monkeypatch.setattr(store_deals_poller.threading, 'Thread', _FakeThread)
+    store_deals_poller.start_store_deals_scheduler(object())
+    store_deals_poller.start_store_deals_scheduler(object())
+    assert started == ['oneirodex-store-deals']

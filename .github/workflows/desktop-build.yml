@@ -42,9 +42,9 @@ jobs:
         working-directory: clients/desktop/src-tauri
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -71,7 +71,7 @@ jobs:
             file
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -165,9 +165,9 @@ jobs:
               clients/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -197,7 +197,7 @@ jobs:
             file
 
       - name: Cache cargo build
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -226,7 +226,7 @@ jobs:
         run: npm run tauri:build${{ matrix.flavor == 'thin' && ':thin' || '' }} ${{ matrix.extra_args }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: oneirodex-${{ matrix.flavor }}-${{ matrix.label }}
           path: ${{ matrix.artifacts }}

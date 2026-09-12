@@ -85,7 +85,10 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # tighter at rest. od-density.css stopped re-asserting `.od-btn` metrics, which
 # is what made UID-050 possible. A preset still carrying the old copies shows
 # the fused bars and the old fixed-height buttons, so Reset Themes is required.
-GENERATOR_VERSION = 30
+# UID-060: Discovery shelves delete uses the house confirm dialog in theme JS
+# (cannot import frontend/shared). Reset Themes required so the volume copy
+# of discovery_sections.js / admin_discovery_sections.css picks it up.
+GENERATOR_VERSION = 31
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

@@ -76,12 +76,20 @@ typed) matching the `src/types.ts` house style — tighten per group as
   sits on `createBrowserRequester` with `getJson` / `postJson` / `putJson` /
   `patchJson` / `deleteJson` plus `send` (FormData / body-less POST) and
   `sendResult` (4xx without throw). Every `src/api/` JSON wrapper uses those
-  verbs. Typed resource modules (`createCollectionsApi` etc.) are not wired
-  into the SPA yet — same follow-up shape as admin. Still off this path:
-  `preferences.ts` HTML `POST /settings_panel` and `EventSource` streams.
-  Chat / voice / space-rail / PC cheats / related media / loading-icon / the
-  library-scan toast poll now use the same verbs. Vitest mocks need
-  `content-type: application/json` and `.text()` for the same reason admin did.
+  verbs. Still off this path: `preferences.ts` HTML `POST /settings_panel`
+  and `EventSource` streams. Chat / voice / space-rail / PC cheats / related
+  media / loading-icon / the library-scan toast poll now use the same verbs.
+  Vitest mocks need `content-type: application/json` and `.text()` for the
+  same reason admin did.
+- **member collections typed module — done.** `member-app/src/api/collections.ts`
+  CRUD verbs call `createCollectionsApi` through `memberResource` (same
+  requester as `getJson`, not a second `createOneirodexBrowserClient`) and
+  `withMemberError` so pages still catch `errorFromBody`. Exported names and
+  camelCase args (`isPublic`) are unchanged. `searchGames` stays on
+  `getJson /api/search` — browse search is a different group (`createBrowseApi`)
+  and the live `/api/search` body is a JSON array, not the typed
+  `SearchResponse` object. Next group to rewire: pick another covered module
+  from the table above; admin-app hooks are still on `getJson`/`postJson`.
 - Account `uploadAvatar` — done (this PR). Moved from `@oneirodex/ui`'s
   `accountApi.ts` (PR-4 sub-wave d) into `account.ts` here as a multipart
   `FormData` POST; `AccountModal.tsx` now calls it through a scoped

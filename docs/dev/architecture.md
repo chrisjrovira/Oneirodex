@@ -4,28 +4,28 @@ Oneirodex is one Flask app (`oneirodex/`) plus three React SPAs and a typed HTTP
 
 ## Runtime
 
-| Piece | Role |
-|---|---|
-| Flask (`oneirodex/`) | Session cookie, Jinja shells, `/api/**` + `/admin/api/**`, scans, play, social |
-| member-app | Household SPA (`frontend/member-app`) |
-| admin-app | Operator SPA (`frontend/admin-app`) |
-| ops-glance | Ops pulse widgets (`frontend/ops-glance`) |
-| `@oneirodex/api-client` | One requester, two transports (Bearer `gt_…` / browser cookie + CSRF) |
-| `@oneirodex/ui` | Shared chrome, envelope helpers, CSRF lookup |
-| Desktop companion | Tauri client on the Bearer transport |
+| Piece                   | Role                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| Flask (`oneirodex/`)    | Session cookie, Jinja shells, `/api/**` + `/admin/api/**`, scans, play, social |
+| member-app              | Household SPA (`frontend/member-app`)                                          |
+| admin-app               | Operator SPA (`frontend/admin-app`)                                            |
+| ops-glance              | Ops pulse widgets (`frontend/ops-glance`)                                      |
+| `@oneirodex/api-client` | One requester, two transports (Bearer `gt_…` / browser cookie + CSRF)          |
+| `@oneirodex/ui`         | Shared chrome, envelope helpers, CSRF lookup                                   |
+| Desktop companion       | Tauri client on the Bearer transport                                           |
 
 JSON errors go through `api_ok` / `api_error` (`oneirodex/utils/api_response.py`). Eleven sites stay off that helper on purpose — [api-envelope-keeps.md](api-envelope-keeps.md).
 
 ## SPA fetch
 
-Admin, member, and ops sit on `createBrowserRequester`: `credentials: 'include'`, `X-CSRFToken` on mutating verbs, `onUnauthorized` → `/login`. Wrappers keep their exported names; pages are not rewired onto typed `createCollectionsApi` modules yet.
+Admin, member, and ops sit on `createBrowserRequester`: `credentials: 'include'`, `X-CSRFToken` on mutating verbs, `onUnauthorized` → `/login`. Wrappers keep their exported names. Member collections CRUD now calls `createCollectionsApi` through that same requester (`memberResource`); search still uses `getJson` on `/api/search`. Other resource groups still call `getJson`/`postJson` directly.
 
 Member leftovers that are not JSON verbs:
 
 - `preferences.ts` — HTML `POST /settings_panel` (FormData)
 - Activity / scan toasts — `EventSource` (`/api/activity/stream`)
 
-Request bodies adopt `@validate_body` **file-by-file** — [pydantic-adoption.md](pydantic-adoption.md). Do not wrap partial-success batch routes.
+Request bodies adopt `@validate_body` **file-by-file** — [pydantic-adoption.md](pydantic-adoption.md). Partial-success batch routes use `@validate_batch_body` so the 422 keeps `updated` / `skipped` / `errors` / `limit`. Do not wrap those with the flat helper.
 
 ## Identifiers (ADR 0003)
 

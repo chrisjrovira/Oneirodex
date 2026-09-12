@@ -62,6 +62,8 @@ var extraConfigBase = 'rgui_show_start_screen = "false"\nnotification_show_remap
 
 /** Measured display refresh in Hz; null until sampled. */
 var measuredRefreshHz = null;
+/** True once a cfg write included video_refresh_rate (avoids a redundant reload). */
+var refreshRateWritten = false;
 
 /**
  * Measure the display's real refresh rate (GT-B19).
@@ -103,6 +105,33 @@ function measureRefreshHz(callback) {
 	}
 
 	requestAnimationFrame(tick);
+}
+
+/**
+ * Wait until measureRefreshHz has a sample, or maxMs elapses.
+ *
+ * The first retroarch.cfg write used to run while measuredRefreshHz was still
+ * null, so video_refresh_rate never made that file. The sampler only calls
+ * tryApplyConfig when mainCompleted is already true — and afterStart used to
+ * set that flag without applying — so a measurement that finished during the
+ * 1s boot window was dropped and the core stayed on 60Hz.
+ */
+function waitForMeasuredRefresh(maxMs) {
+	return new Promise(function (resolve) {
+		if (measuredRefreshHz != null) {
+			resolve(measuredRefreshHz);
+			return;
+		}
+		var start = Date.now();
+		function poll() {
+			if (measuredRefreshHz != null || (Date.now() - start) >= maxMs) {
+				resolve(measuredRefreshHz);
+				return;
+			}
+			requestAnimationFrame(poll);
+		}
+		requestAnimationFrame(poll);
+	});
 }
 
 /**
@@ -1101,6 +1130,7 @@ keybindTable.onclick = function(e) {
 function tryApplyConfig() {
 	if (mainCompleted) {
 		FS.writeFile("/home/web_user/retroarch/userdata/retroarch.cfg", nulKeys + configObjToStr(savedKeybindsObj) + buildExtraConfig());
+		if (measuredRefreshHz != null) refreshRateWritten = true;
 		Module._cmd_reload_config();
 	}
 }
@@ -1703,6 +1733,10 @@ function writeToFileHandler(path) {
 // runs after emulator starts
 function afterStart() {
 	mainCompleted = true;
+	// Apply a refresh sample that landed after the first cfg write and before
+	// this timeout. Skip when the first write already had the rate — a
+	// needless _cmd_reload_config 1s into play is its own audio hitch.
+	if (measuredRefreshHz != null && !refreshRateWritten) tryApplyConfig();
 	
 	adjustCanvasSize();
 	menuBar.classList.add("show");
@@ -2008,8 +2042,11 @@ function initFromData(data) {
 				log("State imported for " + romName);
 			}
 			
-			// config
+			// config — give the 32-frame sampler a beat so the first write
+			// includes video_refresh_rate when the panel is not 60Hz.
+			await waitForMeasuredRefresh(900);
 			safeWriteFile("/home/web_user/retroarch/userdata/retroarch.cfg", nulKeys + configObjToStr(savedKeybindsObj) + buildExtraConfig());
+			if (measuredRefreshHz != null) refreshRateWritten = true;
 			
 			// get the core options
 			var coreOptionsString = "";

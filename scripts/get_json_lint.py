@@ -1,39 +1,34 @@
 #!/usr/bin/env python3
-"""``print()`` ratchet for the Oneirodex backend.
+"""``request.get_json`` ratchet for Oneirodex routes.
 
 Why this exists
 ---------------
-The backend shipped with no logging configuration and ~800 ``print()`` call
-sites across ``oneirodex/`` and ``scripts/``. On Unraid that is an
-unstructured, un-levelled, un-greppable stream on stdout, and every new route
-reaches for ``print`` because the file next to it already does.
+Named-field JSON bodies adopt ``@validate_body`` / ``@validate_batch_body``
+file-by-file. A grep census of ``request.get_json(`` is how we know what is
+left, but a census that is not a gate grows back the moment someone copies
+the three-line pattern into a new route.
 
-``oneirodex/utils/logging_setup.py`` gives the backend a real logging config.
-This is the ratchet that stops the ``print`` count climbing back up while the
-migration happens file by file — the exact model ``scripts/api_envelope_lint.py``
-uses for the JSON envelope: existing call sites are recorded per file, a file
-may never exceed its recorded count, and a file with no record may have none.
+This is the same per-file ratchet as ``scripts/print_lint.py``: existing
+call sites are recorded, a file may never exceed its recorded count, and a
+file with no record may have none.
 
 What counts as a violation
 --------------------------
-A call to the builtin ``print`` — ``ast.Call`` whose ``func`` is the bare name
-``print``. ``logging`` calls, ``pprint(...)``, ``obj.print(...)`` and the string
-``"print("`` inside a literal or comment are **not** counted (this is an AST
-walk, not a grep).
+An AST ``request.get_json(...)`` call. Docstring examples, comments, and
+``obj.get_json(...)`` on something other than the name ``request`` are
+**not** counted.
 
 Scope
 -----
-``oneirodex/**/*.py`` and the top level of ``scripts/*.py``. ``tests/`` is out
-of scope (assertions and fixtures print freely). ``oneirodex/updateschema.py``
-and ``scripts/get_json_lint.py`` are excluded: the former is an operator-run
-migration whose progress ``print``s are its interface; the latter is a CLI
-ratchet whose report is stdout.
+``oneirodex/**/*.py``. ``tests/`` and ``scripts/`` are out of scope.
+``oneirodex/utils/validation.py`` is in scope — it is the decorator helper
+and is allowed its recorded count (the shared ``_json_object`` reader).
 
 Usage
 -----
-    python scripts/print_lint.py            # check (exit 1 on regression)
-    python scripts/print_lint.py --list     # show every call site it finds
-    python scripts/print_lint.py --update   # re-record after a reduction
+    python scripts/get_json_lint.py            # check (exit 1 on regression)
+    python scripts/get_json_lint.py --list     # show every call site it finds
+    python scripts/get_json_lint.py --update   # re-record after a reduction
 """
 
 from __future__ import annotations
@@ -46,19 +41,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-BASELINE_PATH = REPO_ROOT / "scripts" / "print_lint.baseline.json"
+BASELINE_PATH = REPO_ROOT / "scripts" / "get_json_lint.baseline.json"
 
-#: Trees whose ``print()`` output should become ``logging``.
 SCAN_ROOTS = ["oneirodex"]
-
-#: ``scripts/`` is scanned one level deep only (no nested tooling packages).
-SCRIPT_GLOB = "scripts/*.py"
-
-#: Files that legitimately keep ``print`` as their interface.
-EXEMPT = {
-    "oneirodex/updateschema.py",  # operator-run migration; progress print is UX
-    "scripts/get_json_lint.py",  # CLI ratchet; stdout is the report
-}
 
 
 def _read_source(path: Path) -> str:
@@ -81,29 +66,28 @@ def iter_python_files(root: Path):
 def _iter_target_files():
     for root in SCAN_ROOTS:
         yield from iter_python_files(REPO_ROOT / root)
-    yield from sorted((REPO_ROOT).glob(SCRIPT_GLOB))
 
 
-def _print_call_lines(tree: ast.AST) -> list[int]:
-    """Line numbers of every ``print(...)`` builtin call in the tree."""
+def _get_json_call_lines(tree: ast.AST) -> list[int]:
+    """Line numbers of every ``request.get_json(...)`` call in the tree."""
     lines: list[int] = []
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "print"
-        ):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+            continue
+        if node.func.attr != "get_json":
+            continue
+        if isinstance(node.func.value, ast.Name) and node.func.value.id == "request":
             lines.append(node.lineno)
     return sorted(lines)
 
 
-def count_print_calls(path: Path) -> int:
+def count_get_json_calls(path: Path) -> int:
     """Single-file count. Takes any path (the tests hand it temp files)."""
     try:
         tree = ast.parse(_read_source(path))
     except (SyntaxError, UnicodeDecodeError):
         return 0
-    return len(_print_call_lines(tree))
+    return len(_get_json_call_lines(tree))
 
 
 def scan(details: dict[str, list[int]] | None = None) -> dict[str, int]:
@@ -111,14 +95,14 @@ def scan(details: dict[str, list[int]] | None = None) -> dict[str, int]:
     seen: set[str] = set()
     for path in _iter_target_files():
         rel = path.relative_to(REPO_ROOT).as_posix()
-        if rel in seen or rel in EXEMPT:
+        if rel in seen:
             continue
         seen.add(rel)
         try:
             tree = ast.parse(_read_source(path))
         except (SyntaxError, UnicodeDecodeError):
             continue
-        found = _print_call_lines(tree)
+        found = _get_json_call_lines(tree)
         if found:
             counts[rel] = len(found)
             if details is not None:
@@ -150,7 +134,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--update", action="store_true", help="re-record the baseline")
     parser.add_argument(
-        "--list", action="store_true", help="print every call site found"
+        "--list", action="store_true", help="print every call site it finds"
     )
     args = parser.parse_args()
 
@@ -163,7 +147,7 @@ def main() -> int:
             print(f"{file}")
             for line in details[file]:
                 print(f"  {file}:{line}")
-        print(f"\nprint-lint: {total} call sites across {len(counts)} files.")
+        print(f"\nget_json-lint: {total} call sites across {len(counts)} files.")
         return 0
 
     if args.update:
@@ -172,7 +156,7 @@ def main() -> int:
             encoding="utf-8",
         )
         print(
-            f"print-lint: recorded {total} existing call sites "
+            f"get_json-lint: recorded {total} existing call sites "
             f"across {len(counts)} files."
         )
         return 0
@@ -181,28 +165,28 @@ def main() -> int:
     regressions, improvements = compare(counts, baseline)
 
     if regressions:
-        print("print-lint: new print() call sites\n")
+        print("get_json-lint: new request.get_json() call sites\n")
         for file, found, allowed in regressions:
             print(f"  {file}: {found} > {allowed} allowed")
             for line in details.get(file, []):
                 print(f"      {file}:{line}")
         print(
-            "\nUse logging instead: `logger = logging.getLogger(__name__)` at module\n"
-            "level, then logger.info()/warning()/error(). Config lives in\n"
-            "oneirodex/utils/logging_setup.py. If a reduction elsewhere makes this\n"
-            "unavoidable, re-record: python scripts/print_lint.py --update"
+            "\nNew JSON POST/PUT/PATCH bodies use @validate_body / "
+            "@validate_batch_body (docs/dev/pydantic-adoption.md).\n"
+            "If a reduction elsewhere makes this unavoidable, re-record:\n"
+            "  python scripts/get_json_lint.py --update"
         )
         return 1
 
     if improvements:
         print(
-            f"print-lint: OK ({total} known call sites, "
+            f"get_json-lint: OK ({total} known call sites, "
             f"{len(improvements)} file(s) below baseline)."
         )
-        print("  Baseline can be tightened: python scripts/print_lint.py --update")
+        print("  Baseline can be tightened: python scripts/get_json_lint.py --update")
         return 0
 
-    print(f"print-lint: OK ({total} known call sites, none new).")
+    print(f"get_json-lint: OK ({total} known call sites, none new).")
     return 0
 
 
