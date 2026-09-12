@@ -1,25 +1,25 @@
-import { deleteJson, getJson, patchJson, postJson, putJson } from './client'
+import { createCollectionsApi } from '@oneirodex/api-client'
+
+import { getJson, memberResource, withMemberError } from './client'
+
+const collections = memberResource(createCollectionsApi)
 
 export async function fetchCollections({ signal }: LooseProps = {}) {
-  return getJson('/api/collections', { signal, label: 'collections' })
+  return withMemberError(collections.list(signal), 'collections')
 }
 
 export async function fetchCollection(collectionUuid: any, { signal }: LooseProps = {}) {
-  return getJson(`/api/collections/${encodeURIComponent(collectionUuid)}`, {
-    signal,
-    label: 'collection',
-  })
+  return withMemberError(collections.get(collectionUuid, signal), 'collection')
 }
 
 export async function createCollection({ name, description = '', isPublic = true }: LooseProps) {
-  return postJson(
-    '/api/collections',
-    {
+  return withMemberError(
+    collections.create({
       name,
       description,
       is_public: isPublic,
-    },
-    { label: 'create_collection' },
+    }),
+    'create_collection',
   )
 }
 
@@ -38,39 +38,26 @@ export async function updateCollection(
     body.is_public = isPublic
   }
 
-  return patchJson(`/api/collections/${encodeURIComponent(collectionUuid)}`, body, {
-    label: 'update_collection',
-  })
+  return withMemberError(collections.update(collectionUuid, body), 'update_collection')
 }
 
 export async function deleteCollection(collectionUuid: any) {
-  return deleteJson(`/api/collections/${encodeURIComponent(collectionUuid)}`, undefined, {
-    label: 'delete_collection',
-  })
+  return withMemberError(collections.remove(collectionUuid), 'delete_collection')
 }
 
 export async function reorderCollectionItems(collectionUuid: any, gameUuids: any) {
-  return putJson(
-    `/api/collections/${encodeURIComponent(collectionUuid)}/items/order`,
-    { game_uuids: gameUuids },
-    { label: 'reorder_collection_items' },
+  return withMemberError(
+    collections.reorderItems(collectionUuid, gameUuids),
+    'reorder_collection_items',
   )
 }
 
 export async function addCollectionItem(collectionUuid: any, gameUuid: any) {
-  return postJson(
-    `/api/collections/${encodeURIComponent(collectionUuid)}/items`,
-    { game_uuid: gameUuid },
-    { label: 'add_collection_item' },
-  )
+  return withMemberError(collections.addItem(collectionUuid, gameUuid), 'add_collection_item')
 }
 
 export async function removeCollectionItem(collectionUuid: any, gameUuid: any) {
-  return deleteJson(
-    `/api/collections/${encodeURIComponent(collectionUuid)}/items/${encodeURIComponent(gameUuid)}`,
-    undefined,
-    { label: 'remove_collection_item' },
-  )
+  return withMemberError(collections.removeItem(collectionUuid, gameUuid), 'remove_collection_item')
 }
 
 export async function searchGames(query: any, { signal, limit = 20 }: LooseProps = {}) {
