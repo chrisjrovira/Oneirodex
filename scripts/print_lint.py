@@ -25,8 +25,9 @@ Scope
 -----
 ``oneirodex/**/*.py`` and the top level of ``scripts/*.py``. ``tests/`` is out
 of scope (assertions and fixtures print freely). ``oneirodex/updateschema.py``
-is excluded: it is an operator-run migration script whose progress ``print``s
-are its interface, not stray debug output.
+and ``scripts/get_json_lint.py`` are excluded: the former is an operator-run
+migration whose progress ``print``s are its interface; the latter is a CLI
+ratchet whose report is stdout.
 
 Usage
 -----
@@ -56,6 +57,7 @@ SCRIPT_GLOB = "scripts/*.py"
 #: Files that legitimately keep ``print`` as their interface.
 EXEMPT = {
     "oneirodex/updateschema.py",  # operator-run migration; progress print is UX
+    "scripts/get_json_lint.py",  # CLI ratchet; stdout is the report
 }
 
 

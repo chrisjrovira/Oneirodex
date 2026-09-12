@@ -72,6 +72,11 @@ def test_updateschema_is_exempt():
     assert "oneirodex/updateschema.py" in lint.EXEMPT
 
 
+def test_get_json_lint_is_exempt():
+    """CLI ratchet; its print() calls are the report, not stray debug."""
+    assert "scripts/get_json_lint.py" in lint.EXEMPT
+
+
 def test_baseline_exists_and_is_sorted():
     raw = (ROOT / "scripts" / "print_lint.baseline.json").read_text(encoding="utf-8")
     data = json.loads(raw)
