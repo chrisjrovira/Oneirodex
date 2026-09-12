@@ -6,14 +6,16 @@
  * `createBrowserRequester` already provides what each `src/api/` module used
  * to do by hand: `credentials: 'include'`, `X-CSRFToken` on mutating verbs
  * (from the injected `getCsrfToken`), and `onUnauthorized()` on a 401.
- * Wrappers keep their exported names so pages do not move.
+ * Wrappers keep their exported names so pages do not move. Typed resource
+ * modules bind with `memberResource(create*Api)` + `withMemberError` so they
+ * share this requester and still throw `errorFromBody`.
  *
  * 401 from modules not yet on these verbs still goes through
  * `installUnauthorizedRedirect` in `http.ts`. FormData and “return ok
  * rather than throw” paths use `send` / `sendResult`.
  */
 import { getCsrfToken, errorFromBody } from '@oneirodex/ui'
-import { createBrowserRequester, OneirodexApiError } from '@oneirodex/api-client'
+import { createBrowserRequester, OneirodexApiError, type Requester } from '@oneirodex/api-client'
 
 const request = createBrowserRequester({
   baseUrl: '',
@@ -48,6 +50,24 @@ function rethrowAsMemberError(err: unknown, label: string): never {
     throw errorFromBody(data, err.status, label)
   }
   throw err
+}
+
+/**
+ * Bind one typed `create*Api` factory to the shared browser requester so a
+ * resource module does not stand up a second transport (and does not pull the
+ * whole composed client into the member bundle).
+ */
+export function memberResource<T>(factory: (request: Requester) => T): T {
+  return factory(request)
+}
+
+/** Map `OneirodexApiError` onto the `errorFromBody` shape pages already catch. */
+export async function withMemberError<T>(work: Promise<T>, label: string): Promise<T> {
+  try {
+    return await work
+  } catch (err) {
+    return rethrowAsMemberError(err, label)
+  }
 }
 
 export async function getJson(url: string, { signal, label }: VerbOpts = {}) {
