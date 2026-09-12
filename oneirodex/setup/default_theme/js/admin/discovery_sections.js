@@ -1,3 +1,125 @@
+/**
+ * Classic-theme copy of frontend/shared confirmAction (UID-060 / UID-042).
+ *
+ * This file cannot import `@oneirodex/ui` — it is theme JS served from the
+ * library volume and only refreshes on Reset Themes. Keep the dialog in
+ * lockstep with the SPA: named buttons, danger tone, Cancel focused,
+ * Escape / backdrop / focus trap / focus restore. Typed acknowledgement
+ * stays on factory reset only.
+ */
+var odThemeConfirmOpen = null;
+
+function odThemeConfirm(opts) {
+    opts = opts || {};
+    if (typeof document === 'undefined') return Promise.resolve(false);
+    if (odThemeConfirmOpen) return Promise.resolve(false);
+
+    var title = opts.title || 'Are you sure?';
+    var body = opts.body || '';
+    var confirmLabel = opts.confirmLabel || 'Confirm';
+    var cancelLabel = opts.cancelLabel || 'Cancel';
+    var tone = opts.tone === 'neutral' ? 'neutral' : 'danger';
+    var focusableSel =
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    return new Promise(function (resolve) {
+        var returnFocusTo = document.activeElement;
+        var previousOverflow = document.body.style.overflow;
+
+        var backdrop = document.createElement('div');
+        backdrop.className = 'od-confirm';
+
+        var panel = document.createElement('div');
+        panel.className =
+            'od-confirm__panel od-confirm__panel--' + (tone === 'danger' ? 'danger' : 'neutral');
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-modal', 'true');
+
+        var titleId = 'od-confirm-title-' + Date.now().toString(36);
+        var heading = document.createElement('h2');
+        heading.className = 'od-confirm__title';
+        heading.id = titleId;
+        heading.textContent = title;
+        panel.setAttribute('aria-labelledby', titleId);
+        panel.appendChild(heading);
+
+        var paragraphs = Array.isArray(body) ? body : [body];
+        var bodyId = titleId + '-body';
+        var wroteBody = false;
+        paragraphs.forEach(function (text, index) {
+            if (!text) return;
+            var p = document.createElement('p');
+            p.className = 'od-confirm__body';
+            if (index === 0) p.id = bodyId;
+            p.textContent = text;
+            panel.appendChild(p);
+            wroteBody = true;
+        });
+        if (wroteBody) panel.setAttribute('aria-describedby', bodyId);
+
+        var actions = document.createElement('div');
+        actions.className = 'od-confirm__actions';
+
+        var cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'od-btn';
+        cancel.textContent = cancelLabel;
+
+        var confirmBtn = document.createElement('button');
+        confirmBtn.type = 'button';
+        confirmBtn.className = tone === 'danger' ? 'od-btn od-btn--danger' : 'od-btn od-btn--primary';
+        confirmBtn.textContent = confirmLabel;
+
+        actions.append(cancel, confirmBtn);
+        panel.appendChild(actions);
+        backdrop.appendChild(panel);
+
+        function close(answer) {
+            document.removeEventListener('keydown', onKeyDown, true);
+            backdrop.remove();
+            document.body.style.overflow = previousOverflow;
+            odThemeConfirmOpen = null;
+            if (returnFocusTo && typeof returnFocusTo.focus === 'function') {
+                returnFocusTo.focus();
+            }
+            resolve(answer);
+        }
+
+        function onKeyDown(event) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                close(false);
+                return;
+            }
+            if (event.key !== 'Tab') return;
+            var focusable = Array.prototype.slice.call(panel.querySelectorAll(focusableSel));
+            if (!focusable.length) return;
+            var first = focusable[0];
+            var last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+
+        cancel.addEventListener('click', function () { close(false); });
+        confirmBtn.addEventListener('click', function () { close(true); });
+        backdrop.addEventListener('click', function (event) {
+            if (event.target === backdrop) close(false);
+        });
+        document.addEventListener('keydown', onKeyDown, true);
+
+        document.body.appendChild(backdrop);
+        document.body.style.overflow = 'hidden';
+        odThemeConfirmOpen = backdrop;
+        if (tone === 'danger') cancel.focus();
+        else confirmBtn.focus();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const sectionsList = document.getElementById('discovery-sections-list');
 
@@ -312,25 +434,32 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const sectionId = this.dataset.sectionId;
             const item = this.closest('.section-item');
-            const name = item ? item.dataset.sectionName : 'this zone';
-            if (!confirm(`Delete discovery shelf "${name}"? This cannot be undone.`)) return;
+            const name = item ? item.dataset.sectionName : 'this shelf';
+            odThemeConfirm({
+                title: 'Delete this shelf?',
+                body: 'Delete discovery shelf "' + name + '"? This cannot be undone.',
+                confirmLabel: 'Delete shelf',
+                tone: 'danger',
+            }).then(function (ok) {
+                if (!ok) return;
 
-            fetch(`/admin/api/discovery_sections/${sectionId}`, {
-                method: 'DELETE',
-                headers: CSRFUtils.getHeaders({ 'Content-Type': 'application/json' }),
-            })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    $.notify('Shelf deleted', 'success');
-                    if (item) item.remove();
-                } else {
-                    $.notify('Failed to delete shelf: ' + (data.error || 'Unknown error'), 'error');
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                $.notify('Error deleting shelf', 'error');
+                fetch(`/admin/api/discovery_sections/${sectionId}`, {
+                    method: 'DELETE',
+                    headers: CSRFUtils.getHeaders({ 'Content-Type': 'application/json' }),
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        $.notify('Shelf deleted', 'success');
+                        if (item) item.remove();
+                    } else {
+                        $.notify('Failed to delete shelf: ' + (data.error || 'Unknown error'), 'error');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    $.notify('Error deleting shelf', 'error');
+                });
             });
         });
     });

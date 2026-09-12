@@ -1,6 +1,6 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 28** in `oneirodex/utils/preset_themes.py` (edge-tile hover clip-margin; prior 27 = Catalog Grid shelves skip Tile pullback). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
+Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 31** in `oneirodex/utils/preset_themes.py` (UID-060 house confirm on Discovery shelves delete; prior 30 = admin "custom zone" → shelf copy). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
 
 ## Default look
 

@@ -52,3 +52,27 @@ def test_library_game_grid_stays_auto_fill():
         'library grid must keep CSS auto-fill (multiline repeat() still counts)'
     )
     assert 'do NOT change this to auto-fit' in src
+
+
+def test_discovery_shelf_delete_uses_house_confirm_not_window_confirm():
+    """UID-060: theme JS cannot import frontend/shared, so the house dialog
+    is copied into this file. A `confirm(` here is the browser OK/Cancel
+    UID-042 already retired everywhere else."""
+    src = (THEME_JS / 'admin' / 'discovery_sections.js').read_text(encoding='utf-8')
+    css = (
+        ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'admin'
+        / 'admin_discovery_sections.css'
+    ).read_text(encoding='utf-8')
+    assert 'function odThemeConfirm' in src
+    assert 'odThemeConfirm({' in src
+    assert 'window.confirm' not in src
+    stripped = (
+        src.replace('odThemeConfirm', '')
+        .replace('confirmLabel', '')
+        .replace('confirmBtn', '')
+    )
+    assert 'confirm(' not in stripped
+    assert '.od-confirm' in css
+    assert '.od-confirm__panel--danger' in css
+    assert 'od-btn--danger' in src
+    assert 'Delete shelf' in src
