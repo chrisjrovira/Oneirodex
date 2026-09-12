@@ -18,6 +18,7 @@ Do these **before** and **after** every Unraid `git pull` / image rebuild. Agent
 2. Admin → Themes → **Reset Default Themes** (library volume theme CSS/JS lag the image) — [themes-reset.md](../admin/themes-reset.md)
 3. Confirm the image rebuilt **`frontend/member-app` dist** (`member-app.css` / `.js` in View Source). Reset Themes alone does **not** refresh the SPA bundle
 4. Reload the browser normally; smoke Discover/Library + Admin Ops glance
+5. **Deep discounts:** Discover → Elsewhere (or the Deep discounts shelf). CheapShark is public HTTPS (`www.cheapshark.com`); the container must be allowed outbound. Init seeds `store_deals` if missing. An empty shelf is honest when the pull succeeded and nothing is ≥75% off — not a missing seed. A failed pull (generic User-Agent 400, timeout) keeps the last snapshot instead of hiding the shelf. No Reset Themes needed for this shelf.
 
 > Step 4 used to read "hard-refresh". It no longer needs to: theme URLs are versioned by mtime+size
 > and `/static/library/themes/` serves `no-cache`, so a reset is visible on an ordinary reload. If a

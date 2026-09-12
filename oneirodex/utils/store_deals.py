@@ -22,6 +22,10 @@ CHEAPSHARK_DEALS_URL = 'https://www.cheapshark.com/api/1.0/deals'
 CHEAPSHARK_STORE_IDS = '1,7,11,25'
 MIN_SAVINGS_PERCENT = 75.0
 CACHE_TTL_SEC = 900
+# CheapShark 400s python-requests / curl default UAs. Same house string as
+# Giant Bomb / secondary scrapers.
+USER_AGENT = 'Oneirodex/1.0 (self-hosted library)'
+# Their Savings sort treats desc=0 as steepest-first. desc=1 returns 0% off.
 
 _STORE_BY_ID = {
     '1': 'steam',
@@ -42,8 +46,12 @@ def fetch_cheapshark_deals(
     *,
     min_savings: float = MIN_SAVINGS_PERCENT,
     page_size: int = 60,
-) -> list[dict[str, Any]]:
-    """Live CheapShark deals at or above ``min_savings`` percent off."""
+) -> list[dict[str, Any]] | None:
+    """Live CheapShark deals at or above ``min_savings`` percent off.
+
+    ``None`` is a transport or parse failure. An empty list is an honest
+    pull with no qualifying deals.
+    """
     response = request_with_backoff(
         CHEAPSHARK_DEALS_URL,
         host_key='cheapshark',
@@ -51,19 +59,20 @@ def fetch_cheapshark_deals(
             'storeID': CHEAPSHARK_STORE_IDS,
             'pageSize': str(page_size),
             'sortBy': 'Savings',
-            'desc': '1',
+            'desc': '0',
         },
         timeout=8,
         max_retries=2,
+        headers={'User-Agent': USER_AGENT},
     )
     if response is None:
-        return []
+        return None
     try:
         payload = response.json()
     except ValueError:
-        return []
+        return None
     if not isinstance(payload, list):
-        return []
+        return None
 
     out: list[dict[str, Any]] = []
     for row in payload:
@@ -100,13 +109,28 @@ def fetch_cheapshark_deals(
 def cached_deep_discounts(*, force: bool = False) -> list[dict[str, Any]]:
     now = time.monotonic()
     with _cache_lock:
-        if not force and _cache['rows'] and (now - float(_cache['at'])) < CACHE_TTL_SEC:
-            return list(_cache['rows'])
-    rows = fetch_cheapshark_deals()
+        rows = list(_cache['rows'])
+        age = now - float(_cache['at'])
+        if not force and rows and age < CACHE_TTL_SEC:
+            return rows
+    fetched = fetch_cheapshark_deals()
     with _cache_lock:
+        if fetched is None:
+            # CheapShark 400/timeout must not wipe a good snapshot, or
+            # Discover hides the shelf until the next successful poll.
+            if _cache['rows']:
+                return list(_cache['rows'])
+            _cache['at'] = time.monotonic()
+            _cache['rows'] = []
+            return []
         _cache['at'] = time.monotonic()
-        _cache['rows'] = list(rows)
-    return list(rows)
+        _cache['rows'] = list(fetched)
+        return list(fetched)
+
+
+def refresh_deep_discounts() -> int:
+    """Force a CheapShark pull. Used by the boot poller."""
+    return len(cached_deep_discounts(force=True))
 
 
 def _owned_keys(user) -> tuple[set[tuple[str, str]], set[str]]:
