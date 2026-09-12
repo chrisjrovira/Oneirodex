@@ -31,6 +31,11 @@ export default [
       '**/build/**',
       '**/coverage/**',
       '**/node_modules/**',
+      // Local Python virtualenvs ship bundled JS (werkzeug debugger, urllib3
+      // emscripten worker) that `eslint .` would otherwise lint. CI has no venv;
+      // ignore it so `npm run lint` matches CI when run in a dev checkout.
+      '**/venv/**',
+      '**/.venv/**',
       '**/*.min.js',
       'oneirodex/**',
       'scripts/**',

@@ -22,8 +22,11 @@ if ! command -v "/usr/lib/postgresql/${PG_VERSION}/bin/postgres" >/dev/null 2>&1
   sudo apt-get install -y "postgresql-${PG_VERSION}" "postgresql-client-${PG_VERSION}"
 fi
 
-# Python venv + native build headers for psycopg2/argon2/cffi.
-sudo apt-get install -y python3.12-venv python3-dev build-essential libpq-dev
+# Python venv + native build headers for psycopg2/argon2/cffi, plus the archive
+# backends (bsdtar / 7z) the app uses to extract .rar/.7z ROMs — parity with the
+# runtime Dockerfile (libarchive-tools + p7zip-full).
+sudo apt-get install -y python3.12-venv python3-dev build-essential libpq-dev \
+  libarchive-tools p7zip-full
 
 echo "==> Starting PostgreSQL cluster"
 sudo pg_ctlcluster "${PG_VERSION}" main start || true
@@ -78,8 +81,12 @@ pip install -r requirements-dev.txt
 
 echo "==> Frontend dependencies + SPA builds"
 npm ci
+# api-client is a workspace dependency of the SPAs; build it first. member-app,
+# admin-app, and ops-glance are the three bundles the runtime Dockerfile ships to
+# oneirodex/static/dist/ and the Flask app serves.
 npm run build --workspace frontend/api-client
 npm run build --workspace frontend/member-app
 npm run build --workspace frontend/admin-app
+npm run build --workspace frontend/ops-glance
 
 echo "==> Install complete"
