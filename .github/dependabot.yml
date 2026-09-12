@@ -1,10 +1,8 @@
 # Dependabot — weekly dependency updates.
-# Each `directory` entry is grouped so it produces at most one PR per run —
-# minor, patch AND major bumps are bundled together now (npm splits only
-# production vs development deps). This keeps review volume sane; the tradeoff
-# is that a grouped PR can carry a breaking major, so review the grouped PR
-# carefully before merging and split it by hand if a single major needs a
-# closer look.
+# Each `directory` entry is grouped so it produces at most one PR per ecosystem
+# run (npm splits production vs development). Majors are off for npm — vite /
+# vitest / typescript majors need a deliberate upgrade PR, not a weekly grouper.
+# Pip and GitHub Actions still allow majors (security / runner bumps).
 version: 2
 updates:
   # --- Python (root requirements*.txt / requirements-dev.txt) ---
@@ -12,7 +10,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       python-all:
         patterns:
@@ -22,88 +20,88 @@ updates:
           - patch
           - major
 
-  # --- Frontend SPAs + shared packages ---
+  # --- Frontend SPAs + shared packages (minor/patch only) ---
   - package-ecosystem: npm
     directory: "/frontend/member-app"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       production-dependencies:
         dependency-type: "production"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
       development-dependencies:
         dependency-type: "development"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: npm
     directory: "/frontend/admin-app"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       production-dependencies:
         dependency-type: "production"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
       development-dependencies:
         dependency-type: "development"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: npm
     directory: "/frontend/ops-glance"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       production-dependencies:
         dependency-type: "production"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
       development-dependencies:
         dependency-type: "development"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: npm
     directory: "/frontend/api-client"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       production-dependencies:
         dependency-type: "production"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
       development-dependencies:
         dependency-type: "development"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: npm
     directory: "/clients/desktop"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       production-dependencies:
         dependency-type: "production"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
       development-dependencies:
         dependency-type: "development"
         patterns: ["*"]
-        update-types: ["minor", "patch", "major"]
+        update-types: ["minor", "patch"]
 
   # --- GitHub Actions used by the workflows ---
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     groups:
       actions-all:
         patterns:
