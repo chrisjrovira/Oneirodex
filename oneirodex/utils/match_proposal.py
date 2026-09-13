@@ -29,6 +29,8 @@ MATCH_REASON_SUMMARIES = {
     'title_vs_folder': 'Folder title matches an existing library game folder',
     'title_vs_library_name': 'Folder title matches an existing library game name',
     'title_below_threshold': 'IGDB already used by a differently titled folder',
+    'cross_system': 'Same IGDB id exists on a different system — not a duplicate',
+    'region_mismatch': 'Same system, different ROM region — not a duplicate',
     # W22-M5 — UPDATE packaging / bare update-package folders
     'update_package_folder': (
         'Folder name looks like an update or patch package, not a separate game title.'

@@ -68,7 +68,16 @@ from oneirodex.utils.metadata_enrichment import apply_enriched_metadata
 from oneirodex.utils.notifications import notify_admins_new_game
 from oneirodex.utils.scanning import log_unmatched_folder, delete_game_images
 from oneirodex.utils.event_logging import log_system_event
-from oneirodex.utils.duplicate_check import explain_duplicate_match, should_mark_as_duplicate
+from oneirodex.utils.duplicate_check import (
+    explain_duplicate_match,
+    normalize_rom_region,
+    same_duplicate_scope,
+    should_mark_as_duplicate,
+)
+
+# Sentinel: IGDB id is taken by another system/region — caller should import
+# without the unique igdb_id/slug (title-group browse still pairs the editions).
+IMPORT_CROSS_SYSTEM_EDITION = 'import_cross_system_edition'
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -103,6 +112,12 @@ __all__ = [
 ]
 
 
+def _peel_rom_region(peel) -> str | None:
+    if not isinstance(peel, dict):
+        return None
+    return normalize_rom_region(peel.get('rom_region'))
+
+
 def handle_existing_igdb_collision(
     *,
     existing_game,
@@ -115,17 +130,50 @@ def handle_existing_igdb_collision(
     steam_title=None,
     match_policy=None,
     peel=None,
+    library=None,
 ):
     """
     Same IGDB ID already in library. Mark Duplicate only for true title/path
-    copies; otherwise Unmatched + proposal so remasters/collections can be reviewed.
+    copies on the **same system + region**; otherwise Unmatched + proposal so
+    remasters/collections can be reviewed.
+
+    Cross-system (or different known ROM region) collisions return
+    ``IMPORT_CROSS_SYSTEM_EDITION`` so the caller can import a separate Game
+    without the unique igdb_id/slug — browse title-grouping pairs the editions.
 
     BE-DET-5: when both sides are clear multi-disc siblings (same cleaned title,
     different disc index), attach the new path as a disc GameExtra and return
     the existing Game (no second Game, no Duplicate trail).
 
-    Returns existing Game on multi-disc attach; None when caller should abort import.
+    Returns existing Game on multi-disc attach; IMPORT_CROSS_SYSTEM_EDITION when
+    the caller should import without IGDB id; None when caller should abort.
     """
+    scan_library = library
+    if scan_library is None and library_uuid:
+        scan_library = db.session.execute(
+            select(Library).filter_by(uuid=library_uuid)
+        ).scalar_one_or_none()
+    new_region = _peel_rom_region(peel)
+    if new_region is None:
+        from oneirodex.utils.rom_language import parse_rom_language_tags
+
+        new_region = normalize_rom_region(
+            parse_rom_language_tags(full_disk_path or game_name).get('rom_region')
+        )
+
+    if not same_duplicate_scope(
+        existing_game,
+        new_platform=getattr(scan_library, 'platform', None),
+        new_library_uuid=library_uuid,
+        new_rom_region=new_region,
+    ):
+        logger.info(
+            f"IGDB ID {igdb_id} already used by '{existing_game.name}' "
+            f"({existing_game.full_disk_path}) on another system/region — "
+            f"importing '{game_name}' as a cross-system edition (no shared igdb_id)."
+        )
+        return IMPORT_CROSS_SYSTEM_EDITION
+
     # BE-DET-5 — clear multi-disc sibling → one Game + disc index (not N Games).
     try:
         from oneirodex.utils.multi_disc import try_attach_multi_disc_sibling
@@ -147,11 +195,24 @@ def handle_existing_igdb_collision(
 
     policy = match_policy if isinstance(match_policy, dict) else resolve_scan_match_policy()
     dupe_thr = policy.get('dupe_title_threshold')
+    scope_kwargs = {
+        'new_platform': getattr(scan_library, 'platform', None),
+        'new_library_uuid': library_uuid,
+        'new_rom_region': new_region,
+    }
     if should_mark_as_duplicate(
-        existing_game, full_disk_path, game_name, title_threshold=dupe_thr,
+        existing_game,
+        full_disk_path,
+        game_name,
+        title_threshold=dupe_thr,
+        **scope_kwargs,
     ):
         match = explain_duplicate_match(
-            existing_game, full_disk_path, game_name, title_threshold=dupe_thr,
+            existing_game,
+            full_disk_path,
+            game_name,
+            title_threshold=dupe_thr,
+            **scope_kwargs,
         )
         logger.info(
             f"Duplicate folder for IGDB ID {igdb_id}: "
@@ -200,6 +261,14 @@ def handle_existing_igdb_collision(
     except Exception as proposal_err:
         logger.warning(f"⚠️ Failed to write collision proposal for {full_disk_path}: {proposal_err}")
     return None
+
+
+def _strip_unique_igdb_identity(game_data: dict) -> dict:
+    """Copy IGDB payload without unique igdb_id/slug so a cross-system edition can import."""
+    payload = dict(game_data)
+    payload.pop('id', None)
+    payload.pop('slug', None)
+    return payload
 
 
 def is_propose_only_scan(settings):
@@ -331,9 +400,12 @@ def create_game_instance(
             videos_comma_separated = ""
             
         logger.info(f"create_game_instance Creating game instance for '{game_data.get('name')}' with UUID: {game_data.get('id')} in library '{library.name}' on platform '{library.platform.name}'.")
+        igdb_id = game_data.get('id')
+        # Cross-system editions import without igdb_id/slug — both columns are unique.
+        slug = game_data.get('slug') if igdb_id is not None else None
         new_game = Game(
             library_uuid=library_uuid,
-            igdb_id=game_data['id'],
+            igdb_id=igdb_id,
             name=game_data['name'],
             summary=game_data.get('summary'),
             storyline=game_data.get('storyline'),
@@ -343,7 +415,7 @@ def create_game_instance(
             aggregated_rating_count=game_data.get('aggregated_rating_count'),
             rating=game_data.get('rating'),
             rating_count=game_data.get('rating_count'),
-            slug=game_data.get('slug'),
+            slug=slug,
             status=status_enum,
             category=category_enum,
             total_rating=game_data.get('total_rating'),
@@ -393,7 +465,8 @@ def create_game_instance(
             upsert_releases_from_igdb_payload(platform_key or '', game_data)
         except Exception as catalog_err:  # noqa: BLE001 — cache must not fail the scan
             logger.warning(f"create_game_instance licensed catalog cache skipped: {catalog_err}")
-        fetch_and_store_game_urls(new_game.uuid, game_data['id'])
+        if igdb_id is not None:
+            fetch_and_store_game_urls(new_game.uuid, igdb_id)
         logger.info(f"create_game_instance Finished processing game '{new_game.name}'. URLs (if any) have been fetched and stored.")
         
     except Exception as e:
@@ -531,8 +604,9 @@ def retrieve_and_save_game(
                     select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)
                 ).scalar_one_or_none()
 
+                game_payload = response_json[0]
                 if existing_game_with_same_igdb_id:
-                    return handle_existing_igdb_collision(
+                    collision = handle_existing_igdb_collision(
                         existing_game=existing_game_with_same_igdb_id,
                         igdb_id=igdb_id,
                         full_disk_path=full_disk_path,
@@ -542,7 +616,11 @@ def retrieve_and_save_game(
                         candidates=response_json,
                         match_policy=match_policy,
                         peel=None,
+                        library=library,
                     )
+                    if collision is not IMPORT_CROSS_SYSTEM_EDITION:
+                        return collision
+                    game_payload = _strip_unique_igdb_identity(game_payload)
 
                 # Create game from IGDB data (continue with existing logic at line 472)
                 nfo_content = read_first_nfo_content(full_disk_path)
@@ -554,7 +632,7 @@ def retrieve_and_save_game(
                     folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
                     logger.info(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
                 new_game = create_game_instance(
-                    game_data=response_json[0],
+                    game_data=game_payload,
                     full_disk_path=full_disk_path,
                     folder_size_bytes=folder_size_bytes,
                     library_uuid=library.uuid
@@ -568,7 +646,7 @@ def retrieve_and_save_game(
 
                 if 'involved_companies' in response_json[0]:
                     involved_company_ids = response_json[0]['involved_companies']
-                    if involved_company_ids:
+                    if involved_company_ids and new_game.igdb_id is not None:
                         enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
                     else:
                         logger.info("No involved companies found for game from local metadata.")
@@ -968,7 +1046,7 @@ def retrieve_and_save_game(
         # Check for existing game with the same IGDB ID but different folder path
         existing_game_with_same_igdb_id = db.session.execute(select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)).scalar_one_or_none()
         if existing_game_with_same_igdb_id:
-            return handle_existing_igdb_collision(
+            collision = handle_existing_igdb_collision(
                 existing_game=existing_game_with_same_igdb_id,
                 igdb_id=igdb_id,
                 full_disk_path=full_disk_path,
@@ -979,107 +1057,111 @@ def retrieve_and_save_game(
                 steam_title=steam_title,
                 match_policy=match_policy,
                 peel=parsed_label if use_console_rom_peel else None,
+                library=library,
+            )
+            if collision is not IMPORT_CROSS_SYSTEM_EDITION:
+                return collision
+            selected_game = _strip_unique_igdb_identity(selected_game)
+
+        nfo_content = read_first_nfo_content(full_disk_path)
+        # Scan path: defer full tree walk — large NAS/Unraid folders block identify for minutes.
+        if defer_enrichment:
+            folder_size_bytes = 0
+            logger.info(f"Deferring folder size walk for scan identify: {full_disk_path}")
+        else:
+            folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
+            logger.info(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
+        new_game = create_game_instance(game_data=selected_game, full_disk_path=full_disk_path, folder_size_bytes=folder_size_bytes, library_uuid=library.uuid, peel=parsed_label if use_console_rom_peel else None)
+            
+        if new_game is None:
+            logger.warning(f"Failed to create game instance for {game_name}. Skipping further processing.")
+            return None
+
+        if catalog.get('verdict') == 'agree' and catalog.get('agreed'):
+            try:
+                apply_catalog_identity_to_game(new_game, catalog['agreed'])
+            except Exception as stamp_err:
+                logger.warning(f"⚠️ [W34] Catalog identity stamp failed: {stamp_err}")
+                
+        attach_igdb_taxonomy_to_game(new_game, selected_game)
+
+        if 'involved_companies' in selected_game:
+            involved_company_ids = selected_game['involved_companies']
+            if involved_company_ids and new_game.igdb_id is not None:
+                enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
+            else:
+                logger.info(f"No involved companies found for {game_name}.")
+
+        if not defer_enrichment:
+            enrich_game_all_sources(new_game, lookup_name=new_game.name)
+
+        if 'videos' in selected_game:
+            video_urls = [f"https://www.youtube.com/embed/{video['video_id']}" for video in selected_game['videos']]
+            videos_comma_separated = ','.join(video_urls)
+            new_game.video_urls = videos_comma_separated
+            
+        db.session.commit()
+        logger.info(f"Processing images for game: {new_game.name}")
+        # Pass cover/screenshot refs as returned by IGDB (id or {id,url}).
+        # store_image_url_for_download normalizes both shapes so cover is
+        # not skipped when search returns expanded objects.
+        cover_data = selected_game.get('cover')
+        screenshots_data = selected_game.get('screenshots') or []
+        if defer_enrichment:
+            queue_post_identify_enrichment(
+                new_game.uuid,
+                fetch_hltb=fetch_hltb,
+                cover_data=cover_data,
+                screenshots_data=screenshots_data,
             )
         else:
-            nfo_content = read_first_nfo_content(full_disk_path)
-            # Scan path: defer full tree walk — large NAS/Unraid folders block identify for minutes.
-            if defer_enrichment:
-                folder_size_bytes = 0
-                logger.info(f"Deferring folder size walk for scan identify: {full_disk_path}")
-            else:
-                folder_size_bytes = get_folder_size_in_bytes_updates(full_disk_path)
-                logger.info(f"Folder size for {full_disk_path}: {format_size(folder_size_bytes)}")
-            new_game = create_game_instance(game_data=selected_game, full_disk_path=full_disk_path, folder_size_bytes=folder_size_bytes, library_uuid=library.uuid, peel=parsed_label if use_console_rom_peel else None)
-            
-            if new_game is None:
-                logger.warning(f"Failed to create game instance for {game_name}. Skipping further processing.")
-                return None
-
-            if catalog.get('verdict') == 'agree' and catalog.get('agreed'):
-                try:
-                    apply_catalog_identity_to_game(new_game, catalog['agreed'])
-                except Exception as stamp_err:
-                    logger.warning(f"⚠️ [W34] Catalog identity stamp failed: {stamp_err}")
-                    
-            attach_igdb_taxonomy_to_game(new_game, selected_game)
-
-            if 'involved_companies' in selected_game:
-                involved_company_ids = selected_game['involved_companies']
-                if involved_company_ids:
-                    enumerate_companies(new_game, new_game.igdb_id, involved_company_ids)
-                else:
-                    logger.info(f"No involved companies found for {game_name}.")
-
-            if not defer_enrichment:
-                enrich_game_all_sources(new_game, lookup_name=new_game.name)
-
-            if 'videos' in selected_game:
-                video_urls = [f"https://www.youtube.com/embed/{video['video_id']}" for video in selected_game['videos']]
-                videos_comma_separated = ','.join(video_urls)
-                new_game.video_urls = videos_comma_separated
-            
+            smart_process_images_for_game(new_game.uuid, cover_data, screenshots_data)
+        try:
+            new_game.nfo_content = nfo_content
+            for column in new_game.__table__.columns:
+                getattr(new_game, column.name)
             db.session.commit()
-            logger.info(f"Processing images for game: {new_game.name}")
-            # Pass cover/screenshot refs as returned by IGDB (id or {id,url}).
-            # store_image_url_for_download normalizes both shapes so cover is
-            # not skipped when search returns expanded objects.
-            cover_data = selected_game.get('cover')
-            screenshots_data = selected_game.get('screenshots') or []
-            if defer_enrichment:
-                queue_post_identify_enrichment(
-                    new_game.uuid,
-                    fetch_hltb=fetch_hltb,
-                    cover_data=cover_data,
-                    screenshots_data=screenshots_data,
+            logger.info(f"Game and its images saved successfully : {new_game.name}.")
+
+            # Write local metadata file if enabled (for newly identified games)
+            # Use the settings dict we already have (no DB query needed)
+            if settings and settings.get('write_local_metadata'):
+                logger.info(f"💾 [LOCAL METADATA] Writing metadata file for newly identified game '{new_game.name}'")
+                from oneirodex.utils.local_metadata import write_local_metadata
+                write_success = write_local_metadata(
+                    full_disk_path=new_game.full_disk_path,
+                    igdb_id=new_game.igdb_id,
+                    game_title=new_game.name,
+                    manually_verified=False,  # Auto-identified during scan
+                    filename=settings.get('local_metadata_filename', 'oneirodex.json')
                 )
-            else:
-                smart_process_images_for_game(new_game.uuid, cover_data, screenshots_data)
-            try:
-                new_game.nfo_content = nfo_content
-                for column in new_game.__table__.columns:
-                    getattr(new_game, column.name)
-                db.session.commit()
-                logger.info(f"Game and its images saved successfully : {new_game.name}.")
-
-                # Write local metadata file if enabled (for newly identified games)
-                # Use the settings dict we already have (no DB query needed)
-                if settings and settings.get('write_local_metadata'):
-                    logger.info(f"💾 [LOCAL METADATA] Writing metadata file for newly identified game '{new_game.name}'")
-                    from oneirodex.utils.local_metadata import write_local_metadata
-                    write_success = write_local_metadata(
-                        full_disk_path=new_game.full_disk_path,
-                        igdb_id=new_game.igdb_id,
-                        game_title=new_game.name,
-                        manually_verified=False,  # Auto-identified during scan
-                        filename=settings.get('local_metadata_filename', 'oneirodex.json')
-                    )
-                    if write_success:
-                        logger.info(f"✅ [LOCAL METADATA] Successfully wrote metadata file for '{new_game.name}'")
-                    else:
-                        logger.warning(f"⚠️ [LOCAL METADATA] Failed to write metadata file for '{new_game.name}'")
-
-                notify_admins_new_game(new_game.uuid, new_game.name)
-
-                # Fetch HowLongToBeat data if enabled (sync path only; deferred when scanning)
-                if not defer_enrichment:
-                    hltb_settings = global_settings_row()
-                    if fetch_hltb and hltb_settings and hltb_settings.enable_hltb_integration:
-                        try:
-                            from oneirodex.utils.hltb import update_game_hltb_sync
-                            logger.info(f"Fetching HowLongToBeat data for '{new_game.name}'...")
-                            update_game_hltb_sync(new_game.uuid, new_game.name)
-                        except Exception as e:
-                            logger.error(f"Failed to fetch HLTB data for '{new_game.name}': {e}")
-                            # Don't fail the scan if HLTB fetch fails
-
-            except IntegrityError as e: 
-                db.session.rollback()
-                logger.error(f"Failed to save game due to a database error: {e}")
-                if has_request_context():
-                    flash("Failed to save game due to a duplicate entry.")
+                if write_success:
+                    logger.info(f"✅ [LOCAL METADATA] Successfully wrote metadata file for '{new_game.name}'")
                 else:
-                    logger.error("Failed to save game due to a duplicate entry.")
-            return new_game
+                    logger.warning(f"⚠️ [LOCAL METADATA] Failed to write metadata file for '{new_game.name}'")
+
+            notify_admins_new_game(new_game.uuid, new_game.name)
+
+            # Fetch HowLongToBeat data if enabled (sync path only; deferred when scanning)
+            if not defer_enrichment:
+                hltb_settings = global_settings_row()
+                if fetch_hltb and hltb_settings and hltb_settings.enable_hltb_integration:
+                    try:
+                        from oneirodex.utils.hltb import update_game_hltb_sync
+                        logger.info(f"Fetching HowLongToBeat data for '{new_game.name}'...")
+                        update_game_hltb_sync(new_game.uuid, new_game.name)
+                    except Exception as e:
+                        logger.error(f"Failed to fetch HLTB data for '{new_game.name}': {e}")
+                        # Don't fail the scan if HLTB fetch fails
+
+        except IntegrityError as e: 
+            db.session.rollback()
+            logger.error(f"Failed to save game due to a database error: {e}")
+            if has_request_context():
+                flash("Failed to save game due to a duplicate entry.")
+            else:
+                logger.error("Failed to save game due to a duplicate entry.")
+        return new_game
     else:
         if response_json and 'error' in response_json:
             # Check specifically for authentication error

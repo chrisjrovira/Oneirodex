@@ -201,6 +201,11 @@
   min-height: 1.7rem;
 }
 
+.od-table__head.has-filter {
+  /* Title/sort stay left; filter docks to the column's trailing edge. */
+  justify-content: flex-start;
+}
+
 .od-table th.is-right .od-table__head {
   justify-content: flex-end;
 }
@@ -211,16 +216,24 @@
   min-height: 1.7rem;
 }
 
+.od-table__head.has-filter > .od-table__title,
+.od-table__head.has-filter > .od-table__sort {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .od-table__col-filter {
   appearance: none;
   box-sizing: border-box;
-  width: 7.5rem;
-  flex: 0 1 8.5rem;
-  min-width: 5.5rem;
-  max-width: 12rem;
+  /* Rest: short chip on the right until focus or a value is present. */
+  margin-inline-start: auto;
+  width: 2.75rem;
+  flex: 0 0 auto;
+  min-width: 2.75rem;
+  max-width: 2.75rem;
   height: 1.7rem;
   min-height: 1.7rem;
-  padding: 0 0.45rem;
+  padding: 0 0.35rem;
   border-radius: var(--od-radius-sm);
   border: 1px solid var(--od-border);
   background: var(--od-surface);
@@ -230,6 +243,11 @@
   letter-spacing: normal;
   text-transform: none;
   line-height: 1.2;
+  transition:
+    width 0.12s ease,
+    max-width 0.12s ease,
+    min-width 0.12s ease,
+    padding 0.12s ease;
 }
 
 .od-table__col-filter::placeholder {
@@ -237,8 +255,22 @@
   opacity: 0.85;
 }
 
+.od-table__col-filter:focus,
+.od-table__col-filter:not(:placeholder-shown) {
+  width: 8.5rem;
+  min-width: 6.5rem;
+  max-width: min(12rem, 100%);
+  padding: 0 0.45rem;
+}
+
 .od-table__col-filter:focus {
   outline: 2px solid var(--od-focus-ring, var(--od-accent));
   outline-offset: 1px;
   border-color: var(--od-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .od-table__col-filter {
+    transition: none;
+  }
 }

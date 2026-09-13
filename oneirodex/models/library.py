@@ -51,6 +51,11 @@ class ScanJob(db.Model):
     folders = db.Column(JSONEncodedDict)
     content_type = db.Column(db.Enum('Games', name='content_type_enum'))
     schedule = db.Column(db.Enum('8_hours', '24_hours', '48_hours', name='schedule_enum'))
+    # Additive schedule fields (Wave 2): keep legacy enum for presets; interval/cron
+    # live here so cross-system deploys do not rewrite the enum type.
+    schedule_kind = db.Column(db.String(16), nullable=True)  # once|preset|interval|cron
+    schedule_interval_minutes = db.Column(db.Integer, nullable=True)
+    schedule_cron = db.Column(db.String(64), nullable=True)
     is_enabled = db.Column(db.Boolean, default=True)
     status = db.Column(db.Enum(
         'Scheduled', 'Queued', 'Running', 'Stopping', 'Completed', 'Failed', 'Cancelled',

@@ -55,7 +55,9 @@
 .od-libraries-trail__filter .od-table__col-filter {
   width: 100%;
   max-width: none;
+  min-width: 0;
   flex: 1 1 auto;
+  margin-inline-start: 0;
 }
 
 .od-libraries-trail__clear {
@@ -253,7 +255,9 @@
 .od-libraries-group__input {
   width: 100%;
   max-width: none;
+  min-width: 0;
   flex: 1 1 auto;
+  margin-inline-start: 0;
   min-height: var(--od-control-h);
   height: var(--od-control-h);
 }

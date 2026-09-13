@@ -16,7 +16,7 @@ import os
 from datetime import datetime, timezone
 
 from flask import (
-    abort, current_app, flash, redirect, render_template, session, url_for,
+    abort, current_app, flash, redirect, render_template, request, session, url_for,
 )
 from flask_login import login_required
 from sqlalchemy import delete, select
@@ -223,7 +223,27 @@ def delete_scan_job(job_id):
 @login_required
 @admin_required
 def clear_all_scan_jobs():
-    db.session.execute(delete(ScanJob))
+    """Delete every job that is not actively running."""
+    busy = ('Running', 'Stopping')
+    result = db.session.execute(
+        delete(ScanJob).where(ScanJob.status.notin_(busy))
+    )
     db.session.commit()
-    flash('All scan jobs cleared successfully.', 'success')
-    return redirect(url_for('admin2.scan_management'))
+    flash(f'Cleared {result.rowcount} scan jobs (Running/Stopping kept).', 'success')
+    return redirect(url_for('admin2.scan_management', active_tab='jobs'))
+
+
+@admin2_bp.route('/clear_scan_jobs', methods=['POST'])
+@login_required
+@admin_required
+def clear_scan_jobs():
+    """Delete jobs matching one terminal status (Completed or Failed)."""
+    status = (request.form.get('status') or request.args.get('status') or '').strip()
+    allowed = {'Completed', 'Failed', 'Cancelled'}
+    if status not in allowed:
+        flash('Unknown job status to clear.', 'error')
+        return redirect(url_for('admin2.scan_management', active_tab='jobs'))
+    result = db.session.execute(delete(ScanJob).where(ScanJob.status == status))
+    db.session.commit()
+    flash(f'Cleared {result.rowcount} {status} scan jobs.', 'success')
+    return redirect(url_for('admin2.scan_management', active_tab='jobs'))

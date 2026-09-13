@@ -204,6 +204,15 @@ class DatabaseManager:
         ALTER TABLE scan_jobs
         ADD COLUMN IF NOT EXISTS owner_token VARCHAR(80);
 
+        -- Custom schedules: interval (minutes) + 5-field cron (additive; legacy
+        -- schedule enum stays for 8/24/48 hour presets).
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS schedule_kind VARCHAR(16);
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS schedule_interval_minutes INTEGER;
+        ALTER TABLE scan_jobs
+        ADD COLUMN IF NOT EXISTS schedule_cron VARCHAR(64);
+
         -- Optional expiry for personal access tokens. NULL = never expires,
         -- which is what every pre-existing token is, so an upgrade cannot log
         -- out a live companion.

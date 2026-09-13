@@ -29,6 +29,7 @@ function showSpinner() {
     var el = document.getElementById('globalSpinner');
     if (!el) return;
     el.style.display = 'flex';
+    el.setAttribute('aria-busy', 'true');
     if (window.GtLoadingMotifs) {
         window.GtLoadingMotifs.mount(el, { size: 'lg' });
     }
@@ -36,7 +37,9 @@ function showSpinner() {
 
 function hideSpinner() {
     var el = document.getElementById('globalSpinner');
-    if (el) el.style.display = 'none';
+    if (!el) return;
+    el.style.display = 'none';
+    el.setAttribute('aria-busy', 'false');
 }
 
 function escapeHtml(value) {
@@ -995,6 +998,7 @@ const SCAN_TAB_PANES = {
     library: '#librariesPanel',
     deleteLibrary: '#librariesPanel',
     auto: '#autoScan',
+    jobs: '#scanJobs',
     tools: '#libraryTools',
     manual: '#manualScan',
     unmatched: '#unmatchedFolders',
@@ -1007,6 +1011,7 @@ const SCAN_TAB_PANES = {
 const SCAN_PANE_TABS = {
     librariesPanel: 'libraries',
     autoScan: 'auto',
+    scanJobs: 'jobs',
     libraryTools: 'tools',
     manualScan: 'manual',
     unmatchedFolders: 'unmatched',
@@ -1031,6 +1036,92 @@ function scanTabTriggers() {
 function isScanPaneActive(paneId) {
     const pane = document.getElementById(paneId);
     return Boolean(pane && pane.classList.contains('active'));
+}
+
+function isScanJobsModalOpen() {
+    const modal = document.getElementById('scanJobsModal');
+    return Boolean(modal && modal.classList.contains('show'));
+}
+
+/** Auto pane, Scan Jobs page, or the compact modal — any surface that shows the jobs table. */
+function isScanJobsSurfaceVisible() {
+    return isScanPaneActive('autoScan')
+        || isScanPaneActive('scanJobs')
+        || isScanJobsModalOpen();
+}
+
+/** API may send last_run as "Not Available" when unset — only real parseable stamps count. */
+function isRealJobTimestamp(value) {
+    if (value == null || value === '') return false;
+    const text = String(value).trim();
+    if (!text || text === 'Not Available' || text === 'Not Scheduled') return false;
+    return !Number.isNaN(Date.parse(text));
+}
+
+/** Prefer last_run, else started_at; short local YYYY-MM-DD HH:MM for the When column. */
+function formatJobWhen(job) {
+    const raw = isRealJobTimestamp(job && job.last_run)
+        ? job.last_run
+        : (isRealJobTimestamp(job && job.started_at) ? job.started_at : null);
+    if (!raw) return { display: '—', sort: '' };
+    const parsed = Date.parse(raw);
+    if (Number.isNaN(parsed)) return { display: '—', sort: '' };
+    const d = new Date(parsed);
+    const pad = (n) => String(n).padStart(2, '0');
+    const display = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return { display, sort: d.toISOString() };
+}
+
+function csvEscapeCell(value) {
+    const text = String(value == null ? '' : value);
+    if (/[",\n\r]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+}
+
+function downloadScanJobsCsv(jobs) {
+    const rows = Array.isArray(jobs) ? jobs : [];
+    const header = ['id', 'when', 'library', 'path', 'status', 'progress', 'error'];
+    const lines = [header.join(',')];
+    rows.forEach((job) => {
+        const { display: when } = formatJobWhen(job);
+        const { processed, total } = (() => {
+            const success = Number(job.folders_success) || 0;
+            const failed = Number(job.folders_failed) || 0;
+            const tot = Number(job.total_folders) || 0;
+            return { processed: success + failed, total: tot };
+        })();
+        const progress = total ? `${processed}/${total}` : '';
+        lines.push([
+            csvEscapeCell(job.id || ''),
+            csvEscapeCell(when),
+            csvEscapeCell(job.library_name || ''),
+            csvEscapeCell(job.scan_folder || ''),
+            csvEscapeCell(job.status || ''),
+            csvEscapeCell(progress),
+            csvEscapeCell(job.error_message || ''),
+        ].join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scan-jobs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function syncAutoScheduleRows() {
+    const kind = document.getElementById('autoScheduleKind');
+    const intervalRow = document.getElementById('autoScheduleIntervalRow');
+    const cronRow = document.getElementById('autoScheduleCronRow');
+    if (!kind) return;
+    const value = kind.value;
+    if (intervalRow) intervalRow.hidden = value !== 'interval';
+    if (cronRow) cronRow.hidden = value !== 'cron';
 }
 
 /**
@@ -1116,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (activeTabValue === 'unmatched') {
                 updateUnmatchedFolders();
             }
-            if (activeTabValue === 'auto') {
+            if (activeTabValue === 'auto' || activeTabValue === 'jobs') {
                 updateScanJobs();
             }
         });
@@ -1268,10 +1359,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!scanJobsTableBody) return false;
         for (const job of jobs) {
             const row = scanJobsTableBody.querySelector(`tr[data-job-id="${job.id}"]`);
-            if (!row || row.children.length < 5) return false;
+            // ID, When, Library, Path, Status, Progress, Actions → Progress is index 5
+            if (!row || row.children.length < 7) return false;
             const { percentage } = progressCounts(job);
+            const when = formatJobWhen(job);
             row.setAttribute('data-sort-progress', String(percentage));
-            row.children[4].innerHTML = progressColumnHtml(job);
+            row.setAttribute('data-sort-when', when.sort);
+            row.children[1].textContent = when.display;
+            row.children[5].innerHTML = progressColumnHtml(job);
         }
         return true;
     }
@@ -1407,6 +1502,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (aBusy !== bBusy) return aBusy - bBusy;
                     return new Date(b.last_run || 0) - new Date(a.last_run || 0);
                 });
+                // CSV export uses the current filtered list.
+                window.__odLastScanJobsPayload = filtered;
 
                 const isAnyJobRunning = allJobs.some(j => isScanBusyStatus(j.status));
                 scanBusy = isAnyJobRunning;
@@ -1415,8 +1512,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateAutoScanStatusIcon(allJobs);
                 }
 
-                if (!isScanPaneActive('autoScan')) {
-                    // Keep last* as the last painted table so returning to Auto
+                if (!isScanJobsSurfaceVisible() || !scanJobsTableBody) {
+                    // Keep last* as the last painted table so returning to Auto/Jobs
                     // can patch progress instead of wiping rows.
                     return;
                 }
@@ -1440,9 +1537,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const hasFilters = (scanJobFilters.statuses && scanJobFilters.statuses.length)
                         || scanJobFilters.library_uuid
                         || (scanJobFilters.q && scanJobFilters.q.trim());
-                    empty.innerHTML = `<td colspan="6">${hasFilters
+                    empty.innerHTML = `<td colspan="7">${hasFilters
                         ? 'No scan jobs match the current filters.'
-                        : 'No scan jobs yet. Click Start Scan after selecting a folder.'}</td>`;
+                        : 'No scan jobs yet. Start a scan from Auto or Manual.'}</td>`;
                     scanJobsTableBody.appendChild(empty);
                     return;
                 }
@@ -1489,10 +1586,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Sort key for the Progress column (W27-C2). The cell renders a bar
                     // and a "3/25 (12%)" caption, neither of which compares numerically
                     // as text — od_sortable_table.js reads this instead.
+                    const { display: whenDisplay, sort: whenSort } = formatJobWhen(job);
                     row.setAttribute('data-job-id', job.id);
                     row.setAttribute('data-sort-progress', String(percentage));
+                    row.setAttribute('data-sort-when', whenSort);
                     row.innerHTML = `
                         <td>${job.id.substring(0, 8)}</td>
+                        <td>${escapeHtml(whenDisplay)}</td>
                         <td>${escapeHtml(job.library_name || 'N/A')}</td>
                         <td>${escapeHtml(job.scan_folder || 'N/A')}</td>
                         <td>${statusCell}</td>
@@ -1529,6 +1629,29 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     bindScanJobFilters();
+
+    // Schedule kind toggles interval/cron rows on Auto.
+    syncAutoScheduleRows();
+    const autoScheduleKind = document.getElementById('autoScheduleKind');
+    if (autoScheduleKind) {
+        autoScheduleKind.addEventListener('change', syncAutoScheduleRows);
+    }
+
+    // Export CSV — button may appear on jobs page and/or modal toolbar.
+    document.querySelectorAll('#scanJobsExportBtn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            downloadScanJobsCsv(window.__odLastScanJobsPayload || []);
+        });
+    });
+
+    const scanJobsModalEl = document.getElementById('scanJobsModal');
+    if (scanJobsModalEl) {
+        scanJobsModalEl.addEventListener('shown.bs.modal', () => {
+            updateScanJobs();
+        });
+    }
+
+
 
     function interceptScanFormSubmit(form) {
         if (!form || form.dataset.scanConflictBound) return;
@@ -1574,6 +1697,38 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentLeafFilter = 'all';
     let currentTriageFilter = 'all';
     let unmatchedNameEndpointReady = null; // null=unknown, true/false after probe
+    let unmatchedLibraryFilter = '';
+    let unmatchedPlatformFilter = '';
+    let unmatchedRegionFilter = '';
+    let unmatchedPageLimit = 150;
+    let unmatchedPageOffset = 0;
+    let unmatchedTotalCount = 0;
+
+    function syncUnmatchedExportLinks() {
+        const params = new URLSearchParams();
+        if (currentSearch) params.set('q', currentSearch);
+        if (currentFilter !== 'all') params.set('status', currentFilter);
+        if (unmatchedLibraryFilter) params.set('library_uuid', unmatchedLibraryFilter);
+        if (unmatchedPlatformFilter) params.set('platform', unmatchedPlatformFilter);
+        if (unmatchedRegionFilter) params.set('rom_region', unmatchedRegionFilter);
+        if (currentWhyFilter !== 'all') params.set('why', currentWhyFilter);
+        if (currentKindFilter !== 'all') {
+            params.set('suggested_kind', currentKindFilter === 'none' ? '' : currentKindFilter);
+        }
+        const qs = params.toString();
+        ['exportUnmatchedCsvBtn', 'exportUnmatchedJsonBtn'].forEach((id) => {
+            const link = document.getElementById(id);
+            if (!link) return;
+            const url = new URL(link.href, window.location.origin);
+            // Keep format from existing href
+            const format = url.searchParams.get('format') || (id.includes('Json') ? 'json' : 'csv');
+            const next = new URL('/api/unmatched_folders/export', window.location.origin);
+            params.forEach((value, key) => next.searchParams.set(key, value));
+            next.searchParams.set('format', format);
+            if (!next.searchParams.get('status')) next.searchParams.set('status', 'all');
+            link.href = next.pathname + '?' + next.searchParams.toString();
+        });
+    }
 
     function fetchUnmatchedList() {
         const params = new URLSearchParams();
@@ -1586,14 +1741,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentKindFilter !== 'all') {
             params.set('suggested_kind', currentKindFilter === 'none' ? '' : currentKindFilter);
         }
+        if (unmatchedLibraryFilter) params.set('library_uuid', unmatchedLibraryFilter);
+        if (unmatchedPlatformFilter) params.set('platform', unmatchedPlatformFilter);
+        if (unmatchedRegionFilter) params.set('rom_region', unmatchedRegionFilter);
+        params.set('limit', String(unmatchedPageLimit));
+        params.set('offset', String(unmatchedPageOffset));
+        params.set('paginate', '1');
         const qs = params.toString();
         const url = qs ? `/api/unmatched_folders?${qs}` : '/api/unmatched_folders';
+        syncUnmatchedExportLinks();
         return fetch(url, { cache: 'no-store' })
             .then((response) => {
                 if (!response.ok) throw new Error(`unmatched_folders ${response.status}`);
                 return response.json();
             })
-            .then((data) => (Array.isArray(data) ? data : []));
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    unmatchedTotalCount = data.length;
+                    return data;
+                }
+                unmatchedTotalCount = Number(data.total || data.count || 0) || 0;
+                return Array.isArray(data.items) ? data.items : [];
+            });
     }
 
     /** Soft-enrich Duplicate rows with matched_game from /duplicates when list omits it. */
@@ -1765,7 +1934,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" class="btn btn-outline-light btn-sm unmatched-fix-btn" data-folder-id="${escapeHtml(String(folder.id))}" data-fix-action="ignore" title="Ignore this duplicate folder">Ignore</button>`
                         : '';
                     const actionsBar = `
-                        <div class="unmatched-row-actions" role="toolbar" aria-label="Actions for ${escapedDisk}">
+                        <details class="unmatched-row-menu">
+                          <summary class="od-cbtn unmatched-row-menu__summary">Actions</summary>
+                          <div class="unmatched-row-actions" role="toolbar" aria-label="Actions for ${escapedDisk}">
                         <button type="button" class="btn btn-outline-light btn-sm reveal-path-btn" data-path="${escapedPath}" title="Open path (companion / copy) — disk tidy this wave; no disk rename">Open path</button>
                         <form action="/add_game_manual" method="GET" class="unmatched-identify-form" style="display: inline;">
                             <input type="hidden" name="full_disk_path" value="${escapedPath}">
@@ -1792,7 +1963,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <input type="hidden" name="folder_path" value="${escapedPath}">
                             <button type="submit" class="btn btn-outline-light btn-sm" title="Delete the folder from disk">Delete</button>
                         </form>
-                        </div>
+                          </div>
+                        </details>
                     `;
 
                     const matchReasonAttr = String(folder.match_reason || '').trim().toLowerCase();
@@ -1807,7 +1979,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const leafBadgeClass = leafType === 'file-leaf'
                         ? 'unmatched-leaf-badge'
                         : 'unmatched-leaf-badge unmatched-leaf-badge--folder';
-                    const leafBadgeLabel = leafType === 'file-leaf' ? 'ROM files library' : 'Folder library';
+                    const leafBadgeLabel = leafType === 'file-leaf' ? 'ROM files' : 'Folder';
+                    const regionLabel = folder.rom_region ? String(folder.rom_region) : '—';
                     const triageBadgesHtml = `
                         <div class="unmatched-triage-badges">
                           <span class="${leafBadgeClass}" title="${leafType === 'file-leaf' ? 'ROM or archive files in this library' : 'Each game is its own named folder'}">${leafBadgeLabel}</span>
@@ -1821,6 +1994,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         searchName,
                         folder.library_name,
                         folder.platform_name,
+                        folder.rom_region,
                         folder.why_unmatched,
                         folder.unmatched_reason,
                         dupeHit && dupeHit.name,
@@ -1837,6 +2011,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.setAttribute('data-sort-status', String(folder.status || '').toLowerCase());
                     row.setAttribute('data-sort-library', String(folder.library_name || '').toLowerCase());
                     row.setAttribute('data-sort-platform', String(folder.platform_name || '').toLowerCase());
+                    row.setAttribute('data-sort-region', String(folder.rom_region || '').toLowerCase());
                     row.setAttribute('data-match-reason', matchReasonAttr);
                     row.setAttribute('data-suggested-kind', kindAttr);
                     row.setAttribute('data-leaf-type', leafType);
@@ -1848,23 +2023,23 @@ document.addEventListener('DOMContentLoaded', function() {
                           <input type="checkbox" class="unmatched-row-check" value="${escapeHtml(String(folder.id))}" aria-label="Select folder ${escapedDisk}">
                         </td>
                         <td class="col-path">
-                          <div class="unmatched-folder-cell">
-                            ${actionsBar}
+                          <div class="unmatched-folder-cell unmatched-folder-cell--compact">
                             <div class="unmatched-amend">
                               <label class="unmatched-amend__label" for="amend-${escapeHtml(String(folder.id))}">Search name</label>
                               <div class="unmatched-amend__row">
                                 <input type="text" id="amend-${escapeHtml(String(folder.id))}" class="unmatched-amend__input" value="${escapedSearchName}" data-folder-id="${escapeHtml(String(folder.id))}" data-original="${escapedSearchName}" spellcheck="false" title="Search name for Fix search / Identify — does not rename on disk">
                                 <button type="button" class="btn btn-outline-light btn-sm unmatched-amend__save" data-folder-id="${escapeHtml(String(folder.id))}" title="Save search name (does not rename on disk)">Save</button>
                               </div>
-                              <div class="unmatched-amend__ondisk">On disk: ${escapedDisk}</div>
+                              <div class="unmatched-amend__ondisk" title="${escapedPath}">On disk: ${escapedDisk}</div>
                             </div>
                             ${triageBadgesHtml}
-                            <span class="unmatched-folder-path" title="${escapedPath}">${escapedPath}</span>
                           </div>
                         </td>
-                        <td class="col-status"><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Another library game already uses this IGDB match and the folder title looks like the same game' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate (same title)' : folder.status}</span>${suggestedChip}${dupeOfHtml}${whyHtml}</td>
+                        <td class="col-status"><span class="status-${folder.status.toLowerCase()}" title="${folder.status === 'Duplicate' ? 'Same system + region already has this IGDB match with a similar title' : (folder.status === 'Unmatched' ? 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder on this system)' : '')}">${folder.status === 'Duplicate' ? 'Duplicate' : folder.status}</span>${suggestedChip}${dupeOfHtml}${whyHtml}</td>
                         <td class="col-library">${escapeHtml(folder.library_name || '')}</td>
                         <td class="col-platform">${escapeHtml(folder.platform_name || '')}</td>
+                        <td class="col-region">${escapeHtml(regionLabel)}</td>
+                        <td class="col-actions">${actionsBar}</td>
                     `;
                     unmatchedTableBody.appendChild(row);
 
@@ -2476,6 +2651,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const parts = [];
         if (currentFilter !== 'all') parts.push(currentFilter);
+        if (unmatchedLibraryFilter) parts.push('library');
+        if (unmatchedPlatformFilter) parts.push(`system:${unmatchedPlatformFilter}`);
+        if (unmatchedRegionFilter) parts.push(`region:${unmatchedRegionFilter}`);
         if (currentWhyFilter !== 'all') parts.push(`why:${currentWhyFilter}`);
         if (currentKindFilter !== 'all') parts.push(`kind:${currentKindFilter}`);
         if (currentLeafFilter !== 'all') {
@@ -2490,12 +2668,34 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentTriageFilter !== 'all') parts.push(`triage:${currentTriageFilter}`);
         const filterText = parts.length ? ` (${parts.join(' · ')})` : '';
         const searchText = currentSearch ? ` matching "${currentSearch}"` : '';
-        if (currentFilter === 'all' && currentSearch === '' && currentWhyFilter === 'all'
-            && currentKindFilter === 'all' && currentLeafFilter === 'all' && currentTriageFilter === 'all') {
-            resultsInfo.textContent = `Showing all ${total} entries`;
-        } else {
-            resultsInfo.textContent = `Showing ${visible} of ${total} entries${filterText}${searchText}`;
-        }
+        const pageStart = unmatchedTotalCount ? unmatchedPageOffset + 1 : 0;
+        const pageEnd = unmatchedPageOffset + visible;
+        const totalLabel = unmatchedTotalCount || total;
+        resultsInfo.textContent =
+            `Showing ${pageStart}–${pageEnd} of ${totalLabel}${filterText}${searchText}`;
+        updateUnmatchedPager();
+    }
+
+    function updateUnmatchedPager() {
+        const pager = document.getElementById('unmatchedPager');
+        const meta = document.getElementById('unmatchedPageMeta');
+        const prev = document.getElementById('unmatchedPrevPage');
+        const next = document.getElementById('unmatchedNextPage');
+        if (!pager || !meta || !prev || !next) return;
+        const total = unmatchedTotalCount || 0;
+        const showPager = total > unmatchedPageLimit;
+        pager.hidden = !showPager;
+        const page = Math.floor(unmatchedPageOffset / unmatchedPageLimit) + 1;
+        const pages = Math.max(1, Math.ceil(total / unmatchedPageLimit));
+        meta.textContent = `Page ${page} of ${pages}`;
+        prev.disabled = unmatchedPageOffset <= 0;
+        next.disabled = unmatchedPageOffset + unmatchedPageLimit >= total;
+    }
+
+    function refetchUnmatchedFromStart() {
+        unmatchedPageOffset = 0;
+        lastUnmatchedSignature = '';
+        return updateUnmatchedFolders().then(() => filterUnmatchedRows());
     }
 
     function updateBatchBar() {
@@ -2703,28 +2903,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Keep the Export CSV/JSON links in sync with whichever status filter is
-    // active, so a download reflects the tab the admin is currently looking at.
+    // Keep the Export CSV/JSON links in sync with whichever filters are active.
     function updateExportLinks() {
-        ['exportUnmatchedCsvBtn', 'exportUnmatchedJsonBtn'].forEach(id => {
-            const link = document.getElementById(id);
-            if (!link) return;
-            const url = new URL(link.href, window.location.origin);
-            url.searchParams.set('status', currentFilter === 'all' ? 'all' : currentFilter);
-            if (currentSearch) url.searchParams.set('q', currentSearch);
-            else url.searchParams.delete('q');
-            link.href = url.toString();
+        syncUnmatchedExportLinks();
+    }
+
+    function setupUnmatchedExportPop() {
+        const toggle = document.getElementById('unmatchedExportToggle');
+        const menu = document.getElementById('unmatchedExportMenu');
+        if (!toggle || !menu || toggle.dataset.wired) return;
+        toggle.dataset.wired = 'true';
+        const close = () => {
+            menu.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.classList.remove('is-on');
+        };
+        const open = () => {
+            syncUnmatchedExportLinks();
+            menu.hidden = false;
+            toggle.setAttribute('aria-expanded', 'true');
+            toggle.classList.add('is-on');
+        };
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (menu.hidden) open();
+            else close();
+        });
+        document.addEventListener('click', (event) => {
+            if (!menu.hidden && !event.target.closest('#unmatchedExportPop')) close();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') close();
         });
     }
 
     function setupUnmatchedFilters() {
-        // Filter button event listeners
+        setupUnmatchedExportPop();
+
+        // Filter button event listeners — server-backed status refetch (pagination)
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 currentFilter = this.getAttribute('data-filter');
-                filterUnmatchedRows();
+                refetchUnmatchedFromStart();
                 updateExportLinks();
             });
         });
@@ -2734,7 +2957,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('[data-why-filter]').forEach((b) => b.classList.remove('active'));
                 this.classList.add('active');
                 currentWhyFilter = this.getAttribute('data-why-filter') || 'all';
-                filterUnmatchedRows();
+                refetchUnmatchedFromStart();
             });
         });
 
@@ -2743,7 +2966,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('[data-kind-filter]').forEach((b) => b.classList.remove('active'));
                 this.classList.add('active');
                 currentKindFilter = this.getAttribute('data-kind-filter') || 'all';
-                filterUnmatchedRows();
+                refetchUnmatchedFromStart();
             });
         });
 
@@ -2765,18 +2988,66 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
+        const librarySelect = document.getElementById('unmatchedLibraryFilter');
+        if (librarySelect) {
+            librarySelect.addEventListener('change', () => {
+                unmatchedLibraryFilter = librarySelect.value || '';
+                refetchUnmatchedFromStart();
+            });
+        }
+        const platformSelect = document.getElementById('unmatchedPlatformFilter');
+        if (platformSelect) {
+            platformSelect.addEventListener('change', () => {
+                unmatchedPlatformFilter = platformSelect.value || '';
+                refetchUnmatchedFromStart();
+            });
+        }
+        const regionSelect = document.getElementById('unmatchedRegionFilter');
+        if (regionSelect) {
+            regionSelect.addEventListener('change', () => {
+                unmatchedRegionFilter = regionSelect.value || '';
+                refetchUnmatchedFromStart();
+            });
+        }
+        const pageSizeSelect = document.getElementById('unmatchedPageSize');
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', () => {
+                unmatchedPageLimit = Number(pageSizeSelect.value) || 150;
+                refetchUnmatchedFromStart();
+            });
+        }
+        const prevPage = document.getElementById('unmatchedPrevPage');
+        if (prevPage) {
+            prevPage.addEventListener('click', () => {
+                unmatchedPageOffset = Math.max(0, unmatchedPageOffset - unmatchedPageLimit);
+                lastUnmatchedSignature = '';
+                updateUnmatchedFolders().then(() => filterUnmatchedRows());
+            });
+        }
+        const nextPage = document.getElementById('unmatchedNextPage');
+        if (nextPage) {
+            nextPage.addEventListener('click', () => {
+                unmatchedPageOffset += unmatchedPageLimit;
+                lastUnmatchedSignature = '';
+                updateUnmatchedFolders().then(() => filterUnmatchedRows());
+            });
+        }
+
         // Search input — client filter immediate; soft q= goes out on list refresh
         const searchInput = document.getElementById('unmatchedSearch');
         if (searchInput) {
+            let searchTimer = null;
             searchInput.addEventListener('input', function() {
                 currentSearch = this.value.toLowerCase().trim();
                 filterUnmatchedRows();
                 updateExportLinks();
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => refetchUnmatchedFromStart(), 350);
             });
             searchInput.addEventListener('keydown', function(event) {
                 if (event.key !== 'Enter') return;
                 event.preventDefault();
-                updateUnmatchedFolders().then(() => filterUnmatchedRows());
+                refetchUnmatchedFromStart();
             });
         }
 
@@ -2810,7 +3081,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const reclassifyBtn = document.getElementById('reclassifyDuplicatesBtn');
         if (reclassifyBtn) {
             reclassifyBtn.addEventListener('click', function() {
-                if (!confirm('Reclassify false Duplicate rows (different folder titles) as Unmatched?')) {
+                if (!confirm('Reclassify false Duplicate rows (cross-system, different region, or different titles) as Unmatched?')) {
                     return;
                 }
                 reclassifyBtn.disabled = true;
@@ -2949,7 +3220,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.clearTimeout(scanJobsPollTimer);
         const ms = scanJobsPollMs({
             busy: scanBusy,
-            jobsPaneVisible: isScanPaneActive('autoScan'),
+            jobsPaneVisible: isScanJobsSurfaceVisible(),
         });
         scanJobsPollTimer = window.setTimeout(() => {
             if (document.visibilityState === 'hidden') {

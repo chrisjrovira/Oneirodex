@@ -89,7 +89,8 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # (cannot import frontend/shared). Reset Themes required so the volume copy
 # of discovery_sections.js / admin_discovery_sections.css picks it up.
 # Auto Scan: Refresh-all is an icon + od-tip in the panel header (no banner row).
-GENERATOR_VERSION = 33
+# Library tools: THN owns tool views; pane chrome is borderless.
+GENERATOR_VERSION = 36
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

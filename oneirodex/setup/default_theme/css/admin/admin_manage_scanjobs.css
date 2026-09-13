@@ -54,47 +54,55 @@
     backdrop-filter: blur(10px);
 }
 
-/* Column sizing for jobs table */
+/* Column sizing for jobs table: ID | When | Library | Path | Status | Progress | Actions */
 .simple-jobs-table th:nth-child(1), /* ID */
 .simple-jobs-table td:nth-child(1) {
     width: 80px;
     max-width: 80px;
 }
 
-.simple-jobs-table th:nth-child(2), /* Library */
+.simple-jobs-table th:nth-child(2), /* When */
 .simple-jobs-table td:nth-child(2) {
+    width: 130px;
+    max-width: 140px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.simple-jobs-table th:nth-child(3), /* Library */
+.simple-jobs-table td:nth-child(3) {
     width: 120px;
     max-width: 120px;
 }
 
-.simple-jobs-table th:nth-child(4), /* Status */
+.simple-jobs-table th:nth-child(4), /* Path - takes remaining space */
 .simple-jobs-table td:nth-child(4) {
+    width: auto;
+    min-width: 160px;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.simple-jobs-table th:nth-child(5), /* Status */
+.simple-jobs-table td:nth-child(5) {
     width: 100px;
     max-width: 100px;
     text-align: center;
 }
 
-.simple-jobs-table th:nth-child(5), /* Progress */
-.simple-jobs-table td:nth-child(5) {
+.simple-jobs-table th:nth-child(6), /* Progress */
+.simple-jobs-table td:nth-child(6) {
     width: 150px;
     max-width: 150px;
     text-align: center;
 }
 
-.simple-jobs-table th:nth-child(6), /* Actions */
-.simple-jobs-table td:nth-child(6) {
+.simple-jobs-table th:nth-child(7), /* Actions */
+.simple-jobs-table td:nth-child(7) {
     width: 120px;
     max-width: 120px;
     text-align: center;
-}
-
-.simple-jobs-table th:nth-child(3), /* Path - takes remaining space */
-.simple-jobs-table td:nth-child(3) {
-    width: auto;
-    min-width: 200px;
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* Status badges */
@@ -219,6 +227,115 @@
     outline: none;
     border-color: var(--od-accent);
     background: color-mix(in srgb, var(--od-text) 15%, transparent);
+}
+
+.filter-row--selects {
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.unmatched-filter-select {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 140px;
+}
+
+.unmatched-filter-select__control {
+    min-width: 140px;
+    max-width: 220px;
+}
+
+.unmatched-pager-row {
+    justify-content: space-between;
+}
+
+.unmatched-pager {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.unmatched-pager__meta {
+    color: var(--od-text-muted);
+    font-size: var(--od-font-sm);
+}
+
+.simple-unmatched-table.unmatched-table--compact th,
+.simple-unmatched-table.unmatched-table--compact td {
+    padding: 8px 10px;
+    vertical-align: top;
+}
+
+.simple-unmatched-table .col-region {
+    width: 72px;
+    max-width: 88px;
+}
+
+.simple-unmatched-table .col-actions {
+    width: 110px;
+    max-width: 140px;
+}
+
+.unmatched-folder-cell--compact .unmatched-amend__ondisk {
+    font-size: var(--od-font-sm);
+    color: var(--od-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 36rem;
+}
+
+.unmatched-row-menu {
+    position: relative;
+}
+
+.unmatched-row-menu__summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.unmatched-row-menu__summary::-webkit-details-marker {
+    display: none;
+}
+
+.unmatched-row-menu[open] > .unmatched-row-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.35rem);
+    z-index: 20;
+    min-width: 12rem;
+    max-width: min(20rem, 70vw);
+    padding: 0.5rem;
+    border-radius: var(--od-radius-md);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface-2);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+.unmatched-row-menu:not([open]) > .unmatched-row-actions {
+    display: none;
+}
+
+#unmatchedExportMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 10rem;
+    padding: 0.5rem;
+}
+
+#unmatchedExportMenu[hidden] {
+    display: none !important;
+}
+
+.od-contextbar__form {
+    display: inline-flex;
+    margin: 0;
 }
 
 /* Results counter */
@@ -437,6 +554,7 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .control-btn {
@@ -580,6 +698,26 @@
 
 .auto-scan-panel__refresh .od-tip__bubble {
     max-width: 18rem;
+}
+
+/* Library tools: views live in the THN; panes are not a bordered card under
+   leftover Bootstrap nav-tabs. */
+.od-library-tools__lede {
+    max-width: 40rem;
+    margin: 0 0 var(--od-space-4, 1rem);
+}
+
+.od-library-tools__panes.tab-content,
+.od-library-tools__add-panes.tab-content {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+.od-library-tools__add-modes {
+    margin-bottom: var(--od-space-3, 0.75rem);
 }
 
 .auto-scan-location {
@@ -826,6 +964,16 @@
     display: flex;
     gap: 10px;
     align-items: flex-end;
+}
+
+.option-item--schedule,
+.option-item--schedule-interval,
+.option-item--schedule-cron {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    width: 100%;
 }
 
 .path-input {
@@ -2562,4 +2710,72 @@ a.unmatched-dupe-of__title:hover {
   line-height: var(--od-line-base);
   color: var(--od-text-muted);
   max-width: 34ch;
+}
+
+
+/* —— Scan Jobs page + modal (Wave 1/2) —— */
+.manual-scan-path-row,
+.auto-scan-path-row,
+.input-with-button.auto-scan-path-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.manual-scan-path-row .path-input,
+.auto-scan-path-row .path-input {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.auto-scan-path-row .od-cbtn,
+.auto-scan-path-row .loading-spinner {
+  flex: 0 0 auto;
+}
+.scan-jobs-card__modal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.scan-jobs-card--compact .card-content {
+  padding: 0;
+}
+.scan-jobs-card--compact .jobs-table-wrapper {
+  max-height: min(60vh, 28rem);
+  overflow: auto;
+}
+.jobs-controls.od-cbtn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.option-item--schedule-interval .auto-scan-schedule-interval,
+.auto-scan-schedule-interval {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.auto-scan-schedule-interval .form-control {
+  flex: 1 1 5rem;
+  min-width: 4rem;
+}
+@media (max-width: 720px) {
+  .manual-scan-path-row,
+  .auto-scan-path-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .jobs-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .jobs-controls,
+  .jobs-controls.od-cbtn-group,
+  .scan-jobs-card__modal-toolbar {
+    width: 100%;
+  }
 }
