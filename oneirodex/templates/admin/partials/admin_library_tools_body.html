@@ -1,51 +1,42 @@
 {# Shared Library tools body for /scan_management?active_tab=tools.
-   Expects: libraries. Element ids are load-bearing — gt_admin_library_tools.js
+   Expects: libraries. Element ids are load-bearing — od_admin_library_tools.js
    and the admin SPA islands (#propose-leaf-mount, #import-leaf-mount) bind to
-   them. Inner tabs use data-bs-target (not href) so they do not collide with
-   the outer scan-page tab triggers, which select [href^="#"]. #}
-{% import 'partials/icons.html' as icons %}
+   them. Tool views live in the thin top bar (chrome.contextbar + data_toggle);
+   Add many is one THN item with Scan a folder | Import a list inside the pane. #}
 
 <div class="od-library-tools">
-  <div class="od-adminpage-header">
-    <div>
-      <h2 class="od-adminpage-title">{{ icons.icon('wand', size=22) }} Library tools</h2>
-      <p class="od-adminpage-lede">
-        Add libraries in bulk, tidy messy folder names, and fix titles that were matched wrong.
-        Everything here previews first — nothing touches disk until you press an
-        <strong>Apply</strong> button, and those are marked in red.
-      </p>
-    </div>
-  </div>
+  <p class="od-adminpage-lede od-library-tools__lede">
+    Everything here previews first — nothing touches disk until you press a red
+    <strong>Apply</strong> button.
+  </p>
 
-  {# Tabs named for the task, not the internal tool name (UX-C3). #}
-  <ul class="nav nav-tabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-propose-leaf" type="button">Add many: scan a folder</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-import-leaf" type="button">Add many: import a list</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-doctor" type="button">Tidy folder names</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proposals" type="button">Review suggested fixes</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rename" type="button">Rename one game</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-freshness" type="button">Check for updates</button></li>
-  </ul>
+  <div class="tab-content od-library-tools__panes">
+    <div class="tab-pane fade show active" id="tab-add-many" role="tabpanel">
+      <div class="od-seg od-library-tools__add-modes" role="tablist" aria-label="Add many">
+        <a class="od-seg__item active" href="#tab-propose-leaf" data-bs-toggle="tab" role="tab" aria-selected="true">Scan a folder</a>
+        <a class="od-seg__item" href="#tab-import-leaf" data-bs-toggle="tab" role="tab" aria-selected="false">Import a list</a>
+      </div>
+      <div class="tab-content od-library-tools__add-panes">
+        <div class="tab-pane fade show active" id="tab-propose-leaf" role="tabpanel">
+          <p class="text-muted mb-3">
+            Many-leaf model: propose per-platform ROM leaves under a console tree, multi-select, then
+            <strong>Confirm create</strong>. Propose never writes libraries; family mega-lib roots are never suggested.
+          </p>
+          <div id="propose-leaf-mount"></div>
+        </div>
 
-  <div class="tab-content">
-    <div class="tab-pane fade show active" id="tab-propose-leaf">
-      <p class="text-muted mb-3">
-        Many-leaf model: propose per-platform ROM leaves under a console tree, multi-select, then
-        <strong>Confirm create</strong>. Propose never writes libraries; family mega-lib roots are never suggested.
-      </p>
-      <div id="propose-leaf-mount"></div>
-    </div>
-
-    <div class="tab-pane fade" id="tab-import-leaf">
-      <p class="text-muted mb-3">
-        Upload or paste CSV/JSON leaf definitions → <strong>Preview</strong> → multi-select →
-        <strong>Confirm create</strong> (same create path as Propose). Preview never writes libraries;
-        family mega-lib parents are rejected into row errors.
-      </p>
-      <div id="import-leaf-mount"></div>
+        <div class="tab-pane fade" id="tab-import-leaf" role="tabpanel">
+          <p class="text-muted mb-3">
+            Upload or paste CSV/JSON leaf definitions → <strong>Preview</strong> → multi-select →
+            <strong>Confirm create</strong> (same create path as Propose). Preview never writes libraries;
+            family mega-lib parents are rejected into row errors.
+          </p>
+          <div id="import-leaf-mount"></div>
+        </div>
+      </div>
     </div>
 
-    <div class="tab-pane fade" id="tab-doctor">
+    <div class="tab-pane fade" id="tab-doctor" role="tabpanel">
       <p class="text-muted mb-3">
         Finds game folders whose names will not match cleanly, and can rename them on disk.
         Start with <strong>Preview</strong> — it only reads. The three steps below run in order,
@@ -78,7 +69,7 @@
       <pre id="doctorOutput" class="mt-3 small" style="max-height: 420px; overflow:auto;"></pre>
     </div>
 
-    <div class="tab-pane fade" id="tab-proposals">
+    <div class="tab-pane fade" id="tab-proposals" role="tabpanel">
       <p class="text-muted mb-3">
         Fixes Oneirodex has suggested but not applied — from scans, from
         <em>Tidy folder names</em>, or from a title it could not match confidently.
@@ -88,7 +79,7 @@
       <div id="proposalsList"></div>
     </div>
 
-    <div class="tab-pane fade" id="tab-rename">
+    <div class="tab-pane fade" id="tab-rename" role="tabpanel">
       <p class="text-muted mb-3">
         FileBot-style rename: search a game, pick a naming pattern, preview disk changes, then apply.
         Templates use <code>{title}</code> and <code>{year}</code>.
@@ -147,7 +138,7 @@
       <pre id="renameOutput" class="mt-3 small"></pre>
     </div>
 
-    <div class="tab-pane fade" id="tab-freshness">
+    <div class="tab-pane fade" id="tab-freshness" role="tabpanel">
       <p class="text-muted">
         Bulk-check local version hints against Steam / GOG / Epic (best-effort) and refresh library badges.
         Prefer small batches first; store APIs are rate-limited. You can also check a single game from its details page while a scan runs.

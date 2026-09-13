@@ -47,6 +47,20 @@
              ],
              active=active_tab or 'auto') %}
         {% endcall %}
+{% elif enable_new_chrome and active_tab == 'tools' %}
+        {# In-page Library tools views — THN strip; Add many folds scan+import. #}
+        {% call chrome.contextbar(
+             views=[
+               ('add-many', 'Add many', '#tab-add-many'),
+               ('doctor', 'Tidy folder names', '#tab-doctor'),
+               ('proposals', 'Review suggested fixes', '#tab-proposals'),
+               ('rename', 'Rename one game', '#tab-rename'),
+               ('freshness', 'Check for updates', '#tab-freshness'),
+             ],
+             active='add-many',
+             data_toggle='tab',
+             label='Library tools') %}
+        {% endcall %}
 {% endif %}
 <div class="admin_manage_scanjobs-nav-panel">
     <div class="container-settings od-adminpage od-adminpage--xl">
