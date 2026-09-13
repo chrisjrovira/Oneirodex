@@ -1,5 +1,5 @@
 {% extends "base_admin.html" %}
-{% block title %}{% if active_tab == 'tools' %}Library tools{% elif active_tab == 'manual' %}Manual scan{% elif active_tab == 'unmatched' %}Unmatched{% elif active_tab == 'scan_filters' %}Filters{% elif active_tab == 'file_extensions' %}Extensions{% elif active_tab == 'image_queue' %}Image queue{% else %}Auto scan{% endif %} · Oneirodex Admin{% endblock %}
+{% block title %}{% if active_tab == 'tools' %}Library tools{% elif active_tab == 'manual' %}Manual scan{% elif active_tab == 'jobs' %}Scan Jobs{% elif active_tab == 'unmatched' %}Unmatched{% elif active_tab == 'scan_filters' %}Filters{% elif active_tab == 'file_extensions' %}Extensions{% elif active_tab == 'image_queue' %}Image queue{% else %}Auto scan{% endif %} · Oneirodex Admin{% endblock %}
 {% block styles %}
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_libs.css'|theme_asset }}">
@@ -61,6 +61,34 @@
              data_toggle='tab',
              label='Library tools') %}
         {% endcall %}
+{% elif enable_new_chrome and active_tab == 'unmatched' %}
+        {% call chrome.contextbar(
+             views=[],
+             active='unmatched',
+             label='Unmatched',
+             summary='Resolve unmatched') %}
+          <form action="" method="post" class="od-contextbar__form">
+            {{ csrf_form.csrf_token }}
+            <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
+            <button type="submit" class="od-cbtn" id="clearUnmatchedBtn" data-toggle="tooltip" title="Remove only folders with Unmatched status" data-od-confirm="Clear all Unmatched rows? This cannot be undone.">Clear Unmatched</button>
+          </form>
+          <form action="" method="post" class="od-contextbar__form">
+            {{ csrf_form.csrf_token }}
+            <input type="hidden" name="submit" value="DeleteAllUnmatched">
+            <button type="submit" class="od-cbtn od-cbtn--danger" id="clearAllUnmatchedBtn" data-toggle="tooltip" title="Remove every entry from the unmatched list" data-od-confirm="Delete ALL unmatched entries? This cannot be undone.">Clear All</button>
+          </form>
+          <button type="button" id="reclassifyDuplicatesBtn" class="od-cbtn" data-toggle="tooltip" title="Downgrade false Duplicate rows (cross-system / different titles) back to Unmatched">Fix false duplicates</button>
+          <button type="button" id="backfillSuggestedKindBtn" class="od-cbtn" data-toggle="tooltip" title="Fill missing Suggested kind chips from on-disk scan proposals">Backfill kind hints</button>
+          <div class="od-pop" data-align="end" id="unmatchedExportPop">
+            <button type="button" class="od-cbtn" id="unmatchedExportToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="unmatchedExportMenu" title="Download the current filter">
+              {{ icons.icon('download') }} Export
+            </button>
+            <div class="od-pop__panel od-pop__panel--bare" id="unmatchedExportMenu" role="menu" hidden>
+              <a id="exportUnmatchedCsvBtn" class="od-cbtn" role="menuitem" href="{{ url_for('apis.export_unmatched_folders', status='all', format='csv') }}" title="Download the current filter as CSV">Export CSV</a>
+              <a id="exportUnmatchedJsonBtn" class="od-cbtn" role="menuitem" href="{{ url_for('apis.export_unmatched_folders', status='all', format='json') }}" title="Download the current filter as JSON">Export JSON</a>
+            </div>
+          </div>
+        {% endcall %}
 {% endif %}
 <div class="admin_manage_scanjobs-nav-panel">
     <div class="container-settings od-adminpage od-adminpage--xl">
@@ -89,7 +117,6 @@
                         <div class="card-header auto-scan-panel__header">
                             <div class="auto-scan-panel__heading">
                                 <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Auto Scan</h4>
-                                <p class="auto-scan-panel__lede">Library, options, and folder path — one setup panel.</p>
                             </div>
                             <span class="od-tip od-tip--end auto-scan-panel__refresh">
                                 <button
@@ -106,6 +133,7 @@
                             </span>
                         </div>
                         <div class="card-content">
+                            <div class="auto-scan-panel__grid">
                             <div class="config-grid">
                                 <div class="config-item">
                                     {{ auto_form.library_uuid.label(class="config-label", **{"data-toggle": "tooltip", "title": "Choose which library to scan games into"}) }}
@@ -118,12 +146,14 @@
                                 </div>
 
                                 <div class="config-item">
-                                    <label class="config-label" data-toggle="tooltip" title="Choose how your games are organized on disk">{{ auto_form.scan_mode.label.text }}</label>
+                                    <label class="config-label" data-toggle="tooltip" title="Folders, files, or let Oneirodex detect from the path">{{ auto_form.scan_mode.label.text }}</label>
                                     <div class="radio-group">
                                         {% for subfield in auto_form.scan_mode %}
                                             <div class="radio-option">
                                                 {{ subfield(class="form-check-input") }}
-                                                {% if subfield.data == 'folders' %}
+                                                {% if subfield.data == 'auto' %}
+                                                {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Inspect the path and choose folders vs files automatically"}) }}
+                                                {% elif subfield.data == 'folders' %}
                                                 {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Each game is in its own folder (e.g., /Games/Doom/, /Games/Quake/)"}) }}
                                                 {% else %}
                                                 {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Games are individual files in one folder (e.g., /Games/doom.zip, /Games/quake.exe)"}) }}
@@ -139,14 +169,17 @@
                                 </div>
                             </div>
 
-                            <div class="options-row">
+                            <div class="options-row auto-scan-panel__options">
+                                <div class="auto-scan-panel__opt-group" data-group="cleanup">
                                 <div class="option-item">
                                     <div class="form-check modern-checkbox">
                                         {{ auto_form.remove_missing(class="form-check-input") }}
                                         {{ auto_form.remove_missing.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Remove games from library if their folders no longer exist on disk"}) }}
                                     </div>
                                 </div>
+                                </div>
 
+                                <div class="auto-scan-panel__opt-group" data-group="media">
                                 <div class="option-item">
                                     <div class="form-check modern-checkbox">
                                         {{ auto_form.download_missing_images(class="form-check-input") }}
@@ -160,7 +193,9 @@
                                         {{ auto_form.force_updates_extras_scan.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force re-scanning of update and extras folders even if previously scanned"}) }}
                                     </div>
                                 </div>
+                                </div>
 
+                                <div class="auto-scan-panel__opt-group" data-group="hltb">
                                 <div class="option-item">
                                     <div class="form-check modern-checkbox">
                                         {{ auto_form.fetch_hltb(class="form-check-input", id="fetch-hltb-auto", checked="checked") }}
@@ -174,11 +209,26 @@
                                         {{ auto_form.force_hltb_refetch.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force refetch HLTB data for games that already exist in the database"}) }}
                                     </div>
                                 </div>
-
-                                <div class="option-item">
-                                    {{ auto_form.schedule.label(class="config-label", **{"data-toggle": "tooltip", "title": "Optionally repeat this scan on a timer after it completes"}) }}
-                                    {{ auto_form.schedule(class="form-control config-input") }}
                                 </div>
+
+                                <div class="auto-scan-panel__opt-group auto-scan-panel__schedule" data-group="schedule">
+                                    <div class="option-item option-item--schedule">
+                                        {{ auto_form.schedule.label(class="config-label", **{"data-toggle": "tooltip", "title": "Optionally repeat this scan on a timer after it completes"}) }}
+                                        {{ auto_form.schedule(class="form-control config-input", id="autoScheduleKind") }}
+                                    </div>
+                                    <div class="option-item option-item--schedule-interval" id="autoScheduleIntervalRow" hidden>
+                                        <label class="config-label" for="autoScheduleInterval">Every</label>
+                                        <div class="auto-scan-schedule-interval">
+                                            {{ auto_form.schedule_interval_value(class="form-control config-input", id="autoScheduleInterval") }}
+                                            {{ auto_form.schedule_interval_unit(class="form-control config-input", id="autoScheduleUnit") }}
+                                        </div>
+                                    </div>
+                                    <div class="option-item option-item--schedule-cron" id="autoScheduleCronRow" hidden>
+                                        {{ auto_form.schedule_cron.label(class="config-label", **{"data-toggle": "tooltip", "title": "Standard 5-field cron: minute hour day-of-month month day-of-week"}) }}
+                                        {{ auto_form.schedule_cron(class="form-control config-input", id="autoScheduleCron", placeholder="0 */6 * * *") }}
+                                    </div>
+                                </div>
+                            </div>
                             </div>
 
                             <div class="auto-scan-location">
@@ -196,11 +246,16 @@
                                         <div class="od-root-picker__hint" id="scanRootHintAuto" hidden></div>
                                     </div>
                                     {{ auto_form.library_root(id="autoLibraryRoot", type="hidden") }}
-                                    {{ auto_form.folder_path.label(class="config-label", **{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games. Leave empty to scan the configured base directory. Click a folder to select it, then Start Scan."}) }}
-                                    <div class="input-with-button">
-                                        {{ auto_form.folder_path(class="form-control path-input", placeholder="Select a folder below, or leave empty for base directory") }}
-                                        <button id="browseFoldersBtn" type="button" class="btn btn-info browse-btn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
+                                    <div class="input-with-button auto-scan-path-row">
+                                        {{ auto_form.folder_path(class="form-control path-input", placeholder="Folder path (empty = base directory)", **{"aria-label": "Scan folder path", "title": "Browse or enter the path to scan. Leave empty for the configured base directory."}) }}
+                                        <button id="browseFoldersBtn" type="button" class="od-cbtn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
                                             {{ icons.icon('search') }} Browse
+                                        </button>
+                                        <button type="submit" name="submit" value="AutoScan" class="od-cbtn od-cbtn--primary" id="autoScanStartBtn">
+                                            {{ icons.icon('play') }} Start Scan
+                                        </button>
+                                        <button type="button" class="od-cbtn" id="openScanJobsModalBtn" data-bs-toggle="modal" data-bs-target="#scanJobsModal">
+                                            {{ icons.icon('tasks') }} Scan jobs
                                         </button>
                                         <div id="loadingSpinner" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
                                             <span class="od-spinner od-spinner--sm" aria-hidden="true"></span>
@@ -215,16 +270,13 @@
                                 </div>
 
                                 <div class="folder-browser">
-                                    <button id="upFolderBtn" type="button" class="btn btn-secondary up-btn" style="display: none;">
+                                    <button id="upFolderBtn" type="button" class="od-cbtn up-btn" style="display: none;">
                                         {{ icons.icon('updates') }} Up
                                     </button>
                                     <div id="folderContents" class="folder-contents"></div>
                                 </div>
 
                                 <div class="scan-controls-group auto-scan-actions">
-                                    <button type="submit" name="submit" value="AutoScan" class="btn btn-primary browse-btn" id="autoScanStartBtn">
-                                        {{ icons.icon('play') }} Start Scan
-                                    </button>
                                     <div id="autoScanStatus" class="auto-scan-status" hidden role="status" aria-live="polite" data-state="idle">
                                         <span class="auto-scan-status__motif" aria-hidden="true">
                                             <span class="od-spinner od-spinner--sm"></span>
@@ -492,47 +544,21 @@
             <!-- Unmatched Folders Tab -->
             {% endif %}
             {% if active_tab == 'unmatched' %}
-            <div id="unmatchedFolders" class="admin_manage_scanjobs-unmatched-container tab-pane {% if active_tab == 'unmatched' %}active{% else %}fade{% endif %}"><br>
+            <div id="unmatchedFolders" class="admin_manage_scanjobs-unmatched-container tab-pane {% if active_tab == 'unmatched' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-unmatched-panel od-adminpage-panel">
-                    <div class="admin_manage_scanjobs-tab-header">
-                        <h3>Resolve Unmatched Folders</h3>
-                    </div>
-                    <!-- spinner -->
-                    <div id="globalSpinner" class="od-loading-overlay" style="display: none;" role="status" aria-live="polite" aria-busy="true">
+                    {# Fixed overlay — never takes layout height in the panel. #}
+                    <div id="globalSpinner" class="od-loading-overlay od-loading-overlay--blocking" style="display: none;" role="status" aria-live="polite" aria-busy="true">
                         <span class="od-spinner od-spinner--lg" aria-hidden="true"></span>
-                        <span class="visually-hidden">Working…</span>
+                        <span class="od-loading-overlay__label">Working…</span>
                     </div>
 
-                    <div class="unmatched-resolve-bar-wrap mb-3">
-                        <div class="container-unmatched-buttons unmatched-resolve-bar" role="toolbar" aria-label="Resolve unmatched folders">
-                            <form action="" method="post">
-                                {{ csrf_form.csrf_token }}
-                                <input type="hidden" name="submit" value="DeleteAllUnmatched">
-                                <button type="submit" class="admin_manage_scanjobs-clearall-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove all entries from the unmatched folders list" data-od-confirm="Are you sure you want to delete all entries in the list? This cannot be undone.">Clear All</button>
-                            </form>
-                            <form action="" method="post">
-                                {{ csrf_form.csrf_token }}
-                                <input type="hidden" name="submit" value="DeleteOnlyUnmatched">
-                                <button type="submit" class="admin_manage_scanjobs-clearunmatched-btn unmatched-resolve-bar__pill" data-toggle="tooltip" title="Remove only folders with 'Unmatched' status, keeping identified items" data-od-confirm="Are you sure you want to clear all unmatched folders? This cannot be undone.">Clear Unmatched</button>
-                            </form>
-                            <button type="button" id="reclassifyDuplicatesBtn" class="unmatched-resolve-bar__pill" data-toggle="tooltip" title="Change false Duplicate rows (different folder titles, same IGDB) back to Unmatched">Fix false duplicates</button>
-                            <button type="button" id="backfillSuggestedKindBtn" class="unmatched-resolve-bar__pill" data-toggle="tooltip" title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)">Backfill kind hints</button>
-                            <a id="exportUnmatchedCsvBtn" class="unmatched-resolve-bar__pill" href="{{ url_for('apis.export_unmatched_folders', status='all', format='csv') }}" data-toggle="tooltip" title="Download the current filter as CSV">
-                                {{ icons.icon('download') }} Export CSV
-                            </a>
-                            <a id="exportUnmatchedJsonBtn" class="unmatched-resolve-bar__pill" href="{{ url_for('apis.export_unmatched_folders', status='all', format='json') }}" data-toggle="tooltip" title="Download the current filter as JSON">
-                                {{ icons.icon('download') }} Export JSON
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Filter Controls (Wave 17: status · q · why · suggested_kind) -->
+                    <!-- Filter Controls -->
                     <div class="unmatched-filters" id="unmatchedFiltersToolbar">
                         <div class="filter-row">
                             <div class="filter-buttons" role="group" aria-label="Status filter">
                                 <button type="button" class="filter-btn active" data-filter="all">All</button>
                                 <button type="button" class="filter-btn" data-filter="Unmatched">Unmatched</button>
-                                <button type="button" class="filter-btn" data-filter="Duplicate" title="Same title already in library (IGDB copy)">Duplicates</button>
+                                <button type="button" class="filter-btn" data-filter="Duplicate" title="Same title already in this system + region">Duplicates</button>
                                 <button type="button" class="filter-btn" data-filter="Ignore">Ignored</button>
                                 <button type="button" class="filter-btn" data-filter="Pending">Pending</button>
                             </div>
@@ -543,6 +569,50 @@
                                        placeholder="Search path, name, library, platform, or dupe title…"
                                        autocomplete="off">
                             </div>
+                        </div>
+                        <div class="filter-row filter-row--selects">
+                            <label class="unmatched-filter-select">
+                                <span class="filter-chip-label">Library</span>
+                                <select id="unmatchedLibraryFilter" class="search-input unmatched-filter-select__control" aria-label="Filter by library">
+                                    <option value="">All libraries</option>
+                                    {% for lib in libraries %}
+                                    <option value="{{ lib.uuid }}">{{ lib.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label class="unmatched-filter-select">
+                                <span class="filter-chip-label">System</span>
+                                <select id="unmatchedPlatformFilter" class="search-input unmatched-filter-select__control" aria-label="Filter by system">
+                                    <option value="">All systems</option>
+                                    {% set seen_platforms = [] %}
+                                    {% for lib in libraries %}
+                                      {% if lib.platform and lib.platform.name not in seen_platforms %}
+                                        {% if seen_platforms.append(lib.platform.name) %}{% endif %}
+                                        <option value="{{ lib.platform.name }}">{{ lib.platform.name }}</option>
+                                      {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label class="unmatched-filter-select">
+                                <span class="filter-chip-label">Region</span>
+                                <select id="unmatchedRegionFilter" class="search-input unmatched-filter-select__control" aria-label="Filter by ROM region">
+                                    <option value="">All regions</option>
+                                    <option value="USA">USA</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="JPN">JPN</option>
+                                    <option value="WORLD">WORLD</option>
+                                    <option value="OTHER">OTHER</option>
+                                </select>
+                            </label>
+                            <label class="unmatched-filter-select">
+                                <span class="filter-chip-label">Page size</span>
+                                <select id="unmatchedPageSize" class="search-input unmatched-filter-select__control" aria-label="Rows per page">
+                                    <option value="50">50</option>
+                                    <option value="150" selected>150</option>
+                                    <option value="300">300</option>
+                                    <option value="500">500</option>
+                                </select>
+                            </label>
                         </div>
                         <div class="filter-row filter-row--chips">
                             <div class="filter-chip-group" role="group" aria-label="Library layout">
@@ -566,6 +636,8 @@
                                 <button type="button" class="filter-chip" data-why-filter="title_vs_folder">Title vs folder</button>
                                 <button type="button" class="filter-chip" data-why-filter="title_vs_library_name">Title vs library</button>
                                 <button type="button" class="filter-chip" data-why-filter="title_below_threshold">Below threshold</button>
+                                <button type="button" class="filter-chip" data-why-filter="cross_system">Cross-system</button>
+                                <button type="button" class="filter-chip" data-why-filter="region_mismatch">Region mismatch</button>
                             </div>
                             <div class="filter-chip-group" role="group" aria-label="Suggested kind">
                                 <span class="filter-chip-label">Kind</span>
@@ -576,18 +648,17 @@
                                 <button type="button" class="filter-chip" data-kind-filter="none" title="No suggested kind">No hint</button>
                             </div>
                         </div>
-                        <div class="results-info" id="resultsInfo">
-                            Showing all entries
+                        <div class="filter-row unmatched-pager-row">
+                            <div class="results-info" id="resultsInfo">Showing all entries</div>
+                            <div class="unmatched-pager" id="unmatchedPager" hidden>
+                                <button type="button" class="od-cbtn" id="unmatchedPrevPage" disabled>Previous</button>
+                                <span class="unmatched-pager__meta" id="unmatchedPageMeta">Page 1</span>
+                                <button type="button" class="od-cbtn" id="unmatchedNextPage" disabled>Next</button>
+                            </div>
                         </div>
                     </div>
                     <div class="unmatched-table-wrap">
-                    {# The sort buttons here used to be written out by hand and driven by a
-                       sorter local to this page (UID-005). Both are now js/od_sortable_table.js,
-                       which builds the controls from data-sort-key and re-applies the order when
-                       the body is re-rendered. The row-level data-sort-* attributes it reads are
-                       the ones this page already emitted — that convention is why the shared
-                       module adopts the naming it does. #}
-                    <table id="unmatchedTable" class="simple-unmatched-table" style="border-radius: 15px;"
+                    <table id="unmatchedTable" class="simple-unmatched-table unmatched-table--compact"
                            data-od-sortable data-od-sort-default="folder" data-od-sort-dir="asc">
                         <thead>
                             <tr>
@@ -597,16 +668,18 @@
                                 <th class="col-path" scope="col" data-sort-key="folder">Folder</th>
                                 <th class="col-status" scope="col" data-sort-key="status">Status</th>
                                 <th class="col-library" scope="col" data-sort-key="library">Library</th>
-                                <th class="col-platform" scope="col" data-sort-key="platform">Platform</th>
+                                <th class="col-platform" scope="col" data-sort-key="platform">System</th>
+                                <th class="col-region" scope="col" data-sort-key="region">Region</th>
+                                <th class="col-actions" scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="unmatchedFoldersTableBody">
-                            <!-- This will be populated dynamically by JavaScript -->
+                            <!-- Populated by JavaScript -->
                         </tbody>
                     </table>
                     </div>
 
-                    <!-- Sticky batch bar (Wave 17) -->
+                    <!-- Sticky batch bar -->
                     <div id="unmatchedBatchBar" class="unmatched-batch-bar" hidden>
                         <div class="unmatched-batch-bar__count" id="unmatchedBatchCount">0 selected</div>
                         <div class="unmatched-batch-bar__actions">
@@ -618,7 +691,7 @@
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="merge" title="Duplicate: keep library game, clear row">Merge</button>
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="keep" title="Duplicate: reclassify as Unmatched">Keep</button>
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="ignore" title="Duplicate: set Ignore">Ignore dupes</button>
-                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="ignore_selected" title="Set Ignore on all selected rows (garbage / scaffolding triage)">Ignore selected</button>
+                            <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="ignore_selected" title="Set Ignore on all selected rows">Ignore selected</button>
                             <button type="button" class="btn btn-outline-light btn-sm" data-batch-action="deselect" title="Clear selection">Deselect</button>
                         </div>
                     </div>

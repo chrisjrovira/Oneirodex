@@ -221,6 +221,115 @@
     background: color-mix(in srgb, var(--od-text) 15%, transparent);
 }
 
+.filter-row--selects {
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.unmatched-filter-select {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 140px;
+}
+
+.unmatched-filter-select__control {
+    min-width: 140px;
+    max-width: 220px;
+}
+
+.unmatched-pager-row {
+    justify-content: space-between;
+}
+
+.unmatched-pager {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.unmatched-pager__meta {
+    color: var(--od-text-muted);
+    font-size: var(--od-font-sm);
+}
+
+.simple-unmatched-table.unmatched-table--compact th,
+.simple-unmatched-table.unmatched-table--compact td {
+    padding: 8px 10px;
+    vertical-align: top;
+}
+
+.simple-unmatched-table .col-region {
+    width: 72px;
+    max-width: 88px;
+}
+
+.simple-unmatched-table .col-actions {
+    width: 110px;
+    max-width: 140px;
+}
+
+.unmatched-folder-cell--compact .unmatched-amend__ondisk {
+    font-size: var(--od-font-sm);
+    color: var(--od-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 36rem;
+}
+
+.unmatched-row-menu {
+    position: relative;
+}
+
+.unmatched-row-menu__summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.unmatched-row-menu__summary::-webkit-details-marker {
+    display: none;
+}
+
+.unmatched-row-menu[open] > .unmatched-row-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.35rem);
+    z-index: 20;
+    min-width: 12rem;
+    max-width: min(20rem, 70vw);
+    padding: 0.5rem;
+    border-radius: var(--od-radius-md);
+    border: 1px solid var(--od-border);
+    background: var(--od-surface-2);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+.unmatched-row-menu:not([open]) > .unmatched-row-actions {
+    display: none;
+}
+
+#unmatchedExportMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 10rem;
+    padding: 0.5rem;
+}
+
+#unmatchedExportMenu[hidden] {
+    display: none !important;
+}
+
+.od-contextbar__form {
+    display: inline-flex;
+    margin: 0;
+}
+
 /* Results counter */
 .results-info {
     color: var(--od-text-muted);

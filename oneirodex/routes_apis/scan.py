@@ -11,7 +11,13 @@ from oneirodex.models import ScanJob, UnmatchedFolder, Library, Game, DuplicateF
 from sqlalchemy import or_, select
 from oneirodex.utils.auth import admin_required, librarian_required
 from oneirodex.utils.cover_url import resolve_game_cover_url
-from oneirodex.utils.duplicate_check import explain_duplicate_match, folder_basename, should_mark_as_duplicate
+from oneirodex.utils.duplicate_check import (
+    explain_duplicate_match,
+    folder_basename,
+    normalize_rom_region,
+    same_duplicate_scope,
+    should_mark_as_duplicate,
+)
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.functions import igdb_platform_id_for
 from oneirodex.utils.scan_job_timing import (
@@ -30,7 +36,12 @@ _MATCH_REASON_CODES = {
     'title_vs_folder',
     'title_vs_library_name',
     'title_below_threshold',
+    'cross_system',
+    'region_mismatch',
 }
+
+UNMATCHED_LIST_DEFAULT_LIMIT = 150
+UNMATCHED_LIST_MAX_LIMIT = 500
 
 
 def _soft_name(value) -> str | None:
@@ -152,6 +163,7 @@ def _why_unmatched_fields(
     match_reason=None,
     match_score=None,
     use_overrides: bool = False,
+    include_transforms: bool = True,
 ) -> dict:
     """Deterministic one-liner + folder basename for UI explainer (no disk I/O)."""
     from oneirodex.utils.match_proposal import format_why_unmatched
@@ -167,14 +179,18 @@ def _why_unmatched_fields(
         suggested_candidate_name=kind_fields.get('suggested_candidate_name'),
         folder_name=name,
     )
-    return {
+    out = {
         'folder_name': name,
         'why_unmatched': summary,
         'unmatched_reason': summary,  # alias for UI
-        # Peel trail for UI expanders; short match_reason codes stay for filters.
-        'transforms': _label_transforms(folder),
         **_rom_language_fields_from_path(getattr(folder, 'folder_path', None)),
     }
+    # Peel transforms are CPU-heavy across large lists — skip unless asked.
+    if include_transforms:
+        out['transforms'] = _label_transforms(folder)
+    else:
+        out['transforms'] = []
+    return out
 
 
 def _matched_game_payload(game: Game | None, cover_by_uuid: dict | None = None) -> dict | None:
@@ -230,6 +246,7 @@ def _unmatched_list_row(
     *,
     games_by_uuid: dict | None = None,
     cover_by_uuid: dict | None = None,
+    include_transforms: bool = False,
 ) -> dict:
     kind_fields = _suggested_kind_fields(folder)
     matched_uuid = getattr(folder, 'matched_game_uuid', None)
@@ -264,7 +281,11 @@ def _unmatched_list_row(
     }
     row.update(_unmatched_disk_meta_fields(folder))
     row.update(kind_fields)
-    row.update(_why_unmatched_fields(folder, kind_fields))
+    row.update(_why_unmatched_fields(
+        folder,
+        kind_fields,
+        include_transforms=include_transforms,
+    ))
     row.update(_stage_e_fields(folder))
     return row
 
@@ -372,12 +393,32 @@ def _parse_unmatched_list_filters():
             f"Invalid status. Choose one of: {sorted(VALID_UNMATCHED_EXPORT_STATUSES)}",
             code='bad_request',
         )
+    try:
+        limit = int(request.args.get('limit') or UNMATCHED_LIST_DEFAULT_LIMIT)
+    except (TypeError, ValueError):
+        limit = UNMATCHED_LIST_DEFAULT_LIMIT
+    try:
+        offset = int(request.args.get('offset') or 0)
+    except (TypeError, ValueError):
+        offset = 0
+    limit = max(1, min(limit, UNMATCHED_LIST_MAX_LIMIT))
+    offset = max(0, offset)
+    include_raw = (request.args.get('include') or '').strip().lower()
+    include_transforms = include_raw in {'transforms', '1', 'true', 'yes', 'full'}
+    if (request.args.get('transforms') or '').strip().lower() in {'1', 'true', 'yes'}:
+        include_transforms = True
     return {
         'status': status,
         'q': (request.args.get('q') or request.args.get('name') or '').strip(),
         'why': (request.args.get('why') or request.args.get('reason') or '').strip(),
         'suggested_kind': (request.args.get('suggested_kind') or '').strip().lower(),
         'library_uuid': (request.args.get('library_uuid') or '').strip(),
+        'platform': (request.args.get('platform') or request.args.get('system') or '').strip(),
+        'rom_region': (request.args.get('rom_region') or request.args.get('region') or '').strip(),
+        'limit': limit,
+        'offset': offset,
+        'include_transforms': include_transforms,
+        'paginate': (request.args.get('paginate') or '0').strip().lower() in {'1', 'true', 'yes'},
     }, None
 
 
@@ -390,6 +431,25 @@ def _apply_unmatched_filters(query, filters: dict):
     if library_uuid:
         query = query.filter(UnmatchedFolder.library_uuid == library_uuid)
 
+    platform = filters.get('platform') or ''
+    if platform:
+        from oneirodex.platform import LibraryPlatform
+
+        platform_enum = None
+        key = platform.strip()
+        try:
+            platform_enum = LibraryPlatform[key]
+        except KeyError:
+            for member in LibraryPlatform:
+                if member.name == key or member.value == key:
+                    platform_enum = member
+                    break
+        if platform_enum is not None:
+            query = query.filter(Library.platform == platform_enum)
+        else:
+            # Unknown platform token → empty result rather than ignoring the filter.
+            query = query.filter(Library.platform == None)  # noqa: E711
+
     suggested_kind = filters.get('suggested_kind') or ''
     if suggested_kind:
         query = query.filter(UnmatchedFolder.suggested_kind == suggested_kind)
@@ -401,6 +461,7 @@ def _apply_unmatched_filters(query, filters: dict):
             UnmatchedFolder.folder_path.ilike(pattern),
             UnmatchedFolder.search_name.ilike(pattern),
             UnmatchedFolder.display_name.ilike(pattern),
+            Library.name.ilike(pattern),
         ))
 
     why = filters.get('why') or ''
@@ -420,14 +481,31 @@ def _apply_unmatched_filters(query, filters: dict):
     return query
 
 
-def _query_unmatched_rows(filters: dict):
+def _query_unmatched_rows(filters: dict, *, paginate: bool | None = None):
     query = (
         select(UnmatchedFolder, Library.name.label('library_name'), Library.platform)
         .join(Library)
         .order_by(UnmatchedFolder.status.desc(), UnmatchedFolder.folder_path.asc())
     )
     query = _apply_unmatched_filters(query, filters)
+    use_page = filters.get('paginate', True) if paginate is None else paginate
+    if use_page:
+        limit = filters.get('limit') or UNMATCHED_LIST_DEFAULT_LIMIT
+        offset = filters.get('offset') or 0
+        query = query.limit(limit).offset(offset)
     return db.session.execute(query).all()
+
+
+def _count_unmatched_rows(filters: dict) -> int:
+    from sqlalchemy import func
+
+    query = (
+        select(func.count(UnmatchedFolder.id))
+        .select_from(UnmatchedFolder)
+        .join(Library)
+    )
+    query = _apply_unmatched_filters(query, filters)
+    return int(db.session.execute(query).scalar() or 0)
 
 
 def _parse_batch_ids(data: dict):
@@ -622,9 +700,11 @@ def unmatched_folders():
     if err:
         return err
 
+    # Export / legacy full dump: paginate=0 skips limit (still capped by client).
     rows = _query_unmatched_rows(filters)
     folders = [folder for folder, _library_name, _platform in rows]
     games_by_uuid, cover_by_uuid = _prefetch_matched_game_maps(folders)
+    include_transforms = bool(filters.get('include_transforms'))
 
     unmatched_data = [
         _unmatched_list_row(
@@ -633,9 +713,31 @@ def unmatched_folders():
             platform,
             games_by_uuid=games_by_uuid,
             cover_by_uuid=cover_by_uuid,
+            include_transforms=include_transforms,
         )
         for folder, library_name, platform in rows
     ]
+
+    # Optional rom_region filter is applied after peel (path-derived, not a column).
+    region_filter = normalize_rom_region(filters.get('rom_region') or '')
+    if region_filter:
+        unmatched_data = [
+            row for row in unmatched_data
+            if normalize_rom_region(row.get('rom_region')) == region_filter
+        ]
+
+    if filters.get('paginate'):
+        total = _count_unmatched_rows(filters)
+        # Region filter is post-query — approximate total when active.
+        if region_filter:
+            total = len(unmatched_data) if filters.get('offset') == 0 else total
+        return jsonify({
+            'items': unmatched_data,
+            'total': total,
+            'limit': filters.get('limit'),
+            'offset': filters.get('offset'),
+            'count': len(unmatched_data),
+        })
 
     return jsonify(unmatched_data)
 
@@ -645,37 +747,41 @@ def unmatched_folders():
 @admin_required
 def list_duplicate_candidates():
     """List Duplicate unmatched rows with compare fields for admin UI glance."""
+    from sqlalchemy.orm import joinedload
+
     rows = db.session.execute(
-        select(UnmatchedFolder).filter_by(status='Duplicate').order_by(UnmatchedFolder.failed_time.desc())
-    ).scalars().all()
+        select(UnmatchedFolder)
+        .options(joinedload(UnmatchedFolder.library))
+        .filter_by(status='Duplicate')
+        .order_by(UnmatchedFolder.failed_time.desc())
+    ).scalars().unique().all()
 
     games_by_uuid = {}
     uuids = [r.matched_game_uuid for r in rows if getattr(r, 'matched_game_uuid', None)]
     if uuids:
-        for game in db.session.execute(select(Game).filter(Game.uuid.in_(uuids))).scalars().all():
+        for game in db.session.execute(
+            select(Game).options(joinedload(Game.library)).filter(Game.uuid.in_(uuids))
+        ).scalars().unique().all():
             games_by_uuid[game.uuid] = game
 
-    all_games = None
     payload = []
     for folder in rows:
         matched = games_by_uuid.get(getattr(folder, 'matched_game_uuid', None))
-        if matched is None:
-            if all_games is None:
-                all_games = db.session.execute(select(Game)).scalars().all()
-            best = None
-            best_score = -1.0
-            dupe_thr = resolve_scan_match_policy().get('dupe_title_threshold')
-            for game in all_games:
-                expl = explain_duplicate_match(
-                    game, folder.folder_path or '', title_threshold=dupe_thr,
-                )
-                if expl['is_duplicate'] and expl['match_score'] > best_score:
-                    best = game
-                    best_score = expl['match_score']
-                    folder.matched_game_uuid = game.uuid
-                    folder.match_reason = expl['match_reason']
-                    folder.match_score = expl['match_score']
-            matched = best
+        # Never scan the whole Game table — that made this endpoint unusable on
+        # large libraries. Rows without matched_game_uuid stay without candidates.
+        if matched is not None:
+            folder_region = normalize_rom_region(
+                _rom_language_fields_from_path(folder.folder_path).get('rom_region')
+            )
+            if not same_duplicate_scope(
+                matched,
+                new_platform=getattr(getattr(folder, 'library', None), 'platform', None),
+                new_library_uuid=folder.library_uuid,
+                new_rom_region=folder_region,
+            ):
+                # Stale cross-system Duplicate — still return the row but without
+                # pretending it is a same-system hit.
+                matched = None
         payload.append(_duplicate_compare_payload(folder, matched))
     return jsonify({'duplicates': payload, 'count': len(payload)})
 
@@ -1160,7 +1266,8 @@ def export_unmatched_folders():
     if fmt not in ('csv', 'json'):
         return api_error("Invalid format. Choose 'csv' or 'json'.", code='bad_request')
 
-    rows = _query_unmatched_rows(filters)
+    filters['paginate'] = False
+    rows = _query_unmatched_rows(filters, paginate=False)
     folders = [folder for folder, _ln, _pl in rows]
     games_by_uuid, cover_by_uuid = _prefetch_matched_game_maps(folders)
 
@@ -1171,6 +1278,7 @@ def export_unmatched_folders():
             platform,
             games_by_uuid=games_by_uuid,
             cover_by_uuid=cover_by_uuid,
+            include_transforms=True,
         )
         for folder, library_name, platform in rows
     ]
@@ -1227,26 +1335,54 @@ def export_unmatched_folders():
 @login_required
 @admin_required
 def reclassify_duplicate_unmatched():
-    """Downgrade false 'Duplicate' rows to Unmatched when folder titles differ."""
+    """Downgrade false 'Duplicate' rows to Unmatched.
+
+    False means: folder titles differ, OR the matched hit is a different
+    system/region (cross-system copies are not duplicates).
+    """
+    from sqlalchemy.orm import joinedload
+
     rows = db.session.execute(
-        select(UnmatchedFolder).filter_by(status='Duplicate')
-    ).scalars().all()
+        select(UnmatchedFolder)
+        .options(joinedload(UnmatchedFolder.library))
+        .filter_by(status='Duplicate')
+    ).scalars().unique().all()
     changed = []
     kept = []
-    games = db.session.execute(select(Game)).scalars().all()
+    uuids = [r.matched_game_uuid for r in rows if getattr(r, 'matched_game_uuid', None)]
+    games_by_uuid = {}
+    if uuids:
+        for game in db.session.execute(
+            select(Game).options(joinedload(Game.library)).filter(Game.uuid.in_(uuids))
+        ).scalars().unique().all():
+            games_by_uuid[game.uuid] = game
     dupe_thr = resolve_scan_match_policy().get('dupe_title_threshold')
     for folder in rows:
+        matched = games_by_uuid.get(getattr(folder, 'matched_game_uuid', None))
+        folder_region = normalize_rom_region(
+            _rom_language_fields_from_path(folder.folder_path).get('rom_region')
+        )
+        scope_kwargs = {
+            'new_platform': getattr(getattr(folder, 'library', None), 'platform', None),
+            'new_library_uuid': folder.library_uuid,
+            'new_rom_region': folder_region,
+        }
         is_true = False
-        for game in games:
-            if should_mark_as_duplicate(
-                game, folder.folder_path, title_threshold=dupe_thr,
-            ):
-                is_true = True
-                break
+        if matched is not None and should_mark_as_duplicate(
+            matched,
+            folder.folder_path,
+            title_threshold=dupe_thr,
+            **scope_kwargs,
+        ):
+            is_true = True
         if is_true:
             kept.append(folder.folder_path)
             continue
         folder.status = 'Unmatched'
+        if matched is None or not same_duplicate_scope(matched, **scope_kwargs):
+            folder.match_reason = 'cross_system'
+            folder.matched_game_uuid = None
+            folder.match_score = None
         changed.append(folder.folder_path)
     db.session.commit()
     return jsonify({
