@@ -25,22 +25,12 @@
             .replace(/'/g, '&#39;');
     }
 
-    // Initialize image queue when tab is shown
+    // Initialize image queue when its page is present.
     document.addEventListener('DOMContentLoaded', function() {
-        // Load image queue only when the tab is active
-        // Selected by what it points at, not by its own id: bar two's segment
-        // targets the same panel but carries no `imageQueue-tab` id, and
-        // getElementById would silently stop lazy-loading the queue there.
-        const imageQueueTab =
-            document.querySelector('[data-bs-toggle="tab"][href="#imageQueue"]');
-        if (imageQueueTab) {
-            imageQueueTab.addEventListener('shown.bs.tab', function() {
-                loadImageQueue();
-            });
-        }
-
-        // Load initially if image queue tab is active
-        if (document.getElementById('imageQueue').classList.contains('active')) {
+        // Image queue is its own page (`?active_tab=image_queue`); the panel
+        // is only in the DOM when that page rendered.
+        const imageQueue = document.getElementById('imageQueue');
+        if (imageQueue) {
             loadImageQueue();
         }
     });

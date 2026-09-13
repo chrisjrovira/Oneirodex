@@ -31,7 +31,7 @@ export function LibrariesPage() {
   return (
     <Page
       title="Libraries & scans"
-      lede="Manage library folders and platforms. Classic Jinja surfaces share the same Libraries / Auto / Manual / Unmatched tabs."
+      lede="Manage library folders and platforms. Sibling scan pages live under Libraries & scans in the rail."
     >
       <PageStatus error={error} errorMessage="Unable to load libraries." />
       <p className="od-admin-lede">

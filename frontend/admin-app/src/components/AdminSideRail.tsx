@@ -88,7 +88,7 @@ export function AdminSideRail({
   railState?: string
   onCloseDrawer?: () => void
 }) {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const iconOnly = railState === 'collapsed'
   const ownedSection = resolveNavSection(pathname)
   const [collapsedSections, toggleSection] = useCollapsedSections(ownedSection)
@@ -112,11 +112,24 @@ export function AdminSideRail({
     return pathname === base || pathname.startsWith(`${base}/`)
   }
 
-  function isActiveSub(href: string | undefined) {
-    const base = (href || '').split('#')[0].split('?')[0]
-    if (!base) return false
-    const path = pathname.split('?')[0]
-    return path === base || path.startsWith(`${base}/`)
+  function isActiveSub(href: string | undefined, label?: string) {
+    if (!href) return false
+    try {
+      const u = new URL(href, window.location.origin)
+      if (pathname !== u.pathname) return false
+      // Scan covers auto + manual; THN picks the mode.
+      if (label === 'Scan' && u.pathname === '/scan_management') {
+        const tab = new URLSearchParams(search).get('active_tab')
+        return tab === 'auto' || tab === 'manual' || tab == null
+      }
+      const wantTab = u.searchParams.get('active_tab')
+      if (wantTab != null) {
+        return new URLSearchParams(search).get('active_tab') === wantTab
+      }
+      return true
+    } catch {
+      return false
+    }
   }
 
   function destinationLink(link: AdminNavLink, { active }: { active?: boolean } = {}) {
@@ -179,7 +192,7 @@ export function AdminSideRail({
               {folded
                 ? null
                 : subs.map((sub) => {
-                    const subActive = isActiveSub(sub.href)
+                    const subActive = isActiveSub(sub.href, sub.label)
                     return (
                       <li key={`${link.id}:${sub.href}:${sub.label}`}>
                         <a

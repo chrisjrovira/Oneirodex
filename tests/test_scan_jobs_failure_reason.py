@@ -175,11 +175,21 @@ def test_ops_summary_reports_no_reason_as_none_not_empty_string(
 
 
 def test_library_tools_live_on_scan_management(admin_client):
-    """Auto Scan and library maker are tabs of the same page."""
-    body = admin_client.get('/scan_management').get_data(as_text=True)
+    """Library tools is its own scan_management page (active_tab=tools)."""
+    auto = admin_client.get('/scan_management').get_data(as_text=True)
+    assert 'id="libraryTools"' not in auto
+    assert 'id="autoScan"' in auto
+    body = admin_client.get('/scan_management?active_tab=tools').get_data(as_text=True)
     assert 'id="libraryTools"' in body
     assert 'id="propose-leaf-mount"' in body
     assert 'od_admin_library_tools.js' in body
+    assert 'id="autoScan"' not in body
+
+
+def test_libraries_tab_redirects_to_libraries_page(admin_client):
+    response = admin_client.get('/scan_management?active_tab=libraries')
+    assert response.status_code == 302
+    assert '/libraries' in response.headers['Location']
 
 
 def test_library_tools_page_redirects_to_the_scan_tab(admin_client):

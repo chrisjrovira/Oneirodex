@@ -50,7 +50,7 @@ const CASES = [
   ['/admin/ops/history', 'Ops'],
   // libraries family — every legacy prefix folds onto LibrariesPage
   ['/libraries', 'Libraries & scans'],
-  ['/scan_management?active_tab=libraries', 'Libraries & scans'],
+  ['/libraries', 'Libraries & scans'],
   ['/admin/library/tools', 'Libraries & scans'],
   // settings modules with no React body yet -> SettingsSectionPage, which
   // titles itself from the matching SETTINGS_CARDS entry (same as the old switch).

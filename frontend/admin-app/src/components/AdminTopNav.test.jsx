@@ -167,8 +167,7 @@ test('rail lists every admin section', () => {
   renderRail()
 
   // Landing-only sections are destination links; hub sections fold open
-  // (member LHN). Libraries / Settings / Integrations are landing-only so
-  // their tabs and module lists are not duplicated under the rail.
+  // (member LHN). Settings / Integrations stay landing-only; Libraries is a hub.
   for (const link of ADMIN_NAV) {
     const mode = RAIL_SECTION_MODE[link.id] || 'hub'
     if (mode === 'landing') {
@@ -208,16 +207,45 @@ test('rail settings is landing-only (hub owns the module list)', () => {
   expect(screen.queryByRole('link', { name: 'All settings' })).toBeNull()
 })
 
-test('rail libraries is landing-only (tabs stay in the top bar)', () => {
-  const { container } = renderRail({ at: '/scan_management' })
+test('rail libraries is a hub of sibling pages', () => {
+  const { container } = renderRail({ at: '/libraries' })
 
-  expect(screen.queryByRole('button', { name: 'Libraries & scans' })).toBeNull()
-  const libraries = screen.getByRole('link', { name: 'Libraries & scans' })
-  expect(libraries).toHaveAttribute('href', '/scan_management?active_tab=libraries')
-  expect(libraries).toHaveClass('is-active')
-  // Tab-like destinations must not reappear under the rail fold.
-  expect(container.querySelector('a[href="/scan_management?active_tab=tools"]')).toBeNull()
-  expect(container.querySelector('a[href="/scan_management?active_tab=image_queue"]')).toBeNull()
+  expect(screen.getByRole('button', { name: 'Libraries & scans' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  )
+  expect(container.querySelector('a[href="/libraries"]')).toBeTruthy()
+  expect(container.querySelector('a[href="/scan_management?active_tab=auto"]')).toHaveTextContent(
+    'Scan',
+  )
+  expect(container.querySelector('a[href="/scan_management?active_tab=manual"]')).toBeNull()
+  expect(container.querySelector('a[href="/scan_management?active_tab=tools"]')).toBeTruthy()
+  expect(container.querySelector('a[href="/scan_management?active_tab=image_queue"]')).toBeTruthy()
+})
+
+test('rail highlights only the Scan row for auto or manual tabs', () => {
+  const { container } = renderRail({ at: '/scan_management?active_tab=tools' })
+  const active = Array.from(container.querySelectorAll('.od-rail__link--sub.is-active')).map(
+    (el) => el.textContent,
+  )
+  expect(active).toEqual(['Library tools'])
+})
+
+test('rail Scan is active for both auto and manual', () => {
+  const auto = renderRail({ at: '/scan_management?active_tab=auto' })
+  expect(
+    Array.from(auto.container.querySelectorAll('.od-rail__link--sub.is-active')).map(
+      (el) => el.textContent,
+    ),
+  ).toEqual(['Scan'])
+  auto.unmount()
+
+  const manual = renderRail({ at: '/scan_management?active_tab=manual' })
+  expect(
+    Array.from(manual.container.querySelectorAll('.od-rail__link--sub.is-active')).map(
+      (el) => el.textContent,
+    ),
+  ).toEqual(['Scan'])
 })
 
 test('rail integrations is landing-only (hub owns provider links)', () => {

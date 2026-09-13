@@ -2,11 +2,11 @@
 
 > 🎬 Watch: [libraries & scan management](../media/video/howto/howto-admin-libraries.webm) · [ops health](../media/video/howto/howto-admin-ops.webm) — [all how-to videos](../media/video/howto/README.md)
 
-Admin surfaces today are **Jinja** under `base_admin` (top bar). A React admin SPA is planned; paths below stay valid during migration.
+Admin surfaces today are **Jinja** under `base_admin` (top bar), hosted inside the admin SPA shell (LHN + thin THN).
 
-**Libraries & scans** is one document with in-page panes. The pane strip and library/game count live in the **thin admin top bar**. **Libraries** and **Scan** are unfurl menus (Libraries → list / Add library; Scan → Auto / Manual). **Library tools**, Unmatched, Filters, Extensions, and Image queue stay peer segs. Switching a pane does **not** load a new page. Outer `.container-settings` / tab-content wrappers are layout only (no nested glass card).
+**Libraries & scans** destinations are separate pages (not one Bootstrap tab document). The **left rail** lists Libraries, Scan, Library tools, Unmatched, Filters, Release filters, Extensions, Image queue, and Art & images. **Scan** is one LHN row; while you are on Scan, the **thin top bar** shows **Auto | Manual**. Other destinations have no sibling strip in the THN.
 
-The Libraries pane is an admin SPA **DataTable** (sort + per-column filters, themed `od-cbtn` Scan/Edit/Delete bar, sticky multi-select batch actions). Add library lives under the Libraries unfurl — not as an in-page toolbar button.
+The Libraries page is an admin SPA **DataTable** (sort + per-column filters, themed `od-cbtn` Scan/Edit/Delete bar, sticky multi-select batch actions). Add library is reached from the Libraries page / command palette — not a THN unfurl.
 
 ## Where can a library point?
 
@@ -36,9 +36,9 @@ for mounting recipes per OS and for the Docker host-path-vs-container-path trap.
 4. **Update library when folders change** — per-library incremental watch (`watch_enabled`: follow global / prefer on / opt out). Global `ONEIRODEX_LIBRARY_WATCH` may still gate Unraid (Ops → Library watch).
 5. Prefer a small test scan before a full library scan.
 
-**W22-1 unified chrome:** Library Management and Scan management share one tab strip (**Libraries · Auto Scan · Library tools · Manual · Unmatched · Filters · Extensions · Image Queue**). Multi-select libraries (checkbox / select all) → sticky **Scan** / **Edit** / **Delete**. Sticky **Scan** posts `POST /api/admin/libraries/batch/scan` (`library_uuids` + `queue_policy=queue`); sticky **Edit** opens a shared-fields modal → `POST /api/admin/libraries/batch/edit` (`scan_depth` · `watch_enabled` · `platform`; full editor for name/image). Bulk delete offers a **Force delete** checkbox (no typing each name). Prefer the batch APIs below; soft-degrade to sequential single-library calls when a batch route 404s mid-rollout. After theme CSS/JS deploy (sticky Scan/Edit batch wire): **Admin → Themes → Reset Themes** so `library/themes` picks up `admin_manage_libs` — [themes-reset.md](themes-reset.md).
+**W22-1 chrome (updated):** Library Management and Scan management share the **Libraries & scans** LHN section. Destinations are separate URLs (`/libraries`, `/scan_management?active_tab=…`). Multi-select libraries (checkbox / select all) → sticky **Scan** / **Edit** / **Delete**. Sticky **Scan** posts `POST /api/admin/libraries/batch/scan` (`library_uuids` + `queue_policy=queue`); sticky **Edit** opens a shared-fields modal → `POST /api/admin/libraries/batch/edit` (`scan_depth` · `watch_enabled` · `platform`; full editor for name/image). Bulk delete offers a **Force delete** checkbox (no typing each name). Prefer the batch APIs below; soft-degrade to sequential single-library calls when a batch route 404s mid-rollout. After theme CSS/JS deploy: **Admin → Themes → Reset Themes** so `library/themes` picks up `admin_manage_libs` — [themes-reset.md](themes-reset.md).
 
-**Library tools** (tidy names, proposals, rename, freshness, propose/import leaves) live on the same page: `/scan_management?active_tab=tools`. `/admin/library_tools` redirects there.
+**Library tools** (tidy names, proposals, rename, freshness, propose/import leaves): `/scan_management?active_tab=tools` (LHN). `/admin/library_tools` redirects there.
 
 ## Batch library APIs (W22-1 / UID-003)
 
