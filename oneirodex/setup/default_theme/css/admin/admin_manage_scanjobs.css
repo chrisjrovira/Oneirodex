@@ -557,10 +557,6 @@
     flex-wrap: wrap;
 }
 
-.jobs-controls.od-cbtn-group {
-    flex-wrap: wrap;
-}
-
 .control-btn {
     display: flex;
     align-items: center;
@@ -570,18 +566,6 @@
 
 .inline-form {
     display: inline;
-}
-
-.scan-jobs-card__modal-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.85rem;
-}
-
-.scan-jobs-card--compact .card-content {
-    padding: 0;
 }
 
 /* Actions styling */
@@ -980,33 +964,6 @@
     display: flex;
     gap: 10px;
     align-items: flex-end;
-}
-
-.auto-scan-path-row {
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.auto-scan-path-row .path-input {
-    flex: 1 1 12rem;
-    min-width: 10rem;
-}
-
-.auto-scan-path-row .od-cbtn,
-.auto-scan-path-row .loading-spinner {
-    flex: 0 0 auto;
-}
-
-.auto-scan-schedule-interval {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.auto-scan-schedule-interval .form-control {
-    flex: 1 1 5rem;
-    min-width: 4rem;
 }
 
 .option-item--schedule,
@@ -2770,6 +2727,10 @@ a.unmatched-dupe-of__title:hover {
   flex: 1 1 14rem;
   min-width: 0;
 }
+.auto-scan-path-row .od-cbtn,
+.auto-scan-path-row .loading-spinner {
+  flex: 0 0 auto;
+}
 .scan-jobs-card__modal-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -2777,12 +2738,14 @@ a.unmatched-dupe-of__title:hover {
   align-items: center;
   margin-bottom: 0.75rem;
 }
+.scan-jobs-card--compact .card-content {
+  padding: 0;
+}
 .scan-jobs-card--compact .jobs-table-wrapper {
   max-height: min(60vh, 28rem);
   overflow: auto;
 }
-.jobs-controls.od-cbtn-group,
-.od-cbtn-group {
+.jobs-controls.od-cbtn-group {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
@@ -2795,6 +2758,10 @@ a.unmatched-dupe-of__title:hover {
   gap: 0.4rem;
   align-items: center;
 }
+.auto-scan-schedule-interval .form-control {
+  flex: 1 1 5rem;
+  min-width: 4rem;
+}
 @media (max-width: 720px) {
   .manual-scan-path-row,
   .auto-scan-path-row {
@@ -2805,5 +2772,10 @@ a.unmatched-dupe-of__title:hover {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+  }
+  .jobs-controls,
+  .jobs-controls.od-cbtn-group,
+  .scan-jobs-card__modal-toolbar {
+    width: 100%;
   }
 }
