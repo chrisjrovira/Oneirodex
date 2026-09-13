@@ -26,6 +26,8 @@ THEME_CSS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css'
 TEMPLATES = ROOT / 'oneirodex' / 'templates'
 
 SCANJOBS_HTML = TEMPLATES / 'admin' / 'admin_manage_scanjobs.html'
+# Active jobs table lives in the shared panel (LHN Scan Jobs + Auto/Manual modal).
+SCANJOBS_PANEL_HTML = TEMPLATES / 'admin' / 'partials' / 'admin_scan_jobs_panel.html'
 SCANJOBS_JS = THEME_JS / 'admin_manage_scanjobs.js'
 MODULE = THEME_JS / 'od_sortable_table.js'
 
@@ -51,19 +53,19 @@ def test_both_base_templates_load_the_module():
 
 def test_the_scan_jobs_table_opts_in():
     """W27-C2: this table had no sorting at all."""
-    markup = _read(SCANJOBS_HTML)
+    markup = _read(SCANJOBS_PANEL_HTML)
     table = markup[markup.index('id="scanJobsTable"'):]
     head = table[: table.index('</thead>')]
 
     assert 'data-od-sortable' in table[:200]
-    for key in ('id', 'library', 'path', 'status', 'progress'):
+    for key in ('id', 'when', 'library', 'path', 'status', 'progress'):
         assert f'data-sort-key="{key}"' in head, key
 
 
 def test_the_actions_column_is_not_sortable():
     """A column of controls has no order worth asking for, and a sort button
     over it would just be a dead control."""
-    markup = _read(SCANJOBS_HTML)
+    markup = _read(SCANJOBS_PANEL_HTML)
     table = markup[markup.index('id="scanJobsTable"'):]
     head = table[: table.index('</thead>')]
     assert '<th>Actions</th>' in head
@@ -73,7 +75,7 @@ def test_progress_carries_a_numeric_sort_key_on_both_render_paths():
     """The cell shows "10/25", which sorts before "9/25" as text. The server
     renders these rows on first paint and the poller re-renders them every few
     seconds — a key on only one path means the order changes on its own."""
-    assert 'data-sort-progress' in _read(SCANJOBS_HTML)
+    assert 'data-sort-progress' in _read(SCANJOBS_PANEL_HTML)
     assert 'data-sort-progress' in _read(SCANJOBS_JS)
 
 
