@@ -84,11 +84,11 @@
 ## Phase 5 — Verify + ship
 
 **Done when:**
-- [ ] `pytest` for touched tests + sortable/admin shell
-- [ ] `alembic upgrade head` + `alembic check` on fresh DB
-- [ ] Commit + push
-- [ ] PR #112 updated / ready for review
-- [ ] Remind Unraid: rebuild + Reset Themes (generator 36) if not already
+- [x] `pytest` for touched tests + sortable/admin shell
+- [x] `alembic upgrade head` + `alembic check` on fresh DB
+- [x] Commit + push
+- [x] PR #112 updated / ready for review
+- [x] Remind Unraid: rebuild + Reset Themes (generator 36) if not already
 
 ---
 
