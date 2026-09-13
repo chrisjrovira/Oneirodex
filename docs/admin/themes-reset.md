@@ -1,6 +1,6 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 31** in `oneirodex/utils/preset_themes.py` (UID-060 house confirm on Discovery shelves delete; prior 30 = admin "custom zone" → shelf copy). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
+Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 33** in `oneirodex/utils/preset_themes.py` (Auto Scan refresh icon + tip; prior 32 = Libraries & scans LHN/THN chrome). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
 
 ## Default look
 
@@ -61,6 +61,9 @@ Or delete `themes/default` (and stale presets) under the library volume and rest
 | Thin top-bar no fade (`GENERATOR_VERSION` **24** — `od-shell.css` / `od-era.css`: bar stays opaque; hover lifts the scroll pane so tiles overlap it) | Theme tree CSS → **library volume** | Rebuild **and** **Reset Default Themes**. |
 | Admin trail Reset layout (`GENERATOR_VERSION` **25** — `od-appbar.css`: no rest border on `.od-topbar__trail > .od-cbtn-group > .od-cbtn`) | Theme tree CSS → **library volume**; Dashboard drag/resize pitch is **admin-app** dist | Rebuild **and** **Reset Default Themes**. |
 | Token pass on classic CSS (`od-tokens.css` family marks, scan jobs / game details / base / account / setup, plus earlier form-components / sidebar / table-components) | Theme tree CSS → **library volume** | After UID-017: **Reset Default Themes** so volume copies pick up `var(--od-radius-*)` / `var(--od-font-*)` / `--od-family-*`. Member SPA pages ship in **`member-app` dist** — rebuild the image; Reset Themes does not refresh those |
+
+| Libraries & scans LHN/THN (`GENERATOR_VERSION` **32** — `od-shell.css` hub sub active matches member; Scan THN Auto\|Manual only; no Libraries sibling strip) | Theme tree CSS/templates → **library volume**; admin-app dist in **image** | After 2026-09-12 chrome pickup: rebuild **and** **Reset Default Themes**. |
+| Auto Scan refresh control (`GENERATOR_VERSION` **33** — icon + `od-tip` in Auto Scan header; drops the “Refresh all libraries” banner row) | Theme tree CSS/templates → **library volume** | After 2026-09-12: rebuild **and** **Reset Default Themes**. |
 
 If a fresh Unraid pull looks half-applied (new play-skins room art shows but admin still looks old, or vice versa), check which of the two you skipped.
 

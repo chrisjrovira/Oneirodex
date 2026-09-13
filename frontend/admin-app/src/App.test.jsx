@@ -167,17 +167,16 @@ test('renders admin brand and primary nav', () => {
   expect(screen.getByText('Oneirodex Admin')).toBeInTheDocument()
   const nav = screen.getByRole('navigation', { name: 'Admin' })
   expect(nav.querySelector('a[href="/admin/dashboard"]')).toHaveTextContent('Dashboard')
-  // Foldable sections are member-style group toggles; Server settings is the dest.
-  expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('od-rail__group-toggle')
+  // Settings is landing-only (hub owns module rows).
+  expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/admin/settings')
 
-  // UX-C2: libraries and scans are one tabbed page, so they share one nav item.
+  // Libraries & scans is a hub of sibling pages again.
   const librariesToggle = screen.getByRole('button', { name: 'Libraries & scans' })
   expect(librariesToggle).toHaveClass('od-rail__group-toggle')
   fireEvent.click(librariesToggle)
-  expect(nav.querySelector('a[href="/scan_management?active_tab=libraries"]')).toHaveTextContent(
-    'Libraries',
-  )
-  expect(nav.querySelector('a[href="/libraries"]')).toBeNull()
+  expect(nav.querySelector('a[href="/libraries"]')).toHaveTextContent('Libraries')
+  expect(nav.querySelector('a[href="/scan_management?active_tab=auto"]')).toHaveTextContent('Scan')
+  expect(nav.querySelector('a[href="/scan_management?active_tab=manual"]')).toBeNull()
 })
 
 test('users route shows React roster', async () => {

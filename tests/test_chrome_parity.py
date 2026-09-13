@@ -105,13 +105,40 @@ def test_the_chrome_stylesheet_stays_syncable_into_every_theme():
 SCANJOBS = ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_manage_scanjobs.html'
 
 
-def test_in_page_views_stay_in_page():
-    """Libraries & scans is one document with eight panes, so its segments must
-    keep Bootstrap's client-side switch. Turning them into real navigations to
-    gain a prettier strip would trade a working feature for a cosmetic one."""
+def test_libraries_scans_views_are_separate_pages():
+    """Libraries & scans siblings are real navigations, not Bootstrap panes.
+
+    The merged tab document stacked every pane under the libraries table —
+    operators asked for separate pages. The macro still supports `data_toggle`
+    for surfaces that remain genuinely one document (Integrations).
+    """
     markup = _read(SCANJOBS)
-    assert "data_toggle='tab'" in markup, 'scan management views became page loads'
+    assert "data_toggle='tab'" not in markup, 'scan management still uses in-page tabs'
+    assert "url_for('admin2.scan_management', active_tab='auto')" in markup
+    assert "url_for('admin2.scan_management', active_tab='manual')" in markup
     assert 'data_toggle' in _read(JINJA), 'the macro no longer supports in-page views'
+
+
+def test_scan_thn_is_auto_manual_only():
+    """THN on Scan is Auto|Manual; sibling destinations live in the LHN."""
+    markup = _read(SCANJOBS)
+    bar = markup.split('chrome.contextbar(')[1].split('{% endcall %}')[0]
+    assert "('auto', 'Auto'," in bar
+    assert "('manual', 'Manual'," in bar
+    assert 'Library tools' not in bar
+    assert 'libraries' not in bar
+    assert 'image_queue' not in bar
+
+
+def test_auto_scan_refresh_is_header_icon_with_tip():
+    """Refresh-all is an icon + od-tip, not a banner row of button + help text."""
+    markup = _read(SCANJOBS)
+    assert 'id="refreshAllLibrariesBtn"' in markup
+    assert 'class="od-iconbtn"' in markup
+    assert 'od-tip__bubble' in markup
+    assert 'Re-scans each library’s last scan folder' in markup
+    assert 'mb-3 d-flex gap-2 flex-wrap' not in markup
+    assert 'Refresh all libraries</button>' not in markup
 
 
 def test_in_page_views_satisfy_what_bootstrap_actually_binds_to():
@@ -189,15 +216,17 @@ def test_lazy_loaded_panels_are_found_by_target_not_by_id():
     js = _read(ROOT / 'oneirodex' / 'static' / 'js' / 'od_admin_scanjobs_inline.js')
     assert "getElementById('imageQueue-tab')" not in markup
     assert "getElementById('imageQueue-tab')" not in js
-    assert '[data-bs-toggle="tab"][href="#imageQueue"]' in js
+    # Image queue is its own page now; init when the panel is present.
+    assert "getElementById('imageQueue')" in js or "active_tab=image_queue" in markup
 
 
-def test_both_admin_strips_survive_until_the_flag_is_permanent():
-    """The flag is still opt-in, so every converted page must render correctly
-    with it off too — otherwise turning it off is not actually a way back."""
+def test_scan_management_uses_contextbar_page_links():
+    """Scan mode switch is real navigations under the shared contextbar."""
     markup = _read(SCANJOBS)
     assert 'enable_new_chrome' in markup
-    assert 'admin_manage_scanjobs-nav-tabs' in markup, 'the fallback strip was deleted'
+    assert "active_tab='auto'" in markup
+    assert "active_tab='manual'" in markup
+    assert 'admin_manage_scanjobs-nav-tabs' not in markup
 
 
 def test_jinja_views_are_links_not_buttons():
@@ -211,6 +240,12 @@ def test_jinja_views_are_links_not_buttons():
 
 LIBRARIES = ROOT / 'oneirodex' / 'templates' / 'admin' / 'admin_manage_libraries.html'
 SCANJOBS_CSS = ROOT / 'oneirodex' / 'setup' / 'default_theme' / 'css' / 'admin' / 'admin_manage_scanjobs.css'
+
+
+def test_libraries_page_has_no_sibling_contextbar():
+    """Libraries landing is LHN-only — no duplicate THN strip."""
+    markup = _read(LIBRARIES)
+    assert 'chrome.contextbar' not in markup
 
 
 def test_libraries_panel_is_not_a_card_inside_the_page_card():

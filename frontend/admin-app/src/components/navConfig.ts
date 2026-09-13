@@ -4,7 +4,7 @@ export const ADMIN_NAV = [
   // Libraries and scans are one tabbed page (UX-C2) — two top-nav buttons
   // pointing into the same page was the leftover from before they merged.
   // LHN is the landing only; tab strip stays in the top bar (contextbar).
-  { id: 'libraries', path: '/scan_management?active_tab=libraries', label: 'Libraries & scans' },
+  { id: 'libraries', path: '/libraries', label: 'Libraries & scans' },
   // Landing is the Settings hub — module forms live on that page, not as a
   // second copy of every row in the rail (confirmed admin IA).
   { id: 'settings', path: '/admin/settings', label: 'Settings' },
@@ -297,7 +297,8 @@ export function resolveNavSection(pathname: string): string | null {
  */
 export const RAIL_SECTION_MODE = {
   dashboard: 'landing',
-  libraries: 'landing',
+  // Libraries siblings are separate pages again — show them under the fold.
+  libraries: 'hub',
   settings: 'landing',
   integrations: 'landing',
   content: 'hub',
@@ -317,25 +318,22 @@ export function railDestinations(sectionId: string) {
 }
 
 export const HUB_LINKS = {
-  // Ownership + command-palette catalogue for Libraries & scans (UX-C2).
-  // The rail itself is landing-only — tab strip lives in the top bar.
+  // Libraries & scans sibling pages (no longer one Bootstrap tab document).
   libraries: [
-    { href: '/scan_management?active_tab=libraries', label: 'Libraries' },
-    { href: '/scan_management', label: 'Scan jobs' },
-    // Named for what they do, not how (UX-C4). Bulk add already existed via
-    // these two flows, but "propose/import leaf libraries" did not read as
-    // "add several at once", so the single-library form looked like the only way.
+    { href: '/libraries', label: 'Libraries' },
+    // Auto + Manual share one LHN row; mode switch lives in the THN.
+    { href: '/scan_management?active_tab=auto', label: 'Scan' },
+    { href: '/scan_management?active_tab=tools', label: 'Library tools' },
+    { href: '/scan_management?active_tab=unmatched', label: 'Unmatched' },
+    { href: '/scan_management?active_tab=scan_filters', label: 'Filters' },
+    { href: '/admin/edit_filters', label: 'Release filters' },
+    { href: '/admin/extensions', label: 'Extensions' },
+    { href: '/scan_management?active_tab=image_queue', label: 'Image queue' },
+    { href: '/admin/art_studio', label: 'Art & images' },
+    // Page actions — filtered out of the rail by PAGE_ACTION_HREFS.
     { href: '/admin/library/add', label: 'Add one library' },
     { href: '/libraries#propose-leaf', label: 'Add many — scan a folder for libraries' },
     { href: '/libraries#import-leaf', label: 'Add many — import CSV / JSON' },
-    { href: '/scan_management?active_tab=tools', label: 'Library tools' },
-    { href: '/admin/edit_filters', label: 'Release filters' },
-    { href: '/admin/extensions', label: 'Extensions' },
-    { href: '/admin/art_studio#images', label: 'Art & images' },
-    // Points at the inline tab, not a standalone page (W27-C5 · C6). The rail
-    // linking to the classic page is why the queue appeared unchanged — the
-    // inline version existed and nothing routed to it.
-    { href: '/scan_management?active_tab=image_queue', label: 'Image queue' },
   ],
   // Ownership + command-palette catalogue for Settings. Built from
   // SETTINGS_GROUPS so a new card cannot forget section membership. The rail

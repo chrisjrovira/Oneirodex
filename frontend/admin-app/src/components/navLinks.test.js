@@ -101,7 +101,7 @@ describe('section ownership', () => {
     expect(resolveNavSection('/admin/integrations#oidc')).toBe('integrations')
   })
 
-  test('library tools hub link points at the scan-management tab', () => {
+  test('library tools hub link points at the scan-management tools page', () => {
     const hrefs = HUB_LINKS.libraries.map((item) => item.href)
     expect(hrefs).toContain('/scan_management?active_tab=tools')
     expect(hrefs).not.toContain('/admin/library_tools')
@@ -118,19 +118,18 @@ describe('section ownership', () => {
 })
 
 describe('rail destinations vs hub catalogue', () => {
-  test('libraries, settings, and integrations are landing-only on the rail', () => {
-    expect(RAIL_SECTION_MODE.libraries).toBe('landing')
+  test('settings and integrations are landing-only; libraries is a hub again', () => {
+    expect(RAIL_SECTION_MODE.libraries).toBe('hub')
     expect(RAIL_SECTION_MODE.settings).toBe('landing')
     expect(RAIL_SECTION_MODE.integrations).toBe('landing')
-    expect(railDestinations('libraries')).toEqual([])
+    expect(railDestinations('libraries').length).toBeGreaterThan(0)
     expect(railDestinations('settings')).toEqual([])
     expect(railDestinations('integrations')).toEqual([])
   })
 
-  test('hub catalogue still owns library sub-pages for section highlight', () => {
-    // Rail is landing-only, but HUB_LINKS must keep membership so opening
-    // Extensions / Art studio / Filters still lights Libraries & scans.
+  test('hub catalogue owns library sibling pages for section highlight', () => {
     const hrefs = HUB_LINKS.libraries.map((item) => item.href)
+    expect(hrefs).toContain('/libraries')
     expect(hrefs).toContain('/admin/extensions')
     expect(hrefs).toContain('/scan_management?active_tab=tools')
   })

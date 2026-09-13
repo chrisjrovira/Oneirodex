@@ -88,7 +88,8 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # UID-060: Discovery shelves delete uses the house confirm dialog in theme JS
 # (cannot import frontend/shared). Reset Themes required so the volume copy
 # of discovery_sections.js / admin_discovery_sections.css picks it up.
-GENERATOR_VERSION = 31
+# Auto Scan: Refresh-all is an icon + od-tip in the panel header (no banner row).
+GENERATOR_VERSION = 33
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

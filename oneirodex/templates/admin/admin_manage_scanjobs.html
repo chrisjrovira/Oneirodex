@@ -1,5 +1,5 @@
 {% extends "base_admin.html" %}
-{% block title %}Libraries & scans · Oneirodex Admin{% endblock %}
+{% block title %}{% if active_tab == 'tools' %}Library tools{% elif active_tab == 'manual' %}Manual scan{% elif active_tab == 'unmatched' %}Unmatched{% elif active_tab == 'scan_filters' %}Filters{% elif active_tab == 'file_extensions' %}Extensions{% elif active_tab == 'image_queue' %}Image queue{% else %}Auto scan{% endif %} · Oneirodex Admin{% endblock %}
 {% block styles %}
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_scanjobs.css'|theme_asset }}">
 <link rel="stylesheet" href="{{ 'css/admin/admin_manage_libs.css'|theme_asset }}">
@@ -37,91 +37,59 @@
 <meta name="selected-library-uuid" content="{{ selected_library_uuid }}">
 <script src="{{ url_for('static', filename='vendor/sortablejs/1.15.2/Sortable.min.js') }}"></script>
 
-{% if enable_new_chrome %}
+{% if enable_new_chrome and (active_tab == 'auto' or active_tab == 'manual' or not active_tab) %}
+        {# LHN owns Libraries / tools / unmatched / filters / … — THN only
+           switches Auto vs Manual while on Scan. #}
         {% call chrome.contextbar(
              views=[
-               ('libraries', 'Libraries', '#librariesPanel'),
-               ('auto', 'Auto scan', '#autoScan'),
-               ('tools', 'Library tools', '#libraryTools'),
-               ('manual', 'Manual scan', '#manualScan'),
-               ('unmatched', 'Unmatched', '#unmatchedFolders'),
-               ('scan_filters', 'Filters', '#scanFilters'),
-               ('file_extensions', 'Extensions', '#fileExtensions'),
-               ('image_queue', 'Image queue', '#imageQueue'),
+               ('auto', 'Auto', url_for('admin2.scan_management', active_tab='auto')),
+               ('manual', 'Manual', url_for('admin2.scan_management', active_tab='manual')),
              ],
-             active=active_tab or 'auto',
-             data_toggle='tab') %}
+             active=active_tab or 'auto') %}
         {% endcall %}
 {% endif %}
 <div class="admin_manage_scanjobs-nav-panel">
     <div class="container-settings od-adminpage od-adminpage--xl">
-        {# UIR-7: title + Bootstrap tab strip are replaced by chrome.contextbar.
-           Admin SPA portals that bar into the thin top bar
-           (`#od-admin-topbar-slot`). Views stay in-page (`data_toggle='tab'`)
-           because these are panes of one document. #}
-        {% if not enable_new_chrome %}
-        <div class="od-adminpage-header">
-            <div>
-                <h1 class="od-adminpage-title">Libraries &amp; scans</h1>
-                <p class="od-adminpage-lede">Manage libraries, run scans, triage unmatched folders, filters, and extensions — one place.</p>
-            </div>
-        </div>
-        <ul class="admin_manage_scanjobs-nav-tabs nav nav-tabs">
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'libraries' %}active
-        {% endif %}
-" id="libraries-tab" data-bs-toggle="tab" href="#librariesPanel">Libraries</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'auto' or not active_tab %}active{% endif %}" id="autoScan-tab" data-bs-toggle="tab" href="#autoScan">Auto Scan</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'tools' %}active{% endif %}" id="libraryTools-tab" data-bs-toggle="tab" href="#libraryTools">Library tools</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'manual' %}active{% endif %}" id="manualScan-tab" data-bs-toggle="tab" href="#manualScan">Manual Scan</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'unmatched' %}active{% endif %}" id="unmatchedFolders-tab" data-bs-toggle="tab" href="#unmatchedFolders">Unmatched Folders</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'scan_filters' %}active{% endif %}" id="scanFilters-tab" data-bs-toggle="tab" href="#scanFilters">Scan Filters</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'file_extensions' %}active{% endif %}" id="fileExtensions-tab" data-bs-toggle="tab" href="#fileExtensions">File Extensions</a>
-            </li>
-            <li class="admin_manage_scanjobs-nav-item nav-item">
-                <a class="admin_manage_scanjobs-nav-link nav-link {% if active_tab == 'image_queue' %}active{% endif %}" id="imageQueue-tab" data-bs-toggle="tab" href="#imageQueue">Image Queue</a>
-            </li>
-        </ul>
-        {% endif %}
+        {# One panel per request; sibling views use the contextbar URLs. #}
 
         <!-- Tab panes -->
         <div class="admin_manage_scanjobs-tab-content tab-content">
             <!-- Libraries Tab (W22-1 unified with Library Management) -->
+            {% if active_tab == 'libraries' %}
             <div id="librariesPanel" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'libraries' %}active{% else %}fade{% endif %}">
                 {% include 'admin/partials/admin_libraries_panel.html' %}
             </div>
 
             <!-- Auto Scan Tab -->
+            {% endif %}
+            {% if active_tab == 'auto' or not active_tab %}
             <div id="autoScan" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'auto' or not active_tab %}active{% else %}fade{% endif %}">
 
                 
                 {% if libraries|length > 0 %}
-                <div class="mb-3 d-flex gap-2 flex-wrap">
-                    <button type="button" id="refreshAllLibrariesBtn" class="btn btn-secondary">
-                        {{ icons.icon('refresh') }} Refresh all libraries
-                    </button>
-                    <small class="text-muted align-self-center">Re-scans each library’s last scan folder for new games (one at a time).</small>
-                </div>
                 <form id="autoScanForm" action="" method="post">
                     {{ auto_form.hidden_tag() }}
 
                     <!-- Single composition: config + location -->
                     <div class="auto-scan-panel config-card">
-                        <div class="card-header">
-                            <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Auto Scan</h4>
-                            <p class="auto-scan-panel__lede">Library, options, and folder path — one setup panel.</p>
+                        <div class="card-header auto-scan-panel__header">
+                            <div class="auto-scan-panel__heading">
+                                <h4 class="card-title">{{ icons.icon('cogs', size=20) }} Auto Scan</h4>
+                                <p class="auto-scan-panel__lede">Library, options, and folder path — one setup panel.</p>
+                            </div>
+                            <span class="od-tip od-tip--end auto-scan-panel__refresh">
+                                <button
+                                    type="button"
+                                    id="refreshAllLibrariesBtn"
+                                    class="od-iconbtn"
+                                    aria-label="Refresh all libraries"
+                                >
+                                    {{ icons.icon('refresh') }}
+                                </button>
+                                <span class="od-tip__bubble" role="tooltip">
+                                    Re-scans each library’s last scan folder for new games (one at a time).
+                                </span>
+                            </span>
                         </div>
                         <div class="card-content">
                             <div class="config-grid">
@@ -397,11 +365,15 @@
             </div>
 
             <!-- Library tools (same page as Auto Scan — W26 Libraries & Scans overhaul) -->
+            {% endif %}
+            {% if active_tab == 'tools' %}
             <div id="libraryTools" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'tools' %}active{% else %}fade{% endif %}">
                 {% include 'admin/partials/admin_library_tools_body.html' %}
             </div>
 
             <!-- Manual Scan Tab -->
+            {% endif %}
+            {% if active_tab == 'manual' %}
             <div id="manualScan" class="admin_manage_scanjobs-manual-panel od-adminpage-panel tab-pane {% if active_tab == 'manual' %}active{% else %}fade{% endif %}"><br>
                 <div class="admin_manage_scanjobs-tab-header">
                     <h3>Manual Folder Scan</h3>
@@ -504,6 +476,8 @@
                 </div>
 
             <!-- Unmatched Folders Tab -->
+            {% endif %}
+            {% if active_tab == 'unmatched' %}
             <div id="unmatchedFolders" class="admin_manage_scanjobs-unmatched-container tab-pane {% if active_tab == 'unmatched' %}active{% else %}fade{% endif %}"><br>
                 <div class="admin_manage_scanjobs-unmatched-panel od-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
@@ -640,6 +614,8 @@
             </div>
 
             <!-- Scan Filters Tab -->
+            {% endif %}
+            {% if active_tab == 'scan_filters' %}
             <div id="scanFilters" class="admin_manage_scanjobs-filters-container container tab-pane {% if active_tab == 'scan_filters' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-filters-panel od-adminpage-panel od-scan-filters">
                     <div class="admin_manage_scanjobs-tab-header od-scan-filters__header">
@@ -805,6 +781,8 @@
             </div>
 
             <!-- File Extensions Tab — deep-link to unified React ExtensionsPage -->
+            {% endif %}
+            {% if active_tab == 'file_extensions' %}
             <div id="fileExtensions" class="admin_manage_scanjobs-extensions-container container tab-pane {% if active_tab == 'file_extensions' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-extensions-panel od-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
@@ -824,6 +802,8 @@
             </div>
 
             <!-- Image Queue Tab -->
+            {% endif %}
+            {% if active_tab == 'image_queue' %}
             <div id="imageQueue" class="admin_manage_scanjobs-imagequeue-container container tab-pane {% if active_tab == 'image_queue' %}active{% else %}fade{% endif %}">
                 <div class="admin_manage_scanjobs-imagequeue-panel od-adminpage-panel">
                     <div class="admin_manage_scanjobs-tab-header">
@@ -920,6 +900,7 @@
                 </div>
             </div>
 
+            {% endif %}
         </div>
     </div>
 </div>

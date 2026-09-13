@@ -854,11 +854,19 @@ button.od-rail__link {
 }
 
 .od-rail__link--sub.is-active {
-  /* No inset bar here — the parent section already carries one, and two edges
-     stacked in a 12rem column reads as a rendering fault rather than depth. */
-  box-shadow: none;
+  /* Same active treatment as primary destinations (member Library row): accent
+     label + wash + dual inset edges. Admin hub rows are real pages, not a
+     nested pane under an already-active parent. */
   color: var(--od-accent);
-  background: transparent;
+  background: color-mix(in srgb, var(--od-accent) 14%, transparent);
+  box-shadow:
+    inset 2px 0 0 var(--od-accent),
+    inset -2px 0 0 var(--od-accent);
+}
+
+.od-rail__link--sub.is-active:hover {
+  color: var(--od-accent);
+  background: color-mix(in srgb, var(--od-accent) 20%, transparent);
 }
 
 .od-rail__footer {

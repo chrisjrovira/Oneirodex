@@ -149,6 +149,10 @@ def scan_management():
     game_names_with_ids = [{'name': name, 'full_path': path} for name, path in game_paths_dict.items()]
     # Handle active_tab from URL parameter, default to 'auto'
     active_tab = request.args.get('active_tab', 'auto')
+    # Libraries is its own page (`/libraries`). The old merged tab document
+    # stacked every pane under the libraries table — do not re-enter that mode.
+    if active_tab == 'libraries':
+        return redirect(url_for('library.libraries'))
 
     return render_template('admin/admin_manage_scanjobs.html',
                            auto_form=auto_form,
