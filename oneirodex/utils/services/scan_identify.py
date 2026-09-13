@@ -9,6 +9,7 @@ from flask import flash, current_app, abort, has_request_context
 import os, uuid
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 
 from oneirodex import db
 from oneirodex.models import (
@@ -599,9 +600,11 @@ def retrieve_and_save_game(
             if response_json and 'error' not in response_json and len(response_json) > 0:
                 logger.info(f"✅ Successfully fetched game from local metadata: {response_json[0].get('name')}")
 
-                # Check for duplicate
+                # Check for duplicate (eager-load library for collision scope)
                 existing_game_with_same_igdb_id = db.session.execute(
-                    select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)
+                    select(Game)
+                    .options(joinedload(Game.library))
+                    .filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)
                 ).scalar_one_or_none()
 
                 game_payload = response_json[0]
@@ -1044,7 +1047,11 @@ def retrieve_and_save_game(
             logger.info(f"Found game {game_name} with IGDB ID {igdb_id}")
 
         # Check for existing game with the same IGDB ID but different folder path
-        existing_game_with_same_igdb_id = db.session.execute(select(Game).filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)).scalar_one_or_none()
+        existing_game_with_same_igdb_id = db.session.execute(
+            select(Game)
+            .options(joinedload(Game.library))
+            .filter(Game.igdb_id == igdb_id, Game.full_disk_path != full_disk_path)
+        ).scalar_one_or_none()
         if existing_game_with_same_igdb_id:
             collision = handle_existing_igdb_collision(
                 existing_game=existing_game_with_same_igdb_id,

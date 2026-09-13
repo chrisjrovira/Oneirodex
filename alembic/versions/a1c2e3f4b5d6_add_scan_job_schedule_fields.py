@@ -20,18 +20,26 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        'scan_jobs',
-        sa.Column('schedule_kind', sa.String(length=16), nullable=True),
-    )
-    op.add_column(
-        'scan_jobs',
-        sa.Column('schedule_interval_minutes', sa.Integer(), nullable=True),
-    )
-    op.add_column(
-        'scan_jobs',
-        sa.Column('schedule_cron', sa.String(length=64), nullable=True),
-    )
+    # Idempotent: create_all on a fresh boot may already have created these
+    # columns from the SQLAlchemy model before Alembic runs.
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    existing = {col['name'] for col in inspector.get_columns('scan_jobs')}
+    if 'schedule_kind' not in existing:
+        op.add_column(
+            'scan_jobs',
+            sa.Column('schedule_kind', sa.String(length=16), nullable=True),
+        )
+    if 'schedule_interval_minutes' not in existing:
+        op.add_column(
+            'scan_jobs',
+            sa.Column('schedule_interval_minutes', sa.Integer(), nullable=True),
+        )
+    if 'schedule_cron' not in existing:
+        op.add_column(
+            'scan_jobs',
+            sa.Column('schedule_cron', sa.String(length=64), nullable=True),
+        )
 
 
 def downgrade() -> None:

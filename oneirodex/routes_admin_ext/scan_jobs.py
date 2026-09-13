@@ -223,13 +223,22 @@ def delete_scan_job(job_id):
 @login_required
 @admin_required
 def clear_all_scan_jobs():
-    """Delete every job that is not actively running."""
-    busy = ('Running', 'Stopping')
+    """Delete terminal jobs only (keeps Running/Stopping/Queued/Scheduled).
+
+    Recurring schedules live as Scheduled/Queued rows; wiping them on
+    "clear all" silently disarmed interval/cron arms. Use status-scoped
+    clear for Queued/Scheduled if that is intentional.
+    """
+    terminal = ('Completed', 'Failed', 'Cancelled')
     result = db.session.execute(
-        delete(ScanJob).where(ScanJob.status.notin_(busy))
+        delete(ScanJob).where(ScanJob.status.in_(terminal))
     )
     db.session.commit()
-    flash(f'Cleared {result.rowcount} scan jobs (Running/Stopping kept).', 'success')
+    flash(
+        f'Cleared {result.rowcount} completed/failed/cancelled scan jobs '
+        '(Running/Stopping/Queued/Scheduled kept).',
+        'success',
+    )
     return redirect(url_for('admin2.scan_management', active_tab='jobs'))
 
 

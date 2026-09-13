@@ -97,3 +97,52 @@ def test_resolve_scan_mode_for_path_auto_heuristic():
         os.mkdir(os.path.join(folder, 'Game A'))
         os.mkdir(os.path.join(folder, 'Game B'))
         assert resolve_scan_mode_for_path(folder, 'auto') == 'folders'
+
+
+def test_normalize_schedule_fields_rejects_bad_cron_and_interval():
+    bad_cron = normalize_schedule_fields('cron', cron_expr='not-a-cron')
+    assert bad_cron.get('error')
+    assert bad_cron['schedule_kind'] == 'once'
+
+    empty_cron = normalize_schedule_fields('cron', cron_expr='')
+    assert empty_cron.get('error')
+
+    # Parse-ok but no fire in the window (31 Feb) must fail closed.
+    impossible = normalize_schedule_fields('cron', cron_expr='0 0 31 2 *')
+    assert impossible.get('error')
+
+    bad_interval = normalize_schedule_fields(
+        'interval', interval_value=0, interval_unit='minutes',
+    )
+    assert bad_interval.get('error')
+    assert bad_interval['schedule_kind'] == 'once'
+
+
+def test_validate_cron_expression_rejects_impossible_dom():
+    assert validate_cron_expression('0 0 31 2 *') is not None
+
+
+def test_resolve_scan_mode_ignores_non_rom_extensions():
+    with tempfile.TemporaryDirectory() as folder:
+        os.mkdir(os.path.join(folder, 'Game A'))
+        for name in ('readme.txt', 'cover.jpg', 'notes.nfo'):
+            open(os.path.join(folder, name), 'w', encoding='utf-8').close()
+        assert resolve_scan_mode_for_path(folder, 'auto') == 'folders'
+
+
+def test_apply_schedule_to_job_updates_coalesced_fields():
+    """Busy coalesce must be able to overwrite schedule on an existing Queued row."""
+    job = SimpleNamespace(
+        schedule=None,
+        schedule_kind='once',
+        schedule_interval_minutes=None,
+        schedule_cron=None,
+        next_run=None,
+        status='Queued',
+        is_enabled=True,
+    )
+    fields = normalize_schedule_fields('cron', cron_expr='0 */6 * * *')
+    assert not fields.get('error')
+    apply_schedule_to_job(job, fields)
+    assert job.schedule_kind == 'cron'
+    assert job.schedule_cron == '0 */6 * * *'

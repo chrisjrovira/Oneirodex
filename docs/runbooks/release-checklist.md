@@ -56,9 +56,11 @@ hand, committed under `alembic/versions/`.
 
 Operator upgrade path is unchanged in practice: pull image → `compose up` →
 `init_manager` Phase 2 builds/updates the schema and, on the first boot after
-this release, runs a one-time `alembic stamp head` for databases that predate
-Alembic (logged as `Stamped existing schema at Alembic baseline`). No operator
-action, no `alembic` command to run by hand. `/readyz` green as before.
+Alembic adoption, stamps pre-Alembic databases at the **baseline** revision
+(`b9ab856b09ff`, never `head`) then always runs `alembic upgrade head` so
+post-baseline revisions (for example scan-job schedule columns) apply without a
+manual operator step. Log lines: `Stamped existing schema at Alembic baseline`
+and `Alembic upgrade head complete`. `/readyz` green as before.
 
 ## Publish
 

@@ -86,9 +86,15 @@ def next_cron_fire(expr: str, from_time: datetime | None = None) -> datetime:
 
 
 def validate_cron_expression(expr: str) -> str | None:
-    """Return None when valid, otherwise a short error string."""
+    """Return None when valid, otherwise a short error string.
+
+    Parse-ok is not enough: expressions with no fire in the search window
+    (e.g. ``0 0 31 2 *``) must also fail closed so schedules are not armed
+    once and then silently abandoned.
+    """
     try:
         parse_cron_expression(expr)
+        next_cron_fire(expr)
     except Exception as exc:  # noqa: BLE001 — surface as validation message
         return str(exc)
     return None

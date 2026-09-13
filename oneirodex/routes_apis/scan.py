@@ -700,8 +700,20 @@ def unmatched_folders():
     if err:
         return err
 
-    # Export / legacy full dump: paginate=0 skips limit (still capped by client).
-    rows = _query_unmatched_rows(filters)
+    # rom_region is path-derived (not a column), so it must be applied after
+    # row peel. When both region + paginate are set, fetch the full filtered
+    # set first, then slice — SQL limit/offset before peel under-fills pages
+    # and lies about total.
+    region_filter = normalize_rom_region(filters.get('rom_region') or '')
+    paginate = bool(filters.get('paginate'))
+    limit = filters.get('limit') or UNMATCHED_LIST_DEFAULT_LIMIT
+    offset = filters.get('offset') or 0
+
+    query_filters = dict(filters)
+    if region_filter and paginate:
+        query_filters['paginate'] = False
+
+    rows = _query_unmatched_rows(query_filters)
     folders = [folder for folder, _library_name, _platform in rows]
     games_by_uuid, cover_by_uuid = _prefetch_matched_game_maps(folders)
     include_transforms = bool(filters.get('include_transforms'))
@@ -718,24 +730,23 @@ def unmatched_folders():
         for folder, library_name, platform in rows
     ]
 
-    # Optional rom_region filter is applied after peel (path-derived, not a column).
-    region_filter = normalize_rom_region(filters.get('rom_region') or '')
     if region_filter:
         unmatched_data = [
             row for row in unmatched_data
             if normalize_rom_region(row.get('rom_region')) == region_filter
         ]
 
-    if filters.get('paginate'):
-        total = _count_unmatched_rows(filters)
-        # Region filter is post-query — approximate total when active.
+    if paginate:
         if region_filter:
-            total = len(unmatched_data) if filters.get('offset') == 0 else total
+            total = len(unmatched_data)
+            unmatched_data = unmatched_data[offset:offset + limit]
+        else:
+            total = _count_unmatched_rows(filters)
         return jsonify({
             'items': unmatched_data,
             'total': total,
-            'limit': filters.get('limit'),
-            'offset': filters.get('offset'),
+            'limit': limit,
+            'offset': offset,
             'count': len(unmatched_data),
         })
 
@@ -1282,6 +1293,14 @@ def export_unmatched_folders():
         )
         for folder, library_name, platform in rows
     ]
+
+    # Same rom_region peel filter as the list endpoint (path-derived).
+    region_filter = normalize_rom_region(filters.get('rom_region') or '')
+    if region_filter:
+        export_rows = [
+            row for row in export_rows
+            if normalize_rom_region(row.get('rom_region')) == region_filter
+        ]
 
     status = filters['status']
     filename_status = status if status != 'all' else 'all'

@@ -225,6 +225,7 @@ def normalize_schedule_fields(
         'schedule_interval_minutes': None,
         'schedule_cron': None,
         'next_run': None,
+        'error': None,
     }
     if not choice:
         return out
@@ -241,6 +242,7 @@ def normalize_schedule_fields(
         unit = (interval_unit or 'hours').strip().lower()
         minutes = value * 60 if unit == 'hours' else value
         if minutes < 1:
+            out['error'] = 'Interval must be at least 1 minute.'
             return out
         out['schedule_kind'] = 'interval'
         out['schedule_interval_minutes'] = minutes
@@ -252,7 +254,12 @@ def normalize_schedule_fields(
         expr = (cron_expr or '').strip()
         from oneirodex.utils.cron_schedule import validate_cron_expression
 
-        if not expr or validate_cron_expression(expr):
+        if not expr:
+            out['error'] = 'Cron expression is required.'
+            return out
+        cron_err = validate_cron_expression(expr)
+        if cron_err:
+            out['error'] = f'Invalid cron expression: {cron_err}'
             return out
         out['schedule_kind'] = 'cron'
         out['schedule_cron'] = expr[:64]
@@ -439,6 +446,14 @@ def start_or_queue_scan(
     if busy and not force:
         existing_queued = find_queued_for_library(library_uuid, folder_path)
         if existing_queued:
+            # Keep the Queued row's schedule in sync with the latest submit —
+            # dropping interval/cron here silently converts a recurring job
+            # into a once-only queue entry.
+            apply_schedule_to_job(existing_queued, schedule_fields)
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
             position = queue_position(existing_queued.id) or 1
             return {
                 'status': 'queued',

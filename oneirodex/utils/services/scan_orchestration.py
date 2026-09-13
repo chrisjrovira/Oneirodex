@@ -124,7 +124,7 @@ def resolve_scan_mode_for_path(folder_path, requested_mode='auto'):
                 dir_hits += 1
             elif os.path.isfile(full):
                 ext = os.path.splitext(name)[1].lower()
-                if ext in archive_ext or ext:
+                if ext in archive_ext:
                     file_hits += 1
         except OSError:
             continue
@@ -977,6 +977,9 @@ def handle_auto_scan(auto_form):
             interval_unit=auto_form.schedule_interval_unit.data,
             cron_expr=auto_form.schedule_cron.data,
         )
+        if schedule_fields.get('error'):
+            flash(schedule_fields['error'], 'danger')
+            return redirect(url_for('admin2.scan_management', active_tab='auto'))
 
         library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
         if not library:
@@ -1161,6 +1164,10 @@ def handle_manual_scan(manual_form):
                 return redirect(url_for('admin2.scan_management', active_tab='manual', show_permissions_modal='true'))
 
         logger.info("Folder exists and can be accessed.")
+        # Idle Manual must resolve Auto the same way the busy path does;
+        # otherwise scan_mode stays 'auto' and falls through to files mode.
+        scan_mode = resolve_scan_mode_for_path(full_path, manual_form.scan_mode.data)
+        logger.info(f"Resolved idle Manual scan mode for {full_path}: {scan_mode}")
         insensitive_patterns, sensitive_patterns = load_scanning_filter_patterns()
         skip_dir_patterns = load_skip_dir_patterns()
         skip_dir_regexes = load_skip_dir_regex_patterns()
