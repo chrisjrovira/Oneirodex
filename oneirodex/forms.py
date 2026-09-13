@@ -70,7 +70,15 @@ class AutoScanForm(FlaskForm):
     # historical behaviour of resolving against the OS base folder.
     library_root = StringField('Scan location', validators=[Optional()])
     library_uuid = SelectField('Select Library', coerce=str, validators=[DataRequired()])
-    scan_mode = RadioField('My Games are:', choices=[('folders', 'Folders'), ('files', 'Files')], default='folders')
+    scan_mode = RadioField(
+        'My Games are:',
+        choices=[
+            ('auto', 'Auto (detect)'),
+            ('folders', 'Folders'),
+            ('files', 'Files'),
+        ],
+        default='auto',
+    )
     remove_missing = BooleanField('Remove missing games')
     download_missing_images = BooleanField('Download missing images')
     force_updates_extras_scan = BooleanField('Force scan for new updates and extras on existing games')
@@ -83,9 +91,27 @@ class AutoScanForm(FlaskForm):
             ('8_hours', 'Every 8 hours'),
             ('24_hours', 'Every 24 hours'),
             ('48_hours', 'Every 48 hours'),
+            ('interval', 'Every N minutes / hours'),
+            ('cron', 'Cron expression'),
         ],
         default='',
         validators=[Optional()],
+    )
+    schedule_interval_value = IntegerField(
+        'Interval',
+        validators=[Optional(), NumberRange(min=1, max=10080)],
+        default=6,
+    )
+    schedule_interval_unit = SelectField(
+        'Unit',
+        choices=[('hours', 'Hours'), ('minutes', 'Minutes')],
+        default='hours',
+        validators=[Optional()],
+    )
+    schedule_cron = StringField(
+        'Cron expression',
+        validators=[Optional(), Length(max=64)],
+        render_kw={'placeholder': '0 */6 * * *'},
     )
     submit = SubmitField('AutoScan')
 
@@ -103,7 +129,15 @@ class ScanFolderForm(FlaskForm):
     # Empty path is allowed and means "scan the configured base directory"
     folder_path = StringField('Folder Path', validators=[Optional()])
     library_root = StringField('Scan location', validators=[Optional()])
-    scan_mode = RadioField('My Games are:', choices=[('folders', 'Folders'), ('files', 'Files')], default='folders')
+    scan_mode = RadioField(
+        'My Games are:',
+        choices=[
+            ('auto', 'Auto (detect)'),
+            ('folders', 'Folders'),
+            ('files', 'Files'),
+        ],
+        default='auto',
+    )
     library_uuid = SelectField('Select Library', coerce=str, validators=[DataRequired()])
     force_updates_extras_scan = BooleanField('Force scan for new updates and extras on existing games')
     fetch_hltb = BooleanField('Fetch HowLongToBeat data', default=True)

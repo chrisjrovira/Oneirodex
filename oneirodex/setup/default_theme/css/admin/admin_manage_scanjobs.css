@@ -54,47 +54,55 @@
     backdrop-filter: blur(10px);
 }
 
-/* Column sizing for jobs table */
+/* Column sizing for jobs table: ID | When | Library | Path | Status | Progress | Actions */
 .simple-jobs-table th:nth-child(1), /* ID */
 .simple-jobs-table td:nth-child(1) {
     width: 80px;
     max-width: 80px;
 }
 
-.simple-jobs-table th:nth-child(2), /* Library */
+.simple-jobs-table th:nth-child(2), /* When */
 .simple-jobs-table td:nth-child(2) {
+    width: 130px;
+    max-width: 140px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.simple-jobs-table th:nth-child(3), /* Library */
+.simple-jobs-table td:nth-child(3) {
     width: 120px;
     max-width: 120px;
 }
 
-.simple-jobs-table th:nth-child(4), /* Status */
+.simple-jobs-table th:nth-child(4), /* Path - takes remaining space */
 .simple-jobs-table td:nth-child(4) {
+    width: auto;
+    min-width: 160px;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.simple-jobs-table th:nth-child(5), /* Status */
+.simple-jobs-table td:nth-child(5) {
     width: 100px;
     max-width: 100px;
     text-align: center;
 }
 
-.simple-jobs-table th:nth-child(5), /* Progress */
-.simple-jobs-table td:nth-child(5) {
+.simple-jobs-table th:nth-child(6), /* Progress */
+.simple-jobs-table td:nth-child(6) {
     width: 150px;
     max-width: 150px;
     text-align: center;
 }
 
-.simple-jobs-table th:nth-child(6), /* Actions */
-.simple-jobs-table td:nth-child(6) {
+.simple-jobs-table th:nth-child(7), /* Actions */
+.simple-jobs-table td:nth-child(7) {
     width: 120px;
     max-width: 120px;
     text-align: center;
-}
-
-.simple-jobs-table th:nth-child(3), /* Path - takes remaining space */
-.simple-jobs-table td:nth-child(3) {
-    width: auto;
-    min-width: 200px;
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* Status badges */
@@ -546,6 +554,11 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+.jobs-controls.od-cbtn-group {
+    flex-wrap: wrap;
 }
 
 .control-btn {
@@ -557,6 +570,18 @@
 
 .inline-form {
     display: inline;
+}
+
+.scan-jobs-card__modal-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.scan-jobs-card--compact .card-content {
+    padding: 0;
 }
 
 /* Actions styling */
@@ -955,6 +980,43 @@
     display: flex;
     gap: 10px;
     align-items: flex-end;
+}
+
+.auto-scan-path-row {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.auto-scan-path-row .path-input {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+}
+
+.auto-scan-path-row .od-cbtn,
+.auto-scan-path-row .loading-spinner {
+    flex: 0 0 auto;
+}
+
+.auto-scan-schedule-interval {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.auto-scan-schedule-interval .form-control {
+    flex: 1 1 5rem;
+    min-width: 4rem;
+}
+
+.option-item--schedule,
+.option-item--schedule-interval,
+.option-item--schedule-cron {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    width: 100%;
 }
 
 .path-input {
@@ -2691,4 +2753,57 @@ a.unmatched-dupe-of__title:hover {
   line-height: var(--od-line-base);
   color: var(--od-text-muted);
   max-width: 34ch;
+}
+
+
+/* —— Scan Jobs page + modal (Wave 1/2) —— */
+.manual-scan-path-row,
+.auto-scan-path-row,
+.input-with-button.auto-scan-path-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.manual-scan-path-row .path-input,
+.auto-scan-path-row .path-input {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.scan-jobs-card__modal-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.scan-jobs-card--compact .jobs-table-wrapper {
+  max-height: min(60vh, 28rem);
+  overflow: auto;
+}
+.jobs-controls.od-cbtn-group,
+.od-cbtn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.option-item--schedule-interval .auto-scan-schedule-interval,
+.auto-scan-schedule-interval {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+@media (max-width: 720px) {
+  .manual-scan-path-row,
+  .auto-scan-path-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .jobs-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }

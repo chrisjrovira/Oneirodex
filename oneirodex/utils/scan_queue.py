@@ -201,6 +201,111 @@ def find_queued_for_library(library_uuid: str, folder_path: str) -> ScanJob | No
     return None
 
 
+def normalize_schedule_fields(
+    schedule_choice,
+    *,
+    interval_value=None,
+    interval_unit='hours',
+    cron_expr=None,
+):
+    """Map Auto form schedule controls onto ScanJob columns.
+
+    Returns dict with keys: schedule (legacy enum or None), schedule_kind,
+    schedule_interval_minutes, schedule_cron, next_run (optional precompute).
+    """
+    from oneirodex.utils.services.scan_orchestration import (
+        SCHEDULE_HOURS,
+        compute_next_run,
+    )
+
+    choice = (schedule_choice or '').strip()
+    out = {
+        'schedule': None,
+        'schedule_kind': 'once',
+        'schedule_interval_minutes': None,
+        'schedule_cron': None,
+        'next_run': None,
+    }
+    if not choice:
+        return out
+    if choice in SCHEDULE_HOURS:
+        out['schedule'] = choice
+        out['schedule_kind'] = 'preset'
+        out['next_run'] = compute_next_run(choice)
+        return out
+    if choice == 'interval':
+        try:
+            value = int(interval_value or 0)
+        except (TypeError, ValueError):
+            value = 0
+        unit = (interval_unit or 'hours').strip().lower()
+        minutes = value * 60 if unit == 'hours' else value
+        if minutes < 1:
+            return out
+        out['schedule_kind'] = 'interval'
+        out['schedule_interval_minutes'] = minutes
+        out['next_run'] = compute_next_run(
+            schedule_kind='interval', interval_minutes=minutes,
+        )
+        return out
+    if choice == 'cron':
+        expr = (cron_expr or '').strip()
+        from oneirodex.utils.cron_schedule import validate_cron_expression
+
+        if not expr or validate_cron_expression(expr):
+            return out
+        out['schedule_kind'] = 'cron'
+        out['schedule_cron'] = expr[:64]
+        out['next_run'] = compute_next_run(schedule_kind='cron', cron_expr=expr)
+        return out
+    return out
+
+
+def apply_schedule_to_job(job, schedule_fields, *, arm_scheduled=False):
+    """Write normalized schedule fields onto a ScanJob; optionally arm next_run."""
+    if not job or not schedule_fields:
+        return
+    job.schedule = schedule_fields.get('schedule')
+    if hasattr(job, 'schedule_kind'):
+        job.schedule_kind = schedule_fields.get('schedule_kind')
+    if hasattr(job, 'schedule_interval_minutes'):
+        job.schedule_interval_minutes = schedule_fields.get('schedule_interval_minutes')
+    if hasattr(job, 'schedule_cron'):
+        job.schedule_cron = schedule_fields.get('schedule_cron')
+    if arm_scheduled and schedule_fields.get('next_run'):
+        job.next_run = schedule_fields['next_run']
+        job.status = 'Scheduled'
+        job.is_enabled = True
+
+
+def job_next_run_from_row(job):
+    """Compute next_run from whatever schedule columns the job carries."""
+    if not job:
+        return None
+    from oneirodex.utils.services.scan_orchestration import (
+        SCHEDULE_HOURS,
+        compute_next_run,
+    )
+
+    kind = getattr(job, 'schedule_kind', None) or (
+        'preset' if getattr(job, 'schedule', None) in SCHEDULE_HOURS else None
+    )
+    if kind == 'interval':
+        return compute_next_run(
+            schedule_kind='interval',
+            interval_minutes=getattr(job, 'schedule_interval_minutes', None),
+        )
+    if kind == 'cron':
+        return compute_next_run(
+            schedule_kind='cron',
+            cron_expr=getattr(job, 'schedule_cron', None),
+        )
+    if getattr(job, 'schedule', None) in SCHEDULE_HOURS:
+        return compute_next_run(job.schedule)
+    return None
+
+
+
 def create_scan_job_row(
     *,
     folder_path: str,
@@ -210,10 +315,14 @@ def create_scan_job_row(
     download_missing_images: bool = False,
     force_updates_extras_scan: bool = False,
     schedule=None,
+    schedule_fields=None,
     status: str = 'Queued',
 ) -> ScanJob:
     """Persist a ScanJob row without starting work."""
     now = datetime.now(timezone.utc)
+    fields = schedule_fields
+    if fields is None:
+        fields = normalize_schedule_fields(schedule)
     job = ScanJob(
         folders={folder_path: True},
         content_type='Games',
@@ -231,12 +340,15 @@ def create_scan_job_row(
         setting_filefolder=(scan_mode == 'files'),
         setting_download_missing_images=bool(download_missing_images),
         setting_force_updates_extras=bool(force_updates_extras_scan),
-        schedule=schedule if schedule in ('8_hours', '24_hours', '48_hours') else None,
+        schedule=fields.get('schedule') if fields else (
+            schedule if schedule in ('8_hours', '24_hours', '48_hours') else None
+        ),
         # Only a job that starts Running has a worker in this process. A Queued
         # row is owned by nobody yet, and stamping it here would make the queue
         # look busy to the reclaim sweep.
         owner_token=PROCESS_TOKEN if status == 'Running' else None,
     )
+    apply_schedule_to_job(job, fields or {})
     db.session.add(job)
     db.session.commit()
     return job
@@ -286,6 +398,7 @@ def start_or_queue_scan(
     fetch_hltb: bool = False,
     force_hltb_refetch: bool = False,
     schedule=None,
+    schedule_fields=None,
     queue_policy: str = 'queue',
     allow_force: bool = False,
     app=None,
@@ -309,6 +422,8 @@ def start_or_queue_scan(
         }
 
     flask_app = app or current_app._get_current_object()
+    if schedule_fields is None:
+        schedule_fields = normalize_schedule_fields(schedule)
 
     # Clear orphans before deciding, so the *first* request after a restart
     # starts instead of queueing. The admin status poll drains too, but only
@@ -340,6 +455,7 @@ def start_or_queue_scan(
             download_missing_images=download_missing_images,
             force_updates_extras_scan=force_updates_extras_scan,
             schedule=schedule,
+            schedule_fields=schedule_fields,
             status='Queued',
         )
         position = queue_position(job.id) or count_queued_jobs()
@@ -359,6 +475,7 @@ def start_or_queue_scan(
         download_missing_images=download_missing_images,
         force_updates_extras_scan=force_updates_extras_scan,
         schedule=schedule,
+        schedule_fields=schedule_fields,
         status='Running',
     )
 

@@ -998,6 +998,7 @@ const SCAN_TAB_PANES = {
     library: '#librariesPanel',
     deleteLibrary: '#librariesPanel',
     auto: '#autoScan',
+    jobs: '#scanJobs',
     tools: '#libraryTools',
     manual: '#manualScan',
     unmatched: '#unmatchedFolders',
@@ -1010,6 +1011,7 @@ const SCAN_TAB_PANES = {
 const SCAN_PANE_TABS = {
     librariesPanel: 'libraries',
     autoScan: 'auto',
+    scanJobs: 'jobs',
     libraryTools: 'tools',
     manualScan: 'manual',
     unmatchedFolders: 'unmatched',
@@ -1034,6 +1036,92 @@ function scanTabTriggers() {
 function isScanPaneActive(paneId) {
     const pane = document.getElementById(paneId);
     return Boolean(pane && pane.classList.contains('active'));
+}
+
+function isScanJobsModalOpen() {
+    const modal = document.getElementById('scanJobsModal');
+    return Boolean(modal && modal.classList.contains('show'));
+}
+
+/** Auto pane, Scan Jobs page, or the compact modal — any surface that shows the jobs table. */
+function isScanJobsSurfaceVisible() {
+    return isScanPaneActive('autoScan')
+        || isScanPaneActive('scanJobs')
+        || isScanJobsModalOpen();
+}
+
+/** API may send last_run as "Not Available" when unset — only real parseable stamps count. */
+function isRealJobTimestamp(value) {
+    if (value == null || value === '') return false;
+    const text = String(value).trim();
+    if (!text || text === 'Not Available' || text === 'Not Scheduled') return false;
+    return !Number.isNaN(Date.parse(text));
+}
+
+/** Prefer last_run, else started_at; short local YYYY-MM-DD HH:MM for the When column. */
+function formatJobWhen(job) {
+    const raw = isRealJobTimestamp(job && job.last_run)
+        ? job.last_run
+        : (isRealJobTimestamp(job && job.started_at) ? job.started_at : null);
+    if (!raw) return { display: '—', sort: '' };
+    const parsed = Date.parse(raw);
+    if (Number.isNaN(parsed)) return { display: '—', sort: '' };
+    const d = new Date(parsed);
+    const pad = (n) => String(n).padStart(2, '0');
+    const display = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return { display, sort: d.toISOString() };
+}
+
+function csvEscapeCell(value) {
+    const text = String(value == null ? '' : value);
+    if (/[",\n\r]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+}
+
+function downloadScanJobsCsv(jobs) {
+    const rows = Array.isArray(jobs) ? jobs : [];
+    const header = ['id', 'when', 'library', 'path', 'status', 'progress', 'error'];
+    const lines = [header.join(',')];
+    rows.forEach((job) => {
+        const { display: when } = formatJobWhen(job);
+        const { processed, total } = (() => {
+            const success = Number(job.folders_success) || 0;
+            const failed = Number(job.folders_failed) || 0;
+            const tot = Number(job.total_folders) || 0;
+            return { processed: success + failed, total: tot };
+        })();
+        const progress = total ? `${processed}/${total}` : '';
+        lines.push([
+            csvEscapeCell(job.id || ''),
+            csvEscapeCell(when),
+            csvEscapeCell(job.library_name || ''),
+            csvEscapeCell(job.scan_folder || ''),
+            csvEscapeCell(job.status || ''),
+            csvEscapeCell(progress),
+            csvEscapeCell(job.error_message || ''),
+        ].join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scan-jobs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function syncAutoScheduleRows() {
+    const kind = document.getElementById('autoScheduleKind');
+    const intervalRow = document.getElementById('autoScheduleIntervalRow');
+    const cronRow = document.getElementById('autoScheduleCronRow');
+    if (!kind) return;
+    const value = kind.value;
+    if (intervalRow) intervalRow.hidden = value !== 'interval';
+    if (cronRow) cronRow.hidden = value !== 'cron';
 }
 
 /**
@@ -1119,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (activeTabValue === 'unmatched') {
                 updateUnmatchedFolders();
             }
-            if (activeTabValue === 'auto') {
+            if (activeTabValue === 'auto' || activeTabValue === 'jobs') {
                 updateScanJobs();
             }
         });
@@ -1271,10 +1359,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!scanJobsTableBody) return false;
         for (const job of jobs) {
             const row = scanJobsTableBody.querySelector(`tr[data-job-id="${job.id}"]`);
-            if (!row || row.children.length < 5) return false;
+            // ID, When, Library, Path, Status, Progress, Actions → Progress is index 5
+            if (!row || row.children.length < 7) return false;
             const { percentage } = progressCounts(job);
+            const when = formatJobWhen(job);
             row.setAttribute('data-sort-progress', String(percentage));
-            row.children[4].innerHTML = progressColumnHtml(job);
+            row.setAttribute('data-sort-when', when.sort);
+            row.children[1].textContent = when.display;
+            row.children[5].innerHTML = progressColumnHtml(job);
         }
         return true;
     }
@@ -1410,6 +1502,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (aBusy !== bBusy) return aBusy - bBusy;
                     return new Date(b.last_run || 0) - new Date(a.last_run || 0);
                 });
+                // CSV export uses the current filtered list.
+                window.__odLastScanJobsPayload = filtered;
 
                 const isAnyJobRunning = allJobs.some(j => isScanBusyStatus(j.status));
                 scanBusy = isAnyJobRunning;
@@ -1418,8 +1512,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateAutoScanStatusIcon(allJobs);
                 }
 
-                if (!isScanPaneActive('autoScan')) {
-                    // Keep last* as the last painted table so returning to Auto
+                if (!isScanJobsSurfaceVisible() || !scanJobsTableBody) {
+                    // Keep last* as the last painted table so returning to Auto/Jobs
                     // can patch progress instead of wiping rows.
                     return;
                 }
@@ -1443,9 +1537,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const hasFilters = (scanJobFilters.statuses && scanJobFilters.statuses.length)
                         || scanJobFilters.library_uuid
                         || (scanJobFilters.q && scanJobFilters.q.trim());
-                    empty.innerHTML = `<td colspan="6">${hasFilters
+                    empty.innerHTML = `<td colspan="7">${hasFilters
                         ? 'No scan jobs match the current filters.'
-                        : 'No scan jobs yet. Click Start Scan after selecting a folder.'}</td>`;
+                        : 'No scan jobs yet. Start a scan from Auto or Manual.'}</td>`;
                     scanJobsTableBody.appendChild(empty);
                     return;
                 }
@@ -1492,10 +1586,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Sort key for the Progress column (W27-C2). The cell renders a bar
                     // and a "3/25 (12%)" caption, neither of which compares numerically
                     // as text — od_sortable_table.js reads this instead.
+                    const { display: whenDisplay, sort: whenSort } = formatJobWhen(job);
                     row.setAttribute('data-job-id', job.id);
                     row.setAttribute('data-sort-progress', String(percentage));
+                    row.setAttribute('data-sort-when', whenSort);
                     row.innerHTML = `
                         <td>${job.id.substring(0, 8)}</td>
+                        <td>${escapeHtml(whenDisplay)}</td>
                         <td>${escapeHtml(job.library_name || 'N/A')}</td>
                         <td>${escapeHtml(job.scan_folder || 'N/A')}</td>
                         <td>${statusCell}</td>
@@ -1532,6 +1629,29 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     bindScanJobFilters();
+
+    // Schedule kind toggles interval/cron rows on Auto.
+    syncAutoScheduleRows();
+    const autoScheduleKind = document.getElementById('autoScheduleKind');
+    if (autoScheduleKind) {
+        autoScheduleKind.addEventListener('change', syncAutoScheduleRows);
+    }
+
+    // Export CSV — button may appear on jobs page and/or modal toolbar.
+    document.querySelectorAll('#scanJobsExportBtn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            downloadScanJobsCsv(window.__odLastScanJobsPayload || []);
+        });
+    });
+
+    const scanJobsModalEl = document.getElementById('scanJobsModal');
+    if (scanJobsModalEl) {
+        scanJobsModalEl.addEventListener('shown.bs.modal', () => {
+            updateScanJobs();
+        });
+    }
+
+
 
     function interceptScanFormSubmit(form) {
         if (!form || form.dataset.scanConflictBound) return;
@@ -3100,7 +3220,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.clearTimeout(scanJobsPollTimer);
         const ms = scanJobsPollMs({
             busy: scanBusy,
-            jobsPaneVisible: isScanPaneActive('autoScan'),
+            jobsPaneVisible: isScanJobsSurfaceVisible(),
         });
         scanJobsPollTimer = window.setTimeout(() => {
             if (document.visibilityState === 'hidden') {

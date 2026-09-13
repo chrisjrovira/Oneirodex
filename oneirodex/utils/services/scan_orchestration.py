@@ -44,14 +44,98 @@ SCHEDULE_HOURS = {
 }
 
 
-def compute_next_run(schedule_key, from_time=None):
-    hours = SCHEDULE_HOURS.get(schedule_key)
-    if not hours:
-        return None
+def compute_next_run(
+    schedule_key=None,
+    from_time=None,
+    *,
+    schedule_kind=None,
+    interval_minutes=None,
+    cron_expr=None,
+):
+    """Next UTC run for preset hours, interval minutes, or a 5-field cron.
+
+    Legacy call sites pass only ``schedule_key`` (``8_hours`` / ``24_hours`` /
+    ``48_hours``). Interval/cron use the keyword args (and/or columns on a job).
+    """
     base = from_time or datetime.now(timezone.utc)
     if base.tzinfo is None:
         base = base.replace(tzinfo=timezone.utc)
+
+    kind = (schedule_kind or '').strip().lower() or None
+    if kind == 'interval' or (interval_minutes and not schedule_key):
+        minutes = int(interval_minutes or 0)
+        if minutes < 1:
+            return None
+        return base + timedelta(minutes=minutes)
+
+    if kind == 'cron' or (cron_expr and not schedule_key):
+        expr = (cron_expr or '').strip()
+        if not expr:
+            return None
+        from oneirodex.utils.cron_schedule import next_cron_fire
+
+        try:
+            return next_cron_fire(expr, from_time=base)
+        except ValueError:
+            logger.warning(f'Invalid scan cron expression: {expr!r}')
+            return None
+
+    hours = SCHEDULE_HOURS.get(schedule_key)
+    if not hours:
+        return None
     return base + timedelta(hours=hours)
+
+
+def resolve_scan_mode_for_path(folder_path, requested_mode='auto'):
+    """Resolve folders/files/auto into a concrete scan mode.
+
+    Auto: if the target has mostly ROM/archive files at depth 1 → files;
+    if it has game-like subfolders → folders; ambiguous → folders.
+    """
+    mode = (requested_mode or 'auto').strip().lower()
+    if mode in ('folders', 'files'):
+        return mode
+    if mode not in ('auto', ''):
+        return 'folders'
+
+    path = (folder_path or '').strip()
+    if not path or not os.path.isdir(path):
+        return 'folders'
+
+    archive_ext = {
+        '.zip', '.7z', '.rar', '.iso', '.chd', '.rvz', '.wbfs', '.cso',
+        '.nsp', '.xci', '.vpk', '.cia', '.3ds', '.nds', '.gba', '.gb', '.gbc',
+        '.nes', '.sfc', '.smc', '.n64', '.z64', '.v64', '.nds', '.cue', '.bin',
+        '.pbp', '.cso', '.img', '.rom',
+    }
+    try:
+        names = os.listdir(path)
+    except OSError:
+        return 'folders'
+
+    file_hits = 0
+    dir_hits = 0
+    for name in names:
+        if name.startswith('.'):
+            continue
+        full = os.path.join(path, name)
+        try:
+            if os.path.isdir(full):
+                dir_hits += 1
+            elif os.path.isfile(full):
+                ext = os.path.splitext(name)[1].lower()
+                if ext in archive_ext or ext:
+                    file_hits += 1
+        except OSError:
+            continue
+
+    if file_hits >= 3 and file_hits > dir_hits * 2:
+        return 'files'
+    if dir_hits >= 1:
+        return 'folders'
+    if file_hits >= 1:
+        return 'files'
+    return 'folders'
 
 
 def _drain_scan_queue_safe():
@@ -775,14 +859,25 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         # Remember last scan root for refresh-all
         if library is not None:
             library.last_scan_folder = folder_path
-        # Schedule next run when configured
+        # Schedule next run when configured (preset / interval / cron)
+        from oneirodex.utils.scan_queue import job_next_run_from_row
+
         job_schedule = schedule or getattr(scan_job_entry, 'schedule', None)
-        if job_schedule in SCHEDULE_HOURS:
+        if job_schedule in SCHEDULE_HOURS and not getattr(scan_job_entry, 'schedule_kind', None):
             scan_job_entry.schedule = job_schedule
-            scan_job_entry.next_run = compute_next_run(job_schedule)
+            if hasattr(scan_job_entry, 'schedule_kind'):
+                scan_job_entry.schedule_kind = 'preset'
+        next_run = job_next_run_from_row(scan_job_entry)
+        if next_run is None and job_schedule in SCHEDULE_HOURS:
+            next_run = compute_next_run(job_schedule)
+        if next_run is not None:
+            scan_job_entry.next_run = next_run
             scan_job_entry.status = 'Scheduled'
             scan_job_entry.is_enabled = True
-            logger.info(f"Scheduled next scan for {scan_job_entry.next_run} ({job_schedule})")
+            logger.info(
+                f"Scheduled next scan for {scan_job_entry.next_run} "
+                f"(kind={getattr(scan_job_entry, 'schedule_kind', None)}, schedule={job_schedule})"
+            )
     
     # Persist path_status for every library game (cheap exists per row — not Ops poll).
     # When remove_missing is enabled, also delete rows whose path is gone.
@@ -864,6 +959,7 @@ def handle_auto_scan(auto_form):
         from flask import request
         from flask_login import current_user
         from oneirodex.utils.scan_queue import (
+            normalize_schedule_fields,
             parse_force_parallel,
             parse_queue_policy,
             start_or_queue_scan,
@@ -875,6 +971,12 @@ def handle_auto_scan(auto_form):
         fetch_hltb = auto_form.fetch_hltb.data
         force_hltb_refetch = auto_form.force_hltb_refetch.data
         schedule = (auto_form.schedule.data or '').strip() or None
+        schedule_fields = normalize_schedule_fields(
+            schedule,
+            interval_value=auto_form.schedule_interval_value.data,
+            interval_unit=auto_form.schedule_interval_unit.data,
+            cron_expr=auto_form.schedule_cron.data,
+        )
 
         library = db.session.execute(select(Library).filter_by(uuid=library_uuid)).scalars().first()
         if not library:
@@ -925,6 +1027,9 @@ def handle_auto_scan(auto_form):
             and getattr(current_user, 'role', None) == 'admin'
         )
 
+        scan_mode = resolve_scan_mode_for_path(full_path, auto_form.scan_mode.data)
+        logger.info(f"Resolved scan mode for {full_path}: {scan_mode}")
+
         result = start_or_queue_scan(
             folder_path=full_path,
             library_uuid=library_uuid,
@@ -935,6 +1040,7 @@ def handle_auto_scan(auto_form):
             fetch_hltb=fetch_hltb,
             force_hltb_refetch=force_hltb_refetch,
             schedule=schedule,
+            schedule_fields=schedule_fields,
             queue_policy=queue_policy,
             allow_force=is_admin,
             app=current_app._get_current_object(),
@@ -1015,6 +1121,7 @@ def handle_manual_scan(manual_form):
                 getattr(current_user, 'is_authenticated', False)
                 and getattr(current_user, 'role', None) == 'admin'
             )
+            scan_mode = resolve_scan_mode_for_path(full_path, manual_form.scan_mode.data)
             result = start_or_queue_scan(
                 folder_path=full_path,
                 library_uuid=library_uuid,
@@ -1093,6 +1200,7 @@ def handle_manual_scan(manual_form):
 __all__ = [
     "SCHEDULE_HOURS",
     "compute_next_run",
+    "resolve_scan_mode_for_path",
     "_drain_scan_queue_safe",
     "_fail_scan_job_and_drain",
     "scan_and_add_games",

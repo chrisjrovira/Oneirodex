@@ -89,6 +89,12 @@
             </div>
           </div>
         {% endcall %}
+{% elif enable_new_chrome and active_tab == 'jobs' %}
+        {% call chrome.contextbar(
+             views=[],
+             active='jobs',
+             label='Scan Jobs') %}
+        {% endcall %}
 {% endif %}
 <div class="admin_manage_scanjobs-nav-panel">
     <div class="container-settings od-adminpage od-adminpage--xl">
@@ -308,126 +314,15 @@
                     </div>
                 </div>
                 {% endif %}
-                {# No libraries means no jobs are possible — showing an empty
-                   "active scan jobs" table on a fresh install was the reported
-                   phantom (GT-B13/B22). #}
-                {% if libraries|length > 0 %}
-                <!-- Scan Jobs Management Card -->
-                <div class="scan-jobs-card">
-                    <div class="card-header">
-                        <div class="jobs-header-content">
-                            <div class="jobs-title-section">
-                                <h4 class="card-title">
-                                    {{ icons.icon('tasks', size=20) }} Active Scan Jobs
-                                </h4>
-                                <p class="jobs-subtitle">Monitor running, queued, and recent scan operations</p>
-                            </div>
-                            <div class="jobs-controls">
-                                <form action="{{ url_for('admin2.clear_all_scan_jobs') }}" method="post" class="inline-form">
-                                    {{ csrf_form.csrf_token }}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm control-btn" data-od-confirm="Delete ALL jobs?">
-                                        {{ icons.icon('trash') }} <span class="btn-text">Clear All</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-content">
-                        <div
-                            id="scanJobsFilters"
-                            class="scan-jobs-filters"
-                            role="group"
-                            aria-label="Filter scan jobs"
-                        >
-                            <div class="scan-jobs-filters__statuses" role="group" aria-label="Status">
-                                <button type="button" class="scan-jobs-filter-chip is-active" data-scan-status="All" aria-pressed="true">All</button>
-                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Running" aria-pressed="false">Running</button>
-                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Queued" aria-pressed="false">Queued</button>
-                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Completed" aria-pressed="false">Completed</button>
-                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Failed" aria-pressed="false">Failed</button>
-                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Cancelled" aria-pressed="false">Cancelled</button>
-                                <button type="button" class="scan-jobs-filter-chip" data-scan-status="Scheduled" aria-pressed="false">Scheduled</button>
-                            </div>
-                            <div class="scan-jobs-filters__meta">
-                                <label class="scan-jobs-filters__field">
-                                    <span class="visually-hidden">Library</span>
-                                    <select id="scanJobsLibraryFilter" class="form-control scan-jobs-filters__select" aria-label="Filter by library">
-                                        <option value="">All libraries</option>
-                                    </select>
-                                </label>
-                                <label class="scan-jobs-filters__field scan-jobs-filters__field--grow">
-                                    <span class="visually-hidden">Folder path</span>
-                                    <input
-                                        id="scanJobsPathFilter"
-                                        type="search"
-                                        class="form-control scan-jobs-filters__input"
-                                        placeholder="Search folder path…"
-                                        aria-label="Search folder path"
-                                        autocomplete="off"
-                                    >
-                                </label>
-                            </div>
-                        </div>
-                        <div class="jobs-table-wrapper">
-                            {# W27-C2: sorting comes from js/od_sortable_table.js, which builds the
-                               header buttons from data-sort-key. Actions has no key on purpose —
-                               a column of controls has no order worth asking for. Progress sorts
-                               on data-sort-progress below, because "10/25" and "9/25" compare the
-                               wrong way round as text. #}
-                            <table id="scanJobsTable" class="simple-jobs-table" data-od-sortable>
-                                <thead>
-                                    <tr>
-                                        <th data-sort-key="id">ID</th>
-                                        <th data-sort-key="library">Library</th>
-                                        <th data-sort-key="path">Path</th>
-                                        <th data-sort-key="status">Status</th>
-                                        <th data-sort-key="progress">Progress</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="jobsTableBody">
-                                    {% if jobs %}
-                                        {% for job in jobs[:25] %}
-                                        <tr data-job-id="{{ job.id }}"
-                                            data-sort-progress="{{ (((job.folders_success or 0) + (job.folders_failed or 0)) / job.total_folders * 100) | round(1) if job.total_folders else 0 }}">
-                                            <td>{{ job.id }}</td>
-                                            <td>{{ job.library.name if job.library else 'N/A' }}</td>
-                                            <td>{{ job.scan_folder or 'N/A' }}</td>
-                                            {# Reason under the status, matching what the poll renders.
-                                               A Failed job used to show only the word, so a scan
-                                               reclaimed because its owner process died explained
-                                               nothing. #}
-                                            <td>
-                                                {{ job.status }}
-                                                {% if job.status == 'Failed' and job.error_message %}
-                                                    <div class="od-scan-fail-reason">{{ job.error_message }}</div>
-                                                {% endif %}
-                                            </td>
-                                            {# processed = success + failed, as progressCounts() in
-                                               admin_manage_scanjobs.js computes it. Counting only
-                                               successes made the first paint disagree with every
-                                               poll after it whenever a folder had failed. #}
-                                            <td>
-                                                {% if job.total_folders %}
-                                                    {{ (job.folders_success or 0) + (job.folders_failed or 0) }}/{{ job.total_folders }}
-                                                    {%- if job.folders_failed %} · {{ job.folders_failed }} failed{% endif %}
-                                                {% else %}
-                                                    —
-                                                {% endif %}
-                                            </td>
-                                            <td>—</td>
-                                        </tr>
-                                        {% endfor %}
-                                    {% else %}
-                                        <tr class="jobs-empty-row"><td colspan="6">No scan jobs yet. Click Start Scan after selecting a folder.</td></tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+            </div>
+
+            <!-- Scan Jobs Tab (full panel; no modal duplicate of jobsTableBody) -->
+            {% endif %}
+            {% if active_tab == 'jobs' %}
+            <div id="scanJobs" class="admin_manage_scanjobs-tab-panel tab-pane {% if active_tab == 'jobs' %}active{% else %}fade{% endif %}">
+                {% with compact=false %}
+                  {% include 'admin/partials/admin_scan_jobs_panel.html' %}
+                {% endwith %}
             </div>
 
             <!-- Library tools (same page as Auto Scan — W26 Libraries & Scans overhaul) -->
@@ -458,11 +353,13 @@
                     </div>
                     <!-- Scan Mode -->
                     <div class="admin_manage_scanjobs-scanmode form-group">
-                        {{ manual_form.scan_mode.label(**{"data-toggle": "tooltip", "title": "Choose how your games are organized on disk"}) }}
+                        <label data-toggle="tooltip" title="Folders, files, or let Oneirodex detect from the path">{{ manual_form.scan_mode.label.text }}</label>
                         {% for subfield in manual_form.scan_mode %}
                             <div class="form-check">
                                 {{ subfield(class="form-check-input") }}
-                                {% if subfield.data == 'folders' %}
+                                {% if subfield.data == 'auto' %}
+                                {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Inspect the path and choose folders vs files automatically"}) }}
+                                {% elif subfield.data == 'folders' %}
                                 {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Each game is in its own folder (e.g., /Games/Doom/, /Games/Quake/)"}) }}
                                 {% else %}
                                 {{ subfield.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Games are individual files in one folder (e.g., /Games/doom.zip, /Games/quake.exe)"}) }}
@@ -481,17 +378,31 @@
                                 data-path-var="currentPathManual"></select>
                         <div class="od-root-picker__hint" id="scanRootHintManual" hidden></div>
                     </div>
-                    <div class="form-group">
+                    <div class="path-input-group form-group">
                         {{ manual_form.library_root(id="manualLibraryRoot", type="hidden") }}
-                        {{ manual_form.folder_path.label(**{"data-toggle": "tooltip", "title": "Browse or enter the path to scan for games"}) }}
-                        {{ manual_form.folder_path(class="form-control", id="manualFolderPath") }}
+                        <div class="input-with-button auto-scan-path-row">
+                            {{ manual_form.folder_path(class="form-control path-input", id="manualFolderPath", **{"aria-label": "Scan folder path", "title": "Browse or enter the path to scan for games. Leave empty for the configured base directory."}) }}
+                            <button id="browseFoldersBtnManual" type="button" class="od-cbtn" data-browse-url="{{ url_for('apis.browse_folders_ss') }}">
+                                {{ icons.icon('search') }} Browse
+                            </button>
+                            <button type="submit" name="submit" value="ManualScan" class="od-cbtn od-cbtn--primary" id="manualListGamesBtn">
+                                {{ icons.icon('play') }} List Games
+                            </button>
+                            <button type="button" class="od-cbtn" id="openScanJobsModalBtnManual" data-bs-toggle="modal" data-bs-target="#scanJobsModal">
+                                {{ icons.icon('tasks') }} Scan jobs
+                            </button>
+                            <div id="loadingSpinnerManual" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
+                                <span class="od-spinner od-spinner--sm" aria-hidden="true"></span>
+                                <span class="visually-hidden">Loading folders…</span>
+                            </div>
+                        </div>
                         {% if manual_form.folder_path.errors %}
                             {% for error in manual_form.folder_path.errors %}
                                 <div class="alert alert-danger">{{ error }}</div>
                             {% endfor %}
                         {% endif %}
                     </div>
-                    
+
                     <!-- Options -->
                     <div class="form-check modern-checkbox">
                         {{ manual_form.force_updates_extras_scan(class="form-check-input", id="force-updates-extras-manual") }}
@@ -508,18 +419,14 @@
                         {{ manual_form.force_hltb_refetch.label(class="form-check-label", **{"data-toggle": "tooltip", "title": "Force refetch HLTB data for games that already exist in the database"}) }}
                     </div>
 
-                    <div class="form-group">
-                        <button id="browseFoldersBtnManual" type="button" class="admin_manage_scanjobs-browsefolders-btn btn btn-info">Browse Folders</button>
-                        <button type="submit" name="submit" value="ManualScan" class="admin_manage_scanjobs-browsefolders-listgames-btn btn btn-primary">List Games</button>
-                        <button id="upFolderBtnManual" type="button" class="admin_manage_scanjobs-browsefolders-up-btn btn btn-secondary" style="display: none;">Up</button>
+                    <div class="folder-browser">
+                        <button id="upFolderBtnManual" type="button" class="od-cbtn up-btn" style="display: none;">
+                            {{ icons.icon('updates') }} Up
+                        </button>
                     </div>
                 </form>
-                <div id="loadingSpinnerManual" class="loading-spinner" style="display: none;" role="status" aria-live="polite">
-                    <span class="od-spinner od-spinner--lg" aria-hidden="true"></span>
-                    <span class="visually-hidden">Loading folders…</span>
-                </div>
-                <div id="folderContentsManual"></div>
-            
+                <div id="folderContentsManual" class="folder-contents"></div>
+
                 {% if game_names_with_ids %}
                 <br>
                 <div class="admin_manage_scanjobs-foundgames-header">
@@ -538,7 +445,7 @@
                     {% endfor %}
                 </div>
             {% endif %}
-            
+
                 </div>
 
             <!-- Unmatched Folders Tab -->
@@ -991,6 +898,25 @@
         </div>
     </div>
 </div>
+
+{% if active_tab == 'auto' or active_tab == 'manual' or not active_tab %}
+<!-- Compact Scan Jobs modal (Auto/Manual only — jobs tab uses the full panel) -->
+<div class="modal fade" id="scanJobsModal" tabindex="-1" aria-labelledby="scanJobsModalTitle">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scanJobsModalTitle">{{ icons.icon('tasks', size=18) }} Scan Jobs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% with compact=true %}
+                  {% include 'admin/partials/admin_scan_jobs_panel.html' %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Write Permissions Error Modal -->
 <div class="modal fade" id="permissionsErrorModal" tabindex="-1">
