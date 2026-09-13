@@ -182,6 +182,9 @@ def test_library_tools_live_on_scan_management(admin_client):
     body = admin_client.get('/scan_management?active_tab=tools').get_data(as_text=True)
     assert 'id="libraryTools"' in body
     assert 'id="propose-leaf-mount"' in body
+    assert 'id="tab-add-many"' in body
+    assert 'Add many' in body
+    assert 'nav nav-tabs' not in body
     assert 'od_admin_library_tools.js' in body
     assert 'id="autoScan"' not in body
 

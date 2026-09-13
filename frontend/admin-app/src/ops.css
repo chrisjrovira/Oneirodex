@@ -1,6 +1,10 @@
-/* Ops / Dashboard board: full-width under the thin bar. Lock the SPA main
-   scrollport so the board scrolls inside the pane (Full log is a modal now).
-   Specificity must beat `body.od-shell-host .od-admin-main { overflow-y: auto }`. */
+/* Ops / Dashboard board: full-width under the thin bar.
+ *
+ * Shell contract: `.od-admin-main` is the page scrollport (see od-shell.css and
+ * docs/dev/ui-debt-log.md). Do NOT nest a second scroll on `.od-dash__board` —
+ * that read as a page-within-a-page. Do NOT collapse `padding-top` under the
+ * fixed THN (`0.35rem` previously let the board paint past the topbar).
+ * Full log remains a modal; main can scroll the board as one page. */
 body.od-shell-host .od-admin-main:has(.od-ops-page),
 body.od-shell-host .od-admin-main:has(.od-dash),
 .od-admin-main:has(.od-ops-page),
@@ -8,24 +12,18 @@ body.od-shell-host .od-admin-main:has(.od-dash),
   max-width: none;
   margin: 0;
   width: 100%;
-  padding-top: 0.35rem;
   padding-bottom: 0.75rem;
-  overflow: hidden;
-  overflow-y: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .od-ops-page,
 .od-admin-main:has(.od-dash) > .od-admin-page {
-  flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  overflow: hidden;
   padding-bottom: 0;
+  min-width: 0;
 }
 
 .od-admin-main:has(.od-dash) > .od-admin-page > h1,
@@ -37,17 +35,16 @@ body.od-shell-host .od-admin-main:has(.od-dash),
 
 .od-ops-page .od-dash,
 .od-admin-page .od-dash {
-  flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  min-width: 0;
 }
 
+/* Board grows with its tiles; `.od-admin-main` scrolls the page. */
 .od-ops-page .od-dash__board,
 .od-admin-page .od-dash__board {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
+  overflow: visible;
 }
 
 .od-ops-page__sr-title {

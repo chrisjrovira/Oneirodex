@@ -1,4 +1,10 @@
-"""Decide when a same-IGDB hit is a true duplicate vs a different folder."""
+"""Decide when a same-IGDB hit is a true duplicate vs a different folder.
+
+Duplicates are scoped to the **same system (library platform) and region**.
+Cross-system copies of the same title are intentional (NES + SNES + Switch) and
+must not be marked Duplicate — ``Game.igdb_id`` is unique per row, so those
+editions import without the colliding IGDB id (title-group browse pairs them).
+"""
 
 from __future__ import annotations
 
@@ -32,12 +38,97 @@ def folder_basename(path: str | None) -> str:
     return os.path.basename(path.replace('\\', '/').rstrip('/'))
 
 
+def normalize_rom_region(region: str | None) -> str | None:
+    """Fold ROM region tags to a canonical code (USA / JPN / EUR / …)."""
+    if region is None:
+        return None
+    text = str(region).strip()
+    if not text:
+        return None
+    try:
+        from oneirodex.utils.rom_language import normalize_region_token
+
+        folded = normalize_region_token(text)
+        if folded:
+            return folded
+    except Exception:
+        pass
+    return text.upper()
+
+
+def library_platform_key(library_or_platform) -> str | None:
+    """Stable system key from a Library, LibraryPlatform enum, or name string."""
+    if library_or_platform is None:
+        return None
+    platform = getattr(library_or_platform, 'platform', library_or_platform)
+    name = getattr(platform, 'name', None)
+    if name:
+        return str(name)
+    text = str(platform).strip()
+    return text or None
+
+
+def game_library_platform_key(game) -> str | None:
+    """Platform of the library that owns ``game`` (None when unloaded/missing)."""
+    if game is None:
+        return None
+    library = getattr(game, 'library', None)
+    if library is not None:
+        return library_platform_key(library)
+    return None
+
+
+def same_duplicate_scope(
+    existing_game,
+    *,
+    new_platform=None,
+    new_library_uuid: str | None = None,
+    new_rom_region: str | None = None,
+) -> bool:
+    """
+    True when ``existing_game`` may count as a Duplicate of the scan target.
+
+    Rules:
+    - Different systems (library platforms) → never a duplicate.
+    - Same system, both sides have a known ROM region and they differ → never.
+    - Same system, region unknown on either side → still in scope (title check).
+    - When platform cannot be resolved, fall back to same ``library_uuid``.
+    """
+    if existing_game is None:
+        return False
+
+    existing_platform = game_library_platform_key(existing_game)
+    new_platform_key = library_platform_key(new_platform) if new_platform is not None else None
+
+    if existing_platform and new_platform_key:
+        if existing_platform != new_platform_key:
+            return False
+    elif new_library_uuid:
+        existing_lib = getattr(existing_game, 'library_uuid', None)
+        if existing_lib and str(existing_lib) != str(new_library_uuid):
+            # Cross-library and we cannot prove same platform → out of scope.
+            if not existing_platform or not new_platform_key:
+                return False
+    elif existing_platform or new_platform_key:
+        # One side known, the other missing — do not invent a same-system match.
+        return False
+
+    existing_region = normalize_rom_region(getattr(existing_game, 'rom_region', None))
+    new_region = normalize_rom_region(new_rom_region)
+    if existing_region and new_region and existing_region != new_region:
+        return False
+    return True
+
+
 def explain_duplicate_match(
     existing_game,
     new_full_disk_path: str,
     new_raw_name: str | None = None,
     *,
     title_threshold: float = DEFAULT_TITLE_THRESHOLD,
+    new_platform=None,
+    new_library_uuid: str | None = None,
+    new_rom_region: str | None = None,
 ) -> dict[str, Any]:
     """
     Return a structured match explanation for UI glance + fix logging.
@@ -49,6 +140,39 @@ def explain_duplicate_match(
     existing_path = getattr(existing_game, 'full_disk_path', None) or ''
     existing_norm = normalize_disk_path(existing_path)
     new_norm = normalize_disk_path(new_full_disk_path)
+
+    if not same_duplicate_scope(
+        existing_game,
+        new_platform=new_platform,
+        new_library_uuid=new_library_uuid,
+        new_rom_region=new_rom_region,
+    ):
+        existing_platform = game_library_platform_key(existing_game)
+        new_platform_key = library_platform_key(new_platform) if new_platform is not None else None
+        existing_region = normalize_rom_region(getattr(existing_game, 'rom_region', None))
+        new_region = normalize_rom_region(new_rom_region)
+        if (
+            existing_platform
+            and new_platform_key
+            and existing_platform != new_platform_key
+        ):
+            reason = 'cross_system'
+        elif (
+            existing_region
+            and new_region
+            and existing_region != new_region
+        ):
+            reason = 'region_mismatch'
+        else:
+            reason = 'cross_system'
+        return {
+            'is_duplicate': False,
+            'match_reason': reason,
+            'match_score': 0.0,
+            'matched_game_uuid': None,
+            'threshold': title_threshold,
+            'transforms': [],
+        }
 
     if existing_norm and new_norm and existing_norm == new_norm:
         label = new_raw_name or folder_basename(new_full_disk_path)
@@ -93,14 +217,19 @@ def should_mark_as_duplicate(
     new_raw_name: str | None = None,
     *,
     title_threshold: float = DEFAULT_TITLE_THRESHOLD,
+    new_platform=None,
+    new_library_uuid: str | None = None,
+    new_rom_region: str | None = None,
 ) -> bool:
     """
     True only when the new folder is effectively the same title/path as an
-    existing library game that already owns this IGDB ID.
+    existing library game that already owns this IGDB ID — on the **same
+    system and region**.
 
     False when the IGDB ID collides but the folder looks like a different
-    package (e.g. "Alan Wake Complete Collection" vs "Alan Wake") — those
-    should stay Unmatched for human review / link-existing, not "Duplicate".
+    package (e.g. "Alan Wake Complete Collection" vs "Alan Wake"), or when the
+    existing hit is a different system/region — those should stay importable
+    (cross-system editions) or Unmatched for human review, not "Duplicate".
     """
     return bool(
         explain_duplicate_match(
@@ -108,5 +237,8 @@ def should_mark_as_duplicate(
             new_full_disk_path,
             new_raw_name,
             title_threshold=title_threshold,
+            new_platform=new_platform,
+            new_library_uuid=new_library_uuid,
+            new_rom_region=new_rom_region,
         )['is_duplicate']
     )

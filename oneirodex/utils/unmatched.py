@@ -90,7 +90,7 @@ def handle_delete_unmatched(all):
         flash("An unexpected error occurred while clearing folders. Please try again.", 'error')
     
     logger.info("Redirecting to scan management page")
-    return redirect(url_for('admin2.scan_management'))
+    return redirect(url_for('admin2.scan_management', active_tab='unmatched'))
 
 
 

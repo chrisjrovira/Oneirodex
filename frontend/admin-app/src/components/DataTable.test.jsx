@@ -174,7 +174,16 @@ test('column filters sit beside titles, not on a second header row', () => {
   const { container } = renderTable({ toolbar: false, columnFilters: true })
   expect(container.querySelector('.od-table__filter-row')).toBeNull()
   const nameHeader = screen.getByRole('columnheader', { name: /Name/ })
-  expect(within(nameHeader).getByLabelText('Filter Name')).toBeTruthy()
+  const input = within(nameHeader).getByLabelText('Filter Name')
+  expect(input).toBeTruthy()
+  const head = input.closest('.od-table__head')
+  expect(head).toHaveClass('has-filter')
+  // Filter trails the title/sort so CSS can dock it to the column's right edge.
+  const sortOrTitle = head.querySelector('.od-table__sort, .od-table__title')
+  expect(sortOrTitle).toBeTruthy()
+  expect(
+    Boolean(sortOrTitle.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING),
+  ).toBe(true)
 })
 
 test('column filters offer typeahead values from the rows', () => {

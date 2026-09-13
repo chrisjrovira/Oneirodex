@@ -323,7 +323,8 @@ function GroupDialog({
 /**
  * Libraries list for the Jinja Libraries pane — DataTable with inline
  * typeahead filters, themed row actions, grouping, and multi-select batch
- * Scan/Edit/Delete/Group.
+ * Scan/Edit/Delete/Group. Per-row and batch Edit open the shared edit modal
+ * (stays on this page); the modal can still link out to the full editor.
  */
 export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null }) {
   const [rows, setRows] = useState<LibraryRow[] | null>(null)
@@ -370,9 +371,6 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
     return undefined
   }, [rows, reload])
 
-  const editUrlTemplate =
-    panelEl?.getAttribute('data-edit-url-template') || '/admin/library/__UUID__/edit'
-
   const toggleOne = useCallback((uuid: string, on: boolean) => {
     setSelected((prev) => {
       const next = new Set(prev)
@@ -403,13 +401,18 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
     showToast('Delete confirm is unavailable on this page.', 'error')
   }, [])
 
-  const openBatchEdit = useCallback(() => {
+  const openEdit = useCallback((targets: Array<{ uuid: string; name: string }>) => {
+    if (!targets.length) return
     if (typeof window.odLibrariesOpenBatchEdit === 'function') {
-      window.odLibrariesOpenBatchEdit(selectedList)
+      window.odLibrariesOpenBatchEdit(targets)
       return
     }
-    showToast('Batch edit is unavailable on this page.', 'error')
-  }, [selectedList])
+    showToast('Edit is unavailable on this page.', 'error')
+  }, [])
+
+  const openBatchEdit = useCallback(() => {
+    openEdit(selectedList)
+  }, [openEdit, selectedList])
 
   const batchScan = useCallback(async () => {
     if (!selectedList.length) return
@@ -527,9 +530,13 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
         >
           {busyKey === lib.uuid ? '…' : 'Scan'}
         </button>
-        <a className="od-cbtn" href={editUrlTemplate.replace('__UUID__', lib.uuid)}>
+        <button
+          type="button"
+          className="od-cbtn"
+          onClick={() => openEdit([{ uuid: lib.uuid, name: lib.name }])}
+        >
           Edit
-        </a>
+        </button>
         <button
           type="button"
           className="od-cbtn od-cbtn--danger"
@@ -542,7 +549,7 @@ export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null })
         </button>
       </div>
     ),
-    [askDelete, busyKey, editUrlTemplate, startScan],
+    [askDelete, busyKey, openEdit, startScan],
   )
 
   const columns = useMemo(() => {

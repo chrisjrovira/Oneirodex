@@ -1,6 +1,6 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 33** in `oneirodex/utils/preset_themes.py` (Auto Scan refresh icon + tip; prior 32 = Libraries & scans LHN/THN chrome). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
+Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 34** in `oneirodex/utils/preset_themes.py` (Library tools THN; prior 33 = Auto Scan refresh icon). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
 
 ## Default look
 
@@ -64,6 +64,7 @@ Or delete `themes/default` (and stale presets) under the library volume and rest
 
 | Libraries & scans LHN/THN (`GENERATOR_VERSION` **32** — `od-shell.css` hub sub active matches member; Scan THN Auto\|Manual only; no Libraries sibling strip) | Theme tree CSS/templates → **library volume**; admin-app dist in **image** | After 2026-09-12 chrome pickup: rebuild **and** **Reset Default Themes**. |
 | Auto Scan refresh control (`GENERATOR_VERSION` **33** — icon + `od-tip` in Auto Scan header; drops the “Refresh all libraries” banner row) | Theme tree CSS/templates → **library volume** | After 2026-09-12: rebuild **and** **Reset Default Themes**. |
+| Library tools THN (`GENERATOR_VERSION` **34** — tool views in contextbar; Add many folds scan+import; no page title / pane outline) | Theme tree CSS/templates → **library volume** | After 2026-09-12: rebuild **and** **Reset Default Themes**. |
 
 If a fresh Unraid pull looks half-applied (new play-skins room art shows but admin still looks old, or vice versa), check which of the two you skipped.
 

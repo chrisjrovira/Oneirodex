@@ -146,14 +146,12 @@ class InitializationManager:
                 db_manager.add_column_if_not_exists()
                 _safe_print("[OK] Database migrations completed")
 
-                # One-time Alembic adoption (wave A3.1). Every schema this
-                # project has ever built came from create_all + updateschema
-                # above; Alembic now owns forward change. If this database has
-                # no alembic_version table yet but does have a schema, stamp it
-                # at the baseline revision so future `alembic upgrade` starts
-                # from the right place. Do NOT run the baseline migration --
-                # the schema is already present.
-                self._stamp_alembic_baseline_if_needed(engine)
+                # Alembic owns forward schema change (wave A3.1). Pre-Alembic
+                # DBs are stamped at the baseline revision (schema already
+                # present via create_all + updateschema); every boot then runs
+                # `alembic upgrade head` so post-baseline revisions (e.g.
+                # schedule columns) land without a manual operator step.
+                self._ensure_alembic_current(engine)
 
             finally:
                 engine.dispose()
@@ -164,24 +162,28 @@ class InitializationManager:
             _safe_print(f"[ERR] Database structure setup failed: {e}")
             return False
 
-    def _stamp_alembic_baseline_if_needed(self, engine):
-        """Stamp a pre-Alembic database at the baseline revision, once.
+    # First squashed Alembic revision (create_all + frozen updateschema).
+    _ALEMBIC_BASELINE_REVISION = 'b9ab856b09ff'
 
-        No-op when ``alembic_version`` already exists (a stamped or migrated
-        DB) or when there is no schema at all yet (nothing to adopt --
-        ``alembic upgrade`` would build it fresh). Failures here are logged
-        and swallowed: a missing stamp is recoverable by hand and must not
-        block boot.
+    def _ensure_alembic_current(self, engine):
+        """Adopt pre-Alembic DBs at baseline, then upgrade to head.
+
+        - No ``alembic_version`` + existing schema -> stamp baseline only
+          (never ``head``: that would skip post-baseline DDL).
+        - Always ``upgrade head`` afterward so new revisions apply on boot.
+        - If stamped at/ past a revision that adds columns create_all already
+          created, migrations are idempotent (see schedule-fields revision).
+
+        Failures are logged and swallowed so boot cannot die on migration.
         """
         try:
             from sqlalchemy import inspect as sa_inspect
 
             inspector = sa_inspect(engine)
-            if inspector.has_table('alembic_version'):
-                return
-            # "Schema exists" probe: a table every install has had for years.
-            if not inspector.has_table('games'):
-                return
+            # Nothing to adopt yet — empty DB; upgrade head builds from scratch
+            # only when an alembic path is used alone. App boot uses create_all.
+            has_schema = inspector.has_table('games')
+            has_alembic = inspector.has_table('alembic_version')
 
             from alembic import command
             from alembic.config import Config as AlembicConfig
@@ -190,15 +192,37 @@ class InitializationManager:
             ini_path = os.path.join(repo_root, 'alembic.ini')
             if not os.path.isfile(ini_path):
                 _safe_print(
-                    "[WARN] alembic.ini not found; skipping baseline stamp"
+                    "[WARN] alembic.ini not found; skipping Alembic ensure"
                 )
                 return
 
             alembic_cfg = AlembicConfig(ini_path)
-            command.stamp(alembic_cfg, 'head')
-            _safe_print("[OK] Stamped existing schema at Alembic baseline")
+
+            if has_schema and not has_alembic:
+                # Never stamp head here — that skips post-baseline DDL.
+                command.stamp(alembic_cfg, self._ALEMBIC_BASELINE_REVISION)
+                _safe_print(
+                    "[OK] Stamped existing schema at Alembic baseline "
+                    f"({self._ALEMBIC_BASELINE_REVISION})"
+                )
+            elif has_schema and has_alembic and inspector.has_table('scan_jobs'):
+                # Repair installs that were stamped at head before schedule_*
+                # landed: alembic thinks it is current but columns are missing.
+                scan_cols = {
+                    col['name'] for col in inspector.get_columns('scan_jobs')
+                }
+                if 'schedule_kind' not in scan_cols:
+                    command.stamp(alembic_cfg, self._ALEMBIC_BASELINE_REVISION)
+                    _safe_print(
+                        "[OK] Re-stamped to Alembic baseline to apply "
+                        "missing schedule columns"
+                    )
+
+            if has_schema or has_alembic:
+                command.upgrade(alembic_cfg, 'head')
+                _safe_print("[OK] Alembic upgrade head complete")
         except Exception as e:  # noqa: BLE001 - boot must not fail on this
-            _safe_print(f"[WARN] Alembic baseline stamp skipped: {e}")
+            _safe_print(f"[WARN] Alembic ensure skipped: {e}")
 
     def _phase3_default_data(self):
         """Initialize all default data in the database."""

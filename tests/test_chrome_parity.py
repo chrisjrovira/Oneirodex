@@ -130,6 +130,21 @@ def test_scan_thn_is_auto_manual_only():
     assert 'image_queue' not in bar
 
 
+def test_library_tools_thn_owns_tool_views():
+    """Library tools views are the contextbar, not an in-page Bootstrap tab strip."""
+    markup = _read(SCANJOBS)
+    assert "active_tab == 'tools'" in markup
+    assert "('add-many', 'Add many', '#tab-add-many')" in markup
+    assert "data_toggle='tab'" in markup
+    body = _read(ROOT / 'oneirodex' / 'templates' / 'admin' / 'partials' / 'admin_library_tools_body.html')
+    assert 'nav nav-tabs' not in body
+    assert 'od-adminpage-title' not in body
+    assert 'id="tab-add-many"' in body
+    assert 'Scan a folder' in body
+    assert 'Import a list' in body
+    assert 'Everything here previews first' in body
+
+
 def test_auto_scan_refresh_is_header_icon_with_tip():
     """Refresh-all is an icon + od-tip, not a banner row of button + help text."""
     markup = _read(SCANJOBS)

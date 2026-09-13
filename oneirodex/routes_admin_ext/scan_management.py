@@ -32,11 +32,9 @@ from oneirodex.models import (
     Library,
     ReleaseGroup,
     ScanJob,
-    UnmatchedFolder,
 )
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.functions import (
-    igdb_platform_id_for,
     normalize_case_sensitive,
 )
 from oneirodex.utils.services.scan_orchestration import (
@@ -87,21 +85,10 @@ def scan_management():
 
     jobs = db.session.execute(select(ScanJob).order_by(ScanJob.last_run.desc())).scalars().all()
     csrf_form = CsrfProtectForm()
-    unmatched_folders = UnmatchedFolder.query\
-                        .join(Library)\
-                        .with_entities(UnmatchedFolder, Library.name, Library.platform)\
-                        .order_by(UnmatchedFolder.status.desc()).all()
-    unmatched_form = UpdateUnmatchedFolderForm()
-    # Packaging data with platform details
+    # Unmatched rows load via /api/unmatched_folders — do not hydrate the full
+    # list on every Scan management page (that alone made Unmatched feel stuck).
     unmatched_folders_with_platform = []
-    for unmatched, lib_name, lib_platform in unmatched_folders:
-        platform_id = igdb_platform_id_for(lib_platform)
-        unmatched_folders_with_platform.append({
-            "folder": unmatched,
-            "library_name": lib_name,
-            "platform_name": lib_platform.name if lib_platform else '',
-            "platform_id": platform_id
-        })
+    unmatched_form = UpdateUnmatchedFolderForm()
 
     game_count = db.session.scalar(select(func.count(Game.id)))  # Fetch the game count here
 

@@ -16,7 +16,7 @@ import os
 from datetime import datetime, timezone
 
 from flask import (
-    abort, current_app, flash, redirect, render_template, session, url_for,
+    abort, current_app, flash, redirect, render_template, request, session, url_for,
 )
 from flask_login import login_required
 from sqlalchemy import delete, select
@@ -223,7 +223,36 @@ def delete_scan_job(job_id):
 @login_required
 @admin_required
 def clear_all_scan_jobs():
-    db.session.execute(delete(ScanJob))
+    """Delete terminal jobs only (keeps Running/Stopping/Queued/Scheduled).
+
+    Recurring schedules live as Scheduled/Queued rows; wiping them on
+    "clear all" silently disarmed interval/cron arms. Use status-scoped
+    clear for Queued/Scheduled if that is intentional.
+    """
+    terminal = ('Completed', 'Failed', 'Cancelled')
+    result = db.session.execute(
+        delete(ScanJob).where(ScanJob.status.in_(terminal))
+    )
     db.session.commit()
-    flash('All scan jobs cleared successfully.', 'success')
-    return redirect(url_for('admin2.scan_management'))
+    flash(
+        f'Cleared {result.rowcount} completed/failed/cancelled scan jobs '
+        '(Running/Stopping/Queued/Scheduled kept).',
+        'success',
+    )
+    return redirect(url_for('admin2.scan_management', active_tab='jobs'))
+
+
+@admin2_bp.route('/clear_scan_jobs', methods=['POST'])
+@login_required
+@admin_required
+def clear_scan_jobs():
+    """Delete jobs matching one terminal status (Completed or Failed)."""
+    status = (request.form.get('status') or request.args.get('status') or '').strip()
+    allowed = {'Completed', 'Failed', 'Cancelled'}
+    if status not in allowed:
+        flash('Unknown job status to clear.', 'error')
+        return redirect(url_for('admin2.scan_management', active_tab='jobs'))
+    result = db.session.execute(delete(ScanJob).where(ScanJob.status == status))
+    db.session.commit()
+    flash(f'Cleared {result.rowcount} {status} scan jobs.', 'success')
+    return redirect(url_for('admin2.scan_management', active_tab='jobs'))

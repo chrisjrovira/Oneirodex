@@ -144,3 +144,35 @@ def test_admin_app_package_exists():
     pkg = ROOT / 'frontend' / 'admin-app' / 'package.json'
     assert pkg.is_file()
     assert 'admin-app' in pkg.read_text(encoding='utf-8')
+
+
+def test_ops_dashboard_uses_main_as_page_scroll_under_thn():
+    """Ops/Dashboard must not nest a board scrollport under a collapsed THN inset.
+
+    A prior rule set ``padding-top: 0.35rem`` and ``overflow: hidden`` on
+    ``.od-admin-main:has(.od-dash)`` with ``overflow: auto`` on ``.od-dash__board``,
+    so the board painted past the thin top bar and scrolled as a page-within-a-page.
+    Shell contract: main keeps the topbar inset and is the page scrollport.
+    """
+    css = (ADMIN_APP_SRC / 'ops.css').read_text(encoding='utf-8')
+    body = re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
+
+    main_has = re.search(
+        r'\.od-admin-main:has\(\.od-dash\)\s*\{([^{}]*)\}',
+        body,
+    )
+    assert main_has, 'missing .od-admin-main:has(.od-dash) rule'
+    main_block = main_has.group(1)
+    assert 'padding-top: 0.35rem' not in main_block
+    assert 'overflow-y: hidden' not in main_block
+    assert 'overflow: hidden' not in main_block
+    assert 'overflow-y: auto' in main_block
+
+    board = re.search(
+        r'\.od-admin-page\s+\.od-dash__board\s*\{([^{}]*)\}',
+        body,
+    )
+    assert board, 'missing .od-dash__board overflow rule'
+    board_block = board.group(1)
+    assert 'overflow: auto' not in board_block
+    assert 'overflow: visible' in board_block

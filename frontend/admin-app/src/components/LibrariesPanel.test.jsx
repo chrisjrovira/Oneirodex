@@ -159,3 +159,16 @@ test('colors game counts when a platform total is known', async () => {
   expect(empty.style.color).toBeTruthy()
   expect(full.style.color).not.toEqual(empty.style.color)
 })
+
+test('row Edit opens the shared modal instead of navigating away', async () => {
+  const openEdit = vi.fn()
+  window.odLibrariesOpenBatchEdit = openEdit
+  render(<LibrariesPanel />)
+  await screen.findByText('_pc')
+  const row = screen.getByText('_pc').closest('tr')
+  expect(row).toBeTruthy()
+  fireEvent.click(within(row).getByRole('button', { name: 'Edit' }))
+  expect(openEdit).toHaveBeenCalledWith([{ uuid: 'a', name: '_pc' }])
+  expect(screen.queryByRole('link', { name: 'Edit' })).toBeNull()
+  delete window.odLibrariesOpenBatchEdit
+})
