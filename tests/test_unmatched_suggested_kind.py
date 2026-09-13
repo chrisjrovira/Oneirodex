@@ -202,6 +202,90 @@ def test_unmatched_list_exposes_rom_region_lang_from_path(
     assert 'EUR' in text
 
 
+def test_unmatched_paginate_rom_region_total_and_membership(
+    client, admin_user, db_session, sample_library, sample_scan_job,
+):
+    """Region filter must slice after peel so total/page match USA rows only."""
+    paths = [
+        '/test/roms/Alpha (USA).gb',
+        '/test/roms/Bravo (USA).gb',
+        '/test/roms/Charlie (Europe).gb',
+        '/test/roms/Delta (USA).gb',
+        '/test/roms/Echo (Japan).gb',
+    ]
+    for path in paths:
+        db_session.add(UnmatchedFolder(
+            library_uuid=sample_library.uuid,
+            scan_job_id=sample_scan_job.id,
+            folder_path=path,
+            failed_time=datetime.now(timezone.utc),
+            content_type='Games',
+            status='Unmatched',
+        ))
+    db_session.commit()
+
+    _login_admin(client, admin_user)
+    page0 = client.get(
+        '/api/unmatched_folders?paginate=1&rom_region=USA&limit=2&offset=0'
+    )
+    assert page0.status_code == 200
+    body0 = page0.get_json()
+    assert body0['total'] == 3
+    assert body0['count'] == 2
+    assert body0['limit'] == 2
+    assert body0['offset'] == 0
+    assert all(item['rom_region'] == 'USA' for item in body0['items'])
+    page0_ids = {item['id'] for item in body0['items']}
+
+    page1 = client.get(
+        '/api/unmatched_folders?paginate=1&rom_region=USA&limit=2&offset=2'
+    )
+    assert page1.status_code == 200
+    body1 = page1.get_json()
+    assert body1['total'] == 3
+    assert body1['count'] == 1
+    assert body1['offset'] == 2
+    assert len(body1['items']) == 1
+    assert body1['items'][0]['rom_region'] == 'USA'
+    assert body1['items'][0]['id'] not in page0_ids
+
+
+def test_unmatched_export_rom_region_matches_list_filter(
+    client, admin_user, db_session, sample_library, sample_scan_job,
+):
+    """Export rom_region filter must match the list endpoint peel filter."""
+    for path in (
+        '/test/roms/Export USA (USA).gb',
+        '/test/roms/Export EUR (Europe).gb',
+        '/test/roms/Export JPN (Japan).gb',
+    ):
+        db_session.add(UnmatchedFolder(
+            library_uuid=sample_library.uuid,
+            scan_job_id=sample_scan_job.id,
+            folder_path=path,
+            failed_time=datetime.now(timezone.utc),
+            content_type='Games',
+            status='Unmatched',
+        ))
+    db_session.commit()
+
+    _login_admin(client, admin_user)
+    listed = client.get('/api/unmatched_folders?rom_region=USA')
+    assert listed.status_code == 200
+    list_ids = {row['id'] for row in listed.get_json() if row['rom_region'] == 'USA'}
+    assert len(list_ids) == 1
+
+    exported = client.get(
+        '/api/unmatched_folders/export?format=json&rom_region=USA'
+    )
+    assert exported.status_code == 200
+    export_rows = exported.get_json()
+    assert len(export_rows) == 1
+    assert export_rows[0]['rom_region'] == 'USA'
+    assert export_rows[0]['id'] in list_ids
+    assert '(USA)' in export_rows[0]['folder_path']
+
+
 def test_sync_unmatched_kind_hint_from_proposal(db_session, sample_library, sample_scan_job, tmp_path):
     path = str(tmp_path / 'emu-folder')
     folder = UnmatchedFolder(
