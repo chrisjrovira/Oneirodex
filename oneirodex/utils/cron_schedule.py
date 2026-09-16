@@ -7,7 +7,6 @@ accepts 7 as Sunday). Enough for admin scan schedules; not a full crontab.
 
 from __future__ import annotations
 
-from calendar import monthrange
 from datetime import datetime, timedelta, timezone
 
 
@@ -56,31 +55,60 @@ def parse_cron_expression(expr: str) -> tuple[set[int], set[int], set[int], set[
     return minutes, hours, doms, months, dows
 
 
+def _day_fields_restricted(expr: str) -> tuple[bool, bool]:
+    """Whether day-of-month / day-of-week are restricted (i.e. not ``*``).
+
+    POSIX crontab unions the two day fields when **both** are restricted, so
+    the caller has to know which of them the author actually constrained. A
+    parsed set cannot answer that: ``*`` and ``1-31`` both expand to the same
+    31 values.
+    """
+    parts = (expr or '').strip().split()
+    dom_raw = parts[2] if len(parts) > 2 else '*'
+    dow_raw = parts[4] if len(parts) > 4 else '*'
+    return (dom_raw.strip() != '*', dow_raw.strip() != '*')
+
+
 def next_cron_fire(expr: str, from_time: datetime | None = None) -> datetime:
-    """Return the next UTC datetime strictly after ``from_time`` matching ``expr``."""
+    """Return the next UTC datetime strictly after ``from_time`` matching ``expr``.
+
+    Day matching follows POSIX crontab: when day-of-month **and** day-of-week
+    are both restricted the entry fires on days matching *either* of them, not
+    both. ``0 3 1 * 1`` is "the 1st, and every Monday" — ANDing the two fields
+    turns roughly five fires a month into roughly one a year.
+
+    The search steps a whole day at a time while the date does not match, so
+    an unsatisfiable-but-parseable expression (``0 0 30 2 *``) costs ~800
+    iterations rather than the ~1.15 million a minute-by-minute walk took.
+    """
     minutes, hours, doms, months, dows = parse_cron_expression(expr)
+    dom_restricted, dow_restricted = _day_fields_restricted(expr)
     base = from_time or datetime.now(timezone.utc)
     if base.tzinfo is None:
         base = base.replace(tzinfo=timezone.utc)
     else:
         base = base.astimezone(timezone.utc)
-    # Start at the next whole minute
-    cursor = (base.replace(second=0, microsecond=0) + timedelta(minutes=1))
-    # Bound search to ~2 years to avoid infinite loops on impossible expressions
+
+    def _day_matches(moment: datetime) -> bool:
+        if moment.month not in months:
+            return False
+        # Python weekday is Mon=0 … Sun=6; cron is Sun=0 … Sat=6.
+        dom_hit = moment.day in doms
+        dow_hit = ((moment.weekday() + 1) % 7) in dows
+        if dom_restricted and dow_restricted:
+            return dom_hit or dow_hit
+        return dom_hit and dow_hit
+
+    # Start at the next whole minute — the result is strictly after `base`.
+    cursor = base.replace(second=0, microsecond=0) + timedelta(minutes=1)
+    # Bound the search to ~2 years so an impossible expression terminates.
     limit = cursor + timedelta(days=800)
     while cursor <= limit:
-        if (
-            cursor.month in months
-            and cursor.day in doms
-            and cursor.hour in hours
-            and cursor.minute in minutes
-        ):
-            # Convert Python weekday (Mon=0 … Sun=6) to cron (Sun=0 … Sat=6)
-            cron_dow = (cursor.weekday() + 1) % 7
-            if cron_dow in dows:
-                last_day = monthrange(cursor.year, cursor.month)[1]
-                if cursor.day <= last_day:
-                    return cursor
+        if not _day_matches(cursor):
+            cursor = (cursor + timedelta(days=1)).replace(hour=0, minute=0)
+            continue
+        if cursor.hour in hours and cursor.minute in minutes:
+            return cursor
         cursor += timedelta(minutes=1)
     raise ValueError(f'no next fire for cron {expr!r} within search window')
 

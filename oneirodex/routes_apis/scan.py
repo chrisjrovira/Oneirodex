@@ -403,9 +403,20 @@ def _parse_unmatched_list_filters():
         offset = 0
     limit = max(1, min(limit, UNMATCHED_LIST_MAX_LIMIT))
     offset = max(0, offset)
+    # The peel trail is on by default: it is what the Unmatched row's "Name
+    # transform trail" expander renders, and the only caller never asked for it
+    # opt-in, so making it opt-in silently emptied that expander for every row.
+    # The list is paginated now (150 rows, 500 ceiling), so the CPU that made it
+    # worth skipping across an unbounded list is bounded. `include=none` (or
+    # `transforms=0`) is the opt-out for a caller that only wants the columns.
     include_raw = (request.args.get('include') or '').strip().lower()
-    include_transforms = include_raw in {'transforms', '1', 'true', 'yes', 'full'}
-    if (request.args.get('transforms') or '').strip().lower() in {'1', 'true', 'yes'}:
+    transforms_raw = (request.args.get('transforms') or '').strip().lower()
+    include_transforms = True
+    if include_raw in {'none', 'minimal', 'columns'} or transforms_raw in {'0', 'false', 'no'}:
+        include_transforms = False
+    if include_raw in {'transforms', '1', 'true', 'yes', 'full'} or transforms_raw in {
+        '1', 'true', 'yes',
+    }:
         include_transforms = True
     return {
         'status': status,

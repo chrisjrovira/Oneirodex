@@ -865,8 +865,7 @@ def _scan_and_add_games_body(folder_path, scan_mode='folders', library_uuid=None
         job_schedule = schedule or getattr(scan_job_entry, 'schedule', None)
         if job_schedule in SCHEDULE_HOURS and not getattr(scan_job_entry, 'schedule_kind', None):
             scan_job_entry.schedule = job_schedule
-            if hasattr(scan_job_entry, 'schedule_kind'):
-                scan_job_entry.schedule_kind = 'preset'
+            scan_job_entry.schedule_kind = 'preset'
         next_run = job_next_run_from_row(scan_job_entry)
         if next_run is None and job_schedule in SCHEDULE_HOURS:
             next_run = compute_next_run(job_schedule)

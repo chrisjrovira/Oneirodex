@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Unmatched list carries the name-transform trail again. PR #112 made `transforms` opt-in for CPU reasons, but the only consumer — the "Name transform trail" expander on Admin → Unmatched — never opted in, so it rendered for nothing. The list is paginated now, so the trail is on by default; `include=none` skips it.
+- Scan-job cron: the field is labelled **UTC** (it always was evaluated in UTC — `0 3 * * *` from America/Chicago was a 9–10pm local scan); day-of-month and day-of-week follow crontab and fire on *either* when both are set (`0 3 1 * 1` was firing ~once a year instead of ~5×/month); an impossible expression (Feb 30) is rejected instantly instead of after a ~1.15M-step search inside the form POST; an unknown schedule option is refused instead of silently armed as a one-shot.
+- `pydantic-core==2.46.5` is pinned explicitly. The shared interpreter has twice been pulled to 2.49.0 by another package, after which `pydantic` refuses to import and every route test hangs; `pip install -r requirements.txt` now reasserts the version `pydantic==2.13.5` requires.
 - Docker `frontend-build` stages `tsconfig.base.json` so SPA `tsc --noEmit` keeps jsx/lib/moduleResolution (Unraid `compose up --build` was failing after the TypeScript on-ramp).
 - Unraid ship/rebuild scripts pipe `scripts/ops/unraid_reset_themes.py` (the old `scripts/_unraid_reset_themes.py` path is gone).
 - Dependabot npm groups are minor/patch only — vite/vitest/typescript majors stay manual (closed the open major grouper PRs).
