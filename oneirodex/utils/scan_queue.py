@@ -265,6 +265,11 @@ def normalize_schedule_fields(
         out['schedule_cron'] = expr[:64]
         out['next_run'] = compute_next_run(schedule_kind='cron', cron_expr=expr)
         return out
+    # Unknown choice: fail closed like the cron/interval branches above. Falling
+    # through to `once` with no error armed nothing while the caller flashed
+    # success — a select option added to the template but not here would look
+    # like it worked.
+    out['error'] = f'Unknown schedule option: {choice}'
     return out
 
 
@@ -272,13 +277,13 @@ def apply_schedule_to_job(job, schedule_fields, *, arm_scheduled=False):
     """Write normalized schedule fields onto a ScanJob; optionally arm next_run."""
     if not job or not schedule_fields:
         return
+    # No hasattr() guards: these are mapped columns, so the attribute exists on
+    # the instance whether or not the database has run migration a1c2e3f4b5d6.
+    # The guards read as pre-migration safety and provided none.
     job.schedule = schedule_fields.get('schedule')
-    if hasattr(job, 'schedule_kind'):
-        job.schedule_kind = schedule_fields.get('schedule_kind')
-    if hasattr(job, 'schedule_interval_minutes'):
-        job.schedule_interval_minutes = schedule_fields.get('schedule_interval_minutes')
-    if hasattr(job, 'schedule_cron'):
-        job.schedule_cron = schedule_fields.get('schedule_cron')
+    job.schedule_kind = schedule_fields.get('schedule_kind')
+    job.schedule_interval_minutes = schedule_fields.get('schedule_interval_minutes')
+    job.schedule_cron = schedule_fields.get('schedule_cron')
     if arm_scheduled and schedule_fields.get('next_run'):
         job.next_run = schedule_fields['next_run']
         job.status = 'Scheduled'

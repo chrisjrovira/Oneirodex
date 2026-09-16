@@ -444,3 +444,42 @@ def test_backfill_suggested_kind_from_sidecar(
 def test_backfill_endpoint_requires_admin(client, db_session):
     resp = client.post('/api/unmatched_folders/backfill_suggested_kind', json={})
     assert resp.status_code in (401, 302, 403)
+
+
+def test_unmatched_list_carries_the_transform_trail_by_default(
+    client, admin_user, db_session, sample_library, sample_scan_job,
+):
+    """The peel trail must not be opt-in.
+
+    PR #112 made `transforms` opt-in for CPU reasons, but the only consumer --
+    the "Name transform trail" expander in admin_manage_scanjobs.js -- never
+    sends `include=transforms`, so the expander silently rendered for nothing on
+    every row. The list is paginated now, so the cost is bounded; `include=none`
+    is the opt-out for a caller that only wants columns.
+    """
+    folder = UnmatchedFolder(
+        library_uuid=sample_library.uuid,
+        scan_job_id=sample_scan_job.id,
+        # A name that actually peels: the A10 scene-suffix stage records a step.
+        folder_path=f'/test/unmatched/trail-{uuid4().hex[:8]}/Cool.Title-GROUP',
+        failed_time=datetime.now(timezone.utc),
+        content_type='Games',
+        status='Unmatched',
+        match_reason='title_below_threshold',
+    )
+    db_session.add(folder)
+    db_session.commit()
+
+    _login_admin(client, admin_user)
+
+    resp = client.get('/api/unmatched_folders')
+    assert resp.status_code == 200
+    row = next(r for r in resp.get_json() if r['id'] == folder.id)
+    assert row['transforms'], 'peel trail missing from the default list response'
+
+    # Explicit opt-out still skips the work.
+    resp = client.get('/api/unmatched_folders?include=none')
+    assert resp.status_code == 200
+    row = next(r for r in resp.get_json() if r['id'] == folder.id)
+    assert row['transforms'] == []
+

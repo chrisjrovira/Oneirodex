@@ -146,3 +146,50 @@ def test_apply_schedule_to_job_updates_coalesced_fields():
     apply_schedule_to_job(job, fields)
     assert job.schedule_kind == 'cron'
     assert job.schedule_cron == '0 */6 * * *'
+
+
+def test_unknown_schedule_choice_fails_closed():
+    """A select value this function does not know must not arm a silent once job.
+
+    Falling through to `once` with `error: None` made `handle_auto_scan` flash
+    success for a schedule that would never repeat.
+    """
+    fields = normalize_schedule_fields('weekly')
+    assert fields['error']
+    assert 'weekly' in fields['error']
+    assert fields['next_run'] is None
+
+
+def test_cron_day_fields_follow_posix_union():
+    """Crontab ORs day-of-month and day-of-week when both are restricted.
+
+    `0 3 1 * 1` is "the 1st, and every Monday". ANDing the two turned roughly
+    five fires a month into roughly one a year.
+    """
+    from datetime import datetime, timezone
+
+    from oneirodex.utils.cron_schedule import next_cron_fire
+
+    # 2026-09-16 is a Wednesday; the next Monday is the 21st, well before the
+    # next 1st of a month (October).
+    base = datetime(2026, 9, 16, 12, 0, tzinfo=timezone.utc)
+    assert next_cron_fire('0 3 1 * 1', base) == datetime(2026, 9, 21, 3, 0, tzinfo=timezone.utc)
+
+    # Only one field restricted -> that field alone decides (no union).
+    assert next_cron_fire('0 3 1 * *', base) == datetime(2026, 10, 1, 3, 0, tzinfo=timezone.utc)
+
+
+def test_impossible_cron_fails_without_walking_two_years():
+    """Feb 30 parses but never fires; rejecting it must not cost a minute-by-minute walk."""
+    import time
+
+    from oneirodex.utils.cron_schedule import validate_cron_expression
+
+    started = time.monotonic()
+    error = validate_cron_expression('0 0 30 2 *')
+    elapsed = time.monotonic() - started
+    assert error
+    # The old minute-stepping search took ~1.15M iterations (seconds) to reach
+    # the same answer; day-stepping is ~800.
+    assert elapsed < 1.0, f'impossible cron took {elapsed:.2f}s to reject'
+

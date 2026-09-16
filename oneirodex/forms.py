@@ -109,9 +109,17 @@ class AutoScanForm(FlaskForm):
         validators=[Optional()],
     )
     schedule_cron = StringField(
-        'Cron expression',
+        # Next-fire is computed in UTC (oneirodex/utils/cron_schedule.py), so the
+        # label has to say so: "0 3 * * *" from a household in America/Chicago is
+        # a 9pm or 10pm local scan, not the overnight one the operator intended.
+        'Cron expression (UTC)',
+        description='Five fields, evaluated in UTC. Day-of-month and day-of-week '
+                    'follow crontab: when both are set, either one fires.',
         validators=[Optional(), Length(max=64)],
-        render_kw={'placeholder': '0 */6 * * *'},
+        render_kw={
+            'placeholder': '0 */6 * * *',
+            'title': 'Minute hour day-of-month month day-of-week, in UTC',
+        },
     )
     submit = SubmitField('AutoScan')
 
