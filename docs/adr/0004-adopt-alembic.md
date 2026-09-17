@@ -42,7 +42,7 @@ Adopt Alembic. Specifically:
    (`_BASELINE_ONLY_INDEXES`) excludes the pre-Alembic perf/uniqueness indexes
    that live in the baseline but not in `models.py`; each is catalogued in
    `docs/dev/alembic-baseline-notes.md`. CI wiring is requested in
-   `docs/dev/ci-wishlist.md` (`[A3.1]`).
+   `docs/dev/ci-gates.md`.
 
 ## Consequences
 
@@ -56,7 +56,7 @@ Adopt Alembic. Specifically:
 ## Follow-ups
 
 - CI: fresh-Postgres `alembic upgrade head` + `alembic check` job (see
-  `docs/dev/ci-wishlist.md`).
+  `docs/dev/ci-gates.md`).
 - Promote the allow-listed indexes into their models' `__table_args__` over
   time, trimming `_BASELINE_ONLY_INDEXES` as each lands.
 - Delete `oneirodex/updateschema.py` once every supported install is known to

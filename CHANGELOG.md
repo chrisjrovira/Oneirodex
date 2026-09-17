@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Admin shell shows the AGPL source offer again when `source_url` is configured.
+- **Five architecture decision records** — [0006](docs/adr/0006-asgi-bridge-a2wsgi.md) the a2wsgi ASGI bridge, [0007](docs/adr/0007-four-frontends-one-shared-package.md) three SPAs over the Jinja admin hybrid, [0008](docs/adr/0008-npm-workspaces-single-lockfile.md) npm workspaces, [0009](docs/adr/0009-api-envelope.md) the `api_ok`/`api_error` envelope, [0010](docs/adr/0010-pydantic-request-validation.md) pydantic `@validate_body` — plus [an index](docs/adr/README.md) that records what supersedes what.
+- [ci-gates.md](docs/dev/ci-gates.md) — what each CI job actually gates, and the two still owed. Replaces the tracks-era `ci-wishlist.md`, now removed.
+- [test-suite-failures-2026-09-16.md](docs/dev/test-suite-failures-2026-09-16.md) — the full-suite failures named and grouped by cause, replacing an unnamed count that no ticket tracked.
+- **`CLAUDE.md` and `AGENTS.md` are tracked.** Commit `27983dde` untracked them with the agent kit, so a fresh clone, CI, or any machine other than the NAS got no project instructions and a safety correction written into them could not propagate. The kit itself (`.claude/`, `.cursor/`) stays local.
 - [architecture.md](docs/dev/architecture.md) and root [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Changed

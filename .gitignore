@@ -80,8 +80,12 @@ clients/desktop/src-tauri/target/
 !.cursor/install.sh
 !.cursor/start.sh
 .claude/
-/AGENTS.md
-/CLAUDE.md
+# AGENTS.md / CLAUDE.md are TRACKED (v1 cycle, 2026-09-16). 27983dde untracked
+# them with the agent kit, but they are the project's instructions -- ratchet
+# commands, route conventions, the .env warning -- so a fresh clone, CI, or any
+# machine that is not the NAS got none of them, and a safety correction written
+# into one could not propagate. The agent kit itself (.claude/, .cursor/) stays
+# local; these two files are documentation, not kit.
 /docs/strategy/
 /docs/research/
 .codebuddy/
