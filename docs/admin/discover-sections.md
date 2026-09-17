@@ -39,7 +39,7 @@ reads CheapShark (public HTTPS) and never checks out.
 | Identifier | What it shows |
 |---|---|
 | `curated_for_you` | Unplayed titles in genres the member already favourites, best-rated first, then most recently added |
-| `upcoming` | Titles whose release date is still ahead, soonest first — reuses the dates the Calendar already keeps; no new scraping |
+| `upcoming` | **What is coming that the household does not hold**, soonest first, as article tiles with the release date as the badge date. Two sources: library titles still ahead of release that *this member* favourited or requested (cover, links to the title), and the IGDB release cache the licensed-title report keeps (`igdb_platform_releases`) for platforms the member's libraries hold — titles whose IGDB id matches **no** library row (no cover; links to that platform's licensed catalogue). A held title the member has not asked for is **not** upcoming to them (changed 2026-09-17). Horizon 365 days; no new scraping |
 | `store_deals` | **Deep discounts** — CheapShark deals ≥75% off across Steam / GOG / Humble / Epic. Article tiles with HTTPS store redirects. Skips titles on the member’s ownership register. No cart, no DRM download queues, no prices on Game tiles. CheapShark requires an identifying User-Agent (`Oneirodex/1.0 (self-hosted library)`); their Savings sort uses `desc=0` for steepest-first. The shelf hides when a successful pull is empty; a failed pull keeps the last snapshot. Seeded on next init (`display_order` `-8`). |
 
 Honesty rules worth knowing before you go looking for a bug:
@@ -49,7 +49,7 @@ Honesty rules worth knowing before you go looking for a bug:
 - A member with no favourites yet has no signal, so the shelf returns nothing
   and is **hidden** rather than padded with a random sample dressed up as a
   recommendation. This is why a fresh account sees fewer shelves.
-- `upcoming` is empty on a library of only released games. Also expected.
+- `upcoming` is empty when nothing the member wishlisted is ahead of release **and** the IGDB release cache has nothing coming for the platforms they hold — refresh the cache from **Admin → ROM reference sets** (one platform per click). Also expected.
 - Both are ACL-filtered per member like any other shelf.
 
 ## Layouts

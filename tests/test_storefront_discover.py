@@ -9,8 +9,20 @@ import pytest
 from sqlalchemy import text
 
 from oneirodex import db
-from oneirodex.models import DiscoverySection, Game, Genre, Library, LibraryPlatform, User
-from oneirodex.utils.storefront import build_curated_for_you, build_upcoming
+from oneirodex.models import (
+    DiscoverySection,
+    Game,
+    Genre,
+    IgdbPlatformRelease,
+    Library,
+    LibraryPlatform,
+    User,
+)
+from oneirodex.utils.storefront import (
+    build_curated_for_you,
+    build_upcoming,
+    build_upcoming_articles,
+)
 
 
 @pytest.fixture(scope='function', autouse=True)
@@ -119,28 +131,89 @@ class TestCuratedForYou:
 
 
 class TestUpcoming:
-    def test_only_future_releases_soonest_first(self, app, db_session, member, library):
+    """Human, 2026-09-06: a title the household already holds is not "upcoming"
+    -- unless this member wishlisted it. What *is* upcoming is what they do
+    not hold yet, with its release date on the tile."""
+
+    def test_library_titles_only_when_wishlisted(self, app, db_session, member, library):
         with app.app_context():
             now = datetime.now(timezone.utc)
             _game(db_session, library, 'Shipped', release=now - timedelta(days=30))
-            _game(db_session, library, 'Later', release=now + timedelta(days=60))
-            _game(db_session, library, 'Sooner', release=now + timedelta(days=5))
+            later = _game(db_session, library, 'Later', release=now + timedelta(days=60))
+            sooner = _game(db_session, library, 'Sooner', release=now + timedelta(days=5))
+            _game(db_session, library, 'Held but not wanted', release=now + timedelta(days=9))
             _game(db_session, library, 'No date')
             db_session.commit()
 
-            names = [g.name for g in build_upcoming(member)]
+            owner = db.session.get(User, member.id)
+            # Nothing wishlisted: holding a future-dated title is not "upcoming".
+            assert build_upcoming(owner) == []
+
+            owner.favorites.append(db.session.get(Game, later.id))
+            owner.favorites.append(db.session.get(Game, sooner.id))
+            db.session.commit()
+            names = [g.name for g in build_upcoming(owner)]
             assert names == ['Sooner', 'Later']
 
     def test_empty_when_nothing_ahead(self, app, db_session, member, library):
         with app.app_context():
-            _game(
+            old = _game(
                 db_session,
                 library,
                 'Old',
                 release=datetime.now(timezone.utc) - timedelta(days=5),
             )
             db_session.commit()
-            assert build_upcoming(member) == []
+            owner = db.session.get(User, member.id)
+            owner.favorites.append(db.session.get(Game, old.id))
+            db.session.commit()
+            assert build_upcoming(owner) == []
+
+    def test_articles_add_igdb_titles_the_library_lacks(self, app, db_session, member, library):
+        with app.app_context():
+            now = datetime.now(timezone.utc)
+            held = _game(db_session, library, 'Held', release=now + timedelta(days=20), igdb_id=4242)
+            platform = library.platform.name
+            for igdb_id, name, days, region in (
+                (4242, 'Held (cache copy)', 20, 'USA'),   # matched to a library row -> excluded
+                (9001, 'Coming Soon', 3, 'USA'),
+                (9001, 'Coming Soon (other region)', 8, 'EUR'),  # same title, later region -> deduped
+                (9002, 'Coming Later', 40, 'USA'),
+                (9003, 'Way Out', 900, 'USA'),           # beyond the horizon
+                (9004, 'Already Out', -2, 'USA'),
+            ):
+                db_session.add(IgdbPlatformRelease(
+                    library_platform=platform,
+                    igdb_game_id=igdb_id,
+                    region_code=region,
+                    name=name,
+                    released_at=now + timedelta(days=days),
+                ))
+            db_session.add(IgdbPlatformRelease(
+                library_platform='SOME_OTHER_PLATFORM',
+                igdb_game_id=9005,
+                region_code='USA',
+                name='Not held platform',
+                released_at=now + timedelta(days=4),
+            ))
+            db_session.commit()
+
+            owner = db.session.get(User, member.id)
+            owner.favorites.append(db.session.get(Game, held.id))
+            db.session.commit()
+
+            articles = build_upcoming_articles(owner, now=now)
+            titles = [a['title'] for a in articles]
+            # Wishlisted library title first by date? No -- soonest first across both halves.
+            assert titles == ['Coming Soon', 'Held', 'Coming Later']
+            assert all(a['kind'] == 'upcoming' for a in articles)
+            assert all(a['published_at'] for a in articles), 'the date is the badge'
+            by_title = {a['title']: a for a in articles}
+            assert by_title['Held']['href'] == f'/game/{held.uuid}'
+            assert by_title['Held']['image_url']
+            assert by_title['Coming Soon']['image_url'] is None
+            assert by_title['Coming Soon']['href'] == f'/systems/catalog?platform={platform}'
+            assert by_title['Coming Soon']['platform'] == platform
 
 
 class TestScheduledEvents:
