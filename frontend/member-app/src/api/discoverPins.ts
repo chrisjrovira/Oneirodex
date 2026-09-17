@@ -1,4 +1,24 @@
-import { getJson, putJson } from './client'
+import { createDiscoverApi } from '@oneirodex/api-client'
+
+import { memberResource, withMemberError } from './client'
+
+const discover = memberResource(createDiscoverApi)
+
+type PinArrangement = { pins?: string[]; hidden?: string[] }
+
+function shape(data: {
+  pins?: unknown
+  hidden?: unknown
+  max_pins?: unknown
+  available?: unknown
+}) {
+  return {
+    pins: Array.isArray(data.pins) ? (data.pins as string[]) : [],
+    hidden: Array.isArray(data.hidden) ? (data.hidden as string[]) : [],
+    maxPins: Number(data.max_pins) || 0,
+    available: Array.isArray(data.available) ? (data.available as string[]) : [],
+  }
+}
 
 /**
  * How this member has arranged their Discover feed.
@@ -7,14 +27,8 @@ import { getJson, putJson } from './client'
  * rows kept off the feed entirely. One request, because they are one
  * arrangement — see the route's docstring.
  */
-export async function fetchDiscoverPins({ signal }: LooseProps = {}) {
-  const data = await getJson('/api/discover/pins', { signal, label: 'discover pins' })
-  return {
-    pins: Array.isArray(data.pins) ? data.pins : [],
-    hidden: Array.isArray(data.hidden) ? data.hidden : [],
-    maxPins: Number(data.max_pins) || 0,
-    available: Array.isArray(data.available) ? data.available : [],
-  }
+export async function fetchDiscoverPins({ signal }: { signal?: AbortSignal } = {}) {
+  return shape(await withMemberError(discover.getPins(signal), 'discover pins'))
 }
 
 /**
@@ -28,18 +42,17 @@ export async function fetchDiscoverPins({ signal }: LooseProps = {}) {
  * Either half may be omitted; the server leaves out what it is not sent, so a
  * control that only hides a row does not have to know the current pins.
  *
- * @param {{pins?: string[], hidden?: string[]}|string[]} arrangement A bare
- *   array is read as `pins`, which is how every existing caller uses this.
+ * A bare array is read as `pins`, which is how every existing caller uses this.
  */
-export async function saveDiscoverPins(arrangement: any, { signal }: LooseProps = {}) {
-  const body = Array.isArray(arrangement) ? { pins: arrangement } : arrangement || {}
-  const data = await putJson('/api/discover/pins', body, {
-    signal,
-    label: 'save discover pins',
-  })
-  return {
-    pins: Array.isArray(data.pins) ? data.pins : [],
-    hidden: Array.isArray(data.hidden) ? data.hidden : [],
-    maxPins: Number(data.max_pins) || 0,
-  }
+export async function saveDiscoverPins(
+  arrangement: PinArrangement | string[] | null | undefined,
+  { signal }: { signal?: AbortSignal } = {},
+) {
+  const body: PinArrangement = Array.isArray(arrangement)
+    ? { pins: arrangement }
+    : arrangement || {}
+  const { available: _unused, ...rest } = shape(
+    await withMemberError(discover.setPins(body, signal), 'save discover pins'),
+  )
+  return rest
 }

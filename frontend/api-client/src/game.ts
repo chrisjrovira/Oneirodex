@@ -14,6 +14,11 @@ export interface MoreFromResponse {
 
 export interface EditionsResponse {
   editions?: Array<{ [key: string]: unknown }>
+  /** Store / trailer links merged across every visible copy. */
+  urls?: Array<{ [key: string]: unknown }>
+  tags?: string[]
+  /** Household members who played or favourited it (share-activity). */
+  friends?: Array<{ [key: string]: unknown }>
   [key: string]: unknown
 }
 
