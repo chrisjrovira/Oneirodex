@@ -107,6 +107,9 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-unused-vars': 'warn',
+      // Off on purpose: ~1,077 sites would drown the warnings that matter. The
+      // gate is scripts/any_lint.mjs (per-file baseline, CI-run, only moves
+      // down). Flip to 'error' when that baseline reaches 0.
       '@typescript-eslint/no-explicit-any': 'off',
       // tsc resolves identifiers and types; core no-undef only produces false
       // positives on a TS surface.
@@ -145,6 +148,9 @@ export default [
         'warn',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
+      // Off on purpose: ~1,077 sites would drown the warnings that matter. The
+      // gate is scripts/any_lint.mjs (per-file baseline, CI-run, only moves
+      // down). Flip to 'error' when that baseline reaches 0.
       '@typescript-eslint/no-explicit-any': 'off',
       'no-undef': 'off',
     },
@@ -163,6 +169,9 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-unused-vars': 'warn',
+      // Off on purpose: ~1,077 sites would drown the warnings that matter. The
+      // gate is scripts/any_lint.mjs (per-file baseline, CI-run, only moves
+      // down). Flip to 'error' when that baseline reaches 0.
       '@typescript-eslint/no-explicit-any': 'off',
       'no-undef': 'off',
     },

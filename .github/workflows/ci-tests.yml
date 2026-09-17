@@ -199,6 +199,65 @@ jobs:
       - name: Run get_json() ratchet
         run: python scripts/get_json_lint.py
 
+  # Measurement, not a gate. The plan is to replace pytest-core's hand list with
+  # `-m "not integration"` (docs/dev/ci-gates.md, owed item 1), but the marker
+  # set is ~3,700 tests and the only timing we have is a 48-minute NAS run that
+  # says nothing about runner hardware. This job runs the marker set on a real
+  # runner, never fails the PR (continue-on-error), and prints the wall time and
+  # the 30 slowest tests so the flip can be decided on a number. Delete this job
+  # when pytest-core flips or when the decision is "never".
+  pytest-marker-timing:
+    name: Pytest (marker set — timing only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oneirodextest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d oneirodextest"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/oneirodextest
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      FLASK_ENV: testing
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Count the marker set
+        run: python -m pytest tests/ -m "not integration" --collect-only -q | tail -3
+
+      - name: Run the marker set (timing only)
+        # -p no:cacheprovider keeps the runner clean; --durations names what
+        # to tag next if the wall time is over budget.
+        run: >
+          python -m pytest tests/ -m "not integration" -q -p no:cacheprovider
+          --durations=30 --no-header -rfE
+          || echo "::warning::marker set is red or over budget — see the durations above"
+
   alembic-check:
     name: Alembic (upgrade + check)
     # A3.1: the schema is owned by Alembic (ADR 0004). This job proves that a
@@ -372,6 +431,13 @@ jobs:
       - name: Run CSS token lint
         working-directory: .
         run: node scripts/css-token-lint.mjs
+
+      # Explicit-`any` ratchet. strict:true is only as real as this count; the
+      # member-app conversion left 1,041 sites and turned no-explicit-any off.
+      # Per-file baseline in scripts/any_lint.baseline.json; only moves down.
+      - name: Run explicit-any ratchet
+        working-directory: .
+        run: node scripts/any_lint.mjs
 
   ops-glance-vitest:
     name: Ops-glance vitest

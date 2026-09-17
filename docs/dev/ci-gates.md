@@ -10,9 +10,10 @@ What remains is this: the gates as they stand, and the two that are still owed.
 | Job | What it gates |
 |---|---|
 | `pytest-core` | A **hand-enumerated list of ~113 test files** + `--cov=oneirodex --cov-fail-under=35`, then three ratchets: `api_envelope_lint`, `print_lint`, `get_json_lint` |
+| `pytest-marker-timing` | **Measurement, not a gate** (`continue-on-error`). Runs `-m "not integration"` on runner hardware and prints wall time + the 30 slowest tests, so owed item 1 below is decided on a number. Remove when `pytest-core` flips |
 | `alembic-check` | Fresh Postgres → `alembic upgrade head` → `alembic check`. Fails hard on any model/migration drift |
 | `lint` | Repo-root `npm ci`, then `npm run lint` **and** `npm run format:check` (Prettier has failed a PR on its own — do not skip it) |
-| `member-app-vitest` · `admin-app-vitest` · `ops-glance-vitest` | Per-SPA vitest + `npm run typecheck`. `ops-glance` also builds. `admin-app-vitest` carries `css-token-lint` |
+| `member-app-vitest` · `admin-app-vitest` · `ops-glance-vitest` | Per-SPA vitest + `npm run typecheck`. `ops-glance` also builds. `admin-app-vitest` carries `css-token-lint` and `any_lint` |
 | `api-client-vitest` · `shared-vitest` | Workspace package tests + typecheck |
 
 `desktop-build.yml` adds `rust-checks` (fmt + clippy + test) and a 6-way
@@ -41,7 +42,7 @@ nothing out of the gate.
 and a per-test Flask fixture, not runner hardware. Before flipping, measure the
 marker set on a runner (empty Postgres, no SMB) against the 20-minute budget,
 and tag more modules from that timing data if it does not fit. Flip only when
-the measured number is known — not on the assumption that CI is faster.
+the measured number is known — not on the assumption that CI is faster. **The `pytest-marker-timing` job now produces that number on every PR.**
 
 ### 2. `--cov-fail-under` sits below the real number
 
