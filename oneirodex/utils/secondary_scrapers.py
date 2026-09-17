@@ -127,7 +127,17 @@ def game_card_flags(game):
         'disc_count': disc_count,
         'is_multi_disc': multi,
         **path_health_fields(game),
+        **_achievement_fields(game),
     }
+
+
+def _achievement_fields(game):
+    try:
+        from oneirodex.utils.retroachievements import achievement_fields
+
+        return achievement_fields(game)
+    except Exception:  # noqa: BLE001 — a flags helper never breaks a tile
+        return {'supports_achievements': False, 'ra_game_id': None, 'ra_achievements': 0, 'ra_url': None}
 
 
 def enrich_game_metadata(

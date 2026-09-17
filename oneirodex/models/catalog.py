@@ -108,6 +108,14 @@ class Game(db.Model):
     file_crc = db.Column(db.String(16), nullable=True, index=True)
     file_md5 = db.Column(db.String(32), nullable=True, index=True)
     file_sha1 = db.Column(db.String(40), nullable=True, index=True)
+    # RetroAchievements (R1/R2): the hash *their* rules produce for this ROM
+    # (not file_md5 — headers stripped, N64 byte order normalised), the set it
+    # matched, and how many achievements that set carries. `ra_game_id` with a
+    # zero count is a matched set that promises nothing; supports_achievements
+    # is false for it on purpose.
+    ra_hash = db.Column(db.String(32), nullable=True)
+    ra_game_id = db.Column(db.Integer, nullable=True, index=True)
+    ra_achievements = db.Column(db.Integer, nullable=True)
     date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     date_identified = db.Column(db.DateTime, nullable=True)
     steam_url = db.Column(db.String, nullable=True)
@@ -452,6 +460,33 @@ class ReferenceSet(db.Model):
             'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None,
         }
 
+class RetroAchievementsIndexEntry(db.Model):
+    """One (console, hash) row of the RetroAchievements game list.
+
+    Refreshed per console from `API_GetGameList.php?h=1&f=1` (games that carry
+    achievements, with every hash they accept). A game appears once per hash.
+    """
+
+    __tablename__ = 'retroachievements_index'
+    __table_args__ = (
+        db.Index('ix_ra_index_console_md5', 'console_id', 'md5'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    console_id = db.Column(db.Integer, nullable=False, index=True)
+    ra_game_id = db.Column(db.Integer, nullable=False, index=True)
+    title = db.Column(db.String(255), nullable=False, default='', server_default='')
+    image_icon = db.Column(db.String(255), nullable=True)
+    num_achievements = db.Column(db.Integer, nullable=False, default=0, server_default='0')
+    points = db.Column(db.Integer, nullable=False, default=0, server_default='0')
+    md5 = db.Column(db.String(32), nullable=False)
+    fetched_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+
 class ReferenceSetEntry(db.Model):
     """One game/ROM row from a reference DAT."""
 
@@ -618,6 +653,7 @@ __all__ = [
     "publisher_choices",
     "ReferenceSet",
     "ReferenceSetEntry",
+    "RetroAchievementsIndexEntry",
     "IgdbPlatformRelease",
     "get_status_info",
 ]
