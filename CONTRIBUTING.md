@@ -16,22 +16,38 @@ Public product name is **Oneirodex**. Defaults that are already decided live in 
 | `tests/`              | pytest                  |
 | `docs/`               | [index](docs/README.md) |
 
-## Commands
+## Running things
+
+Servers start through `startweb.sh` / `startweb_windows.cmd` — never `python asgi.py` directly ([ADR 0006](docs/adr/0006-asgi-bridge-a2wsgi.md)).
 
 ```bash
 # Frontend (from a SPA directory, or via the repo-root workspace)
-npm test -- --run          # vitest
+npm test -- --run          # vitest, scoped to one file where you can
 npm run typecheck
+npm run lint && npm run format:check   # both — Prettier fails CI on its own
 
-# Python — DB name must contain `test`
+# Python — the database name MUST contain `test` (conftest hard-fails otherwise)
 python -m pytest tests/test_whatever.py
 ```
 
-Full-tree pytest is **not** all-green today; CI `core` is the gate. See [test-harness-2026-09-10.md](docs/dev/test-harness-2026-09-10.md). Do not claim 4150 passing.
+The test database is the container **`oneirodex-review-db`**. `docker start oneirodex-review-db` if it is stopped; if it does not exist at all, `docker compose -f docker-compose.review.yml up -d db` and create `oneirodextest` — [local-postgres-pytest.md](docs/runbooks/local-postgres-pytest.md). A pytest run that produces no output for minutes is a refused connection, not a slow suite.
+
+Full-tree pytest is **not** all-green today — **42 failed / 4,450 passed** on 2026-09-16, every one named in [test-suite-failures-2026-09-16.md](docs/dev/test-suite-failures-2026-09-16.md). CI gates a **core subset** ([ci-gates.md](docs/dev/ci-gates.md)); passing CI is not the full suite, and a new test file is gated only if the hand list names it.
+
+## Ratchets — do not regress
+
+```bash
+python scripts/api_envelope_lint.py     # JSON sites off api_ok/api_error — 11 documented keeps
+python scripts/print_lint.py            # print() calls — 591
+python scripts/get_json_lint.py         # raw request.get_json() sites — 103, migrating to @validate_body
+node scripts/css-token-lint.mjs         # raw colour/radius/type literals — 0
+```
+
+Each records a per-file baseline. `--update` only after a genuine reduction — never to make a red gate green.
 
 ## API changes
 
-- JSON replies: `api_ok` / `api_error`. Do not shrink the envelope keep-list.
+- JSON replies: `api_ok` / `api_error` from `oneirodex/utils/api_response.py`; pick `error_code` from `ERROR_CODES`. **`detail` is passed to the browser as given** — no secrets, tokens, raw `.env` values, or filesystem paths. Do not shrink the envelope keep-list ([api-envelope-keeps.md](docs/dev/api-envelope-keeps.md)).
 - New JSON POST/PUT/PATCH bodies: `@validate_body` on a model in `oneirodex/schemas/` — [pydantic-adoption.md](docs/dev/pydantic-adoption.md). Never batch a file. Partial-success batch routes use `@validate_batch_body` (keeps `updated`/`skipped`/`errors`/`limit` on the 422). Do not wrap those with the flat 422 helper.
 - SPA `src/api/` wrappers go through `createBrowserRequester` (member `client.ts`, admin `adminApi.ts`). Do not hand-roll `fetch` + CSRF. Vitest mocks need `content-type: application/json` and `.text()`.
 - Typed `create*Api` modules: rewire one resource group at a time. Member collections CRUD uses `createCollectionsApi` via `memberResource` + `withMemberError` so page exports stay the same. Leave `preferences.ts` HTML POST `/settings_panel` and EventSource off this path.
@@ -43,3 +59,12 @@ Full-tree pytest is **not** all-green today; CI `core` is the gate. See [test-ha
 ## Scrub
 
 No Class A / warez-adjacent brand names in diffs, docs, UI copy, or commit messages. Capability language for non-goals. [scrub-shipped-bundles.md](docs/runbooks/scrub-shipped-bundles.md).
+
+## Gotchas
+
+- **`.env` at the repo root is live local config — never overwrite it.** Templates are `.env.example`, `.env.docker.example`, `.env.unraid.example`, `.env.nas.example`.
+- The Unraid deploy serves theme CSS/JS from the library **volume**, not the image: a theme change needs `compose up -d --build` **and** Reset Themes before it is visible ([themes-reset.md](docs/admin/themes-reset.md)).
+- npm workspaces cannot install on an SMB checkout (junctions are refused); frontend work needs local NTFS ([ADR 0008](docs/adr/0008-npm-workspaces-single-lockfile.md)).
+- Windows code signing is out of scope ([desktop-code-signing.md](docs/runbooks/desktop-code-signing.md)).
+- Agent-harness files (`CLAUDE.md`, `AGENTS.md`, `.claude/`, `.cursor/`) are deliberately untracked and `tests/test_repo_hygiene.py` fails CI if they become tracked. Put contributor-facing conventions here, not there.
+
