@@ -9,8 +9,7 @@ What remains is this: the gates as they stand, and the two that are still owed.
 
 | Job | What it gates |
 |---|---|
-| `pytest-core` | A **hand-enumerated list of ~113 test files** + `--cov=oneirodex --cov-fail-under=35`, then three ratchets: `api_envelope_lint`, `print_lint`, `get_json_lint` |
-| `pytest-marker-timing` | **Measurement, not a gate** (`continue-on-error`). Runs `-m "not integration"` on runner hardware and prints wall time + the 30 slowest tests, so owed item 1 below is decided on a number. Remove when `pytest-core` flips |
+| `pytest-core` | **`tests/ -m "not integration"` minus a named `--deselect` list** (flipped 2026-09-17) + `--cov=oneirodex --cov-fail-under=35`, then three ratchets: `api_envelope_lint`, `print_lint`, `get_json_lint`. A new test file is gated by default |
 | `alembic-check` | Fresh Postgres → `alembic upgrade head` → `alembic check`. Fails hard on any model/migration drift |
 | `lint` | Repo-root `npm ci`, then `npm run lint` **and** `npm run format:check` (Prettier has failed a PR on its own — do not skip it) |
 | `member-app-vitest` · `admin-app-vitest` · `ops-glance-vitest` | Per-SPA vitest + `npm run typecheck`. `ops-glance` also builds. `admin-app-vitest` carries `css-token-lint` and `any_lint` |
@@ -24,9 +23,13 @@ repo root — see [ADR 0008](../adr/0008-npm-workspaces-single-lockfile.md).
 
 ## Owed
 
-### 1. The `pytest-core` hand list should become `-m "not integration"`
+### 1. ~~The `pytest-core` hand list should become `-m "not integration"`~~ — done 2026-09-17
 
-**Why it matters, concretely:** the 2026-09-16 full run found **42 failures**,
+**Measured:** the marker set is **3,792 tests in 11m24s** on `ubuntu-latest` (PR #118's timing job), 474 deselected by the marker. Flipped in the PR after it; `timeout-minutes` 20 → 30 for coverage overhead.
+
+**The discipline that replaces the hand list:** the `--deselect` lines in `ci-tests.yml` are the exception list — the known failures from [test-suite-failures-2026-09-16.md](test-suite-failures-2026-09-16.md) as they reproduce on the runner (31; three are runner-only). Remove a line when its test is fixed. **Never add one to turn a red PR green** — that is the hand list growing back under another name.
+
+**Why it mattered, concretely:** the 2026-09-16 full run found **42 failures**,
 and **not one of their files is named in the hand list**. The list gates nothing
 it does not name, so a PR can break a file it never runs. See
 [test-suite-failures-2026-09-16.md](test-suite-failures-2026-09-16.md).
@@ -52,9 +55,10 @@ list changes (or disappears, per item 1).
 
 ## Conventions that outlived the wishlist
 
-- A test file is gated only if the hand list names it. **Adding a test file to
-  `tests/` does not gate it** — add it to the list in the same PR, or accept
-  that it runs only locally.
+- A test file under `tests/` is gated **by default**. Mark a module
+  `pytest.mark.integration` only when it genuinely needs live services or
+  Unraid-shaped fixtures; deselect a single test only when it is a known,
+  documented failure.
 - Ratchets only ever move down. `--update` after a genuine reduction, never to
   make a red gate green.
 - Prettier and ESLint are separate failures; run both before pushing.

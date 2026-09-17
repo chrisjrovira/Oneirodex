@@ -27,7 +27,7 @@ jobs:
   pytest-core:
     name: Pytest (core)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -69,118 +69,56 @@ jobs:
           # branch red with no repo change behind it.
           pip install -r requirements-dev.txt
 
-      - name: Run core pytest subset
-        # Core gate only — full suite is still local/release.
-        # Keep this list bare: `run: >` is a folded scalar, so a `#` line here
+      - name: Run pytest (marker set, deselect by exception)
+        # Gate = every test not marked `integration`, minus a named exception
+        # list. Flipped from a hand-enumerated file list on 2026-09-17 after
+        # the timing job measured the marker set at 3,792 tests / 11m24s on
+        # this runner (docs/dev/ci-gates.md). A new test file is now gated by
+        # default; the only way to keep one out is a line below, with its ID.
+        #
+        # The --deselect list is docs/dev/test-suite-failures-2026-09-16.md's
+        # known failures as they reproduce on the runner (three are runner-
+        # only: the SPA dist is not built in this job, a Windows drive-letter
+        # case, the font catalogue). Remove a line when its test is fixed;
+        # never add one to get a red PR green.
+        #
+        # Keep this bare: `run: >` is a folded scalar, so a `#` line here
         # becomes an argument to pytest rather than a comment.
         run: >
-          python -m pytest -q
+          python -m pytest tests/ -q -m "not integration"
           --cov=oneirodex --cov-report=term-missing
           --cov-fail-under=35
-          tests/test_health_probes.py
-          tests/test_asgi_static.py
-          tests/test_asgi_bridge.py
-          tests/test_utils_ops_summary.py
-          tests/test_routes_ops.py
-          tests/test_security_suite.py
-          tests/test_security_headers.py
-          tests/test_ssrf_hardening.py
-          tests/test_no_inline_scripts.py
-          tests/test_image_upload_hardening.py
-          tests/test_auth_hardening.py
-          tests/test_trusted_host.py
-          tests/test_routes_apis_account.py
-          tests/test_theme_js_guards.py
-          tests/test_vendor_licensing.py
-          tests/test_webretro_player_chrome.py
-          tests/test_emulator_play_matrix.py
-          tests/test_console_platform_enums.py
-          tests/test_computer_platform_enums.py
-          tests/test_loading_motifs.py
-          tests/test_rom_dump_suffixes.py
-          tests/test_oidc_unit.py
-          tests/test_propose_leaf_libraries.py
-          tests/test_import_leaf_libraries.py
-          tests/test_licensed_catalog.py
-          tests/test_tgdb_platform_siblings.py
-          tests/test_routes_member.py
-          tests/test_product_name.py
-          tests/test_gt_toast.py
-          tests/test_browse_path_status.py
-          tests/test_legal_surface.py
-          tests/test_rbac_unit.py
-          tests/test_routes_styleguide.py
-          tests/test_templates_rail_chrome.py
-          tests/test_admin_shell.py
-          tests/test_static_svg.py
-          tests/test_platform_recency.py
-          tests/test_browse_title_grouping.py
-          tests/test_game_editions.py
-          tests/test_setup_no_redirect_loop.py
-          tests/test_integrations_inventory_sources.py
-          tests/test_cascade_default_behaviour.py
-          tests/test_ownership_poller.py
-          tests/test_store_ownership.py
-          tests/test_emulator_bios_discovery.py
-          tests/test_emulator_bios_import.py
-          tests/test_cover_art_variety.py
-          tests/test_cover_art_text.py
-          tests/test_cover_quality.py
-          tests/test_preset_themes.py
-          tests/test_theme_picker_ui.py
-          tests/test_global_settings_singleton.py
-          tests/test_routes_info.py
-          tests/test_template_icons.py
-          tests/test_detail_layout_presets.py
-          tests/test_theme_freshness.py
-          tests/test_theme_asset.py
-          tests/test_font_bundle.py
-          tests/test_sortable_tables.py
-          tests/test_button_contract.py
-          tests/test_api_envelope_lint.py
-          tests/test_api_error_envelope.py
-          tests/test_w20_scan_match_api.py
-          tests/test_w34_catalog_corroborate.py
-          tests/test_sse_wsgi_fallback.py
-          tests/test_patch_catalog.py
-          tests/test_patch_catalog_attach.py
-          tests/test_wishlist_versions_artwork.py
-          tests/test_wave2c_support_news_notifications.py
-          tests/test_wave2a_details_media.py
-          tests/test_updates_scan_and_shelves.py
-          tests/test_browser_player.py
-          tests/test_nostalgist_pilot.py
-          tests/test_ops_path_problems.py
-          tests/test_utils_ops_issues.py
-          tests/test_utils_ops_network.py
-          tests/test_library_health_pulse.py
-          tests/test_health_igdb_provider.py
-          tests/test_asgi_activity_sse.py
-          tests/test_api_tokens_health_events.py
-          tests/test_ops_followons.py
-          tests/test_library_batch_ops.py
-          tests/test_pydantic_account.py
-          tests/test_pydantic_acquire_news.py
-          tests/test_pydantic_admin_art.py
-          tests/test_pydantic_admin_covers.py
-          tests/test_pydantic_admin_crop.py
-          tests/test_pydantic_admin_deletes.py
-          tests/test_pydantic_admin_shelves.py
-          tests/test_pydantic_ai_apply.py
-          tests/test_pydantic_arr.py
-          tests/test_pydantic_chat_quality.py
-          tests/test_pydantic_cheats_client.py
-          tests/test_pydantic_library_tools.py
-          tests/test_pydantic_named_leftovers.py
-          tests/test_pydantic_ops_json.py
-          tests/test_pydantic_patch_artwork.py
-          tests/test_pydantic_request_bodies.py
-          tests/test_pydantic_user_layouts.py
-          tests/test_pydantic_batch.py
-          tests/test_utils_validation.py
-          tests/test_get_json_lint.py
-          tests/test_repo_hygiene.py
-          tests/test_store_deals.py
+          --deselect tests/test_admin_spa_assets.py::test_admin_spa_dist_built
+          --deselect tests/test_checkout_paths.py::test_operator_docs_checkout_is_oneirodex
+          --deselect tests/test_collections_api_wiring.py::test_newsletter_ckeditor_targets_content_field
+          --deselect tests/test_collections_api_wiring.py::test_spa_collections_client_covers_new_actions
+          --deselect tests/test_library_roots.py::TestParseLibraryRoots::test_windows_drive_letter_is_not_mistaken_for_a_label
+          --deselect tests/test_member_chrome_css.py::test_tile_hover_has_no_accent_glow_and_grows_from_center
+          --deselect tests/test_member_chrome_css.py::test_topbar_cluster_is_not_a_shared_outline
+          --deselect tests/test_member_spa_assets.py::test_member_spa_links_member_app_css
+          --deselect tests/test_rom_archive.py::test_resolve_nested_zip_member
+          --deselect tests/test_routes_admin_ext_newsletter.py::TestNewsletterIntegration::test_newsletter_recipients_parsing
+          --deselect tests/test_routes_admin_ext_newsletter.py::TestNewsletterIntegration::test_newsletter_workflow_complete
+          --deselect tests/test_routes_admin_ext_newsletter.py::TestNewsletterRoute::test_newsletter_get_request_success
+          --deselect tests/test_routes_admin_ext_newsletter.py::TestNewsletterRoute::test_newsletter_post_email_failure
+          --deselect tests/test_routes_admin_ext_newsletter.py::TestNewsletterRoute::test_newsletter_post_invalid_form
+          --deselect tests/test_routes_admin_ext_newsletter.py::TestNewsletterRoute::test_newsletter_post_success
+          --deselect tests/test_routes_admin_ext_settings_shell.py::TestSettingsShellSections::test_every_section_deep_link_is_reachable_from_the_react_hub
+          --deselect tests/test_routes_apis_download.py::TestDeleteDownloadRequest::test_delete_invalid_request_id_zero
+          --deselect tests/test_routes_apis_download.py::TestDeleteDownloadRequest::test_delete_request_database_error
+          --deselect tests/test_routes_apis_download.py::TestDeleteDownloadRequest::test_delete_request_with_zip_file_success
+          --deselect tests/test_routes_apis_download.py::TestDeleteDownloadRequest::test_delete_request_without_zip_file
+          --deselect tests/test_routes_apis_download.py::TestDeleteDownloadRequest::test_delete_request_zip_deletion_error
+          --deselect tests/test_routes_apis_download.py::TestDeleteDownloadRequest::test_delete_request_zip_outside_save_path
+          --deselect tests/test_theme_fonts.py::TestCatalogue::test_reports_installed_honestly
+          --deselect tests/test_utils_secondary_scrapers.py::test_enrich_game_with_steam_logs_vr_no_when_skipped
+          --deselect tests/test_utils_secondary_scrapers.py::test_enrich_game_with_steam_logs_vr_yes
+          --deselect tests/test_utils_secondary_scrapers.py::test_enrich_game_with_steam_reports_rollback
+          --deselect tests/test_utils_secondary_scrapers.py::test_enrich_game_with_steam_still_enriches_an_already_vr_game
+          --deselect tests/test_utils_unmatched.py::TestHandleDeleteUnmatched::test_handle_delete_unmatched_all_true
+          --deselect tests/test_utils_unmatched.py::TestHandleDeleteUnmatchedOnly::test_handle_delete_unmatched_only_success
+          --deselect tests/test_wave2c_module_ux.py::test_settings_shell_renders_module_status_badges
+          --deselect tests/test_wave2c_module_ux.py::test_storage_page_surfaces_env_gates
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
       # the problem then grew from ~699 call sites to 1194 — new routes reached
@@ -198,65 +136,6 @@ jobs:
       # climbs above scripts/get_json_lint.baseline.json.
       - name: Run get_json() ratchet
         run: python scripts/get_json_lint.py
-
-  # Measurement, not a gate. The plan is to replace pytest-core's hand list with
-  # `-m "not integration"` (docs/dev/ci-gates.md, owed item 1), but the marker
-  # set is ~3,700 tests and the only timing we have is a 48-minute NAS run that
-  # says nothing about runner hardware. This job runs the marker set on a real
-  # runner, never fails the PR (continue-on-error), and prints the wall time and
-  # the 30 slowest tests so the flip can be decided on a number. Delete this job
-  # when pytest-core flips or when the decision is "never".
-  pytest-marker-timing:
-    name: Pytest (marker set — timing only)
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    continue-on-error: true
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: oneirodextest
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d oneirodextest"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    env:
-      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/oneirodextest
-      SECRET_KEY: ci-test-secret-key-not-for-production
-      FLASK_ENV: testing
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-
-      - name: Count the marker set
-        run: python -m pytest tests/ -m "not integration" --collect-only -q | tail -3
-
-      - name: Run the marker set (timing only)
-        # -p no:cacheprovider keeps the runner clean; --durations names what
-        # to tag next if the wall time is over budget.
-        run: >
-          python -m pytest tests/ -m "not integration" -q -p no:cacheprovider
-          --durations=30 --no-header -rfE
-          || echo "::warning::marker set is red or over budget — see the durations above"
 
   alembic-check:
     name: Alembic (upgrade + check)
