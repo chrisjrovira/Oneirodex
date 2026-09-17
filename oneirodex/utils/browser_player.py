@@ -19,7 +19,19 @@ STORAGE_KEY = 'browser_player'
 
 # Names we recognize in settings. Availability is a separate set.
 KNOWN_ENGINES = ('webretro', 'emulatorjs')
+# WebRetro ships in the image. EmulatorJS (BP-2) is offered only when the
+# operator has dropped a release into the data bind -- see utils/emulatorjs.py.
 SHIPPED_ENGINES = ('webretro',)
+
+
+def available_engines() -> tuple[str, ...]:
+    """Engines that can actually boot a game on this install, in listing order."""
+    from oneirodex.utils.emulatorjs import emulatorjs_installed
+
+    engines = list(SHIPPED_ENGINES)
+    if emulatorjs_installed():
+        engines.append('emulatorjs')
+    return tuple(engines)
 
 DEFAULTS: dict[str, Any] = {
     'browser_player_default': 'webretro',
@@ -70,9 +82,10 @@ def normalize_browser_player_settings(raw: dict[str, Any] | None) -> dict[str, A
     default = str(src.get('browser_player_default') or DEFAULTS['browser_player_default']).strip().lower()
     if default not in KNOWN_ENGINES:
         raise ValueError(f'Unsupported browser_player_default: {default}')
-    if default not in SHIPPED_ENGINES:
+    available = available_engines()
+    if default not in available:
         raise ValueError(
-            f'{default} is not wired yet — default must be one of: {", ".join(SHIPPED_ENGINES)}'
+            f'{default} is not installed on this box — default must be one of: {", ".join(available)}'
         )
     allow = src.get(
         'browser_player_allow_member_choice',
@@ -98,7 +111,7 @@ def normalize_browser_player_settings(raw: dict[str, Any] | None) -> dict[str, A
         'nostalgist_nes_pilot': pilot,
         'webrcade_sidecar_url': _clean_url(src.get('webrcade_sidecar_url')),
         'webrcade_feed_export': export,
-        'browser_players_available': list(SHIPPED_ENGINES),
+        'browser_players_available': list(available),
     }
 
 
@@ -147,11 +160,12 @@ def play_engine_fields() -> dict[str, Any]:
     except Exception:
         default = 'webretro'
         pilot = False
-    if default not in SHIPPED_ENGINES:
+    available = available_engines()
+    if default not in available:
         default = 'webretro'
     return {
         'browser_player': default,
-        'browser_players_available': list(SHIPPED_ENGINES),
+        'browser_players_available': list(available),
         'nostalgist_nes_pilot': pilot,
     }
 
@@ -185,4 +199,13 @@ def browser_play_href(
     query = '&'.join(params)
     if key == 'NES' and nostalgist_nes_pilot_enabled():
         return f'/static/vendor/nostalgist/play.html?{query}'
+    # BP-2: engine B when the admin chose it AND it is installed AND it has a
+    # core for this system. Any of those false -> WebRetro, silently; the
+    # honesty badges are per capability, not per engine.
+    if key and play_engine_fields()['browser_player'] == 'emulatorjs':
+        from oneirodex.utils.emulatorjs import emulatorjs_play_href
+
+        href = emulatorjs_play_href(game_uuid=guid, platform_key=key, cheat_surface=cheat_surface)
+        if href:
+            return href
     return f'/static/vendor/webretro/webretro.html?{query}'

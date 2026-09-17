@@ -68,7 +68,7 @@ def test_normalize_defaults():
 
 
 def test_normalize_rejects_unwired_engine():
-    with pytest.raises(ValueError, match='not wired'):
+    with pytest.raises(ValueError, match='not installed'):
         normalize_browser_player_settings({'browser_player_default': 'emulatorjs'})
 
 
@@ -159,7 +159,7 @@ def test_get_and_set_browser_player_settings(app, db_session):
         assert saved['webrcade_feed_export'] is True
         row = db_session.query(GlobalSettings).order_by(GlobalSettings.id).first()
         assert row.settings['browser_player']['webrcade_feed_export'] is True
-        with pytest.raises(ValueError, match='not wired'):
+        with pytest.raises(ValueError, match='not installed'):
             set_browser_player_settings({'browser_player_default': 'emulatorjs'})
 
 
@@ -198,3 +198,84 @@ def test_browser_player_settings_api(client, app, db_session, admin_user):
     )
     assert bad.status_code == 400
     assert bad.get_json()['ok'] is False
+
+
+# --- BP-2: EmulatorJS is offered only when its release is on disk -------------
+
+def _install_emulatorjs(tmp_path, monkeypatch):
+    """Point the detector at a directory that has a loader.js."""
+    from oneirodex.utils import emulatorjs as ejs
+
+    data = tmp_path / 'data'
+    data.mkdir()
+    (data / 'loader.js').write_text('// stub', encoding='utf-8')
+    monkeypatch.setattr(ejs, 'default_data_dir', lambda: data)
+    return data
+
+
+def test_emulatorjs_absent_is_not_offered(tmp_path, monkeypatch):
+    from oneirodex.utils import emulatorjs as ejs
+    from oneirodex.utils.browser_player import available_engines
+
+    monkeypatch.setattr(ejs, 'default_data_dir', lambda: tmp_path / 'nope')
+    assert available_engines() == ('webretro',)
+    with pytest.raises(ValueError, match='not installed'):
+        normalize_browser_player_settings({'browser_player_default': 'emulatorjs'})
+
+
+def test_emulatorjs_present_is_offered_and_accepted(tmp_path, monkeypatch):
+    from oneirodex.utils.browser_player import available_engines
+
+    _install_emulatorjs(tmp_path, monkeypatch)
+    assert available_engines() == ('webretro', 'emulatorjs')
+    cleaned = normalize_browser_player_settings({'browser_player_default': 'emulatorjs'})
+    assert cleaned['browser_player_default'] == 'emulatorjs'
+    assert cleaned['browser_players_available'] == ['webretro', 'emulatorjs']
+
+
+def test_emulatorjs_core_map_covers_only_real_platforms():
+    from oneirodex.platform import LibraryPlatform
+    from oneirodex.utils.emulatorjs import EJS_CORE_BY_PLATFORM, emulatorjs_core_for_platform
+
+    names = {p.name for p in LibraryPlatform}
+    assert set(EJS_CORE_BY_PLATFORM) <= names
+    assert emulatorjs_core_for_platform('nes') == 'nes'
+    assert emulatorjs_core_for_platform(LibraryPlatform.SEGA_MD) == 'segaMD'
+    assert emulatorjs_core_for_platform('PS2') is None
+    assert emulatorjs_core_for_platform(None) is None
+
+
+def test_play_href_routes_to_emulatorjs_only_when_chosen_installed_and_supported(
+    app, db_session, tmp_path, monkeypatch,
+):
+    from oneirodex.utils.browser_player import browser_play_href, set_browser_player_settings
+
+    with app.app_context():
+        # Not installed: the admin cannot even choose it, so WebRetro it is.
+        assert browser_play_href(game_uuid='g1', core='fceumm', platform_key='NES').startswith(
+            '/static/vendor/webretro/webretro.html?'
+        )
+
+        _install_emulatorjs(tmp_path, monkeypatch)
+        set_browser_player_settings({'browser_player_default': 'emulatorjs'})
+        with app.test_request_context('/'):
+            href = browser_play_href(game_uuid='g1', core='fceumm', platform_key='NES')
+            assert href == '/static/vendor/emulatorjs/play.html?guid=g1&core=nes&platform=NES'
+            # A system EmulatorJS has no core for stays on WebRetro, silently.
+            fallback = browser_play_href(game_uuid='g2', core='pcsx2', platform_key='PS2')
+            assert fallback.startswith('/static/vendor/webretro/webretro.html?')
+            assert 'core=pcsx2' in fallback
+
+        set_browser_player_settings({'browser_player_default': 'webretro'})
+
+
+def test_emulatorjs_play_shell_keeps_the_household_lock():
+    """ROM from this origin, data from this origin, no third-party frame."""
+    from pathlib import Path
+
+    shell = Path('oneirodex/static/vendor/emulatorjs/play.html').read_text(encoding='utf-8')
+    assert "'/api/downloadrom/'" in shell
+    assert "EJS_pathtodata = '/static/vendor/emulatorjs/data/'" in shell
+    assert 'EJS_threads = false' in shell
+    assert 'cdn.emulatorjs.org' not in shell
+

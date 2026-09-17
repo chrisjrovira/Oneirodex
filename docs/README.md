@@ -32,7 +32,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Support triage (maintainers) | [dev/ui-debt-log.md](dev/ui-debt-log.md) · [dev/api-envelope-keeps.md](dev/api-envelope-keeps.md) |
 | Test harness (maintainers) | [dev/test-harness-2026-09-10.md](dev/test-harness-2026-09-10.md) — per-test SAVEPOINT isolation · savepoint-restart listener · `database` / `slow` markers · [dev/test-harness-2026-08-07.md](dev/test-harness-2026-08-07.md) (lock-storm) · [dev/test-harness-failures.md](dev/test-harness-failures.md) (Aug re-baseline — counts stale) · **[dev/test-suite-failures-2026-09-16.md](dev/test-suite-failures-2026-09-16.md)** — the current failures, named and grouped |
 | Writing an API route (maintainers) | [dev/pydantic-adoption.md](dev/pydantic-adoption.md) — `@validate_body` request models · which routes are migrated · adoption backlog |
-| Maintainers / browser engines | [dev/browser-play-engines.md](dev/browser-play-engines.md) — WebRetro · Nostalgist/koin · EmulatorJS · webЯcade sidecar |
+| Maintainers / browser engines | [dev/browser-play-engines.md](dev/browser-play-engines.md) — WebRetro · Nostalgist/koin · EmulatorJS · webЯcade sidecar · [runbooks/emulatorjs.md](runbooks/emulatorjs.md) (install engine B) |
 | Reviewing the bundled W31 commit | [dev/w31-commit-attribution.md](dev/w31-commit-attribution.md) — which of `c6fd7bf7`'s 236 files are the security audit and which are the UI pass |
 | OIDC / Authentik SSO | [runbooks/oidc-sso.md](runbooks/oidc-sso.md), [runbooks/oidc-authentik-unraid.md](runbooks/oidc-authentik-unraid.md) |
 | API | [openapi/openapi.json](openapi/openapi.json) |

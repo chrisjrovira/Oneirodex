@@ -53,8 +53,8 @@ browse / details Play
 
 | Setting | Scope | Values |
 |---|---|---|
-| `browser_player_default` | Admin (GlobalSettings) | `webretro` only until EmulatorJS ships |
-| `browser_player_allow_member_choice` | Admin | bool (no UI yet; ignored until two engines ship) |
+| `browser_player_default` | Admin (GlobalSettings) | `webretro` · `emulatorjs` — the second is accepted only when an EmulatorJS release is in the data bind ([runbook](../runbooks/emulatorjs.md), **landed 2026-09-17**) |
+| `browser_player_allow_member_choice` | Admin | bool (stored; no member UI yet — two engines exist now, the preference surface is the next slice) |
 | `nostalgist_nes_pilot` | Admin | bool — **landed**, default **off**. NES `play_url` → `/static/vendor/nostalgist/play.html` |
 | `browser_player_preference` | Member prefs | planned: `webretro` · `emulatorjs` · `default` |
 | `webrcade_sidecar_url` | Admin | empty = off; else base URL of private webЯcade |

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oneirodex · EmulatorJS</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; background: #0b0f14; color: #e8edf5; font: 14px/1.4 system-ui, sans-serif; }
+    #bar { display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    #bar a { color: #9ecbff; text-decoration: none; }
+    #status { color: #9aa7b8; }
+    #stage { position: absolute; inset: 48px 0 0 0; }
+    #game { width: 100%; height: 100%; }
+    #err { color: #ffb4b4; white-space: pre-wrap; max-width: 40rem; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <div id="bar">
+    <a href="/library" id="back">← Game Catalog</a>
+    <strong>EmulatorJS</strong>
+    <span id="status">Starting…</span>
+  </div>
+  <div id="stage">
+    <div id="game"></div>
+    <div id="err" hidden></div>
+  </div>
+  <script>
+    // Browser play engine B (BP-2). Same contract as the WebRetro room and the
+    // Nostalgist pilot: the ROM is streamed from this origin over
+    // /api/downloadrom/<guid>, and everything EmulatorJS needs -- loader,
+    // cores, UI -- comes from /static/vendor/emulatorjs/data/, which the
+    // operator fills with scripts/fetch-emulatorjs.sh (Compose binds it from
+    // EMULATORJS_HOST_PATH). Nothing about the household leaves the box.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var guid = params.get('guid') || '';
+      var core = params.get('core') || '';
+      var platform = params.get('platform') || '';
+      var statusEl = document.getElementById('status');
+      var errEl = document.getElementById('err');
+
+      function fail(msg) {
+        statusEl.textContent = 'Failed';
+        errEl.hidden = false;
+        errEl.textContent = msg;
+      }
+
+      if (!guid || !core) {
+        fail('Missing guid or core query parameter.');
+        return;
+      }
+
+      // Absolute same-origin ROM URL, exactly as the pilot does it.
+      var romUrl = new URL('/api/downloadrom/' + encodeURIComponent(guid), window.location.origin).href;
+
+      // EmulatorJS reads its configuration from globals set before loader.js.
+      window.EJS_player = '#game';
+      window.EJS_core = core;
+      window.EJS_gameUrl = romUrl;
+      window.EJS_pathtodata = '/static/vendor/emulatorjs/data/';
+      window.EJS_startOnLoaded = true;
+      window.EJS_backgroundColor = '#0b0f14';
+      window.EJS_color = '#4fd8c6';
+      // No third-party ad frame, no threads (SharedArrayBuffer needs COOP/COEP
+      // headers the app does not set), no external CDN fallback.
+      window.EJS_disableDatabases = false;
+      window.EJS_threads = false;
+      window.EJS_gameName = platform ? (platform + ' · ' + guid.slice(0, 8)) : guid.slice(0, 8);
+      window.EJS_onGameStart = function () {
+        statusEl.textContent = 'Playing · ' + core;
+      };
+      window.EJS_onLoadState = function () {
+        statusEl.textContent = 'State loaded';
+      };
+
+      statusEl.textContent = 'Loading ' + core + '…';
+      var loader = document.createElement('script');
+      loader.src = window.EJS_pathtodata + 'loader.js';
+      loader.onerror = function () {
+        fail(
+          'EmulatorJS is not installed on this server (no ' + window.EJS_pathtodata +
+          'loader.js). The operator fetches it with scripts/fetch-emulatorjs.sh; ' +
+          'until then Play uses WebRetro.'
+        );
+      };
+      document.body.appendChild(loader);
+    })();
+  </script>
+</body>
+</html>

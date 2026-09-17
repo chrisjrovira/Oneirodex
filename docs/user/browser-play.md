@@ -63,6 +63,10 @@ Browser play opens `webretro.html` with a per-system **artistic room** — multi
 - Motion respects `prefers-reduced-motion`.
 - After deploy, hard-refresh the play tab (Ctrl+F5) so cached `play-skins.css` / `.js` drop. Smoke: `node oneirodex/static/vendor/webretro/play-skins.assert.mjs`.
 
+## Two engines
+
+WebRetro is the player that ships with Oneirodex. Your admin can add **EmulatorJS** as a second engine (a different shell with its own menu, save-state screen and touch controls) and make it the default; when they do, Play on the systems it supports opens in that shell and everything else stays on WebRetro. Either way your ROMs never leave the server. If a game opens in a plain page saying EmulatorJS is not installed, tell your admin — that shell needs a one-time install on the server.
+
 ## Audio/video tuning + WASM limits (SNES and friends)
 
 Browser Play runs RetroArch compiled to WebAssembly inside the tab — there's no native audio thread or GPU passthrough, so a few defaults are tuned to reduce common WASM artifacts:
