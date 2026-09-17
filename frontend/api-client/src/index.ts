@@ -61,7 +61,35 @@ export type {
   ImportLeafLibrariesPreviewError,
 } from './library-tools.js'
 export type { GameApi, GameDetails, MoreFromResponse, EditionsResponse } from './game.js'
+// Every resource factory is a value export so a SPA can bind one module to
+// its own requester (`memberResource(createXApi)`) without pulling the whole
+// composed client into its bundle. Until 2026-09-17 only collections was
+// exported this way -- which is why it was the only module any SPA adopted.
+export { createAccountApi } from './account.js'
+export { createAdminArtApi } from './admin-art.js'
+export { createAdminUsersApi } from './admin-users.js'
+export { createBrowseApi } from './browse.js'
 export { createCollectionsApi } from './collections.js'
+export { createDeviceApi } from './device.js'
+export { createDiscoverApi } from './discover.js'
+export { createDownloadsApi } from './downloads.js'
+export { createGameApi } from './game.js'
+export { createLibraryApi } from './library.js'
+export { createLibraryToolsApi } from './library-tools.js'
+export { createOpsApi } from './ops.js'
+export { createPlaytimeApi } from './playtime.js'
+export { createTokensApi } from './tokens.js'
+export { createUpdatesApi } from './updates.js'
+export { createWishlistApi } from './wishlist.js'
+export type {
+  UpdatesInboxOptions,
+  UpdatesScanBody,
+  UpdatesScanResponse,
+  StoreSearchOptions,
+  StoreSearchResponse,
+  WantedUpdateBody,
+} from './updates.js'
+export type { ListRequestsOptions, ResolveRequestBody } from './wishlist.js'
 export type {
   CollectionsApi,
   CollectionDetail,

@@ -1,4 +1,8 @@
-import { getJson } from './client'
+import { createGameApi } from '@oneirodex/api-client'
+
+import { memberResource, withMemberError } from './client'
+
+const game = memberResource(createGameApi)
 
 /**
  * Every system this title exists on in the library, with per-core launchers.
@@ -7,9 +11,9 @@ import { getJson } from './client'
  * two unrelated tiles. This is what lets the preview say "also on SNES" and
  * offer a launcher for each core the member could actually play it with.
  */
-export async function fetchGameEditions(gameUuid: any, { signal }: LooseProps = {}) {
-  return getJson(`/api/games/${encodeURIComponent(gameUuid)}/editions`, {
-    signal,
-    label: 'game editions',
-  })
+export async function fetchGameEditions(
+  gameUuid: string,
+  { signal }: { signal?: AbortSignal } = {},
+) {
+  return withMemberError(game.editions(gameUuid, signal), 'game editions')
 }

@@ -23,8 +23,8 @@ export function createPlaytimeApi(request: Requester) {
       })
     },
 
-    me(): Promise<PlaytimeMeResponse> {
-      return request<PlaytimeMeResponse>('/api/playtime/me')
+    me(signal?: AbortSignal): Promise<PlaytimeMeResponse> {
+      return request<PlaytimeMeResponse>('/api/playtime/me', { signal })
     },
   }
 }
