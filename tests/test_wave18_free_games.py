@@ -394,3 +394,20 @@ def test_dedupe_title_keys_keep_a_trailing_title_word():
     assert fg.dedupe_title_keys('Known Game (GOG) Giveaway') == {'known game'}
     assert fg.dedupe_title_keys('Skeleton Key Giveaway') == {'skeleton key'}
     assert not fg.dedupe_title_keys('Known Game Giveaway') & fg.dedupe_title_keys('Known')
+
+
+def test_steam_capsule_gets_a_header_fallback():
+    """Steam's 600x900 capsule is an optional upload; header.jpg always exists.
+
+    Human, 2026-09-06: the News row showed nothing for titles the store has
+    art for. The tile swaps to this on load error.
+    """
+    from oneirodex.utils.free_games import steam_image_fallback_url
+
+    capsule = 'https://cdn.cloudflare.steamstatic.com/steam/apps/570/library_600x900.jpg'
+    assert steam_image_fallback_url(capsule) == (
+        'https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg'
+    )
+    assert steam_image_fallback_url('https://cdn1.epicgames.com/offer/x/tall.jpg') is None
+    assert steam_image_fallback_url(None) is None
+    assert steam_image_fallback_url('') is None
