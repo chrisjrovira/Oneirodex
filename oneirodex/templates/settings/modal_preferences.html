@@ -11,6 +11,8 @@
             <div class="modal-body od-prefs-modal__body">
                 <form id="preferencesForm" method="POST" action="{{ url_for('settings.settings_panel') }}">
                     {{ form.hidden_tag() }}
+                    {# Marks a whole-form save; see settings_panel. #}
+                    <input type="hidden" name="_full_form" value="1">
 
                     <details class="od-prefs-section" data-prefs-section="prefs-library-heading" open>
                         <summary class="od-prefs-section__summary">
@@ -176,6 +178,30 @@
                         </div>
                         {% endif %}
                     </details>
+
+                    {# BP-2 member half. Rendered only when the admin allows
+                       member choice and more than one engine is installed;
+                       with the field absent the save keeps the stored value. #}
+                    {% if member_engine_choice %}
+                    <details class="od-prefs-section" data-prefs-section="prefs-play-heading" open>
+                        <summary class="od-prefs-section__summary">
+                            <span class="od-prefs-section__caret" aria-hidden="true"></span>
+                            <h3 class="od-prefs-section__title" id="prefs-play-heading">Play in browser</h3>
+                        </summary>
+                        <p class="od-prefs-section__hint">Which emulator shell opens when you press Play. A system the chosen engine cannot run still opens in WebRetro.</p>
+                        <div class="od-prefs-field">
+                            {{ form.browser_player_engine.label(class="form-label") }}
+                            {{ form.browser_player_engine(class="form-select", id="browserPlayerEngine") }}
+                            {% for error in form.browser_player_engine.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% else %}
+                    {# Hidden picker: carry the stored value so a whole-form
+                       save does not wipe it. #}
+                    <input type="hidden" name="browser_player_engine" value="{{ form.browser_player_engine.data or '' }}">
+                    {% endif %}
 
                     <details class="od-prefs-section" data-prefs-section="prefs-lang-heading" open>
                         <summary class="od-prefs-section__summary">

@@ -279,3 +279,88 @@ def test_emulatorjs_play_shell_keeps_the_household_lock():
     assert 'EJS_threads = false' in shell
     assert 'cdn.emulatorjs.org' not in shell
 
+
+# --- BP-2 member half: the member's engine choice -------------------------------
+
+
+def test_resolve_engine_is_pure_and_honest():
+    from oneirodex.utils.browser_player import resolve_engine
+
+    both = ('webretro', 'emulatorjs')
+    allow = {'browser_player_allow_member_choice': True, 'browser_player_default': 'webretro'}
+    deny = {'browser_player_allow_member_choice': False, 'browser_player_default': 'webretro'}
+    # Member choice wins only when the admin allows it AND it is installed.
+    assert resolve_engine(settings=allow, preference='emulatorjs', available=both) == 'emulatorjs'
+    assert resolve_engine(settings=deny, preference='emulatorjs', available=both) == 'webretro'
+    assert resolve_engine(settings=allow, preference='emulatorjs', available=('webretro',)) == 'webretro'
+    # No preference -> admin default; an uninstalled admin default -> WebRetro.
+    ejs_default = {'browser_player_allow_member_choice': True, 'browser_player_default': 'emulatorjs'}
+    assert resolve_engine(settings=ejs_default, preference=None, available=both) == 'emulatorjs'
+    assert resolve_engine(settings=ejs_default, preference=None, available=('webretro',)) == 'webretro'
+    # A member explicitly choosing WebRetro over an EmulatorJS default is honoured.
+    assert resolve_engine(settings=ejs_default, preference='webretro', available=both) == 'webretro'
+
+
+def test_member_preference_routes_play_href(app, db_session, tmp_path, monkeypatch):
+    """The Play link and the payload's `browser_player` agree, per member."""
+    from oneirodex.models import UserPreference
+
+    _install_emulatorjs(tmp_path, monkeypatch)
+    uid = str(uuid4())
+    member = User(
+        name=f'bpmember_{uid[:8]}', email=f'bpmember_{uid[:8]}@example.com',
+        role='user', user_id=uid, state=True,
+    )
+    member.set_password('password123')
+    db_session.add(member)
+    db_session.flush()
+    db_session.add(UserPreference(user_id=member.id, browser_player_engine='emulatorjs'))
+    db_session.commit()
+
+    # get_browser_player_settings() caches on `g` for the app context, and the
+    # `app` fixture keeps one pushed for the whole test — so the cache has to
+    # be dropped by hand between the two halves. Real requests get a fresh one.
+    from flask import g
+
+    with app.app_context():
+        set_browser_player_settings({
+            'browser_player_default': 'webretro',
+            'browser_player_allow_member_choice': False,
+        })
+    with app.test_request_context('/'):
+        login_user(member)
+        fields = play_engine_fields()
+        assert fields['browser_player'] == 'webretro'
+        assert fields['browser_player_member_choice'] is False
+        assert fields['browser_player_preference'] is None
+        assert browser_play_href(game_uuid='g1', core='fceumm', platform_key='NES').startswith(
+            '/static/vendor/webretro/'
+        )
+
+    with app.app_context():
+        set_browser_player_settings({'browser_player_allow_member_choice': True})
+    g.pop('_browser_player_settings', None)
+    with app.test_request_context('/'):
+        login_user(member)
+        fields = play_engine_fields()
+        assert fields['browser_player'] == 'emulatorjs'
+        assert fields['browser_player_default'] == 'webretro'
+        assert fields['browser_player_member_choice'] is True
+        assert fields['browser_player_preference'] == 'emulatorjs'
+        assert browser_play_href(game_uuid='g1', core='fceumm', platform_key='NES') == (
+            '/static/vendor/emulatorjs/play.html?guid=g1&core=nes&platform=NES'
+        )
+
+    with app.app_context():
+        set_browser_player_settings({'browser_player_allow_member_choice': False})
+
+
+def test_member_choice_is_not_offered_with_one_engine(app, db_session):
+    """Allowing choice with only WebRetro installed offers nothing to choose."""
+    with app.app_context():
+        set_browser_player_settings({'browser_player_allow_member_choice': True})
+        with app.test_request_context('/'):
+            fields = play_engine_fields()
+            assert fields['browser_players_available'] == ['webretro']
+            assert fields['browser_player_member_choice'] is False
+        set_browser_player_settings({'browser_player_allow_member_choice': False})

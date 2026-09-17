@@ -500,6 +500,7 @@ class TestSettingsPanel:
             mock_form.font.data = 'system-ui'
             mock_form.tile_size.data = 50
             mock_form.preferred_game_locale.data = 'en-US'
+            mock_form.browser_player_engine.data = ''
             mock_form_class.return_value = mock_form
             
             response = client.post('/settings_panel', data=form_data)
@@ -541,6 +542,7 @@ class TestSettingsPanel:
             mock_form.font.data = 'system-ui'
             mock_form.tile_size.data = 50
             mock_form.preferred_game_locale.data = 'en-US'
+            mock_form.browser_player_engine.data = ''
             mock_form_class.return_value = mock_form
             
             response = client.post('/settings_panel', data=form_data)
@@ -580,6 +582,7 @@ class TestSettingsPanel:
             mock_form.font.data = 'system-ui'
             mock_form.tile_size.data = 50
             mock_form.preferred_game_locale.data = 'en-US'
+            mock_form.browser_player_engine.data = ''
             mock_form_class.return_value = mock_form
             
             response = client.post('/settings_panel', data=form_data)
@@ -625,6 +628,7 @@ class TestSettingsPanel:
             mock_form.font.data = 'system-ui'
             mock_form.tile_size.data = 50
             mock_form.preferred_game_locale.data = 'en-US'
+            mock_form.browser_player_engine.data = ''
             mock_form_class.return_value = mock_form
             
             with patch('oneirodex.routes_settings.db.session.commit', side_effect=Exception('Database error')):

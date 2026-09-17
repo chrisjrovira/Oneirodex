@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from flask import g, has_request_context
+from flask import g, has_app_context, has_request_context
 from sqlalchemy import select
 
 from oneirodex import db
@@ -117,14 +117,16 @@ def normalize_browser_player_settings(raw: dict[str, Any] | None) -> dict[str, A
 
 def get_browser_player_settings() -> dict[str, Any]:
     """Read stored admin keys, filling defaults. Safe without a settings row."""
-    if has_request_context() and hasattr(g, '_browser_player_settings'):
+    # `g` is app-context scoped, so the cache key is the app context, not the
+    # request — and a save must clear it wherever it lives.
+    if has_app_context() and hasattr(g, '_browser_player_settings'):
         return g._browser_player_settings
     try:
         merged = {**DEFAULTS, **_blob(_settings_row())}
         cleaned = normalize_browser_player_settings(merged)
     except Exception:
         cleaned = normalize_browser_player_settings(DEFAULTS)
-    if has_request_context():
+    if has_app_context():
         g._browser_player_settings = cleaned
     return cleaned
 
@@ -146,26 +148,86 @@ def set_browser_player_settings(payload: dict[str, Any] | None) -> dict[str, Any
     current[STORAGE_KEY] = stored
     row.settings = current
     db.session.commit()
-    if has_request_context() and hasattr(g, '_browser_player_settings'):
+    if has_app_context() and hasattr(g, '_browser_player_settings'):
         delattr(g, '_browser_player_settings')
     return cleaned
 
 
+ENGINE_LABELS = {
+    'webretro': 'WebRetro',
+    'emulatorjs': 'EmulatorJS',
+}
+
+
+def engine_label(engine: str) -> str:
+    return ENGINE_LABELS.get(str(engine or '').strip().lower(), str(engine or ''))
+
+
+def member_engine_preference() -> str | None:
+    """The signed-in member's stored engine choice, or None. Never raises."""
+    try:
+        from flask_login import current_user
+
+        if not has_request_context() or not getattr(current_user, 'is_authenticated', False):
+            return None
+        prefs = getattr(current_user, 'preferences', None)
+        value = str(getattr(prefs, 'browser_player_engine', '') or '').strip().lower()
+        return value if value in KNOWN_ENGINES else None
+    except Exception:
+        return None
+
+
+def resolve_engine(
+    *,
+    settings: dict[str, Any] | None = None,
+    preference: str | None = None,
+    available: tuple[str, ...] | None = None,
+) -> str:
+    """Engine that actually launches for this request.
+
+    Member preference wins only when the admin allows member choice *and* the
+    engine is installed here; otherwise the admin default, and if even that is
+    not installed, WebRetro (always shipped). Pure — callers pass the inputs.
+    """
+    installed = available if available is not None else available_engines()
+    if settings is None:
+        try:
+            settings = get_browser_player_settings()
+        except Exception:
+            settings = dict(DEFAULTS)
+    allow = bool(settings.get('browser_player_allow_member_choice'))
+    if allow and preference in installed:
+        return str(preference)
+    default = str(settings.get('browser_player_default') or 'webretro')
+    return default if default in installed else 'webretro'
+
+
 def play_engine_fields() -> dict[str, Any]:
-    """Fields for browse/details play payloads. Never lists an unwired engine."""
+    """Fields for browse/details play payloads. Never lists an unwired engine.
+
+    ``browser_player`` is the engine this member's Play link will open — the
+    resolved one, not the admin default — so the tile and the launch agree.
+    ``browser_player_member_choice`` / ``browser_player_preference`` let the
+    member surface offer a choice and show which one is theirs.
+    """
     try:
         settings = get_browser_player_settings()
-        default = settings['browser_player_default']
-        pilot = bool(settings.get('nostalgist_nes_pilot'))
     except Exception:
-        default = 'webretro'
-        pilot = False
+        settings = dict(DEFAULTS)
+    pilot = bool(settings.get('nostalgist_nes_pilot'))
     available = available_engines()
-    if default not in available:
-        default = 'webretro'
+    preference = member_engine_preference()
+    allow = bool(settings.get('browser_player_allow_member_choice')) and len(available) > 1
     return {
-        'browser_player': default,
+        'browser_player': resolve_engine(settings=settings, preference=preference, available=available),
+        'browser_player_default': (
+            settings.get('browser_player_default')
+            if settings.get('browser_player_default') in available
+            else 'webretro'
+        ),
         'browser_players_available': list(available),
+        'browser_player_member_choice': allow,
+        'browser_player_preference': preference if allow else None,
         'nostalgist_nes_pilot': pilot,
     }
 
@@ -199,9 +261,10 @@ def browser_play_href(
     query = '&'.join(params)
     if key == 'NES' and nostalgist_nes_pilot_enabled():
         return f'/static/vendor/nostalgist/play.html?{query}'
-    # BP-2: engine B when the admin chose it AND it is installed AND it has a
-    # core for this system. Any of those false -> WebRetro, silently; the
-    # honesty badges are per capability, not per engine.
+    # BP-2: engine B when the resolved engine (member choice if allowed, else
+    # the admin default) is EmulatorJS AND it is installed AND it has a core
+    # for this system. Any of those false -> WebRetro, silently; the honesty
+    # badges are per capability, not per engine.
     if key and play_engine_fields()['browser_player'] == 'emulatorjs':
         from oneirodex.utils.emulatorjs import emulatorjs_play_href
 
