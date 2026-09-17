@@ -60,7 +60,7 @@ class TestFormsInitialization(unittest.TestCase):
         self.assertIn('remove_missing', form._fields)
         self.assertIn('download_missing_images', form._fields)
         # Test default scan mode
-        self.assertEqual(form.scan_mode.default, 'folders')
+        self.assertEqual(form.scan_mode.default, 'auto')
 
     def test_igdb_setup_form_initialization(self):
         """Test IGDBSetupForm initializes with correct fields."""
@@ -369,16 +369,20 @@ class TestFormChoices(unittest.TestCase):
     def test_scan_folder_form_scan_mode_choices(self):
         """Test ScanFolderForm scan mode choices."""
         form = ScanFolderForm()
-        expected_choices = [('folders', 'Folders'), ('files', 'Files')]
+        # 'auto' leads: the scan-jobs redesign made folders-vs-files a heuristic
+        # (resolve_scan_mode_for_path) and the explicit modes the override.
+        expected_choices = [('auto', 'Auto (detect)'), ('folders', 'Folders'), ('files', 'Files')]
         self.assertEqual(form.scan_mode.choices, expected_choices)
-        self.assertEqual(form.scan_mode.default, 'folders')
+        self.assertEqual(form.scan_mode.default, 'auto')
 
     def test_auto_scan_form_scan_mode_choices(self):
         """Test AutoScanForm scan mode choices."""
         form = AutoScanForm()
-        expected_choices = [('folders', 'Folders'), ('files', 'Files')]
+        # 'auto' leads: the scan-jobs redesign made folders-vs-files a heuristic
+        # (resolve_scan_mode_for_path) and the explicit modes the override.
+        expected_choices = [('auto', 'Auto (detect)'), ('folders', 'Folders'), ('files', 'Files')]
         self.assertEqual(form.scan_mode.choices, expected_choices)
-        self.assertEqual(form.scan_mode.default, 'folders')
+        self.assertEqual(form.scan_mode.default, 'auto')
 
 
 class TestFormSpecialCases(unittest.TestCase):

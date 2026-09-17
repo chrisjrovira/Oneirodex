@@ -113,7 +113,16 @@ def test_libraries_scans_views_are_separate_pages():
     for surfaces that remain genuinely one document (Integrations).
     """
     markup = _read(SCANJOBS)
-    assert "data_toggle='tab'" not in markup, 'scan management still uses in-page tabs'
+    # The *siblings* (auto / manual / tools / unmatched / filters / extensions)
+    # are separate pages. Library tools' own five views are genuinely one
+    # document, and the redesign kept them as in-page panes on purpose -- so
+    # the check is "exactly one toggling strip, and it is that one", not "none".
+    toggles = markup.count("data_toggle='tab'")
+    assert toggles == 1, f'expected only Library tools to toggle in-page, found {toggles} strips'
+    at = markup.index("data_toggle='tab'")
+    assert "label='Library tools'" in markup[at:at + 200], (
+        'the surviving in-page tab strip is not the Library tools one'
+    )
     assert "url_for('admin2.scan_management', active_tab='auto')" in markup
     assert "url_for('admin2.scan_management', active_tab='manual')" in markup
     assert 'data_toggle' in _read(JINJA), 'the macro no longer supports in-page views'
