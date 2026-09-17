@@ -113,11 +113,56 @@ def account_pw():
 
     return render_template('settings/settings_password.html', title='Change Password', form=form, user=user)
 
+def _stored_preference_formdata(prefs) -> dict:
+    """The current preferences as the form would post them.
+
+    ``/settings_panel`` validates the whole form, and WTForms rejects a
+    SelectField that is simply absent ("Not a valid choice"). The top-bar tile
+    slider posts one field, so it used to fail validation every time and the
+    size never persisted. Absent fields now mean "keep what is stored".
+    """
+    # No row yet (first save ever) -> the model defaults, same as a GET shows.
+    return {
+        'items_per_page': str(getattr(prefs, 'items_per_page', None) or 50),
+        'default_sort': getattr(prefs, 'default_sort', None) or 'name',
+        'default_sort_order': getattr(prefs, 'default_sort_order', None) or 'asc',
+        'theme': getattr(prefs, 'theme', None) or 'default',
+        'icon_pack': getattr(prefs, 'icon_pack', None) or 'outline',
+        'font': getattr(prefs, 'font', None) or 'system-ui',
+        'tile_size': _normalize_tile_percent(getattr(prefs, 'tile_size', None)),
+        'show_tile_titles': 'true' if getattr(prefs, 'show_tile_titles', True) else 'false',
+        'browser_player_engine': getattr(prefs, 'browser_player_engine', None) or '',
+        'preferred_game_locale': getattr(prefs, 'preferred_game_locale', None) or 'en-US',
+    }
+
+
+def _member_engine_choice_open() -> bool:
+    """Whether the Preferences modal shows the engine picker at all."""
+    try:
+        from oneirodex.utils.browser_player import play_engine_fields
+
+        return bool(play_engine_fields().get('browser_player_member_choice'))
+    except Exception:
+        return False
+
+
 @settings_bp.route('/settings_panel', methods=['GET', 'POST'])
 @login_required
 def settings_panel():
-    form = UserPreferencesForm()
-    
+    # The modal posts every field (plus `_full_form`), and an unchecked box is
+    # simply absent there — so no merge, or a box could never be switched off.
+    # Anything else (the top-bar tile slider) is a partial save and gets the
+    # stored values filled in underneath it.
+    if request.method == 'POST' and not request.form.get('_full_form'):
+        from werkzeug.datastructures import MultiDict
+
+        merged = MultiDict(_stored_preference_formdata(current_user.preferences))
+        for key, values in request.form.lists():
+            merged.setlist(key, values)
+        form = UserPreferencesForm(formdata=merged)
+    else:
+        form = UserPreferencesForm()
+
     if request.method == 'POST' and form.validate_on_submit():
         if not current_user.preferences:
             current_user.preferences = UserPreference(user_id=current_user.id)
@@ -130,6 +175,12 @@ def settings_panel():
         current_user.preferences.font = form.font.data or 'system-ui'
         current_user.preferences.tile_size = _normalize_tile_percent(form.tile_size.data)
         current_user.preferences.show_tile_titles = bool(form.show_tile_titles.data)
+        # Stored even when the admin has member choice off: the picker is
+        # hidden then, so the value is whatever was already there, and it
+        # comes back into force if the admin opens the choice later.
+        current_user.preferences.browser_player_engine = (
+            form.browser_player_engine.data or None
+        )
         current_user.preferences.preferred_game_locale = (
             form.preferred_game_locale.data or 'en-US'
         )
@@ -158,10 +209,17 @@ def settings_panel():
             form.font.data = getattr(prefs, 'font', None) or 'system-ui'
             form.tile_size.data = _normalize_tile_percent(getattr(prefs, 'tile_size', None))
             form.show_tile_titles.data = bool(getattr(prefs, 'show_tile_titles', True))
+            form.browser_player_engine.data = (
+                getattr(prefs, 'browser_player_engine', None) or ''
+            )
             form.preferred_game_locale.data = (
                 getattr(prefs, 'preferred_game_locale', None) or 'en-US'
             )
-        return render_template('settings/modal_preferences.html', form=form)
+        return render_template(
+            'settings/modal_preferences.html',
+            form=form,
+            member_engine_choice=_member_engine_choice_open(),
+        )
     
     return api_error(
         'Form validation failed',

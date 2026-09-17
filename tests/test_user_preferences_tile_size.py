@@ -129,3 +129,81 @@ def test_settings_panel_persists_the_tile_size(client, member, db_session):
     ).scalars().first()
     assert prefs is not None
     assert prefs.tile_size == '85'
+
+
+def test_partial_save_keeps_the_fields_it_did_not_send(client, member, db_session):
+    """The top-bar slider posts `tile_size` alone.
+
+    The form has five SelectFields, and WTForms rejects a SelectField that is
+    absent from the POST — so every slider save used to come back 400 and the
+    size never persisted (the client swallows the error as best-effort). A
+    partial save now fills the stored values in underneath the posted ones,
+    and leaves them exactly as they were.
+    """
+    from oneirodex.models import UserPreference
+
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(member.id)
+        sess['_fresh'] = True
+
+    full = client.post('/settings_panel', data={
+        '_full_form': '1',
+        'items_per_page': 100,
+        'default_sort': 'rating',
+        'default_sort_order': 'desc',
+        'theme': 'default',
+        'icon_pack': 'outline',
+        'font': 'system-ui',
+        'tile_size': '40',
+        # Checkbox left unchecked: absent from a whole-form post.
+        'preferred_game_locale': 'ja-JP',
+    })
+    assert full.status_code == 200, full.get_json()
+
+    partial = client.post('/settings_panel', data={'tile_size': '85'})
+    assert partial.status_code == 200, partial.get_json()
+
+    prefs = db_session.execute(
+        db_session.query(UserPreference).filter_by(user_id=member.id).statement
+    ).scalars().first()
+    assert prefs.tile_size == '85'
+    assert prefs.items_per_page == 100
+    assert prefs.default_sort == 'rating'
+    assert prefs.default_sort_order == 'desc'
+    assert prefs.preferred_game_locale == 'ja-JP'
+    # The whole-form save switched titles off; the partial one must not
+    # switch them back on just because it did not mention them.
+    assert prefs.show_tile_titles is False
+
+
+def test_engine_picker_only_renders_when_the_admin_allows_choice(client, member, db_session, monkeypatch):
+    from oneirodex.utils import browser_player
+
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(member.id)
+        sess['_fresh'] = True
+
+    monkeypatch.setattr(browser_player, 'available_engines', lambda: ('webretro',))
+    html = client.get('/settings_panel').get_data(as_text=True)
+    assert 'id="browserPlayerEngine"' not in html
+    # Hidden carrier so a whole-form save round-trips the stored value.
+    assert 'name="browser_player_engine"' in html
+
+    monkeypatch.setattr(browser_player, 'available_engines', lambda: ('webretro', 'emulatorjs'))
+    monkeypatch.setattr(
+        browser_player, 'get_browser_player_settings',
+        lambda: {**browser_player.DEFAULTS, 'browser_player_allow_member_choice': True},
+    )
+    html = client.get('/settings_panel').get_data(as_text=True)
+    assert 'id="browserPlayerEngine"' in html
+    assert 'Server default (WebRetro)' in html
+    assert 'EmulatorJS' in html
+
+    saved = client.post('/settings_panel', data={'browser_player_engine': 'emulatorjs'})
+    assert saved.status_code == 200, saved.get_json()
+    from oneirodex.models import UserPreference
+
+    prefs = db_session.execute(
+        db_session.query(UserPreference).filter_by(user_id=member.id).statement
+    ).scalars().first()
+    assert prefs.browser_player_engine == 'emulatorjs'

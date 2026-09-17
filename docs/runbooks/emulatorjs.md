@@ -50,10 +50,22 @@ cores are served from this origin. There is no CDN fallback in the shell.
 - Plugins inventory reports `emu.emulatorjs` as `installed` or `available`
   (it was `eval`).
 
+## Member choice
+
+Admin → Emulators → **Let members choose their engine** stores
+`browser_player_allow_member_choice`. With it on *and* both engines installed,
+every member's Preferences modal gains a **Play in browser** section
+(`Server default (…)` / WebRetro / EmulatorJS). The choice is stored on
+`user_preferences.browser_player_engine` (NULL = server default) and is
+honoured only while the admin allows it and the engine is installed — switch
+either off and Play silently returns to the default, the stored value kept
+for when it comes back. A system the chosen engine cannot run still opens in
+WebRetro. `browse_play_fields()` reports the *resolved* engine per member in
+`browser_player`, plus `browser_player_member_choice` and
+`browser_player_preference`.
+
 ## Not in this slice
 
-- A member-level engine preference (`browser_player_allow_member_choice` is
-  stored and ignored until there is a member UI for it).
 - Save states, cheats and the cabinet play bar inside the EmulatorJS shell —
   it has its own menu for states; the Oneirodex play bar is WebRetro-only.
 - BIOS hand-off: systems that need firmware are not in the platform map.
