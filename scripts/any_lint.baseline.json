@@ -35,101 +35,138 @@
   "frontend/admin-app/src/pages/QualityProfilesPage.tsx": {
     "any-annotation": 1
   },
+  "frontend/member-app/src/api/announcements.ts": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/api/assists.ts": {
-    "any-annotation": 1
+    "any-annotation": 1,
+    "any-alias": 1
   },
   "frontend/member-app/src/api/batchActions.ts": {
-    "any-annotation": 7
+    "any-annotation": 7,
+    "any-alias": 13
+  },
+  "frontend/member-app/src/api/browse.ts": {
+    "any-alias": 2
+  },
+  "frontend/member-app/src/api/calendar.ts": {
+    "any-alias": 1
   },
   "frontend/member-app/src/api/chat.ts": {
-    "any-annotation": 21
+    "any-annotation": 21,
+    "any-alias": 2
   },
   "frontend/member-app/src/api/cheats.ts": {
-    "any-annotation": 15
+    "any-annotation": 15,
+    "any-alias": 3
   },
   "frontend/member-app/src/api/client.ts": {
     "any-generic": 7
   },
   "frontend/member-app/src/api/clientCommands.ts": {
-    "any-annotation": 2
+    "any-annotation": 2,
+    "any-alias": 2
   },
   "frontend/member-app/src/api/collections.ts": {
+    "any-alias": 6,
     "any-annotation": 10
   },
   "frontend/member-app/src/api/discover.ts": {
-    "any-annotation": 4
-  },
-  "frontend/member-app/src/api/discoverPins.ts": {
-    "any-annotation": 1
+    "any-annotation": 4,
+    "any-alias": 4
   },
   "frontend/member-app/src/api/downloads.ts": {
-    "any-annotation": 6
+    "any-annotation": 6,
+    "any-alias": 5
+  },
+  "frontend/member-app/src/api/filters.ts": {
+    "any-alias": 1
   },
   "frontend/member-app/src/api/freeGames.ts": {
+    "any-alias": 1,
     "any-annotation": 1
   },
   "frontend/member-app/src/api/gameDetails.ts": {
-    "any-annotation": 6
+    "any-annotation": 6,
+    "any-alias": 3
   },
-  "frontend/member-app/src/api/gameEditions.ts": {
-    "any-annotation": 1
+  "frontend/member-app/src/api/gamingNews.ts": {
+    "any-alias": 1
   },
   "frontend/member-app/src/api/http.ts": {
     "any-annotation": 1
   },
   "frontend/member-app/src/api/notifications.ts": {
-    "any-annotation": 3
+    "any-annotation": 3,
+    "any-alias": 4
   },
   "frontend/member-app/src/api/ownership.ts": {
+    "any-alias": 5,
     "any-annotation": 5
   },
+  "frontend/member-app/src/api/palette.ts": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/api/patchCatalog.ts": {
+    "any-alias": 1,
     "any-annotation": 1
   },
   "frontend/member-app/src/api/pcCheats.ts": {
     "any-annotation": 7
   },
+  "frontend/member-app/src/api/preferences.ts": {
+    "any-alias": 3
+  },
+  "frontend/member-app/src/api/remotePlay.ts": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/api/rtc.ts": {
-    "any-annotation": 1
+    "any-annotation": 1,
+    "any-alias": 1
   },
   "frontend/member-app/src/api/social.ts": {
-    "any-annotation": 8
+    "any-annotation": 8,
+    "any-alias": 4
   },
   "frontend/member-app/src/api/support.ts": {
     "any-annotation": 1
   },
-  "frontend/member-app/src/api/trailers.ts": {
-    "any-annotation": 1
+  "frontend/member-app/src/api/systems.ts": {
+    "any-alias": 3
   },
-  "frontend/member-app/src/api/updates.ts": {
-    "any-annotation": 2
+  "frontend/member-app/src/api/trailers.ts": {
+    "any-alias": 5,
+    "any-annotation": 1
   },
   "frontend/member-app/src/api/userActions.ts": {
     "any-annotation": 3
   },
   "frontend/member-app/src/api/vr.ts": {
+    "any-alias": 2,
     "any-annotation": 1
   },
-  "frontend/member-app/src/api/wishlist.ts": {
-    "any-annotation": 2
-  },
   "frontend/member-app/src/App.tsx": {
-    "any-annotation": 2
+    "any-annotation": 2,
+    "any-alias": 2
   },
   "frontend/member-app/src/chrome/AppBar.tsx": {
+    "any-alias": 1,
     "any-annotation": 1
   },
   "frontend/member-app/src/chrome/CommandPalette.tsx": {
+    "any-alias": 2,
     "any-annotation": 14
   },
   "frontend/member-app/src/chrome/ContextBar.tsx": {
     "any-annotation": 9,
+    "any-alias": 3,
     "any-generic": 4
   },
   "frontend/member-app/src/chrome/icons.tsx": {
     "any-annotation": 9
   },
   "frontend/member-app/src/chrome/navConfig.ts": {
+    "any-alias": 7,
     "any-annotation": 3
   },
   "frontend/member-app/src/chrome/platformSkins.ts": {
@@ -138,129 +175,189 @@
   "frontend/member-app/src/chrome/playRooms.ts": {
     "any-annotation": 4
   },
+  "frontend/member-app/src/chrome/railIcons.tsx": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/chrome/regions.ts": {
     "any-annotation": 1
   },
   "frontend/member-app/src/chrome/ScrollJump.tsx": {
-    "any-annotation": 3
+    "any-annotation": 3,
+    "any-alias": 1
   },
   "frontend/member-app/src/chrome/SideRail.tsx": {
-    "any-annotation": 3
+    "any-annotation": 3,
+    "any-alias": 1
+  },
+  "frontend/member-app/src/chrome/SystemBackdrop.tsx": {
+    "any-alias": 1
   },
   "frontend/member-app/src/chrome/systemMarks.tsx": {
-    "any-annotation": 6
+    "any-annotation": 6,
+    "any-alias": 1
   },
   "frontend/member-app/src/chrome/TileSizeControl.tsx": {
     "any-annotation": 3,
+    "any-alias": 1,
     "any-generic": 1
   },
   "frontend/member-app/src/chrome/TopBar.tsx": {
+    "any-alias": 2,
     "any-generic": 2,
     "any-annotation": 5
   },
+  "frontend/member-app/src/chrome/usesNewChrome.ts": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/components/AddToCollection.tsx": {
+    "any-alias": 1,
     "any-generic": 4,
     "any-annotation": 5
   },
   "frontend/member-app/src/components/BadgeFilterChips.tsx": {
-    "any-annotation": 6
+    "any-annotation": 6,
+    "any-alias": 1
   },
   "frontend/member-app/src/components/BadgeStack.tsx": {
-    "any-annotation": 7
+    "any-annotation": 7,
+    "any-alias": 1
   },
   "frontend/member-app/src/components/catalogGenreShelves.ts": {
-    "any-annotation": 6
+    "any-annotation": 6,
+    "any-alias": 2
   },
   "frontend/member-app/src/components/CatalogGridSections.tsx": {
+    "any-alias": 2,
     "any-generic": 7,
     "any-annotation": 12
   },
   "frontend/member-app/src/components/ChatPanel.tsx": {
+    "any-alias": 7,
     "any-annotation": 22,
     "any-generic": 8
   },
   "frontend/member-app/src/components/ChatSlideOut.tsx": {
+    "any-alias": 1,
     "any-generic": 1,
     "any-annotation": 3
   },
   "frontend/member-app/src/components/CheatsPanel.tsx": {
     "any-annotation": 9,
+    "any-alias": 1,
     "any-generic": 3
   },
+  "frontend/member-app/src/components/CoverFallback.tsx": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/components/DetailsMediaStage.tsx": {
-    "any-annotation": 8
+    "any-annotation": 8,
+    "any-alias": 1
+  },
+  "frontend/member-app/src/components/DetailsMoreFrom.tsx": {
+    "any-alias": 1
   },
   "frontend/member-app/src/components/DetailsStoreSpecs.tsx": {
-    "any-annotation": 2
+    "any-annotation": 2,
+    "any-alias": 1
   },
   "frontend/member-app/src/components/DiscoverRowSettings.tsx": {
+    "any-alias": 1,
     "any-annotation": 6
   },
   "frontend/member-app/src/components/DiscoverShelf.tsx": {
     "any-annotation": 13,
+    "any-alias": 1,
     "any-generic": 2
   },
   "frontend/member-app/src/components/DiscoverZoneStrip.tsx": {
+    "any-alias": 1,
     "any-annotation": 1
   },
   "frontend/member-app/src/components/ExternalStoreLinks.tsx": {
-    "any-annotation": 47
+    "any-annotation": 47,
+    "any-alias": 2
   },
   "frontend/member-app/src/components/FilterBar.tsx": {
     "any-annotation": 13,
+    "any-alias": 3,
     "any-generic": 1
   },
   "frontend/member-app/src/components/GameActionBar.tsx": {
+    "any-alias": 1,
     "any-generic": 1,
     "any-annotation": 6
   },
   "frontend/member-app/src/components/GameCard.tsx": {
     "any-annotation": 9,
+    "any-alias": 1,
     "any-generic": 3
   },
   "frontend/member-app/src/components/GameGrid.tsx": {
     "any-annotation": 8,
+    "any-alias": 1,
     "any-generic": 2,
     "any-cast": 1
   },
   "frontend/member-app/src/components/gameGridLayout.ts": {
     "any-annotation": 9
   },
+  "frontend/member-app/src/components/GameGridSkeleton.tsx": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/components/GamePreviewPopup.tsx": {
     "any-annotation": 18,
+    "any-alias": 1,
     "any-generic": 3
   },
+  "frontend/member-app/src/components/hbarLayout.ts": {
+    "any-alias": 2
+  },
   "frontend/member-app/src/components/ItemKindFilterChips.tsx": {
-    "any-annotation": 9
+    "any-annotation": 9,
+    "any-alias": 1
   },
   "frontend/member-app/src/components/LibrarySelectionBar.tsx": {
-    "any-annotation": 1
+    "any-annotation": 1,
+    "any-alias": 3
   },
   "frontend/member-app/src/components/LoadingMotif.tsx": {
-    "any-annotation": 4
+    "any-annotation": 4,
+    "any-alias": 1
   },
   "frontend/member-app/src/components/loadingMotifApi.ts": {
     "any-annotation": 3
   },
+  "frontend/member-app/src/components/LoadingOverlay.tsx": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/components/NewsCard.tsx": {
-    "any-annotation": 3
+    "any-annotation": 3,
+    "any-alias": 1
   },
   "frontend/member-app/src/components/OpenPathModal.tsx": {
     "any-annotation": 3,
+    "any-alias": 1,
     "any-generic": 2
   },
+  "frontend/member-app/src/components/PageStatus.tsx": {
+    "any-alias": 2
+  },
   "frontend/member-app/src/components/PaginationBar.tsx": {
-    "any-annotation": 1
+    "any-annotation": 1,
+    "any-alias": 2
   },
   "frontend/member-app/src/components/PcCheatsPanel.tsx": {
+    "any-alias": 1,
     "any-generic": 1,
     "any-annotation": 7
   },
   "frontend/member-app/src/components/RelatedMediaStrip.tsx": {
+    "any-alias": 1,
     "any-generic": 1,
     "any-annotation": 2
   },
   "frontend/member-app/src/components/ScreenshotLightbox.tsx": {
+    "any-alias": 1,
     "any-generic": 2,
     "any-annotation": 2
   },
@@ -268,46 +365,64 @@
     "any-annotation": 1
   },
   "frontend/member-app/src/components/SocialCompanionDock.tsx": {
+    "any-alias": 2,
     "any-annotation": 11,
     "any-generic": 2
   },
   "frontend/member-app/src/components/SpaceRail.tsx": {
+    "any-alias": 1,
     "any-generic": 2,
     "any-annotation": 7
   },
   "frontend/member-app/src/components/systemMotifArt.tsx": {
+    "any-alias": 3,
     "any-annotation": 7
   },
+  "frontend/member-app/src/components/TileHoverTrailer.tsx": {
+    "any-alias": 1
+  },
   "frontend/member-app/src/components/useRowScroll.ts": {
+    "any-alias": 1,
     "any-generic": 3,
     "any-annotation": 7
   },
   "frontend/member-app/src/components/VoiceLobby.tsx": {
     "any-annotation": 2,
+    "any-alias": 1,
     "any-generic": 3
   },
   "frontend/member-app/src/DiscoverApp.tsx": {
     "any-annotation": 14,
+    "any-alias": 1,
     "any-generic": 1
   },
   "frontend/member-app/src/FavoritesApp.tsx": {
+    "any-alias": 2,
     "any-generic": 2,
     "any-annotation": 7
   },
   "frontend/member-app/src/hooks/chatPanelApi.ts": {
-    "any-annotation": 8
+    "any-annotation": 8,
+    "any-alias": 1
   },
   "frontend/member-app/src/hooks/socialCompanionApi.ts": {
-    "any-annotation": 5
+    "any-annotation": 5,
+    "any-alias": 2
+  },
+  "frontend/member-app/src/hooks/useLibraryScanToasts.ts": {
+    "any-alias": 1
   },
   "frontend/member-app/src/hooks/useShelfGridNavigation.ts": {
-    "any-annotation": 9
+    "any-annotation": 9,
+    "any-alias": 1
   },
   "frontend/member-app/src/hooks/useSocialCompanion.ts": {
+    "any-alias": 2,
     "any-generic": 2,
     "any-annotation": 1
   },
   "frontend/member-app/src/LibraryApp.tsx": {
+    "any-alias": 5,
     "any-annotation": 36,
     "any-generic": 5
   },
@@ -321,10 +436,12 @@
   },
   "frontend/member-app/src/pages/BigPicturePage.tsx": {
     "any-annotation": 11,
-    "any-generic": 2
+    "any-generic": 2,
+    "any-alias": 1
   },
   "frontend/member-app/src/pages/CalendarPage.tsx": {
     "any-annotation": 22,
+    "any-alias": 5,
     "any-generic": 1
   },
   "frontend/member-app/src/pages/CollectionDetailPage.tsx": {
@@ -333,7 +450,8 @@
   },
   "frontend/member-app/src/pages/CollectionsPage.tsx": {
     "any-annotation": 6,
-    "any-generic": 2
+    "any-generic": 2,
+    "any-alias": 2
   },
   "frontend/member-app/src/pages/DiscoverHubPage.tsx": {
     "any-generic": 2,
@@ -353,10 +471,12 @@
   },
   "frontend/member-app/src/pages/GameDetailsPage.tsx": {
     "any-annotation": 23,
+    "any-alias": 2,
     "any-generic": 11
   },
   "frontend/member-app/src/pages/HelpPage.tsx": {
-    "any-annotation": 7
+    "any-annotation": 7,
+    "any-alias": 2
   },
   "frontend/member-app/src/pages/LicensedCatalogPage.tsx": {
     "any-annotation": 1
@@ -367,7 +487,8 @@
   },
   "frontend/member-app/src/pages/NewsPage.tsx": {
     "any-annotation": 16,
-    "any-generic": 5
+    "any-generic": 5,
+    "any-alias": 1
   },
   "frontend/member-app/src/pages/NotificationsPage.tsx": {
     "any-annotation": 4,
@@ -375,7 +496,8 @@
   },
   "frontend/member-app/src/pages/OwnershipPage.tsx": {
     "any-annotation": 24,
-    "any-generic": 6
+    "any-generic": 6,
+    "any-alias": 1
   },
   "frontend/member-app/src/pages/PlaytimePage.tsx": {
     "any-annotation": 2
@@ -386,10 +508,12 @@
   },
   "frontend/member-app/src/pages/SetCompletionPage.tsx": {
     "any-generic": 2,
-    "any-annotation": 4
+    "any-annotation": 4,
+    "any-alias": 1
   },
   "frontend/member-app/src/pages/SystemsPage.tsx": {
     "any-annotation": 6,
+    "any-alias": 1,
     "any-generic": 2
   },
   "frontend/member-app/src/pages/TokensPage.tsx": {
@@ -398,6 +522,7 @@
   },
   "frontend/member-app/src/pages/TrailersPage.tsx": {
     "any-annotation": 26,
+    "any-alias": 4,
     "any-generic": 7
   },
   "frontend/member-app/src/pages/UpdatesPage.tsx": {
@@ -410,16 +535,19 @@
   },
   "frontend/member-app/src/pages/WishlistPage.tsx": {
     "any-generic": 3,
+    "any-alias": 3,
     "any-annotation": 9
   },
   "frontend/member-app/src/utils/badgeDismiss.ts": {
     "any-annotation": 8
   },
   "frontend/member-app/src/utils/badgeSignals.ts": {
-    "any-annotation": 10
+    "any-annotation": 10,
+    "any-alias": 4
   },
   "frontend/member-app/src/utils/batchOutcome.ts": {
-    "any-annotation": 4
+    "any-annotation": 4,
+    "any-alias": 1
   },
   "frontend/member-app/src/utils/catalogGridGroups.ts": {
     "any-annotation": 1
@@ -434,13 +562,15 @@
     "any-annotation": 1
   },
   "frontend/member-app/src/utils/detailsMedia.ts": {
-    "any-annotation": 20
+    "any-annotation": 20,
+    "any-alias": 1
   },
   "frontend/member-app/src/utils/detailsTaxonomy.ts": {
     "any-annotation": 4
   },
   "frontend/member-app/src/utils/formatLocaleDate.ts": {
-    "any-annotation": 1
+    "any-annotation": 1,
+    "any-alias": 1
   },
   "frontend/member-app/src/utils/itemKind.ts": {
     "any-annotation": 2
@@ -464,6 +594,7 @@
     "any-annotation": 8
   },
   "frontend/member-app/src/utils/toast.ts": {
-    "any-annotation": 8
+    "any-annotation": 8,
+    "any-alias": 2
   }
 }
