@@ -71,8 +71,12 @@ export function createDiscoverApi(request: Requester) {
      * Update pins and/or hidden rows (`PUT /api/discover/pins`). Each field is
      * optional — send only the half that changed.
      */
-    setPins(body: { pins?: string[]; hidden?: string[] }): Promise<DiscoverPins> {
+    setPins(
+      body: { pins?: string[]; hidden?: string[] },
+      signal?: AbortSignal,
+    ): Promise<DiscoverPins> {
       return request<DiscoverPins>('/api/discover/pins', {
+        signal,
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
