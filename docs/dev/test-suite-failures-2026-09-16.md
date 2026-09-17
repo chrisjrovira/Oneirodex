@@ -70,6 +70,15 @@ and form flow.
 
 - `test_scan_job_timing.py::TestScanJobsStatusTimingAndFilters::test_queued_eta_null`
 
+## On the runner (2026-09-17)
+
+CI's `pytest-core` now runs the marker set and carries these as an explicit `--deselect`
+list. 31 of the above reproduce there; the rest are integration-marked or fail only here.
+Three fail **only** on the runner and are deselected with that reason: `test_admin_spa_assets::test_admin_spa_dist_built`
+(the pytest job does not build the SPA), `test_library_roots::…::test_windows_drive_letter_is_not_mistaken_for_a_label`
+(Linux path semantics), `test_theme_fonts::TestCatalogue::test_reports_installed_honestly` (no fonts on the runner).
+Fixing a test here means also deleting its line from the workflow.
+
 ## How to work this list
 
 Each cluster is one sitting, and each needs the same judgement call the 2026-08-07 pass
