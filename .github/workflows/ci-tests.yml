@@ -87,7 +87,7 @@ jobs:
         run: >
           python -m pytest tests/ -q -m "not integration"
           --cov=oneirodex --cov-report=term-missing
-          --cov-fail-under=35
+          --cov-fail-under=65
           --deselect tests/test_admin_spa_assets.py::test_admin_spa_dist_built
           --deselect tests/test_checkout_paths.py::test_operator_docs_checkout_is_oneirodex
           --deselect tests/test_collections_api_wiring.py::test_newsletter_ckeditor_targets_content_field
