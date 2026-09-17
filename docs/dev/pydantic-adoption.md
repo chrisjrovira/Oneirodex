@@ -375,9 +375,22 @@ rest-of-package file.
 
 Highest-count files still to do, roughly in priority order:
 
-- `routes_apis/scan.py` (11) — most are partial-success; use
-  `@validate_batch_body` (now landed) with `extra_on_error` for `cap` /
-  `requested` / per-id `results`.
+- `routes_apis/scan.py` (11) — **read on 2026-09-17, and not the batch
+  candidates this line used to claim.** Every one of the eleven is one of the
+  shapes the flat helper cannot express without lying: dual-input
+  (`start_library_scan` / `refresh_all_libraries` take `library_uuid`,
+  `force_parallel`, `queue_policy` from JSON **or** form **or** query, in that
+  order); all-optional bags (`backfill_suggested_kind` — `dry_run`, `limit`;
+  `bad_match` — `reason` may legitimately be absent to *clear*); or the
+  unmatched batch family, which goes through `_parse_batch_ids` accepting
+  `ids` **or** `items:[{id}]`, layers per-route alias keys on top
+  (`item_kind`/`content_kind`/`kind`; `search_name`/`display_name`/`name`), and
+  reports per-id `results`, not `updated`/`skipped`/`errors`. The theme JS
+  (`admin_manage_scanjobs.js`) displays those routes' 400 `error` strings
+  verbatim, so a 422 here is a visible contract change for no presence/type
+  guard the view does not already have. **Leave this file at 11.** If a
+  bespoke validator for the `ids|items` shape ever lands, revisit the batch
+  five; the other six stay as they are.
 - `routes_apis/game.py` (6 remaining) — the other batch routes above;
   `move_game_to_library` needs the bespoke-message validator.
 - `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
