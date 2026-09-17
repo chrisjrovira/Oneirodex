@@ -42,6 +42,7 @@ from oneirodex.models import (
 )
 from oneirodex.utils.discovery_shelves import resolve_custom_shelf_games
 from oneirodex.utils.library_acl import apply_game_access_filters
+from oneirodex.utils.free_games import steam_image_fallback_url
 from oneirodex.utils.storefront import build_storefront_shelf
 
 #: Tiles shipped with the feed. The rest of a row arrives when it is scrolled —
@@ -461,6 +462,7 @@ def _news_items(user, limit):
             'title': row.title,
             'summary': row.description or '',
             'image_url': row.image_url,
+            'image_fallback_url': steam_image_fallback_url(row.image_url),
             'href': '/news#free-games',
             'store': row.store,
             'published_at': row.last_seen_at.isoformat() if row.last_seen_at else None,

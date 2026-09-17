@@ -79,10 +79,32 @@ def _epic_cover_image_url(images: Any) -> str | None:
 
 
 def _steam_portrait_capsule_url(appid: str) -> str:
-    """Steam's 600×900 library capsule — the 2×3 shape Discover tiles use."""
+    """Steam's 600×900 library capsule — the 2×3 shape Discover tiles use.
+
+    Not every app has one: the tall capsule is an optional upload, so older and
+    free titles often 404 here while ``header.jpg`` always exists. The tile
+    falls back through :func:`steam_image_fallback_url` on load error.
+    """
     return (
         f'https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/library_600x900.jpg'
     )
+
+
+_STEAM_CAPSULE_SUFFIX = '/library_600x900.jpg'
+
+
+def steam_image_fallback_url(image_url: str | None) -> str | None:
+    """The wide ``header.jpg`` for a Steam 2×3 capsule URL, else None.
+
+    Human, 2026-09-06: "news row again has missing 2x3 image (they do have
+    image in other ratios)". The 600×900 capsule is the only shape the poller
+    stored, and when Steam has no such upload the tile showed nothing although
+    the store has a header. The card swaps to this on ``onError``; the
+    letterbox rule already handles a wide image in a tall frame.
+    """
+    if not image_url or not image_url.endswith(_STEAM_CAPSULE_SUFFIX):
+        return None
+    return image_url[: -len(_STEAM_CAPSULE_SUFFIX)] + '/header.jpg'
 
 
 def _now() -> datetime:

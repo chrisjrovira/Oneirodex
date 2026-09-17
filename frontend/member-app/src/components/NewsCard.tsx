@@ -56,6 +56,10 @@ export function NewsCard({ item }: LooseProps) {
   const badge = badgeFor(item)
   const when = whenLabel(item.published_at)
   const [fit, setFit] = useState('cover')
+  // The art actually shown. Starts on the 2:3 candidate; a load error swaps
+  // once to `image_fallback_url` (Steam's always-present header.jpg) rather
+  // than leaving an empty frame for a title the store does have art for.
+  const [artSrc, setArtSrc] = useState<string | null>(item.image_url || null)
   const href = item.href || '/news'
   const external = /^https?:\/\//i.test(href)
 
@@ -67,14 +71,19 @@ export function NewsCard({ item }: LooseProps) {
     setFit(w / h > LETTERBOX_RATIO ? 'letterbox' : 'cover')
   }, [])
 
+  const onArtError = useCallback(() => {
+    const fallback = item.image_fallback_url
+    setArtSrc((current) => (fallback && current !== fallback ? fallback : null))
+  }, [item.image_fallback_url])
+
   const body = (
     <span className="od-news-card__art-wrap">
-      {item.image_url ? (
+      {artSrc ? (
         <>
           {fit === 'letterbox' ? (
             <img
               className="od-news-card__art-fill"
-              src={item.image_url}
+              src={artSrc}
               alt=""
               aria-hidden="true"
               loading="lazy"
@@ -83,10 +92,11 @@ export function NewsCard({ item }: LooseProps) {
           <img
             className="od-news-card__art"
             data-fit={fit}
-            src={item.image_url}
+            src={artSrc}
             alt=""
             loading="lazy"
             onLoad={onArtLoad}
+            onError={onArtError}
           />
         </>
       ) : (

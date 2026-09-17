@@ -299,3 +299,83 @@ describe('useRowScroll arrow hover', () => {
     expect(track.scrollLeft).toBe(10)
   })
 })
+
+describe('useRowScroll grab-to-scroll', () => {
+  let track
+  let viewport
+
+  function pointer(type, init) {
+    // jsdom has no PointerEvent constructor; a MouseEvent with the pointer
+    // fields assigned is what the hook reads.
+    // button / clientX are MouseEvent getters and go through the constructor;
+    // the pointer-only fields are plain properties the hook reads.
+    const { pointerId = 1, pointerType = 'mouse', ...mouse } = init
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, ...mouse })
+    Object.defineProperty(event, 'pointerId', { value: pointerId })
+    Object.defineProperty(event, 'pointerType', { value: pointerType })
+    return event
+  }
+
+  beforeEach(() => {
+    track = document.createElement('div')
+    viewport = document.createElement('div')
+    Object.defineProperty(track, 'clientWidth', { configurable: true, value: 400 })
+    Object.defineProperty(track, 'scrollWidth', { configurable: true, value: 1200 })
+    track.scrollLeft = 0
+    track.setPointerCapture = vi.fn()
+    track.releasePointerCapture = vi.fn()
+    viewport.append(track)
+    document.body.append(viewport)
+    renderHook(() => {
+      const scroll = useRowScroll({ bindKey: 1 })
+      scroll.ref.current = track
+      scroll.viewportRef.current = viewport
+      return scroll
+    })
+  })
+
+  afterEach(() => {
+    viewport.remove()
+  })
+
+  test('a mouse drag from the first tile pans the track and swallows the click', () => {
+    const tile = document.createElement('div')
+    track.append(tile)
+    const opened = vi.fn()
+    tile.addEventListener('click', opened)
+
+    tile.dispatchEvent(pointer('pointerdown', { button: 0, clientX: 300 }))
+    tile.dispatchEvent(pointer('pointermove', { clientX: 100 }))
+    expect(track.scrollLeft).toBe(200)
+    expect(track.dataset.dragging).toBe('true')
+
+    tile.dispatchEvent(pointer('pointerup', { clientX: 100 }))
+    expect(track.dataset.dragging).toBeUndefined()
+
+    tile.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    expect(opened).not.toHaveBeenCalled()
+  })
+
+  test('a press that does not move is still a click', () => {
+    const tile = document.createElement('div')
+    track.append(tile)
+    const opened = vi.fn()
+    tile.addEventListener('click', opened)
+
+    tile.dispatchEvent(pointer('pointerdown', { button: 0, clientX: 300 }))
+    tile.dispatchEvent(pointer('pointermove', { clientX: 302 }))
+    tile.dispatchEvent(pointer('pointerup', { clientX: 302 }))
+    expect(track.scrollLeft).toBe(0)
+
+    tile.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    expect(opened).toHaveBeenCalledTimes(1)
+  })
+
+  test('a press on a control inside the track does not start a drag', () => {
+    const button = document.createElement('button')
+    track.append(button)
+    button.dispatchEvent(pointer('pointerdown', { button: 0, clientX: 300 }))
+    button.dispatchEvent(pointer('pointermove', { clientX: 100 }))
+    expect(track.scrollLeft).toBe(0)
+  })
+})

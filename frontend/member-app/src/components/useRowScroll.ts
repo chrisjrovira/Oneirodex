@@ -238,6 +238,89 @@ export function useRowScroll({ step = 0.55, edgeSpeed = 2.5, bindKey = 0 }: Loos
     }
   }, [onWheel, bindKey])
 
+  // Grab-to-scroll with a mouse. Arrows page half a screen and the wheel pans
+  // a notch at a time, so reaching the far end of a long row from its first
+  // tile was a lot of input (human, 2026-09-06: "all rows should be scrollable
+  // left/right even the first tile so you get to the end tile quicker"). A
+  // press anywhere on the track — first tile included — drags the row; the
+  // click that would have opened the tile is swallowed only if the pointer
+  // actually moved. Touch already scrolls natively and is left alone.
+  useLayoutEffect(() => {
+    const track = ref.current
+    if (!track) return undefined
+    const DRAG_THRESHOLD_PX = 6
+    let pointerId: number | null = null
+    let startX = 0
+    let startScroll = 0
+    let dragged = false
+
+    const swallowClick = (event: Event) => {
+      event.stopPropagation()
+      event.preventDefault()
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return
+      // Controls on the track (Pin / Hide / See all, the play button) keep
+      // their own press; only art and empty track start a drag.
+      const target = event.target as HTMLElement | null
+      if (target && target.closest('button, a[href], input, select, textarea')) return
+      pointerId = event.pointerId
+      startX = event.clientX
+      startScroll = track.scrollLeft
+      dragged = false
+    }
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (pointerId === null || event.pointerId !== pointerId) return
+      const dx = event.clientX - startX
+      if (!dragged) {
+        if (Math.abs(dx) < DRAG_THRESHOLD_PX) return
+        dragged = true
+        try {
+          track.setPointerCapture(pointerId)
+        } catch {
+          /* capture is a nicety; the listeners are on the track anyway */
+        }
+        track.dataset.dragging = 'true'
+        // One-shot: the click after a drag is not a tile activation.
+        track.addEventListener('click', swallowClick, { capture: true, once: true })
+      }
+      track.scrollLeft = startScroll - dx
+      measure()
+      event.preventDefault()
+    }
+
+    const onPointerEnd = (event: PointerEvent) => {
+      if (pointerId === null || event.pointerId !== pointerId) return
+      if (dragged) {
+        try {
+          track.releasePointerCapture(pointerId)
+        } catch {
+          /* already released */
+        }
+        delete track.dataset.dragging
+      } else {
+        // Never moved: make sure a stale swallow listener cannot linger.
+        track.removeEventListener('click', swallowClick, { capture: true })
+      }
+      pointerId = null
+      dragged = false
+    }
+
+    track.addEventListener('pointerdown', onPointerDown)
+    track.addEventListener('pointermove', onPointerMove)
+    track.addEventListener('pointerup', onPointerEnd)
+    track.addEventListener('pointercancel', onPointerEnd)
+    return () => {
+      track.removeEventListener('pointerdown', onPointerDown)
+      track.removeEventListener('pointermove', onPointerMove)
+      track.removeEventListener('pointerup', onPointerEnd)
+      track.removeEventListener('pointercancel', onPointerEnd)
+      track.removeEventListener('click', swallowClick, { capture: true })
+    }
+  }, [measure, bindKey])
+
   return {
     ref,
     viewportRef,

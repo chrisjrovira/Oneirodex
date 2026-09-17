@@ -47,6 +47,21 @@
   --od-shelf-scrollbar-gap: calc(0.45rem + 4px);
 }
 
+/* Article rows (News, Deep discounts, Upcoming) overlay badge, date and title
+   on the art -- there is no caption strip under the card. With titles on,
+   the row's item box still reserved `--od-tile-title-h` for one, so the card
+   ended a strip above the box's floor and the scroll bar, parked relative to
+   that floor, sat a strip too low under every News tile (human, 2026-09-06:
+   "news row scroll bar is too low and should match all other rows spacing").
+   Zero the strip for article rows so their box is the bare 3:4 card and the
+   bar lands at the same gap as under a game cover. The +4px titles-on gap
+   stays: it is about the bar reading as an underline, which a badge-over-art
+   card avoids anyway, and one lane height across rows is the point. */
+.od-shelf[data-item-kind='articles'] {
+  --od-tile-title-h: 0px;
+  --od-shelf-scrollbar-gap: 0.45rem;
+}
+
 /* Head chrome shares the tile gutter so the accent mark lines up with the
    first cover. Pin / hide / see-all stay centred on the heading block. */
 .od-shelf__head {
@@ -306,6 +321,12 @@
   cursor: pointer;
   touch-action: none;
   pointer-events: auto;
+}
+
+/* Grab-to-scroll (useRowScroll): the track shows it is being dragged. */
+.od-shelf__track[data-dragging='true'] {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .od-shelf__hbar[data-idle='true'] {

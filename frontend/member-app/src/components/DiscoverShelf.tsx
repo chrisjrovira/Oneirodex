@@ -263,6 +263,7 @@ export function DiscoverShelf({
     <section
       data-discover-section={identifier}
       data-layout={layout}
+      data-item-kind={itemKind}
       className={`od-shelf od-shelf--${layout}`}
     >
       <div className="od-shelf__head">
