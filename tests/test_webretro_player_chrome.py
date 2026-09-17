@@ -89,7 +89,7 @@ def test_leave_play_never_uses_history_back():
     assert "window.location.assign('/library')" in html
     assert 'onbeforeunload = null' in html
     assert 'od-allow-leave' in html
-    assert 'leave-guard-1' in html
+    assert '&_gt=' in html  # cache key travels with the iframe URL; its value is checked below
 
 
 def test_embedded_webretro_skips_beforeunload_trap():
@@ -100,7 +100,7 @@ def test_embedded_webretro_skips_beforeunload_trap():
     bridge = (WEBRETRO / 'od-bridge.js').read_text(encoding='utf-8')
     assert "type === 'od-allow-leave'" in bridge
     standalone = (WEBRETRO / 'standalone.html').read_text(encoding='utf-8')
-    assert 'base.js?v=leave-guard-1' in standalone
+    assert 'base.js?v=' in standalone
 
 
 def test_overlay_shell_stays_click_through():
@@ -112,3 +112,22 @@ def test_overlay_shell_stays_click_through():
     touch = css.split('@media (hover: none)')[1].split('@media')[0]
     assert 'pointer-events: none' in touch
     assert 'pointer-events: auto' not in touch
+
+
+def test_play_asset_cache_key_is_one_value_everywhere():
+    """base.js and od-bridge.js share one ?v= key, and webretro.html passes the same one.
+
+    The key is the only cache control these files have (max-age=3600, no
+    validator). It sat at `leave-guard-1` through two refresh-clock fixes, so a
+    browser that had the old file kept it. Pinning the literal here would
+    recreate that trap; pinning *consistency* means a bump cannot be partial.
+    """
+    import re
+
+    standalone = (WEBRETRO / 'standalone.html').read_text(encoding='utf-8')
+    shell = (WEBRETRO / 'webretro.html').read_text(encoding='utf-8')
+    keys = set(re.findall(r"(?:base\.js|od-bridge\.js)\?v=([\w.-]+)", standalone))
+    assert len(keys) == 1, f'base.js and od-bridge.js disagree on the cache key: {keys}'
+    (key,) = keys
+    assert key != 'leave-guard-1', 'the key was never bumped past the leave-guard fix'
+    assert f"_gt={key}" in shell, 'webretro.html passes a different key to the iframe than standalone loads'
