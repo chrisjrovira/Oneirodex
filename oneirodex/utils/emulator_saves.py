@@ -17,6 +17,59 @@ from oneirodex.utils.save_crypto import maybe_decrypt, maybe_encrypt
 MAX_SAVE_BYTES = 2 * 1024 * 1024  # 2 MiB
 MAX_SLOTS_PER_GAME = 10
 
+# Slot vocabulary the WebRetro shell writes. `auto` is the state taken when
+# the member leaves the room (Back / Power / tab hidden); `cloud-state` is the
+# explicit "Sync now"; `qs-<name>` are the member's named quick saves; and
+# `cloud-sram` is battery SRAM, which is a save *file* and never a state.
+AUTO_STATE_SLOT = 'auto'
+CLOUD_STATE_SLOT = 'cloud-state'
+CLOUD_SRAM_SLOT = 'cloud-sram'
+QUICK_SAVE_PREFIX = 'qs-'
+# The legacy Wave 7 placeholder slot name, still readable.
+LEGACY_STATE_SLOTS = ('cloud1',)
+
+
+def is_state_slot(row: EmulatorSave) -> bool:
+    """A slot that holds a libretro state (resumable), not SRAM."""
+    slot = str(row.slot_name or '')
+    if slot == CLOUD_SRAM_SLOT:
+        return False
+    if slot in (AUTO_STATE_SLOT, CLOUD_STATE_SLOT) or slot in LEGACY_STATE_SLOTS:
+        return True
+    if slot.startswith(QUICK_SAVE_PREFIX):
+        return True
+    return str(row.filename or '').lower().endswith('.state')
+
+
+def resume_summary(row: EmulatorSave) -> dict:
+    """The part of a state row a tile needs to say "Resume"."""
+    return {
+        'slot_name': row.slot_name,
+        'updated_at': row.updated_at.isoformat() if row.updated_at else None,
+    }
+
+
+def latest_state_by_game(user_id: int, game_uuids) -> dict[str, dict]:
+    """Newest resumable state per game for one member, one query.
+
+    Used by the browse payload so a tile can read "Resume" instead of "Play"
+    without a request per tile. Games with only SRAM (or nothing) are absent.
+    """
+    uuids = [str(u) for u in (game_uuids or []) if u]
+    if not user_id or not uuids:
+        return {}
+    rows = db.session.execute(
+        select(EmulatorSave)
+        .where(EmulatorSave.user_id == user_id, EmulatorSave.game_uuid.in_(uuids))
+        .order_by(EmulatorSave.updated_at.desc()),
+    ).scalars().all()
+    latest: dict[str, dict] = {}
+    for row in rows:
+        if row.game_uuid in latest or not is_state_slot(row):
+            continue
+        latest[row.game_uuid] = resume_summary(row)
+    return latest
+
 
 def save_sync_enabled() -> bool:
     settings = db.session.execute(
@@ -41,7 +94,7 @@ def list_saves(user_id: int, game_uuid: str) -> list[EmulatorSave]:
         db.session.execute(
             select(EmulatorSave)
             .filter_by(user_id=user_id, game_uuid=game_uuid)
-            .order_by(EmulatorSave.slot_name.asc()),
+            .order_by(EmulatorSave.updated_at.desc(), EmulatorSave.slot_name.asc()),
         ).scalars().all(),
     )
 

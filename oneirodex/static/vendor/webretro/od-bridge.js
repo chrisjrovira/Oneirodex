@@ -399,6 +399,9 @@
         var sramBytes = u8FromB64(data.sramB64);
         var imported = [];
         var autoLoaded = false;
+        // The shell asks "Resume?" before loading a state it pulled on boot,
+        // so it imports with autoLoad:false and sends od-load-state on Yes.
+        var autoLoad = data.autoLoad !== false;
         if (stateBytes) {
           if (typeof setIdbItem === 'function') {
             setIdbItem('RetroArch_states_' + romName, stateBytes);
@@ -407,7 +410,7 @@
             try {
               FS.writeFile('/home/web_user/retroarch/userdata/states/rom.state', stateBytes);
               imported.push('state');
-              autoLoaded = tryLoadState();
+              autoLoaded = autoLoad ? tryLoadState() : false;
             } catch (e3) {
               imported.push('state-idb');
             }
@@ -425,7 +428,7 @@
           ok: true,
           imported: imported,
           autoLoaded: autoLoaded,
-          hint: autoLoaded
+          hint: autoLoaded || !autoLoad
             ? null
             : imported.indexOf('state') >= 0
               ? 'Press Load State in RetroArch menu if play did not resume'

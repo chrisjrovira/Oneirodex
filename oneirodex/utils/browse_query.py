@@ -80,6 +80,8 @@ class BrowseQueryResult:
     client_connected: bool = False
     favorite_uuids: set = field(default_factory=set)
     covers_by_uuid: dict = field(default_factory=dict)
+    # game uuid -> {slot_name, updated_at} of this member's newest state.
+    resume_by_uuid: dict = field(default_factory=dict)
 
     @classmethod
     def empty(cls, page: int) -> "BrowseQueryResult":
@@ -322,6 +324,9 @@ def run_browse_query(args, user) -> BrowseQueryResult:
         )
         result.covers_by_uuid = {row.game_uuid: row for row in cover_rows}
         if current_user_id:
+            from oneirodex.utils.emulator_saves import latest_state_by_game
+
+            result.resume_by_uuid = latest_state_by_game(current_user_id, game_uuids)
             result.favorite_uuids = {
                 row[0]
                 for row in db.session.execute(
