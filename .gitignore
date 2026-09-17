@@ -175,6 +175,8 @@ oneirodex/static/library/generated/
 #
 # Fetched on first boot (FETCH_WEBRETRO_CORES_ON_BOOT), or by hand with
 # scripts/fetch-webretro-cores.sh --defaults. The README stays tracked.
+# EmulatorJS release lives in a bind (EMULATORJS_HOST_PATH), never in git.
+oneirodex/static/vendor/emulatorjs/data/
 oneirodex/static/vendor/webretro/cores/*_libretro.js
 oneirodex/static/vendor/webretro/cores/*_libretro.wasm
 

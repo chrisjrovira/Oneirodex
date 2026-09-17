@@ -35,7 +35,7 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('debrid.premiumize', 'Premiumize', 'debrid', 'Optional third debrid'),
     PluginInfo('debrid.torbox', 'TorBox', 'debrid', 'Optional modern debrid API'),
     PluginInfo('emu.webretro', 'WebRetro', 'emulator', 'Browser WASM cores + cloud save bridge'),
-    PluginInfo('emu.emulatorjs', 'EmulatorJS', 'emulator', 'Eval candidate — alternate WASM path'),
+    PluginInfo('emu.emulatorjs', 'EmulatorJS', 'emulator', 'Browser engine B — own shell + cores, operator-fetched (BP-2)'),
     PluginInfo('emu.retroarch', 'RetroArch', 'emulator', 'Native companion profiles'),
     PluginInfo('export.esde', 'ES-DE export', 'export', 'gamelist.xml packs'),
     PluginInfo('export.pegasus', 'Pegasus export', 'export', 'metadata.pegasus.txt'),
@@ -116,7 +116,12 @@ def _runtime_status_map() -> dict[str, str]:
             status['remote_play.moonlight'] = 'disabled'
     except Exception:
         status['remote_play.moonlight'] = 'available'
-    status['emu.emulatorjs'] = 'eval'
+    try:
+        from oneirodex.utils.emulatorjs import emulatorjs_installed
+
+        status['emu.emulatorjs'] = 'installed' if emulatorjs_installed() else 'available'
+    except Exception:
+        status['emu.emulatorjs'] = 'available'
     return status
 
 
