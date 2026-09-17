@@ -532,6 +532,33 @@ def _store_deals(user, limit):
     return list_deep_discount_articles(user, limit=limit)
 
 
+def _upcoming(user, limit):
+    """What is coming that the household does not hold (plus wishlisted titles).
+
+    Was the generic storefront selector, which listed *library* games with a
+    future date -- titles the household already has, which is not what
+    "upcoming" means to a person (human, 2026-09-06). Article tiles so the
+    IGDB half (no cover, not in the library) can sit beside wishlisted library
+    titles, each with its release date as the badge date.
+    """
+    from oneirodex.utils.storefront import build_upcoming_articles
+
+    return build_upcoming_articles(user, limit=limit)
+
+
+register(
+    RowSpec(
+        'upcoming',
+        item_kind='articles',
+        family='editorial',
+        priority=0.7,
+        reason='Releasing soon on systems you hold, or on your wishlist',
+        min_fill=1,
+    ),
+    _upcoming,
+)
+
+
 register(
     RowSpec(
         'store_deals',

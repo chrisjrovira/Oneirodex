@@ -33,6 +33,11 @@ function badgeFor(item: any) {
   if (item.kind === 'free_game') {
     return STORE_LABELS[item.store] || 'Free'
   }
+  if (item.kind === 'upcoming') {
+    // The date itself is the badge — `whenLabel(published_at)` already renders
+    // it beside this; the word says why the tile has no Play.
+    return item.platform ? `Coming · ${item.platform}` : 'Coming'
+  }
   return 'News'
 }
 
