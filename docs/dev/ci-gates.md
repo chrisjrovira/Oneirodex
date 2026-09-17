@@ -12,7 +12,7 @@ What remains is this: the gates as they stand, and the two that are still owed.
 | `pytest-core` | A **hand-enumerated list of ~113 test files** + `--cov=oneirodex --cov-fail-under=35`, then three ratchets: `api_envelope_lint`, `print_lint`, `get_json_lint` |
 | `alembic-check` | Fresh Postgres → `alembic upgrade head` → `alembic check`. Fails hard on any model/migration drift |
 | `lint` | Repo-root `npm ci`, then `npm run lint` **and** `npm run format:check` (Prettier has failed a PR on its own — do not skip it) |
-| `member-app-vitest` · `admin-app-vitest` · `ops-glance-vitest` | Per-SPA vitest + `npm run typecheck`. `ops-glance` also builds. `admin-app-vitest` carries `css-token-lint` |
+| `member-app-vitest` · `admin-app-vitest` · `ops-glance-vitest` | Per-SPA vitest + `npm run typecheck`. `ops-glance` also builds. `admin-app-vitest` carries `css-token-lint` and `any_lint` |
 | `api-client-vitest` · `shared-vitest` | Workspace package tests + typecheck |
 
 `desktop-build.yml` adds `rust-checks` (fmt + clippy + test) and a 6-way

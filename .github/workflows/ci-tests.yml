@@ -373,6 +373,13 @@ jobs:
         working-directory: .
         run: node scripts/css-token-lint.mjs
 
+      # Explicit-`any` ratchet. strict:true is only as real as this count; the
+      # member-app conversion left 1,041 sites and turned no-explicit-any off.
+      # Per-file baseline in scripts/any_lint.baseline.json; only moves down.
+      - name: Run explicit-any ratchet
+        working-directory: .
+        run: node scripts/any_lint.mjs
+
   ops-glance-vitest:
     name: Ops-glance vitest
     # ops-glance ships in the Docker image (oneirodex/static/dist/ops-glance) but
