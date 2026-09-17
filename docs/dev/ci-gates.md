@@ -9,7 +9,7 @@ What remains is this: the gates as they stand, and the two that are still owed.
 
 | Job | What it gates |
 |---|---|
-| `pytest-core` | **`tests/ -m "not integration"` minus a named `--deselect` list** (flipped 2026-09-17) + `--cov=oneirodex --cov-fail-under=35`, then three ratchets: `api_envelope_lint`, `print_lint`, `get_json_lint`. A new test file is gated by default |
+| `pytest-core` | **`tests/ -m "not integration"` minus a named `--deselect` list** (flipped 2026-09-17) + `--cov=oneirodex --cov-fail-under=65`, then three ratchets: `api_envelope_lint`, `print_lint`, `get_json_lint`. A new test file is gated by default |
 | `alembic-check` | Fresh Postgres → `alembic upgrade head` → `alembic check`. Fails hard on any model/migration drift |
 | `lint` | Repo-root `npm ci`, then `npm run lint` **and** `npm run format:check` (Prettier has failed a PR on its own — do not skip it) |
 | `member-app-vitest` · `admin-app-vitest` · `ops-glance-vitest` | Per-SPA vitest + `npm run typecheck`. `ops-glance` also builds. `admin-app-vitest` carries `css-token-lint` and `any_lint` |
@@ -47,11 +47,11 @@ marker set on a runner (empty Postgres, no SMB) against the 20-minute budget,
 and tag more modules from that timing data if it does not fit. Flip only when
 the measured number is known — not on the assumption that CI is faster. **The `pytest-marker-timing` job now produces that number on every PR.**
 
-### 2. `--cov-fail-under` sits below the real number
+### 2. ~~`--cov-fail-under` sits below the real number~~ — retuned 2026-09-17
 
-Set to **35** against a measured **38%**, a deliberate 3-point slack for
-environment variance. Raise it as coverage climbs; revisit whenever the hand
-list changes (or disappears, per item 1).
+The marker set reports **68%** line coverage (PR #121's run) against the hand
+list's 38%. Floor set to **65** — the same 3-point slack for environment
+variance. Raise it as coverage climbs; it only ever moves up.
 
 ## Conventions that outlived the wishlist
 
