@@ -16,6 +16,7 @@
  *   `: any` — a parameter, property, or variable annotation
  *   `<any>` — a generic argument (`useState<any>`, `request<any>`)
  *   `as any` — a cast
+ *   `LooseProps` — member-app's `Record<string, any>` alias (src/loose.d.ts)
  *
  * Deliberately *not* counted: `unknown` (that is the fix), and `any` inside
  * comments or string literals on lines that carry no code use. The regex is
@@ -46,12 +47,18 @@ const RULES = {
   'any-annotation': /:\s*any\b/g, // `: any` — the \b stops `: anything`
   'any-generic': /<\s*any\s*>/g,
   'any-cast': /\bas\s+any\b/g,
+  // `LooseProps` is member-app's global alias for `Record<string, any>`
+  // (src/loose.d.ts) — an `any` by another name, and 224 sites of it were
+  // invisible to the three rules above. Counted so the alias cannot become
+  // the place `any` goes to hide.
+  'any-alias': /\bLooseProps\b/g,
 }
 
 function isSource(entry) {
   if (!(entry.endsWith('.ts') || entry.endsWith('.tsx'))) return false
   if (entry.endsWith('.d.ts')) return false
   if (entry.includes('.test.') || entry.includes('.spec.')) return false
+  if (entry === 'loose.d.ts') return false // the alias's own declaration
   return true
 }
 
@@ -82,7 +89,7 @@ export function lintSource(source) {
   const lines = source.split('\n')
   for (let i = 0; i < lines.length; i++) {
     const code = stripComments(lines[i])
-    if (!code.includes('any')) continue
+    if (!code.includes('any') && !code.includes('LooseProps')) continue
     for (const [rule, re] of Object.entries(RULES)) {
       re.lastIndex = 0
       const hits = code.match(re)
