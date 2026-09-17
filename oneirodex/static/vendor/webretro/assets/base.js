@@ -58,7 +58,15 @@ var nulKeys = 'input_ai_service = "nul"\ninput_ai_service_axis = "nul"\ninput_ai
 // over nulKeys. extraConfigExtras still comes last (audio, picture, heavy-core
 // rewind off). Do not enable runahead — single-thread WASM cannot afford it,
 // and we do not vendor shader presets.
-var extraConfigBase = 'rgui_show_start_screen = "false"\nnotification_show_remap_load = "false"\nmenu_mouse_enable = "true"\nmenu_pointer_enable = "true"\naudio_latency = "96"\naudio_sync = "true"\naudio_rate_control = "true"\naudio_rate_control_delta = "0.005"\naudio_max_timing_skew = "0.15"\nvideo_vsync = "true"\nrewind_enable = "true"\nrewind_buffer_size = "10"\nrewind_granularity = "2"\nfastforward_ratio = "3.000000"\ninput_rewind = "rshift"\ninput_hold_fast_forward = "tab"\ninput_toggle_fast_forward = "f5"\nvideo_smooth = "false"\n';
+// audio_latency 128 (was 96, 2026-09-17). The core and its audio scheduling
+// share the browser main thread, so any long frame starves the buffer queue:
+// that is heard as crackle, and rate control then chases the gap, which is
+// heard as speed drift — the exact pair reported on every core and both
+// output devices. 96ms left ~2 buffers at 48kHz; 128 leaves headroom for one
+// missed frame. The rwebaudio driver opens the AudioContext at the device's
+// own rate and RetroArch resamples to it, so a 44.1/48 mismatch is not the
+// cause — the device rate is logged at boot below so nobody has to guess.
+var extraConfigBase = 'rgui_show_start_screen = "false"\nnotification_show_remap_load = "false"\nmenu_mouse_enable = "true"\nmenu_pointer_enable = "true"\naudio_latency = "128"\naudio_sync = "true"\naudio_rate_control = "true"\naudio_rate_control_delta = "0.005"\naudio_max_timing_skew = "0.15"\nvideo_vsync = "true"\nrewind_enable = "true"\nrewind_buffer_size = "10"\nrewind_granularity = "2"\nfastforward_ratio = "3.000000"\ninput_rewind = "rshift"\ninput_hold_fast_forward = "tab"\ninput_toggle_fast_forward = "f5"\nvideo_smooth = "false"\n';
 
 /** Measured display refresh in Hz; null until sampled. */
 var measuredRefreshHz = null;
@@ -155,17 +163,67 @@ function buildExtraConfig() {
 	return extraConfigBase + refresh + extraConfigExtras;
 }
 
-measureRefreshHz(function (hz) {
-	measuredRefreshHz = hz;
-	log("Display refresh measured: " + hz.toFixed(2) + "Hz");
-	// Re-apply if the core already booted, so a late measurement corrects the
-	// clock instead of waiting for a reload.
+/**
+ * Stamp a measured value where a human can read it without devtools: the
+ * in-page console, the browser console, and a data attribute on <html> the
+ * outer play shell (or a QA page) can query.
+ */
+function odLog(text) {
+	// log() below writes to wconsole, which does not exist until much later in
+	// this file. These clock lines can fire at script load, so they must not
+	// depend on it -- a throw here would abort the rest of base.js.
+	console.log(text);
 	try {
-		if (typeof mainCompleted !== "undefined" && mainCompleted) tryApplyConfig();
-	} catch (e) {
-		// Pre-boot — the next config write picks it up.
+		if (typeof wconsole !== "undefined" && wconsole) wconsole.textContent += text + "\n";
+	} catch (e) { /* console pane not ready; the browser console has it */ }
+}
+
+function recordClock(name, attr, value, unit) {
+	try { document.documentElement.setAttribute(attr, String(value)); } catch (e) { /* no DOM */ }
+	odLog(name + ": " + value + unit);
+}
+
+/**
+ * requestAnimationFrame does not tick in a hidden document, so a player that
+ * boots in a background tab (or a pane behind another window) would sample
+ * nothing, write no video_refresh_rate, and log nothing -- indistinguishable
+ * from the fix not being deployed. Say so, and sample when the tab is shown.
+ * Reported 2026-09-17 as "the line is missing entirely".
+ */
+function sampleRefreshWhenVisible() {
+	if (document.visibilityState === "hidden") {
+		odLog("Display refresh: waiting for a visible tab before sampling");
+		document.addEventListener("visibilitychange", function onShow() {
+			if (document.visibilityState !== "hidden") {
+				document.removeEventListener("visibilitychange", onShow);
+				sampleRefreshWhenVisible();
+			}
+		});
+		return;
 	}
-});
+	measureRefreshHz(function (hz) {
+		measuredRefreshHz = hz;
+		recordClock("Display refresh measured", "data-od-refresh-hz", hz.toFixed(2), "Hz");
+		// Re-apply if the core already booted, so a late measurement corrects the
+		// clock instead of waiting for a reload.
+		try {
+			if (typeof mainCompleted !== "undefined" && mainCompleted) tryApplyConfig();
+		} catch (e) {
+			// Pre-boot — the next config write picks it up.
+		}
+	});
+}
+sampleRefreshWhenVisible();
+
+// The device's audio rate, so "44.1k vs 48k" is a fact on the page rather than
+// a theory in a ticket. Cheap: one throwaway context, closed immediately.
+try {
+	var odProbeCtx = new (window.AudioContext || window.webkitAudioContext)();
+	recordClock("Audio device", "data-od-audio-hz", odProbeCtx.sampleRate, "Hz");
+	odProbeCtx.close();
+} catch (e) {
+	odLog("Audio device: rate unavailable (" + (e && e.message) + ")");
+}
 var pdKeys = [8, 9, 13, 19, 27, 32, 33, 34, 35, 36, 42, 44, 45, 91, 92, 93, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135];
 var webretroVersion = 6.5;
 var maxConsoleLength = 10000;
