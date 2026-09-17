@@ -317,6 +317,14 @@ class UserPreferencesForm(FlaskForm):
     font = SelectField('Font', choices=[('system-ui', 'System UI (default)')])
     tile_size = StringField('Tile size %', default='50')
     show_tile_titles = BooleanField('Show titles under tiles', default=True)
+    # Browser play engine. '' = the admin default. Choices are filled in
+    # __init__ from what is installed on this box; the field is only rendered
+    # when the admin allows member choice (see settings_panel).
+    browser_player_engine = SelectField(
+        'Play in browser with',
+        choices=[('', 'Server default')],
+        default='',
+    )
     preferred_game_locale = SelectField(
         'Preferred game language',
         choices=[
@@ -360,6 +368,23 @@ class UserPreferencesForm(FlaskForm):
             ] or [('system-ui', 'System UI (default)')]
         except Exception:
             self.font.choices = [('system-ui', 'System UI (default)')]
+        try:
+            from oneirodex.utils.browser_player import (
+                KNOWN_ENGINES,
+                engine_label,
+                get_browser_player_settings,
+            )
+
+            # Every known engine, not just the installed ones: the picker is
+            # only *shown* when both are installed, but a stored choice for an
+            # engine that has since been removed must still round-trip through
+            # a whole-form save. The resolver ignores it until it is back.
+            default_engine = get_browser_player_settings()['browser_player_default']
+            self.browser_player_engine.choices = [
+                ('', f'Server default ({engine_label(default_engine)})'),
+            ] + [(engine, engine_label(engine)) for engine in KNOWN_ENGINES]
+        except Exception:
+            self.browser_player_engine.choices = [('', 'Server default')]
 
 
 class LibraryForm(FlaskForm):

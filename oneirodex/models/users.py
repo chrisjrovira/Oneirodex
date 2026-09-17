@@ -235,6 +235,11 @@ class UserPreference(db.Model):
     # weak identifier across a ROM library, where many titles in a series share
     # one piece of art. Members who want the plain art wall can switch it off.
     show_tile_titles = db.Column(db.Boolean, default=True, server_default='true', nullable=False)
+    # Browser play engine this member asked for (`webretro` / `emulatorjs`).
+    # NULL means "whatever the admin set as the default". Only honoured when
+    # the admin allows member choice and the engine is installed on this box —
+    # utils.browser_player resolves it, nothing reads the column directly.
+    browser_player_engine = db.Column(db.String(16), nullable=True)
     notify_friend_requests = db.Column(db.Boolean, default=True, nullable=False)
     notify_activity = db.Column(db.Boolean, default=True, nullable=False)
     notify_mentions = db.Column(db.Boolean, default=True, nullable=False)

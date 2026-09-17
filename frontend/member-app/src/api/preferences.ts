@@ -38,12 +38,13 @@ export async function savePreferences(partial: LooseProps) {
 }
 
 /**
- * Every field the preferences form validates, not just the one being changed.
+ * The shell-known fields plus the one being changed.
  *
- * `/settings_panel` validates the whole `UserPreferencesForm`, and WTForms
- * reads an absent checkbox as False. So a save that omits `show_tile_titles` —
- * dragging the tile-size slider, say — would quietly switch the title strip
- * off. Anything added to that form has to be carried here too.
+ * `/settings_panel` treats a post without `_full_form` as a partial save and
+ * fills the stored values in underneath, so a slider drag no longer has to
+ * carry every SelectField (it never did, and every such save was failing
+ * validation). What is carried here is still sent, so the shell's view of a
+ * field wins over a stale stored one.
  */
 export function preferencesFromShell(shellConfig: LooseProps = {}, partial: LooseProps = {}) {
   return {
