@@ -25,8 +25,10 @@ const ENGINE_LABELS: Record<EngineId, string> = {
  */
 export function BrowserPlayerPilot() {
   const checkboxId = useId()
+  const memberChoiceId = useId()
   const radioName = useId()
   const [pilot, setPilot] = useState(false)
+  const [memberChoice, setMemberChoice] = useState(false)
   const [engine, setEngine] = useState<EngineId>('webretro')
   const [available, setAvailable] = useState<EngineId[]>(['webretro'])
   const [loading, setLoading] = useState(true)
@@ -35,6 +37,7 @@ export function BrowserPlayerPilot() {
 
   const apply = useCallback((data: Record<string, unknown>) => {
     setPilot(Boolean(data.nostalgist_nes_pilot))
+    setMemberChoice(Boolean(data.browser_player_allow_member_choice))
     const next = data.browser_player_default
     if (next === 'webretro' || next === 'emulatorjs') setEngine(next)
     const list = Array.isArray(data.browser_players_available)
@@ -73,6 +76,27 @@ export function BrowserPlayerPilot() {
         next
           ? 'NES Play will use the Nostalgist host (no save bar yet).'
           : 'NES Play uses the WebRetro room.',
+        'success',
+      )
+    } catch (err) {
+      setError(err)
+      showToast(errorText(err) || 'Could not save browser player settings.', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }, [])
+
+  const onMemberChoice = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const next = event.target.checked
+    setBusy(true)
+    setError(null)
+    try {
+      const saved = await putJson(ENDPOINT, { browser_player_allow_member_choice: next })
+      setMemberChoice(Boolean(saved.browser_player_allow_member_choice))
+      showToast(
+        next
+          ? 'Members can pick their engine under Preferences → Play in browser.'
+          : 'Members play with the default engine.',
         'success',
       )
     } catch (err) {
@@ -154,6 +178,21 @@ export function BrowserPlayerPilot() {
               Compose binds as <code>EMULATORJS_HOST_PATH</code>, then reload this page.
             </p>
           )}
+          {/* Stored regardless; only has an effect once two engines are
+              installed, and the member modal only shows the picker then. */}
+          <label htmlFor={memberChoiceId}>
+            <input
+              id={memberChoiceId}
+              type="checkbox"
+              checked={memberChoice}
+              disabled={busy}
+              onChange={onMemberChoice}
+            />{' '}
+            Let members choose their engine
+            {emulatorjsInstalled ? null : (
+              <span className="od-muted"> — takes effect once a second engine is installed</span>
+            )}
+          </label>
           <label htmlFor={checkboxId}>
             <input
               id={checkboxId}
