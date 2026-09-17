@@ -2,6 +2,13 @@
 
 **Re-baselined:** 2026-08-12 · Original classification: 2026-08-07
 
+> **Superseded as a status report (2026-09-16).** The "0 failed" below was true
+> on 2026-08-12 and is not true now — the current run is **42 failed / 4,450
+> passed**, named one by one in
+> [test-suite-failures-2026-09-16.md](test-suite-failures-2026-09-16.md). Read this
+> file for its *method* (run a file alone against a freshly truncated database) and
+> for what the 2026-08 failures turned out to be; do not read its counts as current.
+
 Method unchanged: every candidate file re-run **alone** against a **freshly
 truncated** database, so a result never depends on rows some earlier file left
 behind. Truncating between files is what makes the numbers mean anything.

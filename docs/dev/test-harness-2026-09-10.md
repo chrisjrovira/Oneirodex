@@ -2,6 +2,11 @@
 
 **Date:** 2026-09-10 (verified 2026-09-11) · **Status:** SAVEPOINT model landed; cascade fixed; fallout triaged; bucket-E opt-out fixture landed and verified green
 
+> **The 33 are named now (2026-09-16).** This file said "the pre-existing set
+> unrelated to this harness change" and listed none of them, and no ticket was
+> filed. They are enumerated, grouped by cause, and three of them fixed in
+> [test-suite-failures-2026-09-16.md](test-suite-failures-2026-09-16.md).
+
 Supersedes the "Still open → No isolation between tests" section of
 [test-harness-2026-08-07.md](test-harness-2026-08-07.md). That note recorded a
 deliberate decision *not* to wrap each test in a transaction, because the 23
