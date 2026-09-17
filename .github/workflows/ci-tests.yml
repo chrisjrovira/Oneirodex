@@ -179,6 +179,7 @@ jobs:
           tests/test_pydantic_batch.py
           tests/test_utils_validation.py
           tests/test_get_json_lint.py
+          tests/test_repo_hygiene.py
           tests/test_store_deals.py
 
       # UID-018 ratchet. The envelope helper landed with two files migrated and
