@@ -327,3 +327,40 @@ test('reduced-motion does not autoplay a hover trailer', () => {
   expect(container.querySelector('img.game-cover')).not.toBeNull()
   vi.useRealTimers()
 })
+
+test('a server-side state turns Play into Resume and hands the slot to the room', () => {
+  render(
+    <GameCard
+      game={{
+        ...baseGame,
+        can_play_in_browser: true,
+        play_url: '/static/vendor/webretro/webretro.html?guid=abc&core=fceumm&platform=NES',
+        resume_state: {
+          slot_name: 'auto',
+          updated_at: new Date(Date.now() - 5 * 60000).toISOString(),
+        },
+      }}
+    />,
+  )
+  const link = screen.getByRole('link', { name: /resume archery kings vr in browser/i })
+  expect(link).toHaveTextContent('Resume')
+  expect(link.getAttribute('href')).toContain('resume=auto')
+  expect(link.getAttribute('href')).toContain('guid=abc')
+  expect(link.getAttribute('title')).toMatch(/5 min ago/)
+})
+
+test('no state means Play, with the untouched href', () => {
+  render(
+    <GameCard
+      game={{
+        ...baseGame,
+        can_play_in_browser: true,
+        play_url: '/static/vendor/webretro/webretro.html?guid=abc&core=fceumm',
+        resume_state: null,
+      }}
+    />,
+  )
+  const link = screen.getByRole('link', { name: /play archery kings vr in browser/i })
+  expect(link).toHaveTextContent('Play')
+  expect(link.getAttribute('href')).not.toContain('resume=')
+})
