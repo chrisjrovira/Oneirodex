@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 import { getJson } from '../api/adminApi'
 import { DataTable } from '../components/DataTable'
 import { DupeGlance } from '../components/DupeGlance'
@@ -126,14 +126,14 @@ export function ScansPage() {
       <PageStatus error={error} errorMessage="Unable to load scan status." />
       <div className="od-admin-panel">
         <div className="od-admin-panel__toolbar od-admin-panel__toolbar--row">
-          <button
+          <Button
             type="button"
-            className="od-btn od-btn--accent"
+            className="od-btn--accent"
             onClick={() => void startRefreshAll()}
             disabled={refreshing}
           >
             {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
-          </button>
+          </Button>
           {scanMotifActive ? (
             <span
               className="od-admin-scan-live"
@@ -270,9 +270,9 @@ export function ScansPage() {
                     const active = isScanBusyStatus(job.status) || isScanQueuedStatus(job.status)
                     if (active) return <span className="od-admin-lede">—</span>
                     return (
-                      <button
+                      <Button
                         type="button"
-                        className="od-btn od-btn--sm"
+                        size="sm"
                         disabled={scanBusyKey === job.id || !job.library_uuid}
                         title={
                           job.library_uuid
@@ -294,7 +294,7 @@ export function ScansPage() {
                         }
                       >
                         {scanBusyKey === job.id ? 'Starting…' : 'Scan again'}
-                      </button>
+                      </Button>
                     )
                   },
                 },

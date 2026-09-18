@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useResource, useShellConfig } from '@oneirodex/ui'
+import { useResource, useShellConfig, Button } from '@oneirodex/ui'
 import { fetchSetCompletion } from '../api/systems'
 import { createRequest } from '../api/wishlist'
 import { ContextBar } from '../chrome/ContextBar'
@@ -216,14 +216,13 @@ export function SetCompletionPage() {
             {missing.map((row: any) => (
               <li key={row.normalized_name || row.name}>
                 <span>{row.name}</span>
-                <button
+                <Button
                   type="button"
-                  className="od-btn"
                   disabled={busyTitle === row.name}
                   onClick={() => addToWishlist(row.name)}
                 >
                   Wishlist
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

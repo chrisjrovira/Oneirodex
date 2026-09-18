@@ -41,7 +41,8 @@ python scripts/api_envelope_lint.py     # JSON sites off api_ok/api_error — 11
 python scripts/print_lint.py            # print() calls — 591
 python scripts/get_json_lint.py         # raw request.get_json() sites — 103, migrating to @validate_body
 node scripts/css-token-lint.mjs         # raw colour/radius/type literals — 0
-node scripts/any_lint.mjs               # explicit `any` in .ts/.tsx sources — 1,077 (member-app 1,041)
+node scripts/any_lint.mjs               # explicit `any` in .ts/.tsx sources — 1,266
+node scripts/od_btn_lint.mjs            # raw <button className="od-btn…"> sites — 0; use <Button> from @oneirodex/ui
 ```
 
 Each records a per-file baseline. `--update` only after a genuine reduction — never to make a red gate green.

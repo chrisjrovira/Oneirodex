@@ -756,13 +756,9 @@ export function ChatPanel({
                 autoComplete="off"
                 disabled={creatingRoom}
               />
-              <button
-                className="od-btn"
-                type="submit"
-                disabled={creatingRoom || !newRoomName.trim()}
-              >
+              <Button type="submit" disabled={creatingRoom || !newRoomName.trim()}>
                 Add
-              </button>
+              </Button>
             </form>
           ) : (
             <p className="od-chat-create-hint">

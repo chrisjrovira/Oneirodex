@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import './OpenPathModal.css'
+import { Button } from '@oneirodex/ui'
 
 async function copyPath(path: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
@@ -122,21 +123,12 @@ export function OpenPathModal({
           <code>{path}</code>
         </p>
         <div className="od-open-path__actions">
-          <button
-            type="button"
-            className="od-btn od-btn--primary"
-            onClick={() => void handleCopy()}
-          >
+          <Button type="button" variant="primary" onClick={() => void handleCopy()}>
             Copy path
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={busy}
-            onClick={() => void handleOpenExplorer()}
-          >
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => void handleOpenExplorer()}>
             {busy ? 'Opening…' : 'Open in file explorer'}
-          </button>
+          </Button>
         </div>
         {status ? (
           <p className="od-open-path__status" role="status">

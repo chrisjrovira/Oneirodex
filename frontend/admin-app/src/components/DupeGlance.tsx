@@ -723,39 +723,37 @@ export const DupeGlance = memo(function DupeGlance({
               ['library', 'Library'],
               ['platform', 'Platform'],
             ].map(([key, label]) => (
-              <button
+              <Button
                 key={key}
-                type="button"
-                className={`od-btn od-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
+                className={`od-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
                 aria-pressed={sortKey === key}
                 onClick={() => toggleSort(key)}
               >
                 {label}
                 {sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-              </button>
+              </Button>
             ))}
           </div>
           <Button onClick={() => void load()} disabled={loading}>
             Refresh
           </Button>
-          <button
+          <Button
             type="button"
-            className="od-btn od-btn--primary"
+            variant="primary"
             disabled={busy}
             onClick={() => void handleReclassify()}
             title="Downgrade false Duplicate rows when folder titles differ"
           >
             {busy && !busyFolderId ? 'Fixing…' : 'Fix false duplicates'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             disabled={busy}
             onClick={() => void handleBackfillKindHints()}
             title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)"
           >
             Backfill kind hints
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -799,9 +797,8 @@ export const DupeGlance = memo(function DupeGlance({
               return (
                 <li key={row.id as Key} className="od-dupe-glance__row">
                   <div className="od-dupe-glance__actions" role="toolbar" aria-label="Row actions">
-                    <button
+                    <Button
                       type="button"
-                      className="od-btn"
                       onClick={() =>
                         onOpenPath?.({
                           path: row.folder_path,
@@ -811,7 +808,7 @@ export const DupeGlance = memo(function DupeGlance({
                       }
                     >
                       Open path
-                    </button>
+                    </Button>
                     <a
                       className="od-btn"
                       href={`/add_game_manual?full_disk_path=${encodeURIComponent(String(row.folder_path || ''))}&library_uuid=${encodeURIComponent(String(row.library_uuid || ''))}&platform_name=${encodeURIComponent(String(row.platform_name || ''))}&platform_id=${encodeURIComponent(String(row.platform_id || ''))}&from_unmatched=true`}
@@ -821,10 +818,10 @@ export const DupeGlance = memo(function DupeGlance({
                     </a>
                     {canMarkKind(row.status)
                       ? markKinds.map(({ kind, label }) => (
-                          <button
+                          <Button
                             key={kind}
-                            type="button"
-                            className={`od-btn${suggestedKind === kind ? ' od-btn--primary is-suggested' : ''}`}
+                            variant={suggestedKind === kind ? 'primary' : 'default'}
+                            className={suggestedKind === kind ? 'is-suggested' : undefined}
                             disabled={busy}
                             title={
                               suggestedKind === kind
@@ -834,38 +831,35 @@ export const DupeGlance = memo(function DupeGlance({
                             onClick={() => void handleMarkKind(row, kind)}
                           >
                             {marking ? 'Saving…' : label}
-                          </button>
+                          </Button>
                         ))
                       : null}
                     {row.status === 'Duplicate' ? (
                       <>
-                        <button
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           title="Keep library game; clear this duplicate row"
                           onClick={() => void handleFix(row, 'merge')}
                         >
                           Merge
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           title="Reclassify as Unmatched"
                           onClick={() => void handleFix(row, 'keep')}
                         >
                           Keep
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           title="Ignore this duplicate"
                           onClick={() => void handleFix(row, 'ignore')}
                         >
                           Ignore
-                        </button>
+                        </Button>
                       </>
                     ) : null}
                     {badMatchReasons.length ? (
@@ -900,17 +894,16 @@ export const DupeGlance = memo(function DupeGlance({
                           onChange={(event) => setNoteText(event.target.value)}
                           {...PM_IGNORE}
                         />
-                        <button
+                        <Button
                           type="button"
-                          className="od-btn od-btn--primary"
+                          variant="primary"
                           disabled={busy || !noteText.trim()}
                           onClick={() => void submitBadMatch(row, 'other', noteText.trim())}
                         >
                           Save note
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           onClick={() => {
                             setNoteFor(null)
@@ -918,7 +911,7 @@ export const DupeGlance = memo(function DupeGlance({
                           }}
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </span>
                     ) : null}
                   </div>

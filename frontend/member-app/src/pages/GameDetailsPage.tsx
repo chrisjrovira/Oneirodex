@@ -50,6 +50,7 @@ import { recordRecentTitle } from '../utils/recentTitles'
 import { detailsRootCrumb, primaryGenreName, taxonomyHref } from '../utils/detailsTaxonomy'
 import { showToast } from '../utils/toast'
 import './GameDetailsPage.css'
+import { Button } from '@oneirodex/ui'
 
 function formatPlaytime(seconds: any) {
   const total = Number(seconds) || 0
@@ -563,9 +564,9 @@ export function GameDetailsPage() {
                   </a>
                 </>
               ) : firmwareBlocked || game.play_blocker === 'unsupported_archive' ? (
-                <button
+                <Button
                   type="button"
-                  className="od-btn od-btn--primary"
+                  variant="primary"
                   disabled
                   title={
                     firmwareBlocked
@@ -575,7 +576,7 @@ export function GameDetailsPage() {
                   }
                 >
                   Play in browser
-                </button>
+                </Button>
               ) : null}
               {/* Same control as the tile menu's, at the other place the "where
                 does this go" decision gets made. */}
@@ -602,9 +603,8 @@ export function GameDetailsPage() {
             </div>
 
             <div className="od-details-page__quick-row od-details-page__quick-row--seg">
-              <button
+              <Button
                 type="button"
-                className="od-btn"
                 disabled={freshnessBusy}
                 title="Re-read the store listing for a newer version, updates, or DLC"
                 onClick={() => {
@@ -614,7 +614,7 @@ export function GameDetailsPage() {
                 {/* "Check stores" read like a store-availability lookup; it
                     actually re-reads the listing for updates/DLC. */}
                 {freshnessBusy ? 'Checking…' : 'Check updates & DLC'}
-              </button>
+              </Button>
             </div>
           </div>
           {firmwareBlocked ? (
@@ -654,13 +654,13 @@ export function GameDetailsPage() {
                 {game.summary}
               </p>
               {summaryOverflows ? (
-                <button
+                <Button
                   type="button"
-                  className="od-btn od-details-page__summary-toggle"
+                  className="od-details-page__summary-toggle"
                   onClick={() => setSummaryExpanded((open) => !open)}
                 >
                   {summaryExpanded ? 'Show less' : 'Show more'}
-                </button>
+                </Button>
               ) : null}
             </section>
           ) : null}
@@ -678,14 +678,15 @@ export function GameDetailsPage() {
               {pathRows.length > 0 ? (
                 <span className="od-details-page__section-actions">
                   {pathRows.map((row) => (
-                    <button
+                    <Button
                       key={`open-${row.label}-${row.path}`}
                       type="button"
-                      className="od-btn od-btn--sm od-btn--pill"
+                      size="sm"
+                      pill
                       onClick={() => setPathModal(row)}
                     >
                       {pathRows.length > 1 ? `Open ${row.label.toLowerCase()}` : 'Open path'}
-                    </button>
+                    </Button>
                   ))}
                 </span>
               ) : null}
@@ -839,9 +840,8 @@ export function GameDetailsPage() {
                             </a>
                           ) : null}
                           {canApplyPatch ? (
-                            <button
+                            <Button
                               type="button"
-                              className="od-btn"
                               disabled={Boolean(busyVersionKey)}
                               onClick={() => {
                                 setBusyVersionKey(versionKey)
@@ -869,7 +869,7 @@ export function GameDetailsPage() {
                               }}
                             >
                               {applyBusy ? 'Queuing…' : 'Apply with companion'}
-                            </button>
+                            </Button>
                           ) : (
                             <Link className="od-btn" to="/help#translations">
                               How to apply
@@ -911,9 +911,8 @@ export function GameDetailsPage() {
                   Search your local YAML/JSON patch guide catalog (metadata only - no third-party
                   scrape).
                 </p>
-                <button
+                <Button
                   type="button"
-                  className="od-btn"
                   disabled={catalogBusy}
                   onClick={() => {
                     setCatalogBusy(true)
@@ -935,7 +934,7 @@ export function GameDetailsPage() {
                   }}
                 >
                   {catalogBusy ? 'Searching…' : 'Search catalog'}
-                </button>
+                </Button>
                 {catalogStatus ? (
                   <p className="od-details-page__muted" role="status">
                     {catalogStatus}
@@ -969,9 +968,8 @@ export function GameDetailsPage() {
                                 Open guide
                               </a>
                             ) : null}
-                            <button
+                            <Button
                               type="button"
-                              className="od-btn"
                               disabled={catalogBusy}
                               onClick={() => {
                                 setCatalogBusy(true)
@@ -996,7 +994,7 @@ export function GameDetailsPage() {
                               }}
                             >
                               Attach guide
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       </li>
@@ -1013,9 +1011,9 @@ export function GameDetailsPage() {
             <div className="od-details-page__section-head">
               <h2>Versions</h2>
               {game.is_admin ? (
-                <button
+                <Button
                   type="button"
-                  className="od-btn od-btn--pill"
+                  pill
                   disabled={cleanupBusy}
                   onClick={() => void handleCleanupOrphans()}
                   title={
@@ -1025,7 +1023,7 @@ export function GameDetailsPage() {
                   }
                 >
                   {cleanupBusy ? 'Removing…' : 'Remove missing versions'}
-                </button>
+                </Button>
               ) : null}
             </div>
             {versionActionStatus ? (
@@ -1076,9 +1074,8 @@ export function GameDetailsPage() {
                           that is the one thing the action bar genuinely cannot
                           express: "I have the game, I only need patch 1.03". */}
                         {canDownload && row.kind === 'update' ? (
-                          <button
+                          <Button
                             type="button"
-                            className="od-btn"
                             disabled={Boolean(busyVersionKey)}
                             onClick={() => {
                               void handleVersionDownload({
@@ -1089,12 +1086,11 @@ export function GameDetailsPage() {
                             }}
                           >
                             {downloadBusy ? 'Queuing…' : 'Download'}
-                          </button>
+                          </Button>
                         ) : null}
                         {canApply ? (
-                          <button
+                          <Button
                             type="button"
-                            className="od-btn"
                             disabled={Boolean(busyVersionKey)}
                             onClick={() => {
                               setBusyVersionKey(versionKey)
@@ -1117,7 +1113,7 @@ export function GameDetailsPage() {
                             }}
                           >
                             {applyBusy ? 'Queuing…' : 'Apply with companion'}
-                          </button>
+                          </Button>
                         ) : null}
                       </div>
                     </div>
@@ -1189,9 +1185,8 @@ export function GameDetailsPage() {
                       </div>
                       <div className="od-details-page__version-actions">
                         {row.download_url && !pathMissing ? (
-                          <button
+                          <Button
                             type="button"
-                            className="od-btn"
                             disabled={Boolean(busyVersionKey)}
                             onClick={() => {
                               void handleVersionDownload({
@@ -1204,12 +1199,11 @@ export function GameDetailsPage() {
                             {busyVersionKey === `download:extra:${row.uuid || 'base'}`
                               ? 'Queuing…'
                               : 'Download'}
-                          </button>
+                          </Button>
                         ) : null}
                         {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
-                          <button
+                          <Button
                             type="button"
-                            className="od-btn"
                             disabled={Boolean(busyVersionKey)}
                             onClick={() => {
                               setBusyVersionKey(versionKey)
@@ -1232,7 +1226,7 @@ export function GameDetailsPage() {
                             }}
                           >
                             {applyBusy ? 'Queuing…' : 'Apply with companion'}
-                          </button>
+                          </Button>
                         ) : null}
                       </div>
                     </div>

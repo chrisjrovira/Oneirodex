@@ -209,23 +209,18 @@ export function TokensPage() {
             truncation.
           </p>
           <div className="od-tokens__secret-actions">
-            <button
-              type="button"
-              className="od-btn od-btn--primary"
-              onClick={() => void copySecret()}
-            >
+            <Button type="button" variant="primary" onClick={() => void copySecret()}>
               {copyState === 'copied' ? 'Copied' : 'Copy secret'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="od-btn"
               onClick={() => {
                 setCreatedSecret(null)
                 setCopyState('idle')
               }}
             >
               Done
-            </button>
+            </Button>
           </div>
           {copyState === 'copied' ? (
             <p role="status" className="od-tokens__copy-status">
@@ -310,14 +305,13 @@ export function TokensPage() {
                       : ' · Never used'}
                   </span>
                 </div>
-                <button
+                <Button
                   type="button"
-                  className="od-btn"
                   disabled={busy}
                   onClick={() => void onRevoke(row.id, row.name)}
                 >
                   Revoke
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

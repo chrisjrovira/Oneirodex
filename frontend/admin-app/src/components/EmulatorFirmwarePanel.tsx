@@ -205,9 +205,9 @@ function FirmwareMissingDialog({
           aria-label="Missing firmware report (markdown)"
         />
         <div className="od-open-path__actions">
-          <button
+          <Button
             type="button"
-            className="od-btn od-btn--primary"
+            variant="primary"
             onClick={() => {
               void copyText(markdown)
                 .then(() => setCopied(true))
@@ -215,7 +215,7 @@ function FirmwareMissingDialog({
             }}
           >
             Copy markdown
-          </button>
+          </Button>
           <Button onClick={onClose}>Close</Button>
         </div>
         {copied ? <p className="od-open-path__status">Copied to clipboard</p> : null}
@@ -437,30 +437,28 @@ export function EmulatorFirmwarePanel() {
         onChange={(event) => setSourceFolder(event.target.value)}
       />
       <div className="od-btn-bar">
-        <button
+        <Button
           type="button"
-          className="od-btn od-btn--primary"
+          variant="primary"
           disabled={working || !sourceFolder.trim()}
           onClick={() => void scanCollection()}
         >
           Scan collection
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="od-btn"
           disabled={working || !sourceFolder.trim()}
           onClick={() => void installMatching()}
         >
           Install matching firmware
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="od-btn"
           disabled={working || !reportMarkdown}
           onClick={() => setReportOpen(true)}
         >
           Show missing report
-        </button>
+        </Button>
         <label>
           <input
             type="checkbox"
