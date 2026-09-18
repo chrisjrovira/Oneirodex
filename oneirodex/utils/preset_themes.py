@@ -94,7 +94,12 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # alone — `art/era/<era>.svg` under the theme's own folder, painted by the new
 # `.od-era-scene` layer and recoloured per preset on one accent sentinel. A
 # preset missing `art/` shows the old flat room, so Reset Themes is required.
-GENERATOR_VERSION = 37
+# 38 (E2 + E4): loading motifs read `--od-platform-accent`, so a console's
+# motif carries that console's colour instead of the theme accent everywhere;
+# and the rail glyphs are one shared module rather than two drifting copies.
+# A preset still carrying the old od-loading-motifs.css spins every motif in
+# the theme accent, so Reset Themes is required.
+GENERATOR_VERSION = 38
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'

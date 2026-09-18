@@ -175,9 +175,6 @@
   "frontend/member-app/src/chrome/playRooms.ts": {
     "any-annotation": 4
   },
-  "frontend/member-app/src/chrome/railIcons.tsx": {
-    "any-alias": 1
-  },
   "frontend/member-app/src/chrome/regions.ts": {
     "any-annotation": 1
   },

@@ -173,3 +173,16 @@ def test_a_preset_missing_its_art_rebuilds(tmp_path):
 def test_generator_version_moved_for_this_change():
     """Room art only reaches the volume when the version forces a rebuild."""
     assert GENERATOR_VERSION >= 37
+
+
+def test_loading_motifs_read_the_platform_accent():
+    """E2: a console's motif carries that console's colour, not the theme's.
+
+    Every motif is `currentColor`, and `--od-platform-accent` is already set on
+    <html> per system family by platformSkins. The motifs simply never read it,
+    so a Mega Drive cabinet span in the theme accent like everything else. The
+    fallback keeps every non-system page exactly as it was.
+    """
+    css = (THEME_SOURCE / 'css' / 'od-loading-motifs.css').read_text(encoding='utf-8')
+    assert 'color: var(--od-platform-accent, var(--od-accent));' in css
+    assert GENERATOR_VERSION >= 38, 'motif CSS ships on the volume — bump so presets rebuild'
