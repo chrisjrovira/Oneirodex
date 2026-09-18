@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from flask import g, has_app_context, has_request_context
+from flask import g, has_request_context
 from sqlalchemy import select
 
 from oneirodex import db
@@ -25,13 +25,27 @@ SHIPPED_ENGINES = ('webretro',)
 
 
 def available_engines() -> tuple[str, ...]:
-    """Engines that can actually boot a game on this install, in listing order."""
+    """Engines that can actually boot a game on this install, in listing order.
+
+    Memoised per request. `emulatorjs_installed()` is a filesystem stat, and
+    `play_engine_fields()` runs once per game in `browse_play_fields` — so an
+    unmemoised probe meant one stat per tile, up to a thousand on a single
+    browse page, against a Docker bind mount to the NAS array. Request scope,
+    not app-context scope: an operator who drops a release in mid-session sees
+    it on the next page rather than after a restart.
+    """
+    if has_request_context() and hasattr(g, '_browser_player_available'):
+        return g._browser_player_available
+
     from oneirodex.utils.emulatorjs import emulatorjs_installed
 
     engines = list(SHIPPED_ENGINES)
     if emulatorjs_installed():
         engines.append('emulatorjs')
-    return tuple(engines)
+    resolved = tuple(engines)
+    if has_request_context():
+        g._browser_player_available = resolved
+    return resolved
 
 DEFAULTS: dict[str, Any] = {
     'browser_player_default': 'webretro',
@@ -117,16 +131,19 @@ def normalize_browser_player_settings(raw: dict[str, Any] | None) -> dict[str, A
 
 def get_browser_player_settings() -> dict[str, Any]:
     """Read stored admin keys, filling defaults. Safe without a settings row."""
-    # `g` is app-context scoped, so the cache key is the app context, not the
-    # request — and a save must clear it wherever it lives.
-    if has_app_context() and hasattr(g, '_browser_player_settings'):
+    # Request scope on purpose. `g` is app-context scoped, so caching on a bare
+    # app context makes a long-lived one (a CLI command, a worker loop) hold the
+    # first answer forever — `set_browser_player_settings` can only clear the
+    # context it runs in, which is a different process. A request is short
+    # enough that "once per request" is both cheap and always fresh.
+    if has_request_context() and hasattr(g, '_browser_player_settings'):
         return g._browser_player_settings
     try:
         merged = {**DEFAULTS, **_blob(_settings_row())}
         cleaned = normalize_browser_player_settings(merged)
     except Exception:
         cleaned = normalize_browser_player_settings(DEFAULTS)
-    if has_app_context():
+    if has_request_context():
         g._browser_player_settings = cleaned
     return cleaned
 
@@ -148,8 +165,12 @@ def set_browser_player_settings(payload: dict[str, Any] | None) -> dict[str, Any
     current[STORAGE_KEY] = stored
     row.settings = current
     db.session.commit()
-    if has_app_context() and hasattr(g, '_browser_player_settings'):
-        delattr(g, '_browser_player_settings')
+    # Drop both caches: a default that just changed must not be read from a
+    # stale blob, and an engine that just became (un)installed must re-probe.
+    if has_request_context():
+        for key in ('_browser_player_settings', '_browser_player_available'):
+            if hasattr(g, key):
+                delattr(g, key)
     return cleaned
 
 

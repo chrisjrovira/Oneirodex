@@ -671,11 +671,23 @@
                     });
             }
 
+            /* Throttled so a tab flicking in and out does not upload on every
+               flicker — but the stamp is set on SUCCESS, never on the attempt.
+               Stamping up front meant a hidden-tab save that failed because the
+               core had not started yet (entirely normal in the first seconds)
+               armed the throttle, and the deliberate save on Back or Power a few
+               seconds later returned early and took nothing. The room promises
+               "States also save on Back / Power"; that has to be true even when
+               an earlier opportunistic attempt came to nothing. */
             function autoSaveState(opts) {
-                var now = Date.now();
-                if (now - lastAutoSaveAt < 15000) return Promise.resolve(null);
-                lastAutoSaveAt = now;
-                return exportAndUpload(AUTO_SLOT, Object.assign({ attempts: 1, exportTimeout: 2500 }, opts || {}));
+                if (Date.now() - lastAutoSaveAt < 15000) return Promise.resolve(null);
+                return exportAndUpload(
+                    AUTO_SLOT,
+                    Object.assign({ attempts: 1, exportTimeout: 2500 }, opts || {})
+                ).then(function (result) {
+                    lastAutoSaveAt = Date.now();
+                    return result;
+                });
             }
 
             function hideResumeBar() {

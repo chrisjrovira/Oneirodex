@@ -23,22 +23,47 @@
  * — without pretending to be an offline library it cannot honestly be.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const ASSET_CACHE = `oneirodex-assets-${VERSION}`;
 const SHELL_CACHE = `oneirodex-shell-${VERSION}`;
 const OFFLINE_URL = '/offline';
 
-/** Static prefixes that are safe to keep: versioned, and never member data. */
-const CACHEABLE_PREFIXES = ['/static/dist/', '/static/vendor/', '/static/icons/', '/static/js/'];
-/** Theme CSS/JS/art lives on the library volume and is versioned by mtime. */
-const THEME_PREFIX = '/static/library/themes/';
+/**
+ * Static roots that hold no member data. Necessary, not sufficient — see
+ * `isCacheableAsset`, which also requires the URL to carry a version.
+ */
+const CACHEABLE_PREFIXES = [
+  '/static/dist/',
+  '/static/vendor/',
+  '/static/icons/',
+  '/static/js/',
+  '/static/library/themes/',
+];
+/** Vite content-hashes these filenames, so the path itself is the version. */
+const CONTENT_HASHED_PREFIX = '/static/dist/';
 /** Never, under any circumstances. */
 const NEVER = ['/api/', '/admin/', '/login', '/logout', '/static/library/images/'];
 
+/**
+ * Cache-first is only safe for a URL that changes when its bytes change.
+ *
+ * This used to trust the prefix alone, which was wrong in a way the comment
+ * above it did not admit: `/static/vendor/` also holds the EmulatorJS release,
+ * and its loader and cores are fetched with **no** version query
+ * (`EJS_pathtodata + 'loader.js'`). An installed app that had cached those
+ * would keep booting the old cores forever after an operator re-ran
+ * `fetch-emulatorjs.sh` — unreachable except by uninstalling the app.
+ *
+ * So the rule now enforces what it always claimed: content-hashed paths
+ * (`/static/dist/`, which Vite hashes), or a `?v=` — which `theme_asset` and
+ * the favicon partial both add. Anything else goes to the network, which is
+ * the correct answer for a file whose URL cannot tell us it changed.
+ */
 function isCacheableAsset(url) {
   if (NEVER.some((prefix) => url.pathname.startsWith(prefix))) return false;
-  if (url.pathname.startsWith(THEME_PREFIX)) return true;
-  return CACHEABLE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
+  if (!CACHEABLE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) return false;
+  if (url.pathname.startsWith(CONTENT_HASHED_PREFIX)) return true;
+  return url.searchParams.has('v');
 }
 
 self.addEventListener('install', (event) => {

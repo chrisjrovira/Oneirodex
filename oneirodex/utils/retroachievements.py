@@ -112,7 +112,15 @@ def supported_platforms() -> list[str]:
 
 
 def _nes_hash(data: bytes) -> str:
-    """iNES / NES 2.0: skip the 16-byte header, hash PRG+CHR as the header sizes them."""
+    """iNES / NES 2.0: skip the header (and any trainer), hash PRG+CHR.
+
+    The trainer matters. Flags6 bit 2 means a 512-byte trainer sits between the
+    header and PRG, and rcheevos skips it before hashing. Hashing from offset 16
+    regardless swallowed the trainer as if it were the first 512 bytes of PRG
+    and then truncated 512 bytes off the real end — producing a digest that is
+    neither the trainer-inclusive nor the trainer-exclusive one, so every
+    trainer ROM in a library silently matched nothing at all.
+    """
     if data[:4] == b'NES\x1a' and len(data) > 16:
         prg = data[4] * 16384
         chr_ = data[5] * 8192
@@ -120,7 +128,8 @@ def _nes_hash(data: bytes) -> str:
             prg += ((data[9] & 0x0F) << 8) * 16384
             chr_ += ((data[9] >> 4) << 8) * 8192
         size = prg + chr_
-        body = data[16:]
+        start = 16 + (512 if data[6] & 0x04 else 0)
+        body = data[start:]
         if 0 < size <= len(body):
             body = body[:size]
         return hashlib.md5(body).hexdigest()
@@ -157,18 +166,33 @@ def _a7800_hash(data: bytes) -> str:
 
 
 def _n64_hash(data: bytes) -> str:
-    """Normalise to z64 (big-endian) byte order, then hash."""
+    """Normalise to z64 (big-endian) byte order, then hash.
+
+    The swaps are whole-word operations, so a dump whose length is not a
+    multiple of the word size cannot be swapped wholesale: the strided slices
+    come out different lengths and the assignment raises ValueError. A
+    truncated or corrupt ROM is exactly the kind of file a real library
+    contains, and one of them must not abort the platform's entire match run —
+    so only the complete words are swapped and any short tail is left as-is.
+    """
     if len(data) < 4:
         return hashlib.md5(data).hexdigest()
     magic = data[:4]
     if magic == b'\x37\x80\x40\x12':  # v64: 16-bit byteswapped
-        buf = bytearray(data)
-        buf[0::2], buf[1::2] = data[1::2], data[0::2]
-        data = bytes(buf)
+        end = len(data) - (len(data) % 2)
+        body = bytearray(data[:end])
+        body[0::2], body[1::2] = data[1:end:2], data[0:end:2]
+        data = bytes(body) + data[end:]
     elif magic == b'\x40\x12\x37\x80':  # n64: 32-bit little-endian words
-        buf = bytearray(data)
-        buf[0::4], buf[1::4], buf[2::4], buf[3::4] = data[3::4], data[2::4], data[1::4], data[0::4]
-        data = bytes(buf)
+        end = len(data) - (len(data) % 4)
+        body = bytearray(data[:end])
+        body[0::4], body[1::4], body[2::4], body[3::4] = (
+            data[3:end:4],
+            data[2:end:4],
+            data[1:end:4],
+            data[0:end:4],
+        )
+        data = bytes(body) + data[end:]
     return hashlib.md5(data).hexdigest()
 
 
