@@ -1,7 +1,7 @@
 {
   "name": "member-app",
   "private": true,
-  "version": "1.0.0-beta",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": ">=22 <23"
