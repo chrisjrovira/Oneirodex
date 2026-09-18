@@ -7,6 +7,7 @@ import { SocialCompanionDock } from '../components/SocialCompanionDock'
 import { PageStatus } from '../components/PageStatus'
 import { coverUrl } from '../utils/coverUrl'
 import { showToast } from '../utils/toast'
+import { isThinSeat } from '../utils/seatMode'
 import './BigPicturePage.css'
 import { useShellConfig } from '@oneirodex/ui'
 
@@ -42,6 +43,26 @@ function gameDetailsUrl(uuid: any) {
   return `/game_details/${encodeURIComponent(uuid)}`
 }
 
+/**
+ * TC-3 honesty on the ten-foot screen.
+ *
+ * Big Picture offered Download and Install with no seat check, while
+ * `GameActionBar` has refused both on a thin seat since TC-3 shipped. A thin
+ * token is denied `write:download` server-side and the thin build carries no
+ * install ACL, so the button could never complete — it just failed further
+ * from the press, which on a TV with a gamepad is the worst place to find out.
+ *
+ * Say it once, in the place the press would have happened.
+ */
+function refuseOnThinSeat() {
+  if (!isThinSeat()) return false
+  showToast(
+    'Browse & social seat — downloads and installs happen on the desktop companion.',
+    'info',
+  )
+  return true
+}
+
 function downloadUrl(uuid: any) {
   return `/download_game/${encodeURIComponent(uuid)}`
 }
@@ -65,6 +86,9 @@ function focusGameFromQuery() {
 export function BigPicturePage() {
   const shellConfig = useShellConfig()
   const perPage = Number(shellConfig.perPage) || DEFAULT_PER_PAGE
+  // Latched once per render rather than per press: the seat cannot change
+  // while this page is mounted.
+  const thinSeat = isThinSeat()
   const [games, setGames] = useState<any>(null)
   const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
@@ -193,7 +217,9 @@ export function BigPicturePage() {
       }
 
       if (west && now - lastNav > GAMEPAD_REPEAT_MS) {
-        window.location.href = downloadUrl(padGames[padIndex].uuid)
+        if (!refuseOnThinSeat()) {
+          window.location.href = downloadUrl(padGames[padIndex].uuid)
+        }
         lastNav = now
       }
 
@@ -242,7 +268,9 @@ export function BigPicturePage() {
       case 'd':
       case 'D':
         event.preventDefault()
-        window.location.href = downloadUrl(list[index].uuid)
+        if (!refuseOnThinSeat()) {
+          window.location.href = downloadUrl(list[index].uuid)
+        }
         break
       case 'Escape':
         event.preventDefault()
@@ -326,10 +354,14 @@ export function BigPicturePage() {
                 <Link className="od-bp__btn od-bp__btn--primary" to={gameDetailsUrl(selected.uuid)}>
                   Open
                 </Link>
-                <a className="od-bp__btn" href={downloadUrl(selected.uuid)}>
-                  Download
-                </a>
-                {selected.client_connected && selected.lifecycle_state === 'downloaded' ? (
+                {thinSeat ? null : (
+                  <a className="od-bp__btn" href={downloadUrl(selected.uuid)}>
+                    Download
+                  </a>
+                )}
+                {!thinSeat &&
+                selected.client_connected &&
+                selected.lifecycle_state === 'downloaded' ? (
                   <button
                     type="button"
                     className="od-bp__btn"

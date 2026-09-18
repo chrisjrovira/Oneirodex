@@ -158,3 +158,67 @@ test('friends companion starts closed (SSE gated)', async () => {
   expect(screen.getByRole('button', { name: /open friends companion/i })).toBeInTheDocument()
   expect(screen.queryByLabelText(/^Friends companion$/i)).not.toBeInTheDocument()
 })
+
+describe('TC-3 honesty on the ten-foot screen', () => {
+  afterEach(() => {
+    try {
+      sessionStorage.removeItem('oneirodex-seat')
+    } catch {
+      /* private mode */
+    }
+  })
+
+  function asThinSeat() {
+    sessionStorage.setItem('oneirodex-seat', 'thin')
+  }
+
+  test('a thin seat is not offered Download or Install', async () => {
+    asThinSeat()
+    browseApi.fetchBrowseGames.mockResolvedValue({
+      games: [{ ...GAMES[0], client_connected: true, lifecycle_state: 'downloaded' }],
+      total: 1,
+    })
+    renderPage(
+      <ShellHarness shell={{}}>
+        <BigPicturePage />
+      </ShellHarness>,
+    )
+    await screen.findByRole('heading', { name: 'Alpha Game' })
+    // The buttons a thin token can never complete are simply absent, rather
+    // than present and failing at the press.
+    expect(screen.queryByRole('link', { name: 'Download' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Install' })).toBeNull()
+    // What it can do is still there.
+    expect(screen.getByRole('link', { name: 'Open' })).toBeTruthy()
+  })
+
+  test('a normal browser seat still gets both', async () => {
+    browseApi.fetchBrowseGames.mockResolvedValue({
+      games: [{ ...GAMES[0], client_connected: true, lifecycle_state: 'downloaded' }],
+      total: 1,
+    })
+    renderPage(
+      <ShellHarness shell={{}}>
+        <BigPicturePage />
+      </ShellHarness>,
+    )
+    await screen.findByRole('heading', { name: 'Alpha Game' })
+    expect(screen.getByRole('link', { name: 'Download' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Install' })).toBeTruthy()
+  })
+
+  test('the D shortcut does not navigate to a download on a thin seat', async () => {
+    asThinSeat()
+    browseApi.fetchBrowseGames.mockResolvedValue({ games: [GAMES[0]], total: 1 })
+    renderPage(
+      <ShellHarness shell={{}}>
+        <BigPicturePage />
+      </ShellHarness>,
+    )
+    await screen.findByRole('heading', { name: 'Alpha Game' })
+    const before = window.location.href
+    await userEvent.keyboard('d')
+    // jsdom would record an href assignment; the guard means there is none.
+    expect(window.location.href).toBe(before)
+  })
+})
