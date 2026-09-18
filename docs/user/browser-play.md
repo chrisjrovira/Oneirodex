@@ -118,6 +118,16 @@ Your place is kept for you. States live on the server, per member and per game, 
 
 EmulatorJS (engine B) has its own save-state screen inside its menu; this layer is WebRetro's.
 
+## Achievements (RetroAchievements)
+
+When your admin has connected RetroAchievements, a title whose ROM matches a community achievement set gets an **Achievements** section on its details page: how many the set has, a link to it, and — once you enter your own RetroAchievements username — which ones you have earned.
+
+**Playing here does not unlock anything.** The browser player has no achievement runtime, hardcore or softcore, so the list is what exists to earn plus whatever you earned elsewhere (a real console, RetroArch, the desktop companion). No title claims a set it does not have: a ROM that matches nothing, or matches a set with no achievements yet, simply has no section.
+
+Your username is a public handle, never a password or key, and it is only used to read your progress. Clear the field to remove it.
+
+Only cartridge systems are matched — RetroAchievements hashes those by rules Oneirodex can reproduce (NES, SNES, N64, Game Boy/Color/Advance, Mega Drive, Master System, Game Gear, 32X, PC Engine, Lynx, Neo Geo Pocket, WonderSwan, Virtual Boy, SG-1000, ColecoVision, Intellivision, Vectrex, Odyssey², Channel F, Jaguar, Atari 2600/5200/7800). Disc-based systems are left unmatched rather than matched wrongly.
+
 ## Cheats (`.cht`)
 
 Browse/details payloads include **`cheat_surface`**: `retroarch` | `pc_wand` | `none`. Only `retroarch` exposes the `.cht` library (`GET/POST/DELETE /api/games/{uuid}/cheats`); create/upload/download/delete return **403** otherwise. Create with name + code rows + dialect hint (Raw / GG-style / AR-style / GS-style — capability labels only), or upload a prebuilt `.cht`. The WebRetro play bar loads the same list for **Apply cheat**; companion stages files under `app_data/cheats/{uuid}/` before RetroArch. Quick Menu may still be required to enable codes. PC / native (`PCWIN` / `PCDOS` / `MAC` / `OTHER`) report `pc_wand` — RetroArch `.cht` tooling stays hidden there; no memory injection.

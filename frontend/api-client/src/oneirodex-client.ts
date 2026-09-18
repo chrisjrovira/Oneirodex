@@ -13,6 +13,7 @@ import { createLibraryApi } from './library.js'
 import { createLibraryToolsApi } from './library-tools.js'
 import { createOpsApi } from './ops.js'
 import { createPlaytimeApi } from './playtime.js'
+import { createAchievementsApi } from './achievements.js'
 import { createSavesApi } from './saves.js'
 import { createTokensApi } from './tokens.js'
 import { createUpdatesApi } from './updates.js'
@@ -27,6 +28,7 @@ function buildClient(request: Requester) {
     tokens: createTokensApi(request),
     playtime: createPlaytimeApi(request),
     saves: createSavesApi(request),
+    achievements: createAchievementsApi(request),
     browse: createBrowseApi(request),
     updates: createUpdatesApi(request),
     downloads: createDownloadsApi(request),

@@ -78,6 +78,14 @@ export { createLibraryApi } from './library.js'
 export { createLibraryToolsApi } from './library-tools.js'
 export { createOpsApi } from './ops.js'
 export { createPlaytimeApi } from './playtime.js'
+export { createAchievementsApi } from './achievements.js'
+export type {
+  Achievement,
+  AchievementProgress,
+  AchievementsApi,
+  GameAchievementsResponse,
+  MyRetroAchievements,
+} from './achievements.js'
 export { createSavesApi } from './saves.js'
 export type { GameSave, GameSavesResponse, SavesApi } from './saves.js'
 export { createTokensApi } from './tokens.js'

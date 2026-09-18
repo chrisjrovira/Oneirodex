@@ -15,6 +15,7 @@ import { DetailsMoreFrom } from '../components/DetailsMoreFrom'
 import { DetailsStoreSpecs } from '../components/DetailsStoreSpecs'
 import { CheatsPanel } from '../components/CheatsPanel'
 import { SavedStatesPanel } from '../components/SavedStatesPanel'
+import { AchievementsPanel } from '../components/AchievementsPanel'
 import { PcCheatsPanel } from '../components/PcCheatsPanel'
 import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
 import { ExternalStoreLinks } from '../components/ExternalStoreLinks'
@@ -1130,6 +1131,9 @@ export function GameDetailsPage() {
         {/* Phase 4 save-state layer: this member's states, each a Resume
             into the room (which asks before loading). Self-gates on playHref. */}
         <SavedStatesPanel gameUuid={game.uuid} playHref={playHref} />
+
+        {/* R1/R2: only renders for a matched set that carries achievements. */}
+        <AchievementsPanel gameUuid={game.uuid} />
 
         {showsRetroarchCheats(game) ? (
           <CheatsPanel gameUuid={game.uuid} playHref={playHref} cheatSurface={game.cheat_surface} />

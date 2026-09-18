@@ -4,6 +4,7 @@ import { AdminTabs } from './components/AdminTabs'
 import { App } from './App'
 import { EmulatorFirmwarePanel } from './components/EmulatorFirmwarePanel'
 import { BrowserPlayerPilot } from './components/BrowserPlayerPilot'
+import { RetroAchievementsPanel } from './components/RetroAchievementsPanel'
 import { ImportLeafLibraries } from './components/ImportLeafLibraries'
 import { ProposeLeafLibraries } from './components/ProposeLeafLibraries'
 import './styles.css'
@@ -50,6 +51,7 @@ if (firmwareMount && !firmwareMount.dataset.reactMounted) {
   createRoot(firmwareMount).render(
     <>
       <BrowserPlayerPilot />
+      <RetroAchievementsPanel />
       <EmulatorFirmwarePanel />
     </>,
   )
