@@ -203,6 +203,24 @@
                     <input type="hidden" name="browser_player_engine" value="{{ form.browser_player_engine.data or '' }}">
                     {% endif %}
 
+                    {# TC-2b / Quest: install this library as an app. Hidden by
+                       od_pwa_install.js when it is already installed, dismissed,
+                       or the origin is not secure (service workers need TLS). #}
+                    <details class="od-prefs-section" data-prefs-section="prefs-install-heading" id="od-install-app" hidden>
+                        <summary class="od-prefs-section__summary">
+                            <span class="od-prefs-section__caret" aria-hidden="true"></span>
+                            <h3 class="od-prefs-section__title" id="prefs-install-heading">Install this library</h3>
+                        </summary>
+                        <p class="od-prefs-section__hint">Runs in its own window, starts on your shelf, and keeps no games or covers on the device. A thin seat or a headset can install the same way.</p>
+                        <div class="od-prefs-field">
+                            <button type="button" class="btn btn-primary" data-od-install-action hidden>Install</button>
+                            <p class="od-prefs-hint" data-od-install-hint hidden>
+                                Use your browser&rsquo;s own install control — <em>Share &rarr; Add to Home Screen</em> on iPad and iPhone, <em>Add to Home screen</em> in a headset browser, or the install icon in the address bar.
+                            </p>
+                            <button type="button" class="btn btn-link btn-sm" data-od-install-dismiss>Not now</button>
+                        </div>
+                    </details>
+
                     <details class="od-prefs-section" data-prefs-section="prefs-lang-heading" open>
                         <summary class="od-prefs-section__summary">
                             <span class="od-prefs-section__caret" aria-hidden="true"></span>

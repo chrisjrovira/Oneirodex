@@ -23,9 +23,20 @@ See [controllers-and-vr.md](../../docs/user/controllers-and-vr.md).
 
 ## Standalone (Quest, etc.)
 
-1. Open `/vr` while logged in.
-2. Use the browser **Add to Home** / install prompt when available.
-3. Large-tap browse only in this view (**no downloads**). For real PC games, use **Moonlight → household host** (see [controllers-and-vr.md](../../docs/user/controllers-and-vr.md)).
+1. Open Oneirodex in the headset browser and sign in.
+2. **Install it.** Either the app itself — **Preferences → Install this library**,
+   or the headset browser's own *Add to Home screen* — or the headset-specific
+   large-tap view at `/vr`. Both install; the first gives you the whole library,
+   the second gives you the browse-only view.
+3. Installing needs **HTTPS**; a plain-HTTP LAN address cannot register a
+   service worker, and no browser will offer to install it.
+4. Large-tap browse only in the `/vr` view (**no downloads**). For real PC
+   games, use **Moonlight → household host** (see
+   [controllers-and-vr.md](../../docs/user/controllers-and-vr.md)).
+
+An installed copy keeps the app shell on the headset and nothing else — no
+games, no cover art, no API responses. Offline it says so instead of showing a
+stale shelf.
 
 ## Assets
 
