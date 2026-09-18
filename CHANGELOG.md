@@ -7,14 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- **A console's loading motif now carries that console's colour.** Every motif was already drawn in `currentColor` and `--od-platform-accent` was already set per system family, but `.od-loading-motif` read `--od-accent` — so a Mega Drive cabinet spun in the theme accent like everything else. Non-system pages are unchanged (the fallback is the theme accent). `GENERATOR_VERSION` 38 — Reset Themes after deploying.
-
-### Fixed
-- Admin segmented strips wrap instead of pushing the page sideways on a phone. A six-item strip on Admin → Integrations was 457px wide inside a 315px parent; `.od-seg` was `inline-flex` with no `flex-wrap`. Wide layouts are unchanged — at 1280px it is still a single row. `GENERATOR_VERSION` 39, so Reset Themes after deploying.
-- Rail glyphs are one shared module instead of two hand-maintained copies that had already drifted: the member set carried a `ways-to-play` glyph the admin set never got. The stated reason for the duplication (staging `frontend/shared` broke the image build) has not been true since the Dockerfile started staging all of `frontend/`; both apps keep re-export shims at their old paths. `any` ratchet 1,277 → 1,276.
-
-
 ## [1.0.0] — 2026-09-18
 
 First stable release. Everything below shipped on top of `1.0.0-beta` (2026-08-06):
@@ -25,7 +17,7 @@ drawn theme rooms, and an installable app.
 **Upgrading from `1.0.0-beta`**
 
 1. Pull and rebuild: `docker compose up -d --build`. The entrypoint runs `alembic upgrade head`; this release adds three migrations (scan-job schedule fields, `user_preferences.browser_player_engine`, and the RetroAchievements index + `games.ra_*` columns). All three are idempotent, so a boot that already created the columns from the model is not an error.
-2. **Reset Default Themes** — Admin → Themes, or (admin) Preferences → Look & density. `GENERATOR_VERSION` moved 36 → 37 for the drawn room art, and themes are served from the library volume, so without this the rooms stay flat.
+2. **Reset Default Themes** — Admin → Themes, or (admin) Preferences → Look & density. `GENERATOR_VERSION` moved 36 → 39 across this release (drawn room art, per-console motif colour, the wrapping segmented strip), and themes are served from the library volume, so without this the rooms stay flat.
 3. Optional, operator-owned: `scripts/fetch-emulatorjs.sh` into the `EMULATORJS_HOST_PATH` bind to offer EmulatorJS as a second play engine; `RETROACHIEVEMENTS_USERNAME` + `RETROACHIEVEMENTS_API_KEY` in `.env` to match achievement sets. Both are inert when absent — no badge, no promise.
 4. The installable app needs **HTTPS**. Service workers require a secure origin, so on a plain-HTTP LAN address the *Install this library* row stays hidden by design.
 
@@ -157,6 +149,7 @@ Nothing in this release requires a database restore, and no configuration key wa
   wearing the same number. It never copies anything; the fix stays an operator decision
 
 ### Changed
+- **A console's loading motif now carries that console's colour.** Every motif was already drawn in `currentColor` and `--od-platform-accent` was already set per system family, but `.od-loading-motif` read `--od-accent` — so a Mega Drive cabinet spun in the theme accent like everything else. Non-system pages are unchanged (the fallback is the theme accent). `GENERATOR_VERSION` 38 — Reset Themes after deploying.
 - Discover shelves: the News / deals / Upcoming rows' scroll bar sits at the same gap under the tiles as every other row (article tiles overlay their caption, so the row no longer reserves a caption strip for them); a **mouse drag anywhere on a row — first tile included — pans it**, with the click after a drag swallowed so a tile does not open; a Steam free-game tile whose 2:3 capsule does not exist falls back to the store's `header.jpg` instead of an empty frame.
 - Discover **Upcoming** shows what you do not hold: library titles still ahead of release appear only if *you* favourited or requested them, and the rest of the shelf comes from the IGDB release cache for the systems your libraries hold — titles with no library row, as tiles with a `Coming · <platform>` badge and the date, linking to that platform's licensed catalogue. It used to list library games with a future date, i.e. things the household already had.
 - Browser emulator (EMU-AUDIO): the play assets' cache key is bumped to `play-clock-2` — it had sat at `leave-guard-1` through two refresh-clock fixes under `max-age=3600` with no validator, so a browser holding the old file kept it. The refresh sampler now waits for `visibilitychange` when the player boots in a hidden tab (`requestAnimationFrame` does not tick there) and logs that it is waiting instead of logging nothing. The device's audio rate is logged at boot (`Audio device: 48000Hz`) and both clocks are stamped on `<html>` as `data-od-refresh-hz` / `data-od-audio-hz`. `audio_latency` 96 → 128 for underrun headroom on a main-thread core. Ships with the image — no Reset Themes.
@@ -323,6 +316,8 @@ Nothing in this release requires a database restore, and no configuration key wa
 - **Licensed under AGPL-3.0**
 
 ### Fixed
+- Admin segmented strips wrap instead of pushing the page sideways on a phone. A six-item strip on Admin → Integrations was 457px wide inside a 315px parent; `.od-seg` was `inline-flex` with no `flex-wrap`. Wide layouts are unchanged — at 1280px it is still a single row. `GENERATOR_VERSION` 39, so Reset Themes after deploying.
+- Rail glyphs are one shared module instead of two hand-maintained copies that had already drifted: the member set carried a `ways-to-play` glyph the admin set never got. The stated reason for the duplication (staging `frontend/shared` broke the image build) has not been true since the Dockerfile started staging all of `frontend/`; both apps keep re-export shims at their old paths. `any` ratchet 1,277 → 1,276.
 - Big Picture no longer offers a thin seat buttons it cannot complete. The Download link, the Install button, the `D` shortcut and the gamepad's west button all ran with no seat check, while `GameActionBar` has refused them since TC-3 shipped — so on a TV, with a gamepad, the failure arrived as far from the press as it possibly could. All four are guarded now, and the two on-screen buttons are absent rather than present-and-failing.
 - Tile-size slider in the top bar persists again. It posts `tile_size` alone, and WTForms rejected every SelectField that was absent, so each save came back 400 (swallowed client-side) and the size reverted on reload. `/settings_panel` now treats a post without `_full_form` as a partial save and fills the stored values in underneath.
 - Unmatched list carries the name-transform trail again. PR #112 made `transforms` opt-in for CPU reasons, but the only consumer — the "Name transform trail" expander on Admin → Unmatched — never opted in, so it rendered for nothing. The list is paginated now, so the trail is on by default; `include=none` skips it.
