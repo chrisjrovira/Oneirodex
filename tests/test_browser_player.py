@@ -317,12 +317,11 @@ def test_member_preference_routes_play_href(app, db_session, tmp_path, monkeypat
     db_session.add(UserPreference(user_id=member.id, browser_player_engine='emulatorjs'))
     db_session.commit()
 
-    # get_browser_player_settings() caches on `g` for the app context, and the
-    # `app` fixture keeps one pushed for the whole test — so the cache has to
-    # be dropped by hand between the two halves. Real requests get a fresh one.
-    from flask import g
-
-    with app.app_context():
+    # Saves happen inside a request context, which is how the admin route calls
+    # them — and the only shape the test fixture's scoped session keeps: a
+    # commit made in a bare `app_context()` is rolled back when that context
+    # pops, so the next read would see the pre-save value.
+    with app.test_request_context('/'):
         set_browser_player_settings({
             'browser_player_default': 'webretro',
             'browser_player_allow_member_choice': False,
@@ -337,9 +336,8 @@ def test_member_preference_routes_play_href(app, db_session, tmp_path, monkeypat
             '/static/vendor/webretro/'
         )
 
-    with app.app_context():
+    with app.test_request_context('/'):
         set_browser_player_settings({'browser_player_allow_member_choice': True})
-    g.pop('_browser_player_settings', None)
     with app.test_request_context('/'):
         login_user(member)
         fields = play_engine_fields()
@@ -351,7 +349,7 @@ def test_member_preference_routes_play_href(app, db_session, tmp_path, monkeypat
             '/static/vendor/emulatorjs/play.html?guid=g1&core=nes&platform=NES'
         )
 
-    with app.app_context():
+    with app.test_request_context('/'):
         set_browser_player_settings({'browser_player_allow_member_choice': False})
 
 
@@ -364,3 +362,68 @@ def test_member_choice_is_not_offered_with_one_engine(app, db_session):
             assert fields['browser_players_available'] == ['webretro']
             assert fields['browser_player_member_choice'] is False
         set_browser_player_settings({'browser_player_allow_member_choice': False})
+
+
+def test_install_probe_is_memoised_per_request(app, tmp_path, monkeypatch):
+    """One filesystem stat per request, not one per tile.
+
+    `play_engine_fields()` runs once per game in `browse_play_fields`, so an
+    unmemoised `emulatorjs_installed()` meant a stat per tile — up to a thousand
+    on one browse page, against a bind mount to the NAS array.
+    """
+    from oneirodex.utils import browser_player as bp
+    from oneirodex.utils import emulatorjs as ejs
+
+    calls = []
+    data = tmp_path / 'data'
+    data.mkdir()
+    (data / 'loader.js').write_text('// stub', encoding='utf-8')
+
+    def counting_default_dir():
+        calls.append(1)
+        return data
+
+    monkeypatch.setattr(ejs, 'default_data_dir', counting_default_dir)
+
+    with app.test_request_context('/'):
+        first = bp.available_engines()
+        for _ in range(50):
+            bp.available_engines()
+        assert first == ('webretro', 'emulatorjs')
+        assert len(calls) == 1, f'probed the filesystem {len(calls)} times in one request'
+
+    # A different request re-probes, so installing mid-session is picked up.
+    with app.test_request_context('/'):
+        bp.available_engines()
+    assert len(calls) == 2
+
+
+def test_settings_cache_does_not_outlive_a_request(app):
+    """A long-lived app context must not pin the settings forever.
+
+    A CLI command or worker loop runs under one app context; caching there made
+    `set_browser_player_settings` (in another process) unobservable until
+    restart.
+    """
+    from flask import g
+
+    with app.app_context():
+        get_browser_player_settings()
+        assert not hasattr(g, '_browser_player_settings'), (
+            'settings were cached on a bare app context'
+        )
+        assert not hasattr(g, '_browser_player_available')
+
+
+def test_saving_settings_drops_the_install_probe_too(app, tmp_path, monkeypatch):
+    """An engine that just became installed must not be hidden by a stale probe."""
+    from oneirodex.utils import browser_player as bp
+
+    with app.test_request_context('/'):
+        assert bp.available_engines() == ('webretro',)
+        _install_emulatorjs(tmp_path, monkeypatch)
+        # Still the memoised answer within this request...
+        assert bp.available_engines() == ('webretro',)
+        # ...until a save invalidates both caches.
+        set_browser_player_settings({'browser_player_allow_member_choice': False})
+        assert bp.available_engines() == ('webretro', 'emulatorjs')
