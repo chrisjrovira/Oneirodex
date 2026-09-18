@@ -12,11 +12,6 @@ interface AdminNavLink {
   label: string
 }
 
-interface RailSubLink {
-  href: string
-  label: string
-}
-
 /**
  * Which admin LHN sections the operator has folded away.
  *

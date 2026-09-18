@@ -85,7 +85,6 @@ export function ScansPage() {
   const queuedJobs = jobs.filter((job) => isScanQueuedStatus(job?.status))
   const recentJobs = jobs.slice(0, 12)
   const statusPayload = (status && !Array.isArray(status) ? status : {}) as Record<string, unknown>
-  const progress = statusPayload.progress ?? statusPayload.percent ?? null
   const message =
     statusPayload.message || statusPayload.status_message || statusPayload.phase || null
   const scanMotifActive = running || queuedJobs.length > 0

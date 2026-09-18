@@ -131,6 +131,7 @@ export default [
       'frontend/shared/**/*.{ts,tsx}',
       'frontend/ops-glance/**/*.{ts,tsx}',
       'frontend/member-app/**/*.{ts,tsx}',
+      'frontend/admin-app/**/*.{ts,tsx}',
     ],
     extends: [tseslint.configs.recommended],
     plugins: { react: reactPlugin, 'react-hooks': reactHooks },

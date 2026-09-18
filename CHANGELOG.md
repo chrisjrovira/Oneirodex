@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **The admin app's TypeScript was never linted.** `eslint.config.js` listed `shared`, `ops-glance` and `member-app` under the typescript-eslint block and not `admin-app`, so `npm run lint` — and the CI lint job — checked only the admin app's `.js` test files since its TS conversion. Added; it surfaced three dead bindings (fixed) and two `useMemo` dependency warnings in `DashboardPage` / `OpsPage` (left for their decomposition).
+
 ### Changed
 - `showToast` is one module. The member and admin apps each carried a byte-alike copy of `frontend/shared/src/toast.ts`; both paths are now re-export shims of `@oneirodex/ui`, and the two app test suites merged into one shared suite (ten cases, the union of both). `any` ratchet 1,276 → 1,266.
 
