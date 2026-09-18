@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **A console's loading motif now carries that console's colour.** Every motif was already drawn in `currentColor` and `--od-platform-accent` was already set per system family, but `.od-loading-motif` read `--od-accent` — so a Mega Drive cabinet spun in the theme accent like everything else. Non-system pages are unchanged (the fallback is the theme accent). `GENERATOR_VERSION` 38 — Reset Themes after deploying.
+
+### Fixed
+- Rail glyphs are one shared module instead of two hand-maintained copies that had already drifted: the member set carried a `ways-to-play` glyph the admin set never got. The stated reason for the duplication (staging `frontend/shared` broke the image build) has not been true since the Dockerfile started staging all of `frontend/`; both apps keep re-export shims at their old paths. `any` ratchet 1,277 → 1,276.
+
 
 ## [1.0.0] — 2026-09-18
 

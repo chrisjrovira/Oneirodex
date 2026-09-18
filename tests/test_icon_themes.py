@@ -55,10 +55,21 @@ def test_drawing_packs_ship_pack_drawing_key_svgs():
 
 
 def test_member_rail_icon_exposes_data_icon():
-    text = (REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'railIcons.tsx').read_text(
-        encoding='utf-8'
-    )
+    """`data-icon` is what the icon-pack CSS hooks onto, so it must survive.
+
+    The glyphs moved to `@oneirodex/ui` (one module instead of two copies that
+    had drifted), and the member path is now a re-export shim — so this reads
+    the shared module. A source-text assertion has to follow the source.
+    """
+    text = (REPO / 'frontend' / 'shared' / 'src' / 'railIcons.tsx').read_text(encoding='utf-8')
     assert 'data-icon={name}' in text
+
+    # And the old paths still resolve, or every call site breaks.
+    for shim in (
+        REPO / 'frontend' / 'member-app' / 'src' / 'chrome' / 'railIcons.tsx',
+        REPO / 'frontend' / 'admin-app' / 'src' / 'components' / 'railIcons.tsx',
+    ):
+        assert 'RailIcon' in shim.read_text(encoding='utf-8'), shim
 
 
 def test_chrome_icon_components_expose_leftover_data_icons():

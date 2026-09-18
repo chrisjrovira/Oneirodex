@@ -80,7 +80,17 @@ is what makes that reset actually regenerate rather than keep the stale copy.
 ## Still open
 
 - **E1** console-named theme packs (a pack per system family, not per decade).
-- **E2** loading motifs in full colour per console rather than `currentColor`.
-- **E4** per-theme rail glyph drawings; `platformSkins` / `railIcons` are still
-  duplicated member↔admin and should settle here rather than in a debt sweep.
+- ~~**E2** loading motifs in full colour per console~~ — **done.** They are
+  still `currentColor`, which was the right mechanism all along; what was
+  missing is that `.od-loading-motif` read `--od-accent` instead of
+  `--od-platform-accent`, so a Mega Drive cabinet span in the theme accent like
+  everything else. `platformSkins` already sets that variable on `<html>` per
+  system family, and the fallback keeps every non-system page unchanged.
+- ~~**E4** per-theme rail glyph drawings~~ — **partly done.** The glyphs are one
+  shared module now (`frontend/shared/src/railIcons.tsx`) instead of two copies
+  that had already drifted by a glyph, and they respond to the icon-pack tokens
+  (`--od-icon-stroke`, `--od-icon-linecap`, `--od-icon-fill`) a preset already
+  sets — which is per-theme treatment without redrawing twenty-three paths per
+  theme. Genuinely *redrawn* per-era glyph sets remain open.
+- `platformSkins` is still duplicated member↔admin; `railIcons` no longer is.
 - Generated (AI) backdrops for the six rooms, per the section above.

@@ -12,7 +12,15 @@
   justify-content: center;
   width: var(--od-loading-size);
   height: var(--od-loading-size);
-  color: var(--od-accent);
+  /* E2: a console's motif reads in that console's colour.
+   *
+   * Every motif is drawn in `currentColor`, and `--od-platform-accent` is
+   * already set on <html> per system family by platformSkins (Nintendo red,
+   * Sony blue, Sega blue, Xbox green…). The motifs simply never read it, so a
+   * Mega Drive cabinet spun in the theme accent like everything else. The
+   * fallback is the theme accent, which is what every non-system page gets —
+   * so this changes nothing outside a system context. */
+  color: var(--od-platform-accent, var(--od-accent));
   flex-shrink: 0;
 }
 
