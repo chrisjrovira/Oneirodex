@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="presentation">
+  <!-- Carpeted den, late 90s: big CRT on a wide stand, disc spindle, couch edge,
+       blinds instead of a bare window. #2fd67b is the accent sentinel. -->
+  <defs>
+    <linearGradient id="cd-glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2fd67b" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#2fd67b" stop-opacity=".04"/>
+    </linearGradient>
+    <linearGradient id="cd-wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241c30"/><stop offset="1" stop-color="#14101c"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="620" fill="url(#cd-wall)" opacity=".55"/>
+
+  <!-- venetian blinds, left -->
+  <g opacity=".9">
+    <rect x="80" y="110" width="330" height="300" fill="#1a1626"/>
+    <g fill="#6a6480" opacity=".75">
+      <rect x="88" y="120" width="314" height="12"/><rect x="88" y="146" width="314" height="12"/>
+      <rect x="88" y="172" width="314" height="12"/><rect x="88" y="198" width="314" height="12"/>
+      <rect x="88" y="224" width="314" height="12"/><rect x="88" y="250" width="314" height="12"/>
+      <rect x="88" y="276" width="314" height="12"/><rect x="88" y="302" width="314" height="12"/>
+      <rect x="88" y="328" width="314" height="12"/><rect x="88" y="354" width="314" height="12"/>
+      <rect x="88" y="380" width="314" height="12"/>
+    </g>
+    <rect x="72" y="100" width="348" height="16" rx="4" fill="#3a3450"/>
+    <path d="M88 410 L402 410 L520 660 L20 660 Z" fill="#9aa8d8" opacity=".05"/>
+  </g>
+
+  <!-- big CRT and a wide stand, centre -->
+  <g>
+    <rect x="560" y="592" width="520" height="160" rx="8" fill="#2a2438"/>
+    <rect x="580" y="616" width="230" height="112" rx="5" fill="#161222"/>
+    <rect x="830" y="616" width="230" height="112" rx="5" fill="#161222"/>
+    <rect x="600" y="650" width="150" height="34" rx="6" fill="#3a3450"/>
+    <rect x="620" y="636" width="70" height="14" rx="7" fill="#4a4468"/>
+    <rect x="860" y="654" width="170" height="26" rx="4" fill="#3a3450"/>
+    <circle cx="1000" cy="667" r="7" fill="#2fd67b" opacity=".8"/>
+    <rect x="600" y="300" width="440" height="304" rx="20" fill="#3a3450"/>
+    <rect x="628" y="326" width="340" height="252" rx="16" fill="#08090c"/>
+    <rect x="636" y="334" width="324" height="236" rx="12" fill="url(#cd-glow)"/>
+    <g fill="#08090c" opacity=".3">
+      <rect x="636" y="344" width="324" height="4"/><rect x="636" y="362" width="324" height="4"/>
+      <rect x="636" y="380" width="324" height="4"/><rect x="636" y="398" width="324" height="4"/>
+      <rect x="636" y="416" width="324" height="4"/><rect x="636" y="434" width="324" height="4"/>
+      <rect x="636" y="452" width="324" height="4"/><rect x="636" y="470" width="324" height="4"/>
+      <rect x="636" y="488" width="324" height="4"/><rect x="636" y="506" width="324" height="4"/>
+      <rect x="636" y="524" width="324" height="4"/><rect x="636" y="542" width="324" height="4"/>
+    </g>
+    <rect x="986" y="350" width="42" height="196" rx="6" fill="#2a2438"/>
+    <circle cx="1007" cy="378" r="11" fill="#4a4468"/>
+    <circle cx="1007" cy="412" r="11" fill="#4a4468"/>
+    <rect x="994" y="440" width="26" height="90" rx="4" fill="#4a4468"/>
+  </g>
+
+  <!-- jewel cases and a disc spindle, right -->
+  <g>
+    <rect x="1180" y="470" width="300" height="140" rx="8" fill="#2a2438"/>
+    <g>
+      <rect x="1200" y="486" width="14" height="108" fill="#5a5478"/>
+      <rect x="1218" y="486" width="10" height="108" fill="#48425e"/>
+      <rect x="1232" y="486" width="16" height="108" fill="#6a6488"/>
+      <rect x="1252" y="490" width="12" height="104" fill="#48425e"/>
+      <rect x="1268" y="486" width="14" height="108" fill="#5a5478"/>
+    </g>
+    <g transform="translate(1390 560)">
+      <ellipse cx="0" cy="0" rx="62" ry="16" fill="#6a6488"/>
+      <ellipse cx="0" cy="-12" rx="62" ry="16" fill="#8a84a8"/>
+      <ellipse cx="0" cy="-24" rx="62" ry="16" fill="#6a6488"/>
+      <ellipse cx="0" cy="-36" rx="62" ry="16" fill="#8a84a8"/>
+      <ellipse cx="0" cy="-36" rx="14" ry="5" fill="#2a2438"/>
+      <rect x="-4" y="-104" width="8" height="70" fill="#4a4468"/>
+    </g>
+  </g>
+
+  <!-- couch edge, bottom left, over carpet pile -->
+  <path d="M0 720 h440 a28 28 0 0 1 28 28 v152 H0 z" fill="#3a2a38"/>
+  <path d="M0 720 h440 a28 28 0 0 1 28 28 v22 H0 z" fill="#4a3648"/>
+  <g opacity=".5" fill="#241a26">
+    <rect x="480" y="838" width="1120" height="6"/>
+    <rect x="480" y="860" width="1120" height="6"/>
+    <rect x="480" y="882" width="1120" height="6"/>
+  </g>
+</svg>

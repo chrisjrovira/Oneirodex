@@ -1,6 +1,6 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 34** in `oneirodex/utils/preset_themes.py` (Library tools THN; prior 33 = Auto Scan refresh icon). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
+Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 37** in `oneirodex/utils/preset_themes.py` (drawn room art per era; prior 36 = Library tools THN). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
 
 ## Default look
 
@@ -8,6 +8,23 @@ Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...
 - Glass tokens: `--od-glass-bg`, `--od-glass-border`, `--od-glass-blur`.
 - Admin → Themes is a dense `od-adminpage` surface (upload · reset · **installed themes as a list** · loading icons) — no separate “Back to Dashboard” stack; use the React top bar. Choosing a theme happens in Preferences, not here — see [Apply a theme](#apply-a-theme).
 - Member SPA also needs built **`member-app.css`** in dist — theme reset does not replace a missing SPA bundle.
+
+## Rooms have drawn art (generator 37)
+
+Each era now ships an authored SVG scene — `art/era/<era>.svg` — that the room
+paints behind the product: a window and shelves in the 80s den, posters and a
+portable set in the 90s bedroom, an AV rack in the 2000s media centre, a cabinet
+row in the arcade, a monitor and tower at the desk. The gradients stay as the
+*light*; the art is the *furniture*.
+
+The room keeps its own era palette; only one sentinel colour follows the theme
+accent (the screen glow, a standby LED), recoloured per preset exactly like the
+stock avatars. Art direction and the contract for adding or generating a
+backdrop: [dev/theme-art-direction.md](../dev/theme-art-direction.md).
+
+**This needs a Reset Default Themes** — the art lives on the volume beside the
+CSS, and a preset generated before 37 has no `art/` folder at all (it falls back
+to the old flat room rather than breaking).
 
 ## When to Reset Default Themes
 

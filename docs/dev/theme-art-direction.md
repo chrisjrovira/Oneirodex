@@ -1,0 +1,86 @@
+# Theme art direction
+
+> Human, 2026-08-31: *"themes are horrible; need full design with AI artwork, not
+> CSS-only."* This is the answer to the second half of that sentence — what a
+> theme **is**, so that art (drawn now, generated later) has somewhere to land.
+
+## What a theme is
+
+A theme is not a hue. It is six things that have to agree:
+
+| Layer | Owned by | Where it lives |
+|---|---|---|
+| **Palette** — accent, surface, text, border | the preset | `css/od-tokens.css`, generated per preset |
+| **Geometry** — radius, spacing, type scale, shadow, motion | the preset | same file; `_system_geometry()` in `preset_themes.py` |
+| **Room** — the space the product sits in | the **era**, not the preset | `css/od-era.css` variables + `art/era/<era>.svg` |
+| **Marks** — cover placeholder, avatars | the preset | `avatars/*.svg`, recoloured per preset; `.od-cover-fallback` is CSS + live text |
+| **Motifs** — loading animations | shared, tinted | `css/od-loading-motifs.css`, `currentColor` throughout |
+| **Glyphs** — rail and chrome icons | the icon pack the preset names | `icon_pack` on the preset |
+
+Fifteen presets map onto **six eras**. That is deliberate: a room is a setting,
+and several colour languages can live in one. Arcade Neon and Hot Cabinet are
+both *in the arcade*; they are not two arcades.
+
+## The rule that keeps rooms from becoming nine copies of one room
+
+**The room keeps its own palette. Only the light the product makes is themed.**
+
+A wood den is brown because dens were brown. Tinting the whole scene to the
+preset accent is exactly what made the pre-37 gradient rooms read as one room
+nine times. So each `art/era/*.svg` is authored in its era's palette, with a
+single sentinel colour — `#2fd67b` — used *only* where the theme should show
+through: the screen glow, a standby LED, a boombox bar. `_write_preset_era_art()`
+substitutes that one value with the preset's `--od-accent`, exactly as
+`_write_preset_avatars()` does for the three avatar colours.
+
+Anyone authoring or generating room art works inside that contract:
+
+- era palette for the world, `#2fd67b` for anything that should follow the theme;
+- `viewBox="0 0 1600 900"`, `preserveAspectRatio="xMidYMid slice"`, composed so
+  the **bottom centre** survives cropping (the layer is `background-position:
+  center bottom` under a UI that occupies the middle of the screen);
+- no photographs, no manufacturer marks, no licensed art — original geometry
+  that *reads* as a console, a cabinet, a CRT, without being anyone's product;
+- quiet. This is backdrop. Anything with hard contrast in the centre fights the
+  catalogue grid that sits on top of it.
+
+## How a room is drawn
+
+`#od-era-atmosphere` (see `templates/partials/era_atmosphere.html`) stacks, back
+to front: `wall` → **`scene`** → `window` → `posters` → `furnish` → `stand` →
+`floor` → `lamp` → `vignette` → `grain`. The gradient layers are the *light*;
+`scene` is the *furniture*. Both stay: the gradients respond to tokens and
+animate cheaply, the scene gives the room objects to be a room with.
+
+`--od-era-scene` points at `../art/era/<era>.svg` — relative to the stylesheet,
+so it resolves inside **the preset's own folder** and each preset paints its own
+recoloured copy with no generator work per URL. `--od-era-scene-opacity` is
+per-era, because a bright arcade and a dim den do not need the same weight.
+
+## Replacing drawn art with generated art
+
+The generated-art half of THEME-AI (SD.Next sidecar, `docker-compose.artwork-local.yml`,
+the RTX 2080 box — **do not batch FLUX there, 8 GB**) drops a rendered backdrop
+at the same path with the same name. Nothing else changes: no CSS, no generator,
+no template. Requirements for a generated backdrop are the contract above, plus:
+
+- deliver a raster at 1600×900 or larger, or an SVG that traces it;
+- keep the accent-bearing element (screen, LED) as a separate pass in `#2fd67b`
+  so the substitution still works, **or** accept that the room will not follow
+  the theme accent;
+- bump `GENERATOR_VERSION` so every preset rebuilds and operators Reset Themes.
+
+## Deploy trap
+
+Theme CSS, JS and art are served from the **library volume**, not the image.
+A change here is invisible until the container is rebuilt **and** an admin runs
+**Reset Themes** (Preferences → Look & density, admin only). `GENERATOR_VERSION`
+is what makes that reset actually regenerate rather than keep the stale copy.
+
+## Still open
+
+- **E1** console-named theme packs (a pack per system family, not per decade).
+- **E2** loading motifs in full colour per console rather than `currentColor`.
+- **E4** per-theme rail glyph drawings; `platformSkins` / `railIcons` are still
+  duplicated member↔admin and should settle here rather than in a debt sweep.
+- Generated (AI) backdrops for the six rooms, per the section above.
