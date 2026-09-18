@@ -181,7 +181,9 @@ test('lab generates one forced pair and records the attempt', async () => {
     render(<SystemMarksPanel />)
     expect(await screen.findByTestId('system-marks-lab')).toBeInTheDocument()
     const prompt = await screen.findByLabelText('Lab prompt')
-    expect(prompt).toHaveValue('product icon of grey Nintendo NES')
+    // The textarea mounts empty; its value lands when the lab-spec fetch
+    // resolves. Assert on the value, not on the element existing.
+    await waitFor(() => expect(prompt).toHaveValue('product icon of grey Nintendo NES'))
     await user.click(screen.getByRole('button', { name: /Generate aurora\/nes/i }))
     await waitFor(() => expect(posts.length).toBe(1))
     expect(posts[0]).toMatchObject({
