@@ -8,6 +8,7 @@
 **How do I jump to the top or bottom of a long page?**  
 When the member page is scrollable, aurora glass **Jump to top** / **Jump to bottom** controls appear (bottom-left, clear of the Friends/Chat dock). They hide on short pages that don’t scroll.
 
+
 ## Sign-in & accounts
 
 **I can’t log in.**  
@@ -203,3 +204,13 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 **What licence is Oneirodex?**  
 GNU AGPL v3. Help → About has the licence link. If you run a *modified* copy as a network service, AGPL §13 means you owe your users that modified source — admins set `ONEIRODEX_SOURCE_URL` to their fork so the Help/About source link is honest.
 
+## Installing
+
+**Can I install Oneirodex as an app?**  
+Yes, on anything with a modern browser: **Preferences → Install this library**. It opens in its own window with its own icon and starts on your shelf. On iPad and iPhone use Share → **Add to Home Screen**; in a headset browser use its *Add to Home screen*. A thin seat that wants to appear in the operator's device list as a thin client uses the shell instead — [thin-client.md](thin-client.md).
+
+**Why is there no Install row?**  
+It needs **HTTPS**. Browsers only allow the install path on a secure origin, so a plain-HTTP LAN address will not offer it. The row is also hidden once the app is installed, or if you pressed *Not now*.
+
+**Does an installed copy work offline?**  
+No, and it does not pretend to. It keeps the app's own code and theme files on the device — never games, cover art or anything from the API, because an installed app outlives a sign-out on a shared machine. With no network it shows a "no route to your library" page rather than a stale shelf, and reconnects on its own.

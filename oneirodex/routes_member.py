@@ -3,6 +3,8 @@
 from pathlib import Path
 
 from flask import (
+    jsonify,
+    render_template,
     Blueprint, current_app, jsonify, redirect, request, send_from_directory,
     url_for,
 )
@@ -200,6 +202,80 @@ def vr_browse_page():
     if not enabled:
         return redirect(url_for('library.library'))
     return render_member_spa(title='VR Library')
+
+
+@member_bp.route('/manifest.webmanifest')
+def app_manifest():
+    """Install manifest for the member app (TC-2b thin seats, Quest headsets).
+
+    A route rather than a static file because the name and start URL follow the
+    install: `PRODUCT_NAME` is the product's, but an operator who has renamed
+    the site should see their name on the home screen, not ours.
+
+    No login required — a manifest is fetched by the browser before the member
+    is anywhere near signing in, and it contains nothing but branding.
+    """
+    from oneirodex.product import PRODUCT_NAME
+
+    settings = get_global_settings() or {}
+    site_name = str(settings.get('site_name') or '').strip() or PRODUCT_NAME
+    manifest = {
+        'id': '/library',
+        'name': site_name,
+        'short_name': site_name[:12] or PRODUCT_NAME[:12],
+        'description': f'{site_name} — your household game library',
+        # The library, not `/`: an installed window should open on the shelf.
+        'start_url': '/library',
+        # Site-wide so details, Discover, settings and browser play all stay
+        # inside the installed window instead of kicking out to the browser.
+        'scope': '/',
+        'display': 'standalone',
+        'display_override': ['window-controls-overlay', 'standalone', 'minimal-ui'],
+        'orientation': 'any',
+        'background_color': '#0b0f14',
+        'theme_color': '#0b0f14',
+        'categories': ['games', 'entertainment', 'utilities'],
+        'icons': [
+            {'src': '/static/icons/icon-192.png', 'sizes': '192x192', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/static/icons/gametheca-256.png', 'sizes': '256x256', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/static/icons/gametheca-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'any'},
+            {'src': '/static/icons/gametheca-512.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'},
+        ],
+        'shortcuts': [
+            {'name': 'Library', 'url': '/library'},
+            {'name': 'Discover', 'url': '/discover'},
+            {'name': 'Big Picture', 'url': '/bigpicture'},
+        ],
+    }
+    resp = jsonify(manifest)
+    resp.mimetype = 'application/manifest+json'
+    # Branding changes rarely; an hour keeps a rename from taking a day.
+    resp.headers['Cache-Control'] = 'public, max-age=3600'
+    return resp
+
+
+@member_bp.route('/sw.js')
+def app_service_worker():
+    """Serve the member service worker at the origin root so its scope is `/`."""
+    static_root = Path(current_app.static_folder or '')
+    resp = send_from_directory(static_root, 'app-sw.js', mimetype='application/javascript')
+    resp.headers['Service-Worker-Allowed'] = '/'
+    # Never cached: a stale worker is a bug that outlives deploys.
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+
+@member_bp.route('/offline')
+def offline_page():
+    """What an installed app shows with no network.
+
+    Static and member-free on purpose — the service worker precaches it, and a
+    precached page that carried library data would be readable by whoever opens
+    the browser next.
+    """
+    resp = current_app.make_response(render_template('site/offline.html'))
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
 
 
 @member_bp.route('/vr/sw.js')

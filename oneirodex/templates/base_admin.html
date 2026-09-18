@@ -7,6 +7,15 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Oneirodex Admin{% endblock %}</title>
     {% include 'partials/favicon.html' %}
+    {# Installable app (TC-2b thin seats · Quest headsets). The manifest is a
+       route so branding and start URL sit with the code that serves them; the
+       worker registers from od_pwa_install.js, which also owns the install
+       button. #}
+    <link rel="manifest" href="{{ url_for('member.app_manifest') }}">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="{{ url_for('static', filename='vendor/jquery/3.7.1/jquery.min.js') }}"></script>
     {# DataTables is not on every admin page — only logs and download
        requests load it. Cropper is only on admin library-create. #}
@@ -15,6 +24,8 @@
     <script src="{{ url_for('static', filename='vendor/bootstrap/5.3.2/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/notify/0.4.2/notify.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/od_toast.js') }}"></script>
+    {# Registers /sw.js and owns the install affordance (see od_pwa_install.js). #}
+    <script src="{{ url_for('static', filename='js/od_pwa_install.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/od_dom_actions.js') }}"></script>
     <script src="{{ 'js/csrf-utils.js'|theme_asset }}"></script>
     <link rel="stylesheet" href="{{ 'css/od-tokens.css'|theme_asset }}">

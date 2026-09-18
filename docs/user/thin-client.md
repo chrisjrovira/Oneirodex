@@ -11,6 +11,37 @@ Connect-only shell for browse / social / Big Picture — **not** Download · Ins
 
 Thin has **no** local install pipeline. Install/Update stay on the full companion (or browser download + companion extract).
 
+## No binary: install the web app instead (TC-2b)
+
+A Chromebook, a locked-down work laptop, a tablet or a headset cannot run an
+unsigned Tauri build — and does not need to. **Preferences → Install this
+library** installs the member app itself: its own window, its own icon, opening
+straight on your shelf.
+
+- **Chrome / Edge / Brave / Quest browser:** the Install button appears in
+  Preferences, or use the install icon in the address bar.
+- **Safari (iPad, iPhone, Mac):** Share → **Add to Home Screen**. Safari has no
+  install prompt to offer, so Preferences shows the instruction rather than a
+  button that cannot work.
+- **Firefox desktop:** no install path; use a normal window or a pinned tab.
+
+**This needs HTTPS.** Installing requires a service worker, browsers only allow
+those on a secure origin, and a LAN address over plain HTTP is not one. If the
+install row never appears, that is almost always why — see
+the HTTPS section of [unraid-deploy.md](../runbooks/unraid-deploy.md#https-smtp-passkeys-hellfirenas) if you have
+not set up TLS yet.
+
+**What an installed copy keeps on the device:** the app's own code, fonts and
+theme files. **Not** games, **not** cover art, **not** anything from the API.
+That is deliberate — an installed app on a shared machine outlives a sign-out,
+and one member's shelf should never be sitting in another member's browser
+storage. Offline, the window shows a "no route to your library" page rather
+than a stale one; signing out clears what little is cached.
+
+An installed seat is still a *browser* seat: it heartbeats as `browser`, not as
+`thin`, so it has no install ACLs to lose. If you want the seat to show up in
+the operator's device list as a thin client, use the shell below.
+
 ## Build (unsigned)
 
 ```bash
