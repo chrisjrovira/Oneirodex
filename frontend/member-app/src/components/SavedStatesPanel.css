@@ -1,0 +1,46 @@
+.od-saved-states__lede {
+  margin: 0;
+  line-height: 1.45;
+  opacity: 0.78;
+  font-size: var(--od-font-md);
+}
+
+.od-saved-states__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.od-saved-states__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--od-radius-md);
+  border: 1px solid color-mix(in srgb, var(--od-border) 80%, transparent);
+  background: color-mix(in srgb, var(--od-surface-2) 70%, transparent);
+}
+
+.od-saved-states__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.od-saved-states__when {
+  opacity: 0.7;
+  font-size: var(--od-font-sm);
+}
+
+.od-saved-states__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}

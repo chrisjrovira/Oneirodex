@@ -14,6 +14,7 @@ import { DetailsMediaStage } from '../components/DetailsMediaStage'
 import { DetailsMoreFrom } from '../components/DetailsMoreFrom'
 import { DetailsStoreSpecs } from '../components/DetailsStoreSpecs'
 import { CheatsPanel } from '../components/CheatsPanel'
+import { SavedStatesPanel } from '../components/SavedStatesPanel'
 import { PcCheatsPanel } from '../components/PcCheatsPanel'
 import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
 import { ExternalStoreLinks } from '../components/ExternalStoreLinks'
@@ -1125,6 +1126,10 @@ export function GameDetailsPage() {
             </ul>
           </section>
         ) : null}
+
+        {/* Phase 4 save-state layer: this member's states, each a Resume
+            into the room (which asks before loading). Self-gates on playHref. */}
+        <SavedStatesPanel gameUuid={game.uuid} playHref={playHref} />
 
         {showsRetroarchCheats(game) ? (
           <CheatsPanel gameUuid={game.uuid} playHref={playHref} cheatSurface={game.cheat_surface} />

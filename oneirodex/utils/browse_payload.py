@@ -78,6 +78,10 @@ def serialize_browse_row(game, result: BrowseQueryResult) -> dict:
         "library_platform": library_platform_key,
         "library_platform_label": library_platform_label,
         "is_favorite": game.uuid in result.favorite_uuids,
+        # This member's newest save state, or None. The tile says "Resume"
+        # and hands the slot to the play shell, which then asks rather than
+        # silently loading it.
+        "resume_state": result.resume_by_uuid.get(game.uuid),
         "date_identified": game.date_identified.isoformat()
         if game.date_identified
         else None,
