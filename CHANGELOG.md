@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `showToast` is one module. The member and admin apps each carried a byte-alike copy of `frontend/shared/src/toast.ts`; both paths are now re-export shims of `@oneirodex/ui`, and the two app test suites merged into one shared suite (ten cases, the union of both). `any` ratchet 1,276 → 1,266.
+
 ## [1.0.0] — 2026-09-18
 
 First stable release. Everything below shipped on top of `1.0.0-beta` (2026-08-06):

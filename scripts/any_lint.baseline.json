@@ -589,9 +589,5 @@
   },
   "frontend/member-app/src/utils/tileSize.ts": {
     "any-annotation": 8
-  },
-  "frontend/member-app/src/utils/toast.ts": {
-    "any-annotation": 8,
-    "any-alias": 2
   }
 }
