@@ -112,7 +112,15 @@ def supported_platforms() -> list[str]:
 
 
 def _nes_hash(data: bytes) -> str:
-    """iNES / NES 2.0: skip the 16-byte header, hash PRG+CHR as the header sizes them."""
+    """iNES / NES 2.0: skip the header (and any trainer), hash PRG+CHR.
+
+    The trainer matters. Flags6 bit 2 means a 512-byte trainer sits between the
+    header and PRG, and rcheevos skips it before hashing. Hashing from offset 16
+    regardless swallowed the trainer as if it were the first 512 bytes of PRG
+    and then truncated 512 bytes off the real end — producing a digest that is
+    neither the trainer-inclusive nor the trainer-exclusive one, so every
+    trainer ROM in a library silently matched nothing at all.
+    """
     if data[:4] == b'NES\x1a' and len(data) > 16:
         prg = data[4] * 16384
         chr_ = data[5] * 8192
@@ -120,7 +128,8 @@ def _nes_hash(data: bytes) -> str:
             prg += ((data[9] & 0x0F) << 8) * 16384
             chr_ += ((data[9] >> 4) << 8) * 8192
         size = prg + chr_
-        body = data[16:]
+        start = 16 + (512 if data[6] & 0x04 else 0)
+        body = data[start:]
         if 0 < size <= len(body):
             body = body[:size]
         return hashlib.md5(body).hexdigest()

@@ -334,3 +334,22 @@ def test_the_n64_guard_did_not_break_normal_dumps():
     expected = ra.ra_hash_bytes(z64, 'N64')
     assert ra.ra_hash_bytes(bytes(v64), 'N64') == expected
     assert ra.ra_hash_bytes(bytes(n64), 'N64') == expected
+
+
+def test_a_nes_trainer_is_skipped_like_rcheevos_does():
+    """Flags6 bit 2 puts a 512-byte trainer between the header and PRG.
+
+    Hashing from offset 16 regardless swallowed the trainer as the first 512
+    bytes of PRG and truncated 512 bytes off the real end — a digest that is
+    neither the trainer-inclusive nor the trainer-exclusive one, so every
+    trainer ROM in a library matched nothing and looked simply unsupported.
+    """
+    prg = b'\xaa' * 16384
+    chr_ = b'\x55' * 8192
+    expected = hashlib.md5(prg + chr_).hexdigest()
+
+    with_trainer = b'NES\x1a' + bytes([1, 1, 0x04, 0]) + b'\x00' * 8 + b'\xcc' * 512 + prg + chr_
+    without = b'NES\x1a' + bytes([1, 1, 0x00, 0]) + b'\x00' * 8 + prg + chr_
+
+    assert ra.ra_hash_bytes(with_trainer, 'NES') == expected
+    assert ra.ra_hash_bytes(without, 'NES') == expected
