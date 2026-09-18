@@ -250,6 +250,14 @@
  * rings. */
 .od-seg {
   display: inline-flex;
+  /* Wrap, or the strip pushes the page sideways on a narrow screen.
+     Measured on Admin -> Integrations at a 375px layout viewport: a six-item
+     strip was 457px inside a 315px parent — 142px wider than its own
+     container, which is an overflow regardless of what the viewport is doing.
+     Each member already carries its own border and radius (the bar was
+     un-welded in generator 29), so a wrapped row reads as intended rather
+     than as a broken pill. */
+  flex-wrap: wrap;
   gap: 2px;
   background: transparent;
 }
