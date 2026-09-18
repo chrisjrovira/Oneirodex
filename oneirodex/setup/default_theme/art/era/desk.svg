@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="presentation">
+  <!-- Desk. The one room that is not a decade: a monitor on arms, a tower with a
+       mesh front, a keyboard, a mug, cable tray. #2fd67b is the accent sentinel. -->
+  <defs>
+    <linearGradient id="dk-screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2fd67b" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#2fd67b" stop-opacity=".04"/>
+    </linearGradient>
+    <linearGradient id="dk-desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3140"/><stop offset="1" stop-color="#1b2029"/>
+    </linearGradient>
+    <radialGradient id="dk-bias" cx=".5" cy=".5" r=".6">
+      <stop offset="0" stop-color="#2fd67b" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#2fd67b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- bias light behind the monitor -->
+  <ellipse cx="800" cy="330" rx="520" ry="300" fill="url(#dk-bias)"/>
+
+  <!-- monitor on an arm -->
+  <g>
+    <rect x="470" y="140" width="660" height="376" rx="12" fill="#12161d"/>
+    <rect x="486" y="156" width="628" height="336" rx="7" fill="#080a0e"/>
+    <rect x="486" y="156" width="628" height="336" rx="7" fill="url(#dk-screen)"/>
+    <!-- window chrome sketched, not text -->
+    <g opacity=".5" fill="#0d1218">
+      <rect x="486" y="156" width="628" height="26" rx="7"/>
+    </g>
+    <g opacity=".35" fill="#7fe3ab">
+      <rect x="520" y="206" width="240" height="8" rx="4"/>
+      <rect x="520" y="230" width="180" height="8" rx="4"/>
+      <rect x="520" y="254" width="300" height="8" rx="4"/>
+      <rect x="520" y="290" width="120" height="8" rx="4"/>
+      <rect x="520" y="314" width="210" height="8" rx="4"/>
+    </g>
+    <rect x="770" y="516" width="60" height="18" fill="#12161d"/>
+    <path d="M800 534 L1080 534 L1080 610" stroke="#2a3240" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <rect x="1040" y="606" width="80" height="16" rx="6" fill="#2a3240"/>
+  </g>
+
+  <!-- desk surface -->
+  <rect x="0" y="620" width="1600" height="34" fill="url(#dk-desk)"/>
+  <rect x="0" y="654" width="1600" height="10" fill="#141920" opacity=".8"/>
+
+  <!-- tower under the desk, left -->
+  <g>
+    <rect x="150" y="530" width="180" height="330" rx="8" fill="#1a1f28"/>
+    <rect x="166" y="546" width="60" height="298" rx="5" fill="#0f131a"/>
+    <g fill="#242b36">
+      <rect x="174" y="560" width="44" height="6"/><rect x="174" y="576" width="44" height="6"/>
+      <rect x="174" y="592" width="44" height="6"/><rect x="174" y="608" width="44" height="6"/>
+      <rect x="174" y="624" width="44" height="6"/><rect x="174" y="640" width="44" height="6"/>
+      <rect x="174" y="656" width="44" height="6"/><rect x="174" y="672" width="44" height="6"/>
+    </g>
+    <circle cx="300" cy="566" r="7" fill="#2fd67b" opacity=".9"/>
+    <rect x="250" y="600" width="60" height="180" rx="6" fill="#0f131a" opacity=".7"/>
+  </g>
+
+  <!-- keyboard, mouse, mug -->
+  <g>
+    <rect x="560" y="664" width="480" height="70" rx="8" fill="#1d2430"/>
+    <g fill="#2c3542">
+      <rect x="578" y="678" width="42" height="18" rx="3"/><rect x="626" y="678" width="42" height="18" rx="3"/>
+      <rect x="674" y="678" width="42" height="18" rx="3"/><rect x="722" y="678" width="42" height="18" rx="3"/>
+      <rect x="770" y="678" width="42" height="18" rx="3"/><rect x="818" y="678" width="42" height="18" rx="3"/>
+      <rect x="866" y="678" width="42" height="18" rx="3"/><rect x="914" y="678" width="42" height="18" rx="3"/>
+      <rect x="962" y="678" width="60" height="18" rx="3"/>
+      <rect x="578" y="704" width="90" height="18" rx="3"/><rect x="674" y="704" width="250" height="18" rx="3"/>
+      <rect x="930" y="704" width="92" height="18" rx="3"/>
+    </g>
+    <path d="M1090 664 q40 0 40 34 q0 36 -40 36 q-40 0 -40 -36 q0 -34 40 -34 z" fill="#1d2430"/>
+    <rect x="1086" y="676" width="8" height="18" rx="4" fill="#2fd67b" opacity=".5"/>
+    <g>
+      <path d="M1230 640 h84 v56 a16 16 0 0 1 -16 16 h-52 a16 16 0 0 1 -16 -16 z" fill="#3a4554"/>
+      <path d="M1314 654 a20 20 0 0 1 0 36" fill="none" stroke="#3a4554" stroke-width="8"/>
+      <ellipse cx="1272" cy="640" rx="42" ry="8" fill="#6a7788" opacity=".5"/>
+    </g>
+  </g>
+
+  <!-- cable tray under the desk -->
+  <path d="M420 664 q60 90 190 60 q140 -34 240 40" fill="none" stroke="#141920" stroke-width="10" opacity=".75"/>
+</svg>

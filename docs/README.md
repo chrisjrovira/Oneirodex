@@ -18,6 +18,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Operators / observability (optional) | [runbooks/observability-profile.md](runbooks/observability-profile.md) — Prometheus stub; Admin Ops is default |
 | Operators / LiveKit voice | [runbooks/livekit-unraid.md](runbooks/livekit-unraid.md) |
 | Operators / achievements | [runbooks/retroachievements.md](runbooks/retroachievements.md) — match ROMs to community achievement sets (opt-in key); nothing played in the browser unlocks |
+| Maintainers / theme art | [dev/theme-art-direction.md](dev/theme-art-direction.md) — what a theme is beyond a hue: room art, the accent sentinel, and how a generated backdrop lands |
 | Operators / WebRetro cores | [runbooks/webretro-cores.md](runbooks/webretro-cores.md) · [admin/webretro-core-clauses.md](admin/webretro-core-clauses.md) (non-commercial clauses — not counsel) |
 | Operators / emulator BIOS | [runbooks/emulator-bios.md](runbooks/emulator-bios.md) — operator-supplied firmware; Admin scan/install, filenames only |
 | Operators / ROM reference sets | [runbooks/reference-sets.md](runbooks/reference-sets.md) |

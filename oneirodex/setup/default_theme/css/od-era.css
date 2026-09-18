@@ -21,6 +21,7 @@
 }
 
 #od-era-atmosphere .od-era-wall,
+#od-era-atmosphere .od-era-scene,
 #od-era-atmosphere .od-era-window,
 #od-era-atmosphere .od-era-posters,
 #od-era-atmosphere .od-era-furnish,
@@ -38,6 +39,27 @@
   opacity: var(--od-era-wallpaper-opacity, 1);
   transform-origin: 50% 40%;
   animation: od-era-wall-drift calc(28s / var(--od-era-motion, 1)) ease-in-out infinite alternate;
+}
+
+/* Drawn scene art for the room (art/era/<era>.svg in this theme's own folder,
+   so each preset paints its own recoloured copy). The gradient layers below
+   stay: they are the light, this is the furniture. An AI-generated backdrop
+   replaces the same file — see docs/dev/theme-art-direction.md. */
+#od-era-atmosphere .od-era-scene {
+  background: var(--od-era-scene, none);
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  opacity: var(--od-era-scene-opacity, 0);
+  transform-origin: 50% 70%;
+  animation: od-era-wall-drift calc(46s / var(--od-era-motion, 1)) ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #od-era-atmosphere .od-era-scene,
+  #od-era-atmosphere .od-era-wall {
+    animation: none;
+  }
 }
 
 #od-era-atmosphere .od-era-floor {
@@ -230,6 +252,8 @@ html[data-era] .od-shell:has(.od-news-card:focus-visible) > #content {
 
 html[data-era='wood_den_80s'],
 .theme-card-preview[data-era='wood_den_80s'] {
+  --od-era-scene: url('../art/era/wood_den_80s.svg');
+  --od-era-scene-opacity: 0.5;
   --od-era-bg: #1a1410;
   --od-era-wallpaper:
     repeating-linear-gradient(90deg, #3a2818 0 13px, #2a1c10 13px 26px),
@@ -258,6 +282,8 @@ html[data-era='wood_den_80s'],
 
 html[data-era='teen_bedroom_90s'],
 .theme-card-preview[data-era='teen_bedroom_90s'] {
+  --od-era-scene: url('../art/era/teen_bedroom_90s.svg');
+  --od-era-scene-opacity: 0.46;
   --od-era-bg: #1c1524;
   --od-era-wallpaper:
     repeating-linear-gradient(180deg, #3a2a48 0 18px, #322440 18px 20px, #2a1c38 20px 38px),
@@ -294,6 +320,8 @@ html[data-era='teen_bedroom_90s'],
 
 html[data-era='carpet_den_late_90s'],
 .theme-card-preview[data-era='carpet_den_late_90s'] {
+  --od-era-scene: url('../art/era/carpet_den_late_90s.svg');
+  --od-era-scene-opacity: 0.44;
   --od-era-bg: #121018;
   --od-era-wallpaper: linear-gradient(180deg, #1c1828 0 62%, #141018 62% 100%);
   --od-era-floor:
@@ -324,6 +352,8 @@ html[data-era='carpet_den_late_90s'],
 
 html[data-era='media_center_00s'],
 .theme-card-preview[data-era='media_center_00s'] {
+  --od-era-scene: url('../art/era/media_center_00s.svg');
+  --od-era-scene-opacity: 0.4;
   --od-era-bg: #0b1220;
   --od-era-wallpaper: linear-gradient(180deg, #141c2c, #0a1018);
   --od-era-floor: linear-gradient(180deg, transparent, rgba(12, 20, 36, 0.75) 35%, #060a12);
@@ -345,6 +375,8 @@ html[data-era='media_center_00s'],
 
 html[data-era='arcade_cabinet'],
 .theme-card-preview[data-era='arcade_cabinet'] {
+  --od-era-scene: url('../art/era/arcade_cabinet.svg');
+  --od-era-scene-opacity: 0.52;
   --od-era-bg: #08060f;
   --od-era-wallpaper:
     radial-gradient(80% 40% at 50% 0%, #3a1028, transparent 55%),
@@ -370,6 +402,8 @@ html[data-era='arcade_cabinet'],
 
 html[data-era='desk'],
 .theme-card-preview[data-era='desk'] {
+  --od-era-scene: url('../art/era/desk.svg');
+  --od-era-scene-opacity: 0.34;
   --od-era-bg: #0d1410;
   --od-era-wallpaper:
     repeating-linear-gradient(0deg, rgba(94, 240, 138, 0.06) 0 1px, transparent 1px 4px),
