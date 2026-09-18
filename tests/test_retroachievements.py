@@ -307,3 +307,30 @@ def test_browse_and_plugins_carry_the_flag(client, db_session, configured_instal
     from oneirodex.utils.plugins import get_plugin
 
     assert get_plugin('achievements.retroachievements')['status'] == 'configured'
+
+
+def test_a_truncated_n64_dump_does_not_abort_the_whole_match():
+    """The byteswaps are whole-word; a short tail must not raise.
+
+    `match_platform` walks every game on the platform in one loop, so a
+    ValueError out of the hasher took the entire run down with it — one corrupt
+    dump and nothing on that system gets matched.
+    """
+    # v64 magic, odd length: the 16-bit swap has no partner for the last byte.
+    odd = b'\x37\x80\x40\x12' + bytes(range(61))
+    assert len(ra.ra_hash_bytes(odd, 'N64')) == 32
+    # n64 magic, length not a multiple of 4: same problem, wider word.
+    not_word_aligned = b'\x40\x12\x37\x80' + bytes(range(62))
+    assert len(ra.ra_hash_bytes(not_word_aligned, 'N64')) == 32
+
+
+def test_the_n64_guard_did_not_break_normal_dumps():
+    """Well-formed images in all three byte orders still agree."""
+    z64 = b'\x80\x37\x12\x40' + bytes(range(4, 64))
+    v64 = bytearray(z64)
+    v64[0::2], v64[1::2] = z64[1::2], z64[0::2]
+    n64 = bytearray(z64)
+    n64[0::4], n64[1::4], n64[2::4], n64[3::4] = z64[3::4], z64[2::4], z64[1::4], z64[0::4]
+    expected = ra.ra_hash_bytes(z64, 'N64')
+    assert ra.ra_hash_bytes(bytes(v64), 'N64') == expected
+    assert ra.ra_hash_bytes(bytes(n64), 'N64') == expected

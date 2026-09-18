@@ -117,3 +117,28 @@ def test_preferences_offers_the_install_hidden_by_default():
     assert 'data-od-install-action' in html
     assert 'data-od-install-hint' in html
     assert 'Add to Home Screen' in html
+
+
+def test_worker_only_caches_urls_that_change_when_their_bytes_change():
+    """Cache-first is a promise that a URL identifies its content.
+
+    `/static/vendor/` also holds the EmulatorJS release, whose loader and cores
+    are fetched with no version query at all (`EJS_pathtodata + 'loader.js'`).
+    Caching those by prefix meant an installed app kept booting the old cores
+    after an operator upgraded EmulatorJS — unreachable short of uninstalling.
+    """
+    # The rule is enforced, not merely described.
+    assert "url.searchParams.has('v')" in SW
+    assert 'CONTENT_HASHED_PREFIX' in SW
+    # A bare prefix match is no longer sufficient on its own.
+    assert 'CACHEABLE_PREFIXES.some' in SW
+    assert 'if (url.pathname.startsWith(THEME_PREFIX)) return true;' not in SW
+    # Bumped so installs holding the unversioned copies drop them on activate.
+    assert "const VERSION = 'v2'" in SW
+
+
+def test_worker_drops_superseded_caches_on_activate():
+    """Otherwise a fixed rule never reaches the browsers that need it."""
+    assert 'caches.delete(name)' in SW
+    assert "name.startsWith('oneirodex-')" in SW
+    assert '!name.endsWith(VERSION)' in SW
