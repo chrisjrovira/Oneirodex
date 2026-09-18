@@ -1,6 +1,6 @@
 # Oneirodex documentation
 
-**Product version:** 1.0.0-beta — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
+**Product version:** 1.0.0 — see root [CHANGELOG.md](../CHANGELOG.md) and [VERSION](../VERSION).
 
 Hub for product, ops, and developer docs. Public name **Oneirodex**. Runtime env is `ONEIRODEX_*` only ([ADR 0003](adr/0003-product-name-oneirodex.md)). Package `oneirodex/`, Compose defaults `oneirodex-*`, preferred Hub image `chrisjrovira/oneirodex` once published.
 
@@ -61,7 +61,7 @@ docs/
 |---|---|
 | Product (shipped today) | Oneirodex (public string) |
 | Ops / code identifiers | Compose defaults `oneirodex-*`; npm `@oneirodex/api-client`; env `ONEIRODEX_*` only — [ADR 0003](adr/0003-product-name-oneirodex.md) |
-| Version | 1.0.0-beta |
+| Version | 1.0.0 |
 | GitHub | chrisjrovira/oneirodex |
 | App / DB containers | oneirodex-app · oneirodex-db |
 | Optional voice | oneirodex-livekit (`--profile livekit`) |

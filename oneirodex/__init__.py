@@ -26,7 +26,7 @@ login_manager = LoginManager()
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
 csrf = CSRFProtect()
 app_start_time = datetime.now()
-app_version = '1.0.0-beta'
+app_version = '1.0.0'
 
 
 def create_app(config_object=None):
