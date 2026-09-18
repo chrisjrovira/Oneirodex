@@ -10,6 +10,12 @@ This test is the guard the ruling asked for. It reads the *index*, not the
 working tree, so it fails the moment any agent stages one of these paths --
 including a future one that has never read the ruling.
 
+Agent *handoff briefs* are the same class (PR #140, 2026-09-18, tried to route
+one into ``docs/HANDOFF.md`` because the root ``/*.md`` ignore swallowed it).
+They describe how an agent is run -- plan files, memories, queue mechanics --
+and name the operator's own hosts and containers. They live in ``docs/_private/``
+(ignored) like the 2026-09-01 brief before them.
+
 Exempt: ``.cursor/environment.json`` / ``install.sh`` / ``start.sh`` -- Cursor's
 cloud-agent *environment* bootstrap (a Postgres install and a generated key),
 which contain no agent instructions and which the cloud agent cannot clone
@@ -31,6 +37,8 @@ FORBIDDEN = (
     'AGENTS.md',
     '.claude/',
     '.cursor/',
+    'docs/HANDOFF.md',
+    'docs/_private/',
 )
 
 EXEMPT = frozenset({
@@ -62,5 +70,5 @@ def test_agent_harness_files_are_not_tracked():
 def test_gitignore_still_names_the_policy():
     """The ignore lines are the first line of defence; the test is the second."""
     text = (ROOT / '.gitignore').read_text(encoding='utf-8')
-    for line in ('/AGENTS.md', '/CLAUDE.md', '.claude/'):
+    for line in ('/AGENTS.md', '/CLAUDE.md', '.claude/', 'docs/_private/'):
         assert line in text, f'{line!r} missing from .gitignore'
