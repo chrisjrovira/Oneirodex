@@ -90,7 +90,11 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # of discovery_sections.js / admin_discovery_sections.css picks it up.
 # Auto Scan: Refresh-all is an icon + od-tip in the panel header (no banner row).
 # Library tools: THN owns tool views; pane chrome is borderless.
-GENERATOR_VERSION = 36
+# 37 (THEME-AI first pass): each theme carries **drawn room art**, not gradients
+# alone — `art/era/<era>.svg` under the theme's own folder, painted by the new
+# `.od-era-scene` layer and recoloured per preset on one accent sentinel. A
+# preset missing `art/` shows the old flat room, so Reset Themes is required.
+GENERATOR_VERSION = 37
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'
@@ -120,6 +124,23 @@ PRESET_MARKER_KEY = 'oneirodex_preset'
 AVATAR_SOURCE_ACCENT = '#2fd67b'
 AVATAR_SOURCE_PANEL = '#12161c'
 AVATAR_SOURCE_MUTED = '#8a94a3'
+
+# Drawn room art (THEME-AI). One SVG per era, copied into every preset and
+# recoloured on a single sentinel so the screen glow matches the theme while the
+# room keeps its own era palette — a wood den does not turn green.
+#
+# `docs/dev/theme-art-direction.md` is the contract these files answer to. A
+# generated (AI) backdrop replaces the same path and needs no code change.
+ART_ACCENT_SENTINEL = '#2fd67b'
+
+ERA_ART_FILES = (
+    'arcade_cabinet.svg',
+    'carpet_den_late_90s.svg',
+    'desk.svg',
+    'media_center_00s.svg',
+    'teen_bedroom_90s.svg',
+    'wood_den_80s.svg',
+)
 
 AVATAR_FILES = (
     'arcade.svg',
@@ -152,9 +173,14 @@ PRESET_MANAGED_FILES = (
 # `preset_needs_rebuild`.
 PRESET_AVATAR_FILES = tuple(f'avatars/{name}' for name in AVATAR_FILES)
 
+# The recoloured room art — same conditional-staleness reasoning as the avatars
+# above: generated only when the source tree ships `art/`, never a permanent
+# rebuild trigger for an install whose source predates it.
+PRESET_ART_FILES = tuple(f'art/era/{name}' for name in ERA_ART_FILES)
+
 # What the sync pass must leave alone: everything the generator owns, whether
 # or not its absence would trigger a rebuild.
-PRESET_PROTECTED_FILES = PRESET_MANAGED_FILES + PRESET_AVATAR_FILES
+PRESET_PROTECTED_FILES = PRESET_MANAGED_FILES + PRESET_AVATAR_FILES + PRESET_ART_FILES
 
 # Folder slug must match how preferences / theme_asset resolve paths.
 # Wave 2d: each preset owns a colour language *and* a paired icon pack
@@ -1136,6 +1162,14 @@ def preset_needs_rebuild(
             if os.path.isfile(os.path.join(source_root, *rel.split('/')))
         ]
 
+    # Room art, same rule again.
+    if source_root and os.path.isdir(os.path.join(source_root, 'art', 'era')):
+        required += [
+            rel
+            for rel in PRESET_ART_FILES
+            if os.path.isfile(os.path.join(source_root, *rel.split('/')))
+        ]
+
     return any(
         not os.path.isfile(os.path.join(target, *rel.split('/')))
         for rel in required
@@ -1260,6 +1294,35 @@ def _write_preset_avatars(source_root: str, target: str, preset: dict) -> None:
             fh.write(svg)
 
 
+def _write_preset_era_art(source_root: str, target: str, preset: dict) -> None:
+    """Recolour the drawn room art into this preset's accent.
+
+    Only the sentinel moves. The room's own palette (wood, carpet, glass) is
+    era-owned and deliberately untouched: tinting a whole scene to the accent
+    is what made the old gradient rooms read as nine copies of one room.
+
+    A missing source folder is not an error — the preset simply has no scene
+    layer and falls back to the gradient room, exactly as before.
+    """
+    source_dir = os.path.join(source_root, 'art', 'era')
+    if not os.path.isdir(source_dir):
+        return
+
+    accent = preset_tokens(preset).get('od-accent') or ART_ACCENT_SENTINEL
+    target_dir = os.path.join(target, 'art', 'era')
+    os.makedirs(target_dir, exist_ok=True)
+
+    for name in ERA_ART_FILES:
+        source_file = os.path.join(source_dir, name)
+        if not os.path.isfile(source_file):
+            continue
+        with open(source_file, 'r', encoding='utf-8') as fh:
+            svg = fh.read()
+        svg = re.sub(re.escape(ART_ACCENT_SENTINEL), accent, svg, flags=re.IGNORECASE)
+        with open(os.path.join(target_dir, name), 'w', encoding='utf-8') as fh:
+            fh.write(svg)
+
+
 def build_preset(source_root: str, target: str, preset: dict, fingerprint: str) -> None:
     """Regenerate one preset from scratch."""
     if os.path.exists(target):
@@ -1279,6 +1342,7 @@ def build_preset(source_root: str, target: str, preset: dict, fingerprint: str) 
     _write_preset_base_css(target, preset)
     _write_preset_tokens_css(source_root, target, preset)
     _write_preset_avatars(source_root, target, preset)
+    _write_preset_era_art(source_root, target, preset)
 
 
 def install_preset_themes(themes_path: str, default_source: str, *, force: bool = False) -> int:

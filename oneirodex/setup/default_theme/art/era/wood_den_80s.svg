@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="presentation">
+  <!-- Wood den, early 80s. Original geometry; no photographs, no maker marks.
+       Palette is era-owned (see docs/dev/theme-art-direction.md); #2fd67b is the
+       accent sentinel the preset generator recolours to the theme's accent. -->
+  <defs>
+    <linearGradient id="wd-panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a2818"/><stop offset="1" stop-color="#241609"/>
+    </linearGradient>
+    <linearGradient id="wd-glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2fd67b" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#2fd67b" stop-opacity=".05"/>
+    </linearGradient>
+    <radialGradient id="wd-lamp" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffb347" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- shelving unit, right -->
+  <g opacity=".9">
+    <rect x="1130" y="150" width="400" height="470" fill="url(#wd-panel)"/>
+    <g fill="#1b1008">
+      <rect x="1146" y="166" width="368" height="130"/>
+      <rect x="1146" y="312" width="368" height="130"/>
+      <rect x="1146" y="458" width="368" height="146"/>
+    </g>
+    <!-- cartridges, spines out -->
+    <g>
+      <rect x="1158" y="180" width="22" height="102" fill="#6b4a22"/>
+      <rect x="1184" y="180" width="18" height="102" fill="#8a5f2c"/>
+      <rect x="1206" y="186" width="24" height="96" fill="#57381a"/>
+      <rect x="1234" y="180" width="20" height="102" fill="#7a5426"/>
+      <rect x="1258" y="192" width="26" height="90" fill="#4a2f16"/>
+      <rect x="1288" y="180" width="18" height="102" fill="#8a5f2c"/>
+      <rect x="1310" y="184" width="22" height="98" fill="#6b4a22"/>
+      <rect x="1158" y="326" width="20" height="102" fill="#7a5426"/>
+      <rect x="1182" y="332" width="26" height="96" fill="#4a2f16"/>
+      <rect x="1212" y="326" width="18" height="102" fill="#8a5f2c"/>
+      <rect x="1234" y="330" width="22" height="98" fill="#6b4a22"/>
+    </g>
+    <!-- a couple laid flat -->
+    <rect x="1290" y="404" width="110" height="24" rx="3" fill="#55391b"/>
+    <rect x="1290" y="378" width="96" height="22" rx="3" fill="#6b4a22"/>
+  </g>
+
+  <!-- window, left: mullions + evening light -->
+  <g>
+    <rect x="96" y="120" width="300" height="330" rx="6" fill="#0d0805"/>
+    <rect x="108" y="132" width="276" height="306" fill="#c87838"/>
+    <rect x="108" y="132" width="276" height="120" fill="#f0c878" opacity=".85"/>
+    <rect x="108" y="352" width="276" height="86" fill="#3a2010" opacity=".8"/>
+    <g fill="#4a3018">
+      <rect x="238" y="132" width="16" height="306"/>
+      <rect x="108" y="278" width="276" height="14"/>
+      <rect x="96" y="120" width="300" height="14"/>
+      <rect x="96" y="436" width="300" height="20"/>
+    </g>
+    <!-- sill + light spill on the floor -->
+    <rect x="80" y="450" width="332" height="18" rx="4" fill="#5a3c1e"/>
+    <path d="M108 468 L384 468 L520 720 L40 720 Z" fill="#ffb347" opacity=".07"/>
+  </g>
+
+  <!-- TV on a low cabinet, centre -->
+  <g>
+    <rect x="620" y="560" width="420" height="150" rx="6" fill="url(#wd-panel)"/>
+    <rect x="636" y="596" width="180" height="90" rx="4" fill="#1b1008"/>
+    <rect x="836" y="596" width="188" height="90" rx="4" fill="#1b1008"/>
+    <!-- set -->
+    <rect x="672" y="352" width="330" height="240" rx="18" fill="#3a2a1c"/>
+    <rect x="694" y="374" width="250" height="186" rx="14" fill="#0b0d0c"/>
+    <rect x="700" y="380" width="238" height="174" rx="11" fill="url(#wd-glow)"/>
+    <!-- scanlines -->
+    <g fill="#0b0d0c" opacity=".35">
+      <rect x="700" y="386" width="238" height="3"/><rect x="700" y="398" width="238" height="3"/>
+      <rect x="700" y="410" width="238" height="3"/><rect x="700" y="422" width="238" height="3"/>
+      <rect x="700" y="434" width="238" height="3"/><rect x="700" y="446" width="238" height="3"/>
+      <rect x="700" y="458" width="238" height="3"/><rect x="700" y="470" width="238" height="3"/>
+      <rect x="700" y="482" width="238" height="3"/><rect x="700" y="494" width="238" height="3"/>
+      <rect x="700" y="506" width="238" height="3"/><rect x="700" y="518" width="238" height="3"/>
+      <rect x="700" y="530" width="238" height="3"/><rect x="700" y="542" width="238" height="3"/>
+    </g>
+    <!-- dial column -->
+    <g fill="#241609">
+      <circle cx="972" cy="404" r="16"/><circle cx="972" cy="450" r="16"/>
+      <rect x="954" y="486" width="36" height="58" rx="4"/>
+    </g>
+    <circle cx="972" cy="404" r="6" fill="#2fd67b" opacity=".8"/>
+  </g>
+
+  <!-- table lamp, right of the set -->
+  <g>
+    <ellipse cx="1092" cy="620" rx="150" ry="110" fill="url(#wd-lamp)"/>
+    <path d="M1052 470 L1132 470 L1152 546 L1032 546 Z" fill="#c8913f"/>
+    <rect x="1084" y="546" width="16" height="70" fill="#4a3018"/>
+    <rect x="1054" y="612" width="76" height="12" rx="4" fill="#4a3018"/>
+  </g>
+
+  <!-- controller and a mug on the floor -->
+  <g opacity=".85">
+    <rect x="470" y="742" width="132" height="46" rx="10" fill="#2a1c10"/>
+    <rect x="492" y="756" width="10" height="24" fill="#5a3c1e"/>
+    <rect x="484" y="764" width="26" height="8" fill="#5a3c1e"/>
+    <circle cx="566" cy="766" r="9" fill="#8a3a24"/>
+    <circle cx="542" cy="772" r="9" fill="#8a3a24"/>
+    <path d="M300 760 h56 v40 a12 12 0 0 1 -12 12 h-32 a12 12 0 0 1 -12 -12 z" fill="#6b4a22"/>
+    <path d="M356 770 a16 16 0 0 1 0 28" fill="none" stroke="#6b4a22" stroke-width="7"/>
+  </g>
+</svg>
