@@ -99,7 +99,11 @@ from oneirodex.product import LEGACY_NAME, PRODUCT_NAME
 # and the rail glyphs are one shared module rather than two drifting copies.
 # A preset still carrying the old od-loading-motifs.css spins every motif in
 # the theme accent, so Reset Themes is required.
-GENERATOR_VERSION = 38
+# 39 (UID-064): `.od-seg` wraps. A six-item segmented strip was 457px wide
+# inside a 315px parent on Admin -> Integrations at phone width, pushing the
+# page sideways. A preset still carrying the old od-appbar.css keeps the
+# nowrap strip, so Reset Themes is required.
+GENERATOR_VERSION = 39
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'
