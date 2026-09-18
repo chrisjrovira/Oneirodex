@@ -58,7 +58,7 @@
 }
 
 .od-achievements__earned {
-  color: var(--od-success, #2fd67b);
+  color: var(--od-success);
 }
 
 .od-achievements__form {

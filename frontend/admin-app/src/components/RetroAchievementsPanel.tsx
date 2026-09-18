@@ -156,7 +156,10 @@ export function RetroAchievementsPanel() {
             </tbody>
           </table>
           {lastRun ? (
-            <p className="od-muted" role="status">
+            // Recap only — the toast already announced the result, and a second
+            // live region would double-speak it (and trips the status-language
+            // ratchet, which wants PageStatus for anything that announces).
+            <p className="od-muted" data-testid="ra-last-run">
               Last run — {lastRun.platform}: {lastRun.considered} considered, {lastRun.hashed} newly
               hashed, {lastRun.matched} matched.
             </p>

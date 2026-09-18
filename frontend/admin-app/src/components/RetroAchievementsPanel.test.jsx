@@ -125,7 +125,7 @@ test('Match posts the platform and reports what it did', async () => {
     )
   })
   expect(showToast).toHaveBeenCalledWith(expect.stringMatching(/14 of 30 matched/), 'success')
-  expect(await screen.findByRole('status')).toHaveTextContent(/30 considered/)
+  expect(await screen.findByTestId('ra-last-run')).toHaveTextContent(/30 considered/)
 })
 
 test('a refused match surfaces the reason instead of a silent no-op', async () => {

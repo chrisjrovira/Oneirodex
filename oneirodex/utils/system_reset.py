@@ -107,6 +107,11 @@ RESET_SCOPES: dict[str, tuple[str, ...]] = {
         # rebuilt on demand, and leaving it behind meant a wiped catalog still
         # reported release counts for titles that were gone.
         'igdb_platform_releases',
+        # Cached RetroAchievements (console, hash) -> set index. Catalog scope
+        # for the same reason as the IGDB releases above: it is provider-derived
+        # and refetched on demand, and a wiped catalog that kept it would go on
+        # claiming achievement sets for games that are gone.
+        'retroachievements_index',
         'free_game_offers',
         'download_requests',
         'system_events',
