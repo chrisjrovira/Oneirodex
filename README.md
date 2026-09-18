@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0--beta-2fd67b?style=flat-square" alt="Version 1.0.0-beta" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.0.0-2fd67b?style=flat-square" alt="Version 1.0.0" /></a>
   <a href="https://github.com/chrisjrovira/oneirodex"><img src="https://img.shields.io/badge/github-chrisjrovira%2Foneirodex-181717?style=flat-square&logo=github" alt="GitHub" /></a>
   <a href="#-quick-start"><img src="https://img.shields.io/badge/port-5006-0b0d10?style=flat-square" alt="Port 5006" /></a>
   <a href="#-docker-compose"><img src="https://img.shields.io/badge/docker-compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose" /></a>
@@ -40,12 +40,12 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 
 | | |
 |---|---|
-| 🏷️ **Release** | [1.0.0-beta](CHANGELOG.md) · [`VERSION`](VERSION) |
+| 🏷️ **Release** | [1.0.0](CHANGELOG.md) · [`VERSION`](VERSION) |
 | 📦 **Package** | `oneirodex/` (class/package rename still exclusive-last) |
 | 🐙 **GitHub** | [chrisjrovira/oneirodex](https://github.com/chrisjrovira/oneirodex) (old `oneirodex` URL redirects) |
 | 🐳 **Containers** | `oneirodex-app` · `oneirodex-db` (pin `APP_CONTAINER_NAME=oneirodex-app` on live Unraid until FIFO idle) · optional `oneirodex-livekit` |
 | 🌐 **Default URL** | http://localhost:5006 |
-| 🖼️ **Image** | Local Compose build `oneirodex:1.0.0-beta` (Hub publish optional) |
+| 🖼️ **Image** | Local Compose build `oneirodex:1.0.0` (Hub publish optional) |
 
 > **Legal:** Use only with software you are authorized to share. Oneirodex does **not** include Discord bots, pirate marketplaces, or DRM store download queues. **Authentik / OIDC is optional** — local username/password works for home installs.
 
