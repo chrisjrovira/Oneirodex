@@ -154,6 +154,20 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         tgdb_key = bool(get_thegamesdb_api_key())
     except Exception:
         tgdb_key = bool(settings and getattr(settings, 'thegamesdb_api_key', None))
+    try:
+        from oneirodex.utils.retroachievements import configured as ra_configured
+
+        ra_ok = ra_configured()
+    except Exception:
+        ra_ok = False
+    add(
+        id='retroachievements',
+        name='RetroAchievements',
+        category='emulation',
+        admin_href='/admin/emulators#retroachievements',
+        configured=ra_ok,
+        notes='Achievement sets matched by ROM hash; member progress read-only (RETROACHIEVEMENTS_USERNAME / _API_KEY)',
+    )
     add(
         id='giantbomb',
         name='Giant Bomb',

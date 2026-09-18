@@ -240,6 +240,9 @@ class UserPreference(db.Model):
     # the admin allows member choice and the engine is installed on this box —
     # utils.browser_player resolves it, nothing reads the column directly.
     browser_player_engine = db.Column(db.String(16), nullable=True)
+    # RetroAchievements username, for reading this member's progress on a
+    # matched set (public data on the site). Never a password or key.
+    ra_username = db.Column(db.String(64), nullable=True)
     notify_friend_requests = db.Column(db.Boolean, default=True, nullable=False)
     notify_activity = db.Column(db.Boolean, default=True, nullable=False)
     notify_mentions = db.Column(db.Boolean, default=True, nullable=False)
