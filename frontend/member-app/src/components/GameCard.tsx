@@ -5,6 +5,8 @@ import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'
 import { safeHttpUrl } from '../utils/safeUrl'
+import { resumeHref } from '../api/saves'
+import { formatRelativeTime } from '../utils/formatRelativeTime'
 import { editionChipLabels } from '../utils/platformAbbrev'
 import { trailerEmbedUrls, prefersReducedMotion } from '../utils/detailsMedia'
 import { BadgeStack } from './BadgeStack'
@@ -127,7 +129,13 @@ export function GameCard({
   // the demo link" and was the reason a "Play demo" item sat in the tile menu
   // for a feature that does not exist. `demo_url` stays as a fallback because
   // some rows genuinely carry one and it is still the thing PLAY should open.
-  const playHref = firmwareBlocked ? null : game.play_url || game.demo_url || null
+  const basePlayHref = firmwareBlocked ? null : game.play_url || game.demo_url || null
+  // A state on the server turns Play into Resume: same room, the shell offers
+  // that slot first and still asks before loading it. `demo_url` rows never
+  // carry a state, so they keep reading Play.
+  const resumeState = game.resume_state && game.play_url ? game.resume_state : null
+  const playHref =
+    resumeState && basePlayHref ? resumeHref(basePlayHref, resumeState.slot_name) : basePlayHref
   const archiveBlocked = game.play_blocker === 'unsupported_archive'
   const archiveBlockHint =
     game.companion_hint ||
@@ -718,13 +726,19 @@ export function GameCard({
 
         {playHref ? (
           <a
-            className="od-tile-play"
+            className={resumeState ? 'od-tile-play od-tile-play--resume' : 'od-tile-play'}
             href={playHref}
-            title="Play in browser"
-            aria-label={`Play ${game.name} in browser`}
+            title={
+              resumeState
+                ? `Resume where you left off (${formatRelativeTime(resumeState.updated_at)})`
+                : 'Play in browser'
+            }
+            aria-label={
+              resumeState ? `Resume ${game.name} in browser` : `Play ${game.name} in browser`
+            }
             onClick={(event) => event.stopPropagation()}
           >
-            Play
+            {resumeState ? 'Resume' : 'Play'}
           </a>
         ) : playBlocked ? (
           <>

@@ -379,6 +379,100 @@ body.od-play-shell {
   display: none !important;
 }
 
+/* Save-state layer: resume bar + saves panel sit between the bar and the
+   stage, in the same slab as the alert so they read as chrome, not room. */
+.od-resume-bar,
+.od-saves-panel {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--od-play-accent, #2fd67b) 14%, #141418);
+  border-bottom: 1px solid color-mix(in srgb, var(--od-play-accent, #2fd67b) 45%, transparent);
+  color: var(--od-play-fg, #eee);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.od-resume-bar[hidden],
+.od-saves-panel[hidden] {
+  display: none !important;
+}
+
+.od-resume-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.od-resume-bar button,
+.od-saves-panel button {
+  background: var(--od-play-accent, #2fd67b);
+  color: var(--od-play-btn-fg, #111);
+  border: 0;
+  padding: 5px 12px;
+  cursor: pointer;
+  border-radius: var(--od-play-radius, 4px);
+  font-weight: 600;
+}
+
+.od-resume-bar #od-resume-no,
+.od-saves-panel .od-saves-row button {
+  background: transparent;
+  color: var(--od-play-fg, #eee);
+  border: 1px solid color-mix(in srgb, var(--od-play-fg, #eee) 40%, transparent);
+}
+
+.od-saves-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.od-saves-form input {
+  background: color-mix(in srgb, #000 35%, transparent);
+  color: var(--od-play-fg, #eee);
+  border: 1px solid color-mix(in srgb, var(--od-play-fg, #eee) 30%, transparent);
+  border-radius: var(--od-play-radius, 4px);
+  padding: 5px 8px;
+  min-width: 12ch;
+}
+
+.od-saves-hint {
+  opacity: 0.7;
+}
+
+.od-saves-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.od-saves-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.od-saves-row__name {
+  font-weight: 600;
+}
+
+.od-saves-row__when {
+  opacity: 0.7;
+}
+
+.od-saves-row--empty {
+  opacity: 0.7;
+}
+
 #od-play-stage {
   position: relative;
   z-index: 1;

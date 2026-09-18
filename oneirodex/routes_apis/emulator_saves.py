@@ -13,6 +13,7 @@ from oneirodex import db
 from oneirodex.models import Game
 from oneirodex.utils.emulator_saves import (
     delete_save,
+    is_state_slot,
     list_saves,
     read_save_bytes,
     save_sync_enabled,
@@ -32,10 +33,15 @@ def list_game_saves(game_uuid):
     if not user_can_access_game(current_user, game):
         return api_error('Forbidden', code='forbidden')
 
+    # Newest first; `is_state` separates resumable states from SRAM so the
+    # shell and the details page never offer to "resume" a battery save.
     return jsonify({
         'enabled': save_sync_enabled(),
         'game_uuid': game_uuid,
-        'saves': [row.to_dict() for row in list_saves(current_user.id, game_uuid)],
+        'saves': [
+            {**row.to_dict(), 'is_state': is_state_slot(row)}
+            for row in list_saves(current_user.id, game_uuid)
+        ],
     })
 
 

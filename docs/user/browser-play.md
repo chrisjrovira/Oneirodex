@@ -106,16 +106,17 @@ When `firmware_missing` is true, browse/details also return `bios_required`, `bi
 
 Single-file discs (`.iso`, `.chd`, a lone `.bin`) stream unchanged — no zip wrapping. The play shell reads the actual filename from the response's `Content-Disposition` header (not the request URL, which is just `/api/downloadrom/<uuid>`) and uses a long fetch timeout for ROM downloads, since PS1-sized discs can take well past the old 8-second default.
 
-## Cloud saves (WebRetro bridge)
+## Save states (WebRetro)
 
-The play bar **Sync cloud saves** uses `od-bridge.js` postMessage (`od-export-saves` / `od-import-saves`):
+Your place is kept for you. States live on the server, per member and per game, and the room never loads one without asking.
 
-- Export retries briefly so slow cores can flush `.state` / battery SRAM.
-- SRAM pick prefers `.srm`, then memory-card `.mcr`, then `.sav` (helps PS1-style cores).
-- Import writes IndexedDB + FS and calls `_cmd_load_state` when the core exposes it; otherwise use RetroArch **Load State**.
-- CSRF for upload comes from the `csrf_token` cookie (meta tag is filled from the cookie when present).
+- **Resume.** A tile whose game has a state reads **Resume** instead of Play (the details page lists every state under **Saved states**, each with its own Resume). Opening the room shows a bar — *Where you left off · 5 min ago — resume?* — with **Resume** and **Start fresh**. Nothing is loaded until you choose. Battery saves (the game's own SRAM) are put back silently, as they would be on a real cartridge.
+- **Leaving.** **← Game Catalog** and **Power** take a state and push it before the page goes (a few seconds at most; a slow server never keeps you on the screen). Hiding the tab does the same, throttled. That state is the one Resume offers.
+- **Saves panel.** The **Saves** button on the play bar opens a panel: name a save (**Save as**), **Load** or **Delete** any state, and **Sync now** for an explicit push. Up to 10 slots per game, 2 MiB each.
+- Under the hood this is `od-bridge.js` postMessage (`od-export-saves` / `od-import-saves`, the latter with `autoLoad:false` on boot). Export retries briefly so slow cores can flush `.state` / SRAM; the SRAM pick prefers `.srm`, then `.mcr`, then `.sav`. CSRF for upload comes from the `csrf_token` cookie.
+- If a deferred core is still warming, status may say to open **Saves** again after **Start**.
 
-If a deferred core is still warming, status may say to sync again after **Start**.
+EmulatorJS (engine B) has its own save-state screen inside its menu; this layer is WebRetro's.
 
 ## Cheats (`.cht`)
 

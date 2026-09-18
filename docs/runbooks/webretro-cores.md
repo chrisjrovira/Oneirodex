@@ -90,7 +90,7 @@ Play opens `webretro.html` → iframe `standalone.html?core=&rom=&nobundle=1`.
 | Defer cloud-save API | After `mainCompleted` + `requestIdleCallback` |
 | Cache installed-cores allowlist | `GET /api/emulator/installed-cores.js` → `private, max-age=300` |
 
-Manual **Sync cloud saves** still works immediately once the ROM is ready.
+**Saves → Sync now** still works immediately once the ROM is ready; the boot pull only *offers* a state (resume bar), it never loads one unasked.
 
 ## Honesty rules
 
