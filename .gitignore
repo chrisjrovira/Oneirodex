@@ -141,7 +141,10 @@ oneirodex/static/dist/
 # Agent scratch: task briefs and reports
 .superpowers/
 
-# Team-only competitive intel / banned-token lists — never push
+# Team-only competitive intel / banned-token lists — never push. Also the home
+# for agent handoff briefs (D5, 2026-09-18): they describe how an agent is run
+# and name the operator's hosts, so they never go to GitHub. Guarded by
+# tests/test_repo_hygiene.py.
 docs/_private/
 
 # Legal sample ROM binaries (operator-fetched; never commit dumps)
