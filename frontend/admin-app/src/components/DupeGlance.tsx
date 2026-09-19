@@ -11,9 +11,7 @@ import {
   normalizeMatchedGame,
   resolveSearchName,
 } from './unmatchedDupe'
-import {
-  hasStageEHints,
-} from './stageECandidates'
+import { hasStageEHints } from './stageECandidates'
 import './DupeGlance.css'
 
 import type { UnmatchedFolderRow } from './dupeGlance/dupeGlanceTypes'
