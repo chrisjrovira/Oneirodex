@@ -7,7 +7,7 @@ import { ContextBar } from '../chrome/ContextBar'
 import { formatLocaleDate } from '../utils/formatLocaleDate'
 import { PageStatus } from '../components/PageStatus'
 import './NewsPage.css'
-import { useShellConfig } from '@oneirodex/ui'
+import { useShellConfig, Button } from '@oneirodex/ui'
 
 function formatEndsAt(value: any) {
   if (!value) {
@@ -436,13 +436,13 @@ export function NewsPage() {
                             </header>
                             <p className="od-news__actions">
                               {item.connected && item.id ? (
-                                <button
+                                <Button
                                   type="button"
-                                  className="od-btn od-btn--primary"
+                                  variant="primary"
                                   onClick={() => void claimAssist(item)}
                                 >
                                   Claim &amp; sync
-                                </button>
+                                </Button>
                               ) : https ? (
                                 <a
                                   className="od-btn od-btn--primary"
@@ -513,13 +513,13 @@ export function NewsPage() {
                                 <p className="od-news__actions">
                                   {item.connected && item.id ? (
                                     <>
-                                      <button
+                                      <Button
                                         type="button"
-                                        className="od-btn od-btn--primary"
+                                        variant="primary"
                                         onClick={() => void claimAssist(item)}
                                       >
                                         Claim &amp; sync
-                                      </button>
+                                      </Button>
                                       {protocol ? (
                                         <a className="od-btn od-btn--ghost" href={protocol}>
                                           Open in app

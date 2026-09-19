@@ -243,32 +243,20 @@ export function ActivityPage() {
                   {row.direction === 'incoming' && row.status === 'pending' ? (
                     <>
                       {' '}
-                      <button
-                        type="button"
-                        className="od-btn"
-                        onClick={() => void acceptFriend(row.id)}
-                      >
+                      <Button type="button" onClick={() => void acceptFriend(row.id)}>
                         Accept
-                      </button>{' '}
-                      <button
-                        type="button"
-                        className="od-btn"
-                        onClick={() => void rejectFriend(row.id)}
-                      >
+                      </Button>{' '}
+                      <Button type="button" onClick={() => void rejectFriend(row.id)}>
                         Decline
-                      </button>
+                      </Button>
                     </>
                   ) : null}
                   {row.status === 'accepted' ? (
                     <>
                       {' '}
-                      <button
-                        type="button"
-                        className="od-btn"
-                        onClick={() => void removeFriend(row.id)}
-                      >
+                      <Button type="button" onClick={() => void removeFriend(row.id)}>
                         Unfriend
-                      </button>
+                      </Button>
                     </>
                   ) : null}
                 </li>

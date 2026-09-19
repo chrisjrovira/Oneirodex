@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **The admin app's TypeScript was never linted.** `eslint.config.js` listed `shared`, `ops-glance` and `member-app` under the typescript-eslint block and not `admin-app`, so `npm run lint` — and the CI lint job — checked only the admin app's `.js` test files since its TS conversion. Added; it surfaced three dead bindings (fixed) and two `useMemo` dependency warnings in `DashboardPage` / `OpsPage` (left for their decomposition).
+
+### Changed
+- **Every SPA button is `<Button>`.** 112 hand-spelled `<button className="od-btn …">` sites across 32 files moved onto the `@oneirodex/ui` primitive, which grew `secondary` / `quiet` variants, `size="lg"` and `pill` — all mapped onto classes already in `od-primitives.css`, no new CSS. `od-btn--accent` (admin-only `ops.css`) stays a `className` pass-through. New ratchet `scripts/od_btn_lint.mjs` runs in CI with an **empty** baseline, so a new raw site fails the build. `.od-cbtn` context-bar buttons are a different family and are untouched.
+- `showToast` is one module. The member and admin apps each carried a byte-alike copy of `frontend/shared/src/toast.ts`; both paths are now re-export shims of `@oneirodex/ui`, and the two app test suites merged into one shared suite (ten cases, the union of both). `any` ratchet 1,276 → 1,266.
+
 ## [1.0.0] — 2026-09-18
 
 First stable release. Everything below shipped on top of `1.0.0-beta` (2026-08-06):

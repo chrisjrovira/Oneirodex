@@ -721,22 +721,17 @@ export function ArtStudioPage() {
               </fieldset>
 
               <div className="od-admin-actions-row od-art-studio__primary-actions">
-                <button
-                  type="button"
-                  className="od-btn"
-                  disabled={!hasTitle || previewBusy}
-                  onClick={runPreview}
-                >
+                <Button type="button" disabled={!hasTitle || previewBusy} onClick={runPreview}>
                   {previewBusy ? 'Previewing…' : 'Preview'}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="od-btn od-btn--primary"
+                  variant="primary"
                   disabled={!hasTitle || busy === 'generate'}
                   onClick={runGenerate}
                 >
                   {busy === 'generate' ? 'Generating…' : 'Generate pack'}
-                </button>
+                </Button>
               </div>
 
               <div className="od-art-studio__pack-actions">
@@ -762,14 +757,14 @@ export function ArtStudioPage() {
                   disabled={!packId}
                 />
               </label>
-              <button
+              <Button
                 type="button"
-                className="od-btn od-btn--primary"
+                variant="primary"
                 disabled={!packId || !gameUuid.trim() || busy === 'apply-game'}
                 onClick={applyToGame}
               >
                 Apply cover to game
-              </button>
+              </Button>
 
               {packId ? (
                 <p className="od-art-studio__pack-meta">
@@ -800,14 +795,14 @@ export function ArtStudioPage() {
                   for platform packs and stock motifs.
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
-                className="od-btn od-btn--primary"
+                variant="primary"
                 disabled={busy === 'regen-fallback'}
                 onClick={regenerateDefaults}
               >
                 {busy === 'regen-fallback' ? 'Regenerating…' : 'Regenerate defaults'}
-              </button>
+              </Button>
             </div>
             <div className="od-art-studio-fallbacks__grid">
               {FALLBACK_ASSETS.map((asset) => (
@@ -847,22 +842,17 @@ export function ArtStudioPage() {
                   generate/apply.
                 </p>
                 <div className="od-admin-actions-row">
-                  <button
-                    type="button"
-                    className="od-btn"
-                    disabled={busy === 'missing'}
-                    onClick={loadMissing}
-                  >
+                  <Button type="button" disabled={busy === 'missing'} onClick={loadMissing}>
                     Load no-cover list
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="od-btn od-btn--primary"
+                    variant="primary"
                     disabled={busy === 'batch' || !batchSelected.size}
                     onClick={batchApplyPlaceholders}
                   >
                     Apply placeholders ({batchSelected.size})
-                  </button>
+                  </Button>
                 </div>
                 {missingCovers.length ? (
                   <ul className="od-art-studio__batch-list">

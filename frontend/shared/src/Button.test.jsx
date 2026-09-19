@@ -32,6 +32,18 @@ test('size="sm" adds od-btn--sm; md adds nothing', () => {
   expect(el).not.toHaveClass('od-btn--sm')
 })
 
+test('secondary and quiet variants, lg size and pill map onto the theme classes', () => {
+  const { rerender } = render(
+    <Button variant="secondary" size="lg" pill>
+      A
+    </Button>,
+  )
+  const el = screen.getByRole('button')
+  expect(el).toHaveClass('od-btn', 'od-btn--secondary', 'od-btn--lg', 'od-btn--pill')
+  rerender(<Button variant="quiet">A</Button>)
+  expect(screen.getByRole('button').className).toBe('od-btn od-btn--quiet')
+})
+
 test('type defaults to "button" so a form is not submitted', () => {
   render(<Button>Safe</Button>)
   expect(screen.getByRole('button')).toHaveAttribute('type', 'button')

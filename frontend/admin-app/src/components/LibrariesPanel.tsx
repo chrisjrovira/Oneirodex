@@ -326,7 +326,9 @@ function GroupDialog({
  * Scan/Edit/Delete/Group. Per-row and batch Edit open the shared edit modal
  * (stays on this page); the modal can still link out to the full editor.
  */
-export function LibrariesPanel({ panelEl = null }: { panelEl?: Element | null }) {
+// `panelEl` is still passed by useLibrariesPanelMount; the panel has not read it
+// since the DataTable cutover, and the prop stays so the mount contract does not move.
+export function LibrariesPanel({ panelEl: _panelEl = null }: { panelEl?: Element | null }) {
   const [rows, setRows] = useState<LibraryRow[] | null>(null)
   const [error, setError] = useState<unknown>(null)
   const [selected, setSelected] = useState<Set<string>>(() => new Set())

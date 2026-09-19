@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { confirmAction, Button } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 
 import { DataTable } from './DataTable'
@@ -208,13 +208,13 @@ export function ImportLeafLibraries({
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               disabled={loading || confirming}
             />
-            <button
+            <Button
               type="submit"
-              className="od-btn od-btn--accent"
+              className="od-btn--accent"
               disabled={loading || confirming || !canPreview}
             >
               {loading ? 'Previewing…' : 'Preview'}
-            </button>
+            </Button>
           </div>
         ) : (
           <>
@@ -236,13 +236,13 @@ export function ImportLeafLibraries({
               disabled={loading || confirming}
             />
             <div className="od-propose-leaf__row">
-              <button
+              <Button
                 type="submit"
-                className="od-btn od-btn--accent"
+                className="od-btn--accent"
                 disabled={loading || confirming || !canPreview}
               >
                 {loading ? 'Previewing…' : 'Preview'}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -329,14 +329,14 @@ export function ImportLeafLibraries({
               />
               Select all ({candidates.length})
             </label>
-            <button
+            <Button
               type="button"
-              className="od-btn od-btn--accent"
+              className="od-btn--accent"
               onClick={() => void onConfirm()}
               disabled={confirming || selectedCount === 0}
             >
               {confirming ? 'Creating…' : `Confirm create (${selectedCount})`}
-            </button>
+            </Button>
           </div>
 
           {/* Same grid as ProposeLeafLibraries — an import can carry a hundred

@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, vi } from 'vitest'
 import { showToast } from './toast'
 
+// One suite for the one implementation. The member and admin apps used to carry
+// their own copies of showToast with their own tests; both now re-export this
+// module, and this file is the union of the two former suites.
+
 beforeEach(() => {
   vi.useFakeTimers()
   document.body.innerHTML = ''
@@ -11,11 +15,16 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-test('showToast auto-dismisses after a few seconds', () => {
-  showToast('Queued', 'info')
-  expect(document.getElementById('od-toast-host')).toBeTruthy()
+test('showToast mounts the host and auto-dismisses after a few seconds', () => {
+  showToast('Saved', 'success')
+  const host = document.getElementById('od-toast-host')
+  expect(host).toBeTruthy()
+  expect(host.className).toContain('od-toast-host')
+  expect(host.textContent).toContain('Saved')
+  expect(host.querySelector('.od-toast--success')).toBeTruthy()
+
   vi.advanceTimersByTime(3200)
-  expect(document.querySelector('.od-toast--out')).toBeTruthy()
+  expect(host.querySelector('.od-toast--out')).toBeTruthy()
   vi.advanceTimersByTime(220)
   expect(document.getElementById('od-toast-host')).toBeNull()
 })
@@ -56,6 +65,15 @@ test('five info toasts stay individual', () => {
 test('a sixth info toast collapses the stack to a count', () => {
   for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) {
     showToast(label, 'info')
+  }
+  const toasts = document.querySelectorAll('.od-toast')
+  expect(toasts).toHaveLength(1)
+  expect(toasts[0].textContent).toContain('6 notifications')
+})
+
+test('a sixth success toast collapses the stack to a count', () => {
+  for (const label of ['One', 'Two', 'Three', 'Four', 'Five', 'Six']) {
+    showToast(label, 'success')
   }
   const toasts = document.querySelectorAll('.od-toast')
   expect(toasts).toHaveLength(1)

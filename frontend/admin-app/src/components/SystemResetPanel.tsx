@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { adminError, csrfHeaders } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 
 const ENDPOINT = '/admin/api/system/reset'
 const CONFIRM_PHRASE = 'RESET ONEIRODEX'
@@ -235,14 +235,9 @@ export function SystemResetPanel() {
       </ul>
 
       <div className="od-btn-bar">
-        <button
-          type="button"
-          className="od-btn"
-          disabled={!acknowledged || !chosen || busy}
-          onClick={preview}
-        >
+        <Button type="button" disabled={!acknowledged || !chosen || busy} onClick={preview}>
           Show me what this clears
-        </button>
+        </Button>
       </div>
 
       {plan ? (
@@ -272,14 +267,9 @@ export function SystemResetPanel() {
           </label>
 
           <div className="od-btn-bar">
-            <button
-              type="button"
-              className="od-btn od-btn--danger"
-              disabled={!confirmed || busy}
-              onClick={perform}
-            >
+            <Button type="button" variant="danger" disabled={!confirmed || busy} onClick={perform}>
               {busy ? 'Resetting…' : 'Reset now'}
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}

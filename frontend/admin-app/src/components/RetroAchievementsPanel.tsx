@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getJson, postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 import { showToast } from '../utils/toast'
 
 const STATUS_ENDPOINT = '/api/retroachievements/status'
@@ -141,15 +141,15 @@ export function RetroAchievementsPanel() {
                   </td>
                   <td>{row.matched_games}</td>
                   <td>
-                    <button
+                    <Button
                       type="button"
-                      className="od-btn od-btn--sm"
+                      size="sm"
                       disabled={busy !== null}
                       onClick={() => match(row.platform)}
                       aria-label={`Match ${row.platform}`}
                     >
                       {busy === row.platform ? 'Matching…' : 'Match'}
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}

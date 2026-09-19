@@ -467,9 +467,9 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
           <ul className="od-images-game-hits">
             {gameHits.map((g) => (
               <li key={g.uuid}>
-                <button
+                <Button
                   type="button"
-                  className="od-btn od-btn--ghost"
+                  variant="ghost"
                   onClick={() => {
                     syncGameParam(g.uuid, g.name || '')
                     setGameHits([])
@@ -477,7 +477,7 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
                   }}
                 >
                   {g.name}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -592,51 +592,38 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
         </div>
 
         <div className="od-admin-actions-row">
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={() => downloadBatch(10)}
-          >
+          <Button type="button" disabled={Boolean(queueBusy)} onClick={() => downloadBatch(10)}>
             Download 10
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={() => downloadBatch(50)}
-          >
+          </Button>
+          <Button type="button" disabled={Boolean(queueBusy)} onClick={() => downloadBatch(50)}>
             Download 50
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn od-btn--primary"
+            variant="primary"
             disabled={Boolean(queueBusy)}
             onClick={retryFailed}
           >
             Retry failed
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             disabled={Boolean(queueBusy)}
             onClick={massSearch}
             title="POST /admin/api/covers/batch/search"
           >
             {queueBusy === 'mass-search' ? 'Searching…' : 'Mass cover search'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             disabled={Boolean(queueBusy)}
             onClick={autoPick}
             title={`POST /admin/api/covers/batch/apply policy=${BEST_AVAILABLE_POLICY}`}
           >
             {queueBusy === 'autopick' ? 'Auto-picking…' : 'Auto-pick best available'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             disabled={Boolean(queueBusy) || !gameUuid}
             onClick={generateArtwork}
             title={
@@ -646,15 +633,10 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
             }
           >
             {queueBusy === 'generate' ? 'Generating…' : 'Generate artwork'}
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={loadQueue}
-          >
+          </Button>
+          <Button type="button" disabled={Boolean(queueBusy)} onClick={loadQueue}>
             Refresh
-          </button>
+          </Button>
         </div>
 
         {loadingQueue ? (
@@ -678,13 +660,13 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
                         <span className="od-badge od-badge--warn">{pending} pending</span>
                       ) : null}
                     </div>
-                    <button
+                    <Button
                       type="button"
-                      className="od-btn od-btn--ghost"
+                      variant="ghost"
                       onClick={() => syncGameParam(group.uuid, group.name)}
                     >
                       Open picker
-                    </button>
+                    </Button>
                   </div>
                   <ul className="od-images-group__list">
                     {group.items.map((image) => (
@@ -749,23 +731,23 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
                   return (
                     <span className="od-images-row__actions">
                       {status === 'pending' || status === 'failed' || image.file_missing ? (
-                        <button
+                        <Button
                           type="button"
-                          className="od-btn od-btn--ghost"
+                          variant="ghost"
                           disabled={Boolean(queueBusy)}
                           onClick={() => downloadOne(image.id)}
                         >
                           {status === 'failed' || image.file_missing ? 'Retry' : 'Download'}
-                        </button>
+                        </Button>
                       ) : null}
-                      <button
+                      <Button
                         type="button"
-                        className="od-btn od-btn--ghost"
+                        variant="ghost"
                         disabled={Boolean(queueBusy)}
                         onClick={() => removeOne(image.id)}
                       >
                         Delete
-                      </button>
+                      </Button>
                     </span>
                   )
                 },
@@ -792,13 +774,13 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
           <ul className="od-images-missing">
             {missingCovers.map((g) => (
               <li key={g.uuid}>
-                <button
+                <Button
                   type="button"
-                  className="od-btn od-btn--ghost"
+                  variant="ghost"
                   onClick={() => syncGameParam(g.uuid, g.name || '')}
                 >
                   {g.name}
-                </button>
+                </Button>
                 <span className="od-admin-lede">score {g.score}</span>
               </li>
             ))}
@@ -846,23 +828,23 @@ function QueueRow({
       </div>
       <div className="od-images-row__actions">
         {status === 'pending' || status === 'failed' || image.file_missing ? (
-          <button
+          <Button
             type="button"
-            className="od-btn od-btn--ghost"
+            variant="ghost"
             disabled={Boolean(busy)}
             onClick={() => onDownload(image.id)}
           >
             {status === 'failed' || image.file_missing ? 'Retry' : 'Download'}
-          </button>
+          </Button>
         ) : null}
-        <button
+        <Button
           type="button"
-          className="od-btn od-btn--ghost"
+          variant="ghost"
           disabled={Boolean(busy)}
           onClick={() => onDelete(image.id)}
         >
           Delete
-        </button>
+        </Button>
       </div>
     </li>
   )

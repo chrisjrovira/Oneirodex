@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 import { getJson, postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
@@ -299,14 +299,9 @@ export function SystemMarksPanel() {
             <code>AI_ARTWORK_URL</code>.
           </p>
         </div>
-        <button
-          type="button"
-          className="od-btn"
-          disabled={loading || Boolean(busy)}
-          onClick={loadCatalog}
-        >
+        <Button type="button" disabled={loading || Boolean(busy)} onClick={loadCatalog}>
           Refresh
-        </button>
+        </Button>
       </div>
 
       <PageStatus error={error} />
@@ -406,27 +401,26 @@ export function SystemMarksPanel() {
                   disabled={Boolean(busy)}
                   aria-label="Lab prompt"
                 />
-                <button
+                <Button
                   type="button"
-                  className="od-btn"
                   disabled={Boolean(busy) || labPrompt === labDefaultPrompt}
                   onClick={() => setLabPrompt(labDefaultPrompt)}
                 >
                   Reset prompt
-                </button>
+                </Button>
               </label>
             </div>
             <div className="od-system-marks__actions">
-              <button
+              <Button
                 type="button"
-                className="od-btn od-btn--accent"
+                className="od-btn--accent"
                 disabled={Boolean(busy) || !selectedTheme || !labPlatform}
                 onClick={() => void runLabGenerate()}
               >
                 {busy === 'lab'
                   ? `Generating ${selectedTheme}/${labPlatform}…`
                   : `Generate ${selectedTheme || 'theme'}/${labPlatform}`}
-              </button>
+              </Button>
             </div>
             {labLog.length ? (
               <ol className="od-system-marks-lab__log" data-testid="system-marks-lab-log">
@@ -445,17 +439,16 @@ export function SystemMarksPanel() {
           </section>
 
           <div className="od-system-marks__actions">
-            <button
+            <Button
               type="button"
-              className="od-btn od-btn--accent"
+              className="od-btn--accent"
               disabled={Boolean(busy) || !items.length}
               onClick={() => runGenerate({ force: false })}
             >
               {busy === 'generate' ? 'Generating…' : 'Generate missing (all themes)'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="od-btn"
               disabled={Boolean(busy) || !selected}
               onClick={() =>
                 runGenerate({ themes: selected ? [selected.theme] : [], force: false })
@@ -466,17 +459,16 @@ export function SystemMarksPanel() {
                 : selected
                   ? `Fill gaps · ${selected.theme}`
                   : 'Fill gaps · select a theme'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="od-btn"
               disabled={Boolean(busy) || !selected}
               onClick={() =>
                 runGenerate({ themes: selected ? [selected.theme] : [], force: true, limit: 8 })
               }
             >
               {busy === 'force' ? 'Forcing…' : 'Force redo 8 · selected theme'}
-            </button>
+            </Button>
           </div>
         </>
       )}

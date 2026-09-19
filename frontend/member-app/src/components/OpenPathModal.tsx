@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { queueClientCommand } from '../api/clientCommands'
 import { showToast } from '../utils/toast'
 import './OpenPathModal.css'
+import { Button } from '@oneirodex/ui'
 
 async function copyPath(path: any) {
   if (navigator.clipboard?.writeText) {
@@ -131,16 +132,11 @@ export function OpenPathModal({
           <code>{path}</code>
         </p>
         <div className="od-open-path__actions">
-          <button
-            type="button"
-            className="od-btn od-btn--primary"
-            onClick={() => void handleCopy()}
-          >
+          <Button type="button" variant="primary" onClick={() => void handleCopy()}>
             Copy path
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             disabled={busy}
             onClick={() => void handleOpenExplorer()}
             title={
@@ -150,7 +146,7 @@ export function OpenPathModal({
             }
           >
             {busy ? 'Opening…' : 'Open in file explorer'}
-          </button>
+          </Button>
         </div>
         {status ? (
           <p className="od-open-path__status" role="status">
