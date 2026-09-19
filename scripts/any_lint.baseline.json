@@ -26,9 +26,6 @@
   "frontend/admin-app/src/pages/ImagesPage.tsx": {
     "any-annotation": 3
   },
-  "frontend/admin-app/src/pages/OpsPage.tsx": {
-    "any-cast": 1
-  },
   "frontend/admin-app/src/pages/QualityProfilesPage.tsx": {
     "any-annotation": 1
   },
