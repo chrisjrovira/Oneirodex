@@ -175,7 +175,7 @@ Flask blueprints (`/api` for `routes_apis/`).
 
 Leave these until the contract can be preserved; do not force them.
 
-### `routes_apis/game.py`
+### `routes_apis/game.py` (batch routes in `game_batch.py` since H-D.4)
 
 - `games_batch_favorite` — **adopted** via `@validate_batch_body(BatchFavoriteBody, limit=100)`. Missing `favorite` / `uuids` is 422 with the partial-success keys; over-limit is still 400 from `_normalize_batch_uuids`; success `ok` is still "did every item succeed".
 - `games_batch_status`, `games_batch_wishlist`,
@@ -391,7 +391,7 @@ Highest-count files still to do, roughly in priority order:
   guard the view does not already have. **Leave this file at 11.** If a
   bespoke validator for the `ids|items` shape ever lands, revisit the batch
   five; the other six stay as they are.
-- `routes_apis/game.py` (6 remaining) — the other batch routes above;
+- `routes_apis/game.py` (6 remaining; since the H-D.4 split: `game_batch.py` 4 · `game.py` 2) — the other batch routes above;
   `move_game_to_library` needs the bespoke-message validator.
 - `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
 - `routes_apis/library_tools.py` (5 remaining — propose/import dual-input,

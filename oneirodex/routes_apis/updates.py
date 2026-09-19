@@ -27,7 +27,7 @@ from . import apis_bp
 UPDATES_SCAN_DEFAULT = 25
 UPDATES_SCAN_MAX = 50
 
-# Matches routes_apis/game.py: a title probed inside this window is not re-probed.
+# Matches routes_apis/game_batch.py (FRESHNESS_STALE_SECONDS): a title probed inside this window is not re-probed.
 UPDATES_SCAN_STALE_SECONDS = 86400
 
 
