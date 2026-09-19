@@ -10,7 +10,7 @@ function panel() {
   return document.querySelector('.od-confirm__panel')
 }
 
-function buttonNamed(text) {
+function buttonNamed(text: any) {
   return [...document.querySelectorAll('.od-confirm__actions button')].find(
     (b) => b.textContent === text,
   )
@@ -30,13 +30,13 @@ describe('confirmAction (UID-042)', () => {
     expect(buttonNamed('Keep it')).toBeTruthy()
     expect(document.body.textContent).toContain('only the collection goes')
 
-    buttonNamed('Delete collection').click()
+    ;(buttonNamed('Delete collection') as HTMLElement)!.click()
     expect(await answer).toBe(true)
   })
 
   test('cancel resolves false and clears the dialog', async () => {
     const answer = confirmAction({ title: 'Revoke token?', confirmLabel: 'Revoke token' })
-    buttonNamed('Cancel').click()
+    ;(buttonNamed('Cancel') as HTMLElement)!.click()
     expect(await answer).toBe(false)
     expect(panel()).toBeNull()
     expect(document.body.style.overflow).toBe('')
@@ -51,8 +51,8 @@ describe('confirmAction (UID-042)', () => {
   test('a destructive dialog opens with cancel focused, so a stray Enter does not delete', async () => {
     const answer = confirmAction({ title: 'Delete profile?', confirmLabel: 'Delete profile' })
     expect(document.activeElement).toBe(buttonNamed('Cancel'))
-    expect(panel().className).toContain('od-confirm__panel--danger')
-    buttonNamed('Cancel').click()
+    expect(panel()!.className).toContain('od-confirm__panel--danger')
+    ;(buttonNamed('Cancel') as HTMLElement)!.click()
     await answer
   })
 
@@ -63,8 +63,8 @@ describe('confirmAction (UID-042)', () => {
       tone: 'neutral',
     })
     expect(document.activeElement).toBe(buttonNamed('Refresh all'))
-    expect(panel().className).toContain('od-confirm__panel--neutral')
-    buttonNamed('Refresh all').click()
+    expect(panel()!.className).toContain('od-confirm__panel--neutral')
+    ;(buttonNamed('Refresh all') as HTMLElement)!.click()
     expect(await answer).toBe(true)
   })
 
@@ -72,7 +72,7 @@ describe('confirmAction (UID-042)', () => {
     const first = confirmAction({ title: 'First?', confirmLabel: 'Do it' })
     expect(await confirmAction({ title: 'Second?', confirmLabel: 'Do it too' })).toBe(false)
     expect(document.querySelectorAll('.od-confirm').length).toBe(1)
-    buttonNamed('Cancel').click()
+    ;(buttonNamed('Cancel') as HTMLElement)!.click()
     await first
   })
 
@@ -82,7 +82,7 @@ describe('confirmAction (UID-042)', () => {
     opener.focus()
 
     const answer = confirmAction({ title: 'Delete events?', confirmLabel: 'Delete events' })
-    buttonNamed('Cancel').click()
+    ;(buttonNamed('Cancel') as HTMLElement)!.click()
     await answer
 
     expect(document.activeElement).toBe(opener)

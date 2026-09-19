@@ -95,7 +95,7 @@ test('passes through aria-* attributes', () => {
 })
 
 test('forwards ref to the underlying button node', () => {
-  const ref = createRef()
+  const ref = createRef<HTMLButtonElement>()
   render(<Button>Ref</Button>)
   render(<Button ref={ref}>Ref</Button>)
   expect(ref.current).toBeInstanceOf(HTMLButtonElement)

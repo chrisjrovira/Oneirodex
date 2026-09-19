@@ -88,8 +88,8 @@ test('sorts on value() when a cell renders markup', () => {
     {
       key: 'name',
       label: 'Name',
-      value: (row) => row.name,
-      render: (row) => <strong>{row.name}</strong>,
+      value: (row: any) => row.name,
+      render: (row: any) => <strong>{row.name}</strong>,
     },
   ]
   render(<DataTable columns={columns} rows={ROWS} getRowKey={(r) => r.id} />)
@@ -179,19 +179,19 @@ test('column filters sit beside titles, not on a second header row', () => {
   const head = input.closest('.od-table__head')
   expect(head).toHaveClass('has-filter')
   // Filter trails the title/sort so CSS can dock it to the column's right edge.
-  const sortOrTitle = head.querySelector('.od-table__sort, .od-table__title')
+  const sortOrTitle = head!.querySelector('.od-table__sort, .od-table__title')
   expect(sortOrTitle).toBeTruthy()
   expect(
-    Boolean(sortOrTitle.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING),
+    Boolean(sortOrTitle!.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING),
   ).toBe(true)
 })
 
 test('column filters offer typeahead values from the rows', () => {
   renderTable({ toolbar: false, columnFilters: true })
   const input = screen.getByLabelText('Filter Name')
-  const listId = input.getAttribute('list')
+  const listId = input.getAttribute('list')!
   expect(listId).toBeTruthy()
-  const options = [...document.getElementById(listId).querySelectorAll('option')].map((node) =>
+  const options = [...document.getElementById(listId)!.querySelectorAll('option')].map((node) =>
     node.getAttribute('value'),
   )
   expect(options).toEqual(['Zelda', 'Astro', 'Mario'])

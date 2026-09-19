@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { csrfHeaders, getCsrfToken } from './csrf.js'
 
-function setBody(html) {
+function setBody(html: any) {
   document.body.innerHTML = html
   document.head.innerHTML = ''
 }
 
-function setMeta(value) {
+function setMeta(value: any) {
   document.head.innerHTML = `<meta name="csrf-token" content="${value}">`
 }
 

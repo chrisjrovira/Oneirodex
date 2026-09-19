@@ -11,12 +11,12 @@ function makeWrapper() {
       mutations: { retry: false },
     },
   })
-  return function Wrapper({ children }) {
+  return function Wrapper({ children }: any) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>
   }
 }
 
-function Probe({ resource }) {
+function Probe({ resource }: any) {
   const { data, loading, error, reload } = resource
   return (
     <div>
@@ -91,7 +91,7 @@ test('the disabled resource never calls its fetcher and never reports loading', 
 
 test('useResourceMutation invalidates the keys it is given', async () => {
   const readFetcher = vi
-    .fn()
+    .fn<() => Promise<{ v: string }>>()
     .mockResolvedValueOnce({ v: 'before' })
     .mockResolvedValueOnce({ v: 'after' })
   const writeFn = vi.fn().mockResolvedValue({ ok: true })

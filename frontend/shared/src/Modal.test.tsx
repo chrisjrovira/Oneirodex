@@ -62,7 +62,7 @@ test('closeOnEscape=false keeps a busy dialog open', () => {
 })
 
 test('focus moves to the first focusable on open, or to initialFocusRef', () => {
-  function Host({ useRefTarget }) {
+  function Host({ useRefTarget }: any) {
     const ref = useRef(null)
     return (
       <Modal open label="T" initialFocusRef={useRefTarget ? ref : undefined}>

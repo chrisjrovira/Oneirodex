@@ -19,12 +19,12 @@ test('showToast mounts the host and auto-dismisses after a few seconds', () => {
   showToast('Saved', 'success')
   const host = document.getElementById('od-toast-host')
   expect(host).toBeTruthy()
-  expect(host.className).toContain('od-toast-host')
-  expect(host.textContent).toContain('Saved')
-  expect(host.querySelector('.od-toast--success')).toBeTruthy()
+  expect(host!.className).toContain('od-toast-host')
+  expect(host!.textContent).toContain('Saved')
+  expect(host!.querySelector('.od-toast--success')).toBeTruthy()
 
   vi.advanceTimersByTime(3200)
-  expect(host.querySelector('.od-toast--out')).toBeTruthy()
+  expect(host!.querySelector('.od-toast--out')).toBeTruthy()
   vi.advanceTimersByTime(220)
   expect(document.getElementById('od-toast-host')).toBeNull()
 })
@@ -34,7 +34,7 @@ test('can be dismissed before the timer runs out', () => {
   const close = document.querySelector('.od-toast__close')
   expect(close).toBeTruthy()
 
-  close.click()
+  ;(close as HTMLElement)!.click()
   vi.advanceTimersByTime(220)
   expect(document.getElementById('od-toast-host')).toBeNull()
 })
@@ -44,7 +44,7 @@ test('dismissing one toast leaves the others alone', () => {
   showToast('Second', 'info')
   expect(document.querySelectorAll('.od-toast')).toHaveLength(2)
 
-  document.querySelectorAll('.od-toast__close')[0].click()
+  ;(document.querySelectorAll('.od-toast__close')[0] as HTMLElement).click()
   vi.advanceTimersByTime(220)
 
   const remaining = document.querySelectorAll('.od-toast')
@@ -85,7 +85,7 @@ test('further info toasts increment the collapsed count', () => {
     showToast(`n${i}`, 'success')
   }
   expect(document.querySelectorAll('.od-toast')).toHaveLength(1)
-  expect(document.querySelector('.od-toast__text').textContent).toBe('7 notifications')
+  expect(document.querySelector('.od-toast__text')!.textContent).toBe('7 notifications')
 })
 
 test('error toasts never join the info stack', () => {
@@ -95,12 +95,12 @@ test('error toasts never join the info stack', () => {
   showToast('Scan failed', 'error')
   const toasts = [...document.querySelectorAll('.od-toast')]
   expect(toasts).toHaveLength(2)
-  expect(toasts.some((el) => el.textContent.includes('6 notifications'))).toBe(true)
-  expect(toasts.some((el) => el.textContent.includes('Scan failed'))).toBe(true)
+  expect(toasts.some((el) => el.textContent!.includes('6 notifications'))).toBe(true)
+  expect(toasts.some((el) => el.textContent!.includes('Scan failed'))).toBe(true)
 })
 
 test('the returned dismiss handle closes it too', () => {
-  const dismiss = showToast('Working', 'info')
+  const dismiss = showToast('Working', 'info')!
   dismiss()
   vi.advanceTimersByTime(220)
   expect(document.getElementById('od-toast-host')).toBeNull()
@@ -109,6 +109,6 @@ test('the returned dismiss handle closes it too', () => {
 test('message text is never parsed as markup', () => {
   showToast('<img src=x onerror=alert(1)>', 'info')
   const text = document.querySelector('.od-toast__text')
-  expect(text.querySelector('img')).toBeNull()
-  expect(text.textContent).toContain('<img')
+  expect(text!.querySelector('img')).toBeNull()
+  expect(text!.textContent).toContain('<img')
 })

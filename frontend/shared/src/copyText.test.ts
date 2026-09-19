@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { copyText, copyViaElementSelection, copyViaTextarea } from './copyText'
 
-function stubExecCommand(impl) {
+function stubExecCommand(impl: any) {
   const fn = typeof impl === 'function' ? vi.fn(impl) : vi.fn().mockReturnValue(impl)
   Object.defineProperty(document, 'execCommand', {
     configurable: true,
@@ -64,7 +64,7 @@ test('copyViaTextarea copies full raw string including dashes and underscores', 
   stubExecCommand(() => {
     const active = document.activeElement
     expect(active).toBeInstanceOf(HTMLTextAreaElement)
-    expect(/** @type {HTMLTextAreaElement} */ (active).value).toBe(secret)
+    expect(/** @type {HTMLTextAreaElement} */ (active as HTMLInputElement)!.value).toBe(secret)
     return true
   })
 
