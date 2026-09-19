@@ -11,7 +11,7 @@ A theme is not a hue. It is six things that have to agree:
 | Layer | Owned by | Where it lives |
 |---|---|---|
 | **Palette** — accent, surface, text, border | the preset | `css/od-tokens.css`, generated per preset |
-| **Geometry** — radius, spacing, type scale, shadow, motion | the preset | same file; `_system_geometry()` in `preset_themes.py` |
+| **Geometry** — radius, spacing, type scale, shadow, motion | the preset | `_system_geometry()` in `preset_themes_geometry.py` (catalogue in `preset_themes_catalog.py`, generator in `preset_themes.py`) |
 | **Room** — the space the product sits in | the **era**, not the preset | `css/od-era.css` variables + `art/era/<era>.svg` |
 | **Marks** — cover placeholder, avatars | the preset | `avatars/*.svg`, recoloured per preset; `.od-cover-fallback` is CSS + live text |
 | **Motifs** — loading animations | shared, tinted | `css/od-loading-motifs.css`, `currentColor` throughout |
