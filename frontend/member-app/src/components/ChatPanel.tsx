@@ -1,119 +1,33 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Button } from '@oneirodex/ui'
-import { confirmAction } from '@oneirodex/ui'
 import { PageStatus } from './PageStatus'
-import { SpaceRail } from './SpaceRail'
 import { VoiceLobby } from './VoiceLobby'
 import {
-  archiveChatChannel,
   createChatChannel,
   fetchChatChannels,
   fetchChatEmoji,
   fetchChatMessages,
-  leaveChatChannel,
-  muteChatChannel,
   openChatDm,
   postChatMessage,
   probeChatAttachmentUpload,
   searchChat,
   toggleChatReaction,
-  uploadChatAttachment,
 } from '../api/chat'
-import {
-  canArchiveChannel,
-  canLeaveChannel,
-  isImageAttachment,
-  normalizeAttachments,
-  slugifyRoomName,
-} from '../hooks/chatPanelApi'
+import { canArchiveChannel, canLeaveChannel, slugifyRoomName } from '../hooks/chatPanelApi'
 import '../pages/ChatPage.css'
 
-const FIXED_REACTION_EMOJIS = ['👍', '❤️', '😂', '🎉', '👀']
-const POLL_MS = 8000
-const MAX_ATTACHMENTS_PER_MESSAGE = 5
-const ATTACH_ACCEPT =
-  '.png,.jpg,.jpeg,.webp,.gif,.txt,.csv,.pdf,image/png,image/jpeg,image/webp,image/gif,text/plain,text/csv,application/pdf'
-const ATTACH_HINT_UNAVAILABLE =
-  'File attach isn’t available yet — uploads land when the server enables them.'
-const ATTACH_HINT_CHILD = 'Child accounts can’t upload attachments.'
+import { ChatComposer } from './chat/ChatComposer'
+import { useAttachmentUpload, useRoomActions } from './chat/useChatActions'
+import { ChatMessageList } from './chat/ChatMessageList'
+import { ChatRoomsAside } from './chat/ChatRoomsAside'
+import { ChatThreadHead } from './chat/ChatThreadHead'
+import {
+  FIXED_REACTION_EMOJIS,
+  POLL_MS,
+  ATTACH_HINT_UNAVAILABLE,
+  ATTACH_HINT_CHILD,
+  mergeById,
+} from './chat/chatHelpers'
 
-function ReactionLabel({ item }: LooseProps) {
-  if (item.url) {
-    return (
-      <img
-        src={item.url}
-        alt={item.label || item.emoji}
-        width={16}
-        height={16}
-        className="od-chat-reaction-img"
-      />
-    )
-  }
-  return item.emoji
-}
-
-function MessageAttachments({ attachments }: LooseProps) {
-  const list = normalizeAttachments(attachments)
-  if (!list.length) return null
-  return (
-    <ul className="od-chat-attachments" aria-label="Attachments">
-      {list.map((att) => {
-        const key = att.id ?? att.url ?? att.filename
-        const image = isImageAttachment(att)
-        return (
-          <li key={key} className="od-chat-attachment">
-            {image && att.url ? (
-              <a
-                className="od-chat-attachment__thumb"
-                href={att.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img src={att.url} alt={att.filename || 'Image attachment'} loading="lazy" />
-              </a>
-            ) : null}
-            {att.url ? (
-              <a
-                className="od-chat-attachment__link"
-                href={att.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={att.filename || undefined}
-              >
-                {image ? 'Open image' : att.filename || 'Download file'}
-              </a>
-            ) : (
-              <span className="od-chat-attachment__link">{att.filename || 'Attachment'}</span>
-            )}
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
-function mergeById(existing: any, incoming: any) {
-  if (!incoming.length) return existing
-  const seen = new Set(existing.map((m: any) => m.id))
-  const added = incoming.filter((m: any) => !seen.has(m.id))
-  return added.length ? [...existing, ...added] : existing
-}
-
-function formatMsgTime(iso: any) {
-  if (!iso) return ''
-  try {
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return ''
-    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-  } catch {
-    return ''
-  }
-}
-
-/**
- * Household chat body — rooms sidebar · message pane · composer.
- * Used inside ChatSlideOut (primary) and kept route-agnostic.
- */
 export function ChatPanel({
   compact = false,
   initialChannelId = null,
@@ -137,12 +51,9 @@ export function ChatPanel({
   const [msgIsError, setMsgIsError] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
   const [creatingRoom, setCreatingRoom] = useState(false)
-  const [roomActionBusy, setRoomActionBusy] = useState(false)
   const [showTools, setShowTools] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [pendingAttachments, setPendingAttachments] = useState<any[]>([])
-  const [attachAvailable, setAttachAvailable] = useState<any>(null) // null | true | false
-  const [attachBusy, setAttachBusy] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [preferScreenshare, setPreferScreenshare] = useState(false)
   // Voice is scoped to the channel the member picked. Null = the household
@@ -157,6 +68,30 @@ export function ChatPanel({
   const fileInputRef = useRef<any>(null)
   const emojiPickerId = useId()
   const viewerIsChild = String(viewer?.role || '').toLowerCase() === 'child'
+
+  function showStatus(text: string | null, { isError = false }: { isError?: boolean } = {}) {
+    setMsg(text)
+    setMsgIsError(isError)
+  }
+
+  const { roomActionBusy, toggleMute, archiveActiveRoom, leaveActiveRoom } = useRoomActions({
+    activeId,
+    channels,
+    setChannels,
+    viewer,
+    setMessages,
+    setReplyTo,
+    loadChannels,
+    showStatus,
+  })
+  const { attachAvailable, setAttachAvailable, attachBusy, handleAttachFiles } =
+    useAttachmentUpload({
+      activeId,
+      viewerIsChild,
+      pendingAttachments,
+      setPendingAttachments,
+      showStatus,
+    })
 
   useEffect(() => {
     messagesRef.current = messages
@@ -191,12 +126,7 @@ export function ChatPanel({
     return () => {
       cancelled = true
     }
-  }, [activeId, attachAvailable, viewerIsChild])
-
-  function showStatus(text: any, { isError = false }: LooseProps = {}) {
-    setMsg(text)
-    setMsgIsError(isError)
-  }
+  }, [activeId, attachAvailable, setAttachAvailable, viewerIsChild])
 
   async function loadEmoji() {
     try {
@@ -316,54 +246,6 @@ export function ChatPanel({
     setShowEmojiPicker(false)
   }
 
-  async function handleAttachFiles(event: any) {
-    const files = Array.from(event.target.files || [])
-    event.target.value = ''
-    if (!files.length || !activeId) return
-    if (viewerIsChild) {
-      setAttachAvailable(false)
-      showStatus(ATTACH_HINT_CHILD, { isError: true })
-      return
-    }
-    if (attachAvailable === false) {
-      showStatus(ATTACH_HINT_UNAVAILABLE, { isError: true })
-      return
-    }
-    const roomLeft = MAX_ATTACHMENTS_PER_MESSAGE - pendingAttachments.length
-    if (roomLeft <= 0) {
-      showStatus(`Max ${MAX_ATTACHMENTS_PER_MESSAGE} attachments per message`, { isError: true })
-      return
-    }
-    setAttachBusy(true)
-    showStatus(null)
-    try {
-      for (const file of files.slice(0, roomLeft)) {
-        const result = await uploadChatAttachment(activeId, file)
-        if (result.unavailable) {
-          setAttachAvailable(false)
-          showStatus(ATTACH_HINT_UNAVAILABLE, { isError: true })
-          return
-        }
-        if (!result.ok) {
-          if (result.status === 403) {
-            setAttachAvailable(false)
-            showStatus(result.error || ATTACH_HINT_CHILD, { isError: true })
-            return
-          }
-          showStatus(result.error || 'Upload failed', { isError: true })
-          return
-        }
-        const normalized = normalizeAttachments([result.attachment])[0]
-        if (normalized) {
-          setPendingAttachments((prev) => [...prev, normalized])
-          setAttachAvailable(true)
-        }
-      }
-    } finally {
-      setAttachBusy(false)
-    }
-  }
-
   async function sendMessage(event: any) {
     event.preventDefault()
     if (!activeId) return
@@ -453,104 +335,6 @@ export function ChatPanel({
     )
   }
 
-  async function toggleMute() {
-    if (!activeId) return
-    const current = channels.find((c) => c.id === activeId)
-    if (!current) return
-    const nextMuted = !current.muted
-    const result = await muteChatChannel(activeId, nextMuted)
-    if (!result.ok) {
-      showStatus(result.error, { isError: true })
-      return
-    }
-    setChannels((prev) =>
-      prev.map((ch) => (ch.id === activeId ? { ...ch, muted: Boolean(result.data?.muted) } : ch)),
-    )
-    showStatus(null)
-  }
-
-  async function archiveActiveRoom() {
-    if (!activeId || roomActionBusy) return
-    const current = channels.find((c) => c.id === activeId)
-    if (!current || !canArchiveChannel(current, viewer)) return
-    const label = current.name?.replace(/^#/, '') || current.name || 'this room'
-    const ok = await confirmAction({
-      title: `Archive #${label}?`,
-      body: 'It disappears for everyone, not just you.',
-      confirmLabel: 'Archive room',
-      cancelLabel: 'Keep it',
-    })
-    if (!ok) return
-    setRoomActionBusy(true)
-    showStatus(null)
-    try {
-      const result = await archiveChatChannel(activeId)
-      if (!result.ok) {
-        if (result.status === 403) {
-          showStatus(result.data?.error || 'You don’t have permission to archive this room', {
-            isError: true,
-          })
-        } else {
-          showStatus(result.error, { isError: true })
-        }
-        return
-      }
-      setMessages([])
-      setReplyTo(null)
-      await loadChannels()
-    } finally {
-      setRoomActionBusy(false)
-    }
-  }
-
-  async function leaveActiveRoom() {
-    if (!activeId || roomActionBusy) return
-    const current = channels.find((c) => c.id === activeId)
-    if (!current || !canLeaveChannel(current)) return
-    const isDm = current.kind === 'dm' || current.type === 'dm'
-    const leftId = activeId
-    const label = current.name?.replace(/^#/, '') || current.name || 'this room'
-    const ok = await confirmAction({
-      title: isDm ? `Leave conversation with ${label}?` : `Leave #${label}?`,
-      body: isDm
-        ? 'You can open a new DM later.'
-        : 'This mutes the room (same as Mute). You can unmute later.',
-      confirmLabel: isDm ? 'Leave conversation' : 'Leave room',
-      cancelLabel: 'Stay',
-      // Leaving is reversible — an unmute or a new DM away — so it does not
-      // get the danger treatment that archiving does.
-      tone: 'neutral',
-    })
-    if (!ok) return
-    setRoomActionBusy(true)
-    showStatus(null)
-    try {
-      const result = await leaveChatChannel(activeId)
-      if (!result.ok) {
-        if (result.status === 403) {
-          showStatus(result.data?.error || 'You don’t have permission to leave this room', {
-            isError: true,
-          })
-        } else {
-          showStatus(result.error, { isError: true })
-        }
-        return
-      }
-      if (isDm) {
-        setMessages([])
-        setReplyTo(null)
-      } else {
-        const mutedAfterLeave = typeof result.data?.muted === 'boolean' ? result.data.muted : true
-        setChannels((prev) =>
-          prev.map((ch) => (ch.id === leftId ? { ...ch, muted: mutedAfterLeave } : ch)),
-        )
-      }
-      await loadChannels()
-    } finally {
-      setRoomActionBusy(false)
-    }
-  }
-
   function openVoice({ screenshare = false }: LooseProps = {}) {
     setPreferScreenshare(screenshare)
     setVoiceOpen(true)
@@ -583,278 +367,50 @@ export function ChatPanel({
       className={`od-chat-panel${compact ? ' od-chat-panel--compact' : ''}${expanded ? ' od-chat-panel--expanded' : ''}`}
     >
       <div className="od-chat-layout">
-        <aside className="od-chat-channels" aria-label="Rooms">
-          <div className="od-chat-channels__head">
-            <h2>Rooms</h2>
-            <button
-              type="button"
-              className="od-chat-icon-btn"
-              aria-expanded={showTools}
-              aria-controls="od-chat-tools"
-              onClick={() => setShowTools((v) => !v)}
-              title={showTools ? 'Hide search & DM' : 'Search & DM'}
-            >
-              {showTools ? 'Less' : 'More'}
-            </button>
-          </div>
-
-          {showTools ? (
-            <div id="od-chat-tools" className="od-chat-tools">
-              <form className="od-chat-tool-form" onSubmit={runSearch}>
-                <label className="od-chat-sr-only" htmlFor="od-chat-search">
-                  Search messages
-                </label>
-                <input
-                  id="od-chat-search"
-                  value={searchQ}
-                  onChange={(e) => setSearchQ(e.target.value)}
-                  placeholder="Search messages"
-                  autoComplete="off"
-                />
-                <Button className="od-btn--secondary" type="submit">
-                  Go
-                </Button>
-              </form>
-              <form className="od-chat-tool-form" onSubmit={openDm}>
-                <label className="od-chat-sr-only" htmlFor="od-chat-dm">
-                  Direct message
-                </label>
-                <input
-                  id="od-chat-dm"
-                  value={dmName}
-                  onChange={(e) => setDmName(e.target.value)}
-                  placeholder="DM username"
-                  autoComplete="off"
-                />
-                <Button className="od-btn--secondary" type="submit">
-                  Open
-                </Button>
-              </form>
-            </div>
-          ) : null}
-
-          {searchHits.length > 0 ? (
-            <ul className="od-chat-search-hits">
-              {searchHits.map((hit) => (
-                <li key={`${hit.channel?.id}-${hit.message?.id}`}>
-                  <button
-                    type="button"
-                    className="od-chat-search-hit"
-                    onClick={() => {
-                      if (hit.channel?.id) setActiveId(hit.channel.id)
-                      setSearchHits([])
-                      setShowTools(false)
-                    }}
-                  >
-                    <span className="od-chat-search-hit__ch">{hit.channel?.name}</span>
-                    <span className="od-chat-search-hit__body">
-                      {hit.message?.user}: {hit.message?.body}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {channelsLoading ? (
-            <PageStatus loading inline loadingMessage="Loading rooms…" />
-          ) : channels.length === 0 ? (
-            <PageStatus emptyMessage="No rooms yet — #general appears after first visit when chat is seeded." />
-          ) : (
-            <div className="od-chat-channel-groups">
-              {roomChannels.length > 0 ? (
-                <>
-                  <p className="od-chat-channel-label">Channels</p>
-                  <ul className="od-chat-channel-list" aria-label="Channels">
-                    {roomChannels.map((ch) => (
-                      <li key={ch.id}>
-                        <button
-                          type="button"
-                          className={`od-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
-                          onClick={() => setActiveId(ch.id)}
-                          aria-pressed={ch.id === activeId}
-                        >
-                          <span className="od-chat-channel__hash" aria-hidden="true">
-                            #
-                          </span>
-                          <span className="od-chat-channel__name">
-                            {ch.name?.replace(/^#/, '') || ch.name}
-                          </span>
-                          {ch.unread ? (
-                            <span
-                              className="od-chat-channel__unread"
-                              aria-label={`${ch.unread} unread`}
-                            >
-                              {ch.unread > 99 ? '99+' : ch.unread}
-                            </span>
-                          ) : null}
-                          {ch.muted ? <span className="od-chat-channel__muted">muted</span> : null}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : null}
-              {dmChannels.length > 0 ? (
-                <>
-                  <p className="od-chat-channel-label">Direct</p>
-                  <ul className="od-chat-channel-list" aria-label="Direct messages">
-                    {dmChannels.map((ch) => (
-                      <li key={ch.id}>
-                        <button
-                          type="button"
-                          className={`od-chat-channel${ch.muted ? ' is-muted' : ''}${ch.id === activeId ? ' is-active' : ''}`}
-                          onClick={() => setActiveId(ch.id)}
-                          aria-pressed={ch.id === activeId}
-                        >
-                          <span className="od-chat-channel__hash" aria-hidden="true">
-                            @
-                          </span>
-                          <span className="od-chat-channel__name">{ch.name}</span>
-                          {ch.unread ? (
-                            <span
-                              className="od-chat-channel__unread"
-                              aria-label={`${ch.unread} unread`}
-                            >
-                              {ch.unread > 99 ? '99+' : ch.unread}
-                            </span>
-                          ) : null}
-                          {ch.muted ? <span className="od-chat-channel__muted">muted</span> : null}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : null}
-            </div>
-          )}
-
-          <SpaceRail
-            activeChannelId={activeId}
-            onSelectTextChannel={(channel: any) => {
-              setActiveId(channel.id)
-              void loadChannels()
-            }}
-            onSelectVoiceChannel={(channel: any) => {
-              setVoiceChannel(channel)
-              setPreferScreenshare(false)
-              setVoiceOpen(true)
-            }}
-            onJoined={() => void loadChannels()}
-          />
-
-          {canCreateRooms ? (
-            <form className="od-chat-create-room" onSubmit={createRoom}>
-              <label className="od-chat-sr-only" htmlFor="od-chat-new-room">
-                New room name
-              </label>
-              <input
-                id="od-chat-new-room"
-                value={newRoomName}
-                onChange={(e) => setNewRoomName(e.target.value)}
-                placeholder="New room"
-                autoComplete="off"
-                disabled={creatingRoom}
-              />
-              <Button type="submit" disabled={creatingRoom || !newRoomName.trim()}>
-                Add
-              </Button>
-            </form>
-          ) : (
-            <p className="od-chat-create-hint">
-              Ask a household member to create a room (child accounts cannot).
-            </p>
-          )}
-        </aside>
+        <ChatRoomsAside
+          canCreateRooms={canCreateRooms}
+          activeId={activeId}
+          channels={channels}
+          channelsLoading={channelsLoading}
+          createRoom={createRoom}
+          creatingRoom={creatingRoom}
+          dmChannels={dmChannels}
+          dmName={dmName}
+          loadChannels={loadChannels}
+          newRoomName={newRoomName}
+          openDm={openDm}
+          roomChannels={roomChannels}
+          runSearch={runSearch}
+          searchHits={searchHits}
+          searchQ={searchQ}
+          setActiveId={setActiveId}
+          setDmName={setDmName}
+          setNewRoomName={setNewRoomName}
+          setPreferScreenshare={setPreferScreenshare}
+          setSearchHits={setSearchHits}
+          setSearchQ={setSearchQ}
+          setShowTools={setShowTools}
+          setVoiceChannel={setVoiceChannel}
+          setVoiceOpen={setVoiceOpen}
+          showTools={showTools}
+        />
 
         <section className="od-chat-thread" aria-label="Messages">
-          <div className="od-chat-thread__head">
-            <div className="od-chat-thread__title">
-              {active?.kind === 'dm' || active?.type === 'dm' ? (
-                <strong>{active?.name || 'Select a room'}</strong>
-              ) : (
-                <strong>
-                  <span aria-hidden="true">#</span>
-                  {active?.name?.replace(/^#/, '') || 'Select a room'}
-                </strong>
-              )}
-              <span className="od-chat-thread__subtitle">Household room</span>
-            </div>
-            <div className="od-chat-thread__actions">
-              {active ? (
-                <>
-                  <button
-                    type="button"
-                    className="od-chat-icon-btn od-chat-icon-btn--accent"
-                    onClick={() => openVoice({ screenshare: false })}
-                    aria-pressed={voiceOpen && !preferScreenshare}
-                    title="Join household voice"
-                  >
-                    Voice
-                  </button>
-                  <button
-                    type="button"
-                    className="od-chat-icon-btn od-chat-icon-btn--accent"
-                    onClick={() => openVoice({ screenshare: true })}
-                    aria-pressed={voiceOpen && preferScreenshare}
-                    title="Request screenshare (may be blocked for child accounts)"
-                  >
-                    Screenshare
-                  </button>
-                  <button
-                    type="button"
-                    className="od-chat-icon-btn"
-                    onClick={() => void toggleMute()}
-                    aria-pressed={Boolean(active.muted)}
-                    disabled={roomActionBusy}
-                  >
-                    {active.muted ? 'Unmute' : 'Mute'}
-                  </button>
-                </>
-              ) : null}
-              {showLeave ? (
-                <button
-                  type="button"
-                  className="od-chat-icon-btn"
-                  onClick={() => void leaveActiveRoom()}
-                  disabled={roomActionBusy}
-                >
-                  Leave
-                </button>
-              ) : null}
-              {showArchive ? (
-                <button
-                  type="button"
-                  className="od-chat-icon-btn"
-                  onClick={() => void archiveActiveRoom()}
-                  disabled={roomActionBusy}
-                >
-                  Archive
-                </button>
-              ) : null}
-              {typeof onExpandToggle === 'function' ? (
-                <button
-                  type="button"
-                  className="od-chat-icon-btn"
-                  onClick={onExpandToggle}
-                  aria-pressed={expanded}
-                  title={expanded ? 'Compact chat panel' : 'Expand chat panel'}
-                >
-                  {expanded ? 'Compact' : 'Expand'}
-                </button>
-              ) : null}
-              {onClose ? (
-                <button
-                  type="button"
-                  className="od-chat-icon-btn"
-                  aria-label="Close chat"
-                  onClick={onClose}
-                >
-                  ×
-                </button>
-              ) : null}
-            </div>
-          </div>
+          <ChatThreadHead
+            expanded={expanded}
+            onClose={onClose}
+            onExpandToggle={onExpandToggle}
+            active={active}
+            archiveActiveRoom={archiveActiveRoom}
+            leaveActiveRoom={leaveActiveRoom}
+            openVoice={openVoice}
+            preferScreenshare={preferScreenshare}
+            roomActionBusy={roomActionBusy}
+            showArchive={showArchive}
+            showLeave={showLeave}
+            toggleMute={toggleMute}
+            voiceOpen={voiceOpen}
+          />
 
           {voiceOpen ? (
             <div className="od-chat-voice od-chat-voice--header" aria-label="Voice and screenshare">
@@ -901,191 +457,39 @@ export function ChatPanel({
             </p>
           ) : null}
 
-          <ul className="od-chat-messages">
-            {!activeId ? (
-              <li className="od-chat-empty">Choose a room to start chatting.</li>
-            ) : messages.length === 0 ? (
-              <li className="od-chat-empty">No messages yet — say hi.</li>
-            ) : (
-              messages.map((m, index) => {
-                const prev = messages[index - 1]
-                const sameAuthor = prev && prev.user === m.user
-                const parent = m.parent_message_id
-                  ? messages.find((x) => x.id === m.parent_message_id)
-                  : null
-                return (
-                  <li key={m.id} className={`od-chat-msg${sameAuthor ? ' is-continued' : ''}`}>
-                    {parent ? (
-                      <div className="od-chat-reply-ref">
-                        ↳ {parent.user}: {String(parent.body).slice(0, 80)}
-                      </div>
-                    ) : null}
-                    {!sameAuthor ? (
-                      <div className="od-chat-msg__meta">
-                        <span className="od-chat-msg__user">{m.user}</span>
-                        <time className="od-chat-msg__time" dateTime={m.created_at || undefined}>
-                          {formatMsgTime(m.created_at)}
-                        </time>
-                      </div>
-                    ) : null}
-                    {m.body && String(m.body).trim() ? (
-                      <p className="od-chat-msg__body">{m.body}</p>
-                    ) : null}
-                    <MessageAttachments attachments={m.attachments} />
-                    <div className="od-chat-msg__actions">
-                      <button
-                        type="button"
-                        className="od-cbtn od-cbtn--ghost od-btn--sm"
-                        onClick={() => setReplyTo(m)}
-                      >
-                        Reply
-                      </button>
-                      {reactionItems.map((item) => {
-                        const emoji = item.emoji
-                        const count = m.reactions?.[emoji] || 0
-                        const mine = Array.isArray(m.mine) && m.mine.includes(emoji)
-                        return (
-                          <button
-                            key={emoji}
-                            type="button"
-                            /* `is-on` is the bar language's pressed state, and
-                               it is already keyed off exactly this condition
-                               everywhere else — a reaction you left reads the
-                               same as an active filter. */
-                            className={`od-cbtn od-btn--sm${mine ? ' is-on' : ''}`}
-                            aria-pressed={mine}
-                            title={mine ? `Remove ${item.label}` : `React ${item.label}`}
-                            onClick={() => void toggleReaction(m.id, emoji)}
-                          >
-                            <ReactionLabel item={item} />
-                            {count ? ` ${count}` : ''}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </li>
-                )
-              })
-            )}
-            <li ref={listEndRef} aria-hidden="true" />
-          </ul>
+          <ChatMessageList
+            activeId={activeId}
+            listEndRef={listEndRef}
+            messages={messages}
+            reactionItems={reactionItems}
+            setReplyTo={setReplyTo}
+            toggleReaction={toggleReaction}
+          />
 
-          {replyTo ? (
-            <div className="od-chat-reply-bar">
-              <span>
-                Replying to <strong>{replyTo.user}</strong>: {String(replyTo.body).slice(0, 60)}
-              </span>
-              <button type="button" className="od-chat-icon-btn" onClick={() => setReplyTo(null)}>
-                Cancel
-              </button>
-            </div>
-          ) : null}
-
-          {pendingAttachments.length > 0 ? (
-            <ul className="od-chat-pending-attachments" aria-label="Pending attachments">
-              {pendingAttachments.map((att) => (
-                <li key={att.id ?? att.filename}>
-                  <span>{att.filename || 'file'}</span>
-                  <button
-                    type="button"
-                    className="od-chat-icon-btn"
-                    aria-label={`Remove ${att.filename || 'attachment'}`}
-                    onClick={() =>
-                      setPendingAttachments((prev) => prev.filter((row) => row !== att))
-                    }
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {attachHint ? (
-            <p className="od-chat-attach-hint" role="status">
-              {attachHint}
-            </p>
-          ) : null}
-
-          {showEmojiPicker ? (
-            <div
-              id={emojiPickerId}
-              className="od-chat-emoji-picker"
-              role="listbox"
-              aria-label="Emoji"
-            >
-              {reactionItems.map((item) => (
-                <button
-                  key={item.emoji}
-                  type="button"
-                  role="option"
-                  className="od-chat-emoji-picker__btn"
-                  title={item.label}
-                  onClick={() => insertEmoji(item)}
-                >
-                  <ReactionLabel item={item} />
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          <form className="od-chat-composer" onSubmit={sendMessage}>
-            <div className="od-chat-composer__tools">
-              <button
-                type="button"
-                className="od-chat-composer__tool"
-                aria-label="Insert emoji"
-                aria-expanded={showEmojiPicker}
-                aria-controls={emojiPickerId}
-                disabled={!activeId}
-                onClick={() => setShowEmojiPicker((v) => !v)}
-              >
-                🙂
-              </button>
-              <button
-                type="button"
-                className="od-chat-composer__tool"
-                aria-label="Attach file"
-                title={
-                  viewerIsChild
-                    ? ATTACH_HINT_CHILD
-                    : attachAvailable === false
-                      ? ATTACH_HINT_UNAVAILABLE
-                      : 'Attach image or file'
-                }
-                disabled={attachDisabled}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                📎
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="od-chat-sr-only"
-                tabIndex={-1}
-                accept={ATTACH_ACCEPT}
-                multiple
-                onChange={(event) => void handleAttachFiles(event)}
-              />
-            </div>
-            <textarea
-              ref={composerRef}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder={active ? `Message ${active.name}` : 'Select a room first'}
-              disabled={!activeId}
-              rows={2}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  event.currentTarget.form?.requestSubmit()
-                }
-              }}
-            />
-            <Button variant="primary" type="submit" disabled={!canSend}>
-              Send
-            </Button>
-          </form>
+          <ChatComposer
+            active={active}
+            activeId={activeId}
+            attachAvailable={attachAvailable}
+            attachDisabled={attachDisabled}
+            attachHint={attachHint}
+            body={body}
+            canSend={canSend}
+            composerRef={composerRef}
+            emojiPickerId={emojiPickerId}
+            fileInputRef={fileInputRef}
+            handleAttachFiles={handleAttachFiles}
+            insertEmoji={insertEmoji}
+            pendingAttachments={pendingAttachments}
+            reactionItems={reactionItems}
+            replyTo={replyTo}
+            sendMessage={sendMessage}
+            setBody={setBody}
+            setPendingAttachments={setPendingAttachments}
+            setReplyTo={setReplyTo}
+            setShowEmojiPicker={setShowEmojiPicker}
+            showEmojiPicker={showEmojiPicker}
+            viewerIsChild={viewerIsChild}
+          />
         </section>
       </div>
     </div>
