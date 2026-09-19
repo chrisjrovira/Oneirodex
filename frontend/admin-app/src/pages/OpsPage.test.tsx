@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { formatScanJobCounters, OpsPage } from './OpsPage'
@@ -59,7 +60,7 @@ describe('formatScanJobCounters', () => {
  * keeps each test about the thing it is actually asserting, while a genuinely
  * unexpected URL still throws.
  */
-function ancillaryOpsResponse(url) {
+function ancillaryOpsResponse(url: any) {
   const href = String(url)
   if (href.includes('/admin/api/ops/system')) {
     return {
@@ -158,7 +159,7 @@ function mockOpsSummary(overrides = {}) {
 }
 
 test('OpsPage shows library health score and top factors when present', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -190,7 +191,7 @@ test('OpsPage shows library health score and top factors when present', async ()
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -207,7 +208,7 @@ test('OpsPage shows library health score and top factors when present', async ()
 })
 
 test('OpsPage library health is honest n/a when Backend field absent', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -223,7 +224,7 @@ test('OpsPage library health is honest n/a when Backend field absent', async () 
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -237,7 +238,7 @@ test('OpsPage library health is honest n/a when Backend field absent', async () 
 })
 
 test('OpsPage Scans tile renders honest counters', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -253,7 +254,7 @@ test('OpsPage Scans tile renders honest counters', async () => {
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -265,7 +266,7 @@ test('OpsPage Scans tile renders honest counters', async () => {
 })
 
 test('OpsPage shows library watch off honestly', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -281,7 +282,7 @@ test('OpsPage shows library watch off honestly', async () => {
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -306,7 +307,7 @@ test('OpsPage shows library watch off honestly', async () => {
 })
 
 test('OpsPage shows library watch running with roots and pending', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -335,7 +336,7 @@ test('OpsPage shows library watch running with roots and pending', async () => {
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -348,7 +349,7 @@ test('OpsPage shows library watch running with roots and pending', async () => {
 })
 
 test('OpsPage status banner lists issues with href', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -364,7 +365,7 @@ test('OpsPage status banner lists issues with href', async () => {
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -384,7 +385,7 @@ test('OpsPage status banner lists issues with href', async () => {
 })
 
 test('OpsPage splits action and warning folds; category maps to action', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -420,7 +421,7 @@ test('OpsPage splits action and warning folds; category maps to action', async (
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -441,7 +442,7 @@ test('OpsPage splits action and warning folds; category maps to action', async (
 })
 
 test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -470,7 +471,7 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
     const ancillary = ancillaryOpsResponse(url)
     if (ancillary) return ancillary
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -485,12 +486,12 @@ test('OpsPage keeps disk_*_critical in Warning / Info fold', async () => {
 
 test('OpsPage manual Refresh shows status; poll does not wipe content', async () => {
   const user = userEvent.setup()
-  let resolveSecond
+  let resolveSecond: ((value?: unknown) => void) | undefined
   const secondPromise = new Promise((resolve) => {
     resolveSecond = resolve
   })
   let callCount = 0
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url) => {
     if (!String(url).includes('/admin/api/ops/summary')) {
       const ancillary = ancillaryOpsResponse(url)
       if (ancillary) return ancillary
@@ -528,7 +529,7 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
           },
         }),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(<OpsPage />)
 
@@ -544,7 +545,7 @@ test('OpsPage manual Refresh shows status; poll does not wipe content', async ()
   expect(screen.getByRole('button', { name: /Refreshing/i })).toBeDisabled()
   expect(screen.getByRole('heading', { name: 'Scans' })).toBeInTheDocument()
 
-  resolveSecond()
+  resolveSecond!()
   await waitFor(() => {
     expect(screen.getByText(/9\.9 ms/)).toBeInTheDocument()
   })
@@ -612,7 +613,7 @@ test('OpsPage uses a dashboard-style board with reset and detail panels', async 
   document.body.appendChild(pageSlot)
   document.body.appendChild(trail)
   try {
-    global.fetch = mockOpsWithSystemDetail()
+    globalThis.fetch = mockOpsWithSystemDetail() as unknown as typeof globalThis.fetch
     render(<OpsPage />)
 
     expect(await screen.findByRole('heading', { name: 'System', level: 2 })).toBeInTheDocument()
@@ -627,7 +628,7 @@ test('OpsPage uses a dashboard-style board with reset and detail panels', async 
     expect(trail.contains(refresh)).toBe(true)
     const wrap = refresh.closest('.od-ops-refresh-wrap')
     expect(wrap).toBeTruthy()
-    expect(within(wrap).getByRole('tooltip').textContent).toMatch(/Updated /)
+    expect(within(wrap as HTMLElement).getByRole('tooltip').textContent).toMatch(/Updated /)
   } finally {
     pageSlot.remove()
     trail.remove()
@@ -636,7 +637,7 @@ test('OpsPage uses a dashboard-style board with reset and detail panels', async 
 
 test('OpsPage Full log opens a modal instead of navigating away', async () => {
   const user = userEvent.setup()
-  global.fetch = mockOpsWithSystemDetail()
+  globalThis.fetch = mockOpsWithSystemDetail() as unknown as typeof globalThis.fetch
   render(<OpsPage />)
 
   expect(await screen.findByRole('heading', { name: 'Recent log', level: 2 })).toBeInTheDocument()
@@ -646,6 +647,8 @@ test('OpsPage Full log opens a modal instead of navigating away', async () => {
 
   expect(await screen.findByRole('dialog', { name: 'Full log' })).toBeInTheDocument()
   expect(
-    global.fetch.mock.calls.some(([url]) => String(url).includes('/admin/api/ops/logs?limit=200')),
+    vi
+      .mocked(globalThis.fetch)
+      .mock.calls.some(([url]: any) => String(url).includes('/admin/api/ops/logs?limit=200')),
   ).toBe(true)
 })

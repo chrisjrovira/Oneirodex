@@ -24,8 +24,8 @@ test('detectPlatformMismatch flags path platform vs assigned library platform', 
     'Atari 2600',
   )
   expect(hit).not.toBeNull()
-  expect(hit.pathHint).toMatch(/neo geo/i)
-  expect(hit.assignedPlatform).toBe('Atari 2600')
+  expect(hit!.pathHint).toMatch(/neo geo/i)
+  expect(hit!.assignedPlatform).toBe('Atari 2600')
 })
 
 test('detectPlatformMismatch returns null when path aligns with assignment', () => {

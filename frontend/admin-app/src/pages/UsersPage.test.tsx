@@ -111,7 +111,7 @@ test('Invites and Support sit in the top bar when the slot exists (W33-9)', asyn
     )
     const links = within(slot)
       .getAllByRole('link')
-      .map((link) => link.textContent.trim())
+      .map((link) => link.textContent!.trim())
     expect(links).toEqual(['Invites', 'Support inbox', 'Invite quotas'])
     // Topbar actions are portaled; Create user stays on the page (not a topbar row).
     expect(within(slot).queryByRole('button', { name: 'Create user' })).toBeNull()

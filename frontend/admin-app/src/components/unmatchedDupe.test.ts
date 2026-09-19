@@ -143,7 +143,7 @@ test('buildDupeCompare builds folder vs library sides with honest empties', () =
       match_score: 0.98,
     },
   })
-  expect(compare.folder).toMatchObject({
+  expect(compare!.folder).toMatchObject({
     role: 'folder',
     label: 'This folder',
     name: 'Celeste',
@@ -151,7 +151,7 @@ test('buildDupeCompare builds folder vs library sides with honest empties', () =
     size_bytes: null,
     mtime: null,
   })
-  expect(compare.library).toMatchObject({
+  expect(compare!.library).toMatchObject({
     role: 'library',
     name: 'Celeste',
     path: '/library/Celeste',

@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DupeGlance } from './DupeGlance'
@@ -9,9 +10,9 @@ vi.mock('../api/adminApi', () => ({
 }))
 
 beforeEach(() => {
-  getJson.mockReset()
-  postJson.mockReset()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockReset()
+  vi.mocked(postJson).mockReset()
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 1,
       folder_path: '/games/Celeste',
@@ -32,7 +33,7 @@ beforeEach(() => {
       platform_id: 6,
     },
   ])
-  postJson.mockResolvedValue({ changed_count: 1, kept_count: 0 })
+  vi.mocked(postJson).mockResolvedValue({ changed_count: 1, kept_count: 0 })
 })
 
 /** Rows plus the served bad-match vocabulary (UX-C5). */
@@ -42,7 +43,7 @@ function mockWithBadMatch(rowOverrides = {}) {
     { id: 'duplicate_of_other', label: 'Duplicate of another entry' },
     { id: 'other', label: 'Other' },
   ]
-  getJson.mockImplementation(async (url) => {
+  vi.mocked(getJson).mockImplementation(async (url: any) => {
     if (String(url).includes('/api/unmatched/bad_match_reasons')) return { ok: true, reasons }
     if (String(url).includes('/api/unmatched_folders')) {
       return [
@@ -160,13 +161,13 @@ test('DupeGlance surfaces fix log success from reclassify', async () => {
 
 test('DupeGlance Mark as Emulator calls mark_kind and catalogs without IGDB', async () => {
   const user = userEvent.setup()
-  postJson.mockImplementation(async (url) => {
+  vi.mocked(postJson).mockImplementation(async (url: any) => {
     if (String(url).includes('mark_kind')) {
       return { ok: true, name: '3DSenVR', item_kind: 'emulator', game_uuid: 'g-1' }
     }
     return { changed_count: 0, kept_count: 0 }
   })
-  getJson
+  vi.mocked(getJson)
     .mockResolvedValueOnce([
       {
         id: 2,
@@ -200,7 +201,7 @@ test('DupeGlance Mark as Emulator calls mark_kind and catalogs without IGDB', as
 
 test('DupeGlance shows honest error when mark_kind fails', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 9,
       folder_path: '/games/SomeTool',
@@ -209,7 +210,7 @@ test('DupeGlance shows honest error when mark_kind fails', async () => {
       platform_name: 'PCWIN',
     },
   ])
-  postJson.mockRejectedValue(new Error('Unmatched folder not found'))
+  vi.mocked(postJson).mockRejectedValue(new Error('Unmatched folder not found'))
 
   render(<DupeGlance onOpenPath={() => {}} />)
   await screen.findByRole('heading', { name: 'Dupe glance' })
@@ -221,7 +222,7 @@ test('DupeGlance shows honest error when mark_kind fails', async () => {
 
 test('DupeGlance shows suggested_kind chip and pre-biases Mark as… when present', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 7,
       folder_path: '/games/3DSenVR',
@@ -244,7 +245,7 @@ test('DupeGlance shows suggested_kind chip and pre-biases Mark as… when presen
 
 test('DupeGlance tolerates missing suggested_kind without crashing', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 8,
       folder_path: '/games/PlainFolder',
@@ -263,7 +264,7 @@ test('DupeGlance tolerates missing suggested_kind without crashing', async () =>
 
 test('DupeGlance shows match_score beside Why unmatched? when present', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 14,
       folder_path: '/games/ScoredMiss',
@@ -285,7 +286,7 @@ test('DupeGlance shows match_score beside Why unmatched? when present', async ()
 
 test('DupeGlance omits match_score chip when null', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 15,
       folder_path: '/games/NoScore',
@@ -305,7 +306,7 @@ test('DupeGlance omits match_score chip when null', async () => {
 
 test('DupeGlance shows Why unmatched? from why_unmatched when present', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 11,
       folder_path: '/games/MysterySoft',
@@ -328,7 +329,7 @@ test('DupeGlance shows Why unmatched? from why_unmatched when present', async ()
 
 test('DupeGlance builds Why unmatched? from match_reason + suggested_kind when summary absent', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 12,
       folder_path: '/games/NearMiss',
@@ -351,7 +352,7 @@ test('DupeGlance builds Why unmatched? from match_reason + suggested_kind when s
 
 test('DupeGlance tolerates null why fields without crashing', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 13,
       folder_path: '/games/EmptyWhy',
@@ -373,7 +374,7 @@ test('DupeGlance tolerates null why fields without crashing', async () => {
 
 test('DupeGlance shows ordered transform trail when transforms present', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 21,
       folder_path: '/games/Some Game (Repack) v1.2',
@@ -407,8 +408,8 @@ test('DupeGlance shows ordered transform trail when transforms present', async (
   await user.click(summary)
   const trail = summary.closest('details')
   expect(trail).not.toBeNull()
-  expect(trail.querySelector('.od-dupe-glance__transform-list')).not.toBeNull()
-  const steps = trail.querySelectorAll('.od-dupe-glance__transform-step')
+  expect(trail!.querySelector('.od-dupe-glance__transform-list')).not.toBeNull()
+  const steps = trail!.querySelectorAll('.od-dupe-glance__transform-step')
   expect(steps).toHaveLength(2)
   expect(steps[0]).toHaveTextContent(/A1/)
   expect(steps[0]).toHaveTextContent('Some Game (Repack) v1.2')
@@ -422,7 +423,7 @@ test('DupeGlance shows ordered transform trail when transforms present', async (
 
 test('DupeGlance soft-degrades when transforms missing (mid-rollout)', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 22,
       folder_path: '/games/NoTrailYet',
@@ -443,7 +444,7 @@ test('DupeGlance soft-degrades when transforms missing (mid-rollout)', async () 
 
 test('DupeGlance soft-degrades when transforms is empty array', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 23,
       folder_path: '/games/EmptyTrail',
@@ -463,7 +464,7 @@ test('DupeGlance soft-degrades when transforms is empty array', async () => {
 
 test('DupeGlance shows Stage E propose-only chip and expandable candidates', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 31,
       folder_path: '/games/Doom',
@@ -508,7 +509,7 @@ test('DupeGlance shows Stage E propose-only chip and expandable candidates', asy
 
 test('DupeGlance soft-degrades Stage E when fields absent (mid-rollout)', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 32,
       folder_path: '/games/NoStageEYet',
@@ -549,7 +550,7 @@ test('normalizeTransforms ignores malformed steps and keeps order', async () => 
 
 test('DupeGlance Backfill kind hints confirms then posts and shows count', async () => {
   const user = userEvent.setup()
-  postJson.mockImplementation(async (url) => {
+  vi.mocked(postJson).mockImplementation(async (url: any) => {
     if (String(url).includes('backfill_suggested_kind')) {
       return { ok: true, scanned: 12, updated: 4, skipped_no_sidecar: 7, skipped_empty_hint: 1 }
     }
@@ -585,7 +586,7 @@ test('DupeGlance Backfill kind hints aborts when confirm is cancelled', async ()
 })
 
 test('DupeGlance shows side-by-side compare for matched_game Duplicate rows', async () => {
-  getJson.mockImplementation(async (url) => {
+  vi.mocked(getJson).mockImplementation(async (url: any) => {
     if (String(url).includes('/duplicates')) {
       return {
         duplicates: [
@@ -637,7 +638,7 @@ test('DupeGlance shows side-by-side compare for matched_game Duplicate rows', as
 })
 
 test('DupeGlance shows size and date when API provides them', async () => {
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 1,
       folder_path: '/games/Celeste',
@@ -666,7 +667,7 @@ test('DupeGlance shows size and date when API provides them', async () => {
 
 test('DupeGlance Merge posts fix action', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 1,
       folder_path: '/games/Celeste',
@@ -680,7 +681,11 @@ test('DupeGlance Merge posts fix action', async () => {
       },
     },
   ])
-  postJson.mockResolvedValue({ ok: true, action: 'merge', folder_path: '/games/Celeste' })
+  vi.mocked(postJson).mockResolvedValue({
+    ok: true,
+    action: 'merge',
+    folder_path: '/games/Celeste',
+  })
 
   render(<DupeGlance onOpenPath={() => {}} />)
   await screen.findByLabelText(/Duplicate side-by-side comparison/i)
@@ -694,7 +699,7 @@ test('DupeGlance Merge posts fix action', async () => {
 
 test('DupeGlance shows Search name when soft name differs from on-disk basename', async () => {
   const user = userEvent.setup()
-  getJson.mockResolvedValue([
+  vi.mocked(getJson).mockResolvedValue([
     {
       id: 42,
       folder_path: '/games/Celeste_v1.4.0',

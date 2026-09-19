@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { SettingsPage } from './SettingsPage'
 
-function stubModuleStatus(payload, { ok = true, status = 200 } = {}) {
+function stubModuleStatus(payload: any, { ok = true, status = 200 } = {}) {
   const fetchMock = vi.fn(async (url) => {
     if (String(url).includes('/api/settings/module-status')) {
       return {
@@ -63,9 +63,9 @@ describe('SettingsPage module badges', () => {
 
     // Badge beside the title, not inside it — the title column used to clip
     // both the label and the pill.
-    const storageBadge = badges.find((b) => b.textContent.includes('Apply off'))
-    expect(storageBadge.closest('.od-settings-row__title')).toBeNull()
-    expect(storageBadge.closest('.od-settings-row')).not.toBeNull()
+    const storageBadge = badges.find((b) => b.textContent!.includes('Apply off'))
+    expect(storageBadge!.closest('.od-settings-row__title')).toBeNull()
+    expect(storageBadge!.closest('.od-settings-row')).not.toBeNull()
     expect(document.querySelectorAll('.od-settings-group.od-admin-panel')).toHaveLength(0)
     expect(document.querySelectorAll('.od-admin-panel.od-settings')).toHaveLength(1)
   })

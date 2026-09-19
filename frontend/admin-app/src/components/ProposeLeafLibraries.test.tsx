@@ -153,7 +153,7 @@ describe('ProposeLeafLibraries', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
+      vi.fn(async (): Promise<any> => ({
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
@@ -177,7 +177,7 @@ describe('ProposeLeafLibraries', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
+      vi.fn(async (): Promise<any> => ({
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
@@ -298,7 +298,7 @@ describe('ProposeLeafLibraries', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
+      vi.fn(async (): Promise<any> => ({
         ok: false,
         status: 403,
         headers: new Headers({ 'content-type': 'application/json' }),

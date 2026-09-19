@@ -9,22 +9,22 @@ import { AdminRoutes } from './AdminRoutes'
  * "no URL changed" guard — one row per branch of the old switch.
  */
 
-const originalFetch = global.fetch
+const originalFetch = globalThis.fetch
 afterEach(() => {
-  global.fetch = originalFetch
+  globalThis.fetch = originalFetch
   vi.restoreAllMocks()
 })
 
-function mountAt(path) {
+function mountAt(path: any) {
   // Pages fire data fetches on mount; a generic empty-OK stub keeps them from
   // throwing while we assert on the synchronous <h1>.
-  global.fetch = vi.fn(async () => ({
+  globalThis.fetch = vi.fn(async () => ({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => ({}),
     text: async () => '',
-  }))
+  })) as unknown as typeof globalThis.fetch
   render(
     <MemoryRouter initialEntries={[path]}>
       <AdminRoutes />

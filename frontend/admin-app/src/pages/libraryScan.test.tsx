@@ -14,7 +14,7 @@ import { ScansPage } from './ScansPage'
  * library or re-running a failed job meant leaving the SPA.
  */
 
-function jsonResponse(data, { ok = true, status = 200 } = {}) {
+function jsonResponse(data: any, { ok = true, status = 200 } = {}) {
   return {
     ok,
     status,
@@ -32,9 +32,9 @@ const LIBRARIES = [
   { uuid: 'lib-2', name: 'PS2', last_scan_folder: '' },
 ]
 
-let calls
+let calls: any
 
-function installFetch(overrides = {}) {
+function installFetch(overrides: { jobs?: any; scan?: any } = {}) {
   calls = []
   vi.stubGlobal(
     'fetch',
@@ -78,9 +78,9 @@ test('each library row can start its own scan', async () => {
   await user.click(scanButtons[0])
 
   await waitFor(() => {
-    expect(calls.some((c) => c.url.includes('/api/admin/libraries/scan'))).toBe(true)
+    expect(calls.some((c: any) => c.url.includes('/api/admin/libraries/scan'))).toBe(true)
   })
-  const posted = calls.find((c) => c.url.includes('/api/admin/libraries/scan'))
+  const posted: any = calls.find((c: any) => c.url.includes('/api/admin/libraries/scan'))
   expect(posted.body.library_uuid).toBe('lib-1')
   // Idle path still sends the queue fields — never omit them on a start, or the
   // backend has to guess the policy.
@@ -129,9 +129,9 @@ test('a finished job offers Scan again and repeats that job, not the library', a
   await user.click(retry)
 
   await waitFor(() => {
-    expect(calls.some((c) => c.url.includes('/api/admin/libraries/scan'))).toBe(true)
+    expect(calls.some((c: any) => c.url.includes('/api/admin/libraries/scan'))).toBe(true)
   })
-  const posted = calls.find((c) => c.url.includes('/api/admin/libraries/scan'))
+  const posted: any = calls.find((c: any) => c.url.includes('/api/admin/libraries/scan'))
   // The job's own folder and its own settings — a retry, not a fresh scan of
   // wherever the library happens to point now.
   expect(posted.body).toMatchObject({

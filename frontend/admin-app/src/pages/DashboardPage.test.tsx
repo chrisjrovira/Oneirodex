@@ -6,11 +6,11 @@ import { DASHBOARD_STORAGE_KEY } from '../components/dashboardLayout'
 beforeEach(() => {
   const store = new Map()
   vi.stubGlobal('localStorage', {
-    getItem: (key) => (store.has(key) ? store.get(key) : null),
-    setItem: (key, value) => {
+    getItem: (key: any) => (store.has(key) ? store.get(key) : null),
+    setItem: (key: any, value: any) => {
       store.set(key, String(value))
     },
-    removeItem: (key) => {
+    removeItem: (key: any) => {
       store.delete(key)
     },
     clear: () => store.clear(),
@@ -24,7 +24,7 @@ afterEach(() => {
 })
 
 function mockSummary(overrides = {}) {
-  global.fetch = vi.fn(async (url) => {
+  globalThis.fetch = vi.fn(async (url: any): Promise<any> => {
     if (String(url).includes('/admin/api/ops/summary')) {
       return {
         ok: true,
@@ -67,7 +67,7 @@ function mockSummary(overrides = {}) {
       }
     }
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
 }
 
 test('DashboardPage Updated timestamp is a hover tooltip on refresh', async () => {
@@ -86,7 +86,7 @@ test('DashboardPage Updated timestamp is a hover tooltip on refresh', async () =
     expect(within(pageSlot).getByRole('button', { name: 'Reset layout' })).toBeInTheDocument()
     const wrap = refresh.closest('.od-ops-refresh-wrap')
     expect(wrap).toBeTruthy()
-    const asOf = within(wrap).getByRole('tooltip')
+    const asOf = within(wrap as HTMLElement).getByRole('tooltip')
     expect(asOf.textContent).toMatch(/Updated /)
     expect(refresh.getAttribute('aria-describedby')).toBe(asOf.id)
     expect(container.querySelector('.od-ops-status__trail')).toBeNull()
@@ -137,7 +137,7 @@ test('DashboardPage shows library health tile when library.health present', asyn
       (node) => node.querySelector('.od-ops-metric__label')?.textContent === 'Library health',
     )
     expect(health).toBeTruthy()
-    expect(health.querySelector('.od-ops-metric__value')).toHaveTextContent('81 · good')
+    expect(health!.querySelector('.od-ops-metric__value')).toHaveTextContent('81 · good')
   })
 })
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildAdminCommands, filterAdminCommands, scoreCommand } from './adminCommands'
+import {
+  buildAdminCommands,
+  filterAdminCommands,
+  scoreCommand,
+  type AdminCommand,
+} from './adminCommands'
 import { ADMIN_NAV, HUB_LINKS, INTEGRATION_CARDS, SETTINGS_GROUPS } from './navConfig'
 
 /**
@@ -95,7 +100,9 @@ describe('filterAdminCommands', () => {
 })
 
 describe('scoreCommand', () => {
-  const command = {
+  const command: AdminCommand = {
+    id: 'smtp',
+    href: '/admin/settings#smtp',
     label: 'SMTP',
     section: 'Integrations',
     blurb: 'Outbound mail.',
@@ -103,6 +110,7 @@ describe('scoreCommand', () => {
   }
 
   it('scores exact above prefix above keyword', () => {
+    // scoreCommand reads label / section / blurb / keywords only; id and href are routing.
     expect(scoreCommand(command, 'smtp')).toBeGreaterThan(scoreCommand(command, 'mail'))
     expect(scoreCommand(command, 'email')).toBeGreaterThan(0)
     expect(scoreCommand(command, 'nope')).toBe(-1)

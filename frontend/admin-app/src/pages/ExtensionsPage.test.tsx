@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { App } from '../App'
 import { ExtensionsPage } from './ExtensionsPage'
 
-function mockFetch(handlers) {
+function mockFetch(handlers: any) {
   return vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     const key = `${method} ${String(url)}`
@@ -18,7 +18,7 @@ function mockFetch(handlers) {
   })
 }
 
-function jsonOk(body, status = 200) {
+function jsonOk(body: any, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -33,7 +33,7 @@ function jsonOk(body, status = 200) {
 
 test('ExtensionsPage lists extensions and supports add/remove happy path', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
+  const originalFetch = globalThis.fetch
   let store = [
     { id: 1, value: 'zip' },
     { id: 2, value: 'iso' },
@@ -41,10 +41,10 @@ test('ExtensionsPage lists extensions and supports add/remove happy path', async
   ]
   let nextId = 4
 
-  global.fetch = mockFetch([
+  globalThis.fetch = mockFetch([
     [
       '/api/file_types/allowed',
-      async (_url, init, method) => {
+      async (_url: any, init: any, method: any) => {
         if (method === 'GET') return jsonOk(store)
         if (method === 'POST') {
           const body = init?.body ? JSON.parse(init.body) : {}
@@ -81,7 +81,7 @@ test('ExtensionsPage lists extensions and supports add/remove happy path', async
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/file_types/allowed',
         expect.objectContaining({ method: 'POST' }),
       )
@@ -90,7 +90,7 @@ test('ExtensionsPage lists extensions and supports add/remove happy path', async
 
     await user.click(screen.getByRole('button', { name: 'Remove .iso' }))
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/file_types/allowed',
         expect.objectContaining({ method: 'DELETE' }),
       )
@@ -99,16 +99,16 @@ test('ExtensionsPage lists extensions and supports add/remove happy path', async
       expect(screen.queryByRole('button', { name: 'Remove .iso' })).not.toBeInTheDocument()
     })
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('App route /admin/extensions mounts Extensions UI', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([
     [
       '/api/file_types/allowed',
-      async (_url, _init, method) => (method === 'GET' ? jsonOk([]) : null),
+      async (_url: any, _init: any, method: any) => (method === 'GET' ? jsonOk([]) : null),
     ],
   ])
   try {
@@ -124,6 +124,6 @@ test('App route /admin/extensions mounts Extensions UI', async () => {
     // it committed alongside a heading the skeleton already satisfied.
     expect(await screen.findByText(/library scan recognition/i)).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

@@ -38,10 +38,10 @@ const TICKETS = {
   ],
 }
 
-function mockFetch(payload) {
+function mockFetch(payload: any) {
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => ({
+    vi.fn(async (): Promise<any> => ({
       ok: true,
       status: 200,
       headers: new Headers({ 'content-type': 'application/json' }),

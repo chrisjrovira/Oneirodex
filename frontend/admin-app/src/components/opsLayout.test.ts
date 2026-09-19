@@ -14,7 +14,7 @@ describe('defaultOpsLayout', () => {
       rows.set(item.y, list)
     })
     for (const row of rows.values()) {
-      const width = row.reduce((sum, item) => sum + item.w, 0)
+      const width = row.reduce((sum: any, item: any) => sum + item.w, 0)
       expect(width).toBe(DASHBOARD_COLS)
     }
   })

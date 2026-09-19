@@ -3,6 +3,7 @@
   // strict in PR-4 (b). Local override only — tsconfig.base.json stays
   // strict:false for the other workspaces until each does its own pass.
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "strict": true },
+  "compilerOptions": { "strict": true,
+    "types": ["vitest/globals", "@testing-library/jest-dom"] },
   "include": ["src"]
 }

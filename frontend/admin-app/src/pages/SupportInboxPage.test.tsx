@@ -2,8 +2,8 @@ import { render, screen, within } from '@testing-library/react'
 
 import { SupportInboxPage } from './SupportInboxPage'
 
-function mockFetch(tickets) {
-  return vi.fn(async () => ({
+function mockFetch(tickets: any) {
+  return vi.fn(async (): Promise<any> => ({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -24,16 +24,16 @@ function mockFetch(tickets) {
  * of state would be one more thing to keep in step with the rows it describes.
  */
 test('counts open, resolved and GitHub-synced tickets', async () => {
-  const originalFetch = global.fetch
+  const originalFetch = globalThis.fetch
   // Counts chosen so all three differ — open 3, resolved 1, synced 2. With two
   // tiles showing the same number a getByText would match both and throw,
   // which says nothing about whether the right tile holds the right value.
-  global.fetch = mockFetch([
+  globalThis.fetch = mockFetch([
     { id: 1, status: 'open', title: 'A', github_issue_number: 11 },
     { id: 2, status: 'open', title: 'B' },
     { id: 3, status: 'open', title: 'C', github_issue_number: 13 },
     { id: 4, status: 'resolved', title: 'D' },
-  ])
+  ]) as unknown as typeof globalThis.fetch
   try {
     render(<SupportInboxPage />)
 
@@ -43,13 +43,13 @@ test('counts open, resolved and GitHub-synced tickets', async () => {
     expect(within(strip).getByText('1')).toBeInTheDocument() // one resolved
     expect(within(strip).getByText('2')).toBeInTheDocument() // two on GitHub
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('an empty inbox is a good state, not an empty one', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([])
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([]) as unknown as typeof globalThis.fetch
   try {
     render(<SupportInboxPage />)
 
@@ -59,6 +59,6 @@ test('an empty inbox is a good state, not an empty one', async () => {
     const strip = await screen.findByLabelText('Support')
     expect(within(strip).getByText('Open')).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

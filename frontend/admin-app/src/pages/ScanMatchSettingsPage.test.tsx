@@ -9,7 +9,7 @@ import {
   hasPolicyKey,
 } from '../api/scanMatchSettingsApi'
 
-function jsonOk(body, status = 200) {
+function jsonOk(body: any, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -22,7 +22,7 @@ function jsonOk(body, status = 200) {
   }
 }
 
-function jsonErr(status, body = {}) {
+function jsonErr(status: any, body = {}) {
   return {
     ok: false,
     status,
@@ -97,7 +97,9 @@ describe('ScanMatchSettingsPage', () => {
   })
 
   test('soft-degrades when API is missing (404)', async () => {
-    global.fetch = vi.fn(async () => jsonErr(404, { error: 'not found' }))
+    globalThis.fetch = vi.fn(async () =>
+      jsonErr(404, { error: 'not found' }),
+    ) as unknown as typeof globalThis.fetch
     render(<ScanMatchSettingsPage />)
     expect(await screen.findByRole('heading', { name: 'Scan / match policy' })).toBeInTheDocument()
     expect(screen.getByText(/catalog_disagreement/)).toBeInTheDocument()
@@ -112,8 +114,8 @@ describe('ScanMatchSettingsPage', () => {
 
   test('renders exposed fields and saves only those keys', async () => {
     const user = userEvent.setup()
-    let putBody = null
-    global.fetch = vi.fn(async (url, init) => {
+    let putBody: any = null
+    globalThis.fetch = vi.fn(async (url, init) => {
       const method = (init?.method || 'GET').toUpperCase()
       if (String(url).includes('/api/admin/scan-match/config') && method === 'GET') {
         return jsonOk({
@@ -130,7 +132,7 @@ describe('ScanMatchSettingsPage', () => {
         return jsonOk({ ...putBody, message: 'ok' })
       }
       throw new Error(`unexpected ${method} ${url}`)
-    })
+    }) as unknown as typeof globalThis.fetch
 
     render(<ScanMatchSettingsPage />)
     expect(await screen.findByLabelText(/Propose-only scan mode/i)).toBeInTheDocument()
@@ -163,12 +165,12 @@ describe('ScanMatchSettingsPage', () => {
   })
 
   test('hides unexposed thresholds when Backend mid-rollout', async () => {
-    global.fetch = vi.fn(async () =>
+    globalThis.fetch = vi.fn(async () =>
       jsonOk({
         propose_only_scan: true,
         peel_profile: 'conservative',
       }),
-    )
+    ) as unknown as typeof globalThis.fetch
     render(<ScanMatchSettingsPage />)
     expect(await screen.findByLabelText(/Propose-only scan mode/i)).toBeChecked()
     expect(screen.getByLabelText(/Name peel aggressiveness/i)).toBeInTheDocument()

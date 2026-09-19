@@ -11,12 +11,12 @@ import { AnnouncementsPage } from './AnnouncementsPage'
  * caught a render break here because nothing rendered it.
  */
 
-function mockList(announcements, { fail = false } = {}) {
+function mockList(announcements: any, { fail = false } = {}) {
   const headers = new Headers({ 'content-type': 'application/json' })
-  global.fetch = vi.fn(async () => {
+  globalThis.fetch = vi.fn(async () => {
     if (fail) return { ok: false, status: 500, headers, json: async () => ({ error: 'Boom' }) }
     return { ok: true, status: 200, headers, json: async () => ({ announcements }) }
-  })
+  }) as unknown as typeof globalThis.fetch
 }
 
 afterEach(() => {
@@ -25,7 +25,7 @@ afterEach(() => {
 
 test('shows the shared loading block before the list arrives', () => {
   // Never resolves — the page should be reporting progress, not blank.
-  global.fetch = vi.fn(() => new Promise(() => {}))
+  globalThis.fetch = vi.fn(() => new Promise(() => {})) as unknown as typeof globalThis.fetch
   render(<AnnouncementsPage />)
 
   const status = screen.getByRole('status')

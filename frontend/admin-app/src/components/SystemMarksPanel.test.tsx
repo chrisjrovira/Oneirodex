@@ -16,9 +16,9 @@ test('normalizeSystemMarksCatalog maps theme progress rows', () => {
 
 test('SystemMarksPanel lists themes and posts generate for selected theme', async () => {
   const user = userEvent.setup()
-  const posts = []
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url, init) => {
+  const posts: any[] = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url, init) => {
     const path = String(url).split('?')[0]
     if (
       path.endsWith('/admin/api/art-studio/system-marks') &&
@@ -89,7 +89,7 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
       },
       json: async () => ({ error: path }),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   try {
     render(<SystemMarksPanel />)
@@ -103,15 +103,15 @@ test('SystemMarksPanel lists themes and posts generate for selected theme', asyn
     await waitFor(() => expect(posts.length).toBe(1))
     expect(posts[0]).toMatchObject({ themes: ['aurora'], force: false })
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('lab generates one forced pair and records the attempt', async () => {
   const user = userEvent.setup()
-  const posts = []
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url, init) => {
+  const posts: any[] = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url, init) => {
     const path = String(url).split('?')[0]
     if (
       path.endsWith('/admin/api/art-studio/system-marks') &&
@@ -175,7 +175,7 @@ test('lab generates one forced pair and records the attempt', async () => {
       },
       json: async () => ({ error: path }),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   try {
     render(<SystemMarksPanel />)
@@ -193,6 +193,6 @@ test('lab generates one forced pair and records the attempt', async () => {
     })
     expect(screen.getByTestId('system-marks-lab-log')).toHaveTextContent('aurora/nes')
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

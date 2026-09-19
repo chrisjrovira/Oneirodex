@@ -234,7 +234,7 @@ describe('ScansPage queued jobs', () => {
         String(c[0]).includes('/api/admin/libraries/refresh_all'),
       )
       expect(refreshCall).toBeTruthy()
-      const body = JSON.parse(refreshCall[1].body)
+      const body = JSON.parse(refreshCall![1].body)
       expect(body.queue_policy).toBe(SCAN_QUEUE_POLICY.QUEUE)
       expect(body.force_parallel).toBe(false)
     })
@@ -314,7 +314,7 @@ describe('LibrariesPage refresh all', () => {
         String(c[0]).includes('/api/admin/libraries/refresh_all'),
       )
       expect(refreshCall).toBeTruthy()
-      const body = JSON.parse(refreshCall[1].body)
+      const body = JSON.parse(refreshCall![1].body)
       expect(body).toEqual({ queue_policy: 'queue', force_parallel: false })
     })
   })

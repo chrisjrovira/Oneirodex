@@ -93,9 +93,9 @@ describe('normalizeLibraryHealth / formatters', () => {
       top_issues: [{ code: 'missing_cover', count: 4 }],
     }
     const n = normalizeLibraryHealth(legacy)
-    expect(n.score).toBe(88)
-    expect(n.grade).toBe('good')
-    expect(n.factors[0].id).toBe('missing_cover')
+    expect(n!.score).toBe(88)
+    expect(n!.grade).toBe('good')
+    expect(n!.factors[0].id).toBe('missing_cover')
     expect(formatLibraryHealthHint(legacy)).toBe('missing_cover')
     expect(libraryHealthTone(legacy)).toBe('good')
   })
@@ -112,9 +112,9 @@ describe('normalizeLibraryHealth / formatters', () => {
       ],
     }
     const n = normalizeLibraryHealth(health)
-    expect(n.factors).toHaveLength(2)
-    expect(n.factors[0]).toMatchObject({ id: 'broken_path', label: 'Broken path', count: 2 })
-    expect(n.factors[1]).toMatchObject({ id: 'path_status', label: 'path_status' })
+    expect(n!.factors).toHaveLength(2)
+    expect(n!.factors[0]).toMatchObject({ id: 'broken_path', label: 'Broken path', count: 2 })
+    expect(n!.factors[1]).toMatchObject({ id: 'path_status', label: 'path_status' })
     // Top hint prefers non-zero impact; null-label path_status still normalizes for display.
     expect(formatLibraryHealthHint(health)).toBe('Broken path')
     expect(libraryHealthTone(health)).toBe('fair')
@@ -194,7 +194,7 @@ describe('MetricTile tone class', () => {
     expect(container.firstChild).not.toHaveClass('od-ops-metric--na')
 
     rerender(<MetricTile label="X" value="1" tone="weird" />)
-    expect(container.firstChild.className).toBe('od-ops-metric')
+    expect((container.firstChild as HTMLElement).className).toBe('od-ops-metric')
   })
 })
 

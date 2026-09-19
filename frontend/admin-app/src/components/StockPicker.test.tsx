@@ -73,9 +73,9 @@ test('normalizeStockCatalog hides thumbs until generated', () => {
 
 test('StockPicker renders stock grid from mock catalog and apply posts pack_id', async () => {
   const user = userEvent.setup()
-  const posts = []
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url, init) => {
+  const posts: any[] = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     const u = String(url)
     if (u.includes('/admin/api/art-studio/apply') && method === 'POST') {
@@ -113,7 +113,7 @@ test('StockPicker renders stock grid from mock catalog and apply posts pack_id',
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   try {
     render(<StockPicker />)
@@ -132,16 +132,16 @@ test('StockPicker renders stock grid from mock catalog and apply posts pack_id',
     expect(posts[0].mode).toBe('fallback')
     expect(await screen.findByText(/Set “CRT grid” as library default/i)).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('StockPicker generates then applies when pack not on disk', async () => {
   const user = userEvent.setup()
-  const posts = []
+  const posts: any[] = []
   let generated = false
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url, init) => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     const u = String(url)
     if (u.includes('/admin/api/art-studio/stock/generate') && method === 'POST') {
@@ -208,7 +208,7 @@ test('StockPicker generates then applies when pack not on disk', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   try {
     render(<StockPicker />)
@@ -218,16 +218,16 @@ test('StockPicker generates then applies when pack not on disk', async () => {
       expect(posts.some((p) => String(p.url).includes('/stock/generate'))).toBe(true)
       expect(posts.some((p) => String(p.url).includes('/art-studio/apply'))).toBe(true)
     })
-    const apply = posts.find((p) => String(p.url).includes('/art-studio/apply'))
+    const apply: any = posts.find((p) => String(p.url).includes('/art-studio/apply'))
     expect(apply.body.pack_id).toBe('stock-neon-court')
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('StockPicker soft-empty when catalog API returns 404', async () => {
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url) => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/art-studio/stock')) {
       return {
         ok: false,
@@ -250,12 +250,12 @@ test('StockPicker soft-empty when catalog API returns 404', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(<StockPicker />)
     expect(await screen.findByTestId('stock-picker-unavailable')).toBeInTheDocument()
     expect(screen.getByText(/Stock catalog coming online/i)).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

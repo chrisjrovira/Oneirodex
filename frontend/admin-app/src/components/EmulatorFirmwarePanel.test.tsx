@@ -17,7 +17,7 @@ const SUMMARY = {
 }
 
 function mockGet(payload = SUMMARY) {
-  global.fetch = vi.fn(async () => ({
+  globalThis.fetch = vi.fn(async (): Promise<any> => ({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -26,7 +26,7 @@ function mockGet(payload = SUMMARY) {
       return JSON.stringify(await this.json())
     },
     json: async () => payload,
-  }))
+  })) as unknown as typeof globalThis.fetch
 }
 
 afterEach(() => {
@@ -81,7 +81,7 @@ test('surfaces the backend rejection message on a failed upload', async () => {
   render(<EmulatorFirmwarePanel />)
   await screen.findByText('PlayStation')
 
-  global.fetch = vi.fn(async () => ({
+  globalThis.fetch = vi.fn(async (): Promise<any> => ({
     ok: false,
     status: 422,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -94,7 +94,7 @@ test('surfaces the backend rejection message on a failed upload', async () => {
       error: 'Unsupported firmware file type ".exe". Allowed: .bin, .rom',
       error_code: 'unprocessable',
     }),
-  }))
+  })) as unknown as typeof globalThis.fetch
 
   const file = new File(['x'], 'bad.exe', { type: 'application/octet-stream' })
   await userEvent.upload(screen.getByLabelText('Firmware file'), file)
@@ -113,7 +113,7 @@ test('upload carries the CSRF token', async () => {
   render(<EmulatorFirmwarePanel />)
   await screen.findByText('PlayStation')
 
-  const postFetch = vi.fn(async () => ({
+  const postFetch = vi.fn(async (): Promise<any> => ({
     ok: true,
     status: 201,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -123,22 +123,23 @@ test('upload carries the CSRF token', async () => {
     },
     json: async () => ({ ok: true, data: { name: 'scph5500.bin', size: 524288 } }),
   }))
-  global.fetch = postFetch
+  globalThis.fetch = postFetch as unknown as typeof globalThis.fetch
 
   const file = new File(['x'], 'scph5500.bin', { type: 'application/octet-stream' })
   await userEvent.upload(screen.getByLabelText('Firmware file'), file)
 
   await waitFor(() => {
-    const call = postFetch.mock.calls.find((c) => c[1]?.method === 'POST')
+    const call = postFetch.mock.calls.find((c: any[]) => c[1]?.method === 'POST') as
+      any[] | undefined
     expect(call).toBeTruthy()
-    expect(call[1].headers['X-CSRFToken']).toBe('test-csrf')
-    expect(call[1].body.get('csrf_token')).toBe('test-csrf')
-    expect(call[1].body.get('file')).toBe(file)
+    expect(call![1].headers['X-CSRFToken']).toBe('test-csrf')
+    expect(call![1].body.get('csrf_token')).toBe('test-csrf')
+    expect(call![1].body.get('file')).toBe(file)
   })
 })
 
 test('read failure offers a retry rather than an empty page', async () => {
-  global.fetch = vi.fn(async () => ({
+  globalThis.fetch = vi.fn(async (): Promise<any> => ({
     ok: false,
     status: 500,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -147,7 +148,7 @@ test('read failure offers a retry rather than an empty page', async () => {
       return JSON.stringify(await this.json())
     },
     json: async () => ({ error: 'Volume not mounted' }),
-  }))
+  })) as unknown as typeof globalThis.fetch
   render(<EmulatorFirmwarePanel />)
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Volume not mounted')
@@ -193,8 +194,12 @@ const SCAN_PLAN = {
   copied_count: 1,
 }
 
-function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) {
-  global.fetch = vi.fn(async (url, init = {}) => {
+function mockApi({
+  get = SUMMARY,
+  scan = SCAN_PLAN,
+  install = SCAN_PLAN,
+}: { get?: any; scan?: any; install?: any } = {}) {
+  globalThis.fetch = vi.fn(async (url, init = {}) => {
     const method = (init.method || 'GET').toUpperCase()
     const path = String(url)
     if (method === 'POST' && path.includes('/scan')) {
@@ -243,7 +248,7 @@ function mockApi({ get = SUMMARY, scan = SCAN_PLAN, install = SCAN_PLAN } = {}) 
       },
       json: async () => get,
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 }
 
 test('offers scan, install, and a copyable missing report — never a download', async () => {
@@ -275,14 +280,14 @@ test('scan posts the folder and opens markdown the operator can copy', async () 
   expect(screen.getByText('Which dump for saturn_bios.bin')).toBeInTheDocument()
   expect(screen.getByLabelText(/pack-a\/saturn_bios.bin/)).toBeInTheDocument()
 
-  const scanCall = global.fetch.mock.calls.find(
-    ([url, init]) => String(url).includes('/scan') && init?.method === 'POST',
-  )
+  const scanCall = vi
+    .mocked(globalThis.fetch)
+    .mock.calls.find(([url, init]: any) => String(url).includes('/scan') && init?.method === 'POST')
   expect(scanCall).toBeTruthy()
-  expect(JSON.parse(scanCall[1].body)).toEqual({ source: 'E:\\_bios' })
+  expect(JSON.parse((scanCall as any[])[1].body)).toEqual({ source: 'E:\\_bios' })
   // The browser transport (PR-4c) builds a `Headers` instance rather than a
   // plain object, so bracket access no longer reads it — use `.get()`.
-  expect(new Headers(scanCall[1].headers).get('X-CSRFToken')).toBe('test-csrf')
+  expect(new Headers((scanCall as any[])[1].headers).get('X-CSRFToken')).toBe('test-csrf')
 
   await userEvent.click(screen.getByRole('button', { name: 'Copy markdown' }))
   await waitFor(() => {
@@ -304,11 +309,13 @@ test('install sends the dump the operator picked', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Install matching firmware' }))
 
   await waitFor(() => {
-    const installCall = global.fetch.mock.calls.find(
-      ([url, init]) => String(url).includes('/install') && init?.method === 'POST',
-    )
+    const installCall = vi
+      .mocked(globalThis.fetch)
+      .mock.calls.find(
+        ([url, init]: any) => String(url).includes('/install') && init?.method === 'POST',
+      )
     expect(installCall).toBeTruthy()
-    expect(JSON.parse(installCall[1].body)).toEqual({
+    expect(JSON.parse((installCall as any[])[1].body)).toEqual({
       source: '/bios',
       selections: { 'saturn_bios.bin': SATURN_B },
       skipped: [],

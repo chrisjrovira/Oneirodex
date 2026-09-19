@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { ArtworkPicker } from './ArtworkPicker'
 
 test('ArtworkPicker searches covers and surfaces apply failure reason', async () => {
-  global.fetch = vi.fn(async (url, opts) => {
+  globalThis.fetch = vi.fn(async (url, opts) => {
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
       return {
@@ -99,7 +99,7 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(
     <MemoryRouter>
@@ -124,8 +124,8 @@ test('ArtworkPicker searches covers and surfaces apply failure reason', async ()
 })
 
 test('ArtworkPicker identify chip searches metadata source', async () => {
-  const calls = []
-  global.fetch = vi.fn(async (url, opts) => {
+  const calls: any[] = []
+  globalThis.fetch = vi.fn(async (url, opts) => {
     calls.push({ url: String(url), method: opts?.method || 'GET' })
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
@@ -185,7 +185,7 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(
     <MemoryRouter>
@@ -204,8 +204,8 @@ test('ArtworkPicker identify chip searches metadata source', async () => {
 })
 
 test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
-  const calls = []
-  global.fetch = vi.fn(async (url, opts) => {
+  const calls: any[] = []
+  globalThis.fetch = vi.fn(async (url, opts) => {
     calls.push({ url: String(url), method: opts?.method || 'GET' })
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
@@ -270,7 +270,7 @@ test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(
     <MemoryRouter>
@@ -291,8 +291,8 @@ test('ArtworkPicker MobyGames chip soft-honesty when key unset', async () => {
 })
 
 test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
-  const calls = []
-  global.fetch = vi.fn(async (url, opts) => {
+  const calls: any[] = []
+  globalThis.fetch = vi.fn(async (url, opts) => {
     calls.push({ url: String(url), method: opts?.method || 'GET' })
     const u = String(url)
     if (u.includes('/api/providers') && !u.includes('/search')) {
@@ -357,7 +357,7 @@ test('ArtworkPicker TheGamesDB chip soft-honesty when key unset', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
 
   render(
     <MemoryRouter>

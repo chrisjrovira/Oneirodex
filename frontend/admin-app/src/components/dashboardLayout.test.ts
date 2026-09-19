@@ -25,7 +25,7 @@ describe('defaultDashboardLayout', () => {
       rows.set(item.y, list)
     })
     for (const row of rows.values()) {
-      const width = row.reduce((sum, item) => sum + item.w, 0)
+      const width = row.reduce((sum: any, item: any) => sum + item.w, 0)
       expect(width).toBe(DASHBOARD_COLS)
     }
   })
@@ -59,8 +59,8 @@ test('commitMove pins the mover and nudges others when sizes differ', () => {
   const libs = next.find((item) => item.id === 'm-libraries')
   const status = next.find((item) => item.id === 'status')
   expect(libs).toMatchObject({ x: 0, y: 0 })
-  expect(status.y).toBeGreaterThanOrEqual(libs.h)
-  expect(overlaps(libs, status)).toBe(false)
+  expect(status!.y).toBeGreaterThanOrEqual(libs!.h)
+  expect(overlaps(libs!, status!)).toBe(false)
 })
 
 test('patchWidget does not resolve overlaps (live drag preview)', () => {
@@ -121,26 +121,26 @@ test('boardCellMetrics uses rem track + gap, not 3.5px', () => {
     y: 0,
     toJSON() {},
   })
-  vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+  vi.spyOn(window, 'getComputedStyle').mockImplementation(((el: Element) => {
     if (el === board) {
       return {
         columnGap: '8.8px',
         rowGap: '8.8px',
         gap: '8.8px',
         gridTemplateRows: '56px 56px',
-        getPropertyValue: (name) => (name === '--od-dash-row' ? '3.5rem' : ''),
+        getPropertyValue: (name: string) => (name === '--od-dash-row' ? '3.5rem' : ''),
       }
     }
     return {
       fontSize: '16px',
       getPropertyValue: () => '',
     }
-  })
+  }) as unknown as typeof window.getComputedStyle)
   const metrics = boardCellMetrics(board)
   expect(metrics.rowPitch).toBeCloseTo(64.8, 1)
   expect(metrics.colPitch).toBeCloseTo((1200 + 8.8) / 12, 1)
   expect(metrics.rowPitch).toBeGreaterThan(40)
-  window.getComputedStyle.mockRestore()
+  vi.mocked(window.getComputedStyle).mockRestore()
   board.remove()
 })
 

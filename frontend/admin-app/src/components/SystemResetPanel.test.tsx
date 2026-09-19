@@ -16,9 +16,9 @@ const SCOPE_COUNTS = {
  * Answer preview calls with the count for whichever scope was asked for, and
  * record every request so a test can assert nothing destructive was sent.
  */
-function mockApi({ onPerform } = {}) {
-  const calls = []
-  global.fetch = vi.fn(async (_url, options) => {
+function mockApi({ onPerform }: { onPerform?: (body: any) => any } = {}) {
+  const calls: any[] = []
+  globalThis.fetch = vi.fn(async (_url, options) => {
     const body = JSON.parse(options.body)
     calls.push(body)
 
@@ -42,7 +42,10 @@ function mockApi({ onPerform } = {}) {
       )
     }
 
-    const tables = body.scopes.reduce((n, s) => n + (SCOPE_COUNTS[s] || 0), 0)
+    const tables = body.scopes.reduce(
+      (n: any, s: any) => n + ((SCOPE_COUNTS as Record<string, number>)[s] || 0),
+      0,
+    )
     return {
       ok: true,
       status: 200,
@@ -69,7 +72,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-async function acknowledgeReset(user) {
+async function acknowledgeReset(user: any) {
   await user.click(
     screen.getByRole('checkbox', {
       name: /I understand this cannot be undone/i,

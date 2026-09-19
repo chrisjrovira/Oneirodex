@@ -48,11 +48,11 @@ test('legacy Jinja contextbar splits views to centre and count to trail', () => 
   expect(page).toBeTruthy()
   expect(trail).toBeTruthy()
 
-  expect(page.querySelector('.od-contextbar__views')).toBeTruthy()
-  expect(page.querySelector('.od-seg')).toHaveTextContent('Libraries')
-  expect(page.querySelector('.od-contextbar__count')).toBeNull()
+  expect(page!.querySelector('.od-contextbar__views')).toBeTruthy()
+  expect(page!.querySelector('.od-seg')).toHaveTextContent('Libraries')
+  expect(page!.querySelector('.od-contextbar__count')).toBeNull()
 
-  expect(trail.querySelector('.od-contextbar__count')).toHaveTextContent(
+  expect(trail!.querySelector('.od-contextbar__count')).toHaveTextContent(
     '60 libraries · 7513 games',
   )
   expect(legacy.querySelector('.od-contextbar')).toBeNull()

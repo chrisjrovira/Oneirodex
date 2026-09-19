@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync, readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -55,7 +56,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 /* basename -> absolute path, gathered recursively from `src/`. PR-4 (e) renamed
  * the components to `.tsx`; JSX still lives in a `.jsx`/`.tsx` file, so match
  * both and key the baseline by `.tsx`. */
-function collectJsx(dir, acc) {
+function collectJsx(dir: any, acc: any) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name)
     if (entry.isDirectory()) {
@@ -108,7 +109,7 @@ function sourceFiles() {
   return [...JSX_BY_NAME.keys()].filter((name) => !EXEMPT.has(name))
 }
 
-function countStatusRoles(name) {
+function countStatusRoles(name: any) {
   const full = JSX_BY_NAME.get(name) ?? join(HERE, name)
   const source = readFileSync(full, 'utf8')
   return (source.match(STATUS_ROLE) || []).length
@@ -119,7 +120,7 @@ describe('admin status language', () => {
     const regressions = []
     for (const name of sourceFiles()) {
       const count = countStatusRoles(name)
-      const allowed = STATUS_BASELINE[name] ?? 0
+      const allowed = (STATUS_BASELINE as Record<string, number>)[name] ?? 0
       if (count > allowed) {
         regressions.push(`${name}: ${count} hand-rolled status sites, baseline ${allowed}`)
       }

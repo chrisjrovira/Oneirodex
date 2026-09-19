@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { useLibrariesContextbarUnfurl } from './useLibrariesContextbarUnfurl'
 import { ADMIN_TOPBAR_SLOT_ID } from './useLegacyContextbarPortal'
 
-function Harness({ enabled }) {
+function Harness({ enabled }: any) {
   useLibrariesContextbarUnfurl(enabled)
   return null
 }
@@ -33,10 +33,10 @@ test('leaves a flat Auto | Manual strip alone (no Scan unfurl)', () => {
   )
 
   const seg = document.querySelector(`#${ADMIN_TOPBAR_SLOT_ID} .od-seg`)
-  expect(seg?.dataset.odUnfurlReady).toBeUndefined()
+  expect((seg as HTMLElement)?.dataset.odUnfurlReady).toBeUndefined()
   expect(seg?.querySelector('.od-seg__unfurl-anchor')).toBeNull()
   expect(seg?.innerHTML).toBe(before)
   expect(
-    Array.from(seg.querySelectorAll(':scope > a.od-seg__item')).map((el) => el.textContent),
+    Array.from(seg!.querySelectorAll(':scope > a.od-seg__item')).map((el) => el.textContent),
   ).toEqual(['Auto', 'Manual'])
 })

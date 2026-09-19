@@ -142,6 +142,6 @@ describe('rail destinations vs hub catalogue', () => {
 
   test('settings landing points at the hub, not a single module form', () => {
     const settings = ADMIN_NAV.find((item) => item.id === 'settings')
-    expect(settings.path).toBe('/admin/settings')
+    expect(settings!.path).toBe('/admin/settings')
   })
 })

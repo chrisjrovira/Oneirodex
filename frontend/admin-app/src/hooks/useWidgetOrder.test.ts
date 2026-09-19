@@ -34,7 +34,7 @@ describe('reconcileOrder', () => {
   test('falls back to the declared order for junk input', () => {
     // Covers corrupt JSON, a null read, and someone hand-editing localStorage.
     for (const junk of [null, undefined, 'nonsense', 42, {}]) {
-      expect(reconcileOrder(junk, ['a', 'b'])).toEqual(['a', 'b'])
+      expect(reconcileOrder(junk as any, ['a', 'b'])).toEqual(['a', 'b'])
     }
   })
 })

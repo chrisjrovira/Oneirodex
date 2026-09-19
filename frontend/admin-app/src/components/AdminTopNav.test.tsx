@@ -16,11 +16,11 @@ function resetCollapsedSections() {
     Object.defineProperty(window, 'localStorage', {
       configurable: true,
       value: {
-        getItem: (key) => (store.has(key) ? store.get(key) : null),
-        setItem: (key, value) => {
+        getItem: (key: any) => (store.has(key) ? store.get(key) : null),
+        setItem: (key: any, value: any) => {
           store.set(key, String(value))
         },
-        removeItem: (key) => {
+        removeItem: (key: any) => {
           store.delete(key)
         },
         clear: () => {
@@ -49,7 +49,11 @@ beforeEach(() => {
  * them.
  */
 
-function renderTopBar({ at = '/admin/ops', onToggleRail = () => {}, railState } = {}) {
+function renderTopBar({
+  at = '/admin/ops',
+  onToggleRail = () => {},
+  railState,
+}: { at?: string; onToggleRail?: () => void; railState?: string } = {}) {
   return render(
     <MemoryRouter initialEntries={[at]}>
       <AdminTopNav onToggleRail={onToggleRail} railState={railState} />
@@ -148,7 +152,7 @@ test('dashboard section label is Dashboard (no product prefix)', () => {
   })
   const section = container.querySelector('.od-topbar__section')
   expect(section).toHaveTextContent('Dashboard')
-  expect(section.textContent).not.toMatch(/Oneirodex/i)
+  expect(section!.textContent).not.toMatch(/Oneirodex/i)
   expect(section).not.toHaveTextContent('HOME')
   expect(section).not.toHaveTextContent('Home')
 })
@@ -169,7 +173,7 @@ test('rail lists every admin section', () => {
   // Landing-only sections are destination links; hub sections fold open
   // (member LHN). Settings / Integrations stay landing-only; Libraries is a hub.
   for (const link of ADMIN_NAV) {
-    const mode = RAIL_SECTION_MODE[link.id] || 'hub'
+    const mode = (RAIL_SECTION_MODE as Record<string, string>)[link.id] || 'hub'
     if (mode === 'landing') {
       expect(screen.getByRole('link', { name: link.label })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: link.label })).toBeNull()
@@ -262,7 +266,7 @@ test('rail subsection titles have no bullet markers', () => {
   const { container } = renderRail({ at: '/admin/ops' })
   const sub = container.querySelector('.od-rail__link--sub')
   expect(sub).toBeTruthy()
-  expect(sub.querySelector('.od-rail__icon')).toBeNull()
+  expect(sub!.querySelector('.od-rail__icon')).toBeNull()
 })
 
 test('the ways out of admin survive, and live in exactly one place', () => {
@@ -281,7 +285,7 @@ test('the rail brand is the mark only', () => {
   const { container } = renderRail()
   const brand = container.querySelector('.od-rail__brand')
   expect(brand).toHaveClass('od-rail__brand--mark-only')
-  expect(brand.querySelector('.od-rail__brand-role')).toBeNull()
+  expect(brand!.querySelector('.od-rail__brand-role')).toBeNull()
 })
 
 test('collapsed rail keeps accessible names', () => {
@@ -294,6 +298,6 @@ test('account menu is a dropdown panel, not a horizontal strip', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
   const panel = container.querySelector('.od-topnav__dropdown-panel')
   expect(panel).toBeTruthy()
-  expect(panel.getAttribute('role')).toBe('menu')
-  expect(panel.querySelectorAll('[role="menuitem"]').length).toBeGreaterThan(1)
+  expect(panel!.getAttribute('role')).toBe('menu')
+  expect(panel!.querySelectorAll('[role="menuitem"]').length).toBeGreaterThan(1)
 })

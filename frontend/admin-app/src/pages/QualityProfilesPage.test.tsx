@@ -33,7 +33,7 @@ const SAMPLE_STORE = {
   ],
 }
 
-function mockFetch(handlers) {
+function mockFetch(handlers: any) {
   return vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     const key = `${method} ${String(url)}`
@@ -47,7 +47,7 @@ function mockFetch(handlers) {
   })
 }
 
-function jsonOk(body, status = 200) {
+function jsonOk(body: any, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -62,12 +62,12 @@ function jsonOk(body, status = 200) {
 
 test('QualityProfilesPage lists profiles and sets active', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
+  const originalFetch = globalThis.fetch
   let store = structuredClone(SAMPLE_STORE)
-  global.fetch = mockFetch([
+  globalThis.fetch = mockFetch([
     [
       '/api/quality-profiles/active',
-      async (_url, init, method) => {
+      async (_url: any, init: any, method: any) => {
         if (method !== 'PUT') return null
         const body = init?.body ? JSON.parse(init.body) : {}
         store = { ...store, active_id: body.id }
@@ -76,7 +76,7 @@ test('QualityProfilesPage lists profiles and sets active', async () => {
     ],
     [
       '/api/quality-profiles',
-      async (_url, _init, method) => {
+      async (_url: any, _init: any, method: any) => {
         if (method === 'GET') return jsonOk(store)
         return null
       },
@@ -95,7 +95,7 @@ test('QualityProfilesPage lists profiles and sets active', async () => {
     await user.click(screen.getByRole('button', { name: 'Set active' }))
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/quality-profiles/active',
         expect.objectContaining({ method: 'PUT' }),
       )
@@ -104,21 +104,21 @@ test('QualityProfilesPage lists profiles and sets active', async () => {
       expect(screen.getByText(/Active profile updated|Active: Strict/i)).toBeInTheDocument()
     })
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('QualityProfilesPage creates a profile', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
+  const originalFetch = globalThis.fetch
   const originalPrompt = window.prompt
   window.prompt = vi.fn(() => 'Household')
   let store = structuredClone(SAMPLE_STORE)
 
-  global.fetch = mockFetch([
+  globalThis.fetch = mockFetch([
     [
       '/api/quality-profiles',
-      async (_url, init, method) => {
+      async (_url: any, init: any, method: any) => {
         if (method === 'GET') return jsonOk(store)
         if (method === 'POST') {
           const body = init?.body ? JSON.parse(init.body) : {}
@@ -146,7 +146,7 @@ test('QualityProfilesPage creates a profile', async () => {
     expect(await screen.findByRole('combobox', { name: 'Quality profiles' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'New' }))
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         '/api/quality-profiles',
         expect.objectContaining({ method: 'POST' }),
       )
@@ -157,14 +157,14 @@ test('QualityProfilesPage creates a profile', async () => {
     const select = screen.getByRole('combobox', { name: 'Quality profiles' })
     expect(select.querySelector('option[value="p3"]')).toBeTruthy()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
     window.prompt = originalPrompt
   }
 })
 
 test('App route /admin/quality_profiles mounts Quality Profiles UI', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([['/api/quality-profiles', async () => jsonOk(SAMPLE_STORE)]])
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([['/api/quality-profiles', async () => jsonOk(SAMPLE_STORE)]])
   try {
     render(
       <MemoryRouter initialEntries={['/admin/quality_profiles']}>
@@ -174,6 +174,6 @@ test('App route /admin/quality_profiles mounts Quality Profiles UI', async () =>
     expect(await screen.findByRole('heading', { name: 'Quality Profiles' })).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Quality profiles' })).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

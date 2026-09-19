@@ -8,7 +8,7 @@ beforeEach(() => {
   vi.useRealTimers()
 })
 
-function mockFetch(handlers) {
+function mockFetch(handlers: any) {
   return vi.fn(async (url, init) => {
     const key = `${(init?.method || 'GET').toUpperCase()} ${String(url).split('?')[0]}`
     for (const [match, body] of Object.entries(handlers)) {
@@ -53,8 +53,8 @@ test('empty state before a title is entered', () => {
 
 test('Art studio tabs switch Studio and Pick & queue', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
-  global.fetch = mockFetch({
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch({
     '/admin/api/image_queue_list': { images: [], pagination: {} },
     '/admin/api/art-studio/stock': { items: [] },
     '/admin/api/art-studio/system-marks/lab': {
@@ -68,7 +68,7 @@ test('Art studio tabs switch Studio and Pick & queue', async () => {
     '/api/health/library': { worst: [] },
     '/api/providers': { providers: [] },
     '/api/search_metadata/sources': { sources: [] },
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/art_studio']}>
@@ -95,15 +95,15 @@ test('Art studio tabs switch Studio and Pick & queue', async () => {
     })
     expect(screen.getByRole('button', { name: /Auto-pick best available/i })).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('title input triggers live preview fetch', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
-  const calls = []
-  global.fetch = vi.fn(async (url, init) => {
+  const originalFetch = globalThis.fetch
+  const calls: any[] = []
+  globalThis.fetch = vi.fn(async (url, init) => {
     calls.push({ url: String(url), method: init?.method || 'GET', body: init?.body })
     if (String(url).includes('/admin/api/art-studio/preview')) {
       return {
@@ -131,7 +131,7 @@ test('title input triggers live preview fetch', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/art_studio']}>
@@ -143,7 +143,7 @@ test('title input triggers live preview fetch', async () => {
     await user.type(titleInput, 'Chrono Trigger')
     await waitFor(
       () => {
-        const previews = calls.filter((c) => c.url.includes('/admin/api/art-studio/preview'))
+        const previews: any[] = calls.filter((c) => c.url.includes('/admin/api/art-studio/preview'))
         expect(previews.length).toBeGreaterThanOrEqual(1)
         const body = JSON.parse(previews[previews.length - 1].body)
         expect(body.title).toBe('Chrono Trigger')
@@ -155,15 +155,15 @@ test('title input triggers live preview fetch', async () => {
     expect(await screen.findByAltText(/Chrono Trigger preview/i)).toBeInTheDocument()
     expect(screen.getByText('Artistic')).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('Preview button fetches tile sizes and Generate pack posts generate', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
-  const calls = []
-  global.fetch = vi.fn(async (url, init) => {
+  const originalFetch = globalThis.fetch
+  const calls: any[] = []
+  globalThis.fetch = vi.fn(async (url, init) => {
     calls.push({ url: String(url), method: init?.method || 'GET', body: init?.body })
     if (String(url).includes('/admin/api/art-studio/preview')) {
       return {
@@ -203,7 +203,7 @@ test('Preview button fetches tile sizes and Generate pack posts generate', async
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/art_studio']}>
@@ -221,7 +221,7 @@ test('Preview button fetches tile sizes and Generate pack posts generate', async
 
     await user.click(screen.getByRole('button', { name: /^Preview$/i }))
     await waitFor(() => {
-      const previews = calls.filter((c) => c.url.includes('/admin/api/art-studio/preview'))
+      const previews: any[] = calls.filter((c) => c.url.includes('/admin/api/art-studio/preview'))
       expect(previews.length).toBeGreaterThanOrEqual(2)
       const bodies = previews.map((c) => JSON.parse(c.body))
       expect(bodies.some((b) => b.width === 200 && b.height === 300)).toBe(true)
@@ -241,15 +241,15 @@ test('Preview button fetches tile sizes and Generate pack posts generate', async
       '/admin/api/art-studio/download/pack-1',
     )
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('Backup & stock tab renders catalog and apply posts pack_id', async () => {
   const user = userEvent.setup()
-  const posts = []
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url, init) => {
+  const posts: any[] = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     const u = String(url)
     if (method === 'POST') {
@@ -301,7 +301,7 @@ test('Backup & stock tab renders catalog and apply posts pack_id', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     window.history.replaceState(null, '', '/admin/art_studio#stock')
     render(
@@ -318,19 +318,19 @@ test('Backup & stock tab renders catalog and apply posts pack_id', async () => {
     await waitFor(() => {
       expect(posts.some((p) => p.url.includes('/admin/api/art-studio/apply'))).toBe(true)
     })
-    const apply = posts.find((p) => p.url.includes('/admin/api/art-studio/apply'))
+    const apply: any = posts.find((p) => p.url.includes('/admin/api/art-studio/apply'))
     expect(apply.body.pack_id).toBe('stock-neon-court')
     expect(apply.body.mode).toBe('fallback')
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('batch placeholders prefer art-studio/batch-generate', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
-  const posts = []
-  global.fetch = vi.fn(async (url, init) => {
+  const originalFetch = globalThis.fetch
+  const posts: any[] = []
+  globalThis.fetch = vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     if (method === 'POST') {
       posts.push({ url: String(url), body: init?.body ? JSON.parse(init.body) : null })
@@ -378,7 +378,7 @@ test('batch placeholders prefer art-studio/batch-generate', async () => {
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/art_studio']}>
@@ -395,6 +395,6 @@ test('batch placeholders prefer art-studio/batch-generate', async () => {
     expect(posts.some((p) => p.url.includes('/admin/api/covers/batch/apply'))).toBe(false)
     expect(await screen.findByText(/Batch generate finished/i)).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

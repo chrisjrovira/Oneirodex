@@ -2,8 +2,8 @@ import { render, screen, within } from '@testing-library/react'
 
 import { InvitesPage } from './InvitesPage'
 
-function mockFetch(body) {
-  return vi.fn(async () => ({
+function mockFetch(body: any) {
+  return vi.fn(async (): Promise<any> => ({
     ok: true,
     status: 200,
     headers: new Headers({ 'content-type': 'application/json' }),
@@ -25,13 +25,13 @@ function mockFetch(body) {
  * so that guard is what these pin.
  */
 test('sums invite totals across users', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch({
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch({
     users: [
       { user_id: 'a', name: 'Ada', role: 'admin', invite_quota: 10, unused_invites: 3 },
       { user_id: 'b', name: 'Brin', role: 'user', invite_quota: 5, unused_invites: 2 },
     ],
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(<InvitesPage />)
 
@@ -39,20 +39,20 @@ test('sums invite totals across users', async () => {
     expect(within(strip).getByText('5')).toBeInTheDocument() // 3 + 2 unused
     expect(within(strip).getByText('15')).toBeInTheDocument() // 10 + 5 quota
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('a user with no quota fields counts as zero, not NaN', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch({
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch({
     users: [
       { user_id: 'a', name: 'Ada', role: 'admin', invite_quota: 4, unused_invites: 1 },
       // No invite_quota / unused_invites at all — the shape the API returns for
       // an account that has never been given a quota.
       { user_id: 'b', name: 'Brin', role: 'user' },
     ],
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(<InvitesPage />)
 
@@ -60,15 +60,15 @@ test('a user with no quota fields counts as zero, not NaN', async () => {
     expect(within(strip).queryByText(/NaN/)).toBeNull()
     expect(within(strip).getByText('4')).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('warns when nobody can invite anyone', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch({
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch({
     users: [{ user_id: 'a', name: 'Ada', role: 'admin', invite_quota: 2, unused_invites: 0 }],
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(<InvitesPage />)
 
@@ -78,6 +78,6 @@ test('warns when nobody can invite anyone', async () => {
     const strip = await screen.findByLabelText('Invites')
     expect(within(strip).getByText('Unused tokens')).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

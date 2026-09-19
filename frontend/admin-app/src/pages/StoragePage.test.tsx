@@ -44,7 +44,7 @@ const PREVIEW_OK = {
   dest: 'C:\\library\\a.exe',
 }
 
-function mockFetch(handlers) {
+function mockFetch(handlers: any) {
   return vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     const key = `${method} ${String(url)}`
@@ -58,7 +58,7 @@ function mockFetch(handlers) {
   })
 }
 
-function jsonOk(body, status = 200) {
+function jsonOk(body: any, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -72,8 +72,8 @@ function jsonOk(body, status = 200) {
 }
 
 test('StoragePage shows helpers-off and apply-off banners from status', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_HELPERS_OFF)]])
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_HELPERS_OFF)]])
   try {
     render(<StoragePage />)
     expect(await screen.findByRole('heading', { name: 'Storage / hardlinks' })).toBeInTheDocument()
@@ -87,13 +87,13 @@ test('StoragePage shows helpers-off and apply-off banners from status', async ()
     expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('StoragePage shows apply-off safety banner and RO games mount banner', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_RO)]])
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_RO)]])
   try {
     render(<StoragePage />)
     expect(await screen.findByText(/Apply is disabled until/i)).toBeInTheDocument()
@@ -102,18 +102,18 @@ test('StoragePage shows apply-off safety banner and RO games mount banner', asyn
     expect(screen.getByRole('button', { name: 'Preview' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('StoragePage preview happy path shows reasons list and bytes estimate', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([
     ['/api/storage/status', async () => jsonOk(STATUS_APPLY_OFF)],
     [
       '/api/storage/hardlink/preview',
-      async (_url, init, method) => {
+      async (_url: any, init: any, method: any) => {
         if (method !== 'POST') return null
         const body = init?.body ? JSON.parse(init.body) : {}
         expect(body.source).toBe('C:\\games\\a.exe')
@@ -137,13 +137,13 @@ test('StoragePage preview happy path shows reasons list and bytes estimate', asy
     expect(screen.getByText(/Reasons: none/i)).toBeInTheDocument()
     expect(screen.getByText('Raw JSON')).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
 test('App route /admin/storage mounts Storage UI', async () => {
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_APPLY_OFF)]])
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([['/api/storage/status', async () => jsonOk(STATUS_APPLY_OFF)]])
   try {
     render(
       <MemoryRouter initialEntries={['/admin/storage']}>
@@ -153,7 +153,7 @@ test('App route /admin/storage mounts Storage UI', async () => {
     expect(await screen.findByRole('heading', { name: 'Storage / hardlinks' })).toBeInTheDocument()
     expect(screen.getByLabelText('Source file')).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
@@ -162,8 +162,8 @@ test('StoragePage hides the readiness strip when status could not be read', asyn
   // `status` reset to EMPTY_STATUS. Gating the strip on it alone rendered
   // "Games mount: Missing" in alarm red for a reading that never arrived —
   // a confident answer to a question we could not ask.
-  const originalFetch = global.fetch
-  global.fetch = mockFetch([
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = mockFetch([
     [
       '/api/storage/status',
       async () => ({
@@ -186,6 +186,6 @@ test('StoragePage hides the readiness strip when status could not be read', asyn
     expect(await screen.findByText(/Status API unavailable/i)).toBeInTheDocument()
     expect(screen.queryByLabelText('Storage readiness')).toBeNull()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

@@ -8,7 +8,7 @@ vi.mock('../utils/toast', () => ({
   showToast: vi.fn(),
 }))
 
-function jsonResponse(body, ok = true, status = 200) {
+function jsonResponse(body: any, ok = true, status = 200) {
   return {
     ok,
     status,
@@ -37,8 +37,11 @@ const CONFIGURED = {
   ],
 }
 
-function mockApi({ status = CONFIGURED, matchOk = true } = {}) {
-  global.fetch = vi.fn(async (url, init = {}) => {
+function mockApi({
+  status = CONFIGURED,
+  matchOk = true,
+}: { status?: any; matchOk?: boolean } = {}) {
+  globalThis.fetch = vi.fn(async (url, init = {}) => {
     const method = init.method || 'GET'
     if (String(url).includes('/api/retroachievements/status')) {
       return jsonResponse(status)
@@ -58,8 +61,8 @@ function mockApi({ status = CONFIGURED, matchOk = true } = {}) {
       })
     }
     return jsonResponse({}, false, 404)
-  })
-  return global.fetch
+  }) as unknown as typeof globalThis.fetch
+  return globalThis.fetch
 }
 
 afterEach(() => {

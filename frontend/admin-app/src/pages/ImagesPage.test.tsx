@@ -5,9 +5,9 @@ import { ImagesPage } from './ImagesPage'
 
 test('auto-pick posts covers/batch/apply with best-available policy', async () => {
   const user = userEvent.setup()
-  const originalFetch = global.fetch
-  const posts = []
-  global.fetch = vi.fn(async (url, init) => {
+  const originalFetch = globalThis.fetch
+  const posts: any[] = []
+  globalThis.fetch = vi.fn(async (url, init) => {
     const method = (init?.method || 'GET').toUpperCase()
     if (method === 'POST') {
       posts.push({ url: String(url), body: init?.body ? JSON.parse(init.body) : null })
@@ -131,7 +131,7 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
       },
       json: async () => ({}),
     }
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/art_studio#images']}>
@@ -149,13 +149,13 @@ test('auto-pick posts covers/batch/apply with best-available policy', async () =
     await waitFor(() => {
       expect(posts.some((p) => p.url.includes('/admin/api/covers/batch/apply'))).toBe(true)
     })
-    const auto = posts.find((p) => p.url.includes('/admin/api/covers/batch/apply'))
+    const auto: any = posts.find((p) => p.url.includes('/admin/api/covers/batch/apply'))
     expect(auto.body.policy).toBe('sgdb_then_igdb_then_generate')
     expect(auto.body.missing_cover).toBe(true)
     expect(auto.body.platform).toBe('SNES')
     expect(auto.body.service).toBe('epic')
     expect(await screen.findByText(/applied 2/i)).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

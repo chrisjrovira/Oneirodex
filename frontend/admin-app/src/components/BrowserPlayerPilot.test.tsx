@@ -14,7 +14,7 @@ function mockSettings({
   available = ['webretro'],
   memberChoice = false,
 } = {}) {
-  global.fetch = vi.fn(async (url, init = {}) => {
+  globalThis.fetch = vi.fn(async (url, init = {}) => {
     const method = init.method || 'GET'
     if (!String(url).includes('/api/browser-player-settings')) {
       return {
@@ -87,8 +87,8 @@ function mockSettings({
       },
       json: async () => ({}),
     }
-  })
-  return global.fetch
+  }) as unknown as typeof globalThis.fetch
+  return globalThis.fetch
 }
 
 afterEach(() => {
@@ -110,7 +110,7 @@ test('toggling on PUTs nostalgist_nes_pilot true', async () => {
   const box = await screen.findByLabelText('NES Nostalgist pilot')
   await user.click(box)
   await waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       '/api/browser-player-settings',
       expect.objectContaining({
         method: 'PUT',

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Coverage for the classic-side sortable table (UX-C8 · W27-C1 · W27-C2).
  *
@@ -39,7 +40,7 @@ const HEAD = `
     </tr>
   </thead>`
 
-function table(bodyRows) {
+function table(bodyRows: any) {
   document.body.innerHTML = `
     <table id="t" data-od-sortable>
       ${HEAD}
@@ -47,14 +48,17 @@ function table(bodyRows) {
     </table>`
 }
 
-const ROW = (library, progress, text) =>
+const ROW = (library: string, progress: number | string, text?: string) =>
   `<tr data-sort-progress="${progress}"><td>${library}</td><td>${text ?? progress}</td><td>—</td></tr>`
 
 const libraries = () =>
   Array.from(document.querySelectorAll('#tb tr')).map((r) => r.children[0]?.textContent)
 
-function clickHeader(index) {
-  document.querySelectorAll('#t thead th')[index].querySelector('.od-sort-btn').click()
+function clickHeader(index: any) {
+  document
+    .querySelectorAll('#t thead th')
+    [index].querySelector<HTMLElement>('.od-sort-btn')!
+    .click()
 }
 
 beforeEach(() => {
@@ -67,7 +71,7 @@ describe('auto-wiring', () => {
     loadScript()
 
     const headers = document.querySelectorAll('#t thead th')
-    expect(headers[0].querySelector('.od-sort-btn__label').textContent).toBe('Library')
+    expect(headers[0].querySelector('.od-sort-btn__label')!.textContent).toBe('Library')
     expect(headers[0].getAttribute('aria-sort')).toBe('none')
   })
 
@@ -83,8 +87,8 @@ describe('auto-wiring', () => {
     loadScript()
 
     const label = document.querySelector('#t thead th .od-sort-btn__label')
-    expect(label.querySelector('svg.ic')).not.toBeNull()
-    expect(label.textContent).toBe('Library')
+    expect(label!.querySelector('svg.ic')).not.toBeNull()
+    expect(label!.textContent).toBe('Library')
   })
 
   it('leaves a column without a sort key inert', () => {
@@ -126,13 +130,13 @@ describe('three-state toggle', () => {
     const [library, progress] = document.querySelectorAll('#t thead th')
     expect(library.getAttribute('aria-sort')).toBe('none')
     expect(progress.getAttribute('aria-sort')).toBe('ascending')
-    expect(library.querySelector('.od-sort-btn').classList.contains('is-active')).toBe(false)
-    expect(progress.querySelector('.od-sort-btn').classList.contains('is-active')).toBe(true)
+    expect(library.querySelector('.od-sort-btn')!.classList.contains('is-active')).toBe(false)
+    expect(progress.querySelector('.od-sort-btn')!.classList.contains('is-active')).toBe(true)
   })
 })
 
 describe('declared default order', () => {
-  const withDefault = (dir) => `
+  const withDefault = (dir?: string) => `
     <table id="t" data-od-sortable data-od-sort-default="library"${
       dir ? ` data-od-sort-dir="${dir}"` : ''
     }>
@@ -162,11 +166,11 @@ describe('declared default order', () => {
     loadScript()
 
     const body = document.getElementById('tb')
-    body.innerHTML = ''
+    body!.innerHTML = ''
     ;['Zed', 'Beta'].forEach((name) => {
       const tr = document.createElement('tr')
       tr.innerHTML = `<td>${name}</td><td>1</td><td>—</td>`
-      body.appendChild(tr)
+      body!.appendChild(tr)
     })
     await new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -223,12 +227,12 @@ describe('polled tables', () => {
 
     // Exactly what admin_manage_scanjobs.js does on each poll.
     const body = document.getElementById('tb')
-    body.innerHTML = ''
+    body!.innerHTML = ''
     ;['Zed', 'Beta'].forEach((name) => {
       const tr = document.createElement('tr')
       tr.setAttribute('data-sort-progress', '1')
       tr.innerHTML = `<td>${name}</td><td>1</td><td>—</td>`
-      body.appendChild(tr)
+      body!.appendChild(tr)
     })
 
     await new Promise((resolve) => setTimeout(resolve, 0))
@@ -246,11 +250,11 @@ describe('polled tables', () => {
     clickHeader(0) // cleared
 
     const body = document.getElementById('tb')
-    body.innerHTML = ''
+    body!.innerHTML = ''
     ;['Zed', 'Beta'].forEach((name) => {
       const tr = document.createElement('tr')
       tr.innerHTML = `<td>${name}</td><td>1</td><td>—</td>`
-      body.appendChild(tr)
+      body!.appendChild(tr)
     })
 
     await new Promise((resolve) => setTimeout(resolve, 0))

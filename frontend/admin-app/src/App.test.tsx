@@ -5,7 +5,10 @@ import { App, resolveRenderMode } from './App'
 
 // --- GT-A3: declared render mode ------------------------------------------
 
-function mountRoot({ render: mode, legacyHtml = '' } = {}) {
+function mountRoot({
+  render: mode,
+  legacyHtml = '',
+}: { render?: string; legacyHtml?: string } = {}) {
   const root = document.createElement('div')
   root.id = 'admin-app-root'
   if (mode) root.dataset.adminRender = mode
@@ -47,7 +50,7 @@ test('auto falls back to the old heuristic for unmigrated templates', () => {
   mountRoot({ render: 'auto', legacyHtml: HEAVY_LEGACY_BODY })
   expect(resolveRenderMode()).toBe('legacy')
 
-  document.getElementById('admin-legacy-content').innerHTML = ''
+  document.getElementById('admin-legacy-content')!.innerHTML = ''
   expect(resolveRenderMode()).toBe('spa')
 })
 
@@ -65,8 +68,8 @@ test('an unknown value warns and falls back rather than blanking the page', () =
 })
 
 test('integrations hub shows grouped cards', async () => {
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url) => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/api/admin/integrations/inventory')) {
       return {
         ok: true,
@@ -110,7 +113,7 @@ test('integrations hub shows grouped cards', async () => {
       }
     }
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/integrations']}>
@@ -151,7 +154,7 @@ test('integrations hub shows grouped cards', async () => {
     expect(igdbLinks.some((el) => el.getAttribute('href') === '/admin/igdb_settings')).toBe(true)
     expect(screen.getByText(/Cover \/ hero art/i)).toBeInTheDocument()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })
 
@@ -180,8 +183,8 @@ test('renders admin brand and primary nav', () => {
 })
 
 test('users route shows React roster', async () => {
-  const originalFetch = global.fetch
-  global.fetch = vi.fn(async (url) => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = vi.fn(async (url) => {
     if (String(url).includes('/admin/api/users')) {
       return {
         ok: true,
@@ -202,7 +205,7 @@ test('users route shows React roster', async () => {
       }
     }
     throw new Error(`unexpected fetch ${url}`)
-  })
+  }) as unknown as typeof globalThis.fetch
   try {
     render(
       <MemoryRouter initialEntries={['/admin/users']}>
@@ -215,6 +218,6 @@ test('users route shows React roster', async () => {
     // two behaviours to keep in step. The React roster is the only one now.
     expect(screen.queryByRole('link', { name: /Classic user editor/i })).toBeNull()
   } finally {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
   }
 })

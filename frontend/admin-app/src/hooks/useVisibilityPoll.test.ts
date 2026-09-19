@@ -31,7 +31,7 @@ describe('useVisibilityPoll', () => {
   })
 
   test('does not start a second poll while one is in flight', async () => {
-    let resolveFirst
+    let resolveFirst: any
     const cb = vi.fn(
       () =>
         new Promise((resolve) => {

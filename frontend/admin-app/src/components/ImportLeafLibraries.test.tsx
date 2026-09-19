@@ -9,7 +9,7 @@ import {
 } from '../api/proposeLeafLibrariesApi'
 
 /** userEvent.type treats `{` as a key descriptor — set paste payloads directly. */
-function setPasteValue(label, value) {
+function setPasteValue(label: any, value: any) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } })
 }
 
@@ -179,7 +179,7 @@ describe('ImportLeafLibraries', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
+      vi.fn(async (): Promise<any> => ({
         ok: false,
         status: 404,
         headers: new Headers({ 'content-type': 'application/json' }),
@@ -203,7 +203,7 @@ describe('ImportLeafLibraries', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
+      vi.fn(async (): Promise<any> => ({
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
@@ -281,7 +281,7 @@ describe('ImportLeafLibraries', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
+      vi.fn(async (): Promise<any> => ({
         ok: true,
         status: 200,
         headers: new Headers({ 'content-type': 'application/json' }),
