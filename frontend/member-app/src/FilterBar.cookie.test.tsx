@@ -1,0 +1,183 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { LibraryApp } from './LibraryApp'
+import { ShellHarness } from './testShell'
+
+function jsonResponse(body: any) {
+  const payload = JSON.stringify(body)
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(payload),
+  })
+}
+
+function renderLibrary(ui: any) {
+  return render(
+    <MemoryRouter initialEntries={['/library']}>
+      <ShellHarness>{ui}</ShellHarness>
+    </MemoryRouter>,
+  )
+}
+
+async function openFilters(user: any) {
+  await user.click(await screen.findByRole('button', { name: 'Filters' }))
+  return screen.findByRole('dialog', { name: /Filters/ })
+}
+
+const initialConfig = {
+  perPage: 20,
+  defaultSort: 'name',
+  defaultSortOrder: 'asc',
+  showPlayStatus: false,
+  isAdmin: false,
+  libraryCount: 1,
+  gamesCount: 1,
+  currentFilters: {},
+}
+
+beforeEach(() => {
+  try {
+    window.localStorage?.removeItem('od.library.filtersVisible')
+  } catch {
+    /* vitest may omit localStorage */
+  }
+})
+
+afterEach(() => {
+  document.cookie = 'libraryFilters=; Max-Age=0; path=/'
+  try {
+    window.localStorage?.removeItem('od.library.filtersVisible')
+  } catch {
+    /* ignore */
+  }
+  vi.unstubAllGlobals()
+})
+
+test('applies libraryFilters cookie on boot', async () => {
+  document.cookie = `libraryFilters=${encodeURIComponent(JSON.stringify({ genre: 'Action' }))}; path=/`
+  const fetchMock = vi.fn((url) => {
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [],
+        pages: 1,
+        current_page: 1,
+        total: 0,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
+
+  await waitFor(() => {
+    const browseCall = fetchMock.mock.calls.find(([url]) => url.startsWith('/browse_games?'))
+    expect(browseCall?.[0]).toContain('genre=Action')
+  })
+})
+
+test('apply omits rating when zero', async () => {
+  const user = userEvent.setup()
+  const fetchMock = vi.fn((url) => {
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [],
+        pages: 1,
+        current_page: 1,
+        total: 0,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
+  await openFilters(user)
+  await user.click(await screen.findByRole('button', { name: 'Apply' }))
+
+  await waitFor(() => {
+    const browseUrls = fetchMock.mock.calls
+      .map(([url]) => url)
+      .filter((url) => url.startsWith('/browse_games?'))
+    expect(browseUrls.at(-1)).not.toContain('rating=')
+  })
+})
+
+test('apply persists selected filters and refreshes browse results', async () => {
+  const user = userEvent.setup()
+  const fetchMock = vi.fn((url) => {
+    if (url === '/api/filters/bundle') {
+      return jsonResponse({
+        libraries: [],
+        libraryPlatforms: [],
+        igdbPlatforms: [],
+        genres: [{ id: 1, name: 'Action' }],
+        themes: [],
+        gameModes: [],
+        playerPerspectives: [],
+      })
+    }
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [],
+        pages: 1,
+        current_page: 1,
+        total: 0,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
+
+  await openFilters(user)
+  await user.selectOptions(await screen.findByLabelText('Genre'), 'Action')
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  await waitFor(() => {
+    expect(decodeURIComponent(document.cookie)).toContain('"genre":"Action"')
+    const browseUrls = fetchMock.mock.calls
+      .map(([url]) => url)
+      .filter((url) => url.startsWith('/browse_games?'))
+    expect(browseUrls.at(-1)).toContain('genre=Action')
+  })
+})
+
+test('kind views set a single item_kind on browse and cookie', async () => {
+  const user = userEvent.setup()
+  const fetchMock = vi.fn((url) => {
+    if (url.startsWith('/browse_games?')) {
+      return jsonResponse({
+        games: [],
+        pages: 1,
+        current_page: 1,
+        total: 0,
+      })
+    }
+    return jsonResponse([])
+  })
+  vi.stubGlobal('fetch', fetchMock)
+
+  renderLibrary(<LibraryApp initialConfig={initialConfig} />)
+
+  await user.click(await screen.findByRole('button', { name: 'Games' }))
+  await waitFor(() => {
+    expect(decodeURIComponent(document.cookie)).toContain('"item_kind":"game"')
+  })
+
+  await user.click(screen.getByRole('button', { name: 'Emulators' }))
+
+  await waitFor(() => {
+    expect(decodeURIComponent(document.cookie)).toContain('"item_kind":"emulator"')
+    expect(decodeURIComponent(document.cookie)).not.toContain('game,emulator')
+    const browseUrls = fetchMock.mock.calls
+      .map(([url]) => url)
+      .filter((url) => url.startsWith('/browse_games?'))
+    expect(browseUrls.at(-1)).toContain('item_kind=emulator')
+  })
+})

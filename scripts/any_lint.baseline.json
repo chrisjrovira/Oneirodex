@@ -399,7 +399,7 @@
     "any-annotation": 7
   },
   "frontend/member-app/src/hooks/chatPanelApi.ts": {
-    "any-annotation": 8,
+    "any-annotation": 7,
     "any-alias": 1
   },
   "frontend/member-app/src/hooks/socialCompanionApi.ts": {

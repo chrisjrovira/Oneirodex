@@ -186,7 +186,7 @@ export function DashboardBoard({
       const req =
         typeof requestAnimationFrame === 'function'
           ? requestAnimationFrame
-          : (cb: () => void) => setTimeout(cb, 0)
+          : (cb: () => void) => window.setTimeout(cb, 0)
       raf = req(measureAndCommit)
     }
 

@@ -109,7 +109,7 @@ export function normalizeAttachments(raw: any) {
  * showing a 13.5rem navigation rail would leave almost nothing for the
  * conversation.
  */
-export function openChatPopoutWindow(channelId: any) {
+export function openChatPopoutWindow(channelId?: string | number | null) {
   const params = new URLSearchParams({ popout: '1' })
   if (channelId != null) params.set('channel', String(channelId))
   const features = 'width=420,height=760,menubar=no,toolbar=no,location=no,status=no,resizable=yes'

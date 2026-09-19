@@ -41,7 +41,7 @@ python scripts/api_envelope_lint.py     # JSON sites off api_ok/api_error — 11
 python scripts/print_lint.py            # print() calls — 591
 python scripts/get_json_lint.py         # raw request.get_json() sites — 103, migrating to @validate_body
 node scripts/css-token-lint.mjs         # raw colour/radius/type literals — 0
-node scripts/any_lint.mjs               # explicit `any` in .ts/.tsx sources — 1,224
+node scripts/any_lint.mjs               # explicit `any` in .ts/.tsx sources — 1,208 (test harness excluded)
 node scripts/od_btn_lint.mjs            # raw <button className="od-btn…"> sites — 0; use <Button> from @oneirodex/ui
 node scripts/component_size_lint.mjs    # non-test .tsx over 600 lines — 0; split by responsibility
 ```
