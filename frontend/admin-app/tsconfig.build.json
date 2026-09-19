@@ -1,0 +1,8 @@
+{
+  // The image build type-checks the SPA's *source* only. Test files and the
+  // vitest harness are TypeScript too (v11 cycle, H-D.3) and CI's `typecheck`
+  // job covers them with ./tsconfig.json; some tests import repo scripts that
+  // the Docker build context deliberately does not stage.
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test*.ts", "src/test*.tsx"]
+}
