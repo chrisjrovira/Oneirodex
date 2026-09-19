@@ -7,16 +7,18 @@ title, or Epic exact title before logging Unmatched (operator toggles under
 Integrations → Metadata). Stage E (W21-BE-2) may attach propose-only
 MobyGames / TheGamesDB exact-title hints after Stage D miss — never creates a
 Game from those catalogs in W21. Never invents DRM download queues.
+
+The v11 cycle (H-D.4) moved the leaf helpers out as pure moves --
+``software_identify_store`` (Stage D candidate rows), ``software_identify_custom_game``
+(custom kinded ``Game`` rows) and ``tgdb_platform_match`` (Stage E platform
+matching). The orchestration, and every name callers import, stays here.
 """
 
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
-from uuid import uuid4
 
 from flask import current_app, has_app_context
-from sqlalchemy import func, select
 
 from oneirodex import db
 from oneirodex.models import Game, GameURL, UnmatchedFolder
@@ -24,8 +26,6 @@ from oneirodex.platform import NATIVE_PC_PLATFORMS
 from oneirodex.utils.game_name_parse import parse_game_label
 from oneirodex.utils.item_kind import (
     DEFAULT_ITEM_KIND,
-    ITEM_KINDS,
-    infer_item_kind_from_steam_type,
     is_denied_auto_game_match,
     normalize_item_kind,
     suggest_item_kind,
@@ -38,30 +38,30 @@ from oneirodex.utils.secondary_scrapers import (
     search_steam_games,
     search_thegamesdb_games,
 )
-
-STAGE_D_SOURCE_ORDER = ('steam', 'gog', 'epic')
-
-
-CUSTOM_IGDB_BASE = 2000000420
-
-# Ownership / identify payloads must never carry install or download queue fields.
-_FORBIDDEN_DRM_URL_KEYS = frozenset({
-    'download_url',
-    'install_url',
-    'installer_url',
-    'direct_download',
-    'magnet',
-    'torrent_url',
-    'depot_url',
-    'manifest_url',
-})
-
-
-def _next_custom_igdb_id() -> int:
-    highest = db.session.execute(
-        select(func.max(Game.igdb_id)).filter(Game.igdb_id >= CUSTOM_IGDB_BASE)
-    ).scalar()
-    return CUSTOM_IGDB_BASE if highest is None else int(highest) + 1
+# H-D.4 split: leaf helpers moved out; the public ones are re-exported here
+# because callers and tests import them from this module.
+from oneirodex.utils.software_identify_custom_game import (  # noqa: F401
+    CUSTOM_IGDB_BASE,
+    create_custom_kinded_game,
+    upsert_stage_d_custom_game,
+)
+from oneirodex.utils.software_identify_store import (  # noqa: F401
+    STAGE_D_SOURCE_ORDER,
+    igdb_retry_title_from_store,
+    scrub_stage_d_payload,
+    _casefold_title,
+    _candidate_from_epic_hit,
+    _candidate_from_gog_hit,
+    _candidate_from_steam_details,
+    _candidate_from_steam_hit,
+    _enabled_stage_d_sources,
+    _stage_d_titles_corroborate,
+)
+from oneirodex.utils.tgdb_platform_match import (  # noqa: F401
+    filter_tgdb_hits_for_platform,
+    tgdb_platform_matches,
+    _stage_e_candidate_row,
+)
 
 
 def build_software_search_queries(raw_label: str) -> list[str]:
@@ -180,10 +180,6 @@ def enrich_proposal_with_software(proposal: dict, raw_label: str) -> dict:
     body['suggested_kind'] = suggested
     body['identify_path'] = 'software' if software else 'unmatched'
     return proposal
-
-
-def _casefold_title(value: str | None) -> str:
-    return (value or '').casefold().strip()
 
 
 def exact_title_hits(query: str, hits: list[dict] | None) -> list[dict]:
@@ -389,187 +385,6 @@ def apply_catalog_identity_to_game(game, rows: list[dict] | None) -> None:
             ))
 
 
-def scrub_stage_d_payload(payload: dict) -> dict:
-    """Drop install/download queue fields — register-only ownership/metadata."""
-    if not isinstance(payload, dict):
-        return {}
-    return {k: v for k, v in payload.items() if k not in _FORBIDDEN_DRM_URL_KEYS}
-
-
-def _candidate_from_steam_details(
-    details: dict,
-    *,
-    steam_app_id: int,
-    fallback_name: str,
-) -> dict:
-    name = (details.get('name') or fallback_name or '').strip() or fallback_name
-    steam_type = details.get('steam_type')
-    kind = infer_item_kind_from_steam_type(steam_type, name=name)
-    if is_denied_auto_game_match(name) and kind == DEFAULT_ITEM_KIND:
-        kind = 'tool'
-    return scrub_stage_d_payload({
-        'source': 'steam',
-        'name': name,
-        'summary': details.get('short_description'),
-        'cover_url': details.get('header_image'),
-        'steam_app_id': int(steam_app_id),
-        'steam_type': steam_type,
-        'item_kind': kind,
-        'url': f'https://store.steampowered.com/app/{int(steam_app_id)}/',
-        'identify_path': 'stage_d',
-        'match_mode': 'app_id',
-    })
-
-
-def _candidate_from_steam_hit(hit: dict, *, match_mode: str) -> dict:
-    app_id = hit.get('steam_app_id') or hit.get('id')
-    try:
-        app_id_int = int(app_id) if app_id is not None else None
-    except (TypeError, ValueError):
-        app_id_int = None
-    name = (hit.get('name') or '').strip()
-    steam_type = hit.get('steam_type')
-    kind = hit.get('item_kind') or infer_item_kind_from_steam_type(
-        steam_type, name=name,
-    )
-    if is_denied_auto_game_match(name) and normalize_item_kind(kind) == DEFAULT_ITEM_KIND:
-        kind = 'tool'
-    return scrub_stage_d_payload({
-        'source': 'steam',
-        'name': name,
-        'summary': hit.get('summary'),
-        'cover_url': hit.get('cover_url'),
-        'steam_app_id': app_id_int,
-        'steam_type': steam_type,
-        'item_kind': normalize_item_kind(kind),
-        'url': hit.get('url') or (
-            f'https://store.steampowered.com/app/{app_id_int}/' if app_id_int else None
-        ),
-        'identify_path': 'stage_d',
-        'match_mode': match_mode,
-    })
-
-
-def _candidate_from_gog_hit(hit: dict) -> dict:
-    gog_id = hit.get('gog_id') or hit.get('id')
-    try:
-        gog_id_int = int(gog_id) if gog_id is not None else None
-    except (TypeError, ValueError):
-        gog_id_int = None
-    name = (hit.get('name') or '').strip()
-    kind = DEFAULT_ITEM_KIND
-    if is_denied_auto_game_match(name):
-        kind = 'tool'
-    # Store page only — never install/download URLs.
-    store_url = hit.get('url')
-    if store_url and any(
-        token in str(store_url).lower()
-        for token in ('download', 'install', 'checkout', 'cart')
-    ):
-        store_url = None
-    return scrub_stage_d_payload({
-        'source': 'gog',
-        'name': name,
-        'summary': hit.get('summary'),
-        'cover_url': hit.get('cover_url'),
-        'gog_id': gog_id_int,
-        'slug': hit.get('slug'),
-        'item_kind': kind,
-        'url': store_url,
-        'identify_path': 'stage_d',
-        'match_mode': 'exact_title',
-    })
-
-
-def _candidate_from_epic_hit(hit: dict) -> dict:
-    epic_id = hit.get('epic_id') or hit.get('id')
-    name = (hit.get('name') or '').strip()
-    kind = DEFAULT_ITEM_KIND
-    if is_denied_auto_game_match(name):
-        kind = 'tool'
-    store_url = hit.get('url')
-    if store_url and any(
-        token in str(store_url).lower()
-        for token in ('download', 'install', 'checkout', 'cart')
-    ):
-        store_url = None
-    return scrub_stage_d_payload({
-        'source': 'epic',
-        'name': name,
-        'summary': hit.get('summary'),
-        'cover_url': hit.get('cover_url'),
-        'epic_id': epic_id,
-        'slug': hit.get('slug'),
-        'item_kind': kind,
-        'url': store_url,
-        'identify_path': 'stage_d',
-        'match_mode': 'exact_title',
-        'ownership_only': True,
-    })
-
-
-def igdb_retry_title_from_store(
-    candidate: dict | None,
-    already: list[str] | tuple[str, ...] | set[str] | None = None,
-) -> str | None:
-    """Store canonical title we have not already searched on IGDB.
-
-    Used after an IGDB miss: exact Steam/GOG/Epic title → one more IGDB pass
-    before creating a custom-range Stage D game. Improves hit-rate for messy
-    folder names without fuzzy auto-import.
-    """
-    if not isinstance(candidate, dict):
-        return None
-    name = (candidate.get('name') or '').strip()
-    if not name:
-        return None
-    seen = {
-        (item or '').casefold().strip()
-        for item in (already or [])
-        if (item or '').strip()
-    }
-    if name.casefold().strip() in seen:
-        return None
-    return name
-
-
-def _enabled_stage_d_sources(sources=None) -> tuple[str, ...]:
-    if sources is None:
-        try:
-            from oneirodex.utils.metadata_providers import stage_d_source_ids
-
-            sources = stage_d_source_ids()
-        except Exception:
-            sources = STAGE_D_SOURCE_ORDER
-    enabled = {str(item).strip().lower() for item in (sources or ()) if item}
-    return tuple(item for item in STAGE_D_SOURCE_ORDER if item in enabled)
-
-
-def _stage_d_titles_corroborate(folder_title: str | None, store_title: str | None) -> bool:
-    """
-    Conservative App-ID title gate: folder label must match or be a clear
-    primary-title prefix of the store title (remaster / subtitle tails OK).
-
-    Rejects wrong-namespace paren digits that resolve to an unrelated Steam app.
-    """
-    folder = _casefold_title(folder_title or '')
-    store = _casefold_title(store_title or '')
-    if not folder or not store:
-        return False
-    if folder == store:
-        return True
-    # "Broken Sword 2" vs "Broken Sword 2 - the Smoking Mirror: Remastered"
-    for sep in (' - ', ': ', ' — ', ' – '):
-        head = store.split(sep, 1)[0].strip()
-        if head and folder == head:
-            return True
-    if store.startswith(folder + ' ') or store.startswith(folder + ':'):
-        return True
-    if store.startswith(folder + '-'):
-        return True
-    return False
-
-
 def resolve_stage_d_store_candidate(
     *,
     cleaned_name: str,
@@ -661,223 +476,6 @@ def resolve_stage_d_store_candidate(
     return None
 
 
-def _attach_store_url(game, *, url_type: str, url: str | None) -> None:
-    store_url = (url or '').strip()
-    if not store_url or not game:
-        return
-    lowered = store_url.lower()
-    if any(token in lowered for token in ('download', 'install', 'checkout', 'cart', 'magnet')):
-        return
-    already = any(
-        (getattr(row, 'url_type', '') or '').lower() == url_type
-        for row in (game.urls or [])
-    )
-    if already:
-        return
-    db.session.add(GameURL(
-        game_uuid=game.uuid,
-        url_type=url_type,
-        url=store_url,
-    ))
-
-
-def create_custom_kinded_game(
-    *,
-    name: str,
-    full_disk_path: str,
-    library_uuid: str,
-    item_kind: str = DEFAULT_ITEM_KIND,
-    steam_app_id: int | None = None,
-    gog_id: int | None = None,
-    gog_url: str | None = None,
-    epic_url: str | None = None,
-    summary: str | None = None,
-    cover: str | None = None,
-    size: int = 0,
-) -> Game:
-    """
-    Create a custom-range Game with item_kind (no real IGDB id).
-
-    Used by Unmatched mark_kind, Stage D store cascade, and software identify.
-    GOG / Epic identity is register-only via GameURL (no dedicated gog_id column).
-    """
-    kind = normalize_item_kind(item_kind)
-    if kind not in ITEM_KINDS:
-        kind = DEFAULT_ITEM_KIND
-    custom_id = _next_custom_igdb_id()
-    game = Game(
-        igdb_id=custom_id,
-        name=(name or '').strip() or 'Untitled',
-        summary=summary,
-        full_disk_path=full_disk_path,
-        library_uuid=library_uuid,
-        cover=cover,
-        size=int(size or 0),
-        steam_app_id=steam_app_id,
-        item_kind=kind,
-        date_created=datetime.now(timezone.utc),
-        date_identified=datetime.now(timezone.utc),
-        slug=f"custom-{custom_id}-{uuid4().hex[:8]}",
-        path_status='ok',
-    )
-    if steam_app_id:
-        game.steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}/'
-    db.session.add(game)
-    db.session.flush()
-    try:
-        from oneirodex.utils.rom_language import apply_rom_language_fields
-
-        apply_rom_language_fields(game, full_disk_path or name)
-    except Exception:
-        pass
-    if gog_id or gog_url:
-        store_url = (gog_url or '').strip()
-        if not store_url and gog_id:
-            # Product id alone — store as typed register link without inventing a download URL.
-            store_url = f'https://www.gog.com/game/{int(gog_id)}'
-        _attach_store_url(game, url_type='gog', url=store_url)
-    if epic_url:
-        _attach_store_url(game, url_type='epic', url=epic_url)
-    return game
-
-
-def upsert_stage_d_custom_game(
-    *,
-    candidate: dict,
-    full_disk_path: str,
-    library_uuid: str,
-    size: int = 0,
-) -> Game:
-    """
-    Create or update a custom-range Game from a Stage D store candidate.
-
-    Update applies only when a custom Game already exists for the same path
-    (and matching store id when present). Never attaches DRM install URLs.
-    """
-    candidate = scrub_stage_d_payload(candidate or {})
-    name = (candidate.get('name') or '').strip() or 'Untitled'
-    kind = normalize_item_kind(candidate.get('item_kind'))
-    steam_app_id = candidate.get('steam_app_id')
-    try:
-        steam_app_id = int(steam_app_id) if steam_app_id is not None else None
-    except (TypeError, ValueError):
-        steam_app_id = None
-    gog_id = candidate.get('gog_id')
-    try:
-        gog_id = int(gog_id) if gog_id is not None else None
-    except (TypeError, ValueError):
-        gog_id = None
-    summary = candidate.get('summary')
-    cover = candidate.get('cover_url') or candidate.get('cover')
-    gog_url = candidate.get('url') if candidate.get('source') == 'gog' else None
-    epic_url = candidate.get('url') if candidate.get('source') == 'epic' else None
-
-    existing = db.session.execute(
-        select(Game).filter(
-            Game.full_disk_path == full_disk_path,
-            Game.library_uuid == library_uuid,
-            Game.igdb_id >= CUSTOM_IGDB_BASE,
-        )
-    ).scalar_one_or_none()
-
-    if existing is None and steam_app_id is not None:
-        existing = db.session.execute(
-            select(Game).filter(
-                Game.library_uuid == library_uuid,
-                Game.steam_app_id == steam_app_id,
-                Game.full_disk_path == full_disk_path,
-                Game.igdb_id >= CUSTOM_IGDB_BASE,
-            )
-        ).scalar_one_or_none()
-
-    if existing is not None:
-        existing.name = name
-        if summary:
-            existing.summary = summary
-        if cover:
-            existing.cover = cover
-        existing.item_kind = kind
-        existing.date_identified = datetime.now(timezone.utc)
-        existing.path_status = 'ok'
-        if steam_app_id:
-            existing.steam_app_id = steam_app_id
-            existing.steam_url = f'https://store.steampowered.com/app/{int(steam_app_id)}/'
-        if gog_id or gog_url:
-            store_url = (gog_url or '').strip()
-            if not store_url and gog_id:
-                store_url = f'https://www.gog.com/game/{int(gog_id)}'
-            _attach_store_url(existing, url_type='gog', url=store_url)
-        if epic_url:
-            _attach_store_url(existing, url_type='epic', url=epic_url)
-        try:
-            from oneirodex.utils.rom_language import apply_rom_language_fields
-
-            apply_rom_language_fields(existing, full_disk_path or name)
-        except Exception:
-            pass
-        _hydrate_steam_content(existing, steam_app_id)
-        return existing
-
-    created = create_custom_kinded_game(
-        name=name,
-        full_disk_path=full_disk_path,
-        library_uuid=library_uuid,
-        item_kind=kind,
-        steam_app_id=steam_app_id,
-        gog_id=gog_id,
-        gog_url=gog_url,
-        epic_url=epic_url,
-        summary=summary,
-        cover=cover,
-        size=size,
-    )
-    _hydrate_steam_content(created, steam_app_id)
-    return created
-
-
-def _hydrate_steam_content(game, steam_app_id) -> None:
-    """Pull full store content (summary, genres, dev/publisher, release, modes).
-
-    The storesearch hit that identified the title carries no description and no
-    taxonomy, so without this a Stage D game lands with every box empty.
-
-    A Steam App ID gets the direct ``appdetails`` path, which is the richest
-    source we have. Everything else — a GOG-identified title, or a console ROM
-    that never touched a PC store — falls through to the multi-source cascade,
-    which used to be skipped entirely: this function returned early without an
-    App ID, so those titles got no enrichment at all.
-
-    Failures are swallowed on purpose — a metadata miss must not undo an
-    identification.
-    """
-    if not game:
-        return
-
-    try:
-        if steam_app_id:
-            from oneirodex.utils.steam_metadata import hydrate_game_from_steam
-
-            hydrate_game_from_steam(game, app_id=steam_app_id)
-            # Steam answered on the fields it covers; anything still empty is
-            # worth one more pass through the other sources.
-            from oneirodex.utils.secondary_scrapers import missing_core_fields
-
-            if not missing_core_fields({
-                'summary': getattr(game, 'summary', None),
-                'genres': list(getattr(game, 'genres', []) or []),
-                'developer': getattr(game, 'developer_id', None),
-            }):
-                return
-
-        from oneirodex.utils.metadata_cascade import hydrate_game_from_cascade
-
-        # With an App ID we already pulled Steam's own appdetails above, which
-        # is strictly richer than what the cascade's name search would return.
-        hydrate_game_from_cascade(game, skip=('steam',) if steam_app_id else ())
-    except Exception as exc:  # noqa: BLE001
-        print(f'Content hydrate skipped for {getattr(game, "name", "?")}: {exc}')
-
-
 def try_stage_d_store_identify(
     *,
     raw_label: str,
@@ -916,261 +514,6 @@ def try_stage_d_store_identify(
     )
     db.session.flush()
     return game
-
-
-def _norm_platform_token(value: str | None) -> str:
-    return re.sub(r'[^a-z0-9]', '', (value or '').casefold())
-
-
-# Extra TGDB name needles keyed by LibraryPlatform enum name (beyond .value).
-_TGDB_PLATFORM_ALIASES: dict[str, tuple[str, ...]] = {
-    'GB': ('nintendo game boy', 'game boy'),
-    'GBC': ('nintendo game boy color', 'game boy color', 'gbc'),
-    'GBA': ('nintendo game boy advance', 'game boy advance', 'gba'),
-    'NES': ('nintendo entertainment system', 'nes', 'famicom'),
-    'SNES': ('super nintendo', 'snes', 'super famicom'),
-    'N64': ('nintendo 64', 'n64'),
-    'NDS': ('nintendo ds', 'nds'),
-    'N3DS': ('nintendo 3ds', '3ds'),
-    'NGC': ('nintendo gamecube', 'gamecube'),
-    'WII': ('nintendo wii', 'wii'),
-    'WII_U': ('wii u', 'wiiu'),
-    'VB': ('nintendo virtual boy', 'virtual boy'),
-    'SEGA_MD': ('sega genesis', 'mega drive', 'genesis'),
-    'SEGA_MS': ('sega master system', 'master system'),
-    'SEGA_GG': ('sega game gear', 'game gear'),
-    'SEGA_CD': ('sega cd', 'mega cd'),
-    'SEGA_32X': ('sega 32x', '32x'),
-    'SEGA_SATURN': ('sega saturn', 'saturn'),
-    'SEGA_DC': ('sega dreamcast', 'dreamcast'),
-    'SEGA_SG1000': ('sg-1000', 'sg1000'),
-    'SEGA_PICO': ('sega pico',),
-    'PSX': ('playstation', 'psx', 'ps1'),
-    'PS2': ('playstation 2', 'ps2'),
-    'PS3': ('playstation 3', 'ps3'),
-    'PSP': ('playstation portable', 'psp'),
-    'PSVITA': ('ps vita', 'vita'),
-    'XBOX': ('xbox',),
-    'X360': ('xbox 360',),
-    'XONE': ('xbox one', 'xboxone'),
-    'PCWIN': ('pc', 'windows', 'microsoft windows'),
-    'PCDOS': ('dos', 'ms-dos', 'pc'),
-    'PCE': ('pc engine', 'turbografx', 'tg16', 'hu card'),
-    'PCE_CD': ('pc engine cd', 'turbografx-cd', 'turbografx cd', 'tgcd'),
-    'SUPERGRAFX': ('supergrafx', 'pc engine supergrafx'),
-    'NGP': ('neo geo pocket', 'ngp'),
-    'NGPC': ('neo geo pocket color', 'ngpc'),
-    # BE-DET-8 — AES vs CD stay distinct (substring-safe matching in tgdb_platform_matches).
-    'NEOGEO': ('neo geo aes', 'aes'),
-    'NEOGEO_CD': ('neo geo cd', 'neocd'),
-    'ARCADE': ('arcade',),
-    'INTV': ('intellivision',),
-    'CHAF': ('channel f', 'fairchild'),
-    'O2EM': ('odyssey 2', 'odyssey2', 'videopac'),
-    'THREEDO': ('3do',),
-    'VECTREX': ('vectrex',),
-    'SUPERVISION': ('watara', 'supervision'),
-    'GX4000': ('gx4000',),
-    'ASTROCADE': ('astrocade',),
-    'ARCADIA': ('arcadia 2001',),
-    'POKE_MINI': ('pokemon mini', 'pokémon mini'),
-    'GAME_WATCH': ('game & watch', 'game watch', 'g&w'),
-    'CD_I': ('cd-i', 'philips cd-i'),
-    'JAGUAR_CD': ('jaguar cd', 'atari jaguar cd'),
-    'AMIGA_CD32': ('amiga cd32', 'cd32'),
-    'MSX': ('msx',),
-    'ZX_SPECTRUM': ('zx spectrum', 'spectrum'),
-    'CPC': ('amstrad cpc',),
-    'ATARI_ST': ('atari st',),
-    'APPLE_II': ('apple ii', 'apple 2'),
-    'ATARI_8BIT': ('atari 8-bit', 'atari 800'),
-    'X68000': ('x68000', 'x68k'),
-    'PC_98': ('pc-98', 'pc98'),
-    'BBC_MICRO': ('bbc micro', 'bbc microcomputer'),
-}
-
-# Short library keys: reject tokens that belong to a longer sibling.
-# Needle substring otherwise maps Game Boy → Color, Wii → Wii U, etc.
-_TGDB_SHORT_REJECT: dict[str, tuple[str, ...]] = {
-    'GB': ('color', 'advance', 'gbc', 'gba'),
-    'WII': ('wiiu',),
-    'JAGUAR': ('jaguarcd', 'cd'),
-    'AMIGA': ('cd32',),
-    'NGP': ('color', 'ngpc'),
-    'PCE': ('cd', 'supergrafx'),
-    'PSX': (
-        'playstation2', 'playstation3', 'playstation4', 'playstation5',
-        'playstationportable', 'psp', 'vita', 'ps2', 'ps3', 'ps4', 'ps5',
-    ),
-    'XBOX': ('360', 'xboxone', 'series'),
-    'NEOGEO': ('pocket',),
-}
-
-# Long library keys: token must carry a specificity marker so a short sibling
-# name cannot pass via ``needle in token``.
-_TGDB_LONG_REQUIRE: dict[str, tuple[str, ...]] = {
-    'GBC': ('color', 'gbc'),
-    'GBA': ('advance', 'gba'),
-    'WII_U': ('wiiu',),
-    'JAGUAR_CD': ('cd',),
-    'AMIGA_CD32': ('cd32',),
-    'NGPC': ('color', 'ngpc'),
-    'NGP': ('pocket', 'ngp'),
-    'PCE_CD': ('cd',),
-    'SUPERGRAFX': ('supergrafx',),
-    'PS2': ('playstation2', 'ps2'),
-    'PS3': ('playstation3', 'ps3'),
-    'PSP': ('portable', 'psp'),
-    'PSVITA': ('vita',),
-    'X360': ('360',),
-    'XONE': ('xboxone',),
-}
-
-
-def _tgdb_family_allows(key: str, token: str) -> bool:
-    """False when a sibling platform stole this hit via substring overlap."""
-    require = _TGDB_LONG_REQUIRE.get(key)
-    if require and not any(marker in token for marker in require):
-        return False
-    reject = _TGDB_SHORT_REJECT.get(key)
-    if reject and any(marker in token for marker in reject):
-        return False
-    return True
-
-
-def _library_platform_needles(library_platform: str | None) -> list[str]:
-    """Normalized needles for TGDB platform-name matching."""
-    key = (library_platform or '').strip()
-    if not key:
-        return []
-    needles: list[str] = []
-    try:
-        from oneirodex.platform import LibraryPlatform
-
-        plat = LibraryPlatform[key]
-        needles.append(_norm_platform_token(plat.value))
-        needles.append(_norm_platform_token(plat.name))
-    except (KeyError, TypeError):
-        needles.append(_norm_platform_token(key))
-    for alias in _TGDB_PLATFORM_ALIASES.get(key, ()):
-        needles.append(_norm_platform_token(alias))
-    # Dedupe preserve order
-    seen: set[str] = set()
-    out: list[str] = []
-    for n in needles:
-        if not n or n in seen:
-            continue
-        seen.add(n)
-        out.append(n)
-    return out
-
-
-def _tgdb_token_is_neogeo_cd(token: str) -> bool:
-    """True when a normalized TGDB platform token denotes Neo Geo CD (not AES)."""
-    if not token:
-        return False
-    if 'neocd' in token:
-        return True
-    if 'cd' in token and 'neogeo' in token:
-        return True
-    return token in ('neogeocd', 'neocd')
-
-
-def _tgdb_token_is_neogeo_aes(token: str) -> bool:
-    """True when a normalized TGDB platform token denotes Neo Geo AES (not CD)."""
-    if not token or _tgdb_token_is_neogeo_cd(token):
-        return False
-    if 'pocket' in token:
-        return False
-    if 'aes' in token:
-        return True
-    if token in ('neogeo', 'neogeoaes'):
-        return True
-    # "Neo Geo" without CD — treat as AES cart family, never CD.
-    return 'neogeo' in token
-
-
-def tgdb_platform_matches(
-    hit_platforms: list | None,
-    library_platform: str | None,
-) -> bool:
-    """True when any TGDB platform name corroborates the library leaf platform.
-
-    BE-DET-8 hard guard: Neo Geo AES (``NEOGEO``) never matches Neo Geo CD
-    hits (and reverse) — substring ``neogeo`` ⊂ ``neogeocd`` must not leak.
-    Longer siblings (Wii U, Game Boy Color, Jaguar CD, …) stay distinct from
-    the short name they contain.
-    """
-    key = (library_platform or '').strip()
-    if not key:
-        return False
-
-    names: list[str] = []
-    for p in hit_platforms or []:
-        if isinstance(p, str):
-            names.append(p)
-        elif isinstance(p, dict):
-            names.append(p.get('platform_name') or p.get('name') or '')
-    if not names:
-        return False
-
-    # Dedicated AES ↔ CD gate (never cross-map). Pocket is not AES.
-    if key in ('NEOGEO', 'NEOGEO_CD'):
-        for name in names:
-            token = _norm_platform_token(name)
-            if not token:
-                continue
-            if key == 'NEOGEO_CD':
-                if _tgdb_token_is_neogeo_cd(token):
-                    return True
-            elif _tgdb_token_is_neogeo_aes(token):
-                return True
-        return False
-
-    needles = _library_platform_needles(library_platform)
-    if not needles:
-        return False
-    for name in names:
-        token = _norm_platform_token(name)
-        if not token or not _tgdb_family_allows(key, token):
-            continue
-        for needle in needles:
-            if needle == token or needle in token or token in needle:
-                return True
-    return False
-
-
-def filter_tgdb_hits_for_platform(
-    hits: list[dict] | None,
-    library_platform: str | None,
-) -> list[dict]:
-    """Keep TGDB hits whose platform list matches the library console leaf."""
-    out: list[dict] = []
-    for hit in hits or []:
-        if not isinstance(hit, dict):
-            continue
-        if tgdb_platform_matches(hit.get('platforms'), library_platform):
-            out.append(hit)
-    return out
-
-
-def _stage_e_candidate_row(hit: dict, *, match_mode: str) -> dict:
-    """Scrubbed propose-only candidate (metadata URLs only)."""
-    source = (hit.get('source') or '').strip() or 'unknown'
-    return scrub_stage_d_payload({
-        'source': source,
-        'id': hit.get('id') or hit.get('mobygames_id') or hit.get('thegamesdb_id'),
-        'name': hit.get('name'),
-        'url': hit.get('url'),
-        'cover_url': hit.get('cover_url'),
-        'summary': hit.get('summary'),
-        'mobygames_id': hit.get('mobygames_id'),
-        'thegamesdb_id': hit.get('thegamesdb_id'),
-        'platforms': hit.get('platforms'),
-        'identify_path': 'stage_e',
-        'match_mode': match_mode,
-        'propose_only': True,
-    })
 
 
 def resolve_stage_e_catalog_hints(

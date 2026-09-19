@@ -497,7 +497,7 @@ def test_batch_wishlist_forbidden_acl_and_over_limit(
             return False
         return real_acl(user, game)
 
-    monkeypatch.setattr('oneirodex.routes_apis.game.user_can_access_game', fake_acl)
+    monkeypatch.setattr('oneirodex.routes_apis.game_batch.user_can_access_game', fake_acl)
 
     resp = client.post(
         '/api/games/batch/wishlist',
@@ -590,10 +590,10 @@ def test_batch_refresh_images_queues_happy_path(
         return None
 
     monkeypatch.setattr(
-        'oneirodex.routes_apis.game.run_in_background', fake_run_in_background
+        'oneirodex.routes_apis.game_batch.run_in_background', fake_run_in_background
     )
     monkeypatch.setattr(
-        'oneirodex.routes_apis.game.refresh_images_in_background',
+        'oneirodex.routes_apis.game_batch.refresh_images_in_background',
         lambda game_uuid: None,
     )
     _login(client, librarian_user)
@@ -639,9 +639,9 @@ def test_batch_refresh_images_skips_not_found_and_forbidden(
             return False
         return real_acl(user, game)
 
-    monkeypatch.setattr('oneirodex.routes_apis.game.user_can_access_game', fake_acl)
+    monkeypatch.setattr('oneirodex.routes_apis.game_batch.user_can_access_game', fake_acl)
     monkeypatch.setattr(
-        'oneirodex.routes_apis.game.run_in_background',
+        'oneirodex.routes_apis.game_batch.run_in_background',
         lambda app, func, *args, name=None, **kwargs: None,
     )
 

@@ -1,161 +1,48 @@
-"""Resolve a playable ROM file path, including zip/7z/rar/gz archives for WebRetro."""
+"""Resolve a playable ROM file path, including zip/7z/rar/gz archives for WebRetro.
+
+The v11 cycle (H-D.4) moved the extension tables to ``rom_archive_types``,
+member selection to ``rom_archive_select`` and the zip / gzip / bundle paths
+to ``rom_archive_zip`` as pure moves. The 7z / rar extractor shims and
+``resolve_playable_rom_path`` stay here; every name callers import still
+resolves here.
+"""
 
 from __future__ import annotations
 
-import gzip
 import os
-import re
 import shutil
 import subprocess
-import zipfile
 from pathlib import Path
 
-ROM_EXTENSIONS = frozenset({
-    '.nes', '.smc', '.sfc', '.n64', '.z64', '.v64', '.gb', '.gbc', '.gba',
-    '.nds', '.3ds', '.cia', '.iso', '.gcm', '.rvz', '.wbfs', '.wad',
-    '.cue', '.bin', '.chd', '.pce', '.ngp', '.ngc',
-    '.ws', '.wsc', '.col', '.vec', '.a26', '.a52', '.a78', '.lnx', '.jag',
-    '.md', '.smd', '.gen', '.sms', '.gg', '.32x', '.rom', '.fds',
-    '.pbp', '.cso', '.img', '.raw', '.wav', '.gdi', '.cdi',
-    '.nsp', '.xci', '.nsz', '.xcz',
-    '.sg', '.sgx', '.sv', '.cpr', '.int', '.chf', '.min',
-    '.wud', '.wux', '.wua', '.tzx', '.z80', '.mx1', '.mx2', '.cas', '.sna',
-    '.dsk', '.st', '.stx', '.tap', '.adf', '.ipf',
-    '.atr', '.xfd', '.atx', '.xex', '.dim', '.xdf', '.hdm',
-    '.fdi', '.hdi', '.nhd', '.d88', '.d64', '.prg', '.crt',
-})
-
-ARCHIVE_EXTENSIONS = frozenset({'.zip', '.7z', '.rar'})
-
-# Single-file gzip wrappers of a ROM (e.g. Adventure.nes.gz) — scanned via AllowedFileType `gz`.
-GZIP_EXTENSIONS = frozenset({'.gz'})
-
-# Advertised by scan history or mistaken drops; not extractable for WebRetro.
-UNSUPPORTED_ARCHIVE_EXTENSIONS = frozenset({
-    '.tar', '.tgz', '.tbz2', '.txz', '.xz', '.bz2', '.lz', '.lzma',
-})
-
-# Host binaries — Docker ships libarchive-tools (bsdtar) + p7zip-full (7z).
-_EXTRACTOR_BINARIES: tuple[tuple[str, str], ...] = (
-    ('7z', '7z'),
-    ('7za', '7za'),
-    ('bsdtar', 'bsdtar'),
-    ('unrar', 'unrar'),
+# H-D.4 split: these moved to sibling modules as pure moves. Public names are
+# re-exported here because callers and tests import them from this module.
+from oneirodex.utils.rom_archive_select import (  # noqa: F401
+    choose_rom_member,
+    path_supports_browser_extract,
+    _cue_companion_targets,
+    _is_rom_name,
+    _safe_basename,
 )
-
-_MISSING_EXTRACTOR_HINT = (
-    'Install p7zip-full (7z) and/or libarchive-tools (bsdtar) on the host '
-    '(the Oneirodex Docker image already includes both), ensure they are on PATH, '
-    'or re-pack the ROM as .zip. Optional: Python packages rarfile (for .rar) / py7zr (for .7z).'
+from oneirodex.utils.rom_archive_types import (  # noqa: F401
+    ARCHIVE_EXTENSIONS,
+    ArchiveRomError,
+    CUE_COMPANION_EXTENSIONS,
+    GZIP_EXTENSIONS,
+    MAX_NEST_DEPTH,
+    MIN_ROM_BYTES_PREFERRED,
+    PLATFORM_DUMP_SUFFIXES,
+    PLATFORM_ROM_EXTENSIONS,
+    ROM_EXTENSIONS,
+    UNSUPPORTED_ARCHIVE_EXTENSIONS,
+    _EXTRACTOR_BINARIES,
+    _MISSING_EXTRACTOR_HINT,
 )
-
-# Prefer these extensions when the library platform is known.
-PLATFORM_ROM_EXTENSIONS: dict[str, frozenset[str]] = {
-    'NES': frozenset({'.nes', '.fds', '.unf', '.unif'}),
-    'SNES': frozenset({'.smc', '.sfc'}),
-    'N64': frozenset({'.n64', '.z64', '.v64'}),
-    'GB': frozenset({'.gb'}),
-    'GBC': frozenset({'.gbc', '.gb'}),
-    'GBA': frozenset({'.gba'}),
-    'NDS': frozenset({'.nds'}),
-    'N3DS': frozenset({'.3ds', '.cia'}),
-    'VB': frozenset({'.vb', '.vboy'}),
-    'NGC': frozenset({'.iso', '.gcm', '.rvz', '.ciso', '.dol'}),
-    'WII': frozenset({'.iso', '.wbfs', '.rvz', '.wad', '.dol'}),
-    'PSX': frozenset({'.cue', '.chd', '.iso', '.bin', '.pbp', '.img'}),
-    'PSP': frozenset({'.iso', '.cso', '.pbp', '.chd'}),
-    'PCE': frozenset({'.pce', '.cue', '.chd'}),
-    'SEGA_MD': frozenset({'.md', '.smd', '.gen', '.bin'}),
-    'SEGA_MS': frozenset({'.sms'}),
-    'SEGA_GG': frozenset({'.gg'}),
-    'SEGA_32X': frozenset({'.32x'}),
-    'SEGA_CD': frozenset({'.cue', '.chd', '.iso', '.bin'}),
-    'SEGA_SATURN': frozenset({'.cue', '.chd', '.iso', '.bin'}),
-    'SEGA_DC': frozenset({'.gdi', '.cdi', '.chd', '.cue', '.iso'}),
-    'ATARI_2600': frozenset({'.a26', '.bin', '.rom'}),
-    'ATARI_5200': frozenset({'.a52', '.bin'}),
-    'ATARI_7800': frozenset({'.a78', '.bin'}),
-    'LYNX': frozenset({'.lnx'}),
-    'JAGUAR': frozenset({'.jag', '.j64', '.rom'}),
-    'WS': frozenset({'.ws', '.wsc'}),
-    'NGP': frozenset({'.ngp', '.ngc'}),
-    'COLECO': frozenset({'.col', '.rom', '.bin'}),
-    'VECTREX': frozenset({'.vec', '.bin'}),
-    'NEOGEO': frozenset({'.zip', '.7z'}),
-    'NEOGEO_CD': frozenset({'.cue', '.chd', '.iso'}),
-    'ARCADE': frozenset({'.zip', '.7z'}),
-    'SWITCH': frozenset({'.nsp', '.xci', '.nsz', '.xcz'}),
-    'THREEDO': frozenset({'.cue', '.chd', '.iso'}),
-    'SEGA_SG1000': frozenset({'.sg', '.sms'}),
-    'SUPERGRAFX': frozenset({'.sgx', '.pce'}),
-    'PCE_CD': frozenset({'.cue', '.chd', '.iso'}),
-    'NGPC': frozenset({'.ngc', '.ngp'}),
-    'SUPERVISION': frozenset({'.sv'}),
-    'GX4000': frozenset({'.cpr'}),
-    'ASTROCADE': frozenset({'.bin'}),
-    'ARCADIA': frozenset({'.bin'}),
-    'INTV': frozenset({'.int', '.rom'}),
-    'CHAF': frozenset({'.chf', '.bin'}),
-    'O2EM': frozenset({'.bin'}),
-    'POKE_MINI': frozenset({'.min'}),
-    'GAME_WATCH': frozenset({'.mgw'}),
-    'CD_I': frozenset({'.chd', '.cue', '.iso'}),
-    'SEGA_PICO': frozenset({'.md', '.bin', '.sms'}),
-    'JAGUAR_CD': frozenset({'.cdi', '.cue', '.iso', '.chd'}),
-    'WII_U': frozenset({'.wud', '.wux', '.wua'}),
-    'AMIGA': frozenset({'.adf', '.ipf', '.hdf', '.adz'}),
-    'AMIGA_CD32': frozenset({'.cue', '.chd', '.iso', '.adf'}),
-    'MSX': frozenset({'.rom', '.mx1', '.mx2', '.dsk', '.cas'}),
-    'ZX_SPECTRUM': frozenset({'.tzx', '.tap', '.z80', '.sna', '.dsk'}),
-    'CPC': frozenset({'.dsk', '.cdt', '.cpr'}),
-    'ATARI_ST': frozenset({'.st', '.stx', '.msa', '.ipf'}),
-    'APPLE_II': frozenset({'.dsk', '.do', '.po', '.2mg', '.nib'}),
-    'ATARI_8BIT': frozenset({'.atr', '.xex', '.xfd', '.atx', '.rom', '.car', '.bin'}),
-    'X68000': frozenset({'.dim', '.xdf', '.hdm'}),
-    'PC_98': frozenset({'.fdi', '.hdi', '.nhd', '.d88'}),
-    'BBC_MICRO': frozenset({'.ssd', '.dsd', '.uef', '.bbc', '.img'}),
-    'VICE_X64SC': frozenset({'.d64', '.prg', '.tap', '.crt', '.g64'}),
-    'VICE_X128': frozenset({'.d64', '.d71', '.prg'}),
-    'VICE_XVIC': frozenset({'.prg', '.tap', '.crt'}),
-    'VICE_XPLUS4': frozenset({'.prg', '.tap', '.d64'}),
-    'VICE_XPET': frozenset({'.prg', '.tap'}),
-}
-
-# Every suffix we advertise per platform — scan, peel, hash, and play
-# resolution must accept this set (plus archives). Union into ROM_EXTENSIONS
-# so a new leaf cannot land in PLATFORM_ROM_EXTENSIONS and stay invisible.
-PLATFORM_DUMP_SUFFIXES = frozenset().union(*PLATFORM_ROM_EXTENSIONS.values())
-ROM_EXTENSIONS = ROM_EXTENSIONS | PLATFORM_DUMP_SUFFIXES
-
-# When a .cue is chosen, also extract these sibling extensions from the same archive folder.
-CUE_COMPANION_EXTENSIONS = frozenset({'.bin', '.img', '.iso', '.raw', '.wav'})
-
-MAX_NEST_DEPTH = 3
-MIN_ROM_BYTES_PREFERRED = 1024
-
-
-class ArchiveRomError(Exception):
-    """Raised when an archive cannot be used for emulation."""
-
-    def __init__(
-        self,
-        message: str,
-        *,
-        status_code: int = 400,
-        code: str = 'archive_error',
-        hint: str | None = None,
-    ):
-        self.message = message
-        self.status_code = status_code
-        self.code = code
-        self.hint = hint
-        super().__init__(message)
-
-    def to_dict(self) -> dict[str, str]:
-        payload = {'error': self.message, 'code': self.code}
-        if self.hint:
-            payload['hint'] = self.hint
-        return payload
+from oneirodex.utils.rom_archive_zip import (  # noqa: F401
+    bundle_playable_rom_zip,
+    extract_rom_from_gz,
+    extract_rom_from_zip,
+    _list_roms_with_sizes_in_zip,
+)
 
 
 def find_archive_extractors() -> dict[str, str]:
@@ -329,31 +216,6 @@ def _extract_members_via_bsdtar(
                 parent = os.path.dirname(parent)
 
 
-def _cue_companion_targets(
-    members: list[tuple[str, int]],
-    chosen: str,
-) -> list[str]:
-    targets = [chosen]
-    if _member_ext(chosen) != '.cue':
-        return targets
-    folder = str(Path(chosen).parent).replace('\\', '/')
-    if folder == '.':
-        folder = ''
-    prefix = f'{folder}/' if folder else ''
-    for name, _ in members:
-        if name == chosen or _member_ext(name) not in CUE_COMPANION_EXTENSIONS:
-            continue
-        norm = name.replace('\\', '/')
-        if folder and not norm.startswith(prefix):
-            continue
-        if folder:
-            rest = norm[len(prefix):]
-            if '/' in rest:
-                continue
-        targets.append(name)
-    return targets
-
-
 def _extract_archive_via_cli(
     archive_path: str,
     cache_dir: str,
@@ -423,110 +285,6 @@ def _extract_archive_via_cli(
             hint='Prefer re-packing as .zip with a single known ROM extension.',
         )
     return dest
-
-
-def _is_rom_name(name: str) -> bool:
-    lower = Path(name).name.lower()
-    return any(lower.endswith(ext) for ext in ROM_EXTENSIONS)
-
-
-def _member_ext(name: str) -> str:
-    return Path(name).suffix.lower()
-
-
-def _safe_basename(member: str) -> str:
-    safe_name = Path(member).name
-    if not safe_name or safe_name in ('.', '..'):
-        raise ArchiveRomError(
-            'Invalid ROM member name in archive',
-            code='invalid_member',
-        )
-    return safe_name
-
-
-def _platform_key(platform: str | None) -> str | None:
-    if not platform:
-        return None
-    text = str(platform).strip()
-    if not text:
-        return None
-    # Accept enum .name or raw key.
-    return text.upper().replace(' ', '_') if text.islower() else text
-
-
-def choose_rom_member(
-    members: list[tuple[str, int]],
-    *,
-    platform: str | None = None,
-    preferred_member: str | None = None,
-) -> str:
-    """
-    Pick the best ROM member from (name, size) pairs.
-
-    Prefer: explicit member → platform-matching extension → .cue over lone .bin →
-    larger size → shallower path. Tiny junk files are demoted when larger ROMs exist.
-    """
-    if not members:
-        raise ArchiveRomError(
-            'No playable ROM files found inside archive',
-            code='no_playable_member',
-            hint='Archive should contain a ROM with a known extension (e.g. .nes, .sfc, .gba).',
-        )
-
-    names = {name for name, _ in members}
-    if preferred_member and preferred_member in names:
-        return preferred_member
-
-    preferred_exts = PLATFORM_ROM_EXTENSIONS.get(_platform_key(platform) or '', frozenset())
-    has_cue = any(_member_ext(name) == '.cue' for name, _ in members)
-
-    scored: list[tuple[float, str]] = []
-    for name, size in members:
-        ext = _member_ext(name)
-        score = float(max(size, 0))
-        if preferred_exts and ext in preferred_exts:
-            score += 1e12
-        if ext == '.cue':
-            score += 1e9
-        if has_cue and ext == '.bin':
-            # WebRetro / disc cores usually want the cue sheet, not a raw track dump.
-            score -= 1e8
-        if size < MIN_ROM_BYTES_PREFERRED and any(s >= MIN_ROM_BYTES_PREFERRED for _, s in members):
-            score -= 1e6
-        depth = name.count('/') + name.count('\\')
-        score -= depth * 1000
-        # Stable tie-break: lexicographic name (negative so reverse sort still prefers A before Z).
-        scored.append((score, name))
-
-    scored.sort(key=lambda item: (-item[0], item[1].lower()))
-    return scored[0][1]
-
-
-def path_supports_browser_extract(source_path: str | None) -> bool:
-    """
-    Whether browse play_url may advertise browser play for this on-disk path.
-
-    Returns True when unknown/empty (keep existing browse behavior) or when the
-    resolver can attempt extract/stream. Returns False for formats we will never
-    extract for WebRetro (e.g. bare .tar / non-ROM .gz). Existence is not required.
-    """
-    if not source_path:
-        return True
-    path = os.path.abspath(source_path)
-    if os.path.isdir(path):
-        return True
-
-    ext = Path(path).suffix.lower()
-    if ext in UNSUPPORTED_ARCHIVE_EXTENSIONS:
-        return False
-    if ext in ARCHIVE_EXTENSIONS:
-        return True
-    if ext in GZIP_EXTENSIONS:
-        return _is_rom_name(Path(path).stem)
-    if _is_rom_name(Path(path).name):
-        return True
-    # Unknown extension — leave browse decision to platform/cores.
-    return True
 
 
 def list_roms_in_zip(zip_path: str) -> list[str]:
@@ -611,161 +369,6 @@ def _list_roms_in_rar(archive_path: str) -> list[tuple[str, int]]:
             code='extract_failed',
             hint='Prefer re-packing as .zip, or verify the RAR is not password-protected.',
         )
-
-
-def _list_roms_with_sizes_in_zip(zip_path: str) -> list[tuple[str, int]]:
-    try:
-        with zipfile.ZipFile(zip_path, 'r') as archive:
-            return [
-                (info.filename, int(info.file_size or 0))
-                for info in archive.infolist()
-                if not info.is_dir() and _is_rom_name(info.filename)
-            ]
-    except zipfile.BadZipFile as exc:
-        raise ArchiveRomError(
-            'Invalid or corrupt zip archive',
-            code='corrupt_archive',
-            hint='Re-zip the ROM or use a raw ROM / .7z / .rar if the file is not a zip.',
-        ) from exc
-
-
-def _list_nested_zip_members(zip_path: str) -> list[tuple[str, int]]:
-    with zipfile.ZipFile(zip_path, 'r') as archive:
-        return [
-            (info.filename, int(info.file_size or 0))
-            for info in archive.infolist()
-            if not info.is_dir() and info.filename.lower().endswith('.zip')
-        ]
-
-
-def _extract_zip_member(archive: zipfile.ZipFile, member: str, dest: str) -> None:
-    parent = os.path.dirname(dest)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with archive.open(member) as src, open(dest, 'wb') as out:
-        while True:
-            chunk = src.read(1024 * 1024)
-            if not chunk:
-                break
-            out.write(chunk)
-
-
-def _extract_cue_companions(
-    archive: zipfile.ZipFile,
-    chosen: str,
-    cache_dir: str,
-    member_names: set[str],
-) -> None:
-    """Extract disc companions (.bin/.img/…) next to a chosen .cue in the same zip folder."""
-    if _member_ext(chosen) != '.cue':
-        return
-    folder = str(Path(chosen).parent).replace('\\', '/')
-    if folder == '.':
-        folder = ''
-    prefix = f'{folder}/' if folder else ''
-    for name in member_names:
-        if name == chosen:
-            continue
-        norm = name.replace('\\', '/')
-        if folder:
-            if not norm.startswith(prefix):
-                continue
-            rest = norm[len(prefix):]
-            if '/' in rest:
-                continue
-        elif '/' in norm or '\\' in name:
-            continue
-        if _member_ext(name) not in CUE_COMPANION_EXTENSIONS:
-            continue
-        companion_dest = os.path.join(cache_dir, Path(name).name)
-        if os.path.isfile(companion_dest) and os.path.getsize(companion_dest) > 0:
-            continue
-        try:
-            _extract_zip_member(archive, name, companion_dest)
-        except KeyError:
-            continue
-
-
-def extract_rom_from_zip(
-    zip_path: str,
-    cache_dir: str,
-    *,
-    member: str | None = None,
-    platform: str | None = None,
-    nest_depth: int = 0,
-) -> str:
-    """
-    Extract one ROM member from a zip into cache_dir and return absolute path.
-
-    Supports nested .zip members when no ROM is present at the current level.
-    When a .cue is selected, sibling disc images in the same folder are extracted too.
-    """
-    os.makedirs(cache_dir, exist_ok=True)
-    rom_members = _list_roms_with_sizes_in_zip(zip_path)
-
-    if rom_members:
-        chosen = choose_rom_member(rom_members, platform=platform, preferred_member=member)
-        safe_name = _safe_basename(chosen)
-        dest = os.path.join(cache_dir, safe_name)
-        with zipfile.ZipFile(zip_path, 'r') as archive:
-            all_names = {info.filename for info in archive.infolist() if not info.is_dir()}
-            if not (os.path.isfile(dest) and os.path.getsize(dest) > 0):
-                try:
-                    _extract_zip_member(archive, chosen, dest)
-                except KeyError as exc:
-                    raise ArchiveRomError(
-                        f'ROM member not found in zip: {safe_name}',
-                        code='invalid_member',
-                    ) from exc
-            _extract_cue_companions(archive, chosen, cache_dir, all_names)
-        if not os.path.isfile(dest):
-            raise ArchiveRomError(
-                'Failed to extract ROM from zip archive',
-                code='extract_failed',
-            )
-        return dest
-
-    if nest_depth >= MAX_NEST_DEPTH:
-        raise ArchiveRomError(
-            'No playable ROM files found inside zip archive (nested search exhausted)',
-            code='no_playable_member',
-            hint='Put a ROM directly in the zip, or use a shallower nest of zip-in-zip.',
-        )
-
-    nested = _list_nested_zip_members(zip_path)
-    if not nested:
-        raise ArchiveRomError(
-            'No playable ROM files found inside zip archive',
-            code='no_playable_member',
-            hint='Archive should contain a ROM with a known extension (e.g. .nes, .sfc, .gba).',
-        )
-
-    nested.sort(key=lambda item: (-item[1], item[0].lower()))
-    last_error: ArchiveRomError | None = None
-    for nested_name, _ in nested[:8]:
-        nested_basename = _safe_basename(nested_name)
-        nested_dest = os.path.join(cache_dir, f'_nested_{nest_depth}_{nested_basename}')
-        try:
-            with zipfile.ZipFile(zip_path, 'r') as archive:
-                if not (os.path.isfile(nested_dest) and os.path.getsize(nested_dest) > 0):
-                    _extract_zip_member(archive, nested_name, nested_dest)
-            return extract_rom_from_zip(
-                nested_dest,
-                cache_dir,
-                member=member,
-                platform=platform,
-                nest_depth=nest_depth + 1,
-            )
-        except ArchiveRomError as exc:
-            last_error = exc
-            continue
-
-    if last_error is not None:
-        raise last_error
-    raise ArchiveRomError(
-        'No playable ROM files found inside nested zip archive',
-        code='no_playable_member',
-    )
 
 
 def _list_roms_in_7z(archive_path: str) -> list[tuple[str, int]]:
@@ -989,44 +592,6 @@ def extract_rom_from_rar(
         ) from exc
 
 
-def extract_rom_from_gz(gz_path: str, cache_dir: str) -> str:
-    """Gunzip a single-file ROM wrapper (e.g. Adventure.nes.gz) into cache_dir."""
-    inner_name = Path(gz_path).stem
-    if inner_name.lower().endswith('.tar') or not _is_rom_name(inner_name):
-        raise ArchiveRomError(
-            '.gz must wrap a single ROM file (e.g. game.nes.gz); .tar.gz is not supported',
-            status_code=415,
-            code='unsupported_format',
-            hint='Unzip/repack as .zip/.7z/.rar with a ROM inside, or store the raw ROM.',
-        )
-
-    os.makedirs(cache_dir, exist_ok=True)
-    safe_name = _safe_basename(inner_name)
-    dest = os.path.join(cache_dir, safe_name)
-    if os.path.isfile(dest) and os.path.getsize(dest) > 0:
-        return dest
-
-    try:
-        with gzip.open(gz_path, 'rb') as src, open(dest, 'wb') as out:
-            while True:
-                chunk = src.read(1024 * 1024)
-                if not chunk:
-                    break
-                out.write(chunk)
-    except OSError as exc:
-        raise ArchiveRomError(
-            'Invalid or corrupt gzip ROM',
-            code='corrupt_archive',
-        ) from exc
-
-    if not os.path.isfile(dest) or os.path.getsize(dest) == 0:
-        raise ArchiveRomError(
-            'Failed to extract ROM from gzip',
-            code='extract_failed',
-        )
-    return dest
-
-
 def resolve_playable_rom_path(
     source_path: str,
     *,
@@ -1117,111 +682,3 @@ def resolve_playable_rom_path(
     )
 
 
-# Matches a cue sheet FILE line, quoted or bare: FILE "disc.bin" BINARY / FILE disc.bin BINARY
-_CUE_FILE_LINE_RE = re.compile(r'(?im)^(\s*FILE\s+)(?:"([^"]*)"|(\S+))(\s+\S+\s*)$')
-
-
-def _rewrite_cue_file_paths(cue_text: str) -> str:
-    """Rewrite FILE references in a .cue sheet to basenames (for a flattened zip)."""
-
-    def _replace(match: re.Match[str]) -> str:
-        prefix, quoted, bare, suffix = match.groups()
-        original = quoted if quoted is not None else bare
-        basename = Path(original.replace('\\', '/')).name
-        if quoted is not None:
-            return f'{prefix}"{basename}"{suffix}'
-        return f'{prefix}{basename}{suffix}'
-
-    return _CUE_FILE_LINE_RE.sub(_replace, cue_text)
-
-
-def bundle_playable_rom_zip(rom_path: str, cache_dir: str) -> tuple[str, str]:
-    """
-    Bundle a resolved `.cue` sheet with its sibling disc images (.bin/.img/.iso/
-    .raw/.wav) into one stored (uncompressed) zip named `play.zip`, so a single
-    HTTP download hands WebRetro every file a multi-track PSX/CD image needs
-    (WebRetro's own client-side unzip already splits multi-file zips back out
-    for disc cores — see `unzipFileMulti` in base.js).
-
-    Returns (rom_path, filename) unchanged when `rom_path` is not a `.cue` or
-    has no companions next to it, so single-file `.iso`/`.chd`/`.bin` play is
-    untouched.
-    """
-    path = Path(rom_path)
-    if path.suffix.lower() != '.cue':
-        return rom_path, path.name
-
-    source_dir = path.parent
-    try:
-        sibling_names = sorted(os.listdir(source_dir))
-    except OSError as exc:
-        raise ArchiveRomError(
-            'Failed to read disc folder for ROM bundling',
-            code='extract_failed',
-        ) from exc
-
-    resolved_cue = path.resolve()
-    companions = [
-        candidate
-        for name in sibling_names
-        if Path(name).suffix.lower() in CUE_COMPANION_EXTENSIONS
-        for candidate in (source_dir / name,)
-        if candidate.is_file() and candidate.resolve() != resolved_cue
-    ]
-
-    if not companions:
-        return rom_path, path.name
-
-    os.makedirs(cache_dir, exist_ok=True)
-    zip_path = os.path.join(cache_dir, 'play.zip')
-
-    sources = [path, *companions]
-    try:
-        newest_source_mtime = max(p.stat().st_mtime for p in sources)
-    except OSError as exc:
-        raise ArchiveRomError(
-            'Failed to stat disc files for ROM bundling',
-            code='extract_failed',
-        ) from exc
-
-    if os.path.isfile(zip_path):
-        try:
-            fresh = (
-                os.path.getsize(zip_path) > 0
-                and os.path.getmtime(zip_path) >= newest_source_mtime
-            )
-        except OSError:
-            fresh = False
-        if fresh:
-            return zip_path, 'play.zip'
-
-    try:
-        cue_text = path.read_text(encoding='utf-8', errors='replace')
-    except OSError as exc:
-        raise ArchiveRomError(
-            'Failed to read .cue sheet for ROM bundling',
-            code='extract_failed',
-        ) from exc
-
-    rewritten_cue = _rewrite_cue_file_paths(cue_text)
-
-    tmp_path = f'{zip_path}.tmp-{os.getpid()}'
-    try:
-        with zipfile.ZipFile(tmp_path, 'w', compression=zipfile.ZIP_STORED) as zf:
-            zf.writestr(path.name, rewritten_cue)
-            for companion in companions:
-                zf.write(companion, arcname=companion.name)
-        os.replace(tmp_path, zip_path)
-    except OSError as exc:
-        raise ArchiveRomError(
-            'Failed to build ROM bundle zip',
-            code='extract_failed',
-        ) from exc
-    finally:
-        if os.path.isfile(tmp_path):
-            try:
-                os.remove(tmp_path)
-            except OSError:
-                pass
-
-    return zip_path, 'play.zip'

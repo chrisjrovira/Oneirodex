@@ -1,4 +1,5 @@
-"""Request models for ``oneirodex/routes_apis/game.py``.
+"""Request models for ``oneirodex/routes_apis/game.py`` and its H-D.4 sibling
+``game_batch.py`` (the batch routes).
 
 Named-field JSON with a real presence/type guard is exhausted on this file
 except via ``@validate_batch_body``. Remaining skip-list items:
