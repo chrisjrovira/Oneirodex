@@ -55,7 +55,7 @@ const CASES = [
   // settings modules with no React body yet -> SettingsSectionPage, which
   // titles itself from the matching SETTINGS_CARDS entry (same as the old switch).
   ['/admin/ai', 'AI assist'],
-  ['/admin/detail_layout', 'Detail layout'],
+  ['/admin/detail_layout', 'Detail layout'], // React body since H-D.5; same h1 as the card
   // unknown admin path -> the old switch default
   ['/admin/something-unrouted', 'Admin'],
 ]
