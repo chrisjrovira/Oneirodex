@@ -225,10 +225,16 @@
     "any-generic": 7,
     "any-annotation": 12
   },
+  "frontend/member-app/src/components/chat/chatHelpers.tsx": {
+    "any-annotation": 5
+  },
+  "frontend/member-app/src/components/chat/ChatRoomsAside.tsx": {
+    "any-annotation": 2
+  },
   "frontend/member-app/src/components/ChatPanel.tsx": {
-    "any-alias": 7,
-    "any-annotation": 22,
-    "any-generic": 8
+    "any-alias": 4,
+    "any-generic": 7,
+    "any-annotation": 13
   },
   "frontend/member-app/src/components/ChatSlideOut.tsx": {
     "any-alias": 1,
