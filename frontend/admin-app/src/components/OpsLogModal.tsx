@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { confirmAction, Modal } from '@oneirodex/ui'
 import { deleteJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import { DataTable, type DataTableColumn } from './DataTable'
@@ -46,15 +46,8 @@ export function OpsLogModal({
   const [clearError, setClearError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open) return undefined
-    setClearError(null)
-    closeRef.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose?.()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+    if (open) setClearError(null)
+  }, [open])
 
   if (!open) return null
 
@@ -86,63 +79,59 @@ export function OpsLogModal({
   }
 
   return (
-    <div
+    <Modal
+      open
+      onClose={onClose}
+      labelledBy={titleId}
       className="od-open-path od-ops-log-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onClick={onClose}
+      panelClassName="od-open-path__panel od-ops-log-modal__panel"
+      initialFocusRef={closeRef}
     >
-      <div
-        className="od-open-path__panel od-ops-log-modal__panel"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="od-open-path__toolbar">
-          <h2 id={titleId} className="od-open-path__title">
-            Full log
-          </h2>
-          <button
-            ref={closeRef}
-            type="button"
-            className="od-open-path__close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        <p className="od-ops-log-modal__lede">
-          Most recent system events (up to 200). Use column filters for type, level, and text.
-        </p>
-        <div className="od-ops-log-modal__actions">
-          <button
-            type="button"
-            className="od-cbtn od-cbtn--danger"
-            onClick={handleClear}
-            disabled={clearing || loading}
-          >
-            {clearing ? 'Clearing…' : 'Clear all'}
-          </button>
-          {clearError ? <span className="od-ops-log-modal__error">{clearError}</span> : null}
-          {error ? <span className="od-ops-log-modal__error">{error}</span> : null}
-        </div>
-        <div className="od-ops-log-modal__table">
-          {loading && events == null ? (
-            <p className="od-admin-lede">Loading events…</p>
-          ) : (
-            <DataTable
-              columns={LOG_COLUMNS}
-              rows={events || []}
-              getRowKey={(row) => row.id}
-              emptyMessage="No system events recorded yet."
-              initialSort={{ key: 'timestamp', dir: 'desc' }}
-              dense
-              columnFilters
-              toolbar
-            />
-          )}
-        </div>
+      <div className="od-open-path__toolbar">
+        <h2 id={titleId} className="od-open-path__title">
+          Full log
+        </h2>
+        <button
+          ref={closeRef}
+          type="button"
+          className="od-open-path__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ×
+        </button>
       </div>
-    </div>
+      <p className="od-ops-log-modal__lede">
+        Most recent system events (up to 200). Use column filters for type, level, and text.
+      </p>
+      <div className="od-ops-log-modal__actions">
+        <button
+          type="button"
+          className="od-cbtn od-cbtn--danger"
+          onClick={handleClear}
+          disabled={clearing || loading}
+        >
+          {clearing ? 'Clearing…' : 'Clear all'}
+        </button>
+        {clearError ? <span className="od-ops-log-modal__error">{clearError}</span> : null}
+        {error ? <span className="od-ops-log-modal__error">{error}</span> : null}
+      </div>
+      <div className="od-ops-log-modal__table">
+        {loading && events == null ? (
+          <p className="od-admin-lede">Loading events…</p>
+        ) : (
+          <DataTable
+            columns={LOG_COLUMNS}
+            rows={events || []}
+            getRowKey={(row) => row.id}
+            emptyMessage="No system events recorded yet."
+            initialSort={{ key: 'timestamp', dir: 'desc' }}
+            dense
+            columnFilters
+            toolbar
+          />
+        )}
+      </div>
+    </Modal>
   )
 }

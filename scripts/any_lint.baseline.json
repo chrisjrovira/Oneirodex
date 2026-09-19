@@ -8,9 +8,6 @@
   "frontend/admin-app/src/components/ArtworkPicker.tsx": {
     "any-annotation": 3
   },
-  "frontend/admin-app/src/components/DataTable.tsx": {
-    "any-annotation": 5
-  },
   "frontend/admin-app/src/components/DupeGlance.tsx": {
     "any-annotation": 4
   },
@@ -332,7 +329,7 @@
     "any-alias": 1
   },
   "frontend/member-app/src/components/OpenPathModal.tsx": {
-    "any-annotation": 3,
+    "any-annotation": 2,
     "any-alias": 1,
     "any-generic": 2
   },
@@ -589,5 +586,8 @@
   },
   "frontend/member-app/src/utils/tileSize.ts": {
     "any-annotation": 8
+  },
+  "frontend/shared/src/DataTable.tsx": {
+    "any-annotation": 5
   }
 }
