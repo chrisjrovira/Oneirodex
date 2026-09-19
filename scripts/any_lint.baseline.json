@@ -421,10 +421,17 @@
     "any-generic": 2,
     "any-annotation": 1
   },
+  "frontend/member-app/src/library/useLibraryBatchActions.ts": {
+    "any-annotation": 9
+  },
+  "frontend/member-app/src/library/useLibrarySelection.ts": {
+    "any-annotation": 3,
+    "any-alias": 1
+  },
   "frontend/member-app/src/LibraryApp.tsx": {
-    "any-alias": 5,
-    "any-annotation": 36,
-    "any-generic": 5
+    "any-alias": 3,
+    "any-annotation": 14,
+    "any-generic": 2
   },
   "frontend/member-app/src/pages/AcquirePage.tsx": {
     "any-annotation": 10,
