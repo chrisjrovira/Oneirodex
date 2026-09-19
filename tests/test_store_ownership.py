@@ -414,7 +414,7 @@ def test_steam_sync_register_only(mock_out, db_session, user):
     assert len(rows) == 2
 
 
-@patch('oneirodex.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership_gog._outbound')
 def test_gog_live_sync_register_only(mock_out, db_session, user):
     from oneirodex.utils.store_ownership import connect_gog_account, sync_gog_owned_games
 
@@ -458,7 +458,7 @@ def test_gog_live_sync_register_only(mock_out, db_session, user):
     assert 'access_token' not in account.to_dict()
 
 
-@patch('oneirodex.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership_epic._outbound')
 def test_epic_live_sync_register_only(mock_out, db_session, user):
     from oneirodex.utils.store_ownership import connect_epic_account, sync_epic_owned_games
 
@@ -505,7 +505,7 @@ def test_epic_live_sync_register_only(mock_out, db_session, user):
     assert {row.external_app_id for row in rows} == {'cat-a', 'cat-b'}
 
 
-@patch('oneirodex.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership_gog._outbound')
 def test_gog_401_fails_honestly(mock_out, db_session, user):
     from oneirodex.utils.store_ownership import connect_gog_account, sync_gog_owned_games
 
@@ -549,7 +549,7 @@ def test_flatten_amazon_nile_user_json():
     assert flat['user_id'] == 'amzn1.account.x'
 
 
-@patch('oneirodex.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership_amazon._outbound')
 def test_amazon_live_sync_register_only(mock_out, db_session, user):
     from oneirodex.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
 
@@ -603,7 +603,7 @@ def test_amazon_live_sync_register_only(mock_out, db_session, user):
     assert 'access_token' not in account.to_dict()
 
 
-@patch('oneirodex.utils.store_ownership._outbound')
+@patch('oneirodex.utils.store_ownership_amazon._outbound')
 def test_amazon_401_fails_honestly(mock_out, db_session, user):
     from oneirodex.utils.store_ownership import connect_amazon_account, sync_amazon_owned_games
 
