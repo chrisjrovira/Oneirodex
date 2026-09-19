@@ -546,10 +546,25 @@
     "any-annotation": 7,
     "any-generic": 3
   },
+  "frontend/member-app/src/pages/trailers/TrailerFilterPanel.tsx": {
+    "any-alias": 1,
+    "any-annotation": 3
+  },
+  "frontend/member-app/src/pages/trailers/TrailerPlayer.tsx": {
+    "any-alias": 1,
+    "any-generic": 1,
+    "any-annotation": 4
+  },
+  "frontend/member-app/src/pages/trailers/TrailerSettingsModal.tsx": {
+    "any-alias": 1
+  },
+  "frontend/member-app/src/pages/trailers/trailersHelpers.ts": {
+    "any-annotation": 1
+  },
   "frontend/member-app/src/pages/TrailersPage.tsx": {
-    "any-annotation": 26,
-    "any-alias": 4,
-    "any-generic": 7
+    "any-generic": 6,
+    "any-annotation": 6,
+    "any-alias": 1
   },
   "frontend/member-app/src/pages/UpdatesPage.tsx": {
     "any-generic": 9,
