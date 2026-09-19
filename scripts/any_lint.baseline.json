@@ -508,9 +508,15 @@
     "any-annotation": 3,
     "any-generic": 2
   },
+  "frontend/member-app/src/pages/news/NewsFreeGamesSection.tsx": {
+    "any-annotation": 2
+  },
+  "frontend/member-app/src/pages/news/NewsHeadlinesSection.tsx": {
+    "any-annotation": 2
+  },
   "frontend/member-app/src/pages/NewsPage.tsx": {
-    "any-annotation": 16,
-    "any-generic": 5,
+    "any-generic": 1,
+    "any-annotation": 4,
     "any-alias": 1
   },
   "frontend/member-app/src/pages/NotificationsPage.tsx": {
