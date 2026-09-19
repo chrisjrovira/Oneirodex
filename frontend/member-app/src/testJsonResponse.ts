@@ -6,7 +6,7 @@
  */
 import { vi } from 'vitest'
 
-export function jsonResponse(body, { ok = true, status = 200 } = {}) {
+export function jsonResponse(body: unknown, { ok = true, status = 200 } = {}): Promise<any> {
   const payload = typeof body === 'string' ? body : JSON.stringify(body ?? {})
   return Promise.resolve({
     ok,
@@ -17,7 +17,7 @@ export function jsonResponse(body, { ok = true, status = 200 } = {}) {
   })
 }
 
-export function jsonFrom(result) {
+export function jsonFrom(result: any): Promise<any> {
   return Promise.resolve(result).then((res) => {
     if (res == null) return res
     if (
@@ -39,12 +39,12 @@ export function jsonFrom(result) {
   })
 }
 
-export function stubFetch(impl) {
-  const fn = vi.fn((...args) => jsonFrom(impl(...args)))
+export function stubFetch(impl: (...args: any[]) => unknown) {
+  const fn = vi.fn((...args: any[]) => jsonFrom(impl(...args)))
   vi.stubGlobal('fetch', fn)
   return fn
 }
 
-export function requestHeaders(call) {
+export function requestHeaders(call: any[] | undefined) {
   return new Headers(call?.[1]?.headers)
 }

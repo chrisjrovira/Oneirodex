@@ -15,7 +15,7 @@ vi.mock('../utils/toast', () => ({
   showToast: vi.fn(),
 }))
 
-function stubExecCommand(returnValue) {
+function stubExecCommand(returnValue: any) {
   const fn = vi.fn().mockReturnValue(returnValue)
   Object.defineProperty(document, 'execCommand', {
     configurable: true,
@@ -27,7 +27,7 @@ function stubExecCommand(returnValue) {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  tokensApi.listTokens.mockResolvedValue({
+  vi.mocked(tokensApi.listTokens).mockResolvedValue({
     tokens: [
       {
         id: 7,
@@ -53,8 +53,8 @@ beforeEach(() => {
   })
 })
 
-async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_value') {
-  tokensApi.createToken.mockResolvedValue({
+async function createAndRevealSecret(user: any, secret = 'gt_efgh_one-time_secret_value') {
+  vi.mocked(tokensApi.createToken).mockResolvedValue({
     token: {
       id: 8,
       name: 'My PC',
@@ -67,7 +67,7 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
     secret,
     warning: 'Store this secret now; it will not be shown again.',
   })
-  tokensApi.listTokens
+  vi.mocked(tokensApi.listTokens)
     .mockResolvedValueOnce({
       tokens: [
         {
@@ -80,6 +80,7 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
           revoked: false,
         },
       ],
+      valid_scopes: [],
       scope_presets: {
         companion: { label: 'Desktop companion', scopes: ['read:library', 'write:download'] },
         thin: { label: 'Thin client', scopes: ['read:library', 'read:social', 'write:presence'] },
@@ -106,6 +107,7 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
           revoked: false,
         },
       ],
+      valid_scopes: [],
       scope_presets: {
         companion: { label: 'Desktop companion', scopes: ['read:library', 'write:download'] },
         thin: { label: 'Thin client', scopes: ['read:library', 'read:social', 'write:presence'] },
@@ -116,7 +118,7 @@ async function createAndRevealSecret(user, secret = 'gt_efgh_one-time_secret_val
   expect(await screen.findByText('Living room PC')).toBeInTheDocument()
   await user.type(screen.getByLabelText(/^Name$/i), 'My PC')
   await user.click(screen.getByRole('button', { name: /create token/i }))
-  const field = await screen.findByLabelText(/one-time secret/i)
+  const field = (await screen.findByLabelText(/one-time secret/i)) as HTMLInputElement
   expect(field).toHaveValue(secret)
   return { secret, field }
 }
@@ -144,8 +146,8 @@ test('copy secret writes pure token string with no labels or junk', async () => 
   const { field } = await createAndRevealSecret(user, secret)
 
   expect(field).toHaveValue(secret)
-  expect(field.value).not.toMatch(/prefix|Store this|My PC|…/)
-  expect(field.value.endsWith('-jkl')).toBe(true)
+  expect((field as HTMLInputElement).value).not.toMatch(/prefix|Store this|My PC|…/)
+  expect((field as HTMLInputElement).value.endsWith('-jkl')).toBe(true)
 
   await user.click(screen.getByRole('button', { name: /copy secret/i }))
 
@@ -165,9 +167,9 @@ test('display keeps full urlsafe secret after final hyphen', async () => {
   const secret = 'gt_9f2a_xY7-zQ9_rest'
   await createAndRevealSecret(user, secret)
 
-  const field = screen.getByLabelText(/one-time secret/i)
+  const field = screen.getByLabelText(/one-time secret/i) as HTMLInputElement as HTMLInputElement
   expect(field).toHaveValue(secret)
-  expect(field.value).toContain('-zQ9_rest')
+  expect((field as HTMLInputElement).value).toContain('-zQ9_rest')
   expect(screen.getByText(/hyphens and underscores/i)).toBeInTheDocument()
 })
 
@@ -201,13 +203,13 @@ test('copy secret shows manual-select guidance when all copy paths fail', async 
   expect(showToast).toHaveBeenCalledWith(expect.stringMatching(/clipboard unavailable/i), 'warn')
   expect(field).toHaveFocus()
   expect(field.selectionStart).toBe(0)
-  expect(field.selectionEnd).toBe(field.value.length)
+  expect((field as HTMLInputElement).selectionEnd).toBe((field as HTMLInputElement).value.length)
 })
 
 test('revokes a token after confirm', async () => {
   const user = userEvent.setup()
-  tokensApi.revokeToken.mockResolvedValue({ ok: true })
-  tokensApi.listTokens
+  vi.mocked(tokensApi.revokeToken).mockResolvedValue({ ok: true })
+  vi.mocked(tokensApi.listTokens)
     .mockResolvedValueOnce({
       tokens: [
         {
@@ -220,10 +222,12 @@ test('revokes a token after confirm', async () => {
           revoked: false,
         },
       ],
+      valid_scopes: [],
       scope_presets: {},
     })
     .mockResolvedValue({
       tokens: [],
+      valid_scopes: [],
       scope_presets: {},
     })
 
@@ -243,7 +247,7 @@ test('revokes a token after confirm', async () => {
 test('failed list uses PageStatus with Retry', async () => {
   const user = userEvent.setup()
   let failList = true
-  tokensApi.listTokens.mockImplementation(() => {
+  vi.mocked(tokensApi.listTokens).mockImplementation(() => {
     if (failList) {
       return Promise.reject(new Error('Unable to load tokens.'))
     }
@@ -259,6 +263,7 @@ test('failed list uses PageStatus with Retry', async () => {
           revoked: false,
         },
       ],
+      valid_scopes: [],
       scope_presets: {},
     })
   })

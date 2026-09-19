@@ -6,7 +6,7 @@ beforeEach(() => {
   window.localStorage.removeItem('od.systems.collapsedFamilies')
 })
 
-function mockFetch(payload, ok = true) {
+function mockFetch(payload: any, ok = true) {
   const payloadJson = payload
   const body = JSON.stringify(payloadJson)
   global.fetch = vi.fn(() =>
@@ -17,7 +17,7 @@ function mockFetch(payload, ok = true) {
       json: () => Promise.resolve(payloadJson),
       text: () => Promise.resolve(body),
     }),
-  )
+  ) as unknown as typeof global.fetch
 }
 
 test('renders system tiles linking into library platform filter', async () => {
@@ -137,7 +137,7 @@ test('prefers themed system-mark WebP for the active data-theme', async () => {
     await screen.findByRole('link', { name: /Nintendo Entertainment System/i })
     const img = container.querySelector('img.od-systems-tile__mark-img')
     expect(img).toBeTruthy()
-    expect(img.getAttribute('src')).toBe('/static/library/system-marks/aurora/nes.webp')
+    expect(img!.getAttribute('src')).toBe('/static/library/system-marks/aurora/nes.webp')
   } finally {
     document.documentElement.removeAttribute('data-theme')
   }

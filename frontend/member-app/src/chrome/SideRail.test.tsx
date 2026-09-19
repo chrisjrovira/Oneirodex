@@ -18,7 +18,10 @@ import { ShellHarness } from '../testShell'
  * than against a hand-written list that could drift with it.
  */
 
-function renderRail({ shell = {}, ...props } = {}) {
+function renderRail({
+  shell = {},
+  ...props
+}: { shell?: Record<string, unknown>; [key: string]: unknown } = {}) {
   return render(
     <MemoryRouter initialEntries={['/library']}>
       <ShellHarness shell={{ showTrailers: true, showHelp: true, enableVr: true, ...shell }}>
@@ -43,11 +46,11 @@ test('every former More-menu destination is present, ungated by an overflow', ()
   expect(groups.length).toBeGreaterThan(0)
   for (const group of groups) {
     for (const link of group.links) {
-      if (link.action) {
+      if (link!.action) {
         // Panel openers are buttons, not links, but still must be offered.
-        expect(screen.getByRole('button', { name: link.label })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: link!.label })).toBeInTheDocument()
       } else {
-        expect(container.querySelector(`a[href="${link.to}"]`)).toBeTruthy()
+        expect(container.querySelector(`a[href="${link!.to}"]`)).toBeTruthy()
       }
     }
   }
@@ -102,7 +105,10 @@ describe('rail groups fold away', () => {
    * part of it. The group heading was already there doing nothing, so it became
    * the control rather than adding one beside it.
    */
-  function renderRail({ shell = {}, ...props } = {}) {
+  function renderRail({
+    shell = {},
+    ...props
+  }: { shell?: Record<string, unknown>; [key: string]: unknown } = {}) {
     return render(
       <MemoryRouter>
         <ShellHarness shell={{ showTrailers: true, showHelp: true, ...shell }}>

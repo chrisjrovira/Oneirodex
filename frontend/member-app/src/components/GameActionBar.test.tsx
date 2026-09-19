@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GameActionBar } from './GameActionBar'
@@ -26,14 +27,17 @@ vi.mock('../api/remotePlay', () => ({
 }))
 
 beforeEach(() => {
-  clientCommands.queueClientCommand.mockReset()
-  downloadsApi.initiateGameDownload.mockReset()
-  showToast.mockReset()
+  vi.mocked(clientCommands.queueClientCommand).mockReset()
+  vi.mocked(downloadsApi.initiateGameDownload).mockReset()
+  vi.mocked(showToast).mockReset()
 })
 
 test('Download queues via API; Install explains when companion offline', async () => {
   const user = userEvent.setup()
-  downloadsApi.initiateGameDownload.mockResolvedValue({ download_id: 1, status: 'available' })
+  vi.mocked(downloadsApi.initiateGameDownload).mockResolvedValue({
+    download_id: 1,
+    status: 'available',
+  })
   const assign = vi.fn()
   vi.stubGlobal('location', { ...window.location, assign })
 
@@ -61,11 +65,11 @@ test('Download queues via API; Install explains when companion offline', async (
 test('Download toasts Backend hint on 410 path_missing', async () => {
   const user = userEvent.setup()
   const err = new Error('Version file is missing on disk')
-  err.status = 410
-  err.code = 'path_missing'
-  err.hint = 'This install path is gone. Use Remove missing versions.'
-  err.data = { code: 'path_missing', hint: err.hint }
-  downloadsApi.initiateGameDownload.mockRejectedValue(err)
+  ;(err as any).status = 410
+  ;(err as any).code = 'path_missing'
+  ;(err as any).hint = 'This install path is gone. Use Remove missing versions.'
+  ;(err as any).data = { code: 'path_missing', hint: (err as any).hint }
+  vi.mocked(downloadsApi.initiateGameDownload).mockRejectedValue(err)
 
   render(
     <GameActionBar
@@ -86,7 +90,7 @@ test('Download toasts Backend hint on 410 path_missing', async () => {
 
 test('Get with companion queues download when connected and not downloaded', async () => {
   const user = userEvent.setup()
-  clientCommands.queueClientCommand.mockResolvedValue({ ok: true })
+  vi.mocked(clientCommands.queueClientCommand).mockResolvedValue({ ok: true })
   render(
     <GameActionBar
       gameUuid="abc"
@@ -117,7 +121,7 @@ test('Install enabled when companion client connected and downloaded', () => {
 
 test('Install click queues companion command', async () => {
   const user = userEvent.setup()
-  clientCommands.queueClientCommand.mockResolvedValue({ ok: true })
+  vi.mocked(clientCommands.queueClientCommand).mockResolvedValue({ ok: true })
 
   render(
     <GameActionBar

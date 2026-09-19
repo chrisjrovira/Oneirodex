@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -35,7 +36,7 @@ const DOCKERFILE = join(REPO_ROOT, 'Dockerfile')
 const APPS = ['frontend/member-app', 'frontend/admin-app', 'frontend/ops-glance']
 const SKIP_DIRS = new Set(['node_modules', 'dist', '__pycache__', '.git'])
 
-function sourceFiles(dir, out = []) {
+function sourceFiles(dir: string, out: string[] = []): string[] {
   let entries
   try {
     entries = readdirSync(dir)
@@ -52,7 +53,7 @@ function sourceFiles(dir, out = []) {
 }
 
 /** Relative specifiers only — bare package names are npm's problem, not ours. */
-function relativeImports(source) {
+function relativeImports(source: any) {
   const specs = []
   for (const m of source.matchAll(/(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g)) {
     specs.push(m[1])

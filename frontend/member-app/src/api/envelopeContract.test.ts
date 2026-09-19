@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -69,7 +70,7 @@ describe('CSRF handling lives in one module', () => {
  */
 const SRC_ROOT = path.resolve(API_DIR, '..')
 
-function walkSrcFiles(dir = SRC_ROOT, acc = []) {
+function walkSrcFiles(dir = SRC_ROOT, acc: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === 'node_modules') continue
     const full = path.join(dir, entry.name)
@@ -100,8 +101,8 @@ const LOCAL_CSRF_DEF =
 const META_CSRF = /meta\[name=["']csrf-token["']\]/
 const HEADER_CSRF = /['"]X-CSRFToken['"]\s*:/
 
-function csrfOffendersIn(source) {
-  return source.split(/\r?\n/).flatMap((line, index) => {
+function csrfOffendersIn(source: any) {
+  return source.split(/\r?\n/).flatMap((line: any, index: any) => {
     if (LOCAL_CSRF_DEF.test(line) || META_CSRF.test(line) || HEADER_CSRF.test(line)) {
       return [`${index + 1}: ${line.trim()}`]
     }
@@ -135,7 +136,7 @@ describe('api wrappers report failures through the shared envelope helper', () =
     const source = fs.readFileSync(path.join(API_DIR, name), 'utf8')
     const lines = source.split('\n')
 
-    const offenders = []
+    const offenders: any[] = []
     lines.forEach((line, index) => {
       if (!/throw new Error\(/.test(line)) {
         return
@@ -197,7 +198,7 @@ describe('api wrappers report failures through the shared envelope helper', () =
     // this when the label was passed through a module's own wrapper —
     // `cheats.js` did that at four sites. Interpolating the status into a
     // template literal is the tell, so match that instead of a callee name.
-    const offenders = []
+    const offenders: any[] = []
     for (const name of sourceFiles()) {
       const source = fs.readFileSync(path.join(API_DIR, name), 'utf8')
       source.split('\n').forEach((line, index) => {

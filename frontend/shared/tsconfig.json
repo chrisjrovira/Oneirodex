@@ -1,10 +1,8 @@
 {
-  // `@oneirodex/ui` — the shared infrastructure package. Converted to
-  // TypeScript with `strict: true` (Phase 3.3, the template wave); every
-  // later SPA PR consumes these types.
+  // `@oneirodex/ui` — the shared infrastructure package (TypeScript since
+  // Phase 3.3); every SPA consumes these types.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
     "jsx": "react-jsx",
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },

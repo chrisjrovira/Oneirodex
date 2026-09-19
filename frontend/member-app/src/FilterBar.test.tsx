@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import * as filtersApi from './api/filters'
@@ -35,8 +36,8 @@ function clearFiltersVisibleFlag() {
 
 beforeEach(() => {
   clearFiltersVisibleFlag()
-  filtersApi.fetchFilterOptions.mockReset()
-  filtersApi.fetchFilterOptions.mockResolvedValue(FILTER_OPTIONS)
+  vi.mocked(filtersApi.fetchFilterOptions).mockReset()
+  vi.mocked(filtersApi.fetchFilterOptions).mockResolvedValue(FILTER_OPTIONS)
 })
 
 afterEach(() => {
@@ -187,8 +188,8 @@ test('FilterBar leads with Apply; Signals under actions; Kind in body', async ()
   const apply = screen.getByRole('button', { name: 'Apply' })
   expect(apply.compareDocumentPosition(signals) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(signals.compareDocumentPosition(kind) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-  expect(body.contains(kind)).toBe(true)
-  expect(body.contains(signals)).toBe(false)
+  expect(body!.contains(kind)).toBe(true)
+  expect(body!.contains(signals)).toBe(false)
   expect(screen.queryByRole('button', { name: 'Hide filters' })).toBeNull()
 })
 
@@ -248,7 +249,7 @@ test('FilterBar kind chips drive item_kind browse param', async () => {
 })
 
 test('shows a page status when filter options fail to load', async () => {
-  filtersApi.fetchFilterOptions.mockRejectedValue(new Error('bundle failed'))
+  vi.mocked(filtersApi.fetchFilterOptions).mockRejectedValue(new Error('bundle failed'))
 
   render(<FilterBar filters={{}} onApply={() => {}} onClear={() => {}} />)
 

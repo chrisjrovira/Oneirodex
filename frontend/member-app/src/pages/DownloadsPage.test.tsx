@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DownloadsPage } from './DownloadsPage'
@@ -11,9 +12,9 @@ vi.mock('../api/downloads', () => ({
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
-  downloadsApi.fetchMyDownloads.mockReset()
-  downloadsApi.checkStatus.mockReset()
-  downloadsApi.deleteDownload.mockReset()
+  vi.mocked(downloadsApi.fetchMyDownloads).mockReset()
+  vi.mocked(downloadsApi.checkStatus).mockReset()
+  vi.mocked(downloadsApi.deleteDownload).mockReset()
 })
 
 afterEach(() => {
@@ -21,7 +22,7 @@ afterEach(() => {
 })
 
 test('shows empty state when there are no downloads', async () => {
-  downloadsApi.fetchMyDownloads.mockResolvedValue([])
+  vi.mocked(downloadsApi.fetchMyDownloads).mockResolvedValue([])
 
   render(<DownloadsPage />)
 
@@ -30,7 +31,7 @@ test('shows empty state when there are no downloads', async () => {
 })
 
 test('lists downloads and polls non-terminal rows every 5s', async () => {
-  downloadsApi.fetchMyDownloads.mockResolvedValue([
+  vi.mocked(downloadsApi.fetchMyDownloads).mockResolvedValue([
     {
       id: 7,
       game_name: 'Pending Game',
@@ -46,7 +47,7 @@ test('lists downloads and polls non-terminal rows every 5s', async () => {
       download_url: '/download_zip/8',
     },
   ])
-  downloadsApi.checkStatus.mockResolvedValue({
+  vi.mocked(downloadsApi.checkStatus).mockResolvedValue({
     status: 'available',
     downloadId: 7,
     found: true,
@@ -71,16 +72,18 @@ test('lists downloads and polls non-terminal rows every 5s', async () => {
     expect(screen.getAllByRole('link', { name: 'Download' })).toHaveLength(2)
   })
   expect(
-    document.querySelector('[data-download-id="7"] [data-status]').getAttribute('data-status'),
+    document.querySelector('[data-download-id="7"] [data-status]')!.getAttribute('data-status'),
   ).toBe('available')
-  expect(document.querySelector('[data-download-id="7"] a').getAttribute('href')).toBe(
+  expect(document.querySelector('[data-download-id="7"] a')!.getAttribute('href')).toBe(
     '/download_zip/7',
   )
 })
 
 test('shows error with retry', async () => {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-  downloadsApi.fetchMyDownloads.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce([])
+  vi.mocked(downloadsApi.fetchMyDownloads)
+    .mockRejectedValueOnce(new Error('boom'))
+    .mockResolvedValueOnce([])
 
   render(<DownloadsPage />)
 
@@ -91,7 +94,7 @@ test('shows error with retry', async () => {
 
 test('deletes a download row', async () => {
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-  downloadsApi.fetchMyDownloads.mockResolvedValue([
+  vi.mocked(downloadsApi.fetchMyDownloads).mockResolvedValue([
     {
       id: 3,
       game_name: 'Removable Game',
@@ -100,7 +103,7 @@ test('deletes a download row', async () => {
       download_url: '/download_zip/3',
     },
   ])
-  downloadsApi.deleteDownload.mockResolvedValue(true)
+  vi.mocked(downloadsApi.deleteDownload).mockResolvedValue(true)
 
   render(<DownloadsPage />)
 

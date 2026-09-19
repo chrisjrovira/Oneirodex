@@ -39,7 +39,7 @@ describe('OpsApp', () => {
   })
 
   test('aborts an in-flight request on unmount without applying its result', async () => {
-    let resolveSummary: (value: unknown) => void = () => {}
+    let resolveSummary: (value: any) => void = () => {}
     vi.mocked(fetchOpsSummary).mockImplementationOnce(
       () =>
         new Promise((resolve) => {

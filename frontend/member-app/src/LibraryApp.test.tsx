@@ -8,7 +8,7 @@ afterEach(() => {
   window.localStorage.removeItem('od.library.layout')
 })
 
-function jsonResponse(body, { ok = true, status = 200 } = {}) {
+function jsonResponse(body: any, { ok = true, status = 200 } = {}) {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok,
@@ -19,7 +19,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   })
 }
 
-function renderLibrary(ui, { route = '/library', shell = {} } = {}) {
+function renderLibrary(ui: any, { route = '/library', shell = {} } = {}) {
   return render(
     <MemoryRouter initialEntries={[route]}>
       <ShellHarness shell={shell}>{ui}</ShellHarness>
@@ -445,7 +445,7 @@ test('kind is a segmented control, not duplicated in the panel', async () => {
   // One "All" segment in the bar…
   const seg = document.querySelector('.od-seg')
   expect(seg).not.toBeNull()
-  expect(seg.textContent).toMatch(/All/)
+  expect(seg!.textContent).toMatch(/All/)
 
   // …and the popover must not render a second Kind control for the same filter.
   await user.click(screen.getByRole('button', { name: /Filters/ }))
@@ -561,8 +561,10 @@ test('failed first browse uses PageStatus with Retry', async () => {
  * `scanHasRun` the last two were indistinguishable, so an operator whose scan
  * paths pointed at the wrong folders was told the same cheerful thing as an
  * operator who simply had not scanned yet. */
-function renderEmpty(config) {
-  global.fetch = vi.fn(() => jsonResponse({ games: [], pages: 1, total: 0 }))
+function renderEmpty(config: any) {
+  global.fetch = vi.fn(() =>
+    jsonResponse({ games: [], pages: 1, total: 0 }),
+  ) as unknown as typeof global.fetch
   return renderLibrary(
     <LibraryApp
       initialConfig={{

@@ -1,9 +1,10 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { WishlistPage } from './WishlistPage'
 import { ShellHarness } from '../testShell'
 
-function jsonResponse(body, { ok = true, status = 200 } = {}) {
+function jsonResponse(body: any, { ok = true, status = 200 } = {}): any {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok,
@@ -14,7 +15,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   })
 }
 
-function requestHeaders(call) {
+function requestHeaders(call: any) {
   return new Headers(call?.[1]?.headers)
 }
 
@@ -25,11 +26,11 @@ beforeEach(() => {
 
 afterEach(() => {
   document.head.innerHTML = ''
-  delete global.fetch
+  delete (global as any).fetch
 })
 
 test('renders requests returned by the API', async () => {
-  global.fetch.mockReturnValue(
+  vi.mocked(global.fetch).mockReturnValue(
     jsonResponse({
       requests: [
         {
@@ -62,7 +63,7 @@ test('renders requests returned by the API', async () => {
 })
 
 test('shows empty state when there are no requests', async () => {
-  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+  vi.mocked(global.fetch).mockReturnValue(jsonResponse({ requests: [] }))
 
   render(
     <ShellHarness shell={{}}>
@@ -79,7 +80,7 @@ test('shows empty state when there are no requests', async () => {
 
 test('shows error state with retry', async () => {
   const user = userEvent.setup()
-  global.fetch
+  vi.mocked(global.fetch)
     .mockReturnValueOnce(jsonResponse({ error: 'nope' }, { ok: false, status: 500 }))
     .mockReturnValue(jsonResponse({ requests: [] }))
 
@@ -101,7 +102,7 @@ test('shows error state with retry', async () => {
 
 test('cancelling a pending request sends DELETE with the CSRF header', async () => {
   const user = userEvent.setup()
-  global.fetch
+  vi.mocked(global.fetch)
     .mockReturnValueOnce(
       jsonResponse({
         requests: [
@@ -122,11 +123,13 @@ test('cancelling a pending request sends DELETE with the CSRF header', async () 
   await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
   await waitFor(() => {
-    const del = global.fetch.mock.calls.find(
-      (call) => call[0] === '/api/requests/42' && call[1]?.method === 'DELETE',
-    )
+    const del = vi
+      .mocked(global.fetch)
+      .mock.calls.find(
+        (call: any) => call[0] === '/api/requests/42' && call[1]?.method === 'DELETE',
+      )
     expect(del).toBeTruthy()
-    expect(del[1]).toEqual(expect.objectContaining({ method: 'DELETE', credentials: 'include' }))
+    expect(del![1]).toEqual(expect.objectContaining({ method: 'DELETE', credentials: 'include' }))
     expect(requestHeaders(del).get('X-CSRFToken')).toBe('test-csrf-token')
   })
 
@@ -139,7 +142,7 @@ test('cancelling a pending request sends DELETE with the CSRF header', async () 
 
 test('librarian can resolve a request and toggle the all-requests view', async () => {
   const user = userEvent.setup()
-  global.fetch.mockReturnValue(
+  vi.mocked(global.fetch).mockReturnValue(
     jsonResponse({
       requests: [{ id: 7, title: 'Tunic', notes: null, status: 'pending', created_at: null }],
     }),
@@ -155,11 +158,11 @@ test('librarian can resolve a request and toggle the all-requests view', async (
   await user.click(screen.getByRole('button', { name: 'Fulfilled' }))
 
   await waitFor(() => {
-    const patch = global.fetch.mock.calls.find(
-      (call) => call[0] === '/api/requests/7' && call[1]?.method === 'PATCH',
-    )
+    const patch = vi
+      .mocked(global.fetch)
+      .mock.calls.find((call: any) => call[0] === '/api/requests/7' && call[1]?.method === 'PATCH')
     expect(patch).toBeTruthy()
-    expect(patch[1]).toEqual(
+    expect(patch![1]).toEqual(
       expect.objectContaining({
         method: 'PATCH',
         credentials: 'include',
@@ -182,7 +185,7 @@ test('librarian can resolve a request and toggle the all-requests view', async (
 
 test('surfaces a failed create request to the user', async () => {
   const user = userEvent.setup()
-  global.fetch
+  vi.mocked(global.fetch)
     .mockReturnValueOnce(jsonResponse({ requests: [] }))
     .mockReturnValueOnce(
       jsonResponse(
@@ -210,7 +213,7 @@ test('surfaces a failed create request to the user', async () => {
 
 test('new chrome moves the request form and the librarian toggle into bar two', async () => {
   const user = userEvent.setup()
-  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+  vi.mocked(global.fetch).mockReturnValue(jsonResponse({ requests: [] }))
 
   render(
     <ShellHarness shell={{ enableNewChrome: true, isLibrarian: true }}>
@@ -238,7 +241,7 @@ test('the librarian scope toggle stays a real toggle after the move', async () =
   // It was a checkbox; as a bar-two button it must still report its state, or
   // a librarian cannot tell whose requests they are looking at.
   const user = userEvent.setup()
-  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+  vi.mocked(global.fetch).mockReturnValue(jsonResponse({ requests: [] }))
 
   render(
     <ShellHarness shell={{ enableNewChrome: true, isLibrarian: true }}>
@@ -257,7 +260,7 @@ test('the librarian scope toggle stays a real toggle after the move', async () =
 })
 
 test('members never see the librarian scope toggle', async () => {
-  global.fetch.mockReturnValue(jsonResponse({ requests: [] }))
+  vi.mocked(global.fetch).mockReturnValue(jsonResponse({ requests: [] }))
   render(
     <ShellHarness shell={{ enableNewChrome: true }}>
       <WishlistPage />

@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -13,12 +14,12 @@ vi.mock('../api/clientCommands', () => ({
   queueClientCommand: vi.fn(),
 }))
 
-function renderPage(ui) {
+function renderPage(ui: any) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)
 }
 
 beforeEach(() => {
-  browseApi.fetchBrowseGames.mockReset()
+  vi.mocked(browseApi.fetchBrowseGames).mockReset()
 })
 
 const GAMES = [
@@ -39,7 +40,7 @@ const GAMES = [
 ]
 
 test('shows loading then renders tiles and hero for the first game', async () => {
-  browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
+  vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({ games: GAMES })
 
   renderPage(
     <ShellHarness shell={{}}>
@@ -74,7 +75,7 @@ test('shows loading then renders tiles and hero for the first game', async () =>
 
 test('arrow keys move the selection and update the hero', async () => {
   const user = userEvent.setup()
-  browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
+  vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({ games: GAMES })
 
   renderPage(
     <ShellHarness shell={{}}>
@@ -107,7 +108,7 @@ test('arrow keys move the selection and update the hero', async () => {
 })
 
 test('shows empty state when the library has no games', async () => {
-  browseApi.fetchBrowseGames.mockResolvedValue({ games: [] })
+  vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({ games: [] })
 
   renderPage(
     <ShellHarness shell={{}}>
@@ -123,7 +124,7 @@ test('shows empty state when the library has no games', async () => {
 
 test('shows an error with retry that recovers', async () => {
   const user = userEvent.setup()
-  browseApi.fetchBrowseGames
+  vi.mocked(browseApi.fetchBrowseGames)
     .mockRejectedValueOnce(new Error('boom'))
     .mockResolvedValueOnce({ games: GAMES })
 
@@ -142,7 +143,7 @@ test('shows an error with retry that recovers', async () => {
 })
 
 test('friends companion starts closed (SSE gated)', async () => {
-  browseApi.fetchBrowseGames.mockResolvedValue({ games: GAMES })
+  vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({ games: GAMES })
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => ({ ok: true, json: async () => ({ friends: [], friend_count: 0 }) })),
@@ -174,7 +175,7 @@ describe('TC-3 honesty on the ten-foot screen', () => {
 
   test('a thin seat is not offered Download or Install', async () => {
     asThinSeat()
-    browseApi.fetchBrowseGames.mockResolvedValue({
+    vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({
       games: [{ ...GAMES[0], client_connected: true, lifecycle_state: 'downloaded' }],
       total: 1,
     })
@@ -193,7 +194,7 @@ describe('TC-3 honesty on the ten-foot screen', () => {
   })
 
   test('a normal browser seat still gets both', async () => {
-    browseApi.fetchBrowseGames.mockResolvedValue({
+    vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({
       games: [{ ...GAMES[0], client_connected: true, lifecycle_state: 'downloaded' }],
       total: 1,
     })
@@ -209,7 +210,7 @@ describe('TC-3 honesty on the ten-foot screen', () => {
 
   test('the D shortcut does not navigate to a download on a thin seat', async () => {
     asThinSeat()
-    browseApi.fetchBrowseGames.mockResolvedValue({ games: [GAMES[0]], total: 1 })
+    vi.mocked(browseApi.fetchBrowseGames).mockResolvedValue({ games: [GAMES[0]], total: 1 })
     renderPage(
       <ShellHarness shell={{}}>
         <BigPicturePage />

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import {
   getContextLinks,
   getMoreGroups,
@@ -99,7 +99,7 @@ describe('getMoreGroups', () => {
       .map((l) => l.id)
       .sort()
     const grouped = getMoreGroups(ALL)
-      .flatMap((g) => g.links.map((l) => l.id))
+      .flatMap((g) => g.links.map((l) => l!.id))
       .sort()
     expect(grouped).toEqual(flat)
   })
@@ -107,12 +107,12 @@ describe('getMoreGroups', () => {
   it('adds no destination the flat list does not have', () => {
     const flat = new Set(getMoreLinks(ALL).map((l) => l.id))
     for (const group of getMoreGroups(ALL)) {
-      for (const link of group.links) expect(flat.has(link.id)).toBe(true)
+      for (const link of group.links) expect(flat.has(link!.id)).toBe(true)
     }
   })
 
   it('puts every link in exactly one group', () => {
-    const ids = getMoreGroups(ALL).flatMap((g) => g.links.map((l) => l.id))
+    const ids = getMoreGroups(ALL).flatMap((g) => g.links.map((l) => l!.id))
     expect(new Set(ids).size).toBe(ids.length)
   })
 
@@ -126,22 +126,22 @@ describe('getMoreGroups', () => {
   it('drops empty groups rather than rendering a bare heading', () => {
     const minimal = getMoreGroups({ showTrailers: false, showHelp: false, enableVr: false })
     expect(minimal.every((g) => g.links.length > 0)).toBe(true)
-    expect(minimal.some((g) => g.id === 'support' && g.links.some((l) => l.id === 'help'))).toBe(
+    expect(minimal.some((g) => g.id === 'support' && g.links.some((l) => l!.id === 'help'))).toBe(
       false,
     )
   })
 
   it('puts Ways to Play in the Play group', () => {
     const play = getMoreGroups(ALL).find((g) => g.id === 'play')
-    expect(play.links.some((l) => l.id === 'ways-to-play')).toBe(true)
+    expect(play!.links.some((l) => l!.id === 'ways-to-play')).toBe(true)
   })
 
   it('respects enableActivity, which the nav previously ignored', () => {
     const on = getMoreGroups({ ...ALL, enableActivity: true }).flatMap((g) =>
-      g.links.map((l) => l.id),
+      g.links.map((l) => l!.id),
     )
     const off = getMoreGroups({ ...ALL, enableActivity: false }).flatMap((g) =>
-      g.links.map((l) => l.id),
+      g.links.map((l) => l!.id),
     )
     expect(on).toContain('activity')
     expect(off).not.toContain('activity')

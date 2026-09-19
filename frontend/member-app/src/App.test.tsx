@@ -30,11 +30,13 @@ vi.mock('./pages/NewsPage', () => ({
 // The real lazy page — it reads useShellConfig() itself now, so the mock does
 // too, proving the provider chain reaches a routed page.
 vi.mock('./pages/CollectionsPage', async () => {
-  const { useShellConfig } = await vi.importActual('@oneirodex/ui')
-  return { CollectionsPage: () => <div>CollectionsPage:{useShellConfig().tileSize}</div> }
+  const { useShellConfig } = await vi.importActual<typeof import('@oneirodex/ui')>('@oneirodex/ui')
+  return {
+    CollectionsPage: () => <div>CollectionsPage:{String(useShellConfig().tileSize)}</div>,
+  }
 })
 
-function renderAt(path, shell) {
+function renderAt(path: any, shell: any) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <ShellHarness shell={shell}>
@@ -49,7 +51,7 @@ test('layout exposes skip link and main landmark', () => {
   const skip = screen.getByRole('link', { name: /skip to main content/i })
   expect(skip).toHaveAttribute('href', '#main-content')
   expect(document.getElementById('main-content')).toBeTruthy()
-  expect(document.getElementById('main-content').tagName).toBe('MAIN')
+  expect(document.getElementById('main-content')!.tagName).toBe('MAIN')
 })
 
 test('renders library route', () => {

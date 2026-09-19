@@ -19,7 +19,7 @@ vi.mock('../utils/toast', () => ({
 
 const GAME_UUID = '11111111-1111-4111-8111-111111111111'
 
-function achievement(id, earned = false) {
+function achievement(id: any, earned = false) {
   return {
     id,
     title: `Achievement ${id}`,
@@ -33,12 +33,12 @@ function achievement(id, earned = false) {
 }
 
 beforeEach(() => {
-  api.fetchGameAchievements.mockReset()
-  api.saveRetroAchievementsUsername.mockReset()
+  vi.mocked(api.fetchGameAchievements).mockReset()
+  vi.mocked(api.saveRetroAchievementsUsername).mockReset()
 })
 
 test('renders nothing when no set carries achievements', async () => {
-  api.fetchGameAchievements.mockResolvedValue({
+  vi.mocked(api.fetchGameAchievements).mockResolvedValue({
     supports_achievements: false,
     ra_game_id: null,
     ra_achievements: 0,
@@ -55,7 +55,7 @@ test('renders nothing when no set carries achievements', async () => {
 })
 
 test('a matched set says it exists and that playing here does not unlock it', async () => {
-  api.fetchGameAchievements.mockResolvedValue({
+  vi.mocked(api.fetchGameAchievements).mockResolvedValue({
     supports_achievements: true,
     ra_game_id: 1001,
     ra_achievements: 42,
@@ -78,7 +78,7 @@ test('a matched set says it exists and that playing here does not unlock it', as
 })
 
 test('saving a username reloads and shows progress', async () => {
-  api.fetchGameAchievements
+  vi.mocked(api.fetchGameAchievements)
     .mockResolvedValueOnce({
       supports_achievements: true,
       ra_game_id: 1001,
@@ -107,7 +107,10 @@ test('saving a username reloads and shows progress', async () => {
         achievements: [achievement(1, true), achievement(2, false)],
       },
     })
-  api.saveRetroAchievementsUsername.mockResolvedValue({ ra_username: 'Player_1', configured: true })
+  vi.mocked(api.saveRetroAchievementsUsername).mockResolvedValue({
+    ra_username: 'Player_1',
+    configured: true,
+  })
 
   render(<AchievementsPanel gameUuid={GAME_UUID} />)
   const input = await screen.findByLabelText(/RetroAchievements username/i)
@@ -125,7 +128,7 @@ test('saving a username reloads and shows progress', async () => {
 })
 
 test('long sets collapse to twelve until asked', async () => {
-  api.fetchGameAchievements.mockResolvedValue({
+  vi.mocked(api.fetchGameAchievements).mockResolvedValue({
     supports_achievements: true,
     ra_game_id: 7,
     ra_achievements: 20,

@@ -29,16 +29,16 @@ if (typeof window !== 'undefined') {
     needsPolyfill = true
   }
   if (needsPolyfill || !window.localStorage) {
-    const store = new Map()
+    const store = new Map<string, string>()
     Object.defineProperty(window, 'localStorage', {
       configurable: true,
       enumerable: true,
       get: () => ({
-        getItem: (k) => (store.has(String(k)) ? store.get(String(k)) : null),
-        setItem: (k, v) => store.set(String(k), String(v)),
-        removeItem: (k) => store.delete(String(k)),
+        getItem: (k: string) => (store.has(String(k)) ? store.get(String(k)) : null),
+        setItem: (k: string, v: string) => store.set(String(k), String(v)),
+        removeItem: (k: string) => store.delete(String(k)),
         clear: () => store.clear(),
-        key: (i) => [...store.keys()][i] ?? null,
+        key: (i: number) => [...store.keys()][i] ?? null,
         get length() {
           return store.size
         },

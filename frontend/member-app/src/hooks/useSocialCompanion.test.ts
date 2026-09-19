@@ -2,12 +2,12 @@ import { act, renderHook } from '@testing-library/react'
 import { useSocialCompanion } from './useSocialCompanion'
 
 describe('useSocialCompanion SSE gating', () => {
-  let EventSourceMock
-  let instances
+  let EventSourceMock: any
+  let instances: any
 
   beforeEach(() => {
     instances = []
-    EventSourceMock = vi.fn(function EventSource(url) {
+    EventSourceMock = vi.fn(function EventSource(this: any, url) {
       this.url = url
       this.addEventListener = vi.fn()
       this.close = vi.fn()

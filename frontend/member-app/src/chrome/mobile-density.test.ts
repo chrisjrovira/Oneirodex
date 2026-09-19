@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Smoke: mobile density rules target library chrome at ≤900px.
  */

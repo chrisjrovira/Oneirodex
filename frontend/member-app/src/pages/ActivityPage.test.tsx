@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 // Module scope, not inside the test — an in-test dynamic import charges
 // vitest's first resolve+transform of the module to that test's timeout.
@@ -108,6 +109,8 @@ test('new chrome turns the friends-only checkbox into a view switch', async () =
   await user.click(screen.getByRole('button', { name: 'Friends only' }))
   // The switch must actually re-query, or it is decoration.
   await waitFor(() =>
-    expect(fetch.mock.calls.some(([u]) => String(u).includes('friends_only=1'))).toBe(true),
+    expect(
+      vi.mocked(fetch).mock.calls.some(([u]: any) => String(u).includes('friends_only=1')),
+    ).toBe(true),
   )
 })

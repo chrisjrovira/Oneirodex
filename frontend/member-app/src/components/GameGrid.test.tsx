@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,7 +15,7 @@ import {
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
-function makeGames(count) {
+function makeGames(count: any) {
   return Array.from({ length: count }, (_, index) => ({
     uuid: `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
     name: `Game ${index + 1}`,
@@ -124,9 +125,9 @@ test('renders virtualized grid root and visible game tiles', () => {
 
   // The virtualizer should mount at least the first row's cards.
   expect(screen.getByText('Game 1', { selector: '.game-card__title' })).toBeInTheDocument()
-  expect(within(root).getAllByRole('img').length).toBeGreaterThan(0)
+  expect(within(root! as HTMLElement).getAllByRole('img').length).toBeGreaterThan(0)
   // Not every tile needs to be in the DOM when virtualized.
-  expect(within(root).getAllByRole('img').length).toBeLessThanOrEqual(games.length)
+  expect(within(root! as HTMLElement).getAllByRole('img').length).toBeLessThanOrEqual(games.length)
 })
 
 test('rows are positioned, not transformed, so cards can stack on their own', () => {
@@ -196,7 +197,7 @@ test('rows CSS sizes covers from the tile slider, not a fixed 4.75rem', () => {
    library has and lets each shelf fetch its own titles. jsdom has no
    IntersectionObserver, so the shelves load eagerly here. */
 function stubGridFetch({ genres = ['Action', 'RPG'], total = 2, bundleFails = false } = {}) {
-  const calls = []
+  const calls: any[] = []
   const fetchStub = vi.fn((url) => {
     calls.push(String(url))
     if (String(url).includes('/api/filters/bundle')) {
@@ -246,8 +247,8 @@ test('grid layout gives every library genre a shelf, not the current page', asyn
   expect(root).toHaveAttribute('data-library-shelves')
   // Must not carry data-library-grid — shell hover-pad pullback clips titles.
   expect(root).not.toHaveAttribute('data-library-grid')
-  expect(root.style.getPropertyValue('--od-tile-min')).toBe('')
-  expect(root.querySelectorAll('.od-shelf').length).toBe(2)
+  expect((root as HTMLElement)!.style.getPropertyValue('--od-tile-min')).toBe('')
+  expect(root!.querySelectorAll('.od-shelf').length).toBe(2)
   expect(document.querySelector('[data-library-virtual]')).toBeNull()
 
   // Each shelf asked for its own genre, one page, never the pager's page.

@@ -8,7 +8,7 @@ import {
   toggleBadgeFilter,
 } from './BadgeFilterChips'
 
-function cleanFilters(filters) {
+function cleanFilters(filters: any) {
   return Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== '' && value != null),
   )
@@ -23,22 +23,27 @@ test('badgeFiltersFromSearchParams reads truthy chip params including legacy is_
 })
 
 test('toggleBadgeFilter sets and clears param', () => {
-  const applied = []
-  toggleBadgeFilter({ sort_by: 'name' }, 'has_updates', (next) => applied.push(next), cleanFilters)
+  const applied: any[] = []
+  toggleBadgeFilter(
+    { sort_by: 'name' },
+    'has_updates',
+    (next: any) => applied.push(next),
+    cleanFilters,
+  )
   expect(applied[0]).toEqual({ sort_by: 'name', has_updates: '1' })
-  toggleBadgeFilter(applied[0], 'has_updates', (next) => applied.push(next), cleanFilters)
+  toggleBadgeFilter(applied[0], 'has_updates', (next: any) => applied.push(next), cleanFilters)
   expect(applied[1]).toEqual({ sort_by: 'name' })
 })
 
 test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles Update / Lang', async () => {
   const user = userEvent.setup()
-  const applied = []
+  const applied: any[] = []
   const filters = { sort_by: 'name' }
 
   const { rerender } = render(
     <BadgeFilterChips
       filters={filters}
-      onApply={(next) => applied.push(next)}
+      onApply={(next: any) => applied.push(next)}
       cleanFilters={cleanFilters}
     />,
   )
@@ -63,7 +68,7 @@ test('BadgeFilterChips omits VR / OUT/~ / RELEASE and toggles Update / Lang', as
   rerender(
     <BadgeFilterChips
       filters={applied[0]}
-      onApply={(next) => applied.push(next)}
+      onApply={(next: any) => applied.push(next)}
       cleanFilters={cleanFilters}
     />,
   )

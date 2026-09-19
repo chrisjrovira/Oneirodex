@@ -1,4 +1,5 @@
-﻿import { render, screen } from '@testing-library/react'
+import { vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { NewsPage } from './NewsPage'
@@ -21,18 +22,18 @@ vi.mock('../api/gamingNews', () => ({
 }))
 
 beforeEach(() => {
-  announcementsApi.fetchAnnouncements.mockReset()
-  freeGamesApi.fetchFreeGames.mockReset()
-  freeGamesApi.claimFreeGameAssist.mockReset()
-  gamingNewsApi.fetchGamingNews.mockReset()
-  freeGamesApi.fetchFreeGames.mockResolvedValue({ items: [] })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({ items: [] })
+  vi.mocked(announcementsApi.fetchAnnouncements).mockReset()
+  vi.mocked(freeGamesApi.fetchFreeGames).mockReset()
+  vi.mocked(freeGamesApi.claimFreeGameAssist).mockReset()
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockReset()
+  vi.mocked(freeGamesApi.fetchFreeGames).mockResolvedValue({ items: [] })
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({ items: [] })
   window.location.hash = ''
   window.localStorage.removeItem('od.news.layout')
 })
 
 test('lists announcement cards from API', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({
     announcements: [
       {
         id: 1,
@@ -66,7 +67,7 @@ test('the admin section stays off the combined view when there is nothing in it'
   // empty and rendered a heading, a zero count and "No announcements yet." —
   // a permanent empty panel holding a column beside the two sections that
   // always have content.
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
 
   render(
     <ShellHarness>
@@ -83,7 +84,7 @@ test('the admin section stays off the combined view when there is nothing in it'
 test('the admin tab still says so when there are no announcements', async () => {
   // On its own tab the section *is* the page, so silence would read as a
   // failed load rather than an empty one.
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
 
   render(
     <ShellHarness>
@@ -99,7 +100,7 @@ test('the admin tab still says so when there are no announcements', async () => 
 })
 
 test('keeps announcements when gaming news fails', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({
     announcements: [
       {
         id: 2,
@@ -109,7 +110,7 @@ test('keeps announcements when gaming news fails', async () => {
       },
     ],
   })
-  gamingNewsApi.fetchGamingNews.mockRejectedValue(new Error('rss down'))
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockRejectedValue(new Error('rss down'))
 
   render(
     <ShellHarness>
@@ -124,8 +125,8 @@ test('keeps announcements when gaming news fails', async () => {
 })
 
 test('section tabs filter free offers without a long scroll dump', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
-  freeGamesApi.fetchFreeGames.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
+  vi.mocked(freeGamesApi.fetchFreeGames).mockResolvedValue({
     items: [
       {
         id: 9,
@@ -138,7 +139,7 @@ test('section tabs filter free offers without a long scroll dump', async () => {
       },
     ],
   })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [{ url: 'https://example.test/h1', title: 'Industry headline', source: 'Wire' }],
   })
 
@@ -160,7 +161,7 @@ test('section tabs filter free offers without a long scroll dump', async () => {
 })
 
 test('News layout smoke: hero strip and magazine densify', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({
     announcements: [
       {
         id: 1,
@@ -176,7 +177,7 @@ test('News layout smoke: hero strip and magazine densify', async () => {
       },
     ],
   })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [
       {
         url: 'https://example.test/story',
@@ -206,9 +207,9 @@ test('News layout smoke: hero strip and magazine densify', async () => {
 })
 
 test('headline cards show artwork when the feed supplies it', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
   // The first headline is promoted to the hero, so a card needs a second item.
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [
       { title: 'Hero story', url: 'https://example.com/hero', source: 'Example' },
       {
@@ -230,17 +231,17 @@ test('headline cards show artwork when the feed supplies it', async () => {
   await screen.findByText('Studio ships patch')
   const wrap = container.querySelector('.od-news__card-art-wrap')
   expect(wrap).toBeTruthy()
-  const art = wrap.querySelector('img.od-news__card-art')
+  const art = wrap!.querySelector('img.od-news__card-art')
   expect(art).toBeTruthy()
   expect(art).toHaveAttribute('src', 'https://cdn.example.com/art.jpg')
-  expect(wrap.querySelector('.od-news__card-badge')).toHaveTextContent('Example')
-  expect(wrap.querySelector('time.od-news__card-when')).toBeTruthy()
+  expect(wrap!.querySelector('.od-news__card-badge')).toHaveTextContent('Example')
+  expect(wrap!.querySelector('time.od-news__card-when')).toBeTruthy()
   expect(container.querySelector('.od-news__card-body .od-news__meta')).toBeNull()
 })
 
 test('a feed with no artwork gets a placeholder, never a broken frame', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [
       { title: 'Hero story', url: 'https://example.com/hero', source: 'Example' },
       { title: 'No art here', url: 'https://example.com/b', source: 'Example' },
@@ -259,12 +260,12 @@ test('a feed with no artwork gets a placeholder, never a broken frame', async ()
 
 test('new chrome puts the sections in bar two with live counts', async () => {
   const user = userEvent.setup()
-  announcementsApi.fetchAnnouncements.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({
     announcements: [
       { id: 1, title: 'Welcome', body: 'Hi', created_at: '2026-07-01T12:00:00+00:00' },
     ],
   })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
   })
 
@@ -289,7 +290,7 @@ test('new chrome puts the sections in bar two with live counts', async () => {
 test('section counts stay hidden until the feeds have actually answered', async () => {
   // A "0" beside Free now would read as "there is nothing free" when the truth
   // is that the request has not come back.
-  announcementsApi.fetchAnnouncements.mockReturnValue(new Promise(() => {}))
+  vi.mocked(announcementsApi.fetchAnnouncements).mockReturnValue(new Promise(() => {}))
   render(
     <ShellHarness shell={{ enableNewChrome: true }}>
       <NewsPage />
@@ -302,8 +303,8 @@ test('section counts stay hidden until the feeds have actually answered', async 
 
 test('new chrome unfurls Card Grid RSS under the active layout name on the section bar', async () => {
   const user = userEvent.setup()
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [{ title: 'Studio ships patch', url: 'https://example.com/a', source: 'Example' }],
   })
 
@@ -327,8 +328,8 @@ test('new chrome unfurls Card Grid RSS under the active layout name on the secti
 
 test('RSS layout renders headline magazine rows instead of cards', async () => {
   const user = userEvent.setup()
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
-  gamingNewsApi.fetchGamingNews.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
+  vi.mocked(gamingNewsApi.fetchGamingNews).mockResolvedValue({
     items: [
       {
         title: 'Studio ships patch',
@@ -358,8 +359,8 @@ test('RSS layout renders headline magazine rows instead of cards', async () => {
 })
 
 test('the Free now tab fills the stage rather than a half column', async () => {
-  announcementsApi.fetchAnnouncements.mockResolvedValue({ announcements: [] })
-  freeGamesApi.fetchFreeGames.mockResolvedValue({
+  vi.mocked(announcementsApi.fetchAnnouncements).mockResolvedValue({ announcements: [] })
+  vi.mocked(freeGamesApi.fetchFreeGames).mockResolvedValue({
     items: [
       {
         id: 9,

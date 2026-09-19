@@ -241,7 +241,7 @@ describe('ContextBar portal ownership', () => {
   }
 
   function centreText() {
-    return (document.getElementById('od-topbar-slot').textContent || '').trim()
+    return (document.getElementById('od-topbar-slot')!.textContent || '').trim()
   }
 
   it('renders a page’s views into the top bar rather than inline', () => {
@@ -271,7 +271,7 @@ describe('ContextBar portal ownership', () => {
     const stranded = document.createElement('div')
     stranded.setAttribute('data-od-contextbar-host', 'gone-page')
     stranded.textContent = 'Everyone Friends only'
-    document.getElementById('od-topbar-slot').appendChild(stranded)
+    document.getElementById('od-topbar-slot')!.appendChild(stranded)
 
     render(<ContextBar views={VIEWS} activeView="all" />)
 

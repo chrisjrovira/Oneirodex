@@ -282,7 +282,11 @@ export function detailsDiscChips(game: any) {
  * @param {object[]} versions
  * @returns {{ rows: object[], source: 'extras' | 'versions' | 'empty', loading: boolean }}
  */
-export function extrasPanelModel(game: any, versions: any, { loading = false }: LooseProps = {}) {
+export function extrasPanelModel(
+  game: any,
+  versions: any[] = [],
+  { loading = false }: LooseProps = {},
+) {
   if (loading) {
     return { rows: [], source: 'empty', loading: true }
   }

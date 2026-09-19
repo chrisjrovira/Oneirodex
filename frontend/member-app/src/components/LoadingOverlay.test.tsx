@@ -10,7 +10,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function advance(ms) {
+function advance(ms: any) {
   act(() => {
     vi.advanceTimersByTime(ms)
   })

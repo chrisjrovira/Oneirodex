@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 
 // jsdom does not implement window.scrollTo; @tanstack/react-virtual calls it.
-if (typeof window !== 'undefined' && !window.scrollTo?.mock) {
+if (typeof window !== 'undefined' && !(window.scrollTo as { mock?: unknown })?.mock) {
   window.scrollTo = () => {}
 }
 
@@ -43,21 +43,21 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
  * Polyfill so LHN collapse preference tests (and cookie helpers) stay deterministic.
  */
 function installMemoryLocalStorage() {
-  const store = new Map()
+  const store = new Map<string, string>()
   const memory = {
-    getItem(key) {
+    getItem(key: string) {
       return store.has(String(key)) ? store.get(String(key)) : null
     },
-    setItem(key, value) {
+    setItem(key: string, value: string) {
       store.set(String(key), String(value))
     },
-    removeItem(key) {
+    removeItem(key: string) {
       store.delete(String(key))
     },
     clear() {
       store.clear()
     },
-    key(index) {
+    key(index: number) {
       return [...store.keys()][index] ?? null
     },
     get length() {

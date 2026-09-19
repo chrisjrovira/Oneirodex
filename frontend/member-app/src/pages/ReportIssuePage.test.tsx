@@ -27,8 +27,8 @@ test('keeps logs and context collapsed by default', () => {
   const contextFold = screen.getByText('Context (deploy, client, URL)').closest('details')
   expect(logsFold).toBeTruthy()
   expect(contextFold).toBeTruthy()
-  expect(logsFold.open).toBe(false)
-  expect(contextFold.open).toBe(false)
+  expect(logsFold!.open).toBe(false)
+  expect(contextFold!.open).toBe(false)
 
   expect(screen.queryByPlaceholderText('Paste only the relevant lines')).not.toBeInTheDocument()
 })

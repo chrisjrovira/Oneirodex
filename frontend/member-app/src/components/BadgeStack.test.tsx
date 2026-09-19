@@ -15,7 +15,7 @@ function badgeLayers() {
   return screen.getByLabelText(/game badges/i)
 }
 
-function cornerStack(corner) {
+function cornerStack(corner: any) {
   return badgeLayers().querySelector(`[data-corner="${corner}"]`)
 }
 
@@ -113,7 +113,7 @@ test('layoutBadgesByCorner omits empty corners and pins VR top-left', () => {
   expect(corners.every((c) => c.badges.length > 0 || c.overflow > 0)).toBe(true)
   expect(corners.some((c) => c.corner === 'top-left')).toBe(true)
   const tl = corners.find((c) => c.corner === 'top-left')
-  expect(tl.badges.some((b) => b.kind === 'VR')).toBe(true)
+  expect(tl!.badges.some((b: any) => b.kind === 'VR')).toBe(true)
 })
 
 test('BadgeStack renders top-left NEW fixture by default', () => {
@@ -150,10 +150,10 @@ test('VR badge joins top-left transitional stack and is not dismissable', () => 
   const stack = cornerStack('top-left')
   expect(stack).toHaveAttribute('data-corner', 'top-left')
   expect(stack).toHaveAttribute('data-vr-in-stack', 'top-left')
-  expect(stack.className).toMatch(/od-badge-stack--top-left/)
+  expect(stack!.className).toMatch(/od-badge-stack--top-left/)
   expect(screen.getByTitle(/virtual reality/i)).toHaveTextContent('VR')
   expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
-  expect(stack.querySelector('[data-badge="VR"] .od-badge__dismiss')).toBeNull()
+  expect(stack!.querySelector('[data-badge="VR"] .od-badge__dismiss')).toBeNull()
   expect(screen.getByRole('button', { name: /hide l badge/i })).toBeInTheDocument()
   expect(screen.queryByLabelText(/^vr badge$/i)).toBeNull()
 
@@ -163,8 +163,8 @@ test('VR badge joins top-left transitional stack and is not dismissable', () => 
     { kind: 'L', label: 'L' },
   ])
   // Even if a stale dismiss store listed VR, filter always keeps it.
-  expect(filtered.some((b) => b.kind === 'VR')).toBe(true)
-  expect(filtered.map((b) => b.kind)).toContain('VR')
+  expect(filtered.some((b: any) => b.kind === 'VR')).toBe(true)
+  expect(filtered.map((b: any) => b.kind)).toContain('VR')
 })
 
 test('VR stays top-left even when title collides or platform chip is present', () => {
@@ -209,7 +209,7 @@ test('BadgeStack renders MISSING when path is gone', () => {
   expect(stack).toHaveAttribute('data-missing-in-stack', 'top-left')
   expect(screen.getByTitle(/removed from disk/i)).toHaveTextContent('MISSING')
   expect(screen.getByTitle(/newly added/i)).toHaveTextContent('NEW')
-  expect(stack.querySelector('[data-badge="MISSING"] .od-badge__dismiss')).toBeNull()
+  expect(stack!.querySelector('[data-badge="MISSING"] .od-badge__dismiss')).toBeNull()
 })
 
 test('BadgeStack omits MISSING when path is ok', () => {

@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -46,20 +47,20 @@ function renderDetailPage(uuid = 'abc-123', shellConfig = {}) {
 }
 
 beforeEach(() => {
-  collectionsApi.fetchCollections.mockReset()
-  collectionsApi.fetchCollection.mockReset()
-  collectionsApi.createCollection.mockReset()
-  collectionsApi.updateCollection.mockReset()
-  collectionsApi.deleteCollection.mockReset()
-  collectionsApi.reorderCollectionItems.mockReset()
-  collectionsApi.addCollectionItem.mockReset()
-  collectionsApi.removeCollectionItem.mockReset()
-  collectionsApi.searchGames.mockReset()
-  collectionsApi.searchGames.mockResolvedValue([])
+  vi.mocked(collectionsApi.fetchCollections).mockReset()
+  vi.mocked(collectionsApi.fetchCollection).mockReset()
+  vi.mocked(collectionsApi.createCollection).mockReset()
+  vi.mocked(collectionsApi.updateCollection).mockReset()
+  vi.mocked(collectionsApi.deleteCollection).mockReset()
+  vi.mocked(collectionsApi.reorderCollectionItems).mockReset()
+  vi.mocked(collectionsApi.addCollectionItem).mockReset()
+  vi.mocked(collectionsApi.removeCollectionItem).mockReset()
+  vi.mocked(collectionsApi.searchGames).mockReset()
+  vi.mocked(collectionsApi.searchGames).mockResolvedValue([])
 })
 
 test('lists collections from API and links to detail routes', async () => {
-  collectionsApi.fetchCollections.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollections).mockResolvedValue({
     collections: [
       {
         id: 1,
@@ -86,7 +87,7 @@ test('lists collections from API and links to detail routes', async () => {
 })
 
 test('shows empty state when no collections', async () => {
-  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+  vi.mocked(collectionsApi.fetchCollections).mockResolvedValue({ collections: [] })
 
   renderPage()
 
@@ -96,8 +97,8 @@ test('shows empty state when no collections', async () => {
 })
 
 test('shows retry control when the request fails', async () => {
-  collectionsApi.fetchCollections.mockRejectedValueOnce(new Error('collections 500'))
-  collectionsApi.fetchCollections.mockResolvedValueOnce({ collections: [] })
+  vi.mocked(collectionsApi.fetchCollections).mockRejectedValueOnce(new Error('collections 500'))
+  vi.mocked(collectionsApi.fetchCollections).mockResolvedValueOnce({ collections: [] })
 
   renderPage()
 
@@ -111,8 +112,8 @@ test('shows retry control when the request fails', async () => {
 })
 
 test('creates a collection and shows it in the list', async () => {
-  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
-  collectionsApi.createCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollections).mockResolvedValue({ collections: [] })
+  vi.mocked(collectionsApi.createCollection).mockResolvedValue({
     id: 7,
     uuid: 'new-uuid',
     name: 'Roguelites',
@@ -142,7 +143,7 @@ test('creates a collection and shows it in the list', async () => {
 })
 
 test('detail page renders items for the routed collection uuid', async () => {
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Cozy co-op nights',
@@ -170,7 +171,7 @@ test('detail page renders items for the routed collection uuid', async () => {
 })
 
 test('detail page saves collection edits', async () => {
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Cozy',
@@ -180,7 +181,7 @@ test('detail page saves collection edits', async () => {
     can_edit: true,
     items: [],
   })
-  collectionsApi.updateCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.updateCollection).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Cozy remixed',
@@ -213,7 +214,7 @@ test('detail page saves collection edits', async () => {
 })
 
 test('detail page reorders items with up/down controls', async () => {
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Shelf',
@@ -225,7 +226,7 @@ test('detail page reorders items with up/down controls', async () => {
       { id: 2, game_uuid: 'game-b', game_name: 'Beta', position: 1 },
     ],
   })
-  collectionsApi.reorderCollectionItems.mockResolvedValue({
+  vi.mocked(collectionsApi.reorderCollectionItems).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Shelf',
@@ -251,7 +252,7 @@ test('detail page reorders items with up/down controls', async () => {
 })
 
 test('detail page shows an empty state when the collection has no games', async () => {
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 2,
     uuid: 'empty-uuid',
     name: 'Empty shelf',
@@ -271,7 +272,7 @@ test('detail page shows an empty state when the collection has no games', async 
 })
 
 test('detail page searches and adds a picked game', async () => {
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Cozy',
@@ -280,8 +281,10 @@ test('detail page searches and adds a picked game', async () => {
     can_edit: true,
     items: [],
   })
-  collectionsApi.searchGames.mockResolvedValue([{ id: 9, uuid: 'game-9', name: 'Celeste' }])
-  collectionsApi.addCollectionItem.mockResolvedValue({
+  vi.mocked(collectionsApi.searchGames).mockResolvedValue([
+    { id: 9, uuid: 'game-9', name: 'Celeste' },
+  ])
+  vi.mocked(collectionsApi.addCollectionItem).mockResolvedValue({
     id: 11,
     game_uuid: 'game-9',
     game_name: 'Celeste',
@@ -303,7 +306,7 @@ test('new chrome puts the create form behind one button', async () => {
   // An always-visible three-field form above the list is the noise bar two
   // exists to absorb; creating a shelf is an action, not page furniture.
   const user = userEvent.setup()
-  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+  vi.mocked(collectionsApi.fetchCollections).mockResolvedValue({ collections: [] })
 
   render(
     <MemoryRouter>
@@ -327,7 +330,7 @@ test('new chrome puts the create form behind one button', async () => {
 test('the empty state points at the control that actually exists', async () => {
   // It used to say "with the form above", which is wrong once the form is
   // behind a button — and that sentence is the only guidance a new user gets.
-  collectionsApi.fetchCollections.mockResolvedValue({ collections: [] })
+  vi.mocked(collectionsApi.fetchCollections).mockResolvedValue({ collections: [] })
   render(
     <MemoryRouter>
       <ShellHarness shell={{ enableNewChrome: true }}>
@@ -342,7 +345,7 @@ test('new chrome still says which collection you are looking at', async () => {
   // Regression: the v2 retirement rule matches `.od-page-header > h1`, and on
   // this page that h1 is the *collection's name*. Before the move, the page
   // rendered under the new chrome with nothing identifying it at all.
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 1,
     uuid: 'abc-123',
     name: 'Cozy co-op nights',
@@ -360,7 +363,7 @@ test('new chrome still says which collection you are looking at', async () => {
 })
 
 test('a collection you cannot edit offers no delete button', async () => {
-  collectionsApi.fetchCollection.mockResolvedValue({
+  vi.mocked(collectionsApi.fetchCollection).mockResolvedValue({
     id: 2,
     uuid: 'sys-1',
     name: 'Recently added',

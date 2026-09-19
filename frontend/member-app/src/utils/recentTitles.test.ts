@@ -25,7 +25,7 @@ test('recordRecentTitle newest-first and unique', () => {
   recordRecentTitle({ uuid: 'a', name: 'Alpha' })
   recordRecentTitle({ uuid: 'b', name: 'Beta' })
   recordRecentTitle({ uuid: 'a', name: 'Alpha' })
-  expect(readRecentTitles().map((row) => row.uuid)).toEqual(['a', 'b'])
+  expect(readRecentTitles().map((row) => row!.uuid)).toEqual(['a', 'b'])
 })
 
 test('mergeSuggestRecent prefers server played rows then local opened', () => {

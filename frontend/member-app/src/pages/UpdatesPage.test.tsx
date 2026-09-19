@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -23,11 +24,11 @@ vi.mock('../api/calendar', () => ({
 }))
 
 beforeEach(() => {
-  updatesApi.fetchUpdatesInbox.mockReset()
-  updatesApi.fetchStoreSearch.mockReset()
-  updatesApi.addWantedUpdate?.mockReset?.()
-  updatesApi.scanLibraryUpdates.mockReset()
-  updatesApi.scanLibraryUpdates.mockResolvedValue({
+  vi.mocked(updatesApi.fetchUpdatesInbox).mockReset()
+  vi.mocked(updatesApi.fetchStoreSearch).mockReset()
+  vi.mocked(updatesApi.addWantedUpdate)?.mockReset?.()
+  vi.mocked(updatesApi.scanLibraryUpdates).mockReset()
+  vi.mocked(updatesApi.scanLibraryUpdates).mockResolvedValue({
     ok: true,
     checked: 0,
     behind_count: 0,
@@ -35,9 +36,9 @@ beforeEach(() => {
     errors: [],
     remaining: 0,
   })
-  clientCommands.queueClientCommand.mockReset()
-  calendarApi.fetchCalendar.mockReset()
-  calendarApi.fetchCalendar.mockResolvedValue({
+  vi.mocked(clientCommands.queueClientCommand).mockReset()
+  vi.mocked(calendarApi.fetchCalendar).mockReset()
+  vi.mocked(calendarApi.fetchCalendar).mockResolvedValue({
     releases: [
       {
         igdb_id: 9,
@@ -47,7 +48,7 @@ beforeEach(() => {
       },
     ],
   })
-  updatesApi.fetchUpdatesInbox.mockResolvedValue({
+  vi.mocked(updatesApi.fetchUpdatesInbox).mockResolvedValue({
     items: [
       {
         uuid: 'game-1',
@@ -70,7 +71,7 @@ beforeEach(() => {
 
 test('inbox shows apply action and queues companion update pack', async () => {
   const user = userEvent.setup()
-  clientCommands.queueClientCommand.mockResolvedValue({ ok: true })
+  vi.mocked(clientCommands.queueClientCommand).mockResolvedValue({ ok: true })
 
   render(
     <MemoryRouter>
@@ -94,18 +95,19 @@ test('inbox shows apply action and queues companion update pack', async () => {
     })
   })
   expect(
-    await screen.findByText(
-      (_, el) =>
+    await screen.findByText((_, el) =>
+      Boolean(
         el?.classList?.contains('od-updates__status') &&
         /queued for companion/i.test(el.textContent || ''),
+      ),
     ),
   ).toBeInTheDocument()
 })
 
 test('manual Refresh shows brief feedback without wiping inbox', async () => {
   const user = userEvent.setup()
-  let resolveInbox
-  updatesApi.fetchUpdatesInbox
+  let resolveInbox: ((value: any) => void) | undefined
+  vi.mocked(updatesApi.fetchUpdatesInbox)
     .mockResolvedValueOnce({
       items: [
         {
@@ -151,10 +153,12 @@ test('manual Refresh shows brief feedback without wiping inbox', async () => {
   // ("Checking library…") or the inbox re-read that follows it ("Refreshing…").
   // The point of the test is that there *is* feedback and the list survives it.
   const tools = refresh.closest('.od-updates__inbox-tools')
-  expect(within(tools).getByRole('status')).toHaveTextContent(/Checking library|Refreshing/i)
+  expect(within(tools! as HTMLElement).getByRole('status')).toHaveTextContent(
+    /Checking library|Refreshing/i,
+  )
   expect(screen.getByText('Behind Game')).toBeInTheDocument()
 
-  resolveInbox({
+  resolveInbox!({
     items: [
       {
         uuid: 'game-1',
@@ -214,8 +218,8 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
   await waitFor(() => expect(screen.getByText(/^Updated /)).toBeInTheDocument())
 
   const tools = refresh.closest('.od-updates__inbox-tools')
-  const stamp = tools.querySelector('.od-updates__refresh-status')
-  expect(stamp.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  const stamp = tools!.querySelector('.od-updates__refresh-status')
+  expect(stamp!.compareDocumentPosition(refresh) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
 
 /**
@@ -233,7 +237,7 @@ test('refresh and its timestamp sit on the inbox heading row', async () => {
  */
 test('the one refresh control probes the library and refills the inbox', async () => {
   const user = userEvent.setup()
-  updatesApi.scanLibraryUpdates.mockResolvedValue({
+  vi.mocked(updatesApi.scanLibraryUpdates).mockResolvedValue({
     ok: true,
     checked: 25,
     behind_count: 2,
@@ -250,7 +254,7 @@ test('the one refresh control probes the library and refills the inbox', async (
     </MemoryRouter>,
   )
   await waitFor(() => expect(updatesApi.fetchUpdatesInbox).toHaveBeenCalled())
-  const before = updatesApi.fetchUpdatesInbox.mock.calls.length
+  const before = vi.mocked(updatesApi.fetchUpdatesInbox).mock.calls.length
 
   await user.click(screen.getByRole('button', { name: 'Check the library against store versions' }))
 
@@ -262,13 +266,13 @@ test('the one refresh control probes the library and refills the inbox', async (
   // a guess about whether one press did the whole library.
   expect(await screen.findByText(/387 still to check/i)).toBeInTheDocument()
   await waitFor(() =>
-    expect(updatesApi.fetchUpdatesInbox.mock.calls.length).toBeGreaterThan(before),
+    expect(vi.mocked(updatesApi.fetchUpdatesInbox).mock.calls.length).toBeGreaterThan(before),
   )
 })
 
 test('store search failure uses PageStatus', async () => {
   const user = userEvent.setup()
-  updatesApi.fetchStoreSearch.mockRejectedValue(new Error('upstream down'))
+  vi.mocked(updatesApi.fetchStoreSearch).mockRejectedValue(new Error('upstream down'))
 
   render(
     <MemoryRouter>

@@ -10,12 +10,12 @@ beforeAll(() => {
 })
 
 /** A shelf stack with the shape the real Grid produces: ragged row lengths. */
-function Stack({ shelves }) {
+function Stack({ shelves }: any) {
   const rootRef = useRef(null)
   useShelfGridNavigation(rootRef)
   return (
     <div ref={rootRef}>
-      {shelves.map((count, row) => (
+      {shelves.map((count: any, row: any) => (
         <div className="od-shelf" key={`shelf-${row}`}>
           <div className="od-shelf__track" role="list">
             {Array.from({ length: count }, (_, col) => (
@@ -32,15 +32,15 @@ function Stack({ shelves }) {
   )
 }
 
-function press(key, options = {}) {
-  fireEvent.keyDown(document.activeElement, { key, ...options })
+function press(key: any, options = {}) {
+  fireEvent.keyDown(document.activeElement!, { key, ...options })
 }
 
 describe('useShelfGridNavigation', () => {
   it('makes the whole stack one tab stop', () => {
     const { container } = render(<Stack shelves={[3, 3]} />)
     const links = container.querySelectorAll('.game-card__cover-link')
-    const tabbable = Array.from(links).filter((link) => link.tabIndex === 0)
+    const tabbable = Array.from(links).filter((link) => (link as HTMLElement).tabIndex === 0)
     expect(links).toHaveLength(6)
     expect(tabbable).toHaveLength(1)
     expect(tabbable[0]).toHaveTextContent('r0c0')
@@ -48,7 +48,7 @@ describe('useShelfGridNavigation', () => {
 
   it('moves along a shelf and between shelves', () => {
     const { container } = render(<Stack shelves={[3, 3]} />)
-    container.querySelector('.game-card__cover-link').focus()
+    container.querySelector<HTMLElement>('.game-card__cover-link')!.focus()
 
     press('ArrowRight')
     expect(document.activeElement).toHaveTextContent('r0c1')
@@ -62,7 +62,7 @@ describe('useShelfGridNavigation', () => {
 
   it('does not dead-end at the edges', () => {
     const { container } = render(<Stack shelves={[2, 2]} />)
-    container.querySelector('.game-card__cover-link').focus()
+    container.querySelector<HTMLElement>('.game-card__cover-link')!.focus()
 
     // Up from the first shelf and Left from the first cell must hold position,
     // never blank the focus — losing the ring is the failure this hook exists
@@ -82,7 +82,7 @@ describe('useShelfGridNavigation', () => {
 
   it('clamps into a short shelf but remembers the column', () => {
     const { container } = render(<Stack shelves={[4, 1, 4]} />)
-    container.querySelector('.game-card__cover-link').focus()
+    container.querySelector<HTMLElement>('.game-card__cover-link')!.focus()
 
     press('ArrowRight')
     press('ArrowRight')
@@ -100,7 +100,7 @@ describe('useShelfGridNavigation', () => {
 
   it('Home and End work per shelf, and Ctrl spans the stack', () => {
     const { container } = render(<Stack shelves={[3, 3]} />)
-    container.querySelector('.game-card__cover-link').focus()
+    container.querySelector<HTMLElement>('.game-card__cover-link')!.focus()
 
     press('End')
     expect(document.activeElement).toHaveTextContent('r0c2')
@@ -114,10 +114,10 @@ describe('useShelfGridNavigation', () => {
 
   it('leaves Enter and Space to the cell', () => {
     const { container } = render(<Stack shelves={[2]} />)
-    container.querySelector('.game-card__cover-link').focus()
+    container.querySelector<HTMLElement>('.game-card__cover-link')!.focus()
 
-    const enter = fireEvent.keyDown(document.activeElement, { key: 'Enter' })
-    const space = fireEvent.keyDown(document.activeElement, { key: ' ' })
+    const enter = fireEvent.keyDown(document.activeElement!, { key: 'Enter' })
+    const space = fireEvent.keyDown(document.activeElement!, { key: ' ' })
     // fireEvent returns false when a handler called preventDefault.
     expect(enter).toBe(true)
     expect(space).toBe(true)
@@ -129,8 +129,8 @@ describe('useShelfGridNavigation', () => {
     const links = container.querySelectorAll('.game-card__cover-link')
 
     fireEvent.focusIn(links[4], { target: links[4] })
-    links[4].focus()
-    expect(links[4].tabIndex).toBe(0)
-    expect(links[0].tabIndex).toBe(-1)
+    ;(links[4] as HTMLElement).focus()
+    expect((links[4] as HTMLElement).tabIndex).toBe(0)
+    expect((links[0] as HTMLElement).tabIndex).toBe(-1)
   })
 })

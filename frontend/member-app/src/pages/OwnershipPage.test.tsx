@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { OwnershipPage } from './OwnershipPage'
@@ -26,7 +27,7 @@ function summaryPayload(overrides = {}) {
   }
 }
 
-function jsonResponse(body, { ok = true, status = 200 } = {}) {
+function jsonResponse(body: any, { ok = true, status = 200 } = {}): Promise<any> {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok,
@@ -37,7 +38,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   })
 }
 
-function requestHeaders(call) {
+function requestHeaders(call: any) {
   return new Headers(call?.[1]?.headers)
 }
 
@@ -53,11 +54,11 @@ beforeEach(() => {
 
 afterEach(() => {
   document.head.innerHTML = ''
-  delete global.fetch
+  delete (global as any).fetch
 })
 
 test('renders ownership summary after loading', async () => {
-  global.fetch.mockImplementation(() => jsonResponse(summaryPayload()))
+  vi.mocked(global.fetch).mockImplementation(() => jsonResponse(summaryPayload()))
 
   render(
     <ShellHarness shell={{}}>
@@ -92,7 +93,7 @@ test('renders ownership summary after loading', async () => {
 })
 
 test('shows empty state when nothing is synced yet', async () => {
-  global.fetch.mockImplementation(() =>
+  vi.mocked(global.fetch).mockImplementation(() =>
     jsonResponse(
       summaryPayload({
         total_owned: 0,
@@ -119,7 +120,7 @@ test('shows empty state when nothing is synced yet', async () => {
 })
 
 test('shows retry when the summary request fails', async () => {
-  global.fetch
+  vi.mocked(global.fetch)
     .mockImplementationOnce(() => jsonResponse({}, { ok: false, status: 500 }))
     .mockImplementation(() => jsonResponse(summaryPayload()))
 
@@ -140,7 +141,7 @@ test('shows retry when the summary request fails', async () => {
 })
 
 test('sync posts to the steam sync endpoint with the CSRF header', async () => {
-  global.fetch.mockImplementation((url) => {
+  vi.mocked(global.fetch).mockImplementation((url: any) => {
     if (url === '/api/ownership/steam/sync') {
       return jsonResponse({ synced: 10, matched: 4, store: 'steam', summary: summaryPayload() })
     }
@@ -166,14 +167,16 @@ test('sync posts to the steam sync endpoint with the CSRF header', async () => {
       }),
     )
   })
-  const syncCall = global.fetch.mock.calls.find(([url]) => url === '/api/ownership/steam/sync')
+  const syncCall = vi
+    .mocked(global.fetch)
+    .mock.calls.find(([url]: any) => url === '/api/ownership/steam/sync')
   expect(requestHeaders(syncCall).get('X-CSRFToken')).toBe('token-abc')
 
   expect(await screen.findByText('Synced 10 titles (4 matched to library).')).toBeInTheDocument()
 })
 
 test('csv import posts the pasted rows as JSON', async () => {
-  global.fetch.mockImplementation((url) => {
+  vi.mocked(global.fetch).mockImplementation((url: any) => {
     if (url === '/api/ownership/gog/csv') {
       return jsonResponse({ imported: 3, matched: 2, store: 'gog', summary: summaryPayload() })
     }
@@ -203,7 +206,9 @@ test('csv import posts the pasted rows as JSON', async () => {
       }),
     )
   })
-  const csvCall = global.fetch.mock.calls.find(([url]) => url === '/api/ownership/gog/csv')
+  const csvCall = vi
+    .mocked(global.fetch)
+    .mock.calls.find(([url]: any) => url === '/api/ownership/gog/csv')
   expect(requestHeaders(csvCall).get('X-CSRFToken')).toBe('token-abc')
   expect(requestHeaders(csvCall).get('Content-Type')).toBe('application/json')
 

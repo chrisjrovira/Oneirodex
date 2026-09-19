@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { LibraryApp } from './LibraryApp'
 import { ShellHarness } from './testShell'
 
-function jsonResponse(body) {
+function jsonResponse(body: any) {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: true,
@@ -15,7 +15,7 @@ function jsonResponse(body) {
   })
 }
 
-function renderLibrary(ui) {
+function renderLibrary(ui: any) {
   return render(
     <MemoryRouter initialEntries={['/library']}>
       <ShellHarness>{ui}</ShellHarness>
@@ -23,7 +23,7 @@ function renderLibrary(ui) {
   )
 }
 
-async function openFilters(user) {
+async function openFilters(user: any) {
   await user.click(await screen.findByRole('button', { name: 'Filters' }))
   return screen.findByRole('dialog', { name: /Filters/ })
 }

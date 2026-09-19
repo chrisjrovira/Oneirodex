@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { ChatPanel } from './ChatPanel'
 import { stubFetch } from '../testJsonResponse'
 
-function jsonOk(body, status = 200) {
+function jsonOk(body: any, status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -15,7 +15,7 @@ function baseFetch({
   messages,
   attachStatus = 404,
   channels = [{ id: 1, name: 'household', kind: 'channel', slug: 'household' }],
-} = {}) {
+}: { messages?: any[]; attachStatus?: number; channels?: any[] } = {}) {
   const msgPayload = messages || [
     {
       id: 10,
@@ -26,7 +26,7 @@ function baseFetch({
       mine: [],
     },
   ]
-  return async (input, init) => {
+  return async (input: any, init: any) => {
     const url = String(input)
     const method = (init?.method || 'GET').toUpperCase()
     if (url.includes('/api/chat/emoji')) {

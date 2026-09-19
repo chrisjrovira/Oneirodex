@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -86,7 +87,7 @@ const ALLOWED = new Map([
   ['.library-layout', 'systemBackdrop.css layers the backdrop onto the filter layout'],
 ])
 
-function cssFiles(dir, out = []) {
+function cssFiles(dir: string, out: string[] = []): string[] {
   let entries
   try {
     entries = readdirSync(dir)
@@ -103,7 +104,7 @@ function cssFiles(dir, out = []) {
 }
 
 /** Class selectors that start a rule at column 0, i.e. base definitions. */
-function definedClasses(css) {
+function definedClasses(css: any) {
   const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const names = new Set()
   // A class is defined when it is a complete simple selector, not a descendant
@@ -115,7 +116,7 @@ function definedClasses(css) {
 }
 
 /** Map of class name -> files defining it, for one tree. */
-function ownersIn(root) {
+function ownersIn(root: any) {
   const owners = new Map()
   for (const file of cssFiles(join(REPO_ROOT, root))) {
     const rel = relative(REPO_ROOT, file).split(sep).join('/')
@@ -138,7 +139,7 @@ test.each(SCAN_ROOTS)('no class is defined in two stylesheets within %s', (root)
 
 test('the Jinja theme tree does not gain new duplicate definitions', () => {
   const duplicated = [...ownersIn(THEME_ROOT).values()]
-    .map((files) => files.filter((f) => !OVERRIDE_LAYERS.some((l) => f.endsWith(l))))
+    .map((files) => files.filter((f: any) => !OVERRIDE_LAYERS.some((l) => f.endsWith(l))))
     .filter((files) => files.length > 1)
 
   // Strictly less-than-or-equal: if this drops, lower the budget in the same

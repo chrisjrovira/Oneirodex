@@ -6,12 +6,12 @@ import { HOVER_TRAILER_MS } from './TileHoverTrailer'
 
 /** The blocked-Play panel links out (Help, Report), so those cases need a
  *  router. The rest of the file renders bare on purpose — a badge does not. */
-function renderRouted(ui) {
+function renderRouted(ui: any) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)
 }
 
 /** `data-corner` lives on the per-corner stack inside the badge-layers wrapper. */
-function badgeCorner(corner) {
+function badgeCorner(corner: any) {
   return screen.getByLabelText(/game badges/i).querySelector(`[data-corner="${corner}"]`)
 }
 
@@ -220,7 +220,7 @@ test('a title with no art gets a drawn, themed fallback rather than the old JPG'
 
   const fallback = document.querySelector('[data-cover-fallback]')
   expect(fallback).not.toBeNull()
-  expect(fallback.textContent).toContain(baseGame.name)
+  expect(fallback!.textContent).toContain(baseGame.name)
   expect(document.querySelector('img.game-cover')).toBeNull()
 })
 
@@ -258,7 +258,7 @@ test('rows layout captions the title beside the cover', () => {
 
 const TRAILER_EMBED = 'https://www.youtube.com/embed/abc123DEF'
 
-function stubMatchMedia(reduced) {
+function stubMatchMedia(reduced: any) {
   window.matchMedia = vi.fn().mockImplementation((query) => ({
     matches: reduced && String(query).includes('prefers-reduced-motion: reduce'),
     media: query,
@@ -274,7 +274,7 @@ test('a missing trailer URL keeps the cover only', () => {
   vi.useFakeTimers()
   stubMatchMedia(false)
   const { container } = render(<GameCard game={baseGame} showPlayStatus={false} isAdmin={false} />)
-  fireEvent.pointerEnter(container.querySelector('.game-card-container'))
+  fireEvent.pointerEnter(container.querySelector('.game-card-container')!)
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)
   })
@@ -293,18 +293,18 @@ test('hover with a trailer URL mounts a muted iframe over the cover', () => {
       isAdmin={false}
     />,
   )
-  fireEvent.pointerEnter(container.querySelector('.game-card-container'))
+  fireEvent.pointerEnter(container.querySelector('.game-card-container')!)
   expect(container.querySelector('.od-tile-hover-trailer')).toBeNull()
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS)
   })
   const iframe = container.querySelector('iframe.od-tile-hover-trailer')
   expect(iframe).not.toBeNull()
-  expect(iframe.getAttribute('src')).toContain('mute=1')
-  expect(iframe.getAttribute('src')).toContain('autoplay=1')
+  expect(iframe!.getAttribute('src')).toContain('mute=1')
+  expect(iframe!.getAttribute('src')).toContain('autoplay=1')
   expect(iframe).toHaveAttribute('aria-hidden', 'true')
   expect(container.querySelector('img.game-cover')).not.toBeNull()
-  fireEvent.pointerLeave(container.querySelector('.game-card-container'))
+  fireEvent.pointerLeave(container.querySelector('.game-card-container')!)
   expect(container.querySelector('.od-tile-hover-trailer')).toBeNull()
   vi.useRealTimers()
 })
@@ -319,7 +319,7 @@ test('reduced-motion does not autoplay a hover trailer', () => {
       isAdmin={false}
     />,
   )
-  fireEvent.pointerEnter(container.querySelector('.game-card-container'))
+  fireEvent.pointerEnter(container.querySelector('.game-card-container')!)
   act(() => {
     vi.advanceTimersByTime(HOVER_TRAILER_MS + 20)
   })

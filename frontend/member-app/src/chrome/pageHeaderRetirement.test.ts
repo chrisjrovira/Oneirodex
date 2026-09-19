@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -64,7 +65,7 @@ describe('page header retirement', () => {
  * the routes above had no heading at all. These guard the replacement.
  */
 describe('the context bar title is the page heading', () => {
-  const jsx = (name) => readFileSync(join(HERE, name), 'utf8')
+  const jsx = (name: any) => readFileSync(join(HERE, name), 'utf8')
 
   it('TopBar renders the section name as an h1, not a span', () => {
     const src = jsx('TopBar.tsx')

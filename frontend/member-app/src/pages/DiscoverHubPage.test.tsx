@@ -3,13 +3,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { DiscoverHubPage } from './DiscoverHubPage'
 import { ShellHarness } from '../testShell'
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body: any, status = 200) {
   const payload = JSON.stringify(body)
   return {
     ok: status >= 200 && status < 300,
     status,
     headers: {
-      get(name) {
+      get(name: any) {
         return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
       },
     },
@@ -62,7 +62,7 @@ test('renders hub shelves without pin or hide', async () => {
         ],
       }),
     ),
-  )
+  ) as unknown as typeof global.fetch
 
   renderHub()
 
@@ -84,7 +84,7 @@ test('unknown genre shows the envelope sentence', async () => {
         404,
       ),
     ),
-  )
+  ) as unknown as typeof global.fetch
 
   renderHub('/discover/hub/genre/Missing')
 

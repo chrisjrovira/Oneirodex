@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PlaytimePage } from './PlaytimePage'
@@ -9,8 +10,8 @@ vi.mock('../api/playtime', () => ({
 }))
 
 beforeEach(() => {
-  playtimeApi.fetchMyPlaytime.mockReset()
-  playtimeApi.fetchMyPlaytime.mockResolvedValue({
+  vi.mocked(playtimeApi.fetchMyPlaytime).mockReset()
+  vi.mocked(playtimeApi.fetchMyPlaytime).mockResolvedValue({
     total_seconds: 3661,
     games: [
       {
@@ -38,7 +39,7 @@ test('lists dense playtime rows with duration meta', async () => {
 })
 
 test('shows honest empty state', async () => {
-  playtimeApi.fetchMyPlaytime.mockResolvedValue({ total_seconds: 0, games: [] })
+  vi.mocked(playtimeApi.fetchMyPlaytime).mockResolvedValue({ total_seconds: 0, games: [] })
   render(
     <ShellHarness>
       <PlaytimePage />
@@ -49,7 +50,7 @@ test('shows honest empty state', async () => {
 
 test('Retry reloads after error', async () => {
   const user = userEvent.setup()
-  playtimeApi.fetchMyPlaytime
+  vi.mocked(playtimeApi.fetchMyPlaytime)
     .mockRejectedValueOnce(new Error('playtime 502'))
     .mockResolvedValueOnce({ total_seconds: 0, games: [] })
 

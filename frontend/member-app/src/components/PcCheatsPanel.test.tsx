@@ -22,7 +22,7 @@ const PAYLOAD = {
   ],
 }
 
-function mockFetch(payload, ok = true) {
+function mockFetch(payload: any, ok = true) {
   stubFetch(async () => ({ ok, status: ok ? 200 : 400, json: async () => payload }))
 }
 

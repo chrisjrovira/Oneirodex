@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { applyTileSizeCssVars, TileSizeControl } from './TileSizeControl'
 import * as preferencesApi from '../api/preferences'
@@ -46,7 +47,7 @@ test('unmounting mid-drag still saves the pending tile size', () => {
   // used to fire it from an unmounted component — or, once the timer was
   // cleared, to lose it entirely. It should be flushed instead.
   vi.useFakeTimers()
-  preferencesApi.savePreferences.mockClear()
+  vi.mocked(preferencesApi.savePreferences).mockClear()
   const { unmount } = render(<TileSizeControl value="50" shellConfig={{ perPage: 20 }} />)
   fireEvent.change(screen.getByLabelText('Game Catalog tile size percent'), {
     target: { value: '72' },
@@ -55,7 +56,9 @@ test('unmounting mid-drag still saves the pending tile size', () => {
 
   unmount()
   expect(preferencesApi.savePreferences).toHaveBeenCalledTimes(1)
-  expect(preferencesApi.savePreferences.mock.calls[0][0]).toMatchObject({ tile_size: '72' })
+  expect(vi.mocked(preferencesApi.savePreferences).mock.calls[0][0]).toMatchObject({
+    tile_size: '72',
+  })
 
   // And nothing fires afterwards from the cleared timer.
   vi.runAllTimers()

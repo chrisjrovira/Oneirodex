@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CalendarPage, buildMonthCells, readCalendarView, writeCalendarView } from './CalendarPage'
@@ -13,11 +14,11 @@ const VIEW_KEY = 'od.calendar.view'
 function installLocalStorageMock() {
   const store = new Map()
   const api = {
-    getItem: (key) => (store.has(key) ? store.get(key) : null),
-    setItem: (key, value) => {
+    getItem: (key: any) => (store.has(key) ? store.get(key) : null),
+    setItem: (key: any, value: any) => {
       store.set(String(key), String(value))
     },
-    removeItem: (key) => {
+    removeItem: (key: any) => {
       store.delete(key)
     },
     clear: () => {
@@ -34,8 +35,8 @@ function installLocalStorageMock() {
 
 beforeEach(() => {
   installLocalStorageMock()
-  calendarApi.fetchCalendar.mockReset()
-  calendarApi.fetchCalendar.mockResolvedValue({
+  vi.mocked(calendarApi.fetchCalendar).mockReset()
+  vi.mocked(calendarApi.fetchCalendar).mockResolvedValue({
     count: 1,
     days_ahead: 60,
     days_behind: 14,
@@ -67,7 +68,7 @@ test('lists dense release rows with date, title, and link', async () => {
 })
 
 test('shows honest empty state', async () => {
-  calendarApi.fetchCalendar.mockResolvedValue({ count: 0, releases: [] })
+  vi.mocked(calendarApi.fetchCalendar).mockResolvedValue({ count: 0, releases: [] })
   render(
     <ShellHarness>
       <CalendarPage />
@@ -78,7 +79,7 @@ test('shows honest empty state', async () => {
 
 test('Retry reloads after error', async () => {
   const user = userEvent.setup()
-  calendarApi.fetchCalendar
+  vi.mocked(calendarApi.fetchCalendar)
     .mockRejectedValueOnce(new Error('calendar 502'))
     .mockResolvedValueOnce({ count: 0, releases: [] })
 
@@ -165,7 +166,7 @@ test('a stored agenda view falls back to List rather than selecting nothing', ()
 
 test('month view renders a rotating cover tile per busy day', async () => {
   const user = userEvent.setup()
-  calendarApi.fetchCalendar.mockResolvedValue({
+  vi.mocked(calendarApi.fetchCalendar).mockResolvedValue({
     count: 2,
     releases: [
       {
@@ -222,8 +223,8 @@ test('month view renders a rotating cover tile per busy day', async () => {
 
   await user.click(dayBtn)
   const panel = screen.getByText(/Aug/i, { selector: 'h4' }).closest('.od-calendar__day-panel')
-  expect(within(panel).getByText('August Drop')).toBeInTheDocument()
-  expect(within(panel).getByText('Same Day Sequel')).toBeInTheDocument()
+  expect(within(panel! as HTMLElement).getByText('August Drop')).toBeInTheDocument()
+  expect(within(panel! as HTMLElement).getByText('Same Day Sequel')).toBeInTheDocument()
 })
 
 test('month view survives an empty window and explains why', async () => {
@@ -233,7 +234,7 @@ test('month view survives an empty window and explains why', async () => {
   // whole page down. It fires on the first render, because with no releases
   // nothing auto-selects a day and the empty branch is what renders.
   const user = userEvent.setup()
-  calendarApi.fetchCalendar.mockResolvedValue({
+  vi.mocked(calendarApi.fetchCalendar).mockResolvedValue({
     count: 0,
     releases: [],
     empty_reason: 'not_configured',
@@ -268,7 +269,7 @@ test('buildMonthCells indexes markers by date key', () => {
 
 test('new chrome moves views to bar two and the window into a popover', async () => {
   const user = userEvent.setup()
-  calendarApi.fetchCalendar.mockResolvedValue({ releases: [] })
+  vi.mocked(calendarApi.fetchCalendar).mockResolvedValue({ releases: [] })
   render(
     <ShellHarness shell={{ enableNewChrome: true }}>
       <CalendarPage />

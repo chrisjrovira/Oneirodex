@@ -15,12 +15,12 @@ function renderDiscover(props = {}) {
   )
 }
 
-function jsonResponse(body) {
+function jsonResponse(body: any) {
   const payload = JSON.stringify(body)
   return {
     ok: true,
     headers: {
-      get(name) {
+      get(name: any) {
         return String(name).toLowerCase() === 'content-type' ? 'application/json' : null
       },
     },
@@ -29,14 +29,17 @@ function jsonResponse(body) {
   }
 }
 
-function mockDiscoverFetch(sections, { pins = [], maxPins = 3 } = {}) {
+function mockDiscoverFetch(
+  sections: any,
+  { pins = [], maxPins = 3 }: { pins?: string[]; maxPins?: number } = {},
+) {
   global.fetch = vi.fn((url) =>
     Promise.resolve(
       String(url).includes('/pins')
         ? jsonResponse({ ok: true, pins, max_pins: maxPins, available: [] })
         : jsonResponse({ sections }),
     ),
-  )
+  ) as unknown as typeof global.fetch
 }
 
 test('renders discover section titles and games as horizontal shelves', async () => {
@@ -145,7 +148,7 @@ test('a row that shows everything it has does not claim there is more', async ()
 })
 
 test('shows Loading Discover while sections fetch', async () => {
-  let resolveFetch
+  let resolveFetch: ((value: unknown) => void) | undefined
   // Keyed by URL: the page also asks for the member's pins, and a single
   // shared resolver would be reassigned by whichever request went out last.
   global.fetch = vi.fn((url) => {
@@ -155,12 +158,12 @@ test('shows Loading Discover while sections fetch', async () => {
     return new Promise((resolve) => {
       resolveFetch = resolve
     })
-  })
+  }) as unknown as typeof global.fetch
 
   renderDiscover()
   expect(screen.getByText('Loading Discover')).toBeInTheDocument()
 
-  resolveFetch(jsonResponse({ sections: [] }))
+  resolveFetch!(jsonResponse({ sections: [] }))
 
   await waitFor(() => {
     expect(screen.getByText(/No Discover shelves/i)).toBeInTheDocument()
@@ -349,5 +352,5 @@ test('arrangeDiscoverSections hides and pins without waiting for a refetch', () 
     { identifier: 'c', title: 'C', games: [{ uuid: '3' }] },
   ]
   const arranged = arrangeDiscoverSections(sections, { pins: ['c', 'a'], hidden: ['b'] })
-  expect(arranged.map((row) => row.identifier)).toEqual(['c', 'a'])
+  expect(arranged.map((row: any) => row.identifier)).toEqual(['c', 'a'])
 })

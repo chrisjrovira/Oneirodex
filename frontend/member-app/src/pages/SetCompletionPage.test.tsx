@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -9,7 +10,7 @@ vi.mock('../api/wishlist', () => ({
   createRequest: vi.fn(),
 }))
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body: any, status = 200): any {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: status >= 200 && status < 300,
@@ -30,7 +31,7 @@ const SAMPLE = {
   missing: [{ name: 'Zelda II', normalized_name: 'zelda ii' }],
 }
 
-function renderPage(path, shellConfig = {}) {
+function renderPage(path: any, shellConfig = {}) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <ShellHarness shell={shellConfig}>
@@ -40,7 +41,7 @@ function renderPage(path, shellConfig = {}) {
   )
 }
 
-function completionPayload(url, overrides = {}) {
+function completionPayload(url: any, overrides = {}) {
   const parsed = new URL(String(url), 'http://local.test')
   return {
     ...SAMPLE,
@@ -50,13 +51,15 @@ function completionPayload(url, overrides = {}) {
 }
 
 beforeEach(() => {
-  wishlistApi.createRequest.mockReset()
-  wishlistApi.createRequest.mockResolvedValue({ id: 1 })
-  global.fetch = vi.fn((url) => jsonResponse(completionPayload(url)))
+  vi.mocked(wishlistApi.createRequest).mockReset()
+  vi.mocked(wishlistApi.createRequest).mockResolvedValue({ id: 1, title: 'Wanted', status: 'open' })
+  global.fetch = vi.fn((url) =>
+    jsonResponse(completionPayload(url)),
+  ) as unknown as typeof global.fetch
 })
 
 afterEach(() => {
-  delete global.fetch
+  delete (global as any).fetch
 })
 
 test('lists missing titles and can wishlist one', async () => {
@@ -96,7 +99,9 @@ test('empty query asks the member to open the page from Systems', () => {
 })
 
 test('404 names the missing reference set', async () => {
-  global.fetch.mockResolvedValue(jsonResponse({ error: 'No set', error_code: 'not_found' }, 404))
+  vi.mocked(global.fetch).mockResolvedValue(
+    jsonResponse({ error: 'No set', error_code: 'not_found' }, 404),
+  )
   renderPage('/systems/completion?library_platform=NES&region=USA')
   expect(await screen.findByRole('alert')).toHaveTextContent(
     /No reference set uploaded for NES\/USA/,
@@ -106,7 +111,7 @@ test('404 names the missing reference set', async () => {
 
 test('Retry reloads after a failed fetch', async () => {
   const user = userEvent.setup()
-  global.fetch
+  vi.mocked(global.fetch)
     .mockResolvedValueOnce(jsonResponse({ error: 'down' }, 502))
     .mockResolvedValueOnce(jsonResponse(SAMPLE))
 
@@ -143,7 +148,7 @@ test('new chrome moves identity and actions into the bar', async () => {
     expect(trigger).toHaveClass('is-on')
   })
   await waitFor(() => {
-    const urls = global.fetch.mock.calls.map((call) => String(call[0]))
-    expect(urls.some((url) => url.includes('region=EUR'))).toBe(true)
+    const urls = vi.mocked(global.fetch).mock.calls.map((call: any) => String(call[0]))
+    expect(urls.some((url: any) => url.includes('region=EUR'))).toBe(true)
   })
 })

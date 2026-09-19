@@ -109,7 +109,7 @@ test('every topic card carries a theme tone and a glyph', () => {
   expect(cards.length).toBeGreaterThan(0)
   const allowed = new Set(['accent', 'info', 'success', 'warning', 'danger'])
   for (const card of cards) {
-    expect(allowed.has(card.getAttribute('data-tone'))).toBe(true)
+    expect(allowed.has(card.getAttribute('data-tone')!)).toBe(true)
     expect(card.querySelector('.od-help__card-mark svg')).not.toBeNull()
   }
 })

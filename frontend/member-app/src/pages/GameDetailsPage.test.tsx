@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -34,9 +35,9 @@ const detailsPayload = {
 }
 
 beforeEach(() => {
-  showToast.mockReset()
-  initiateGameDownload.mockReset()
-  stubFetch((url) => {
+  vi.mocked(showToast).mockReset()
+  vi.mocked(initiateGameDownload).mockReset()
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -103,7 +104,7 @@ test('loads game details into SPA page with action bar', async () => {
 })
 
 test('shows Cheats panel only when cheat_surface is retroarch', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -142,7 +143,7 @@ test('shows Cheats panel only when cheat_surface is retroarch', async () => {
 })
 
 test('Play link keeps the Nostalgist NES host from play_url', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -182,7 +183,7 @@ test('Play link keeps the Nostalgist NES host from play_url', async () => {
 })
 
 test('shows disc chips on details, not as a tile badge', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -216,7 +217,7 @@ test('shows disc chips on details, not as a tile badge', async () => {
 
 test('admin path rows show the full library folder string', async () => {
   const fullPath = '/mnt/user/games/PCWIN/Indie Puzzle/Very Long Folder Name/Celeste'
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -253,7 +254,7 @@ test('admin path rows show the full library folder string', async () => {
 
 test('admin ⋮ menu exposes Edit Details / Edit Images', async () => {
   const user = userEvent.setup()
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -286,20 +287,18 @@ test('admin ⋮ menu exposes Edit Details / Edit Images', async () => {
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
   const coverWrap = container.querySelector('.od-details-page__cover-wrap')
   expect(coverWrap).toBeTruthy()
-  const adminBtn = within(coverWrap).getByRole('button', { name: 'Admin actions' })
+  const adminBtn = within(coverWrap! as HTMLElement).getByRole('button', { name: 'Admin actions' })
   expect(adminBtn).toHaveAttribute('data-chrome-anchor', 'top-right')
   expect(
     container.querySelector('.od-details-page__hero-main .od-details-page__admin-menu'),
   ).toBeNull()
   await user.click(adminBtn)
-  expect(within(coverWrap).getByRole('menuitem', { name: 'Edit Details' })).toHaveAttribute(
-    'href',
-    `/game_edit/${detailsPayload.uuid}`,
-  )
-  expect(within(coverWrap).getByRole('menuitem', { name: 'Edit Images' })).toHaveAttribute(
-    'href',
-    `/edit_game_images/${detailsPayload.uuid}`,
-  )
+  expect(
+    within(coverWrap! as HTMLElement).getByRole('menuitem', { name: 'Edit Details' }),
+  ).toHaveAttribute('href', `/game_edit/${detailsPayload.uuid}`)
+  expect(
+    within(coverWrap! as HTMLElement).getByRole('menuitem', { name: 'Edit Images' }),
+  ).toHaveAttribute('href', `/edit_game_images/${detailsPayload.uuid}`)
   expect(screen.getByText('/games/Celeste')).toBeInTheDocument()
   expect(screen.getByText('/mnt/user/games/Celeste')).toBeInTheDocument()
   expect(screen.getByLabelText('Admin paths')).toBeInTheDocument()
@@ -350,12 +349,12 @@ test('the screenshot viewer portals out of the details page', async () => {
 
   const lightbox = document.querySelector('.od-lightbox')
   expect(lightbox).toBeTruthy()
-  expect(document.querySelector('.od-details-page').contains(lightbox)).toBe(false)
-  expect(lightbox.parentElement).toBe(document.body)
+  expect(document.querySelector('.od-details-page')!.contains(lightbox)).toBe(false)
+  expect(lightbox!.parentElement).toBe(document.body)
 })
 
 test('prefers trailers[].embed_url and shows extras from details payload', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -413,7 +412,7 @@ test('prefers trailers[].embed_url and shows extras from details payload', async
 })
 
 test('shows youtube_demo_url when no trailers exist', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -465,7 +464,7 @@ test('shows youtube_demo_url when no trailers exist', async () => {
  * once: base (never), update-downloadable (yes), update-missing (no).
  */
 test('versions: base has no Download; a downloadable update does; missing hides it', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -527,18 +526,18 @@ test('versions: base has no Download; a downloadable update does; missing hides 
   expect(versionsSection).toBeTruthy()
   expect(versionsSection).toHaveTextContent('1.2 GB')
   // Exactly one: the downloadable update. Not the base row, not the missing one.
-  const downloadButtons = within(versionsSection).getAllByRole('button', { name: 'Download' })
+  const downloadButtons = within(versionsSection!).getAllByRole('button', { name: 'Download' })
   expect(downloadButtons).toHaveLength(1)
   // …and it is the one attached to the update, which is what makes this a test
   // of the rule rather than of the count.
   expect(downloadButtons[0].closest('li')?.textContent).toMatch(/patch-1\.03\.bin/)
-  expect(within(versionsSection).getByText(/Missing on disk/i)).toBeInTheDocument()
-  expect(within(versionsSection).getByText(/Update: gone\.bin/i)).toBeInTheDocument()
+  expect(within(versionsSection!).getByText(/Missing on disk/i)).toBeInTheDocument()
+  expect(within(versionsSection!).getByText(/Update: gone\.bin/i)).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: /Remove missing versions/i })).toBeNull()
 })
 
 test('firmware_missing blocks Play and shows quiet honesty with Help link', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -596,13 +595,17 @@ test('firmware_missing blocks Play and shows quiet honesty with Help link', asyn
 test('version download toasts Backend hint on 410 path_missing', async () => {
   const user = userEvent.setup()
   const err = new Error('This install path is gone')
-  err.status = 410
-  err.code = 'path_missing'
-  err.hint = 'Use game details → Remove missing versions'
-  err.data = { code: 'path_missing', hint: err.hint, error: 'Version file is missing on disk' }
-  initiateGameDownload.mockRejectedValue(err)
+  ;(err as any).status = 410
+  ;(err as any).code = 'path_missing'
+  ;(err as any).hint = 'Use game details → Remove missing versions'
+  ;(err as any).data = {
+    code: 'path_missing',
+    hint: (err as any).hint,
+    error: 'Version file is missing on disk',
+  }
+  vi.mocked(initiateGameDownload).mockRejectedValue(err)
 
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -649,7 +652,7 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
   renderDetails()
   expect(await screen.findByRole('heading', { name: 'Versions' })).toBeInTheDocument()
   await user.click(
-    within(document.getElementById('updates')).getByRole('button', { name: 'Download' }),
+    within(document.getElementById('updates')!).getByRole('button', { name: 'Download' }),
   )
   await waitFor(() => {
     expect(initiateGameDownload).toHaveBeenCalledWith(detailsPayload.uuid, {
@@ -662,7 +665,7 @@ test('version download toasts Backend hint on 410 path_missing', async () => {
 
 test('admin can remove missing versions via cleanup_orphans', async () => {
   const user = userEvent.setup()
-  stubFetch((url, options = {}) => {
+  stubFetch((url: any, options = {}) => {
     const href = String(url)
     if (href.includes('/details')) {
       return Promise.resolve({
@@ -675,7 +678,7 @@ test('admin can remove missing versions via cleanup_orphans', async () => {
       })
     }
     if (href.includes('/versions/cleanup_orphans')) {
-      expect(options.method).toBe('POST')
+      expect((options as any).method).toBe('POST')
       return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ removed: 1, message: 'Removed 1 missing version' }),
@@ -729,7 +732,7 @@ test('admin can remove missing versions via cleanup_orphans', async () => {
     )
   })
   const versionsSection = document.getElementById('updates')
-  expect(within(versionsSection).getByRole('status')).toHaveTextContent(
+  expect(within(versionsSection!).getByRole('status')).toHaveTextContent(
     /Removed 1 missing version/i,
   )
 })
@@ -745,21 +748,25 @@ test('summary and facts share the fold with the media stage', async () => {
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
   const fold = document.querySelector('.od-details-page__fold')
   expect(fold).toBeTruthy()
-  const grid = fold.querySelector('.od-details-page__content-grid')
+  const grid = fold!.querySelector('.od-details-page__content-grid')
   expect(grid).toBeTruthy()
-  expect(grid.querySelector('.od-details-page__section--summary')).toBeTruthy()
-  expect(grid.querySelector('.od-details-page__section--facts')).toBeTruthy()
-  expect(fold.querySelector('.od-details-media')).toBeTruthy()
+  expect(grid!.querySelector('.od-details-page__section--summary')).toBeTruthy()
+  expect(grid!.querySelector('.od-details-page__section--facts')).toBeTruthy()
+  expect(fold!.querySelector('.od-details-media')).toBeTruthy()
 
   const flow = document.querySelector('.od-details-page__flow')
   expect(flow).toBeTruthy()
-  expect(grid.contains(flow)).toBe(false)
-  expect(within(flow).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
-  expect(within(flow).getByRole('heading', { name: 'Extras & DLC' })).toBeInTheDocument()
+  expect(grid!.contains(flow)).toBe(false)
+  expect(
+    within(flow! as HTMLElement).getByRole('heading', { name: 'Versions' }),
+  ).toBeInTheDocument()
+  expect(
+    within(flow! as HTMLElement).getByRole('heading', { name: 'Extras & DLC' }),
+  ).toBeInTheDocument()
 })
 
 test('facts rail stays in the grid when there is no summary', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -790,10 +797,12 @@ test('facts rail stays in the grid when there is no summary', async () => {
 
   expect(await screen.findByRole('heading', { name: 'Celeste' })).toBeInTheDocument()
   const grid = document.querySelector('.od-details-page__content-grid')
-  expect(grid.querySelector('.od-details-page__section--summary')).toBeNull()
-  expect(grid.querySelector('.od-details-page__section--facts')).toBeTruthy()
+  expect(grid!.querySelector('.od-details-page__section--summary')).toBeNull()
+  expect(grid!.querySelector('.od-details-page__section--facts')).toBeTruthy()
   const flow = document.querySelector('.od-details-page__flow')
-  expect(within(flow).getByRole('heading', { name: 'Versions' })).toBeInTheDocument()
+  expect(
+    within(flow! as HTMLElement).getByRole('heading', { name: 'Versions' }),
+  ).toBeInTheDocument()
 })
 
 test('breadcrumb is Catalog then primary genre then title', async () => {
@@ -812,7 +821,7 @@ test('breadcrumb is Catalog then primary genre then title', async () => {
 })
 
 test('console leaf breadcrumb starts at Systems', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,
@@ -834,7 +843,7 @@ test('console leaf breadcrumb starts at Systems', async () => {
 })
 
 test('renders About, capability chips, and store specs when present', async () => {
-  stubFetch((url) => {
+  stubFetch((url: any) => {
     if (String(url).includes('/details')) {
       return Promise.resolve({
         ok: true,

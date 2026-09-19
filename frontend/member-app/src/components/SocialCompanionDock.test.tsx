@@ -10,7 +10,7 @@ beforeEach(() => {
   } catch {
     // jsdom may lack localStorage
   }
-  stubFetch(async (input) => {
+  stubFetch(async (input: any) => {
     const url = String(input)
     if (url.includes('/api/social/friends')) {
       return {
@@ -44,15 +44,15 @@ beforeEach(() => {
     }
     return { ok: false, json: async () => ({}) }
   })
-  globalThis.__odEventSourceCalls = []
+  ;(globalThis as any).__odEventSourceCalls = []
   vi.stubGlobal(
     'EventSource',
     class {
-      constructor(url) {
-        globalThis.__odEventSourceCalls.push(url)
-        this.url = url
-        this.addEventListener = () => {}
-        this.close = () => {}
+      constructor(url: any) {
+        ;(globalThis as any).__odEventSourceCalls.push(url)
+        ;(this as any).url = url
+        ;(this as any).addEventListener = () => {}
+        ;(this as any).close = () => {}
       }
     },
   )
@@ -111,7 +111,7 @@ test('closed dock never opens activity EventSource', async () => {
   )
   await screen.findByRole('button', { name: /open friends companion/i })
   await new Promise((resolve) => setTimeout(resolve, 1700))
-  expect(globalThis.__odEventSourceCalls || []).toHaveLength(0)
+  expect((globalThis as any).__odEventSourceCalls || []).toHaveLength(0)
 })
 
 test('open dock connects activity EventSource after defer', async () => {
@@ -123,7 +123,7 @@ test('open dock connects activity EventSource after defer', async () => {
   expect(await screen.findByText('Alex')).toBeInTheDocument()
   await waitFor(
     () => {
-      expect(globalThis.__odEventSourceCalls).toContain('/api/activity/stream')
+      expect((globalThis as any).__odEventSourceCalls).toContain('/api/activity/stream')
     },
     { timeout: 2500 },
   )
@@ -132,7 +132,7 @@ test('open dock connects activity EventSource after defer', async () => {
 test('failed friends load uses PageStatus with Retry', async () => {
   const user = userEvent.setup()
   let failFriends = true
-  stubFetch(async (input) => {
+  stubFetch(async (input: any) => {
     const url = String(input)
     if (url.includes('/api/social/friends')) {
       if (failFriends) {

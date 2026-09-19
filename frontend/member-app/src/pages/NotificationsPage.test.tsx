@@ -5,7 +5,7 @@ import { beforeEach, expect, test, vi } from 'vitest'
 import { NotificationsPage } from './NotificationsPage'
 import { ShellHarness } from '../testShell'
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body: any, status = 200) {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: status >= 200 && status < 300,
@@ -71,9 +71,10 @@ test('the inbox asks the server for unread, so it cannot disagree with the count
   )
 
   await screen.findByText('Friend request')
-  const listCalls = fetch.mock.calls
-    .map(([url]) => String(url))
-    .filter((url) => url.includes('/api/notifications?'))
+  const listCalls = vi
+    .mocked(fetch)
+    .mock.calls.map(([url]: any) => String(url))
+    .filter((url: any) => url.includes('/api/notifications?'))
   expect(listCalls.length).toBeGreaterThan(0)
   expect(listCalls[0]).toContain('unread=1')
 })
@@ -146,7 +147,7 @@ test('keeps preferences on the Inbox row and collapsed by default', async () => 
 })
 
 test('shows retry when notifications fail to load', async () => {
-  fetch.mockImplementation(() => Promise.reject(new Error('network')))
+  vi.mocked(fetch).mockImplementation(() => Promise.reject(new Error('network')))
   render(
     <MemoryRouter>
       <ShellHarness>

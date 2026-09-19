@@ -90,8 +90,8 @@ test('surfaces the server error rather than rendering an empty rail', async () =
 })
 
 test('invite redemption posts the token and refreshes', async () => {
-  const calls = []
-  stubFetch(async (url, opts) => {
+  const calls: any[] = []
+  stubFetch(async (url: any, opts: any) => {
     calls.push({ url, opts })
     if (String(url).endsWith('/join')) {
       return { ok: true, json: async () => ({ ok: true, space: { id: 3, name: 'Joined' } }) }
@@ -106,7 +106,7 @@ test('invite redemption posts the token and refreshes', async () => {
   await user.click(screen.getByRole('button', { name: /^Join$/i }))
 
   await waitFor(() => {
-    const join = calls.find((c) => String(c.url).endsWith('/join'))
+    const join: any = calls.find((c) => String(c.url).endsWith('/join'))
     expect(join).toBeTruthy()
     expect(JSON.parse(join.opts.body)).toEqual({ token: 'tok-123' })
   })

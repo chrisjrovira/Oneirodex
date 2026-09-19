@@ -76,7 +76,7 @@ test('every room defines the full palette', () => {
 test('roomStyle returns custom properties only, so nothing leaks globally', () => {
   const style = roomStyle('ARCADE')
   expect(Object.keys(style).every((k) => k.startsWith('--od-room-'))).toBe(true)
-  expect(style['--od-room-backdrop']).toBe(ROOMS.arcade_cabinet.backdrop)
+  expect((style as any)['--od-room-backdrop']).toBe(ROOMS.arcade_cabinet.backdrop)
 })
 
 test('roomForPlatform returns the room object', () => {

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -44,13 +45,13 @@ test('the stylesheet re-asserts fill on explicitly solid sub-paths', () => {
   const rule = css.match(/\.od-icon\s*\[fill=['"]currentColor['"]\]\s*\{([^}]*)\}/)
 
   expect(rule, 'od-primitives.css must keep the solid-sub-path rule').toBeTruthy()
-  expect(rule[1]).toMatch(/fill:\s*currentColor/)
+  expect(rule![1]).toMatch(/fill:\s*currentColor/)
   // fill-opacity is the half that actually broke; fill alone does not fix it.
-  expect(rule[1]).toMatch(/fill-opacity:\s*1/)
+  expect(rule![1]).toMatch(/fill-opacity:\s*1/)
 })
 
 /** Render a glyph's JSX children to a flat list of their props. */
-function subPaths(node) {
+function subPaths(node: any) {
   const kids = node?.props?.children
   const list = Array.isArray(kids) ? kids : [kids]
   return list.filter(Boolean).map((child) => child.props || {})

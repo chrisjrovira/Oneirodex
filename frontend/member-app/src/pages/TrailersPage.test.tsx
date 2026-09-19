@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TrailersPage } from './TrailersPage'
@@ -19,15 +20,15 @@ const FILTER_OPTIONS = {
 }
 
 beforeEach(() => {
-  trailersApi.fetchTrailerFilters.mockReset()
-  trailersApi.fetchRandomTrailer.mockReset()
-  trailersApi.fetchAttractModeSettings.mockReset()
-  trailersApi.saveAttractModePreferences.mockReset()
-  trailersApi.fetchTrailerFilters.mockResolvedValue(FILTER_OPTIONS)
+  vi.mocked(trailersApi.fetchTrailerFilters).mockReset()
+  vi.mocked(trailersApi.fetchRandomTrailer).mockReset()
+  vi.mocked(trailersApi.fetchAttractModeSettings).mockReset()
+  vi.mocked(trailersApi.saveAttractModePreferences).mockReset()
+  vi.mocked(trailersApi.fetchTrailerFilters).mockResolvedValue(FILTER_OPTIONS)
 })
 
 test('shows loading then renders the random trailer', async () => {
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',
@@ -54,7 +55,7 @@ test('shows loading then renders the random trailer', async () => {
 })
 
 test('shows the no-results state when nothing matches', async () => {
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: false,
     message: 'No games with trailers found matching your filters',
   })
@@ -75,7 +76,7 @@ test('shows the no-results state when nothing matches', async () => {
 })
 
 test('shows structured empty for Backend no_trailers contract without a CTA', async () => {
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: false,
     empty: true,
     code: 'no_trailers',
@@ -97,7 +98,7 @@ test('shows structured empty for Backend no_trailers contract without a CTA', as
 })
 
 test('rejects a non-YouTube embed URL', async () => {
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-2',
     game_name: 'Sketchy',
@@ -116,7 +117,7 @@ test('rejects a non-YouTube embed URL', async () => {
 
 test('shows an error with retry', async () => {
   const user = userEvent.setup()
-  trailersApi.fetchRandomTrailer
+  vi.mocked(trailersApi.fetchRandomTrailer)
     .mockRejectedValueOnce(new Error('boom'))
     .mockResolvedValueOnce({ has_videos: false, message: 'No games with trailers found' })
 
@@ -134,7 +135,7 @@ test('shows an error with retry', async () => {
 
 test('applies selected filters when asking for another trailer', async () => {
   const user = userEvent.setup()
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-3',
     game_name: 'Quake',
@@ -170,8 +171,8 @@ test('another trailer keeps the player up while the next one loads', async () =>
   // of the current frame instead (and is delayed, so this assertion is the
   // player staying, not a flash of overlay).
   const user = userEvent.setup()
-  let releaseSecond
-  trailersApi.fetchRandomTrailer
+  let releaseSecond: ((value: unknown) => void) | undefined
+  vi.mocked(trailersApi.fetchRandomTrailer)
     .mockResolvedValueOnce({
       has_videos: true,
       game_uuid: 'game-uuid-1',
@@ -196,7 +197,7 @@ test('another trailer keeps the player up while the next one loads', async () =>
   expect(screen.getByRole('heading', { name: 'Doom' })).toBeInTheDocument()
   expect(screen.queryByText(/Loading random trailer/)).not.toBeInTheDocument()
 
-  releaseSecond({
+  releaseSecond!({
     has_videos: true,
     game_uuid: 'game-uuid-3',
     game_name: 'Quake',
@@ -209,7 +210,7 @@ test('new chrome keeps the playing title as content, not as a page heading', asy
   // The h1 here was never page identity — it names the trailer now playing and
   // links to that game. Retiring it as a "page title" would delete real
   // information, so it becomes bar two's summary and stays a link.
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',
@@ -229,7 +230,7 @@ test('new chrome keeps the playing title as content, not as a page heading', asy
 
 test('new chrome keeps every playback action reachable', async () => {
   const user = userEvent.setup()
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',
@@ -263,7 +264,7 @@ test('trailers shows exactly one Filters control under the new chrome', async ()
   //
   // Counted by role rather than by class, because the defect was about what a
   // member can see and click, not which element carries which attribute.
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',
@@ -281,7 +282,7 @@ test('trailers shows exactly one Filters control under the new chrome', async ()
 })
 
 test('new chrome fuses Filters, Another one, and More into one cluster', async () => {
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',
@@ -297,16 +298,20 @@ test('new chrome fuses Filters, Another one, and More into one cluster', async (
 
   const group = container.querySelector('.od-cbtn-group')
   expect(group).toBeTruthy()
-  expect(within(group).getByRole('button', { name: /^filters$/i })).toBeInTheDocument()
-  expect(within(group).getByRole('button', { name: 'Another one' })).toBeInTheDocument()
-  expect(within(group).getByRole('button', { name: /^more$/i })).toBeInTheDocument()
+  expect(
+    within(group! as HTMLElement).getByRole('button', { name: /^filters$/i }),
+  ).toBeInTheDocument()
+  expect(
+    within(group! as HTMLElement).getByRole('button', { name: 'Another one' }),
+  ).toBeInTheDocument()
+  expect(within(group! as HTMLElement).getByRole('button', { name: /^more$/i })).toBeInTheDocument()
 })
 
 test('Filters popover matches Library panel chrome', async () => {
   // Chromeless panel (no Filters/Done head), Apply/Clear fused at the top,
   // same `.library-filters` form Library uses — not a nested box under Done.
   const user = userEvent.setup()
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',
@@ -322,18 +327,18 @@ test('Filters popover matches Library panel chrome', async () => {
 
   const panel = container.querySelector('.od-pop__panel')
   expect(panel).toBeTruthy()
-  expect(panel.classList.contains('od-pop__panel--bare')).toBe(true)
-  expect(within(panel).queryByText('Done')).toBeNull()
-  expect(within(panel).getByRole('button', { name: 'Apply' })).toBeInTheDocument()
-  expect(within(panel).getByRole('button', { name: 'Clear' })).toBeInTheDocument()
-  expect(panel.querySelector('.library-filters')).toBeTruthy()
-  expect(panel.querySelector('.library-filters__actions .od-cbtn-group')).toBeTruthy()
+  expect(panel!.classList.contains('od-pop__panel--bare')).toBe(true)
+  expect(within(panel! as HTMLElement).queryByText('Done')).toBeNull()
+  expect(within(panel! as HTMLElement).getByRole('button', { name: 'Apply' })).toBeInTheDocument()
+  expect(within(panel! as HTMLElement).getByRole('button', { name: 'Clear' })).toBeInTheDocument()
+  expect(panel!.querySelector('.library-filters')).toBeTruthy()
+  expect(panel!.querySelector('.library-filters__actions .od-cbtn-group')).toBeTruthy()
 })
 
 test('trailers keeps its own Filters toggle on the old chrome', async () => {
   // The other half of the contract: suppressing the page control must depend on
   // the new bar actually being there to own it.
-  trailersApi.fetchRandomTrailer.mockResolvedValue({
+  vi.mocked(trailersApi.fetchRandomTrailer).mockResolvedValue({
     has_videos: true,
     game_uuid: 'game-uuid-1',
     game_name: 'Doom',

@@ -54,11 +54,9 @@ const ROW = (library: string, progress: number | string, text?: string) =>
 const libraries = () =>
   Array.from(document.querySelectorAll('#tb tr')).map((r) => r.children[0]?.textContent)
 
-function clickHeader(index: any) {
-  document
-    .querySelectorAll('#t thead th')
-    [index].querySelector<HTMLElement>('.od-sort-btn')!
-    .click()
+function clickHeader(index: number) {
+  const th = document.querySelectorAll('#t thead th')[index]
+  th.querySelector<HTMLElement>('.od-sort-btn')!.click()
 }
 
 beforeEach(() => {

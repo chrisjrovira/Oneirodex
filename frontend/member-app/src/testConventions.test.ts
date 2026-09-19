@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,13 +21,13 @@ import { expect, test } from 'vitest'
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)))
 
-function testFiles(dir) {
-  const out = []
+function testFiles(dir: string): string[] {
+  const out: string[] = []
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) {
       out.push(...testFiles(full))
-    } else if (/\.test\.jsx?$/.test(entry)) {
+    } else if (/\.test\.[jt]sx?$/.test(entry)) {
       out.push(full)
     }
   }
@@ -34,9 +35,9 @@ function testFiles(dir) {
 }
 
 test('no test imports user-event inside a test body', () => {
-  const offenders = testFiles(SRC).filter((file) =>
+  const offenders = testFiles(SRC).filter((file: any) =>
     /await import\(\s*['"]@testing-library\/user-event['"]\s*\)/.test(readFileSync(file, 'utf8')),
   )
 
-  expect(offenders.map((f) => f.replace(SRC, ''))).toEqual([])
+  expect(offenders.map((f: any) => f.replace(SRC, ''))).toEqual([])
 })

@@ -93,7 +93,9 @@ export interface CollectionSummary {
 }
 
 export interface UpdatesInboxItem {
-  game_uuid: string
+  /** The game's uuid — the inbox route writes `uuid`, not `game_uuid`. */
+  uuid: string
+  game_uuid?: string
   name?: string
   [key: string]: unknown
 }

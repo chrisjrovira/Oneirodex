@@ -1,10 +1,11 @@
+import { vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { LicensedCatalogPage } from './LicensedCatalogPage'
 import { ShellHarness } from '../testShell'
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body: any, status = 200): any {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: status >= 200 && status < 300,
@@ -41,7 +42,7 @@ const SAMPLE = {
   ],
 }
 
-function renderPage(path, shellConfig = {}) {
+function renderPage(path: any, shellConfig = {}) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <ShellHarness shell={shellConfig}>
@@ -52,11 +53,11 @@ function renderPage(path, shellConfig = {}) {
 }
 
 beforeEach(() => {
-  global.fetch = vi.fn(() => jsonResponse(SAMPLE))
+  global.fetch = vi.fn(() => jsonResponse(SAMPLE)) as unknown as typeof global.fetch
 })
 
 afterEach(() => {
-  delete global.fetch
+  delete (global as any).fetch
 })
 
 test('empty query asks the member to open the page from Systems', () => {
@@ -82,7 +83,7 @@ test('lists IGDB region counts and DAT-only honesty', async () => {
 
 test('Retry reloads after a failed fetch', async () => {
   const user = userEvent.setup()
-  global.fetch
+  vi.mocked(global.fetch)
     .mockResolvedValueOnce(jsonResponse({ error: 'down' }, 502))
     .mockResolvedValueOnce(jsonResponse(SAMPLE))
 

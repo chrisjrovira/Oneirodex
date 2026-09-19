@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AcquirePage } from './AcquirePage'
@@ -25,7 +26,7 @@ const READY_STATUS = {
 test('failed status uses PageStatus with Retry and does not look like the module is off', async () => {
   const user = userEvent.setup()
   let failStatus = true
-  updatesApi.fetchAcquireStatus.mockImplementation(() => {
+  vi.mocked(updatesApi.fetchAcquireStatus).mockImplementation(() => {
     if (failStatus) {
       return Promise.reject(new Error('Unable to load Acquire.'))
     }

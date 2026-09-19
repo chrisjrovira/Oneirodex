@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FavoritesApp } from './FavoritesApp'
 
-function jsonResponse(body) {
+function jsonResponse(body: any) {
   const payload = JSON.stringify(body)
   return {
     ok: true,

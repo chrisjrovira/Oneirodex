@@ -7,7 +7,7 @@ import { GameCard } from './GameCard'
 // the way every other surface rendering it already has one. Rendering it bare
 // fails on `useContext(...)` being null, which reads as a card bug rather than
 // a missing test wrapper.
-function renderCard(ui) {
+function renderCard(ui: any) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)
 }
 
@@ -22,7 +22,7 @@ const game = {
   genres: ['Sports'],
 }
 
-function jsonResponse(body) {
+function jsonResponse(body: any) {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: true,
@@ -33,7 +33,7 @@ function jsonResponse(body) {
   })
 }
 
-function requestHeaders(call) {
+function requestHeaders(call: any) {
   return new Headers(call?.[1]?.headers)
 }
 
@@ -59,7 +59,7 @@ test('favorite toggle posts with CSRF and updates the card', async () => {
     `/api/toggle_favorite/${game.uuid}`,
     expect.objectContaining({ method: 'POST' }),
   )
-  const favoriteCall = fetchMock.mock.calls.find(([url]) =>
+  const favoriteCall = (fetchMock.mock.calls as any[][]).find(([url]) =>
     String(url).includes('/api/toggle_favorite/'),
   )
   expect(requestHeaders(favoriteCall).get('Content-Type')).toBe('application/json')
@@ -87,7 +87,7 @@ test('status selection posts with CSRF and updates the status button', async () 
       body: JSON.stringify({ status: 'completed' }),
     }),
   )
-  const statusCall = fetchMock.mock.calls.find(([url]) =>
+  const statusCall = (fetchMock.mock.calls as any[][]).find(([url]) =>
     String(url).includes('/api/set_game_status/'),
   )
   expect(requestHeaders(statusCall).get('X-CSRFToken')).toBe('test-csrf')

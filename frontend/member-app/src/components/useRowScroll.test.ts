@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { useRowScroll } from './useRowScroll'
 
 describe('useRowScroll wheel', () => {
-  let track
-  let viewport
-  let page
+  let track: any
+  let viewport: any
+  let page: any
 
   beforeEach(() => {
     track = document.createElement('div')
@@ -35,7 +35,7 @@ describe('useRowScroll wheel', () => {
       return scroll
     })
 
-    const blocked = !viewport.dispatchEvent(
+    const blocked: any = !viewport.dispatchEvent(
       new WheelEvent('wheel', { deltaY: 80, deltaMode: 0, bubbles: true, cancelable: true }),
     )
     expect(blocked).toBe(true)
@@ -52,7 +52,7 @@ describe('useRowScroll wheel', () => {
     })
 
     track.scrollLeft = 120
-    const blockedBack = !viewport.dispatchEvent(
+    const blockedBack: any = !viewport.dispatchEvent(
       new WheelEvent('wheel', {
         deltaX: -50,
         deltaY: 8,
@@ -65,7 +65,7 @@ describe('useRowScroll wheel', () => {
     expect(track.scrollLeft).toBe(70)
     expect(page.scrollTop).toBe(0)
 
-    const blockedForward = !viewport.dispatchEvent(
+    const blockedForward: any = !viewport.dispatchEvent(
       new WheelEvent('wheel', {
         deltaX: 40,
         deltaY: 5,
@@ -88,7 +88,7 @@ describe('useRowScroll wheel', () => {
     })
 
     track.scrollLeft = 90
-    const blocked = !viewport.dispatchEvent(
+    const blocked: any = !viewport.dispatchEvent(
       new WheelEvent('wheel', {
         deltaY: -40,
         shiftKey: true,
@@ -110,7 +110,7 @@ describe('useRowScroll wheel', () => {
       return scroll
     })
 
-    const blocked = !track.dispatchEvent(
+    const blocked: any = !track.dispatchEvent(
       new WheelEvent('wheel', { deltaY: 40, deltaMode: 0, bubbles: true, cancelable: true }),
     )
     expect(blocked).toBe(true)
@@ -121,14 +121,15 @@ describe('useRowScroll wheel', () => {
   test('wheel over the slider pans the track', () => {
     const hbar = document.createElement('div')
     viewport.append(hbar)
-    hbar.getBoundingClientRect = () => ({
-      left: 0,
-      right: 400,
-      top: 200,
-      bottom: 208,
-      width: 400,
-      height: 8,
-    })
+    hbar.getBoundingClientRect = (): DOMRect =>
+      ({
+        left: 0,
+        right: 400,
+        top: 200,
+        bottom: 208,
+        width: 400,
+        height: 8,
+      }) as DOMRect
 
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
@@ -156,14 +157,15 @@ describe('useRowScroll wheel', () => {
   test('wheel over the slider pans the track backward', () => {
     const hbar = document.createElement('div')
     viewport.append(hbar)
-    hbar.getBoundingClientRect = () => ({
-      left: 0,
-      right: 400,
-      top: 200,
-      bottom: 208,
-      width: 400,
-      height: 8,
-    })
+    hbar.getBoundingClientRect = (): DOMRect =>
+      ({
+        left: 0,
+        right: 400,
+        top: 200,
+        bottom: 208,
+        width: 400,
+        height: 8,
+      }) as DOMRect
 
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
@@ -192,14 +194,15 @@ describe('useRowScroll wheel', () => {
   test('wheel over the track padding that covers the slider still pans', () => {
     const hbar = document.createElement('div')
     viewport.append(hbar)
-    hbar.getBoundingClientRect = () => ({
-      left: 0,
-      right: 400,
-      top: 200,
-      bottom: 208,
-      width: 400,
-      height: 8,
-    })
+    hbar.getBoundingClientRect = (): DOMRect =>
+      ({
+        left: 0,
+        right: 400,
+        top: 200,
+        bottom: 208,
+        width: 400,
+        height: 8,
+      }) as DOMRect
 
     renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
@@ -210,7 +213,7 @@ describe('useRowScroll wheel', () => {
     })
 
     // Target is the track (old stacking bug), but the pointer is on the bar.
-    const blocked = !track.dispatchEvent(
+    const blocked: any = !track.dispatchEvent(
       new WheelEvent('wheel', {
         deltaY: 40,
         deltaMode: 0,
@@ -227,9 +230,9 @@ describe('useRowScroll wheel', () => {
 })
 
 describe('useRowScroll arrow hover', () => {
-  let track
-  let queued
-  let frameId
+  let track: any
+  let queued: any
+  let frameId: any
 
   beforeEach(() => {
     track = document.createElement('div')
@@ -242,7 +245,7 @@ describe('useRowScroll arrow hover', () => {
     document.body.append(track)
     queued = null
     frameId = 0
-    vi.stubGlobal('requestAnimationFrame', (cb) => {
+    vi.stubGlobal('requestAnimationFrame', (cb: any) => {
       queued = cb
       frameId += 1
       return frameId
@@ -275,7 +278,7 @@ describe('useRowScroll arrow hover', () => {
   })
 
   test('a native scroll event turns the start arrow on', async () => {
-    const { result } = renderHook(() => {
+    const { result }: any = renderHook(() => {
       const scroll = useRowScroll({ bindKey: 1 })
       scroll.ref.current = track
       return scroll
@@ -301,10 +304,10 @@ describe('useRowScroll arrow hover', () => {
 })
 
 describe('useRowScroll grab-to-scroll', () => {
-  let track
-  let viewport
+  let track: any
+  let viewport: any
 
-  function pointer(type, init) {
+  function pointer(type: any, init: any) {
     // jsdom has no PointerEvent constructor; a MouseEvent with the pointer
     // fields assigned is what the hook reads.
     // button / clientX are MouseEvent getters and go through the constructor;

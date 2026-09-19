@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ShellConfigProvider, ViewerProvider } from '@oneirodex/ui'
@@ -22,7 +22,23 @@ import { ShellConfigProvider, ViewerProvider } from '@oneirodex/ui'
  * rather than react-query silently swallowing it). Pages that adopt
  * `useResource` need the provider; pages that do not are unaffected.
  */
-export function ShellHarness({ shell = {}, viewer, router = false, initialEntries, children }) {
+export interface ShellHarnessProps {
+  /** The ShellConfig value, verbatim. */
+  shell?: Record<string, unknown>
+  /** Viewer override; derived from `shell` when absent. */
+  viewer?: Record<string, unknown>
+  router?: boolean
+  initialEntries?: string[]
+  children?: ReactNode
+}
+
+export function ShellHarness({
+  shell = {},
+  viewer,
+  router = false,
+  initialEntries,
+  children,
+}: ShellHarnessProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -33,8 +49,8 @@ export function ShellHarness({ shell = {}, viewer, router = false, initialEntrie
       }),
   )
   const tree = (
-    <ViewerProvider value={viewer ?? shell}>
-      <ShellConfigProvider value={shell}>
+    <ViewerProvider value={(viewer ?? shell) as any}>
+      <ShellConfigProvider value={shell as any}>
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </ShellConfigProvider>
     </ViewerProvider>
@@ -43,8 +59,11 @@ export function ShellHarness({ shell = {}, viewer, router = false, initialEntrie
   return <MemoryRouter initialEntries={initialEntries}>{tree}</MemoryRouter>
 }
 
-export function shellWrapper(shell = {}, options = {}) {
-  return function Wrapper({ children }) {
+export function shellWrapper(
+  shell: Record<string, unknown> = {},
+  options: Omit<ShellHarnessProps, 'shell' | 'children'> = {},
+) {
+  return function Wrapper({ children }: { children?: ReactNode }) {
     return (
       <ShellHarness shell={shell} {...options}>
         {children}

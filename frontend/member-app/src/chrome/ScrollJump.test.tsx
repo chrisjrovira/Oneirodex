@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { EDGE_PX, ScrollJump } from './ScrollJump'
 
-function stubScrollMetrics({ scrollHeight, clientHeight, scrollY }) {
+function stubScrollMetrics({ scrollHeight, clientHeight, scrollY }: any) {
   Object.defineProperty(document.documentElement, 'scrollHeight', {
     configurable: true,
     get: () => scrollHeight,
@@ -37,7 +37,7 @@ function stubScrollMetrics({ scrollHeight, clientHeight, scrollY }) {
 }
 
 describe('ScrollJump', () => {
-  let scrollToSpy
+  let scrollToSpy: any
 
   beforeEach(() => {
     // The component scrolls its *host*, not the window (GT-B3). With no shell

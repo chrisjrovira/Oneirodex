@@ -4,7 +4,7 @@ import { VoiceLobby } from './VoiceLobby'
 import { stubFetch } from '../testJsonResponse'
 
 beforeEach(() => {
-  stubFetch(async (input) => {
+  stubFetch(async (input: any) => {
     const url = String(input)
     if (url.includes('/api/rtc/status')) {
       return { ok: true, json: async () => ({ enabled: false }) }
@@ -40,7 +40,7 @@ test('compact mode hides disabled lobby entirely', async () => {
 
 test('token failure uses PageStatus', async () => {
   const user = userEvent.setup()
-  stubFetch(async (input) => {
+  stubFetch(async (input: any) => {
     const url = String(input)
     if (url.includes('/api/rtc/status')) {
       return { ok: true, json: async () => ({ enabled: true }) }

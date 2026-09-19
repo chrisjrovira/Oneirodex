@@ -21,8 +21,8 @@ const GAME_UUID = '11111111-1111-4111-8111-111111111111'
 const PLAY = '/static/vendor/webretro/webretro.html?guid=abc&core=fceumm'
 
 beforeEach(() => {
-  savesApi.fetchSavedStates.mockReset()
-  savesApi.deleteSavedState.mockReset()
+  vi.mocked(savesApi.fetchSavedStates).mockReset()
+  vi.mocked(savesApi.deleteSavedState).mockReset()
 })
 
 test('does not mount for a title that cannot be played in the browser', () => {
@@ -32,15 +32,25 @@ test('does not mount for a title that cannot be played in the browser', () => {
 })
 
 test('lists states newest first with a Resume that carries the slot', async () => {
-  savesApi.fetchSavedStates.mockResolvedValue({
+  vi.mocked(savesApi.fetchSavedStates).mockResolvedValue({
     enabled: true,
     states: [
       {
+        id: 1,
+        game_uuid: 'g-1',
+        filename: 'auto.state',
+        size_bytes: 1024,
+        encrypted: false,
         slot_name: 'auto',
         updated_at: new Date(Date.now() - 3 * 60000).toISOString(),
         is_state: true,
       },
       {
+        id: 2,
+        game_uuid: 'g-1',
+        filename: 'qs-before-boss.state',
+        size_bytes: 2048,
+        encrypted: false,
         slot_name: 'qs-before-boss',
         updated_at: new Date(Date.now() - 2 * 3600000).toISOString(),
         is_state: true,
@@ -59,13 +69,24 @@ test('lists states newest first with a Resume that carries the slot', async () =
 })
 
 test('delete removes the row through the API', async () => {
-  savesApi.fetchSavedStates
+  vi.mocked(savesApi.fetchSavedStates)
     .mockResolvedValueOnce({
       enabled: true,
-      states: [{ slot_name: 'qs-lab', updated_at: new Date().toISOString(), is_state: true }],
+      states: [
+        {
+          id: 3,
+          game_uuid: 'g-1',
+          filename: 'qs-lab.state',
+          size_bytes: 512,
+          encrypted: false,
+          slot_name: 'qs-lab',
+          updated_at: new Date().toISOString(),
+          is_state: true,
+        },
+      ],
     })
     .mockResolvedValueOnce({ enabled: true, states: [] })
-  savesApi.deleteSavedState.mockResolvedValue({ status: 'deleted', slot_name: 'qs-lab' })
+  vi.mocked(savesApi.deleteSavedState).mockResolvedValue({ status: 'deleted', slot_name: 'qs-lab' })
   render(<SavedStatesPanel gameUuid={GAME_UUID} playHref={PLAY} />)
   const del = await screen.findByRole('button', { name: 'Delete lab' })
   await userEvent.click(del)
@@ -76,7 +97,7 @@ test('delete removes the row through the API', async () => {
 })
 
 test('says so when sync is off on the server', async () => {
-  savesApi.fetchSavedStates.mockResolvedValue({ enabled: false, states: [] })
+  vi.mocked(savesApi.fetchSavedStates).mockResolvedValue({ enabled: false, states: [] })
   render(<SavedStatesPanel gameUuid={GAME_UUID} playHref={PLAY} />)
   expect(await screen.findByText(/Save sync is off/)).toBeInTheDocument()
 })

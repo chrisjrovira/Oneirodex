@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -54,11 +55,11 @@ function renderPalette(shellConfig = {}, props = {}, initialEntries = ['/library
 
 beforeEach(() => {
   navigateMock.mockReset()
-  openPreferencesModal.mockClear()
-  searchGames.mockReset()
-  searchGames.mockResolvedValue([])
-  fetchPaletteSuggest.mockReset()
-  fetchPaletteSuggest.mockResolvedValue({ recent: [], popular: [] })
+  vi.mocked(openPreferencesModal).mockClear()
+  vi.mocked(searchGames).mockReset()
+  vi.mocked(searchGames).mockResolvedValue([])
+  vi.mocked(fetchPaletteSuggest).mockReset()
+  vi.mocked(fetchPaletteSuggest).mockResolvedValue({ recent: [], popular: [] })
 })
 
 test('isLibrarySearchRoute matches library paths', () => {
@@ -130,7 +131,7 @@ test('opens when open prop is true and filters by typeahead', async () => {
 
 test('Library mode searches titles via /api/search and navigates to details', async () => {
   const user = userEvent.setup()
-  searchGames.mockResolvedValue([
+  vi.mocked(searchGames).mockResolvedValue([
     { uuid: 'game-1', name: 'Celeste' },
     { uuid: 'game-2', name: 'Celeste Classic' },
   ])
@@ -142,7 +143,7 @@ test('Library mode searches titles via /api/search and navigates to details', as
   await waitFor(() => {
     expect(searchGames).toHaveBeenCalled()
   })
-  expect(searchGames.mock.calls.at(-1)[0]).toBe('cel')
+  expect(vi.mocked(searchGames).mock.calls.at(-1)![0]).toBe('cel')
 
   const dialog = screen.getByRole('dialog')
   expect(await within(dialog).findByText('Celeste')).toBeInTheDocument()
@@ -154,7 +155,7 @@ test('Library mode searches titles via /api/search and navigates to details', as
 })
 
 test('empty palette shows recent titles and household favourites', async () => {
-  fetchPaletteSuggest.mockResolvedValue({
+  vi.mocked(fetchPaletteSuggest).mockResolvedValue({
     recent: [{ uuid: 'r1', name: 'Hades', hint: 'Played recently' }],
     popular: [{ uuid: 'p1', name: 'Celeste', hint: 'Favorited here' }],
   })
@@ -170,7 +171,7 @@ test('empty palette shows recent titles and household favourites', async () => {
 })
 
 test('title search runs from Discover, not only Game Catalog', async () => {
-  searchGames.mockResolvedValue([{ uuid: 'game-9', name: 'Outer Wilds' }])
+  vi.mocked(searchGames).mockResolvedValue([{ uuid: 'game-9', name: 'Outer Wilds' }])
   const user = userEvent.setup()
   renderPalette({}, { open: true }, ['/discover'])
 
@@ -178,7 +179,7 @@ test('title search runs from Discover, not only Game Catalog', async () => {
   await waitFor(() => {
     expect(searchGames).toHaveBeenCalled()
   })
-  expect(searchGames.mock.calls.at(-1)[0]).toBe('out')
+  expect(vi.mocked(searchGames).mock.calls.at(-1)![0]).toBe('out')
   expect(await screen.findByText('Outer Wilds')).toBeInTheDocument()
 })
 
@@ -247,7 +248,7 @@ test('admin external command uses location href', async () => {
 })
 
 describe('type-to-search', () => {
-  const key = (k, extra = {}) => ({ key: k, target: document.body, ...extra })
+  const key = (k: any, extra = {}) => ({ key: k, target: document.body, ...extra })
 
   test('a printable key opens the palette and seeds it', () => {
     expect(typeToSearchKey(key('a'))).toBe(true)

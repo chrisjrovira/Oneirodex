@@ -10,7 +10,7 @@ beforeEach(() => {
   } catch {
     // ignore
   }
-  stubFetch(async (input) => {
+  stubFetch(async (input: any) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return {

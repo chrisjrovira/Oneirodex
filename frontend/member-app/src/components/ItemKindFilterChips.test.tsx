@@ -10,7 +10,7 @@ import {
   ItemKindFilterChips,
 } from './ItemKindFilterChips'
 
-function cleanFilters(filters) {
+function cleanFilters(filters: any) {
   return Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== '' && value != null),
   )
@@ -45,23 +45,23 @@ test('itemKindFromSearchParams reads item_kind and content_kind alias', () => {
 })
 
 test('toggleItemKindFilter sets, multi-selects, and clears item_kind', () => {
-  const applied = []
-  toggleItemKindFilter({ sort_by: 'name' }, 'game', (next) => applied.push(next), cleanFilters)
+  const applied: any[] = []
+  toggleItemKindFilter({ sort_by: 'name' }, 'game', (next: any) => applied.push(next), cleanFilters)
   expect(applied[0]).toEqual({ sort_by: 'name', item_kind: 'game' })
 
-  toggleItemKindFilter(applied[0], 'experience', (next) => applied.push(next), cleanFilters)
+  toggleItemKindFilter(applied[0], 'experience', (next: any) => applied.push(next), cleanFilters)
   expect(applied[1]).toEqual({ sort_by: 'name', item_kind: 'game,experience' })
 
-  toggleItemKindFilter(applied[1], 'game', (next) => applied.push(next), cleanFilters)
+  toggleItemKindFilter(applied[1], 'game', (next: any) => applied.push(next), cleanFilters)
   expect(applied[2]).toEqual({ sort_by: 'name', item_kind: 'experience' })
 
-  toggleItemKindFilter(applied[2], 'experience', (next) => applied.push(next), cleanFilters)
+  toggleItemKindFilter(applied[2], 'experience', (next: any) => applied.push(next), cleanFilters)
   expect(applied[3]).toEqual({ sort_by: 'name' })
 })
 
 test('ItemKindFilterChips toggles Games then Soft titles → comma param', async () => {
   const user = userEvent.setup()
-  const applied = []
+  const applied: any[] = []
   const filters = { sort_by: 'name' }
 
   expect(ITEM_KIND_FILTER_CHIPS.map((c) => c.kind)).toEqual([
@@ -80,7 +80,7 @@ test('ItemKindFilterChips toggles Games then Soft titles → comma param', async
   const { rerender } = render(
     <ItemKindFilterChips
       filters={filters}
-      onApply={(next) => applied.push(next)}
+      onApply={(next: any) => applied.push(next)}
       cleanFilters={cleanFilters}
     />,
   )
@@ -92,7 +92,7 @@ test('ItemKindFilterChips toggles Games then Soft titles → comma param', async
   rerender(
     <ItemKindFilterChips
       filters={applied[0]}
-      onApply={(next) => applied.push(next)}
+      onApply={(next: any) => applied.push(next)}
       cleanFilters={cleanFilters}
     />,
   )

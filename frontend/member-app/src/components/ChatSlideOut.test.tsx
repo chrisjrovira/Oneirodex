@@ -4,7 +4,7 @@ import { ChatSlideOut } from './ChatSlideOut'
 import { stubFetch } from '../testJsonResponse'
 
 function defaultChatFetch() {
-  return async (input) => {
+  return async (input: any) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return {
@@ -109,7 +109,7 @@ test('close dismisses slide-out and shows launcher again', async () => {
 
 test('create room posts to channels API', async () => {
   const user = userEvent.setup()
-  const fetchMock = stubFetch(async (input, init) => {
+  const fetchMock = stubFetch(async (input: any, init: any) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return { ok: true, json: async () => ({ fixed: ['👍'], custom: [] }) }
@@ -154,16 +154,24 @@ test('create room posts to channels API', async () => {
       ([url, init]) => String(url).includes('/api/chat/channels') && init?.method === 'POST',
     )
     expect(post).toBeTruthy()
-    expect(JSON.parse(post[1].body)).toMatchObject({ name: 'party', slug: 'party' })
+    expect(JSON.parse(post![1].body)).toMatchObject({ name: 'party', slug: 'party' })
   })
 })
 
-function mockChatFetch({ channels, onArchive, onLeave } = {}) {
-  let list = channels || [
+function mockChatFetch({
+  channels,
+  onArchive,
+  onLeave,
+}: {
+  channels?: any[]
+  onArchive?: (url: string, init?: any) => any
+  onLeave?: (url: string, init?: any) => any
+} = {}) {
+  let list: any[] = channels || [
     { id: 1, name: 'household', kind: 'channel', slug: 'household', created_by_user_id: 9 },
     { id: 2, name: 'Alex', kind: 'dm' },
   ]
-  return async (input, init) => {
+  return async (input: any, init: any) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return { ok: true, json: async () => ({ fixed: ['👍'], custom: [] }) }
@@ -173,12 +181,12 @@ function mockChatFetch({ channels, onArchive, onLeave } = {}) {
     }
     if (/\/api\/chat\/channels\/\d+\/archive/.test(url) && init?.method === 'POST') {
       if (onArchive) return onArchive(url, init)
-      list = list.filter((c) => c.id !== 1)
+      list = list.filter((c: any) => c.id !== 1)
       return { ok: true, json: async () => ({ ok: true, archived: true, channel_id: 1 }) }
     }
     if (/\/api\/chat\/channels\/\d+\/leave/.test(url) && init?.method === 'POST') {
       if (onLeave) return onLeave(url, init)
-      list = list.filter((c) => c.id !== 2)
+      list = list.filter((c: any) => c.id !== 2)
       return { ok: true, json: async () => ({ ok: true, left: true, channel_id: 2 }) }
     }
     if (url.includes('/api/chat/channels') && !url.includes('/messages')) {
@@ -261,11 +269,11 @@ test('leave DM posts to leave API and refreshes list', async () => {
 
 test('leave household channel refreshes list and shows muted badge', async () => {
   const user = userEvent.setup()
-  let list = [
+  let list: any[] = [
     { id: 1, name: 'household', kind: 'channel', slug: 'household', muted: false },
     { id: 2, name: 'Alex', kind: 'dm' },
   ]
-  const fetchMock = stubFetch(async (input, init) => {
+  const fetchMock = stubFetch(async (input: any, init: any) => {
     const url = String(input)
     if (url.includes('/api/chat/emoji')) {
       return { ok: true, json: async () => ({ fixed: ['👍'], custom: [] }) }

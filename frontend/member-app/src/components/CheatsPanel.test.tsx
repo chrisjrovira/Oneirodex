@@ -23,11 +23,11 @@ vi.mock('../utils/toast', () => ({
 const GAME_UUID = '11111111-1111-4111-8111-111111111111'
 
 beforeEach(() => {
-  cheatsApi.listCheats.mockReset()
-  cheatsApi.createCheat.mockReset()
-  cheatsApi.uploadCheat.mockReset()
-  cheatsApi.deleteCheat.mockReset()
-  cheatsApi.listCheats.mockResolvedValue({ game_uuid: GAME_UUID, cheats: [] })
+  vi.mocked(cheatsApi.listCheats).mockReset()
+  vi.mocked(cheatsApi.createCheat).mockReset()
+  vi.mocked(cheatsApi.uploadCheat).mockReset()
+  vi.mocked(cheatsApi.deleteCheat).mockReset()
+  vi.mocked(cheatsApi.listCheats).mockResolvedValue({ game_uuid: GAME_UUID, cheats: [] })
 })
 
 function renderPanel(props = {}) {
@@ -40,12 +40,12 @@ function renderPanel(props = {}) {
 
 test('create form posts name, dialect, and code rows', async () => {
   const user = userEvent.setup()
-  cheatsApi.createCheat.mockResolvedValue({
+  vi.mocked(cheatsApi.createCheat).mockResolvedValue({
     name: 'Infinite_lives.cht',
     size: 42,
     url: `/api/games/${GAME_UUID}/cheats/Infinite_lives.cht`,
   })
-  cheatsApi.listCheats
+  vi.mocked(cheatsApi.listCheats)
     .mockResolvedValueOnce({ game_uuid: GAME_UUID, cheats: [] })
     .mockResolvedValueOnce({
       game_uuid: GAME_UUID,
@@ -101,8 +101,8 @@ test('shows create-unavailable message without toast spam path', async () => {
   const err = new Error(
     'Easy-create is not available on this server yet. Upload a .cht file, or wait for the create API.',
   )
-  err.code = 'create_unavailable'
-  cheatsApi.createCheat.mockRejectedValue(err)
+  ;(err as any).code = 'create_unavailable'
+  vi.mocked(cheatsApi.createCheat).mockRejectedValue(err)
 
   renderPanel()
   await screen.findByRole('heading', { name: 'Cheats' })

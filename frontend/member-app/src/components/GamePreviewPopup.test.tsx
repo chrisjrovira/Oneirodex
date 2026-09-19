@@ -48,8 +48,8 @@ const GBA_EDITION = {
 }
 
 beforeEach(() => {
-  fetchGameEditions.mockReset()
-  fetchGameEditions.mockResolvedValue({ editions: [] })
+  vi.mocked(fetchGameEditions).mockReset()
+  vi.mocked(fetchGameEditions).mockResolvedValue({ editions: [] })
 })
 
 const GAME = {
@@ -183,7 +183,7 @@ test('clicking the scrim itself dismisses', () => {
   // <body> so `position: fixed` is measured against the viewport rather than
   // against a transformed tile ancestor. Rendered in place it dimmed only the
   // tile's row.
-  fireEvent.click(document.querySelector('.od-preview__scrim'))
+  fireEvent.click(document.querySelector('.od-preview__scrim')!)
   expect(onClose).toHaveBeenCalled()
 })
 
@@ -221,20 +221,20 @@ test('renders nothing without a game', () => {
 test('lists every system the title is held on, current copy marked', async () => {
   // The grid renders one tile per library row, so two copies of a game read as
   // two unrelated games. This section is the only place they are one title.
-  fetchGameEditions.mockResolvedValue({ editions: [SNES_EDITION, GBA_EDITION] })
+  vi.mocked(fetchGameEditions).mockResolvedValue({ editions: [SNES_EDITION, GBA_EDITION] })
   renderPopup()
 
   await waitFor(() => expect(screen.getByText('Game Boy Advance')).toBeInTheDocument())
   // Scoped to the section: "PC Windows" is also the tile's platform fact, and an
   // unscoped query matches both.
   const systems = document.querySelector('.od-preview__systems')
-  expect(within(systems).getByText('PC Windows')).toBeInTheDocument()
-  expect(within(systems).getByText('This copy')).toBeInTheDocument()
-  expect(within(systems).getByText('2 systems')).toBeInTheDocument()
+  expect(within(systems! as HTMLElement).getByText('PC Windows')).toBeInTheDocument()
+  expect(within(systems! as HTMLElement).getByText('This copy')).toBeInTheDocument()
+  expect(within(systems! as HTMLElement).getByText('2 systems')).toBeInTheDocument()
 })
 
 test('offers a launcher per emulator core, not just the preferred one', async () => {
-  fetchGameEditions.mockResolvedValue({ editions: [GBA_EDITION] })
+  vi.mocked(fetchGameEditions).mockResolvedValue({ editions: [GBA_EDITION] })
   renderPopup()
 
   await waitFor(() =>
@@ -252,7 +252,7 @@ test('offers a launcher per emulator core, not just the preferred one', async ()
 test('a copy that cannot be launched says why instead of being hidden', async () => {
   // Dropping unplayable copies would answer "which systems is this on?" with a
   // half-truth, and the reason is usually the thing to act on.
-  fetchGameEditions.mockResolvedValue({ editions: [SNES_EDITION] })
+  vi.mocked(fetchGameEditions).mockResolvedValue({ editions: [SNES_EDITION] })
   renderPopup()
 
   await waitFor(() =>
@@ -264,7 +264,7 @@ test('surfaces GOG, Epic, and a trailer from the editions payload, not only Stea
   // Browse never sends game.urls or video_urls per tile. The preview already
   // asks for editions once; that is where GOG / Epic / YouTube ride, so the
   // popup matches details without becoming a second player.
-  fetchGameEditions.mockResolvedValue({
+  vi.mocked(fetchGameEditions).mockResolvedValue({
     editions: [SNES_EDITION],
     urls: [
       { type: 'gog', url: 'https://www.gog.com/game/portal_2' },
@@ -292,7 +292,7 @@ test('surfaces GOG, Epic, and a trailer from the editions payload, not only Stea
 })
 
 test('a failed editions lookup keeps Steam from browse and does not invent stores', async () => {
-  fetchGameEditions.mockRejectedValue(new Error('boom'))
+  vi.mocked(fetchGameEditions).mockRejectedValue(new Error('boom'))
   renderPopup({
     game: {
       ...GAME,
@@ -349,7 +349,7 @@ test('friendsSentence names household members without a store crowd', () => {
 })
 
 test('shows the shelf reason, extra tags, and household friends from editions', async () => {
-  fetchGameEditions.mockResolvedValue({
+  vi.mocked(fetchGameEditions).mockResolvedValue({
     editions: [SNES_EDITION],
     tags: [{ label: 'Co-op', kind: 'mode' }],
     friends: [{ id: 2, name: 'Alex', kind: 'played' }],

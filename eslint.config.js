@@ -88,7 +88,7 @@ export default [
   {
     files: [
       'frontend/**/*.{test,spec}.{js,jsx}',
-      'frontend/**/testSetup.js',
+      'frontend/**/testSetup.{js,ts}',
       'frontend/**/vite.config.js',
       'frontend/**/*.config.{js,mjs}',
     ],

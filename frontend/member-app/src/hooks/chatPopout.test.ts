@@ -23,7 +23,10 @@ describe('openChatPopoutWindow', () => {
 
     openChatPopoutWindow()
 
-    const [url, name] = open.mock.calls[0]
+    const [url, name] = open.mock.calls[0] as unknown as [string, string] as unknown as [
+      string,
+      string,
+    ]
     expect(url).toContain('/chat')
     expect(url).toContain('popout=1')
     // Named, so a second pop-out reuses the window rather than stacking copies.
@@ -36,7 +39,7 @@ describe('openChatPopoutWindow', () => {
 
     openChatPopoutWindow(42)
 
-    expect(open.mock.calls[0][0]).toContain('channel=42')
+    expect((open.mock.calls[0] as unknown as [string])[0]).toContain('channel=42')
   })
 
   test('closes the in-page panel', () => {

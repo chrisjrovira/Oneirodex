@@ -4,7 +4,7 @@ import { DetailsMoreFrom } from './DetailsMoreFrom'
 import { stubFetch } from '../testJsonResponse'
 
 vi.mock('./DiscoverShelf', () => ({
-  DiscoverShelf: ({ section }) => <div>{section.title}</div>,
+  DiscoverShelf: ({ section }: any) => <div>{section.title}</div>,
 }))
 
 test('renders vault shelves and hides when the API is empty', async () => {

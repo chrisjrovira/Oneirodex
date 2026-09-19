@@ -1,6 +1,6 @@
 import { getSeatMode, isThinSeat } from './seatMode'
 
-function setSearch(search) {
+function setSearch(search: any) {
   vi.stubGlobal('location', { ...window.location, search })
 }
 

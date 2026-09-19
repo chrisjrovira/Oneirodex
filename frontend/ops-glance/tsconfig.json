@@ -1,10 +1,7 @@
 {
-  // ops-glance SPA — converted to .ts/.tsx in Phase 3.3. `strict: true` is an
-  // override over the shared on-ramp base (which stays `strict: false` until
-  // every SPA is converted).
+  // ops-glance SPA — TypeScript since Phase 3.3.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src"]

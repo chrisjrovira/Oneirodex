@@ -12,7 +12,7 @@ import {
   batchSetPlayStatus,
 } from './batchActions'
 
-function jsonResponse(body, status = 200) {
+function jsonResponse(body: any, status = 200) {
   const payload = JSON.stringify(body)
   return Promise.resolve({
     ok: status >= 200 && status < 300,

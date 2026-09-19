@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -43,7 +44,7 @@ const BUTTON_TAG = /<button(?![a-zA-Z])((?:[^>]|\n)*?)>/g
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', '__snapshots__'])
 
-function sourceFiles(dir, out = []) {
+function sourceFiles(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     if (SKIP_DIRS.has(entry)) continue
     const full = join(dir, entry)

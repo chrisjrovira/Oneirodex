@@ -21,9 +21,9 @@ test('normalizeTilePercent maps legacy letters and clamps', () => {
 })
 
 test('tilePercentToCssVars scales min width', () => {
-  expect(tilePercentToCssVars(0)['--od-tile-min']).toBe(`${TILE_PX_MIN}px`)
-  expect(tilePercentToCssVars(100)['--od-tile-min']).toBe(`${TILE_PX_MAX}px`)
-  expect(tilePercentToCssVars(50)['--od-tile-min']).toBe('205px')
+  expect((tilePercentToCssVars(0) as any)['--od-tile-min']).toBe(`${TILE_PX_MIN}px`)
+  expect((tilePercentToCssVars(100) as any)['--od-tile-min']).toBe(`${TILE_PX_MAX}px`)
+  expect((tilePercentToCssVars(50) as any)['--od-tile-min']).toBe('205px')
 })
 
 test('normalizeTilePercent preserves fractional percent for smooth dragging', () => {
@@ -35,9 +35,9 @@ test('normalizeTilePercent preserves fractional percent for smooth dragging', ()
 test('tilePercentToCssVars produces continuous (non-integer-snapped) pixel widths', () => {
   const a = tilePercentToCssVars(33.3)
   const b = tilePercentToCssVars(33.8)
-  expect(a['--od-tile-min']).not.toBe(b['--od-tile-min'])
-  expect(parseFloat(a['--od-tile-min'])).toBeGreaterThan(TILE_PX_MIN)
-  expect(parseFloat(a['--od-tile-min'])).toBeLessThan(TILE_PX_MAX)
+  expect((a as any)['--od-tile-min']).not.toBe((b as any)['--od-tile-min'])
+  expect(parseFloat((a as any)['--od-tile-min'])).toBeGreaterThan(TILE_PX_MIN)
+  expect(parseFloat((a as any)['--od-tile-min'])).toBeLessThan(TILE_PX_MAX)
 })
 
 test('tileSizeToCssVars still accepts legacy letters', () => {
@@ -72,9 +72,9 @@ test('hover scale is one flat value at every tile size', () => {
   // never reached the screen — a later `.game-card:hover` rule hardcoded
   // scale(1.08) and won on source order — and a lift that changes with a
   // slider the member set once reads as a bug rather than a feature.
-  const small = Number(tilePercentToCssVars(0)['--od-tile-hover-scale'])
-  const mid = Number(tilePercentToCssVars(50)['--od-tile-hover-scale'])
-  const large = Number(tilePercentToCssVars(100)['--od-tile-hover-scale'])
+  const small = Number((tilePercentToCssVars(0) as any)['--od-tile-hover-scale'])
+  const mid = Number((tilePercentToCssVars(50) as any)['--od-tile-hover-scale'])
+  const large = Number((tilePercentToCssVars(100) as any)['--od-tile-hover-scale'])
 
   expect(small).toBe(TILE_HOVER_SCALE)
   expect(mid).toBe(TILE_HOVER_SCALE)
@@ -93,7 +93,7 @@ test('narrow viewports keep the same lift', () => {
 
 test('title strip height is zero when titles are off', () => {
   expect(tileTitleHeightPx(50, false)).toBe(0)
-  expect(tilePercentToCssVars(50, false)['--od-tile-title-h']).toBe('0px')
+  expect((tilePercentToCssVars(50, false) as any)['--od-tile-title-h']).toBe('0px')
 })
 
 test('title strip grows with tile size when titles are on', () => {
@@ -101,11 +101,11 @@ test('title strip grows with tile size when titles are on', () => {
   const large = tileTitleHeightPx(100, true)
   expect(small).toBeGreaterThan(0)
   expect(large).toBeGreaterThan(small)
-  expect(tilePercentToCssVars(50, true)['--od-tile-title-h']).toBe(
+  expect((tilePercentToCssVars(50, true) as any)['--od-tile-title-h']).toBe(
     `${tileTitleHeightPx(50, true)}px`,
   )
 })
 
 test('titles default to on so an older caller keeps the strip', () => {
-  expect(parseFloat(tilePercentToCssVars(50)['--od-tile-title-h'])).toBeGreaterThan(0)
+  expect(parseFloat((tilePercentToCssVars(50) as any)['--od-tile-title-h'])).toBeGreaterThan(0)
 })
