@@ -31,7 +31,7 @@ describe('OpsApp', () => {
   })
 
   test('renders the hostname from the first successful summary', async () => {
-    fetchOpsSummary.mockResolvedValueOnce(snapshot)
+    vi.mocked(fetchOpsSummary).mockResolvedValueOnce(snapshot)
 
     render(<OpsApp pollMs={15000} />)
 
@@ -39,8 +39,8 @@ describe('OpsApp', () => {
   })
 
   test('aborts an in-flight request on unmount without applying its result', async () => {
-    let resolveSummary
-    fetchOpsSummary.mockImplementationOnce(
+    let resolveSummary: (value: unknown) => void = () => {}
+    vi.mocked(fetchOpsSummary).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveSummary = resolve
@@ -48,17 +48,17 @@ describe('OpsApp', () => {
     )
 
     const { unmount } = render(<OpsApp pollMs={15000} />)
-    const signal = fetchOpsSummary.mock.calls[0][0].signal
+    const signal = vi.mocked(fetchOpsSummary).mock.calls[0][0]!.signal
 
     unmount()
     resolveSummary(snapshot)
 
-    await waitFor(() => expect(signal.aborted).toBe(true))
+    await waitFor(() => expect(signal!.aborted).toBe(true))
     expect(screen.queryByText('ops-host')).not.toBeInTheDocument()
   })
 
   test('announces the first load as a polite status', () => {
-    fetchOpsSummary.mockImplementationOnce(() => new Promise(() => {}))
+    vi.mocked(fetchOpsSummary).mockImplementationOnce(() => new Promise(() => {}))
 
     render(<OpsApp pollMs={15000} />)
 
@@ -72,7 +72,7 @@ describe('OpsApp', () => {
   })
 
   test('first failed load uses the shared error status instead of empty panels', async () => {
-    fetchOpsSummary.mockRejectedValueOnce(new Error('offline'))
+    vi.mocked(fetchOpsSummary).mockRejectedValueOnce(new Error('offline'))
 
     render(<OpsApp pollMs={15000} />)
 
@@ -83,7 +83,9 @@ describe('OpsApp', () => {
   })
 
   test('keeps the previous snapshot and offers Retry after a failed refresh', async () => {
-    fetchOpsSummary.mockResolvedValueOnce(snapshot).mockRejectedValueOnce(new Error('offline'))
+    vi.mocked(fetchOpsSummary)
+      .mockResolvedValueOnce(snapshot)
+      .mockRejectedValueOnce(new Error('offline'))
     const user = userEvent.setup()
 
     render(<OpsApp pollMs={15000} />)
