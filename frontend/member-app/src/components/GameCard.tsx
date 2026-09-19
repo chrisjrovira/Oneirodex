@@ -1,25 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { getCsrfToken } from '@oneirodex/ui'
+import { statusConfig } from './gameCard/playStatus'
+import { GameCardAdminMenu } from './gameCard/GameCardAdminMenu'
+import { GameCardPlayControl } from './gameCard/GameCardPlayControl'
+import { GameCardStatusControl } from './gameCard/GameCardStatusControl'
 import { setGameStatus, toggleFavorite } from '../api/userActions'
 import { coverUrl, DEFAULT_COVER_URL } from '../utils/coverUrl'
 import { CoverFallback } from './CoverFallback'
 import { safeHttpUrl } from '../utils/safeUrl'
 import { resumeHref } from '../api/saves'
-import { formatRelativeTime } from '../utils/formatRelativeTime'
 import { editionChipLabels } from '../utils/platformAbbrev'
 import { trailerEmbedUrls, prefersReducedMotion } from '../utils/detailsMedia'
 import { BadgeStack } from './BadgeStack'
-import { AddToCollection } from './AddToCollection'
-import { GameActionBar } from './GameActionBar'
 import { GamePreviewPopup } from './GamePreviewPopup'
 import { HOVER_TRAILER_MS, TileHoverTrailer } from './TileHoverTrailer'
-import {
-  FIRMWARE_ADMIN_HREF,
-  FIRMWARE_HELP_HREF,
-  firmwareBlockMessage,
-  isFirmwarePlayBlocked,
-} from '../utils/playHonesty'
+import { firmwareBlockMessage, isFirmwarePlayBlocked } from '../utils/playHonesty'
 
 const DEFAULT_COVER = DEFAULT_COVER_URL
 
@@ -27,28 +21,6 @@ const DEFAULT_COVER = DEFAULT_COVER_URL
 // oneirodex/setup/default_theme/css/od-tokens.css. It is written into
 // `style={{ background: currentStatus.color }}` on the status dot, so the token
 // resolves at the use site.
-const STATUS_OPTIONS = [
-  { value: 'unplayed', color: 'var(--od-status-unplayed)', label: 'Unplayed' },
-  { value: 'unfinished', color: 'var(--od-status-unfinished)', label: 'Unfinished' },
-  { value: 'beaten', color: 'var(--od-status-beaten)', label: 'Beaten' },
-  { value: 'completed', color: 'var(--od-status-completed)', label: 'Completed' },
-  { value: 'null', color: 'var(--od-status-wont-play)', label: "Won't Play" },
-  { value: '', color: 'var(--od-status-none)', label: 'Clear Status' },
-]
-
-const NO_STATUS = {
-  value: '',
-  color: 'var(--od-status-none)',
-  label: 'No Status',
-}
-
-function statusConfig(status: any) {
-  if (!status) {
-    return NO_STATUS
-  }
-  return STATUS_OPTIONS.find((option) => option.value === status) || NO_STATUS
-}
-
 const LONG_PRESS_MS = 480
 
 /**
@@ -420,75 +392,17 @@ export function GameCard({
           <span aria-hidden="true">{isFavorite ? '♥' : '♡'}</span>
         </button>
 
-        {showPlayStatus && (
-          <>
-            <button
-              type="button"
-              className={`game-status-btn${statusPending ? ' processing' : ''}`}
-              data-game-uuid={game.uuid}
-              data-current-status={status}
-              data-chrome-anchor="top-right"
-              title={currentStatus.label}
-              aria-label={`Game status: ${currentStatus.label}`}
-              aria-expanded={statusOpen}
-              disabled={statusPending}
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                setMenuOpen(false)
-                setStatusOpen((open) => !open)
-              }}
-            >
-              {statusPending ? (
-                <span className="od-spinner od-spinner--sm" aria-hidden="true" />
-              ) : (
-                <span
-                  className="od-status-dot"
-                  style={{
-                    background: currentStatus.color,
-                    opacity: status ? 1 : 0.4,
-                  }}
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-            {statusOpen && (
-              <div
-                className={`status-dropdown${statusOpen ? ' is-open' : ''}`}
-                data-game-uuid={game.uuid}
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <button
-                    key={option.value || 'clear'}
-                    type="button"
-                    className={`status-dropdown-option${option.value ? '' : ' is-clear'}`}
-                    data-status={option.value}
-                    style={{
-                      background: 'none',
-                      borderLeft: 0,
-                      borderRight: 0,
-                      borderTop: 0,
-                      width: '100%',
-                      textAlign: 'left',
-                    }}
-                    onClick={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      handleStatusSelect(option.value)
-                    }}
-                  >
-                    <span
-                      className="od-status-dot"
-                      style={{ background: option.color }}
-                      aria-hidden="true"
-                    />
-                    <span className="status-label">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+        <GameCardStatusControl
+          currentStatus={currentStatus}
+          game={game}
+          handleStatusSelect={handleStatusSelect}
+          setMenuOpen={setMenuOpen}
+          setStatusOpen={setStatusOpen}
+          showPlayStatus={showPlayStatus}
+          status={status}
+          statusOpen={statusOpen}
+          statusPending={statusPending}
+        />
 
         <button
           id={`menuButton-${game.uuid}`}
@@ -524,127 +438,16 @@ export function GameCard({
           Preview
         </button>
 
-        {menuOpen && (
-          <div id={`popupMenu-${game.uuid}`} className="popup-menu">
-            <div className="menu-item menu-item--action-bar">
-              <GameActionBar
-                gameUuid={game.uuid}
-                gameName={game.name}
-                variant="compact"
-                lifecycleState={game.lifecycle_state || 'not_downloaded'}
-                clientConnected={Boolean(game.client_connected)}
-              />
-            </div>
-            {/* Filing a game is a decision you make while looking at it, so the
-                control belongs on the tile rather than four navigations away
-                inside the shelf you want to put it on. */}
-            <div className="menu-item">
-              <AddToCollection
-                gameUuid={game.uuid}
-                gameName={game.name}
-                variant="menu"
-                onAdded={() => setMenuOpen(false)}
-              />
-            </div>
-            {isAdmin && (
-              <>
-                <div className="menu-item">
-                  <a className="menu-button" href={`/game_edit/${game.uuid}`}>
-                    Edit Details
-                  </a>
-                </div>
-                <div className="menu-item">
-                  <a className="menu-button" href={`/edit_game_images/${game.uuid}`}>
-                    Edit Images
-                  </a>
-                </div>
-                <form
-                  action={`/refresh_game_images/${game.uuid}`}
-                  method="post"
-                  className="menu-item"
-                >
-                  <input type="hidden" name="csrf_token" value={getCsrfToken()} />
-                  <button type="submit" className="menu-button refresh-game-images">
-                    Refresh Images
-                  </button>
-                </form>
-                <div className="menu-item">
-                  <button
-                    type="button"
-                    className="menu-button delete-game"
-                    data-game-uuid={game.uuid}
-                  >
-                    Remove Game from DB
-                  </button>
-                </div>
-                {enableDeleteOnDisk && (
-                  <div className="menu-item">
-                    <button
-                      type="button"
-                      className="menu-button trigger-delete-modal"
-                      data-game-uuid={game.uuid}
-                    >
-                      Delete Game on disk
-                    </button>
-                  </div>
-                )}
-                <div className="menu-item move-library-container">
-                  <button
-                    type="button"
-                    className="menu-button move-library"
-                    data-game-uuid={game.uuid}
-                  >
-                    Move Library
-                  </button>
-                  <div className="submenu-libraries" style={{ display: 'none' }}>
-                    <div className="loading-libraries">
-                      <span>Loading libraries...</span>
-                    </div>
-                    <div className="libraries-list" style={{ display: 'none' }} />
-                  </div>
-                </div>
-              </>
-            )}
-            {igdbUrl && (
-              <div className="menu-item">
-                <a className="menu-button" href={igdbUrl} target="_blank" rel="noreferrer">
-                  Open catalog page
-                </a>
-              </div>
-            )}
-            {steamStoreUrl && (
-              <div className="menu-item">
-                <a className="menu-button" href={steamStoreUrl} target="_blank" rel="noreferrer">
-                  Open in Steam store
-                </a>
-              </div>
-            )}
-            {steamRunUrl && (
-              <div className="menu-item">
-                <a className="menu-button" href={steamRunUrl}>
-                  Launch via Steam
-                </a>
-              </div>
-            )}
-            {/* Last, and always present. Everything above it depends on the
-                title being right; this is what a member reaches for when it is
-                not — wrong artwork, wrong match, a file that will not run. The
-                report form is prefilled from here so they do not have to
-                describe which game they were looking at. */}
-            <div className="menu-item">
-              <Link
-                className="menu-button"
-                to={`/report?${new URLSearchParams({
-                  area: 'library',
-                  title: `Issue with ${game.name}`,
-                  url: `/game_details/${game.uuid}`,
-                })}`}
-              >
-                Report an issue
-              </Link>
-            </div>
-          </div>
-        )}
+        <GameCardAdminMenu
+          enableDeleteOnDisk={enableDeleteOnDisk}
+          game={game}
+          igdbUrl={igdbUrl}
+          isAdmin={isAdmin}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          steamRunUrl={steamRunUrl}
+          steamStoreUrl={steamStoreUrl}
+        />
 
         {/* The clip lives here now, not on .game-card — the card was clipping
             its own popup menu. See .game-card__cover-link in components.css. */}
@@ -724,87 +527,20 @@ export function GameCard({
           </span>
         ) : null}
 
-        {playHref ? (
-          <a
-            className={resumeState ? 'od-tile-play od-tile-play--resume' : 'od-tile-play'}
-            href={playHref}
-            title={
-              resumeState
-                ? `Resume where you left off (${formatRelativeTime(resumeState.updated_at)})`
-                : 'Play in browser'
-            }
-            aria-label={
-              resumeState ? `Resume ${game.name} in browser` : `Play ${game.name} in browser`
-            }
-            onClick={(event) => event.stopPropagation()}
-          >
-            {resumeState ? 'Resume' : 'Play'}
-          </a>
-        ) : playBlocked ? (
-          <>
-            {/* A button, not a dead <span>. The blocker copy used to live in a
-                native `title`: invisible on touch, unreachable by keyboard, and
-                gone the moment the pointer moved. Play is exactly the control a
-                member presses when they do not know why something will not run,
-                so it has to be able to answer. */}
-            <button
-              type="button"
-              className="od-tile-play od-tile-play--disabled"
-              aria-expanded={playInfoOpen}
-              aria-controls={playInfoOpen ? `playBlock-${game.uuid}` : undefined}
-              aria-label={`${game.name}: browser play unavailable — ${playBlockLabel}. Why?`}
-              onClick={(event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                setMenuOpen(false)
-                setStatusOpen(false)
-                setPlayInfoOpen((open) => !open)
-              }}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              Play
-            </button>
-            {playInfoOpen && (
-              <div
-                id={`playBlock-${game.uuid}`}
-                className="popup-menu popup-menu--play"
-                role="dialog"
-                aria-label={`Why ${game.name} cannot be played in the browser`}
-              >
-                <p className="popup-menu__note">{playBlockHint}</p>
-                {firmwareBlocked && isAdmin ? (
-                  <div className="menu-item">
-                    <a className="menu-button" href={FIRMWARE_ADMIN_HREF}>
-                      Emulator profiles
-                    </a>
-                  </div>
-                ) : null}
-                <div className="menu-item">
-                  <Link
-                    className="menu-button"
-                    to={FIRMWARE_HELP_HREF}
-                    onClick={() => setPlayInfoOpen(false)}
-                  >
-                    Browser play requirements
-                  </Link>
-                </div>
-                <div className="menu-item">
-                  <Link
-                    className="menu-button"
-                    to={`/report?${new URLSearchParams({
-                      area: 'library',
-                      title: `Cannot play ${game.name} in browser (${playBlockLabel})`,
-                      url: `/game_details/${game.uuid}`,
-                    })}`}
-                    onClick={() => setPlayInfoOpen(false)}
-                  >
-                    Report an issue
-                  </Link>
-                </div>
-              </div>
-            )}
-          </>
-        ) : null}
+        <GameCardPlayControl
+          firmwareBlocked={firmwareBlocked}
+          game={game}
+          isAdmin={isAdmin}
+          playBlockHint={playBlockHint}
+          playBlockLabel={playBlockLabel}
+          playBlocked={playBlocked}
+          playHref={playHref}
+          playInfoOpen={playInfoOpen}
+          resumeState={resumeState}
+          setMenuOpen={setMenuOpen}
+          setPlayInfoOpen={setPlayInfoOpen}
+          setStatusOpen={setStatusOpen}
+        />
 
         <BadgeStack
           game={game}
