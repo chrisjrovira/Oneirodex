@@ -20,6 +20,7 @@ import { SystemDangerPage } from '../pages/SystemDangerPage'
 import { UsersPage } from '../pages/UsersPage'
 import { HubPage } from './HubPage'
 import { DetailLayoutPage } from '../pages/DetailLayoutPage'
+import { EmulatorsPage } from '../pages/EmulatorsPage'
 import { SETTINGS_CARDS, railDestinations } from './navConfig'
 
 /**
@@ -52,8 +53,9 @@ import { SETTINGS_CARDS, railDestinations } from './navConfig'
  *   /admin/integrations .... IntegrationsPage
  *   /libraries[/…], /admin/library[/…], /scan_management[/…], /admin/filters[/…]
  *                          ... LibrariesPage
- *   /admin/detail_layout ......... DetailLayoutPage  (H-D.5 port)
- *   /admin/ai, /admin/arr, /admin/emulator_profiles,
+ *   /admin/detail_layout ......... DetailLayoutPage  (H-D.5 port 1)
+ *   /admin/emulator_profiles ..... EmulatorsPage     (H-D.5 port 2)
+ *   /admin/ai, /admin/arr,
  *   /admin/new_server_settings ... SettingsSectionPage
  *   (anything else) ........ HubPage "Admin"  (the old switch `default`)
  *
@@ -124,7 +126,7 @@ export function AdminRoutes() {
       <Route path="/admin/detail_layout" element={<DetailLayoutPage />} />
       <Route path="/admin/ai" element={<SettingsSectionPage />} />
       <Route path="/admin/arr" element={<SettingsSectionPage />} />
-      <Route path="/admin/emulator_profiles" element={<SettingsSectionPage />} />
+      <Route path="/admin/emulator_profiles" element={<EmulatorsPage />} />
       <Route path="/admin/new_server_settings" element={<SettingsSectionPage />} />
 
       {/* Discovery shelves, newsletter, announcements, attract mode. */}
