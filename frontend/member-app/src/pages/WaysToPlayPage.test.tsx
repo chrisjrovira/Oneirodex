@@ -29,12 +29,23 @@ test('links catalog play paths and Systems', () => {
     '/library?play_mode=catalog',
   )
   expect(screen.getByRole('link', { name: /^Systems/ })).toHaveAttribute('href', '/systems')
-  expect(screen.queryByRole('link', { name: /^VR/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /^VR Headset titles/ })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /Plays in VR/ })).not.toBeInTheDocument()
 })
 
 test('shows VR when the flag is on', () => {
   renderPage({ enableVr: true })
-  expect(screen.getByRole('link', { name: /VR/ })).toHaveAttribute('href', '/vr')
+  expect(screen.getByRole('link', { name: /^VR Headset titles/ })).toHaveAttribute('href', '/vr')
+  // Rider R3: the three headset rows, deep links only.
+  const rows = screen.getAllByRole('link', {
+    name: /Plays in VR|VR via community profile|Plays flat/,
+  })
+  expect(rows.map((el) => el.getAttribute('href'))).toEqual([
+    '/vr?vr_compat=native_vr',
+    '/vr?vr_compat=injector_profile',
+    '/library?play_mode=companion',
+  ])
+  expect(screen.getByText(/never ships, installs or points at a shim/)).toBeInTheDocument()
 })
 
 test('cards are stacked tiles, not bar buttons', () => {

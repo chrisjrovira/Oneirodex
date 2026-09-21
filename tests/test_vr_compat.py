@@ -136,3 +136,25 @@ def test_patch_vr_compat_roundtrip_and_clear(client, app, admin, db_session, gam
 
     resp = client.patch(f'/api/games/{uuid4()}/vr_compat', json={'vr_compat': 'flat'})
     assert resp.status_code == 404
+
+
+def test_vr_hub_admits_stored_vr_compat_and_filters(client, app, admin, games):
+    """P4: the /vr hub lists perspective-tagged *and* librarian-stored titles,
+    a stored `flat` removes a title, and `?vr_compat=` narrows the hub."""
+    _login(client, app, admin)
+    app.config['ENABLE_VR_BROWSE'] = True
+
+    def hub(query=''):
+        resp = client.get(f'/api/vr/catalog?per_page=100{query}')
+        assert resp.status_code == 200
+        return {g['uuid']: g['vr_compat'] for g in resp.get_json()['games'] if g['uuid'] in {x.uuid for k, x in games.items() if k != 'lib'}}
+
+    everything = hub()
+    assert everything == {games['native'].uuid: 'native_vr', games['injector'].uuid: 'injector_profile'}
+    assert games['flat'].uuid not in everything and games['unknown'].uuid not in everything
+    assert set(hub('&vr_compat=native_vr')) == {games['native'].uuid}
+    assert set(hub('&vr_compat=injector_profile')) == {games['injector'].uuid}
+
+    detail = client.get(f'/api/vr/games/{games["injector"].uuid}')
+    assert detail.status_code == 200 and detail.get_json()['vr_compat'] == 'injector_profile'
+    assert client.get(f'/api/vr/games/{games["flat"].uuid}').status_code == 404
