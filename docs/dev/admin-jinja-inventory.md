@@ -27,13 +27,13 @@ and keeps the `<h1>` equal to the settings card title (that is what
 
 48 templates under `templates/admin/` (45 pages + 3 partials).
 
-**Tier 0 — already React (16).** Six-line shells; nothing to port:
+**Tier 0 — already React (17).** Six-line shells; nothing to port:
 `admin_announcements`, `admin_art_studio`, `admin_dashboard`, `admin_invites`,
 `admin_manage_extensions`, `admin_ops`, `admin_remote_play`,
 `admin_scan_match_settings`, `admin_settings_shell`, `admin_support`,
 `admin_system_danger`, `admin_users`, `quality_profiles`, `storage`, plus
 `admin_plugins` (empty `auto` body — React `PluginsPage` renders) and, since
-this cycle, `detail_layout` (the pattern port below).
+this cycle, `detail_layout` and `emulator_profiles` (the first two ports below).
 
 **Tier 1 — small panels (first).** One handler of under 80 lines; the API
 exists or is one small PR away. Ordered by handler size.
@@ -47,7 +47,7 @@ exists or is one small PR away. Ordered by handler size.
 | `admin_help` (294) | `od_admin_help.js` (58) | static content (no API) | — (HelpPage is member-side) |
 | `admin_manage_downloads` (83) | `od_admin_downloads.js` (62) | server-rendered table + `/api/delete_download/<id>` | — |
 | `admin_reference_sets` (133) | `od_admin_reference_sets.js` (68) | `/api/reference-sets/rehash`, `/api/licensed-catalog/refresh` (+ server-rendered table) | — |
-| `emulator_profiles` (32, `legacy`) | `od_admin_emulator_profiles.js` (68) | `/api/emulator-profiles` | route stub (`SettingsSectionPage`) |
+| `emulator_profiles` (32, `legacy`) | `od_admin_emulator_profiles.js` (68) | `/api/emulator-profiles` | **`EmulatorsPage` — done** (the firmware / RA / pilot island moved in with it) |
 | `ai_assist` (77) | `od_admin_ai_assist.js` (75) | `/api/ai/config`, `/status`, `/triage`, `/apply-triage`, `/doctor-notes` | route stub |
 | `admin_manage_igdb_settings` (33) · `admin_manage_smtp_settings` (40) | `admin_manage_igdb_settings.js` · `admin_manage_smtp_settings.js` (+ `password_visibility.js`) | form routes | `IntegrationsPage` (inventory only) |
 | `admin_chat_emoji` (66) · `admin_manage_invites` (53) · `admin_statistics` (68) · `admin_server_logs` (99) · `admin_manage_themes_readme` (90) | small / chart-utils | mixed | `InvitesPage` covers invites |
@@ -89,6 +89,6 @@ template can blank a route, which only the deployed page shows.
 | | 2026-09-19 |
 |---|---|
 | Templates | 48 |
-| Server-rendered bodies (`auto` / `legacy`) | 29 pages + 3 partials |
-| Template lines still server-rendered | 5,032 |
-| Handler JS files still loaded by a Jinja page | 34 |
+| Server-rendered bodies (`auto` / `legacy`) | 28 pages + 3 partials |
+| Template lines still server-rendered | 5,000 |
+| Handler JS files still loaded by a Jinja page | 33 |

@@ -2,9 +2,6 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AdminTabs } from './components/AdminTabs'
 import { App } from './App'
-import { EmulatorFirmwarePanel } from './components/EmulatorFirmwarePanel'
-import { BrowserPlayerPilot } from './components/BrowserPlayerPilot'
-import { RetroAchievementsPanel } from './components/RetroAchievementsPanel'
 import { ImportLeafLibraries } from './components/ImportLeafLibraries'
 import { ProposeLeafLibraries } from './components/ProposeLeafLibraries'
 import './styles.css'
@@ -42,17 +39,3 @@ document.querySelectorAll('[data-od-tabs-mount]').forEach((node) => {
   mount.dataset.reactMounted = '1'
   createRoot(mount).render(<AdminTabs container={container} />)
 })
-
-// Emulators page keeps its Jinja profile forms; firmware is the React island
-// (GT-B2 / UID-007) so the page did not have to be migrated wholesale.
-const firmwareMount = document.getElementById('emulator-firmware-mount')
-if (firmwareMount && !firmwareMount.dataset.reactMounted) {
-  firmwareMount.dataset.reactMounted = '1'
-  createRoot(firmwareMount).render(
-    <>
-      <BrowserPlayerPilot />
-      <RetroAchievementsPanel />
-      <EmulatorFirmwarePanel />
-    </>,
-  )
-}
