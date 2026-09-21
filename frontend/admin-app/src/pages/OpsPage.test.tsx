@@ -86,6 +86,44 @@ function ancillaryOpsResponse(url: any) {
       json: async () => ({ events: [] }),
     }
   }
+  if (href.includes('/admin/api/ops/devices')) {
+    return {
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+
+      text: async function () {
+        return JSON.stringify(await this.json())
+      },
+      json: async () => ({
+        ok: true,
+        window_minutes: 3,
+        count: 2,
+        devices: [
+          {
+            device_id: 'thin-tv',
+            device_kind: 'thin',
+            device_name: 'Living-room TV',
+            client_version: '1.0.0',
+            last_seen_at: new Date().toISOString(),
+            user_id: 7,
+            user_name: 'cephy',
+            online: true,
+          },
+          {
+            device_id: 'pc-1',
+            device_kind: 'companion',
+            device_name: 'Gaming PC',
+            client_version: '0.9.7',
+            last_seen_at: new Date(Date.now() - 3600_000).toISOString(),
+            user_id: 7,
+            user_name: 'cephy',
+            online: false,
+          },
+        ],
+      }),
+    }
+  }
   return null
 }
 
@@ -382,6 +420,12 @@ test('OpsPage status banner lists issues with href', async () => {
   expect(screen.getByText(/1\.2 ms/)).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Companions' })).toBeInTheDocument()
   expect(screen.getByText('windows')).toBeInTheDocument()
+  // TC-4: the device list under the by-kind table, one row per heartbeat seat.
+  expect(await screen.findByText('Living-room TV')).toBeInTheDocument()
+  expect(screen.getByText('Gaming PC')).toBeInTheDocument()
+  const tvRow = screen.getByText('Living-room TV').closest('tr')!
+  expect(tvRow).toHaveTextContent('Online')
+  expect(screen.getByText('Gaming PC').closest('tr')!).toHaveTextContent('Offline')
 })
 
 test('OpsPage splits action and warning folds; category maps to action', async () => {

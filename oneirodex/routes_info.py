@@ -3,7 +3,7 @@ from flask_login import login_required
 from sqlalchemy import select
 
 from oneirodex import db
-from oneirodex.utils.api_response import api_error
+from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.processors import get_global_settings
 from oneirodex.utils.system_stats import format_bytes
@@ -12,7 +12,7 @@ from oneirodex.utils.status import get_system_info, get_config_values, get_activ
 from oneirodex import app_version, app_start_time
 from oneirodex import cache
 from oneirodex.utils.event_logging import log_system_event
-from oneirodex.utils.ops_summary import build_ops_summary
+from oneirodex.utils.ops_summary import build_ops_summary, list_client_devices
 from oneirodex.utils.health_probes import build_liveness, build_readiness
 
 info_bp = Blueprint('info', __name__)
@@ -234,6 +234,20 @@ def ops_summary_api():
     except Exception as exc:
         current_app.logger.warning('Ops summary snapshot failed: %s', exc)
         return api_error('Ops summary is unavailable', code='unavailable')
+
+
+@info_bp.route('/admin/api/ops/devices')
+@login_required
+@admin_required
+def ops_devices_api():
+    """The operator's device list: every companion / thin / browser seat that
+    has sent a heartbeat, newest first (TC-4)."""
+    try:
+        limit = request.args.get('limit', default=200, type=int)
+        return api_ok(list_client_devices(limit=limit))
+    except Exception as exc:
+        current_app.logger.warning('Ops device list failed: %s', exc)
+        return api_error('Device list is unavailable', code='unavailable')
 
 
 @info_bp.route('/admin/api/library/health')

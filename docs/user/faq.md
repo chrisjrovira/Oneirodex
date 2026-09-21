@@ -199,6 +199,9 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 
 `/vr` is headset-friendly browse (admin flag), **not Quest-only** — PSVR2/SteamVR use a desktop browser on the PC; Quest friends use the headset browser/PWA. Thin / headset seats have **no** install pipeline. See [controllers-and-vr.md](controllers-and-vr.md).
 
+**Where do I see which devices are connected?**  
+Admin → Ops → **Companions** shows the count by kind and, under it, the device list: every companion, thin seat or browser shell that has sent a heartbeat, with its owner, version and last-seen time. *Online* means a heartbeat in the last 3 minutes.
+
 ## Licence
 
 **What licence is Oneirodex?**  

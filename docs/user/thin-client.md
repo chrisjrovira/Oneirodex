@@ -63,7 +63,7 @@ Token lives in the OS credential store under the thin app's own service (`com.on
 
 ## Presence
 
-With a token saved, the thin shell heartbeats as `device_kind=thin`, so the seat appears in the operator's device list as a thin client rather than passing for a companion. It is never sent install/update commands: the server gates that on a companion seat **and** a download scope, and the thin preset has neither.
+With a token saved, the thin shell heartbeats as `device_kind=thin`, so the seat appears in the operator's device list (Admin → Ops → Companions → Devices) as a thin client rather than passing for a companion. It is never sent install/update commands: the server gates that on a companion seat **and** a download scope, and the thin preset has neither.
 
 No token? Presence stays quiet and the library / Friends windows fall back to site login — everything else still works.
 

@@ -15,6 +15,7 @@ from oneirodex.models import (
     ScanJob,
     SystemEvents,
     UnmatchedFolder,
+    User,
 )
 from oneirodex.utils.game_servers import probe_server_health
 from oneirodex.utils.health_probes import build_readiness
@@ -321,6 +322,43 @@ def _malware_pulse():
         'clamav_version': clam.get('version'),
         'clamav_error': clam.get('error'),
         'heuristics': status.get('heuristics') or {},
+    }
+
+
+def list_client_devices(*, limit: int = 200) -> dict:
+    """Per-device rows behind the Ops "Companions" tile (TC-4, v11 H-T).
+
+    ``_companion_pulse`` answers "how many"; this answers "which" -- the
+    operator's device list. One row per ``ClientDevice`` (companion, thin
+    seat, browser shell), newest heartbeat first, with the owning user's name
+    and an ``online`` flag on the same window the tile uses, so the two never
+    disagree. A device shows up after its first heartbeat with a
+    ``device_kind``; a seat that never sent one is not a device here.
+    """
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(minutes=_COMPANION_ONLINE_MINUTES)
+    rows = db.session.execute(
+        select(ClientDevice, User.name)
+        .join(User, User.id == ClientDevice.user_id)
+        .order_by(ClientDevice.last_seen_at.desc())
+        .limit(max(1, min(int(limit or 200), 1000)))
+    ).all()
+    devices = []
+    for device, user_name in rows:
+        seen = device.last_seen_at
+        if seen is not None and seen.tzinfo is None:
+            seen = seen.replace(tzinfo=timezone.utc)
+        row = device.to_dict()
+        row.update({
+            'user_id': device.user_id,
+            'user_name': user_name,
+            'online': bool(seen and seen >= since),
+        })
+        devices.append(row)
+    return {
+        'devices': devices,
+        'count': len(devices),
+        'window_minutes': _COMPANION_ONLINE_MINUTES,
     }
 
 
