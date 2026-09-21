@@ -102,7 +102,7 @@ export function EmulatorProfilesForm() {
         preferred core when set.
       </p>
       <PageStatus loading={loading} error={loadError} onRetry={() => setReloadKey((k) => k + 1)}>
-        <p className="od-adminpage-status mb-2" role="status" aria-live="polite">
+        <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">
           {status}
         </p>
         {platforms.length === 0 ? (

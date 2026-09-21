@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { EmulatorProfilesForm } from './EmulatorsPage'
 
@@ -54,7 +54,7 @@ describe('EmulatorProfilesForm', () => {
     await user.selectOptions(screen.getByLabelText('NES'), '')
     await user.selectOptions(screen.getByLabelText('SNES'), 'snes9x')
     await user.click(screen.getByRole('button', { name: 'Save profiles' }))
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved.'))
+    expect(await screen.findByText('Saved.')).toBeInTheDocument()
     expect(puts).toEqual([{ profiles: { NES: null, SNES: 'snes9x' } }])
   })
 
