@@ -89,7 +89,7 @@ describe('platformSkins', () => {
       motion: 'pixel',
       accent: '#e60012',
     })
-    expect(skinForPlatform('PS5').motion).toBe('sheen')
+    expect(skinForPlatform('PS5')?.motion).toBe('sheen')
   })
 
   test('applyPlatformSkin sets document attributes', () => {
