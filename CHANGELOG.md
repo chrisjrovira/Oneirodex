@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Ops → Companions has a device list** (TC-4). `GET /admin/api/ops/devices` returns every companion, thin seat or browser shell that has sent a heartbeat — kind, name, member, version, last seen — with `online` judged on the same 3-minute window as the tile, and the Ops page renders it under the by-kind table. FAQ, troubleshooting and the thin-client guide say where a seat appears and why it might not.
+
 ### Fixed
 - **vitest 3.2.7 → 4.1.11 in every workspace** (GHSA-82fw-gwwq-j7x9, `@vitest/mocker` redirect-mock path traversal; Dependabot alerts 1 and 3–9). One lockfile change for all six packages; vite stays 6.4.3. Every suite is unchanged under vitest 4: shared 125 · api-client 51 · ops-glance 6 · admin 382 · desktop 124 · member 1,017. The remaining alert (`glib` 0.18 in the desktop `Cargo.lock`, Linux target only) is pinned by tauri 2.11.5 → gtk 0.18 and has no upstream fix; dismissed with that reason.
 - **The admin app's TypeScript was never linted.** `eslint.config.js` listed `shared`, `ops-glance` and `member-app` under the typescript-eslint block and not `admin-app`, so `npm run lint` — and the CI lint job — checked only the admin app's `.js` test files since its TS conversion. Added; it surfaced three dead bindings (fixed) and two `useMemo` dependency warnings in `DashboardPage` / `OpsPage` (left for their decomposition).

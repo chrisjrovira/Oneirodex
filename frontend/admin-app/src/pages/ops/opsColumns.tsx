@@ -19,6 +19,35 @@ export const COMPANION_KIND_COLUMNS: DataTableColumn[] = [
   { key: 'registered', label: 'Registered', align: 'right' },
 ]
 
+/* TC-4 (v11 H-T): the device list under the Companions tile. `online` is the
+ * server's verdict on the same window the tile counts with. */
+export const DEVICE_COLUMNS: DataTableColumn[] = [
+  {
+    key: 'online',
+    label: 'Status',
+    render: (row) => (
+      <span className={row.online ? 'od-badge od-badge--good' : 'od-badge od-badge--muted'}>
+        {row.online ? 'Online' : 'Offline'}
+      </span>
+    ),
+    value: (row) => (row.online ? 'online' : 'offline'),
+  },
+  { key: 'device_kind', label: 'Kind' },
+  {
+    key: 'device_name',
+    label: 'Name',
+    render: (row) => row.device_name || <span className="od-admin-muted">—</span>,
+  },
+  { key: 'user_name', label: 'Member' },
+  { key: 'client_version', label: 'Version', render: (row) => row.client_version || '—' },
+  {
+    key: 'last_seen_at',
+    label: 'Last seen',
+    render: (row) => (row.last_seen_at ? new Date(row.last_seen_at).toLocaleString() : '—'),
+    value: (row) => row.last_seen_at || '',
+  },
+]
+
 export const SCAN_JOB_COLUMNS: DataTableColumn[] = [
   {
     key: 'id',
