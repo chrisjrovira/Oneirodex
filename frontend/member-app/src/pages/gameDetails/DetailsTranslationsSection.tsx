@@ -1,4 +1,5 @@
 import { queueClientCommand } from '../../api/clientCommands'
+import { seatCanUseCompanion } from '../../utils/seatMode'
 import { attachPatchCatalogGuide, searchPatchCatalog } from '../../api/patchCatalog'
 import { showToast } from '../../utils/toast'
 import { Button } from '@oneirodex/ui'
@@ -38,8 +39,11 @@ export function DetailsTranslationsSection({
           {game.translation_patches.map((patch: any) => {
             const versionKey = `patch:${patch.uuid}`
             const applyBusy = busyVersionKey === versionKey
+            // TC-3: a thin seat gets the Guide link, never a queue button.
             const canApplyPatch =
-              Boolean(game.client_connected) && Boolean(game.rom_patch_apply_enabled)
+              seatCanUseCompanion() &&
+              Boolean(game.client_connected) &&
+              Boolean(game.rom_patch_apply_enabled)
             return (
               <li key={patch.uuid}>
                 <div className="od-details-page__version-row">

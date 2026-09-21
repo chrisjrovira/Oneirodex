@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { queueClientCommand } from '../api/clientCommands'
+import { seatCanUseCompanion } from '../utils/seatMode'
 import { showToast } from '../utils/toast'
 import './OpenPathModal.css'
 import { Button, Modal } from '@oneirodex/ui'
@@ -60,13 +61,19 @@ export function OpenPathModal({
     setBusy(true)
     setStatus(null)
     try {
-      if (clientConnected) {
+      // TC-3: a thin seat never queues open-on-companion; the folder is not here.
+      if (clientConnected && seatCanUseCompanion()) {
         await queueClientCommand(gameUuid || '', 'open_path', { path, select: true })
         setStatus('Queued open in file explorer for companion')
         showToast('Queued open in file explorer', 'success')
         return
       }
       await copyPath(path)
+      if (!seatCanUseCompanion()) {
+        setStatus('Path copied — open it on the desktop companion; this seat only browses.')
+        showToast('Path copied', 'info')
+        return
+      }
       setStatus('Companion offline — path copied. Open it on the host.')
       showToast('Companion offline — path copied', 'info')
     } catch (err: any) {
