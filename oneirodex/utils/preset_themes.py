@@ -110,7 +110,9 @@ from oneirodex.utils.preset_themes_geometry import _system_geometry
 # inside a 315px parent on Admin -> Integrations at phone width, pushing the
 # page sideways. A preset still carrying the old od-appbar.css keeps the
 # nowrap strip, so Reset Themes is required.
-GENERATOR_VERSION = 39
+# 40 = E1 console-family packs (six `group: 'console'` presets); existing
+# presets are byte-identical, the bump is what makes Reset Themes install them.
+GENERATOR_VERSION = 40
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'
@@ -213,7 +215,7 @@ def era_for_theme(slug: str | None) -> str:
 
 
 def theme_picker_groups(choices) -> list[dict]:
-    """Group Preferences theme choices into decade rooms, colour cabinets, uploads.
+    """Group Preferences theme choices into decade rooms, system families, colour cabinets, uploads.
 
     *choices* is the WTForms ``(value, label)`` list. Unknown / uploaded slugs
     land in Installed so the picker still covers every installed folder.
@@ -223,6 +225,12 @@ def theme_picker_groups(choices) -> list[dict]:
             'id': 'decade',
             'label': 'Decade rooms',
             'hint': 'The room you started in — same scenery language as browser play.',
+            'items': [],
+        },
+        'console': {
+            'id': 'console',
+            'label': 'System families',
+            'hint': 'The shell language of a console family, in the room it lived in.',
             'items': [],
         },
         'cabinet': {
@@ -270,7 +278,7 @@ def theme_picker_groups(choices) -> list[dict]:
             'era': DEFAULT_ERA,
             'icon_pack': '',
         })
-    return [group for group in (groups['decade'], groups['cabinet'], groups['installed']) if group['items']]
+    return [group for group in (groups['decade'], groups['console'], groups['cabinet'], groups['installed']) if group['items']]
 
 
 # --------------------------------------------------------------------------

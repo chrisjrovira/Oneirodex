@@ -79,7 +79,7 @@ is what makes that reset actually regenerate rather than keep the stale copy.
 
 ## Still open
 
-- **E1** console-named theme packs (a pack per system family, not per decade).
+- ~~**E1** console-named theme packs (a pack per system family, not per decade).~~ **Done (v11 H-T, generator 40):** six `group: 'console'` presets — Cartridge red, Disc-tray blue, Signal green, Deep blue 16-bit, Woodgrain amber, Terminal teal — each the shell language of one family in the era room it lived in; names and copy describe the look, never a maker (Class A lock). Data only: `preset_themes_catalog.py` + `preset_themes_geometry.py`.
 - ~~**E2** loading motifs in full colour per console~~ — **done.** They are
   still `currentColor`, which was the right mechanism all along; what was
   missing is that `.od-loading-motif` read `--od-accent` instead of
