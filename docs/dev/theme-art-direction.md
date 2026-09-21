@@ -86,11 +86,6 @@ is what makes that reset actually regenerate rather than keep the stale copy.
   `--od-platform-accent`, so a Mega Drive cabinet span in the theme accent like
   everything else. `platformSkins` already sets that variable on `<html>` per
   system family, and the fallback keeps every non-system page unchanged.
-- ~~**E4** per-theme rail glyph drawings~~ — **partly done.** The glyphs are one
-  shared module now (`frontend/shared/src/railIcons.tsx`) instead of two copies
-  that had already drifted by a glyph, and they respond to the icon-pack tokens
-  (`--od-icon-stroke`, `--od-icon-linecap`, `--od-icon-fill`) a preset already
-  sets — which is per-theme treatment without redrawing twenty-three paths per
-  theme. Genuinely *redrawn* per-era glyph sets remain open.
+- ~~**E4** per-theme rail glyph drawings~~ — **done (v11 H-T).** First half: one shared `railIcons.tsx` restyled by the icon-pack tokens. Second half: `frontend/shared/src/railIconsEra.tsx` redraws the eight most-visible destinations (discover · library · systems · downloads · favorites · collections · playtime · chat) in three hands — *pixel* (wood den 80s, arcade cabinet), *rounded* (teen bedroom 90s, carpet den late 90s), *angular* (media centre 00s, desk). `RailIcon` prefers the era drawing when the theme is a decade room or system-family pack (`data-theme` `era-*` / `console-*`); colour cabinets and the default keep the shared set.
 - `platformSkins` is still duplicated member↔admin; `railIcons` no longer is.
 - Generated (AI) backdrops for the six rooms, per the section above.

@@ -16,6 +16,7 @@
  * twenty-three paths per theme.
  */
 import type { SVGProps } from 'react'
+import { eraForGlyphs, eraGlyph } from './railIconsEra.js'
 
 /**
  * Padded by one unit on each side: a 2px stroke sitting on the edge of the
@@ -278,10 +279,15 @@ export const railIconPaths: Record<string, React.ReactNode> = {
 export interface RailIconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: string
   size?: number
+  /** Era whose hand draws the glyph (E4). Defaults to the shell's `data-era`
+   * when the current theme is a decade room or system-family pack; pass
+   * `null` to force the shared drawing. */
+  era?: string | null
 }
 
-export function RailIcon({ name, size = 18, ...rest }: RailIconProps) {
-  const glyph = railIconPaths[name]
+export function RailIcon({ name, size = 18, era, ...rest }: RailIconProps) {
+  const activeEra = era === undefined ? eraForGlyphs() : era
+  const glyph = eraGlyph(name, activeEra) ?? railIconPaths[name]
   // An unknown id renders nothing rather than a dot: a missing glyph should be
   // invisible, not a mark the eye reads as a real category.
   if (!glyph) return null
@@ -293,6 +299,7 @@ export function RailIcon({ name, size = 18, ...rest }: RailIconProps) {
       aria-hidden="true"
       focusable="false"
       data-icon={name}
+      data-era-hand={activeEra && eraGlyph(name, activeEra) ? activeEra : undefined}
       {...rest}
     >
       {glyph}
