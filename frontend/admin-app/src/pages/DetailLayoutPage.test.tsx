@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DetailLayoutPage } from './DetailLayoutPage'
 
@@ -68,7 +68,7 @@ describe('DetailLayoutPage', () => {
     await user.click(within(mediaRow).getByRole('checkbox'))
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved'))
+    expect(await screen.findByText('Saved')).toBeInTheDocument()
     expect(puts).toEqual([
       {
         sections: [
@@ -87,7 +87,7 @@ describe('DetailLayoutPage', () => {
     await user.click(screen.getByRole('button', { name: 'Move summary down' }))
     await user.click(screen.getByRole('button', { name: 'Reset defaults' }))
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Reset'))
+    expect(await screen.findByText('Reset')).toBeInTheDocument()
     expect(puts).toEqual([{ sections: [] }])
     const list = screen.getByRole('list', { name: 'Detail page sections' })
     expect(

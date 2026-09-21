@@ -81,7 +81,9 @@ export function DetailLayoutPage() {
       <p className="od-admin-lede">Reorder and show/hide sections on the game details page.</p>
 
       <PageStatus loading={loading} error={loadError} onRetry={() => setReloadKey((k) => k + 1)}>
-        <p className="od-admin-status text-muted" role="status" aria-live="polite">
+        {/* A polite live region without a status role: a transient "Saved" / "Reset"
+            line, the shape QualityProfilesPage uses. PageStatus owns loading / error. */}
+        <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">
           {status}
         </p>
         <ul className="list-group mb-3" aria-label="Detail page sections">
