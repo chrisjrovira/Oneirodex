@@ -1,5 +1,6 @@
 import type { DetailsGame, ExtrasModel, VersionActions } from './detailsTypes'
 import { queueClientCommand } from '../../api/clientCommands'
+import { seatCanUseCompanion } from '../../utils/seatMode'
 import { formatVersionSize, isVersionPathMissing } from '../../utils/detailsMedia'
 import { showToast } from '../../utils/toast'
 import { Button } from '@oneirodex/ui'
@@ -76,7 +77,11 @@ export function DetailsExtrasSection({
                           : 'Download'}
                       </Button>
                     ) : null}
-                    {game.client_connected && row.uuid && row.download_url && !pathMissing ? (
+                    {seatCanUseCompanion() &&
+                    game.client_connected &&
+                    row.uuid &&
+                    row.download_url &&
+                    !pathMissing ? (
                       <Button
                         type="button"
                         disabled={Boolean(busyVersionKey)}

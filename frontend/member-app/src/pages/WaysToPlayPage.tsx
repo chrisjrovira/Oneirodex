@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import './MorePage.css'
 import './WaysToPlayPage.css'
+import { isThinSeat } from '../utils/seatMode'
 import { useShellConfig } from '@oneirodex/ui'
 
 const PLAY_PATHS = [
@@ -26,6 +27,8 @@ const PLAY_PATHS = [
 
 export function WaysToPlayPage() {
   const shellConfig = useShellConfig()
+  // TC-3: on a thin seat the companion card must say the launch happens elsewhere.
+  const thinSeat = isThinSeat()
   const enableVr = Boolean(shellConfig.enableVr)
 
   return (
@@ -40,9 +43,18 @@ export function WaysToPlayPage() {
         <h2 className="od-systems-group__title">Play paths</h2>
         <div className="od-ways-to-play__grid">
           {PLAY_PATHS.map((path) => (
-            <Link key={path.id} className="od-ways-to-play__card" to={path.to}>
+            <Link
+              key={path.id}
+              className="od-ways-to-play__card"
+              to={path.to}
+              data-seat={thinSeat && path.id === 'companion' ? 'thin' : undefined}
+            >
               <h3 className="od-ways-to-play__card-title">{path.title}</h3>
-              <p className="od-ways-to-play__card-body">{path.body}</p>
+              <p className="od-ways-to-play__card-body">
+                {thinSeat && path.id === 'companion'
+                  ? 'Launches on the desktop companion, not on this seat — this seat browses and chats.'
+                  : path.body}
+              </p>
             </Link>
           ))}
         </div>
