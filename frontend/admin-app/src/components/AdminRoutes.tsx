@@ -19,6 +19,7 @@ import { ThemesPage } from '../pages/ThemesPage'
 import { SystemDangerPage } from '../pages/SystemDangerPage'
 import { UsersPage } from '../pages/UsersPage'
 import { HubPage } from './HubPage'
+import { DetailLayoutPage } from '../pages/DetailLayoutPage'
 import { SETTINGS_CARDS, railDestinations } from './navConfig'
 
 /**
@@ -51,7 +52,8 @@ import { SETTINGS_CARDS, railDestinations } from './navConfig'
  *   /admin/integrations .... IntegrationsPage
  *   /libraries[/…], /admin/library[/…], /scan_management[/…], /admin/filters[/…]
  *                          ... LibrariesPage
- *   /admin/detail_layout, /admin/ai, /admin/arr, /admin/emulator_profiles,
+ *   /admin/detail_layout ......... DetailLayoutPage  (H-D.5 port)
+ *   /admin/ai, /admin/arr, /admin/emulator_profiles,
  *   /admin/new_server_settings ... SettingsSectionPage
  *   (anything else) ........ HubPage "Admin"  (the old switch `default`)
  *
@@ -119,7 +121,7 @@ export function AdminRoutes() {
       <Route path="/scan_management/*" element={<LibrariesPage />} />
 
       {/* Settings modules with no React body yet. */}
-      <Route path="/admin/detail_layout" element={<SettingsSectionPage />} />
+      <Route path="/admin/detail_layout" element={<DetailLayoutPage />} />
       <Route path="/admin/ai" element={<SettingsSectionPage />} />
       <Route path="/admin/arr" element={<SettingsSectionPage />} />
       <Route path="/admin/emulator_profiles" element={<SettingsSectionPage />} />
