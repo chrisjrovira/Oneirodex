@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import current_app, jsonify, request
 from flask_login import current_user, login_required
-from sqlalchemy import exists, func, select
+from sqlalchemy import and_, exists, func, or_, select
 
 from oneirodex import db
 from oneirodex.models import Game, Image, PlayerPerspective, game_player_perspective_association
@@ -27,13 +27,28 @@ _VR_PERSPECTIVE_NAMES = (
 
 
 def _vr_games_query():
-    """Games tagged with a Virtual Reality player perspective — not the whole library.
+    """Games that play in a headset -- not the whole library.
+
+    A title belongs here when its perspectives say Virtual Reality, or when a
+    librarian stored ``vr_compat`` as ``native_vr`` / ``injector_profile``
+    (rider R3). A stored ``flat`` removes a perspective-tagged title -- the
+    librarian's word wins over the scrape.
 
     Uses EXISTS (not DISTINCT on Game) so Postgres JSON columns on ``games``
     do not break equality for DISTINCT.
     """
+    return select(Game).where(
+        or_(
+            Game.vr_compat.in_(('native_vr', 'injector_profile')),
+            and_(Game.vr_compat.is_(None), exists(_vr_perspective_link())),
+        )
+    )
+
+
+def _vr_perspective_link():
+    """EXISTS body: this game has a Virtual Reality player perspective."""
     assoc = game_player_perspective_association
-    vr_link = (
+    return (
         select(1)
         .select_from(
             assoc.join(
@@ -46,7 +61,10 @@ def _vr_games_query():
             func.lower(PlayerPerspective.name).in_(_VR_PERSPECTIVE_NAMES),
         )
     )
-    return select(Game).where(exists(vr_link))
+
+
+def _game_in_vr_hub(game) -> bool:
+    return game_vr_compat(game) in ('native_vr', 'injector_profile')
 
 
 def _vr_enabled() -> bool:
@@ -78,6 +96,14 @@ def vr_catalog():
         return api_error('Invalid pagination', code='bad_request')
 
     query = apply_game_access_filters(_vr_games_query(), current_user)
+    # `?vr_compat=native_vr|injector_profile` narrows the hub to one way to play.
+    wanted = str(request.args.get('vr_compat') or '').strip().lower()
+    if wanted == 'native_vr':
+        query = query.where(
+            or_(Game.vr_compat == 'native_vr', and_(Game.vr_compat.is_(None), exists(_vr_perspective_link())))
+        )
+    elif wanted == 'injector_profile':
+        query = query.where(Game.vr_compat == 'injector_profile')
     query = query.order_by(Game.name.asc())
 
     total = db.session.execute(
@@ -97,6 +123,7 @@ def vr_catalog():
                 'uuid': g.uuid,
                 'name': g.name,
                 'cover_url': _cover_url_for_uuid(g.uuid),
+                'vr_compat': game_vr_compat(g),
             }
             for g in rows
         ],
@@ -113,8 +140,8 @@ def vr_game_detail(game_uuid: str):
         return api_error('Game not found', code='not_found')
     if not user_can_access_game(current_user, game):
         return api_error('Forbidden', code='forbidden')
-    # Detail matches the catalog: non-VR titles are not part of this hub.
-    if not game_indicates_vr(game):
+    # Detail matches the catalog: titles outside the hub are not part of it.
+    if not _game_in_vr_hub(game):
         return api_error('Game not found', code='not_found')
     size = format_size(game.size) if game.size is not None else None
     return jsonify({
@@ -123,6 +150,7 @@ def vr_game_detail(game_uuid: str):
         'cover_url': _cover_url_for_uuid(game.uuid),
         'summary': game.summary,
         'size': size,
+        'vr_compat': game_vr_compat(game),
     })
 
 

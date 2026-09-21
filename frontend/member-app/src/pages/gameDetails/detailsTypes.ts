@@ -56,6 +56,7 @@ export interface DetailsGame {
   platforms?: DetailsRecord[] | null
   urls?: DetailsRecord[] | null
   translation_patches?: DetailsRecord[] | null
+  vr_compat?: 'native_vr' | 'injector_profile' | 'flat' | null
   store_specs?: DetailsRecord | null
   is_admin?: boolean
   is_favorite?: boolean

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { fetchVrCatalog, fetchVrGame } from '../api/vr'
+import { VrWayToPlayLine, vrCompatCopy } from '../components/VrWayToPlay'
 import { PageStatus } from '../components/PageStatus'
 import './VrPage.css'
 
@@ -13,6 +15,9 @@ export function VrPage() {
   const [selectedUuid, setSelectedUuid] = useState<any>(null)
   const [detail, setDetail] = useState<any>(null)
   const [detailError, setDetailError] = useState<any>(null)
+  // Rider R3: `?vr_compat=native_vr|injector_profile` narrows the hub to one way to play.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const vrCompatFilter = searchParams.get('vr_compat') || ''
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) {
@@ -29,7 +34,7 @@ export function VrPage() {
     setError(null)
     setCatalog(null)
 
-    fetchVrCatalog({ signal: controller.signal, page, perPage: PER_PAGE })
+    fetchVrCatalog({ signal: controller.signal, page, perPage: PER_PAGE, vrCompat: vrCompatFilter })
       .then((data) => {
         if (active) {
           setCatalog(data)
@@ -45,7 +50,7 @@ export function VrPage() {
       active = false
       controller.abort()
     }
-  }, [page, retryCount])
+  }, [page, retryCount, vrCompatFilter])
 
   useEffect(() => {
     if (!selectedUuid) {
@@ -87,6 +92,30 @@ export function VrPage() {
         no downloads.
       </p>
 
+      <div className="od-seg od-vr__ways" role="group" aria-label="Way to play">
+        {[
+          ['', 'All'],
+          ['native_vr', 'Native VR'],
+          ['injector_profile', 'Community profile'],
+        ].map(([value, label]) => (
+          <button
+            key={value || 'all'}
+            type="button"
+            className="od-cbtn"
+            aria-pressed={vrCompatFilter === value}
+            onClick={() => {
+              const next = new URLSearchParams(searchParams)
+              if (value) next.set('vr_compat', value)
+              else next.delete('vr_compat')
+              setSearchParams(next, { replace: true })
+              setPage(1)
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <PageStatus
         loading={!error && !catalog}
         error={error}
@@ -113,6 +142,11 @@ export function VrPage() {
             >
               {game.cover_url ? <img src={game.cover_url} alt="" loading="lazy" /> : null}
               <span>{game.name}</span>
+              {game.vr_compat === 'injector_profile' ? (
+                <small className="od-vr__card-way" title={vrCompatCopy('injector_profile')?.title}>
+                  community profile
+                </small>
+              ) : null}
             </button>
           ))}
         </div>
@@ -162,6 +196,7 @@ export function VrPage() {
               ) : null}
               <h2>{detail.name}</h2>
               {detail.size ? <p className="od-vr__meta">{detail.size}</p> : null}
+              <VrWayToPlayLine vrCompat={detail.vr_compat} />
               <p>{detail.summary || 'No summary'}</p>
             </>
           ) : null}
