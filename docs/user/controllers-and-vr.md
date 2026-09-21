@@ -31,3 +31,7 @@ Kid mode uses the same browse controls; parental ACL already filters the list. D
 | **No headset** | Normal Library + Big Picture on TV. |
 
 Android APK is a spike only.
+
+### How a title plays in VR (`vr_compat`)
+
+Beside the **VR** badge, every card and details payload carries `vr_compat`: `native_vr` (the title ships VR — derived from its IGDB perspective unless a librarian set otherwise), `injector_profile` (a community injector profile exists for it — Oneirodex links to the profile page and **never ships, installs or points at a shim**), `flat` (plays flat; use Moonlight to the household PC from a headset seat), or unknown. Librarians set it from the details page (`PATCH /api/games/<uuid>/vr_compat`); Library filters accept `?vr_compat=`. The ways-to-play rows that read it land in the next slice.
