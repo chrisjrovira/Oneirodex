@@ -42,17 +42,14 @@ must become
 so mocking toast does not blank the rest of the barrel (`confirmAction`,
 `PageStatus`, `csrfHeaders`, `groupLibraryScanToasts`…). Do it as one commit.
 
-### `platformSkins.js` — genuine divergence, needs art/chrome review
+### `platformSkins.ts` — resolved (v11 H-T, T2)
 
-- member (`chrome/platformSkins.js`): drives `data-platform` / `-family` /
-  `-motion` chrome — `applyPlatformSkin`, `clearPlatformSkin`, `sharedPlatform`,
-  `familyForPlatform`; `FAMILY_META` carries a `motion` field.
-- admin (`platformSkins.js`): Art-Studio-preview only — `ART_STUDIO_SYSTEMS`,
-  `systemLabel`; no motion; `pc` accent differs (`#2fd67b` vs `''`);
-  `skinForPlatform(unknown)` falls back to `pc` instead of returning `null`.
-
-A superset merge changes admin's `skinForPlatform` null-semantics. Needs the art
-seat to confirm the merged `FAMILY_META` + fallback behaviour.
+The family table, `FAMILY_META` (with `motion`) and `platformFamily()` live in
+`frontend/shared/src/platformSkins.ts`. Each app keeps its own wrapper because the
+fallbacks genuinely differ and neither was wrong: member `skinForPlatform` returns
+`null` for an unknown platform (so no chrome is painted); admin's falls back to `pc`
+and paints the preview default accent. No art decision was needed once the table
+was the only shared thing.
 
 ### `railIcons.jsx` — two deliberate icon sets, art decision
 
