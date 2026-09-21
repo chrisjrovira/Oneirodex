@@ -8,11 +8,14 @@ from sqlalchemy import exists, func, select
 
 from oneirodex import db
 from oneirodex.models import Game, Image, PlayerPerspective, game_player_perspective_association
-from oneirodex.utils.api_response import api_error
+from oneirodex.utils.api_response import api_error, api_ok
+from oneirodex.utils.auth import librarian_required
+from oneirodex.utils.validation import validate_body
+from oneirodex.schemas.vr import VrCompatBody
 from oneirodex.utils.cover_url import resolve_cover_url
 from oneirodex.utils.functions import format_size
 from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_game
-from oneirodex.utils.secondary_scrapers import VR_PERSPECTIVE_NAME, game_indicates_vr
+from oneirodex.utils.secondary_scrapers import VR_PERSPECTIVE_NAME, game_indicates_vr, game_vr_compat
 
 from . import apis_bp
 
@@ -120,4 +123,34 @@ def vr_game_detail(game_uuid: str):
         'cover_url': _cover_url_for_uuid(game.uuid),
         'summary': game.summary,
         'size': size,
+    })
+
+
+@apis_bp.route('/games/<game_uuid>/vr_compat', methods=['PATCH'])
+@login_required
+@librarian_required
+@validate_body(VrCompatBody)
+def game_vr_compat_patch(game_uuid: str, body: VrCompatBody):
+    """Set how a title is played in VR (rider R3): ``native_vr``,
+    ``injector_profile`` or ``flat``; ``null`` clears it back to the derived
+    answer. Not gated on ``ENABLE_VR_BROWSE`` -- the row is catalogue data the
+    details page reads whether or not the headset hub is on.
+    """
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return api_error('Game not found', code='not_found')
+    if not user_can_access_game(current_user, game):
+        return api_error('Forbidden', code='forbidden')
+    game.vr_compat = body.vr_compat
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.warning('vr_compat save failed for %s: %s', game_uuid, exc)
+        return api_error("Couldn't save the VR row.", code='internal')
+    return api_ok({
+        'uuid': game.uuid,
+        'vr_compat': game_vr_compat(game),
+        'vr_compat_stored': game.vr_compat,
+        'is_vr': game_indicates_vr(game),
     })

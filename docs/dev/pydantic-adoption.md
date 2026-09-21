@@ -99,6 +99,7 @@ Flask blueprints (`/api` for `routes_apis/`).
 | `routes_apis/client.py` | `POST /api/client/lifecycle` (`client_lifecycle_post`) | `ClientLifecycleBody` |
 | `routes_apis/wanted.py` | `POST /api/updates/wanted` (`updates_wanted_add`) | `AddWantedBody` |
 | `routes_apis/wanted.py` | `POST /api/updates/wanted/fulfill` (`updates_wanted_fulfill`) | `FulfillWantedBody` |
+| `routes_apis/vr.py` | `PATCH /api/games/<uuid>/vr_compat` (`game_vr_compat_patch`) | `VrCompatBody` |
 | `routes_apis/storage.py` | `POST /api/storage/hardlink/preview` (`hardlink_preview`) | `HardlinkBody` |
 | `routes_apis/storage.py` | `POST /api/storage/hardlink/apply` (`hardlink_apply`) | `HardlinkBody` |
 | `routes_apis/game_servers.py` | `POST /api/game-servers` (`create_game_server`) | `CreateGameServerBody` |
