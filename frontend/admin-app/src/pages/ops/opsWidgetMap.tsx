@@ -29,6 +29,19 @@ import {
 } from './opsColumns'
 import { livekitLabel, type OpsSummary, type OpsSystemDetail } from '../OpsPage'
 
+/** INSP-44 — first GPU's name and VRAM, or why the tile reads n/a. */
+export function gpuHint(gpu: OpsSummary): string {
+  const first = gpu?.gpus?.[0]
+  if (!first) return 'no NVML or reader'
+  const vram =
+    first.mem_used != null && first.mem_total != null
+      ? ` · ${formatBytes(first.mem_used)} / ${formatBytes(first.mem_total)}`
+      : ''
+  const temp = first.temp_c != null ? ` · ${first.temp_c}°C` : ''
+  const source = gpu.source === 'reader' ? ' (reader)' : ''
+  return `${first.name || 'GPU'}${vram}${temp}${source}`
+}
+
 export interface OpsDeviceRow {
   device_id: string
   device_kind: string
@@ -90,6 +103,14 @@ export function buildOpsWidgets({
             : 'n/a'
         }
         tone={usageTone(host?.memory?.percent)}
+      />
+    ),
+    'm-gpu': (
+      <MetricTile
+        label="GPU"
+        value={na(host?.gpu?.gpus?.[0]?.util_percent, '%')}
+        hint={gpuHint(host?.gpu)}
+        tone={host?.gpu ? usageTone(host.gpu.gpus?.[0]?.util_percent) : 'na'}
       />
     ),
     'm-rss': (

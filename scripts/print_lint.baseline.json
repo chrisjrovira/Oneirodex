@@ -46,7 +46,7 @@
   "oneirodex/utils/software_identify_custom_game.py": 1,
   "oneirodex/utils/status.py": 1,
   "oneirodex/utils/system_marks.py": 1,
-  "oneirodex/utils/system_stats.py": 10,
+  "oneirodex/utils/system_stats.py": 6,
   "oneirodex/utils/themes.py": 7,
   "oneirodex/utils/uptime.py": 1,
   "scripts/api_envelope_lint.py": 14,
