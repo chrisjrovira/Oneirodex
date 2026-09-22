@@ -346,3 +346,230 @@ def test_extract_rom_from_rar_missing_tool_direct(tmp_path, monkeypatch):
     with pytest.raises(ArchiveRomError) as exc:
         extract_rom_from_rar(str(rar_path), str(tmp_path / 'c'))
     assert exc.value.code == 'missing_extractor'
+
+
+# --- RAR5 on the live box, 2026-09-22 ---------------------------------------
+#
+# He reported "games for NeoGeo CD does not play the rom and has the unrar tool
+# error". Reproduced on the box: the 7-Zip in the image *lists* a RAR5 and then
+# writes 28 zero-byte files ("Unsupported Method"), rarfile streaming through
+# that same backend returns a short read, and bsdtar -- which decodes the
+# archive perfectly -- was never reached because the code assumed the tool that
+# listed could also extract. These three cover each link.
+
+def _fake_tools(tmp_path):
+    seven = tmp_path / 'fake-7z'
+    seven.write_text('#!/bin/sh\n', encoding='utf-8')
+    tar = tmp_path / 'fake-bsdtar'
+    tar.write_text('#!/bin/sh\n', encoding='utf-8')
+    return str(seven), str(tar)
+
+
+def _no_rarfile(monkeypatch):
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == 'rarfile':
+            raise ImportError('no rarfile')
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', fake_import)
+
+
+def test_a_listing_tool_that_cannot_decode_falls_back_to_the_other(tmp_path, monkeypatch):
+    """7z lists the RAR5, writes an empty file, and bsdtar finishes the job."""
+    from subprocess import CompletedProcess
+
+    rar_path = tmp_path / 'Game [!][NGCD-058].rar'
+    rar_path.write_bytes(b'fake-rar')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+    seven, tar = _fake_tools(tmp_path)
+    member = 'Game [!][NGCD-058]/Game [!][NGCD-058].cue'
+    used = []
+
+    def fake_run(cmdline, **kwargs):
+        if '-slt' in cmdline:
+            return CompletedProcess(cmdline, 0, stdout=f'Path = {member}\nSize = 12\nAttributes = A\n\n', stderr='')
+        if cmdline[0] == seven:
+            used.append('7z')
+            # What p7zip without the RAR codec actually does: exit 0-ish and
+            # leave a zero-byte husk behind.
+            (cache / 'Game [!][NGCD-058].cue').write_bytes(b'')
+            return CompletedProcess(cmdline, 2, stdout='', stderr='ERROR: Unsupported Method')
+        used.append('bsdtar')
+        # The member name is full of glob metacharacters, so it must reach
+        # bsdtar backslash-escaped -- raw, it reads as a character class and
+        # bsdtar answers "Not found in archive".
+        assert any(r'\[!\]' in arg for arg in cmdline), cmdline
+        nested = cache / 'Game [!][NGCD-058]'
+        nested.mkdir(exist_ok=True)
+        (nested / 'Game [!][NGCD-058].cue').write_bytes(b'FILE "x.bin"')
+        return CompletedProcess(cmdline, 0, stdout='', stderr='')
+
+    _no_rarfile(monkeypatch)
+    monkeypatch.setattr('oneirodex.utils.rom_archive.find_archive_extractors', lambda: {'7z': seven, 'bsdtar': tar})
+    monkeypatch.setattr('oneirodex.utils.rom_archive._run_extractor', fake_run)
+
+    path, name = resolve_playable_rom_path(str(rar_path), cache_dir=str(cache), platform='NEOGEO_CD')
+    assert name == 'Game [!][NGCD-058].cue'
+    assert Path(path).read_bytes() == b'FILE "x.bin"'
+    assert used == ['7z', 'bsdtar']  # tried the lister first, then the other tool
+
+
+def test_an_empty_extract_is_never_served_as_a_rom(tmp_path, monkeypatch):
+    """Both tools write zero bytes: fail honestly and leave no husk behind."""
+    from subprocess import CompletedProcess
+
+    from oneirodex.utils.rom_archive import ArchiveRomError
+
+    rar_path = tmp_path / 'pack.rar'
+    rar_path.write_bytes(b'fake-rar')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+    seven, tar = _fake_tools(tmp_path)
+
+    def fake_run(cmdline, **kwargs):
+        if '-slt' in cmdline:
+            return CompletedProcess(cmdline, 0, stdout='Path = Hero.nes\nSize = 9\nAttributes = A\n\n', stderr='')
+        (cache / 'Hero.nes').write_bytes(b'')
+        return CompletedProcess(cmdline, 0, stdout='', stderr='')
+
+    _no_rarfile(monkeypatch)
+    monkeypatch.setattr('oneirodex.utils.rom_archive.find_archive_extractors', lambda: {'7z': seven, 'bsdtar': tar})
+    monkeypatch.setattr('oneirodex.utils.rom_archive._run_extractor', fake_run)
+
+    with pytest.raises(ArchiveRomError) as exc:
+        resolve_playable_rom_path(str(rar_path), cache_dir=str(cache), platform='NES')
+    assert exc.value.code == 'extract_failed'
+    assert not (cache / 'Hero.nes').exists(), 'a zero-byte husk must not survive to be cached'
+
+
+def test_a_short_rarfile_read_is_refused(tmp_path, monkeypatch):
+    """rarfile streaming through a backend that cannot decode returns a short
+    stream instead of raising; half a ROM must not reach the player."""
+    import sys
+    import types
+
+    from oneirodex.utils.rom_archive import extract_rom_from_rar, ArchiveRomError
+
+    rar_path = tmp_path / 'pack.rar'
+    rar_path.write_bytes(b'fake-rar')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+
+    class FakeInfo:
+        filename = 'Hero.nes'
+        file_size = 4096
+
+        def is_dir(self):
+            return False
+
+    class FakeMember:
+        def __init__(self):
+            self._left = 1
+
+        def read(self, _n=None):
+            # 5 of the 4096 bytes the header promised, then end of stream.
+            if not self._left:
+                return b''
+            self._left = 0
+            return b'short'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    class FakeRarFile:
+        def __init__(self, *a, **k):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def infolist(self):
+            return [FakeInfo()]
+
+        def open(self, _name):
+            return FakeMember()
+
+    fake = types.ModuleType('rarfile')
+    fake.RarFile = FakeRarFile
+    monkeypatch.setitem(sys.modules, 'rarfile', fake)
+    monkeypatch.setattr('oneirodex.utils.rom_archive._configure_rarfile_tools', lambda mod: ['7z'])
+    monkeypatch.setattr('oneirodex.utils.rom_archive.find_archive_extractors', lambda: {'7z': '/usr/bin/7z'})
+    monkeypatch.setattr(
+        'oneirodex.utils.rom_archive._extract_archive_via_cli',
+        lambda *a, **k: (_ for _ in ()).throw(ArchiveRomError('cli also failed', code='extract_failed')),
+    )
+
+    with pytest.raises(ArchiveRomError) as exc:
+        extract_rom_from_rar(str(rar_path), str(cache), platform='NES')
+    assert exc.value.code == 'extract_failed'
+    assert not (cache / 'Hero.nes').exists()
+
+
+def test_one_damaged_track_does_not_cost_the_whole_cd_rip(tmp_path, monkeypatch):
+    """A CRC error on track 12 of 34 must not hide the cue sitting at member 34.
+
+    bsdtar stops the whole run on a damaged member, so the members listed after
+    it never land -- which is exactly where the cue lives in a NeoGeo CD rip.
+    The extractor drops the bad track and asks again for the rest.
+    """
+    from subprocess import CompletedProcess
+
+    rar_path = tmp_path / 'Aero [!][SW2].rar'
+    rar_path.write_bytes(b'fake-rar')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+    seven, tar = _fake_tools(tmp_path)
+    folder = 'Aero [!][SW2]'
+    cue = f'{folder}/Aero [!][SW2].cue'
+    good = f'{folder}/Aero (Track 11 of 34)[!][SW2].wav'
+    bad = f'{folder}/Aero (Track 12 of 34)[!][SW2].wav'
+    passes = []
+
+    def fake_run(cmdline, **kwargs):
+        if '-tf' in cmdline:
+            names = chr(10).join((good, bad, cue))
+            return CompletedProcess(cmdline, 0, stdout=names, stderr='')
+        # bsdtar receives the names backslash-escaped, so match on the
+        # unescaped form the way bsdtar itself would.
+        asked = [
+            arg.replace(chr(92), '')
+            for arg in cmdline
+            if 'Aero' in arg and arg != str(rar_path)
+        ]
+        passes.append(asked)
+        nested = cache / folder
+        nested.mkdir(exist_ok=True)
+        # bsdtar walks the archive in order and dies on the damaged track, so
+        # nothing listed after it is written.
+        for name in (good, bad, cue):
+            if not any(Path(name).name in arg for arg in asked):
+                continue
+            if name == bad:
+                return CompletedProcess(
+                    cmdline, 1, stdout='', stderr=f'bsdtar: {bad}: File CRC error',
+                )
+            (cache / name).write_bytes(b'REAL BYTES')
+        return CompletedProcess(cmdline, 0, stdout='', stderr='')
+
+    _no_rarfile(monkeypatch)
+    monkeypatch.setattr('oneirodex.utils.rom_archive.find_archive_extractors', lambda: {'bsdtar': tar})
+    monkeypatch.setattr('oneirodex.utils.rom_archive._run_extractor', fake_run)
+
+    path, name = resolve_playable_rom_path(str(rar_path), cache_dir=str(cache), platform='NEOGEO_CD')
+    assert name == 'Aero [!][SW2].cue'
+    assert Path(path).read_bytes() == b'REAL BYTES'
+    assert len(passes) == 2, 'should retry once, without the damaged track'
+    assert not any('Track 12' in arg for arg in passes[1]), passes[1]
+    assert not (cache / folder / Path(bad).name).exists()
+

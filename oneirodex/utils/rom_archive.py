@@ -9,6 +9,7 @@ resolves here.
 
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
@@ -16,6 +17,8 @@ from pathlib import Path
 
 # H-D.4 split: these moved to sibling modules as pure moves. Public names are
 # re-exported here because callers and tests import them from this module.
+logger = logging.getLogger(__name__)
+
 from oneirodex.utils.rom_archive_select import (  # noqa: F401
     choose_rom_member,
     path_supports_browser_extract,
@@ -166,6 +169,31 @@ def _list_roms_via_bsdtar(archive_path: str, bsdtar: str) -> list[tuple[str, int
     return members
 
 
+def _extract_paths_for(cache_dir: str, targets: list[str]) -> list[str]:
+    """Where a target can land: flattened (7z -e) or nested (bsdtar)."""
+    out: list[str] = []
+    for target in targets:
+        out.append(os.path.join(cache_dir, Path(target).name))
+        out.append(os.path.join(cache_dir, target.replace('/', os.sep)))
+    return out
+
+
+def _extracted_bytes(cache_dir: str, targets: list[str], chosen: str) -> bool:
+    """True when the member we actually asked for arrived with bytes in it."""
+    return _member_has_bytes(cache_dir, chosen)
+
+
+def _clear_empty_extracts(cache_dir: str, targets: list[str]) -> None:
+    """Remove the zero-byte husks a failed decode leaves, so the next tool
+    starts clean and a later run does not serve an empty ROM from cache."""
+    for path in _extract_paths_for(cache_dir, targets):
+        try:
+            if os.path.isfile(path) and os.path.getsize(path) == 0:
+                os.remove(path)
+        except OSError:
+            pass
+
+
 def _extract_members_via_7z(
     archive_path: str,
     cache_dir: str,
@@ -185,21 +213,96 @@ def _extract_members_via_7z(
         )
 
 
+# bsdtar matches member arguments as shell-style patterns, and ROM names are
+# full of metacharacters -- `[!]`, `[NGCD-058]`, `(Track 02 of 34)`. An exact
+# name therefore asks bsdtar for a character class and it answers "Not found in
+# archive". Backslash-escaping makes the match literal, which also keeps the
+# work to the members we want instead of unpacking 700 MB to reach one cue.
+_GLOB_METACHARS = frozenset('*?[]\\')
+
+# How many damaged members we will step over before calling the archive bad.
+_MAX_DAMAGED_MEMBERS = 6
+
+
+def _bsdtar_literal(member: str) -> str:
+    return ''.join('\\' + ch if ch in _GLOB_METACHARS else ch for ch in member)
+
+
+def _member_has_bytes(cache_dir: str, member: str) -> bool:
+    return any(
+        os.path.isfile(path) and os.path.getsize(path) > 0
+        for path in _extract_paths_for(cache_dir, [member])
+    )
+
+
+def _drop_member_files(cache_dir: str, member: str) -> None:
+    for path in _extract_paths_for(cache_dir, [member]):
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+        except OSError:
+            pass
+
+
+def _bsdtar_damaged_member(stderr: str, wanted: list[str]) -> str | None:
+    """Which member bsdtar died on, when it named one.
+
+    A CD rip with one bad audio track stops the whole run, so a cue sitting at
+    member 34 of 34 never lands even though every other track decoded. bsdtar
+    prints the member it choked on; the caller drops that one and asks again.
+    """
+    text = stderr or ''
+    hits = []
+    for member in wanted:
+        for needle in (member, Path(member).name):
+            at = text.find(needle)
+            if at >= 0:
+                hits.append((at, member))
+                break
+    return min(hits)[1] if hits else None
+
+
 def _extract_members_via_bsdtar(
     archive_path: str,
     cache_dir: str,
     members: list[str],
     bsdtar: str,
 ) -> None:
-    cmdline = [bsdtar, '-xf', archive_path, '-C', cache_dir, '--', *members]
-    result = _run_extractor(cmdline)
-    if result.returncode != 0:
+    pending = list(members)
+    damaged: list[str] = []
+    while True:
+        cmdline = [bsdtar, '-xf', archive_path, '-C', cache_dir, '--']
+        cmdline += [_bsdtar_literal(name) for name in pending]
+        result = _run_extractor(cmdline, timeout=600)
+        if result.returncode == 0:
+            break
+        detail = (result.stderr or result.stdout or 'bsdtar extract failed').strip()
+        bad = _bsdtar_damaged_member(detail, pending)
+        if bad is not None and len(damaged) < _MAX_DAMAGED_MEMBERS:
+            # Half a member is not a member; remove it so nothing serves it
+            # later, then ask for everything that has not landed yet.
+            _drop_member_files(cache_dir, bad)
+            damaged.append(bad)
+            pending = [
+                name
+                for name in pending
+                if name != bad and not _member_has_bytes(cache_dir, name)
+            ]
+            if pending:
+                continue
+            break
         raise ArchiveRomError(
             'Failed to extract ROM with bsdtar',
             status_code=415,
             code='extract_failed',
-            hint=(result.stderr or result.stdout or 'bsdtar extract failed').strip()[:240]
-            or 'Prefer re-packing as .zip or use 7z.',
+            hint=detail[:240] or 'Prefer re-packing as .zip or use 7z.',
+        )
+    if damaged:
+        logger.warning(
+            'rom_archive: %s has %d damaged member(s), extracted without them: %s',
+            os.path.basename(archive_path),
+            len(damaged),
+            ', '.join(Path(name).name for name in damaged),
         )
     # Flatten nested paths into cache_dir basenames.
     for member in members:
@@ -264,12 +367,55 @@ def _extract_archive_via_cli(
 
     targets = _cue_companion_targets(members, chosen)
     os.makedirs(cache_dir, exist_ok=True)
+
+    # The tool that could *list* the archive is not necessarily the tool that
+    # can *decompress* it: a 7-Zip build without the RAR codec lists a RAR5
+    # happily and then writes zero-byte files ("Unsupported Method"). So try
+    # the listing tool, check it produced real bytes, and fall back to the
+    # other one rather than handing the member a truncated ROM.
+    attempts: list[tuple[str, object]] = []
     if tool_name == '7z' and seven:
-        _extract_members_via_7z(archive_path, cache_dir, targets, seven)
+        attempts.append(('7z', seven))
+        if bsdtar:
+            attempts.append(('bsdtar', bsdtar))
     elif bsdtar:
-        _extract_members_via_bsdtar(archive_path, cache_dir, targets, bsdtar)
-    else:
+        attempts.append(('bsdtar', bsdtar))
+        if seven:
+            attempts.append(('7z', seven))
+    if not attempts:
         raise _missing_extractor_error(archive_kind=archive_kind)
+
+    extract_error: ArchiveRomError | None = None
+    for name, tool in attempts:
+        try:
+            if name == '7z':
+                _extract_members_via_7z(archive_path, cache_dir, targets, str(tool))
+            else:
+                _extract_members_via_bsdtar(archive_path, cache_dir, targets, str(tool))
+        except ArchiveRomError as exc:
+            extract_error = exc
+            _clear_empty_extracts(cache_dir, targets)
+            # A tool can fail the *archive* and still have written the member we
+            # asked for: one bad audio track in a 34-track CD rip makes bsdtar
+            # exit non-zero long after the .cue and the data track landed. The
+            # question is whether the ROM is here and whole, not whether every
+            # companion survived -- so check before throwing the work away.
+            if _extracted_bytes(cache_dir, targets, chosen):
+                break
+            continue
+        if _extracted_bytes(cache_dir, targets, chosen):
+            break
+        # Zero bytes on disk is a failed decode wearing a success's clothes.
+        extract_error = ArchiveRomError(
+            f'{name} produced an empty file for this {archive_kind} archive',
+            status_code=415,
+            code='extract_failed',
+            hint=f'{name} can list this archive but not decompress it (missing codec).',
+        )
+        _clear_empty_extracts(cache_dir, targets)
+    else:
+        if extract_error is not None:
+            raise extract_error
 
     # 7z -e already flattens; ensure companions land as basenames.
     for target in targets:
@@ -547,12 +693,23 @@ def extract_rom_from_rar(
             dest = os.path.join(cache_dir, safe_name)
             if os.path.isfile(dest) and os.path.getsize(dest) > 0:
                 return dest
+            expected = next((size for name, size in members if name == chosen), 0)
             with archive.open(chosen) as src, open(dest, 'wb') as out:
                 while True:
                     chunk = src.read(1024 * 1024)
                     if not chunk:
                         break
                     out.write(chunk)
+            # A backend that cannot decode this RAR returns a short stream
+            # rather than raising; a half ROM is worse than an honest failure.
+            if expected and os.path.getsize(dest) < expected:
+                os.remove(dest)
+                raise ArchiveRomError(
+                    'rar member came back short',
+                    status_code=415,
+                    code='extract_failed',
+                    hint='The configured rar backend cannot decode this archive.',
+                )
             for companion_name in _cue_companion_targets(members, chosen)[1:]:
                 companion_dest = os.path.join(cache_dir, Path(companion_name).name)
                 if os.path.isfile(companion_dest) and os.path.getsize(companion_dest) > 0:
@@ -569,16 +726,16 @@ def extract_rom_from_rar(
     except Exception as exc:
         # rarfile.Error / RarCannotExec / OSError — prefer CLI before failing.
         if tools.get('7z') or tools.get('7za') or tools.get('bsdtar'):
-            try:
-                return _extract_archive_via_cli(
-                    archive_path,
-                    cache_dir,
-                    member=member,
-                    platform=platform,
-                    archive_kind='rar',
-                )
-            except ArchiveRomError:
-                pass
+            # The CLI path knows *why* it failed (missing codec, damaged member,
+            # password). Reporting a generic "failed to read" over the top of it
+            # is what made this look like a missing unrar tool for months.
+            return _extract_archive_via_cli(
+                archive_path,
+                cache_dir,
+                member=member,
+                platform=platform,
+                archive_kind='rar',
+            )
         if not find_archive_extractors():
             raise _missing_extractor_error(archive_kind='rar') from exc
         raise ArchiveRomError(
