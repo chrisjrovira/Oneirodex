@@ -16,12 +16,16 @@ export function ModCatalogDrawer({
   open,
   onClose,
   onAdd,
+  onNoteUpdate,
   defaultSource = 'thunderstore',
 }: {
   gameUuid: string
   open: boolean
   onClose: () => void
-  onAdd: (hit: ModHit) => Promise<void> | void
+  /** Adds the hit and, when it names dependencies present in the same list, those too (INSP-38). */
+  onAdd: (hit: ModHit, dependencies: ModHit[]) => Promise<void> | void
+  /** Records a registry's newer version on the tracked row (INSP-39). */
+  onNoteUpdate?: (hit: ModHit) => Promise<void> | void
   defaultSource?: string
 }) {
   const [source, setSource] = useState(defaultSource)
@@ -64,10 +68,18 @@ export function ModCatalogDrawer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, source, gameUuid])
 
+  function dependenciesOf(hit: ModHit): ModHit[] {
+    const wanted = new Set((hit.dependencies || []).map((d) => d.toLowerCase()))
+    if (wanted.size === 0 || !hits) return []
+    return hits.filter(
+      (other) => other.url !== hit.url && !other.tracked_id && wanted.has(other.name.toLowerCase()),
+    )
+  }
+
   async function add(hit: ModHit) {
     setAdding(hit.url)
     try {
-      await onAdd(hit)
+      await onAdd(hit, dependenciesOf(hit))
     } finally {
       setAdding(null)
     }
@@ -160,7 +172,14 @@ export function ModCatalogDrawer({
                       {hit.downloads.toLocaleString()} downloads
                     </span>
                   ) : null}
+                  {hit.tracked_id ? <span className="od-modcat__tracked">tracked</span> : null}
+                  {hit.update_available ? (
+                    <span className="od-modcat__update">update: v{hit.update_available}</span>
+                  ) : null}
                 </div>
+                {hit.dependencies && hit.dependencies.length ? (
+                  <p className="od-modcat__deps">Needs: {hit.dependencies.join(', ')}</p>
+                ) : null}
                 {hit.summary ? <p className="od-modcat__summary">{hit.summary}</p> : null}
                 <div className="od-modcat__actions">
                   <a
@@ -171,14 +190,30 @@ export function ModCatalogDrawer({
                   >
                     Registry page
                   </a>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={adding === hit.url}
-                    onClick={() => void add(hit)}
-                  >
-                    {adding === hit.url ? 'Adding…' : 'Add to list'}
-                  </Button>
+                  {hit.tracked_id && hit.update_available && onNoteUpdate ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={adding === hit.url}
+                      onClick={() => void onNoteUpdate(hit)}
+                    >
+                      Mark updated to v{hit.update_available}
+                    </Button>
+                  ) : hit.tracked_id ? null : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={adding === hit.url}
+                      onClick={() => void add(hit)}
+                    >
+                      {adding === hit.url
+                        ? 'Adding…'
+                        : dependenciesOf(hit).length
+                          ? `Add with ${dependenciesOf(hit).length} needed`
+                          : 'Add to list'}
+                    </Button>
+                  )}
                 </div>
               </li>
             ))}
