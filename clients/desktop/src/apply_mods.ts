@@ -30,6 +30,8 @@ export interface GameModsResponse {
   mods: GameModRow[]
   /** Pack-level loader the librarian set; rows without their own inherit it in the hint. */
   default_loader: string
+  /** INSP-37 — the profile whose set is currently enabled, by name; `''` when none. */
+  active_profile_name: string
 }
 
 const ZIP_EXTS = new Set(['.zip', '.7z'])
@@ -123,7 +125,7 @@ export async function fetchGameMods(
   const baseUrl = auth.getBaseUrl()
   const token = auth.getToken()
   if (!baseUrl || !token) {
-    return { enabled: false, mods: [], default_loader: '' }
+    return { enabled: false, mods: [], default_loader: '', active_profile_name: '' }
   }
   const fetchImpl = options.fetchImpl ?? fetch
   const response = await fetchImpl(
@@ -137,6 +139,8 @@ export async function fetchGameMods(
     enabled?: boolean
     mods?: unknown
     default_loader?: unknown
+    profiles?: unknown
+    active_profile?: unknown
   }
   const mods = Array.isArray(data.mods)
     ? data.mods.flatMap((row) => {
@@ -161,10 +165,19 @@ export async function fetchGameMods(
         ]
       })
     : []
+  const activeId = String(data.active_profile || '').trim()
+  const activeName = Array.isArray(data.profiles)
+    ? String(
+        (data.profiles as Array<Record<string, unknown>>).find(
+          (p) => p && String(p.id) === activeId,
+        )?.name || '',
+      )
+    : ''
   return {
     enabled: data.enabled !== false,
     mods,
     default_loader: String(data.default_loader || '').trim(),
+    active_profile_name: activeId ? activeName : '',
   }
 }
 
@@ -343,7 +356,13 @@ export async function kickoffApplyModPack(
   gameUuid: string,
   options: { fetchImpl?: typeof fetch } = {},
 ): Promise<
-  | { ok: true; appliedMods: number; filesApplied: number; loaderHint: string | null }
+  | {
+      ok: true
+      appliedMods: number
+      filesApplied: number
+      loaderHint: string | null
+      profileName: string
+    }
   | { ok: false; error: string }
 > {
   if (!isTauriRuntime()) {
@@ -387,5 +406,5 @@ export async function kickoffApplyModPack(
     filesApplied += applied.applied
   }
 
-  return { ok: true, appliedMods, filesApplied, loaderHint }
+  return { ok: true, appliedMods, filesApplied, loaderHint, profileName: pack.active_profile_name }
 }
