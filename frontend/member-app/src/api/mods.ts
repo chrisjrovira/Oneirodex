@@ -12,6 +12,17 @@ export interface ModRow {
   load_order: number
   /** INSP-36 — loader slug the mod needs; `''` when unsaid. */
   loader: string
+  /** INSP-38 — ids of rows this one needs first. */
+  requires?: string[]
+  /** INSP-39 — newest version a registry showed for this row. */
+  latest_seen_version?: string
+}
+
+export interface LoaderConflict {
+  id: string
+  name: string
+  loader: string
+  default_loader: string
 }
 
 export interface ModProfile {
@@ -29,6 +40,8 @@ export interface ModPack {
   /** INSP-37 — named sets of mod ids, and which one was last activated. */
   profiles: ModProfile[]
   active_profile: string
+  /** INSP-38 — enabled rows whose loader disagrees with the pack default. */
+  loader_conflicts: LoaderConflict[]
 }
 
 export interface ModProfileImportResult {
@@ -49,6 +62,11 @@ export interface ModHit {
   downloads: number | null
   updated: string | null
   categories: string[]
+  /** INSP-38 — package names this one needs, when the registry says so. */
+  dependencies?: string[]
+  /** INSP-39 — set when the pack already tracks this hit by source URL. */
+  tracked_id?: string
+  update_available?: string | null
 }
 
 export interface ModCatalogResult {
@@ -66,6 +84,8 @@ export interface ModDraft {
   notes?: string
   loader?: string
   enabled?: boolean
+  requires?: string[]
+  latest_seen_version?: string
 }
 
 export const MOD_CATALOG_SOURCES: { id: string; label: string }[] = [
@@ -89,6 +109,9 @@ export async function fetchMods(gameUuid: string): Promise<ModPack> {
     mods: Array.isArray(data.mods) ? (data.mods as ModRow[]) : [],
     profiles: Array.isArray(data.profiles) ? (data.profiles as ModProfile[]) : [],
     active_profile: String(data.active_profile || ''),
+    loader_conflicts: Array.isArray(data.loader_conflicts)
+      ? (data.loader_conflicts as LoaderConflict[])
+      : [],
   }
 }
 

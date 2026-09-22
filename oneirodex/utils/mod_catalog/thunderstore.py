@@ -108,6 +108,13 @@ def _hit(pkg: dict[str, Any], community: dict[str, str]) -> ModHit | None:
             loader = mapped
             break
     latest = pkg.get('latest') if isinstance(pkg.get('latest'), dict) else {}
+    # "namespace-Name-1.2.3" -> "Name"; the loader pack itself is a dependency
+    # everywhere, so it shows up as `requires` and the gate can see it.
+    deps: list[str] = []
+    for dep in (pkg.get('dependencies') or latest.get('dependencies') or []):
+        parts = text(dep, 200).split('-')
+        if len(parts) >= 2:
+            deps.append(parts[1].replace('_', ' '))
     return ModHit(
         name=name.replace('_', ' '),
         url=url,
@@ -119,6 +126,7 @@ def _hit(pkg: dict[str, Any], community: dict[str, str]) -> ModHit | None:
         downloads=as_int(pkg.get('download_count') or pkg.get('total_downloads')),
         updated=text(pkg.get('last_updated') or pkg.get('date_updated'), 40) or None,
         categories=[c for c in cats if c],
+        dependencies=deps,
     )
 
 
