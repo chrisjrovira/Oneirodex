@@ -44,6 +44,8 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('mods.tracking', 'Mod tracking', 'mods', 'Per-game community mod lists'),
     PluginInfo('mods.catalog.thunderstore', 'Thunderstore catalogue', 'mods', 'Browse BepInEx / MelonLoader communities, read-only, no key (INSP-22)'),
     PluginInfo('mods.catalog.modrinth', 'Modrinth catalogue', 'mods', 'Browse Minecraft mods, read-only, no key (INSP-22)'),
+    PluginInfo('mods.catalog.gamebanana', 'GameBanana catalogue', 'mods', 'Browse long-tail UGC, read-only, no key, rate-limited (INSP-22)'),
+    PluginInfo('mods.catalog.nexus', 'Nexus Mods catalogue', 'mods', 'Browse trending + latest behind NEXUS_API_KEY; never a download (INSP-22)'),
     PluginInfo('social.community_chat', 'Community chat link', 'social', 'BYO Stoat/Matrix deep-link'),
     PluginInfo('rtc.livekit', 'LiveKit voice', 'rtc', 'Optional household voice SFU (Wave 16)'),
     PluginInfo('remote_play.moonlight', 'Remote play', 'streaming', 'BYO Sunshine/Wolf Moonlight host'),
@@ -132,10 +134,13 @@ def _runtime_status_map() -> dict[str, str]:
     except Exception:
         status['achievements.retroachievements'] = 'available'
     try:
-        from oneirodex.utils.mod_catalog import catalog_enabled
+        from oneirodex.utils.mod_catalog import catalog_enabled, source_configured, source_ids
 
-        for sid in ('thunderstore', 'modrinth'):
-            status[f'mods.catalog.{sid}'] = 'configured' if catalog_enabled() else 'disabled'
+        for sid in source_ids():
+            if not catalog_enabled():
+                status[f'mods.catalog.{sid}'] = 'disabled'
+            else:
+                status[f'mods.catalog.{sid}'] = 'configured' if source_configured(sid) else 'available'
     except Exception:
         pass
     return status
