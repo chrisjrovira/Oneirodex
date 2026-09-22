@@ -304,6 +304,25 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
             f"{bus.get('apprise', 0)} Apprise endpoint(s), ntfy {'on' if bus.get('ntfy') else 'off'}; admin alerts ride the admin_notify_* flags, social kinds {'also pushed (NOTIFY_SOCIAL_TO_BUS)' if bus.get('social_to_bus') else 'in-app only'}. Test: POST /api/admin/notify-bus/test"
             if bus.get('configured')
             else 'Nothing bundled: name an Apprise API notify URL (NOTIFY_APPRISE_URLS) and/or an ntfy topic (NOTIFY_NTFY_URL) to push admin alerts to a phone'
+    # INSP-1 -- community save-location manifest, read-only. `configured` means
+    # the daily fetch built the index at least once.
+    try:
+        from oneirodex.utils.save_paths import status_summary as _sp_status
+
+        sp = _sp_status()
+    except Exception:  # noqa: BLE001
+        sp = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='save_paths',
+        name='Save locations',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(sp.get('configured')),
+        enabled=bool(sp.get('enabled')),
+        notes=(
+            f"Community save-location manifest, {sp.get('count', 0)} titles indexed; one keyless fetch a day, paths only -- nothing synced (ENABLE_SAVE_PATHS)"
+            if sp.get('configured')
+            else 'Community save-location manifest; the daily fetch has not landed yet (ENABLE_SAVE_PATHS)'
         ),
     )
 
