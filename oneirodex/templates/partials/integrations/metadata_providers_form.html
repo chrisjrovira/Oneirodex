@@ -1,4 +1,5 @@
-{# Steam / GOG / Epic toggles for Stage D identify + PC enrichment cascade.
+{# Steam / GOG / Epic toggles for Stage D identify + PC enrichment cascade, plus the
+   keyless hash-identify switch (INSP-31).
    Config: GET|PUT /api/admin/integrations/metadata-providers #}
 <div id="metadata-providers-panel" class="settings-form">
   <p class="text-muted mb-3">
@@ -23,6 +24,12 @@
     <input type="checkbox" class="form-check-input" id="mp_epic" checked>
     <label class="form-check-label" for="mp_epic"><strong>Epic Games Store</strong></label>
     <div class="form-text" id="mp_epic_note">Stage D exact title + PC enrichment. Ownership/register links only.</div>
+  </div>
+
+  <div class="form-group form-check">
+    <input type="checkbox" class="form-check-input" id="mp_hash_identify" checked>
+    <label class="form-check-label" for="mp_hash_identify"><strong>Hash identify</strong> <span class="text-muted">(console ROMs, keyless)</span></label>
+    <div class="form-text" id="mp_hash_identify_note">Console identify after an IGDB and local-DAT miss: the file's own hashes against a keyless community lookup. Identity only, never enrichment; never a download.</div>
   </div>
 
   <hr class="my-3">

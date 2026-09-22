@@ -112,7 +112,9 @@ from oneirodex.utils.preset_themes_geometry import _system_geometry
 # nowrap strip, so Reset Themes is required.
 # 40 = E1 console-family packs (six `group: 'console'` presets); existing
 # presets are byte-identical, the bump is what makes Reset Themes install them.
-GENERATOR_VERSION = 40
+# 41 = admin_metadata_providers.js learns the hash_identify switch (INSP-31);
+# the theme JS lives on the volume, so the handler change needs a Reset.
+GENERATOR_VERSION = 41
 
 # Play-room id used when a theme does not name one (default + uploaded packs).
 DEFAULT_ERA = 'wood_den_80s'
