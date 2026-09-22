@@ -13,6 +13,7 @@ import re
 import threading
 import time
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 from oneirodex.utils.http_safe import safe_request
 from oneirodex.utils.security import validate_user_outbound_http_url
@@ -25,6 +26,8 @@ COMMUNITY_LIST_PATH = '/api/experimental/community/'
 # Ordered package listing the site itself reads; smaller than the full v1 dump.
 PACKAGES_PATH = '/api/experimental/frontend/c/{community}/packages/'
 _COMMUNITY_TTL = 24 * 3600
+# The community list is paginated at 100; a few hundred communities exist.
+MAX_COMMUNITY_PAGES = 20
 # Package categories that name a loader, mapped to the INSP-36 vocabulary.
 LOADER_CATEGORIES = {
     'bepinex': 'bepinex',
@@ -57,23 +60,49 @@ def _get(path: str, **params) -> Any:
 
 
 def _load_communities() -> list[dict[str, str]]:
+    """Every Thunderstore community, following the cursor.
+
+    The list is paginated at 100 rows and there are several hundred
+    communities -- reading only the first page meant the source could never
+    find Risk of Rain 2, Valheim or Lethal Company, and answered *no data*
+    for titles it certainly knows. Caps at MAX_COMMUNITY_PAGES so a cursor
+    loop can never run away.
+    """
     global _COMMUNITIES, _COMMUNITIES_AT
     with _LOCK:
         if _COMMUNITIES is not None and time.monotonic() - _COMMUNITIES_AT < _COMMUNITY_TTL:
             return _COMMUNITIES
     rows: list[dict[str, str]] = []
-    data = _get(COMMUNITY_LIST_PATH)
-    items = data.get('results') if isinstance(data, dict) else data
-    for item in items or []:
-        if not isinstance(item, dict):
-            continue
-        ident = text(item.get('identifier'), 100)
-        name = text(item.get('name'), 200)
-        if ident and name:
-            rows.append({'identifier': ident, 'name': name})
+    cursor: str | None = None
+    for _ in range(MAX_COMMUNITY_PAGES):
+        data = _get(COMMUNITY_LIST_PATH, **({'cursor': cursor} if cursor else {}))
+        items = data.get('results') if isinstance(data, dict) else data
+        for item in items or []:
+            if not isinstance(item, dict):
+                continue
+            ident = text(item.get('identifier'), 100)
+            name = text(item.get('name'), 200)
+            if ident and name:
+                rows.append({'identifier': ident, 'name': name})
+        cursor = _next_cursor(data)
+        if not cursor:
+            break
     with _LOCK:
         _COMMUNITIES, _COMMUNITIES_AT = rows, time.monotonic()
     return rows
+
+
+def _next_cursor(data: Any) -> str | None:
+    """The ``cursor`` query value from ``pagination.next_link``, or None."""
+    if not isinstance(data, dict):
+        return None
+    link = ((data.get('pagination') or {}) if isinstance(data.get('pagination'), dict) else {}).get('next_link')
+    if not link:
+        return None
+    try:
+        return parse_qs(urlparse(str(link)).query).get('cursor', [None])[0]
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def find_community(game_title: str) -> dict[str, str] | None:
