@@ -136,8 +136,8 @@ def test_modrinth_only_answers_for_minecraft_and_reads_loaders(app, live):
 
 
 def test_catalog_search_envelope_never_hides_silence(app, live):
-    assert set(source_ids()) == {'thunderstore', 'modrinth'}
-    assert catalog_search('nexus', 'X')['status'] == 'unknown_source'
+    assert {'thunderstore', 'modrinth'} <= set(source_ids())
+    assert catalog_search('curseforge', 'X')['status'] == 'unknown_source'
     with app.app_context(), patch.object(modrinth, 'safe_request', return_value=_resp({'hits': []})):
         ok = catalog_search('modrinth', 'Minecraft')
     assert ok['status'] == 'ok' and ok['hits'] == [] and ok['count'] == 0
