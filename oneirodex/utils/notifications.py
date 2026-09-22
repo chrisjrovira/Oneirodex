@@ -134,6 +134,15 @@ def notify_user(
         except Exception:
             # Email must never break in-app notification delivery.
             pass
+    # INSP-6: the BYO bus (Apprise API / ntfy). Social kinds go only when the
+    # operator opted in (NOTIFY_SOCIAL_TO_BUS) -- the member's in-app
+    # preference was already honoured above.
+    try:
+        from oneirodex.utils.notification_bus import publish_user_event
+
+        publish_user_event(kind=row.kind, title=row.title, body=row.body, link=_absolute_member_link(row.link))
+    except Exception:  # noqa: BLE001 -- the bus never breaks in-app delivery
+        pass
     return row
 
 
@@ -216,7 +225,7 @@ def notify_admins(
     pref_flag: str = 'notify_support',
 ) -> int:
     """Fan-out in-app alerts to all active admin users."""
-    return notify_staff(
+    count = notify_staff(
         kind=kind,
         title=title,
         body=body,
@@ -226,6 +235,15 @@ def notify_admins(
         pref_flag=pref_flag,
         min_role='admin',
     )
+    # INSP-6: one bus event per admin alert (not one per admin). The caller
+    # already checked the admin_notify_* flag for this kind.
+    try:
+        from oneirodex.utils.notification_bus import publish_admin_event
+
+        publish_admin_event(kind=kind, title=title, body=body, link=_absolute_member_link(link))
+    except Exception:  # noqa: BLE001
+        pass
+    return count
 
 
 def notify_staff(
