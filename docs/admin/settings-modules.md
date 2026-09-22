@@ -45,6 +45,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 | `ENABLE_VR_BROWSE` | on | `/vr` catalogue |
 | `ENABLE_PCDOS_BROWSER` | on | Needs vendored dosbox WASM |
 | `ENABLE_FREE_GAMES` | on | News free-games poller + API |
+| `ENABLE_SAVE_PATHS` | on | **Save location** row on PC details pages (INSP-1): one keyless fetch a day of the community save-location manifest, indexed into `static/library/save_paths/` (`SAVE_PATHS_MANIFEST_URL`, `SAVE_PATHS_CACHE_DIR`). Paths keep their `<winAppData>`-style placeholders; the desktop companion expands them for its own PC when asked to *Open save folder*, and refuses when a placeholder is unknown there. Nothing is synced or copied — the multi-device save story is sized in H-I |
 | `ENABLE_MOD_CATALOG` | on | *Browse catalogue* in a game's Mods panel: Thunderstore and Modrinth, read-only, keyless. A hit is a name, version, loader and registry page — never a file. Integrations lists both plus CurseForge as *declined* |
 | `ENABLE_ANTICHEAT_COMPAT` | on | Community anti-cheat compatibility list, one keyless fetch a day into `static/library/anticheat/`; details show the status as *community reports*. `ANTICHEAT_FEED_URL` / `ANTICHEAT_CACHE_PATH` override the source and the file. Integrations lists it as **Anti-cheat reports**, configured once the first fetch has landed |
 | `ENABLE_EMAIL_DIGEST` | on | Scheduler on; members still opt in |

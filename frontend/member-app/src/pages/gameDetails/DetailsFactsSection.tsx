@@ -1,6 +1,7 @@
 import type { DetailsGame, PathModalRequest, PathRow } from './detailsTypes'
 import { AnticheatFact } from './AnticheatFact'
 import { formatPlaytime, TaxonomyChip } from './detailsHelpers'
+import { SavePathsFact } from './SavePathsFact'
 import { Button } from '@oneirodex/ui'
 
 /** The Details facts grid: taxonomy chips, playtime, admin paths. */
@@ -106,6 +107,18 @@ export function DetailsFactsSection({
             <dt>Anti-cheat</dt>
             <dd>
               <AnticheatFact report={game.anticheat} />
+            </dd>
+          </>
+        ) : null}
+        {game.save_paths && game.save_paths.length ? (
+          <>
+            <dt>Save location</dt>
+            <dd>
+              <SavePathsFact
+                paths={game.save_paths}
+                canOpen={Boolean(game.client_connected)}
+                onOpen={(path) => setPathModal({ label: 'Save folder', path })}
+              />
             </dd>
           </>
         ) : null}
