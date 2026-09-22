@@ -168,6 +168,22 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         configured=ra_ok,
         notes='Achievement sets matched by ROM hash; member progress read-only (RETROACHIEVEMENTS_USERNAME / _API_KEY)',
     )
+    try:
+        from oneirodex.utils.hash_identify import base_url as _hash_base, is_enabled as _hash_on
+
+        hash_on = bool(_hash_on())
+        hash_host = _hash_base()
+    except Exception:
+        hash_on, hash_host = False, ''
+    add(
+        id='hash_identify',
+        name='Hash identify',
+        category='metadata',
+        admin_href='/admin/integrations#metadata-providers',
+        configured=hash_on,
+        enabled=hash_on,
+        notes=f'Keyless community hash lookup ({hash_host or "unset"}) for console ROMs after an IGDB and local-DAT miss -- identity only, never a download (ENABLE_HASH_IDENTIFY, HASH_IDENTIFY_BASE_URL)',
+    )
     add(
         id='giantbomb',
         name='Giant Bomb',
@@ -219,6 +235,28 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         configured=False,
         enabled=False,
         notes='Declined: its API terms forbid third-party download automation and require a key per app; Modrinth covers the same games without either.',
+    )
+
+    # INSP-35 -- keyless community list, read-only. `configured` means the
+    # daily fetch has landed at least once, so lookups can answer.
+    try:
+        from oneirodex.utils.anticheat_compat import status_summary as _anticheat_status
+
+        ac = _anticheat_status()
+    except Exception:  # noqa: BLE001
+        ac = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='anticheat_compat',
+        name='Anti-cheat reports',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(ac.get('configured')),
+        enabled=bool(ac.get('enabled')),
+        notes=(
+            f"Community anti-cheat compatibility, {ac.get('count', 0)} titles cached; one keyless fetch a day, reports not guarantees (ENABLE_ANTICHEAT_COMPAT)"
+            if ac.get('configured')
+            else 'Community anti-cheat compatibility; the daily fetch has not landed yet (ENABLE_ANTICHEAT_COMPAT)'
+        ),
     )
 
     hltb_on = bool(settings and getattr(settings, 'enable_hltb_integration', True))

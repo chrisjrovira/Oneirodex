@@ -1,4 +1,5 @@
 import type { DetailsGame, PathModalRequest, PathRow } from './detailsTypes'
+import { AnticheatFact } from './AnticheatFact'
 import { formatPlaytime, TaxonomyChip } from './detailsHelpers'
 import { Button } from '@oneirodex/ui'
 
@@ -97,6 +98,14 @@ export function DetailsFactsSection({
               {game.player_perspectives.map((name: any) => (
                 <TaxonomyChip key={name} kind="player_perspective" name={name} />
               ))}
+            </dd>
+          </>
+        ) : null}
+        {game.anticheat?.status ? (
+          <>
+            <dt>Anti-cheat</dt>
+            <dd>
+              <AnticheatFact report={game.anticheat} />
             </dd>
           </>
         ) : null}

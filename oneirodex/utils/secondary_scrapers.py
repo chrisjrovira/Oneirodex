@@ -122,6 +122,15 @@ def game_vr_compat(game):
     return 'native_vr' if game_indicates_vr(game) else None
 
 
+def _game_anticheat(game):
+    try:
+        from oneirodex.utils.anticheat_compat import game_anticheat
+
+        return game_anticheat(game)
+    except Exception:  # noqa: BLE001 -- a flag never breaks a card
+        return None
+
+
 def game_card_flags(game):
     """Flags used by library cards / browse JSON payloads."""
     from oneirodex.utils.item_kind import DEFAULT_ITEM_KIND, normalize_item_kind
@@ -137,6 +146,8 @@ def game_card_flags(game):
     return {
         'is_vr': game_indicates_vr(game),
         'vr_compat': game_vr_compat(game),
+        # INSP-35 — community anti-cheat reports (None = the list is silent)
+        'anticheat': _game_anticheat(game),
         'item_kind': kind,
         # Alias for UI field maps that prefer content_kind wording
         'content_kind': kind,
