@@ -153,6 +153,37 @@
   align-self: flex-start;
 }
 
+/* INSP-38 / INSP-39 */
+
+.od-mods__conflict {
+  margin: 0 0 0.7rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-warning);
+  font-size: var(--od-font-sm);
+  line-height: 1.45;
+}
+
+.od-modcat__tracked,
+.od-modcat__update {
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--od-radius-pill);
+  border: 1px solid var(--od-border);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-modcat__update {
+  border-color: var(--od-accent);
+  color: var(--od-accent);
+}
+
+.od-modcat__deps {
+  margin: 0.3rem 0 0;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
 /* Profiles (INSP-37) */
 
 .od-mods__profiles {

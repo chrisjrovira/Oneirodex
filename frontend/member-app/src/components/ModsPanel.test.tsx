@@ -191,3 +191,116 @@ test('profiles: a member sees the active profile and can copy, but has no Activa
   expect(screen.queryByRole('button', { name: /Activate|Active/ })).toBeNull()
   expect(screen.queryByText('Save profile')).toBeNull()
 })
+
+test('catalogue: a hit with dependencies is added with them, and a tracked hit offers Mark updated (INSP-38/39)', async () => {
+  const hits = [
+    {
+      name: 'BepInExPack',
+      url: 'https://ts/p/bbepis/BepInExPack/',
+      source: 'thunderstore',
+      version: '5.4',
+      loader: 'bepinex',
+      summary: '',
+      author: 'bbepis',
+      downloads: 1,
+      updated: null,
+      categories: [],
+      dependencies: [],
+    },
+    {
+      name: 'Big Mod',
+      url: 'https://ts/p/a/BigMod/',
+      source: 'thunderstore',
+      version: '2.0',
+      loader: 'bepinex',
+      summary: '',
+      author: 'a',
+      downloads: 1,
+      updated: null,
+      categories: [],
+      dependencies: ['BepInExPack'],
+    },
+    {
+      name: 'Configuration Manager',
+      url: 'https://thunderstore.io/c/x/p/a/ConfigurationManager/',
+      source: 'thunderstore',
+      version: '19.0',
+      loader: 'bepinex',
+      summary: '',
+      author: 'a',
+      downloads: 1,
+      updated: null,
+      categories: [],
+      dependencies: [],
+      tracked_id: 'm1',
+      update_available: '19.0',
+    },
+  ]
+  const calls: { url: string; method: string; body: Record<string, unknown> | undefined }[] = []
+  let nextId = 10
+  stubFetch(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input)
+    const method = (init?.method || 'GET').toUpperCase()
+    const body = init?.body ? JSON.parse(String(init.body)) : undefined
+    calls.push({ url, method, body })
+    if (url.includes('/mods/catalog'))
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ ok: true, status: 'ok', source: 'thunderstore', hits }),
+      }
+    if (method === 'POST')
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({
+          ok: true,
+          mod: { ...PACK.mods[0], id: `m${nextId++}`, name: body?.name },
+        }),
+      }
+    if (method === 'PATCH')
+      return { ok: true, status: 200, json: async () => ({ ok: true, mod: PACK.mods[0] }) }
+    return { ok: true, status: 200, json: async () => ({ ...PACK, loader_conflicts: [] }) }
+  })
+  const user = userEvent.setup()
+  render(<ModsPanel gameUuid="g1" canEdit />)
+  await screen.findByText('Configuration Manager')
+  await user.click(screen.getByRole('button', { name: 'Browse catalogue' }))
+  expect(await screen.findByText('Big Mod')).toBeTruthy()
+  expect(screen.getByText('Needs: BepInExPack')).toBeTruthy()
+  expect(screen.getByText('update: v19.0')).toBeTruthy()
+
+  await user.click(screen.getByRole('button', { name: 'Add with 1 needed' }))
+  await waitFor(() => expect(calls.filter((c) => c.method === 'POST').length).toBe(2))
+  const posts = calls.filter((c) => c.method === 'POST')
+  expect(posts[0].body?.name).toBe('BepInExPack')
+  expect(posts[1].body?.name).toBe('Big Mod')
+  expect(posts[1].body?.requires).toEqual(['m10'])
+
+  await user.click(screen.getByRole('button', { name: 'Mark updated to v19.0' }))
+  await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
+  const patch = calls.find((c) => c.method === 'PATCH')!
+  expect(patch.url).toMatch(/\/mods\/m1$/)
+  expect(patch.body).toEqual({ version: '19.0', latest_seen_version: '19.0' })
+})
+
+test('a loader mismatch is said plainly on the panel', async () => {
+  stubFetch(async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      ...PACK,
+      loader_conflicts: [
+        {
+          id: 'm1',
+          name: 'Configuration Manager',
+          loader: 'melonloader',
+          default_loader: 'bepinex',
+        },
+      ],
+    }),
+  }))
+  render(<ModsPanel gameUuid="g1" />)
+  expect(await screen.findByRole('note')).toHaveTextContent(/Loader mismatch/)
+  expect(screen.getByRole('note')).toHaveTextContent('Configuration Manager (melonloader)')
+})

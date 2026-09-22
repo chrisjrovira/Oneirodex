@@ -29,6 +29,7 @@ from oneirodex.utils.game_mods import (
     delete_mod,
     list_mods_summary,
     load_mods,
+    loader_conflicts,
     mods_enabled,
     save_mods,
     set_default_loader,
@@ -98,7 +99,7 @@ def get_game_mods(game_uuid: str):
     if denied:
         return denied
     pack = load_mods(game_uuid)
-    return jsonify({'enabled': True, **pack})
+    return jsonify({'enabled': True, **pack, 'loader_conflicts': loader_conflicts(pack)})
 
 
 @apis_bp.route('/games/<game_uuid>/mods/catalog', methods=['GET'])
@@ -128,6 +129,7 @@ def get_game_mods_catalog(game_uuid: str):
         game.name or '',
         query=(request.args.get('q') or '').strip(),
         limit=request.args.get('limit', type=int),
+        tracked=load_mods(game_uuid)['mods'],
     )
     return api_ok({'game_uuid': game_uuid, **result})
 
