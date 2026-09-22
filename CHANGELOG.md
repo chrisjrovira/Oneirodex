@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`/chat`, `/calendar` and every other lazily loaded member page that reads the viewer or shell config no longer blanks the SPA.** The shell linked `member-app.js?v=<token>` while the route chunks import `../member-app.js` bare, so the browser evaluated the entry twice — two module instances, two copies of every React context, and `useViewer()` / `useShellConfig()` threw *"must be used within a <…Provider>"* on the second one, unmounting the app and leaving only the room backdrop. `dist_asset` now links the module entry at its bare path (the stylesheet keeps its token); freshness for the entry is already carried by the `no-cache` header `asgi.py` puts on unhashed `static/dist/` files. Regression test in `tests/test_theme_asset.py`.
+
+### Changed
+- **README and docs media rebuilt from a live capture instance.** A new README (token-drawn section headers and feature cards, a composited hero, a screens gallery, a how-to gallery), 49 fresh stills across every member and admin surface, and **20 narrated how-to videos** (AI voice via `edge-tts`, in-page captions, WebVTT tracks, transcripts, posters) replacing the ten silent clips. Pipeline: `scripts/serve_capture.py` (one-command capture instance), `scripts/capture_docs_media.py`, `scripts/capture_howto_videos.py`, `scripts/render_readme_art.py`, shared `scripts/capture_common.py`. Recipe and gates: [CAPTURE.md](docs/assets/readme/CAPTURE.md).
+
 ## [1.0.0] — 2026-09-18
 
 First stable release. Everything below shipped on top of `1.0.0-beta` (2026-08-06):

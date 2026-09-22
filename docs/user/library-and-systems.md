@@ -1,6 +1,6 @@
 # Game Catalog & Systems
 
-> 🎬 Watch: [browsing the library](../media/video/howto/howto-library.webm) · [a game page](../media/video/howto/howto-game-details.webm) · [Discover](../media/video/howto/howto-discover.webm) · [Systems](../media/video/howto/howto-systems.webm) — [all how-to videos](../media/video/howto/README.md)
+> 🎬 Watch (narrated): [find a game](../media/video/howto/howto-library.mp4) · [a game page](../media/video/howto/howto-game-details.mp4) · [Discover](../media/video/howto/howto-discover.mp4) · [Systems & completion](../media/video/howto/howto-systems.mp4) · [collections, wishlist & favourites](../media/video/howto/howto-collections.mp4) · [calendar, news & activity](../media/video/howto/howto-calendar-news.mp4) — [all how-to videos, with transcripts](../media/video/howto/README.md)
 
 ## Game Catalog
 

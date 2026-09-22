@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="88" viewBox="0 0 1200 88" role="img" aria-label="What is Oneirodex?">
+  <defs>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12a4a0"/><stop offset=".5" stop-color="#2fd67b"/><stop offset="1" stop-color="#4ef2a1"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2fd67b" stop-opacity=".16"/><stop offset=".55" stop-color="#2fd67b" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="88" rx="14" fill="#141820"/>
+  <rect width="1200" height="88" rx="14" fill="url(#glow)"/>
+  <rect x=".5" y=".5" width="1199" height="87" rx="13.5" fill="none" stroke="#ffffff" stroke-opacity=".12"/>
+  <rect x="18" y="18" width="6" height="52" rx="3" fill="url(#bar)"/>
+  <text x="44" y="36" fill="#2fd67b" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3">01 · OVERVIEW</text>
+  <text x="44" y="66" fill="#f2f4f8" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="800">What is Oneirodex?</text>
+</svg>

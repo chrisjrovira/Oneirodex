@@ -38,7 +38,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Reviewing the bundled W31 commit | [dev/w31-commit-attribution.md](dev/w31-commit-attribution.md) — which of `c6fd7bf7`'s 236 files are the security audit and which are the UI pass |
 | OIDC / Authentik SSO | [runbooks/oidc-sso.md](runbooks/oidc-sso.md), [runbooks/oidc-authentik-unraid.md](runbooks/oidc-authentik-unraid.md) |
 | API | [openapi/openapi.json](openapi/openapi.json) |
-| How-to videos | [media/video/howto/](media/video/howto/README.md) — one worked example per section (members + admins) |
+| How-to videos | [media/video/howto/](media/video/howto/README.md) — 20 narrated clips (AI voice, captions, WebVTT + transcripts), one worked example per feature, members + admins |
 | README media | [assets/readme/](assets/readme/) · capture recipe [CAPTURE.md](assets/readme/CAPTURE.md) |
 
 ## Layout

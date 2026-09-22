@@ -1,0 +1,413 @@
+[
+  {
+    "name": "tour",
+    "title": "Meet Oneirodex",
+    "kicker": "Overview",
+    "blurb": "A quick lap of the member app \u2014 Discover, the catalog, Systems, and the household.",
+    "guide": "docs/user/getting-started.md",
+    "file": "howto-tour.mp4",
+    "poster": "howto-tour.png",
+    "vtt": "howto-tour.vtt",
+    "seconds": 65,
+    "transcript": [
+      "Meet Oneirodex. A quick lap of the member app \u2014 Discover, the catalog, Systems, and the household.",
+      "Oneirodex is a self-hosted game library for a household. This is the member app, and Discover is where it opens.",
+      "Shelves surface what is new, what friends are playing, store deals, and curated rows an admin arranges.",
+      "Game Catalog is the whole library \u2014 every scanned title, with filters, badges and play buttons on each tile.",
+      "Systems groups the same library by console family, with a licensed catalog behind each console.",
+      "Chat, Friends and Notifications make it a household rather than a file share.",
+      "And everything you just saw is one Ctrl-K away from anywhere.",
+      "The rest of these clips take each of those areas one at a time.",
+      "That is meet oneirodex. The written guide is in the docs folder, at docs/user/getting-started.md."
+    ]
+  },
+  {
+    "name": "library",
+    "title": "Find a game in your library",
+    "kicker": "Members",
+    "blurb": "Filters, segments, tile size and the actions on a tile.",
+    "guide": "docs/user/library-and-systems.md",
+    "file": "howto-library.mp4",
+    "poster": "howto-library.png",
+    "vtt": "howto-library.vtt",
+    "seconds": 74,
+    "transcript": [
+      "Find a game in your library. Filters, segments, tile size and the actions on a tile.",
+      "Game Catalog lists every title Oneirodex has scanned and identified.",
+      "The segments across the top split games from soft titles, emulators and utilities.",
+      "Back to All.",
+      "Filters opens the full set \u2014 library, system, genre, theme, play path, and sort. Update, Missing, New and Lang are one-tap chips.",
+      "Type part of a name to narrow the grid as you go.",
+      "Clear it, and close the panel.",
+      "Every tile carries a Play button when browser play is available, a system chip, and a freshness badge \u2014 NEW here, UPDATE or MISSING after later scans.",
+      "The heart marks a favourite, and the menu holds download, collection and status actions.",
+      "Close the menu, then open a title to read its page.",
+      "That is find a game in your library. The written guide is in the docs folder, at docs/user/library-and-systems.md."
+    ]
+  },
+  {
+    "name": "game-details",
+    "title": "Read a game page",
+    "kicker": "Members",
+    "blurb": "Download, play, install, versions, saved states and cheats \u2014 in one place.",
+    "guide": "docs/user/library-and-systems.md",
+    "file": "howto-game-details.mp4",
+    "poster": "howto-game-details.png",
+    "vtt": "howto-game-details.vtt",
+    "seconds": 64,
+    "transcript": [
+      "Read a game page. Download, play, install, versions, saved states and cheats \u2014 in one place.",
+      "Open any tile and you land on the game page.",
+      "The header has the cover, size and status chips, and the actions: Download the files, Install through the desktop companion, or Play in browser where the system supports it.",
+      "Add to collection keeps household lists; Check updates and DLC asks the store side for newer versions.",
+      "Details on the right shows the library folder and playtime. Open path hands the folder to the desktop companion.",
+      "Versions lists the base game and every extra Oneirodex has matched.",
+      "Saved states and household cheat files live here too \u2014 browser play and the companion both read the same ones.",
+      "That is read a game page. The written guide is in the docs folder, at docs/user/library-and-systems.md."
+    ]
+  },
+  {
+    "name": "discover",
+    "title": "Discover \u2014 the storefront",
+    "kicker": "Members",
+    "blurb": "Shelves, zones, pin and hide, and See all.",
+    "guide": "docs/user/library-and-systems.md",
+    "file": "howto-discover.mp4",
+    "poster": "howto-discover.png",
+    "vtt": "howto-discover.vtt",
+    "seconds": 55,
+    "transcript": [
+      "Discover \u2014 the storefront. Shelves, zones, pin and hide, and See all.",
+      "Discover is Oneirodex as a storefront for your own library.",
+      "Each row is a shelf. New Library Games, Most Downloaded, Curated for you \u2014 an admin orders them and can add custom ones with dates.",
+      "Pin keeps a shelf at the top for you; Hide removes it for your account only.",
+      "Arrows scroll a shelf, and See all opens it as a full page.",
+      "Zones at the top are curated views \u2014 New and updated, and Elsewhere for titles outside the vault.",
+      "Everything here is your library, arranged \u2014 never a store queue.",
+      "That is discover \u2014 the storefront. The written guide is in the docs folder, at docs/user/library-and-systems.md."
+    ]
+  },
+  {
+    "name": "systems",
+    "title": "Systems and set completion",
+    "kicker": "Members",
+    "blurb": "Console families, the licensed catalog, export packs and DAT completion.",
+    "guide": "docs/user/library-and-systems.md",
+    "file": "howto-systems.mp4",
+    "poster": "howto-systems.png",
+    "vtt": "howto-systems.vtt",
+    "seconds": 55,
+    "transcript": [
+      "Systems and set completion. Console families, the licensed catalog, export packs and DAT completion.",
+      "Systems is the same library grouped by console family.",
+      "Each console tile shows how many games you hold, whether they run in the browser, and a Catalog link to the licensed release list.",
+      "Export packs write a gamelist for ES-DE or Pegasus, so other front ends can show the same library without moving a file.",
+      "Completion compares your ROM sets against No-Intro and Redump DATs an admin uploads.",
+      "Region chips and percentages tell you exactly what is missing per system.",
+      "That is systems and set completion. The written guide is in the docs folder, at docs/user/library-and-systems.md."
+    ]
+  },
+  {
+    "name": "play",
+    "title": "Ways to play",
+    "kicker": "Members",
+    "blurb": "Browser play, the desktop companion, and Big Picture for the TV.",
+    "guide": "docs/user/browser-play.md",
+    "file": "howto-play.mp4",
+    "poster": "howto-play.png",
+    "vtt": "howto-play.vtt",
+    "seconds": 54,
+    "transcript": [
+      "Ways to play. Browser play, the desktop companion, and Big Picture for the TV.",
+      "Ways to Play lists every path to actually running a game.",
+      "Browser play uses WebRetro for supported consoles \u2014 cores are fetched at first boot, and cloud saves and cheats ride along.",
+      "The desktop companion installs, launches and updates PC titles; Catalog is browse-only.",
+      "On a tile, Play opens the game straight in a new tab.",
+      "Play buttons appear only where the system, the core and any BIOS are actually ready \u2014 no fake Play buttons.",
+      "Playtime keeps the record of what you ran and for how long.",
+      "That is ways to play. The written guide is in the docs folder, at docs/user/browser-play.md."
+    ]
+  },
+  {
+    "name": "big-picture",
+    "title": "Big Picture on the TV",
+    "kicker": "Members",
+    "blurb": "A ten-foot interface driven by a controller or a few keys.",
+    "guide": "docs/user/browser-play.md",
+    "file": "howto-big-picture.mp4",
+    "poster": "howto-big-picture.png",
+    "vtt": "howto-big-picture.vtt",
+    "seconds": 38,
+    "transcript": [
+      "Big Picture on the TV. A ten-foot interface driven by a controller or a few keys.",
+      "Big Picture is the living-room view \u2014 large tiles, one focused title, controller-friendly.",
+      "Left and right browse.",
+      "Enter or A opens, D downloads, Y brings up friends, and B starts attract mode.",
+      "Escape blurs the focus and Home returns to the first tile.",
+      "That is big picture on the tv. The written guide is in the docs folder, at docs/user/browser-play.md."
+    ]
+  },
+  {
+    "name": "chat-spaces",
+    "title": "Chat, rooms and spaces",
+    "kicker": "Members",
+    "blurb": "Household rooms, reactions and threads, voice, and invite-only spaces.",
+    "guide": "docs/user/social-and-voice.md",
+    "file": "howto-chat-spaces.mp4",
+    "poster": "howto-chat-spaces.png",
+    "vtt": "howto-chat-spaces.vtt",
+    "seconds": 59,
+    "transcript": [
+      "Chat, rooms and spaces. Household rooms, reactions and threads, voice, and invite-only spaces.",
+      "Chat slides out over whatever you are doing.",
+      "Expand gives it the whole pane.",
+      "Rooms are household channels \u2014 general, looking for players, whatever you add.",
+      "Messages take reactions, replies and threads.",
+      "Voice and Screenshare open a LiveKit session for the room when an admin has enabled it.",
+      "Switch to another room.",
+      "Spaces are servers of their own \u2014 text and voice channels, household-wide or invite-only. Paste an invite code to join one.",
+      "Pop out opens chat as its own window, handy on a second screen.",
+      "That is chat, rooms and spaces. The written guide is in the docs folder, at docs/user/social-and-voice.md."
+    ]
+  },
+  {
+    "name": "friends",
+    "title": "Friends and presence",
+    "kicker": "Members",
+    "blurb": "The friends dock, adding people, and the pop-out companion.",
+    "guide": "docs/user/social-and-voice.md",
+    "file": "howto-friends.mp4",
+    "poster": "howto-friends.png",
+    "vtt": "howto-friends.vtt",
+    "seconds": 42,
+    "transcript": [
+      "Friends and presence. The friends dock, adding people, and the pop-out companion.",
+      "Friends is a dock, not a page \u2014 it opens from the rail and stays put.",
+      "It shows who in the household is online and what they are playing.",
+      "Add someone by username.",
+      "Pinned keeps the dock open across pages; Pop out makes it an always-on-top window with the desktop companion.",
+      "Chat and Activity jump straight to those surfaces.",
+      "That is friends and presence. The written guide is in the docs folder, at docs/user/social-and-voice.md."
+    ]
+  },
+  {
+    "name": "collections",
+    "title": "Collections, wishlist and favourites",
+    "kicker": "Members",
+    "blurb": "The lists that organise a library \u2014 and Downloads for what you took.",
+    "guide": "docs/user/library-and-systems.md",
+    "file": "howto-collections.mp4",
+    "poster": "howto-collections.png",
+    "vtt": "howto-collections.vtt",
+    "seconds": 46,
+    "transcript": [
+      "Collections, wishlist and favourites. The lists that organise a library \u2014 and Downloads for what you took.",
+      "Collections are named lists you build from any game page or tile menu.",
+      "Wishlist tracks titles you want \u2014 the release calendar and store deals feed it.",
+      "Favourites is the heart on a tile, collected.",
+      "Downloads lists what you have taken from the library and the zips still being built.",
+      "Updates is the inbox for new versions and extras that scans find for titles you hold.",
+      "That is collections, wishlist and favourites. The written guide is in the docs folder, at docs/user/library-and-systems.md."
+    ]
+  },
+  {
+    "name": "calendar-news",
+    "title": "Calendar, news and activity",
+    "kicker": "Members",
+    "blurb": "What is coming, what happened, and what the household did.",
+    "guide": "docs/user/library-and-systems.md",
+    "file": "howto-calendar-news.mp4",
+    "poster": "howto-calendar-news.png",
+    "vtt": "howto-calendar-news.vtt",
+    "seconds": 46,
+    "transcript": [
+      "Calendar, news and activity. What is coming, what happened, and what the household did.",
+      "Release calendar is IGDB's schedule, filtered to what you own or wish for. List or Month view.",
+      "Month lays the same releases on a grid.",
+      "News collects store and publisher feeds an admin has turned on.",
+      "Activity is the household timeline \u2014 scans, downloads, plays and posts.",
+      "Notifications are yours alone: mentions, invites, finished scans.",
+      "That is calendar, news and activity. The written guide is in the docs folder, at docs/user/library-and-systems.md."
+    ]
+  },
+  {
+    "name": "preferences",
+    "title": "Themes, rooms, icons and fonts",
+    "kicker": "Members",
+    "blurb": "Make it yours from the Preferences modal.",
+    "guide": "docs/user/preferences-themes.md",
+    "file": "howto-preferences.mp4",
+    "poster": "howto-preferences.png",
+    "vtt": "howto-preferences.vtt",
+    "seconds": 60,
+    "transcript": [
+      "Themes, rooms, icons and fonts. Make it yours from the Preferences modal.",
+      "Preferences lives under the account menu.",
+      "Library sets your page size and default sort.",
+      "Decade rooms are the scenery \u2014 a 1980s wood den, a 90s bedroom, an arcade floor. Browser play uses the same room.",
+      "Colour cabinets are palettes that still sit in a room rather than a flat colour.",
+      "Icon packs are independent of the theme \u2014 Outline, Filled, Duotone, Pixel, Soft and Mono.",
+      "Fonts offer era faces per system; tile size is a continuous slider.",
+      "Save, and the whole app takes the new look.",
+      "That is themes, rooms, icons and fonts. The written guide is in the docs folder, at docs/user/preferences-themes.md."
+    ]
+  },
+  {
+    "name": "command-palette",
+    "title": "The command palette",
+    "kicker": "Members",
+    "blurb": "Ctrl-K or Cmd-K to search titles and jump anywhere.",
+    "guide": "docs/user/getting-started.md",
+    "file": "howto-command-palette.mp4",
+    "poster": "howto-command-palette.png",
+    "vtt": "howto-command-palette.vtt",
+    "seconds": 36,
+    "transcript": [
+      "The command palette. Ctrl-K or Cmd-K to search titles and jump anywhere.",
+      "From any page, press Control K.",
+      "Empty, it lists everywhere you can go \u2014 and, once you have played something, your recent titles and household favourites.",
+      "Type two letters to search titles and destinations.",
+      "Enter goes there.",
+      "That is the command palette. The written guide is in the docs folder, at docs/user/getting-started.md."
+    ]
+  },
+  {
+    "name": "help-support",
+    "title": "Help and reporting a problem",
+    "kicker": "Members",
+    "blurb": "The in-app guide, and Report issue straight to the admin inbox.",
+    "guide": "docs/user/faq.md",
+    "file": "howto-help-support.mp4",
+    "poster": "howto-help-support.png",
+    "vtt": "howto-help-support.vtt",
+    "seconds": 39,
+    "transcript": [
+      "Help and reporting a problem. The in-app guide, and Report issue straight to the admin inbox.",
+      "Help is the in-app guide \u2014 pick a topic and the answer opens underneath.",
+      "Expand all reads it straight through.",
+      "Topics cover browser play, controllers, cheats, translations and the licence.",
+      "Report sends an issue to the admin's Support inbox, and on to GitHub when configured.",
+      "That is help and reporting a problem. The written guide is in the docs folder, at docs/user/faq.md."
+    ]
+  },
+  {
+    "name": "admin-libraries",
+    "title": "Libraries and scans",
+    "kicker": "Admins",
+    "blurb": "Add a library, point a scan at a folder, watch the job.",
+    "guide": "docs/admin/libraries-and-scans.md",
+    "file": "howto-admin-libraries.mp4",
+    "poster": "howto-admin-libraries.png",
+    "vtt": "howto-admin-libraries.vtt",
+    "seconds": 54,
+    "transcript": [
+      "Libraries and scans. Add a library, point a scan at a folder, watch the job.",
+      "Libraries and scans is where a library begins.",
+      "Each library is a platform plus a folder. Select rows to scan, edit, group or delete them.",
+      "Scan chooses a library and a folder \u2014 on this box, a NAS share, or any declared scan location \u2014 and whether games are folders or files.",
+      "Options cover missing games, missing images, extras, and HowLongToBeat.",
+      "Scan jobs shows every run with progress, and Unmatched holds what could not be identified for you to fix by hand.",
+      "That is libraries and scans. The written guide is in the docs folder, at docs/admin/libraries-and-scans.md."
+    ]
+  },
+  {
+    "name": "admin-discover",
+    "title": "Shelves and events",
+    "kicker": "Admins",
+    "blurb": "Arrange Discover: reorder, hide, and add custom shelves with dates.",
+    "guide": "docs/admin/discover-sections.md",
+    "file": "howto-admin-discover.mp4",
+    "poster": "howto-admin-discover.png",
+    "vtt": "howto-admin-discover.vtt",
+    "seconds": 50,
+    "transcript": [
+      "Shelves and events. Arrange Discover: reorder, hide, and add custom shelves with dates.",
+      "Discovery sections controls what members see on Discover.",
+      "Drag to reorder. Toggle Visible to hide a built-in shelf without deleting it.",
+      "Add shelf creates a custom one \u2014 a hand-picked list, or a library, platform or genre filter.",
+      "Give it a start and end date and it becomes an event: a seasonal row that appears and retires on its own.",
+      "Newsletter, Announcements and Attract mode sit alongside it under Content.",
+      "That is shelves and events. The written guide is in the docs folder, at docs/admin/discover-sections.md."
+    ]
+  },
+  {
+    "name": "admin-ops",
+    "title": "Ops health",
+    "kicker": "Admins",
+    "blurb": "Is everything healthy \u2014 services, queues, companions, the log.",
+    "guide": "docs/admin/ops-summary.md",
+    "file": "howto-admin-ops.mp4",
+    "poster": "howto-admin-ops.png",
+    "vtt": "howto-admin-ops.vtt",
+    "seconds": 55,
+    "transcript": [
+      "Ops health. Is everything healthy \u2014 services, queues, companions, the log.",
+      "The admin Dashboard is the at-a-glance board: libraries, games, health, scans, disk.",
+      "Ops goes deeper \u2014 CPU, memory, database, watch folders, and every service with its status.",
+      "Tiles resize and the layout is yours; Reset layout puts it back.",
+      "Services shows LiveKit, the malware scanner, companions and queues.",
+      "The recent log is filterable by level, type and text, and Full log opens the whole thing.",
+      "The same numbers are on slash pulse and slash awake for your monitoring.",
+      "That is ops health. The written guide is in the docs folder, at docs/admin/ops-summary.md."
+    ]
+  },
+  {
+    "name": "admin-users",
+    "title": "Users, invites and support",
+    "kicker": "Admins",
+    "blurb": "Household membership, invite links, roles and the support inbox.",
+    "guide": "docs/admin/support-inbox.md",
+    "file": "howto-admin-users.mp4",
+    "poster": "howto-admin-users.png",
+    "vtt": "howto-admin-users.vtt",
+    "seconds": 42,
+    "transcript": [
+      "Users, invites and support. Household membership, invite links, roles and the support inbox.",
+      "Users lists every member with their role \u2014 admin, librarian, member or child.",
+      "Invites are how people join: generate a link, set its quota, hand it over.",
+      "Whitelist pre-approves addresses when registration is open.",
+      "Support inbox receives what members send from Report, and can mirror to GitHub Issues.",
+      "That is users, invites and support. The written guide is in the docs folder, at docs/admin/support-inbox.md."
+    ]
+  },
+  {
+    "name": "admin-settings",
+    "title": "Settings, features and integrations",
+    "kicker": "Admins",
+    "blurb": "Server settings, module toggles, metadata providers, SSO.",
+    "guide": "docs/admin/settings-modules.md",
+    "file": "howto-admin-settings.mp4",
+    "poster": "howto-admin-settings.png",
+    "vtt": "howto-admin-settings.vtt",
+    "seconds": 70,
+    "transcript": [
+      "Settings, features and integrations. Server settings, module toggles, metadata providers, SSO.",
+      "Settings is the index \u2014 library and matching, play and emulation, presentation, extend.",
+      "Features toggles whole modules: arr, AI assist, VR browse, free games, remote play.",
+      "Integrations holds the keys \u2014 IGDB, SteamGridDB, RetroAchievements, email, and OIDC single sign-on, which stays off until you turn it on.",
+      "Themes uploads packs and resets shipped defaults after a deploy; picking a look is per member.",
+      "Emulator profiles map cores and BIOS per system, and say honestly what can run.",
+      "That is settings, features and integrations. The written guide is in the docs folder, at docs/admin/settings-modules.md."
+    ]
+  },
+  {
+    "name": "admin-art",
+    "title": "Art studio and extensions",
+    "kicker": "Admins",
+    "blurb": "Covers without a cloud, the image queue, and reference sets.",
+    "guide": "docs/admin/theme-fonts-and-images.md",
+    "file": "howto-admin-art.mp4",
+    "poster": "howto-admin-art.png",
+    "vtt": "howto-admin-art.vtt",
+    "seconds": 54,
+    "transcript": [
+      "Art studio and extensions. Covers without a cloud, the image queue, and reference sets.",
+      "Art studio paints a cover from a title \u2014 motifs, bezels, initials \u2014 with a local renderer. No cloud AI.",
+      "Type a name and the preview updates.",
+      "Generate writes the full pack; Pick and queue fetches SteamGridDB or IGDB art instead.",
+      "Backup and stock keeps fallbacks, and System marks holds a badge per console.",
+      "Extensions lists library extensions \u2014 DLC, patches, translations \u2014 and Reference sets take your DAT uploads.",
+      "That is art studio and extensions. The written guide is in the docs folder, at docs/admin/theme-fonts-and-images.md."
+    ]
+  }
+]

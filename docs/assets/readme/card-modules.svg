@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="210" viewBox="0 0 380 210" role="img" aria-label="Optional modules">
+  <defs>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#12a4a0"/><stop offset=".5" stop-color="#2fd67b"/><stop offset="1" stop-color="#4ef2a1"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(44 50) scale(120)">
+      <stop offset="0" stop-color="#2fd67b" stop-opacity=".18"/><stop offset="1" stop-color="#2fd67b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="380" height="210" rx="16" fill="#141820"/>
+  <rect width="380" height="210" rx="16" fill="url(#halo)"/>
+  <rect x=".5" y=".5" width="379" height="209" rx="15.5" fill="none" stroke="#ffffff" stroke-opacity=".12"/>
+  <rect x="26" y="0" width="64" height="3" rx="1.5" fill="url(#top)"/>
+  <g transform="translate(26 28)">
+    <rect width="44" height="44" rx="11" fill="#1c2230"/>
+    <rect x=".5" y=".5" width="43" height="43" rx="10.5" fill="none" stroke="#2fd67b" stroke-opacity=".35"/>
+    <g transform="translate(10 10)"><svg width="24" height="24" viewBox="-1 -1 26 26" fill="none" stroke="#2fd67b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#2fd67b"><path d="M6 8h12v3a6 6 0 0 1-12 0V8z" /> <path d="M9 8V2M15 8V2M12 17v5" /></svg></g>
+  </g>
+  <text x="84" y="57" fill="#f2f4f8" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="800">Optional modules</text>
+  <text x="26" y="112" fill="#c4ccd8" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="15"><tspan fill="#2fd67b" font-weight="700">·</tspan> *arr + hardlink pipeline · Ollama AI assist</text><text x="26" y="138" fill="#c4ccd8" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="15"><tspan fill="#2fd67b" font-weight="700">·</tspan> OIDC / Authentik SSO — off by default</text><text x="26" y="164" fill="#c4ccd8" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="15"><tspan fill="#2fd67b" font-weight="700">·</tspan> Generated art on your own A1111 endpoint</text><text x="26" y="190" fill="#c4ccd8" font-family="'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="15"><tspan fill="#2fd67b" font-weight="700">·</tspan> Malware heuristics · optional ClamAV</text>
+</svg>
