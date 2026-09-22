@@ -209,6 +209,34 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         notes='Optional Class D identify / covers (THEGAMESDB_API_KEY)',
     )
 
+    # INSP-22 -- read-only mod registries. Keyless, so `configured` reads
+    # "usable right now" (the flag is on), like the cascade sources above.
+    try:
+        from oneirodex.utils.mod_catalog import SOURCE_LABELS, SOURCE_NOTES, catalog_enabled
+
+        catalog_on = catalog_enabled()
+        for sid, label in SOURCE_LABELS.items():
+            add(
+                id=f'mod_catalog_{sid}',
+                name=f'{label} (mods)',
+                category='mods',
+                admin_href='/admin/integrations#mods',
+                configured=catalog_on,
+                enabled=catalog_on,
+                notes=f'{SOURCE_NOTES[sid]} Browse + deep link only; the companion stages the URL the librarian chose (ENABLE_MOD_CATALOG).',
+            )
+    except Exception:  # noqa: BLE001
+        pass
+    add(
+        id='mod_catalog_curseforge',
+        name='CurseForge (mods)',
+        category='mods',
+        admin_href='/admin/integrations#mods',
+        configured=False,
+        enabled=False,
+        notes='Declined: its API terms forbid third-party download automation and require a key per app; Modrinth covers the same games without either.',
+    )
+
     # INSP-35 -- keyless community list, read-only. `configured` means the
     # daily fetch has landed at least once, so lookups can answer.
     try:

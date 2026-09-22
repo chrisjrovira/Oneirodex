@@ -46,6 +46,8 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('export.pegasus', 'Pegasus export', 'export', 'metadata.pegasus.txt'),
     PluginInfo('assist.packs', 'Assist packs', 'assists', 'Single-player companion toggles'),
     PluginInfo('mods.tracking', 'Mod tracking', 'mods', 'Per-game community mod lists'),
+    PluginInfo('mods.catalog.thunderstore', 'Thunderstore catalogue', 'mods', 'Browse BepInEx / MelonLoader communities, read-only, no key (INSP-22)'),
+    PluginInfo('mods.catalog.modrinth', 'Modrinth catalogue', 'mods', 'Browse Minecraft mods, read-only, no key (INSP-22)'),
     PluginInfo('social.community_chat', 'Community chat link', 'social', 'BYO Stoat/Matrix deep-link'),
     PluginInfo('rtc.livekit', 'LiveKit voice', 'rtc', 'Optional household voice SFU (Wave 16)'),
     PluginInfo('remote_play.moonlight', 'Remote play', 'streaming', 'BYO Sunshine/Wolf Moonlight host'),
@@ -152,6 +154,13 @@ def _runtime_status_map() -> dict[str, str]:
         status['achievements.retroachievements'] = 'configured' if ra_configured() else 'available'
     except Exception:
         status['achievements.retroachievements'] = 'available'
+    try:
+        from oneirodex.utils.mod_catalog import catalog_enabled
+
+        for sid in ('thunderstore', 'modrinth'):
+            status[f'mods.catalog.{sid}'] = 'configured' if catalog_enabled() else 'disabled'
+    except Exception:
+        pass
     try:
         from oneirodex.utils.anticheat_compat import status_summary as anticheat_status
 
