@@ -50,8 +50,6 @@
   "oneirodex/utils/themes.py": 7,
   "oneirodex/utils/uptime.py": 1,
   "scripts/api_envelope_lint.py": 14,
-  "scripts/capture_docs_media.py": 22,
-  "scripts/capture_howto_videos.py": 10,
   "scripts/fetch-fonts.py": 14,
   "scripts/fetch-free-roms.py": 29,
   "scripts/finish_capture_setup.py": 6,

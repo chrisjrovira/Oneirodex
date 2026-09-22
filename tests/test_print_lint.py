@@ -77,6 +77,34 @@ def test_get_json_lint_is_exempt():
     assert "scripts/get_json_lint.py" in lint.EXEMPT
 
 
+def test_capture_tools_are_exempt():
+    """The docs-capture CLIs report to stdout by design.
+
+    Each runs once, by hand, against a throwaway instance, and its output is
+    the deliverable: what was captured, what was skipped and why. They are
+    exempt rather than baselined so the numbers in the baseline stay a record
+    of backend `print` still owed to `logging` — and so a capture script does
+    not have to be re-baselined every time it learns to say something new.
+    """
+    for tool in (
+        "scripts/capture_common.py",
+        "scripts/capture_docs_media.py",
+        "scripts/capture_howto_videos.py",
+        "scripts/render_readme_art.py",
+        "scripts/serve_capture.py",
+    ):
+        assert tool in lint.EXEMPT
+
+
+def test_exempt_files_carry_no_baseline_allowance():
+    """An exempt file is skipped before counting, so an entry would be dead."""
+    data = json.loads(
+        (ROOT / "scripts" / "print_lint.baseline.json").read_text(encoding="utf-8")
+    )
+    for exempt in lint.EXEMPT:
+        assert exempt not in data, f"{exempt} is exempt; its baseline entry is dead"
+
+
 def test_baseline_exists_and_is_sorted():
     raw = (ROOT / "scripts" / "print_lint.baseline.json").read_text(encoding="utf-8")
     data = json.loads(raw)
