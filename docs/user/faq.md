@@ -85,6 +85,9 @@ A breadcrumb (Catalog or Systems › genre › title), a media stage when a trai
 **What is Ways to Play?**  
 **More → Ways to Play** (`/ways-to-play`) links Game Catalog filters for **Browser**, **Companion**, and **Catalog**, plus Systems and VR when enabled. Same honesty as the Systems badges — not Deck Verified or sale chrome. Filters also have a **Play path** select.
 
+**What does the Anti-cheat line on a details page mean?**  
+A PC title the community anti-cheat list knows shows **Anti-cheat: Supported / Running / Planned / Broken / Denied**, the anti-cheat's name, and a link to the report page. It is community reports, not a guarantee — *Denied* means the publisher has said no to Linux / Proton seats, and that a kernel anti-cheat title is one where mods, cheats or an injector risk a ban. Nothing on the page changes what Play or Download do. Titles the list does not know show no line; an admin can turn the whole row off with `ENABLE_ANTICHEAT_COMPAT=false`.
+
 **Open path does nothing / doesn’t open Auto Scan.**  
 Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallback). It never jumps to Auto Scan. Pair the desktop companion Online and send a path your PC can see — [desktop-companion.md](desktop-companion.md).
 
