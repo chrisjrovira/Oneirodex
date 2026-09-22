@@ -165,6 +165,7 @@ describe('apply_mods helpers', () => {
       { fetchImpl },
     )
     expect(pack.default_loader).toBe('bepinex')
+    expect(pack.active_profile_name).toBe('')
     expect(pack.mods[1].loader).toBe('melonloader')
     expect(requiredLoaders(pack)).toEqual(['bepinex', 'melonloader'])
     expect(loaderRequirementHint(pack)).toBe(
@@ -268,7 +269,13 @@ describe('apply_mods helpers', () => {
       { fetchImpl },
     )
 
-    expect(result).toEqual({ ok: true, appliedMods: 1, filesApplied: 3, loaderHint: null })
+    expect(result).toEqual({
+      ok: true,
+      appliedMods: 1,
+      filesApplied: 3,
+      loaderHint: null,
+      profileName: '',
+    })
     expect(invoke).toHaveBeenCalledWith('apply_staged_mod', {
       sourcePath: '/appdata/mods/game-42/m1/one.zip',
       installRoot: 'C:\\Oneirodex\\installs\\game-42',
