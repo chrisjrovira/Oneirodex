@@ -39,6 +39,7 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('emu.emulatorjs', 'EmulatorJS', 'emulator', 'Browser engine B — own shell + cores, operator-fetched (BP-2)'),
     PluginInfo('emu.retroarch', 'RetroArch', 'emulator', 'Native companion profiles'),
     PluginInfo('compat.anticheat', 'Anti-cheat reports', 'metadata', 'Community anti-cheat compatibility list, read-only; one keyless fetch a day (INSP-35)'),
+    PluginInfo('compat.save_paths', 'Save locations', 'metadata', 'Community save-location manifest, read-only; one keyless fetch a day (INSP-1)'),
     PluginInfo('achievements.retroachievements', 'RetroAchievements', 'emulator', 'Community achievement sets matched by ROM hash; member progress read-only (R1/R2)'),
     PluginInfo('store.xbox', 'Xbox ownership', 'ownership', 'Register-only, opt-in, unofficial (xbox-webapi); CSV always (INSP-42)'),
     PluginInfo('store.psn', 'PlayStation ownership', 'ownership', 'Register-only, opt-in, unofficial (psnawp); CSV always (INSP-42)'),
@@ -150,6 +151,12 @@ def _runtime_status_map() -> dict[str, str]:
                 status[f'store.{sid}'] = 'configured' if has_client else 'available'
     except Exception:
         pass
+        from oneirodex.utils.save_paths import status_summary as save_paths_status
+
+        sp = save_paths_status()
+        status['compat.save_paths'] = 'disabled' if not sp['enabled'] else ('configured' if sp['configured'] else 'available')
+    except Exception:
+        status['compat.save_paths'] = 'available'
     try:
         from oneirodex.utils.retroachievements import configured as ra_configured
 
