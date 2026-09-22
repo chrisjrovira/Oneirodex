@@ -189,7 +189,7 @@ def parse_dat_xml(text: str, *, source: str | None = None) -> tuple[str, list[di
             header_name = desc_el.text.strip()
 
     entries: list[dict[str, Any]] = []
-    seen: set[str] = set()
+    by_norm: dict[str, int] = {}
     for node in list(datafile):
         if local(node.tag) not in ('game', 'machine', 'software'):
             continue
@@ -205,12 +205,42 @@ def parse_dat_xml(text: str, *, source: str | None = None) -> tuple[str, list[di
         if not name:
             continue
         norm = normalize_set_title(name)
-        if not norm or norm in seen:
+        if not norm:
             continue
-        seen.add(norm)
-        row = {'name': name, 'normalized_name': norm, **_rom_attrs_from_xml_game(node)}
+        parent = (node.attrib.get('cloneof') or node.attrib.get('romof') or '').strip() or None
+        row = {
+            'name': name,
+            'normalized_name': norm,
+            'parent_name': parent,
+            **_rom_attrs_from_xml_game(node),
+        }
+        # One row per title. When a DAT lists the same title for several
+        # regions, keep the one the household would want (REGION_PREF_ORDER),
+        # not whichever the file happened to list first -- that is the 1G1R
+        # region preference, applied at parse time so completion counts it once.
+        if norm in by_norm:
+            kept = entries[by_norm[norm]]
+            if _region_rank(name) < _region_rank(kept['name']):
+                entries[by_norm[norm]] = row
+            continue
+        by_norm[norm] = len(entries)
         entries.append(row)
     return header_name, entries
+
+
+def _region_rank(dat_name: str) -> int:
+    """Position of the entry's region in REGION_PREF_ORDER (unknown sorts last)."""
+    try:
+        from oneirodex.utils.rom_name_peel import parse_console_rom_label
+
+        region = parse_console_rom_label(dat_name).get('rom_region')
+    except Exception:  # noqa: BLE001
+        region = None
+    region = normalize_region(region) if region else None
+    try:
+        return REGION_PREF_ORDER.index(region) if region else len(REGION_PREF_ORDER)
+    except ValueError:
+        return len(REGION_PREF_ORDER)
 
 
 def parse_dat_clrmame(text: str) -> tuple[str, list[dict[str, Any]]]:
@@ -319,6 +349,7 @@ def upsert_reference_set(
                 set_id=ref.id,
                 name=entry['name'][:512],
                 normalized_name=entry['normalized_name'][:512],
+                parent_name=(entry.get('parent_name') or None) and str(entry['parent_name'])[:512],
                 crc=entry.get('crc'),
                 md5=entry.get('md5'),
                 sha1=entry.get('sha1'),
@@ -359,6 +390,66 @@ def _owned_identity(library_platform: str, user) -> dict[str, set[str]]:
     return {'titles': titles, 'crc': crcs, 'md5': md5s, 'sha1': sha1s}
 
 
+def preferred_entries(set_id: int) -> list[ReferenceSetEntry]:
+    """The 1G1R view of a set: parents only (INSP-5).
+
+    A DAT with parent/clone data lists every clone; completion should count
+    each *game* once, so clones drop out here. A set with no clone data (most
+    No-Intro uploads) is returned whole -- its region duplicates were already
+    collapsed to the household's preferred region at parse time.
+    """
+    rows = list(
+        db.session.execute(
+            select(ReferenceSetEntry).filter_by(set_id=set_id)
+        ).scalars().all()
+    )
+    if any(getattr(r, 'parent_name', None) for r in rows):
+        return [r for r in rows if not getattr(r, 'parent_name', None)]
+    return rows
+
+
+def clone_parent_for(
+    *,
+    library_platform: str | None,
+    crc: str | None = None,
+    md5: str | None = None,
+    sha1: str | None = None,
+    name: str | None = None,
+) -> str | None:
+    """Name of the parent set when these digests belong to a *clone* entry, else None.
+
+    Advisory only: the duplicate check reports `clone_of_owned_parent` so an
+    operator can see that a second dump of an owned game arrived; nothing is
+    marked or deleted on the strength of it.
+    """
+    key = (library_platform or '').strip().upper()
+    norm = normalize_set_title(name) if name else ''
+    if not key or not (crc or md5 or sha1 or norm):
+        return None
+    set_ids = [
+        row for row in db.session.execute(
+            select(ReferenceSet.id).filter_by(library_platform=key)
+        ).scalars().all()
+    ]
+    if not set_ids:
+        return None
+    conds = []
+    if crc:
+        conds.append(ReferenceSetEntry.crc == crc.lower())
+    if md5:
+        conds.append(ReferenceSetEntry.md5 == md5.lower())
+    if sha1:
+        conds.append(ReferenceSetEntry.sha1 == sha1.lower())
+    if norm:
+        conds.append(ReferenceSetEntry.normalized_name == norm)
+    hit = db.session.execute(
+        select(ReferenceSetEntry.parent_name)
+        .filter(ReferenceSetEntry.set_id.in_(set_ids), ReferenceSetEntry.parent_name.isnot(None), or_(*conds))
+        .limit(1)
+    ).scalar()
+    return hit or None
+
+
 def _match_entry(entry: ReferenceSetEntry, owned: dict[str, set[str]]) -> str | None:
     """Return match method name or None."""
     if entry.crc and entry.crc.lower() in owned['crc']:
@@ -388,11 +479,7 @@ def compute_set_completion(
     if not ref:
         return None
 
-    entries = list(
-        db.session.execute(
-            select(ReferenceSetEntry).filter_by(set_id=ref.id)
-        ).scalars().all()
-    )
+    entries = preferred_entries(ref.id)
     owned = _owned_identity(platform, user)
     matched: list[dict] = []
     missing: list[dict] = []
