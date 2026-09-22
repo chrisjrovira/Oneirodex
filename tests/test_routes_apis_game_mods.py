@@ -226,3 +226,101 @@ class TestModLoader:
         assert client.post(base, json={'name': 'X', 'install': True}).status_code == 422
         assert client.patch(f'{base}/pack', json={'mods': []}).status_code == 422
         assert client.put(base, json={'mods': 'nope'}).status_code == 422
+
+
+class TestModProfiles:
+    """INSP-37 / H2d: named mod sets, one-click activate, od-mod: export / import."""
+
+    def _seed(self, client, base):
+        ids = []
+        for name, url in (('A', 'https://x/a.zip'), ('B', 'https://x/b.zip'), ('C', 'https://x/c.zip')):
+            r = client.post(base, json={'name': name, 'source_url': url, 'loader': 'bepinex'})
+            assert r.status_code == 201
+            ids.append(r.get_json()['mod']['id'])
+        return ids
+
+    def test_profiles_round_trip_and_activate_flips_enabled(self, client, librarian_user, sample_game, app, tmp_path):
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        _login(client, librarian_user)
+        base = f'/api/games/{sample_game.uuid}/mods'
+        a, b, c = self._seed(client, base)
+
+        # From the enabled set (all three), then an explicit subset
+        r = client.post(f'{base}/profiles', json={'name': 'Everything'})
+        assert r.status_code == 201 and r.get_json()['profile']['mod_ids'] == [a, b, c]
+        r = client.post(f'{base}/profiles', json={'name': 'Vanilla+', 'mod_ids': [a, 'not-a-mod']})
+        assert r.status_code == 201
+        vanilla = r.get_json()['profile']
+        assert vanilla['id'] == 'vanilla' and vanilla['mod_ids'] == [a]
+
+        # Activate: only A stays enabled, the pack remembers the profile
+        r = client.post(f'{base}/profiles/vanilla/activate', json={})
+        assert r.status_code == 200
+        pack = r.get_json()
+        assert pack['active_profile'] == 'vanilla'
+        assert {m['id']: m['enabled'] for m in pack['mods']} == {a: True, b: False, c: False}
+
+        # Row writes and bulk replace keep the profiles; a deleted row drops out of the set
+        client.patch(f'{base}/{b}', json={'notes': 'x'})
+        client.delete(f'{base}/{c}')
+        listing = client.get(f'{base}/profiles').get_json()
+        assert listing['active_profile'] == 'vanilla'
+        assert next(p for p in listing['profiles'] if p['id'] == 'everything')['mod_ids'] == [a, b]
+
+        assert client.post(f'{base}/profiles/nope/activate', json={}).status_code == 404
+        assert client.delete(f'{base}/profiles/vanilla').status_code == 200
+        assert client.get(f'{base}/profiles').get_json()['active_profile'] == ''
+        assert client.post(f'{base}/profiles', json={'name': 'X', 'extra': 1}).status_code == 422
+
+    def test_export_code_imports_against_another_pack_and_reports_missing(self, client, librarian_user, sample_game, app, tmp_path, db_session):
+        from oneirodex.utils.game_mod_profiles import decode_export
+
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        _login(client, librarian_user)
+        base = f'/api/games/{sample_game.uuid}/mods'
+        a, b, _c = self._seed(client, base)
+        client.patch(f'{base}/pack', json={'default_loader': 'bepinex'})
+        client.post(f'{base}/profiles', json={'name': 'Share me', 'mod_ids': [a, b]})
+
+        r = client.get(f'{base}/profiles/share-me/export')
+        assert r.status_code == 200
+        code = r.get_json()['code']
+        assert code.startswith('od-mod:')
+        doc = decode_export(code)
+        assert doc['name'] == 'Share me' and doc['default_loader'] == 'bepinex'
+        assert [m['source_url'] for m in doc['mods']] == ['https://x/a.zip', 'https://x/b.zip']
+
+        # A second game tracks only A (by URL, different id): B comes back missing
+        other = Game(uuid=str(uuid4()), name='Other', library_uuid=sample_game.library_uuid, full_disk_path=str(tmp_path / 'o'))
+        db_session.add(other)
+        db_session.commit()
+        obase = f'/api/games/{other.uuid}/mods'
+        client.post(obase, json={'name': 'A again', 'source_url': 'https://x/a.zip'})
+        r = client.post(f'{obase}/profiles/import', json={'code': code})
+        assert r.status_code == 201, r.get_json()
+        body = r.get_json()
+        assert body['matched'] == 1 and len(body['missing']) == 1
+        assert body['missing'][0]['source_url'] == 'https://x/b.zip' and body['missing'][0]['loader'] == 'bepinex'
+        assert body['profile']['name'] == 'Share me' and len(body['profile']['mod_ids']) == 1
+        assert body['suggested_default_loader'] == 'bepinex'
+        assert client.get(obase).get_json()['mods'].__len__() == 1  # nothing was invented
+
+        assert client.post(f'{obase}/profiles/import', json={'code': 'not-a-code'}).status_code == 400
+        assert client.post(f'{obase}/profiles/import', json={'code': 'od-mod:!!!!!!!!'}).status_code == 400
+
+    def test_profiles_are_librarian_only_but_export_is_readable(self, client, regular_user, sample_game, app, tmp_path):
+        from oneirodex.utils.game_mod_profiles import create_profile
+        from oneirodex.utils.game_mods import create_mod
+
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        # Seed through the utility layer: the harness keeps one identity per test,
+        # so the member below is the only login here.
+        with app.app_context():
+            create_mod(sample_game.uuid, {'name': 'A', 'source_url': 'https://x/a.zip'})
+            create_profile(sample_game.uuid, name='Public')
+        base = f'/api/games/{sample_game.uuid}/mods'
+        _login(client, regular_user)
+        assert client.post(f'{base}/profiles', json={'name': 'Nope'}).status_code == 403
+        assert client.post(f'{base}/profiles/public/activate', json={}).status_code == 403
+        assert client.get(f'{base}/profiles/public/export').status_code == 200
+        assert client.get(f'{base}/profiles').get_json()['profiles'][0]['id'] == 'public'
