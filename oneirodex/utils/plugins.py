@@ -38,6 +38,7 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('emu.webretro', 'WebRetro', 'emulator', 'Browser WASM cores + cloud save bridge'),
     PluginInfo('emu.emulatorjs', 'EmulatorJS', 'emulator', 'Browser engine B — own shell + cores, operator-fetched (BP-2)'),
     PluginInfo('emu.retroarch', 'RetroArch', 'emulator', 'Native companion profiles'),
+    PluginInfo('compat.anticheat', 'Anti-cheat reports', 'metadata', 'Community anti-cheat compatibility list, read-only; one keyless fetch a day (INSP-35)'),
     PluginInfo('achievements.retroachievements', 'RetroAchievements', 'emulator', 'Community achievement sets matched by ROM hash; member progress read-only (R1/R2)'),
     PluginInfo('export.esde', 'ES-DE export', 'export', 'gamelist.xml packs'),
     PluginInfo('export.pegasus', 'Pegasus export', 'export', 'metadata.pegasus.txt'),
@@ -136,6 +137,13 @@ def _runtime_status_map() -> dict[str, str]:
         status['achievements.retroachievements'] = 'configured' if ra_configured() else 'available'
     except Exception:
         status['achievements.retroachievements'] = 'available'
+    try:
+        from oneirodex.utils.anticheat_compat import status_summary as anticheat_status
+
+        ac = anticheat_status()
+        status['compat.anticheat'] = 'disabled' if not ac['enabled'] else ('configured' if ac['configured'] else 'available')
+    except Exception:
+        status['compat.anticheat'] = 'available'
     return status
 
 
