@@ -2,16 +2,22 @@ import { useEffect, useRef, useState } from 'react'
 import { confirmAction, useShellConfig } from '@oneirodex/ui'
 import {
   connectAmazon,
+  connectPsn,
+  connectXbox,
   connectEpic,
   connectGog,
   connectSteam,
   disconnectAmazon,
+  disconnectPsn,
+  disconnectXbox,
   disconnectEpic,
   disconnectGog,
   disconnectSteam,
   fetchOwnership,
   importCsv,
   syncAmazon,
+  syncPsn,
+  syncXbox,
   syncEpic,
   syncGog,
   syncSteam,
@@ -98,10 +104,64 @@ const STORES = [
     csvNoun: 'Amazon titles',
     canSync: true,
   },
+  {
+    key: 'xbox',
+    label: 'Xbox',
+    meta: 'Register only, unofficial, opt-in. CSV always works. Live sync runs only when the server operator set ENABLE_UNOFFICIAL_STORE_SYNC=xbox and installed the xbox-webapi client; the sync button says so otherwise. Oneirodex never downloads Xbox titles.',
+    fieldLabel: 'Gamertag / XUID or note (optional)',
+    fieldPlaceholder: 'Optional label for your Xbox link',
+    tokenLabel: 'xbox-webapi token JSON (from xbox-authenticate)',
+    tokenPlaceholder: 'Paste the tokens file the client wrote — never shown again after save',
+    tokenKind: 'textarea',
+    numericField: false,
+    saveLabel: 'Save Xbox link',
+    connect: (id: string, extras: { credential?: string }) => connectXbox(id, extras),
+    sync: syncXbox,
+    disconnect: disconnectXbox,
+    disconnectBody: 'Your imported ownership is cleared — your games stay put.',
+    csvLabel: 'Import owned Xbox titles (CSV: title ID or PFN, or id,name per line)',
+    csvPlaceholder: 'title_id,name\n1234ABCD,Halo Infinite',
+    csvNoun: 'Xbox titles',
+    canSync: true,
+  },
+  {
+    key: 'psn',
+    label: 'PlayStation Network',
+    meta: 'Register only, unofficial, opt-in. CSV always works. Live sync runs only when the server operator set ENABLE_UNOFFICIAL_STORE_SYNC=psn and installed the psnawp client; the sync button says so otherwise. Oneirodex never downloads PlayStation titles.',
+    fieldLabel: 'Online ID or note (optional)',
+    fieldPlaceholder: 'Optional label for your PSN link',
+    tokenLabel: 'npsso token (from a signed-in browser session)',
+    tokenPlaceholder: 'Paste npsso — never shown again after save',
+    tokenKind: 'password',
+    numericField: false,
+    saveLabel: 'Save PlayStation link',
+    connect: (id: string, extras: { npsso?: string }) => connectPsn(id, extras),
+    sync: syncPsn,
+    disconnect: disconnectPsn,
+    disconnectBody: 'Your imported ownership is cleared — your games stay put.',
+    csvLabel: 'Import owned PlayStation titles (CSV: title ID, or id,name per line)',
+    csvPlaceholder: 'np_communication_id,name\nNPWR20188_00,Astro Bot',
+    csvNoun: 'PlayStation titles',
+    canSync: true,
+  },
 ]
 
-const EMPTY_DRAFTS: Record<string, string> = { steam: '', gog: '', epic: '', amazon: '' }
-const EMPTY_TOKENS: Record<string, string> = { steam: '', gog: '', epic: '', amazon: '' }
+const EMPTY_DRAFTS: Record<string, string> = {
+  steam: '',
+  gog: '',
+  epic: '',
+  amazon: '',
+  xbox: '',
+  psn: '',
+}
+const EMPTY_TOKENS: Record<string, string> = {
+  steam: '',
+  gog: '',
+  epic: '',
+  amazon: '',
+  xbox: '',
+  psn: '',
+}
 
 function accountDraftsFrom(summary: any, current: any) {
   const stores = summary?.stores || {}
@@ -189,6 +249,12 @@ export function OwnershipPage() {
     }
     if (store.key === 'amazon' && tokenDrafts.amazon.trim()) {
       extras.credential = tokenDrafts.amazon.trim()
+    }
+    if (store.key === 'xbox' && tokenDrafts.xbox.trim()) {
+      extras.credential = tokenDrafts.xbox.trim()
+    }
+    if (store.key === 'psn' && tokenDrafts.psn.trim()) {
+      extras.npsso = tokenDrafts.psn.trim()
     }
     const result = await runAction(`${store.key}:connect`, store.key, () =>
       store.connect(accountDrafts[store.key], extras),
