@@ -144,3 +144,17 @@ describe('social-window', () => {
     expect(how).toBe('opened')
   })
 })
+
+describe('overlay subject (INSP-45)', () => {
+  it('carries the game on screen as ?game= and nothing when unknown', () => {
+    expect(buildSocialCompanionUrl('https://od.example', 'abc-123')).toBe(
+      'https://od.example/social-companion?game=abc-123',
+    )
+    expect(buildSocialCompanionUrl('https://od.example', null)).toBe(
+      'https://od.example/social-companion',
+    )
+    expect(buildSocialCompanionUrl('https://od.example', '  ')).toBe(
+      'https://od.example/social-companion',
+    )
+  })
+})
