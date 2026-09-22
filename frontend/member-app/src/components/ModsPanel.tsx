@@ -11,6 +11,7 @@ import {
   type ModPack,
 } from '../api/mods'
 import { ModCatalogDrawer } from './ModCatalogDrawer'
+import { ModProfiles } from './ModProfiles'
 import { PageStatus } from './PageStatus'
 import './ModsPanel.css'
 
@@ -225,6 +226,16 @@ export function ModsPanel({ gameUuid, canEdit = false }: { gameUuid: string; can
             )
           })}
         </ul>
+      ) : null}
+
+      {pack && (mods.length > 0 || canEdit) ? (
+        <ModProfiles
+          gameUuid={gameUuid}
+          pack={pack}
+          canEdit={canEdit}
+          onChanged={load}
+          onError={setError}
+        />
       ) : null}
 
       {canEdit ? (
