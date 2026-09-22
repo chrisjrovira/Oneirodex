@@ -34,6 +34,8 @@ MATCH_REASON_SUMMARIES = {
     'title_below_threshold': 'IGDB already used by a differently titled folder',
     'cross_system': 'Same IGDB id exists on a different system — not a duplicate',
     'region_mismatch': 'Same system, different ROM region — not a duplicate',
+    # 1G1R (INSP-5): the reference DAT says this dump is a clone of a title already held.
+    'clone_of_owned_parent': 'Reference DAT lists this dump as a clone of a game already in the library',
     # W22-M5 — UPDATE packaging / bare update-package folders
     'update_package_folder': (
         'Folder name looks like an update or patch package, not a separate game title.'

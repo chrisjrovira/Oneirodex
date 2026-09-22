@@ -17,7 +17,10 @@ from oneirodex.models import GlobalSettings
 from oneirodex.utils.event_logging import log_system_event
 
 STORAGE_KEY = 'metadata_providers'
-PROVIDER_IDS = ('steam', 'gog', 'epic')
+# Storefront sources feed Stage D *and* enrichment; hash_identify (INSP-31) is
+# an identify-only source with the same on/off switch and no Stage D role.
+STORE_PROVIDER_IDS = ('steam', 'gog', 'epic')
+PROVIDER_IDS = STORE_PROVIDER_IDS + ('hash_identify',)
 DEFAULTS = {provider: True for provider in PROVIDER_IDS}
 
 
@@ -95,13 +98,13 @@ def resolve_metadata_providers(settings: Any = None) -> dict[str, bool]:
 def stage_d_source_ids() -> tuple[str, ...]:
     """Enabled Stage D store sources in cascade order."""
     flags = resolve_metadata_providers()
-    return tuple(key for key in PROVIDER_IDS if flags.get(key))
+    return tuple(key for key in STORE_PROVIDER_IDS if flags.get(key))
 
 
 def disabled_enrich_sources() -> frozenset[str]:
     """Source ids the enrichment cascade should skip."""
     flags = resolve_metadata_providers()
-    return frozenset(key for key in PROVIDER_IDS if not flags.get(key))
+    return frozenset(key for key in STORE_PROVIDER_IDS if not flags.get(key))
 
 
 def get_metadata_providers_config() -> dict:
@@ -113,6 +116,7 @@ def get_metadata_providers_config() -> dict:
             'steam': 'Stage D App ID / exact title + PC enrichment. Never a download queue.',
             'gog': 'Stage D exact title + PC enrichment. DRM-free catalogue only.',
             'epic': 'Stage D exact title + PC enrichment. Ownership/register links only.',
+            'hash_identify': "Console identify after an IGDB and local-DAT miss: the file's own hashes against a keyless community lookup. Identity only, never enrichment; never a download.",
         },
     }
 

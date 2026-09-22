@@ -50,7 +50,8 @@ def test_get_metadata_providers_defaults(client, admin_user, clean_settings, app
     response = client.get('/api/admin/integrations/metadata-providers')
     assert response.status_code == 200
     data = response.get_json()
-    assert data['providers'] == {'steam': True, 'gog': True, 'epic': True}
+    assert data['providers'] == {'steam': True, 'gog': True, 'epic': True, 'hash_identify': True}
+    assert 'hash_identify' in data['notes']
     assert 'steam' in data['notes']
     assert stage_d_source_ids() == ('steam', 'gog', 'epic')
 
@@ -138,7 +139,7 @@ def test_get_returns_the_shared_envelope(client, admin_user, clean_settings, app
     assert body['ok'] is True
     assert body['error'] is None
     assert body['error_code'] is None
-    assert set(body['providers']) == {'steam', 'gog', 'epic'}
+    assert set(body['providers']) == {'steam', 'gog', 'epic', 'hash_identify'}
 
 
 def test_metadata_providers_requires_admin(client, clean_settings, app, db_session):
