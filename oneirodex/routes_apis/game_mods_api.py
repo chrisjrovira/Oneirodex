@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from oneirodex.utils.api_response import api_error, api_ok
-from flask import jsonify
+from flask import jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -22,6 +22,7 @@ from oneirodex.utils.game_mods import (
 )
 from oneirodex.utils.validation import validate_body
 from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_game
+from oneirodex.utils.mod_catalog import catalog_search, source_ids
 from oneirodex.utils.rbac import is_librarian, normalize_role
 
 from . import apis_bp
@@ -84,6 +85,37 @@ def get_game_mods(game_uuid: str):
         return denied
     pack = load_mods(game_uuid)
     return jsonify({'enabled': True, **pack})
+
+
+@apis_bp.route('/games/<game_uuid>/mods/catalog', methods=['GET'])
+@login_required
+def get_game_mods_catalog(game_uuid: str):
+    """Browse a community registry for this game (INSP-22, librarian).
+
+    ``?source=thunderstore|modrinth&q=&limit=``. Read-only: the answer is
+    names, versions, loaders and registry pages -- never an archive. ``status``
+    says whether the registry answered (``ok``) or had no data
+    (``unavailable``); ``hits`` is ``null`` in the latter case, never ``[]``.
+    """
+    if not mods_enabled():
+        return _mods_disabled()
+    denied = _require_librarian()
+    if denied:
+        return denied
+    game = _game_or_404(game_uuid)
+    read_denied = _require_game_read(game)
+    if read_denied:
+        return read_denied
+    source = (request.args.get('source') or '').strip().lower()
+    if source not in source_ids():
+        return api_error('Unknown catalogue source', code='bad_request', sources=source_ids())
+    result = catalog_search(
+        source,
+        game.name or '',
+        query=(request.args.get('q') or '').strip(),
+        limit=request.args.get('limit', type=int),
+    )
+    return api_ok({'game_uuid': game_uuid, **result})
 
 
 @apis_bp.route('/games/<game_uuid>/mods', methods=['POST'])

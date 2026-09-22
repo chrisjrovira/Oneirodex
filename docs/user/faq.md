@@ -85,6 +85,8 @@ A breadcrumb (Catalog or Systems › genre › title), a media stage when a trai
 **What is Ways to Play?**  
 **More → Ways to Play** (`/ways-to-play`) links Game Catalog filters for **Browser**, **Companion**, and **Catalog**, plus Systems and VR when enabled. Same honesty as the Systems badges — not Deck Verified or sale chrome. Filters also have a **Play path** select.
 
+**What is the Mods panel, and what does Browse catalogue do?**
+When mod tracking is on, a game's details page lists the mods a librarian tracks for it — name, version, the loader it needs (BepInEx, SMAPI, Fabric…), and where it came from. Librarians can add rows by hand or **Browse catalogue**: Thunderstore (BepInEx / MelonLoader games) and Modrinth (Minecraft) are searched read-only and *Add to list* records the registry page. Nothing on the page downloads or installs a mod or a loader; the desktop companion can later stage the URLs you chose into a local install. When a registry has no entry for the game the drawer says so instead of showing an empty list.
 **What does the Anti-cheat line on a details page mean?**  
 A PC title the community anti-cheat list knows shows **Anti-cheat: Supported / Running / Planned / Broken / Denied**, the anti-cheat's name, and a link to the report page. It is community reports, not a guarantee — *Denied* means the publisher has said no to Linux / Proton seats, and that a kernel anti-cheat title is one where mods, cheats or an injector risk a ban. Nothing on the page changes what Play or Download do. Titles the list does not know show no line; an admin can turn the whole row off with `ENABLE_ANTICHEAT_COMPAT=false`.
 
