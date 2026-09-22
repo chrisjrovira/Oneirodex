@@ -34,20 +34,6 @@ from oneirodex.utils.store_ownership_amazon import (  # noqa: F401
     sync_amazon_owned_games,
     _flatten_amazon_credential,
 )
-from oneirodex.utils.store_ownership_psn import (  # noqa: F401
-    connect_psn_account,
-    disconnect_psn_account,
-    get_psn_api_token,
-    psn_live_ready,
-    sync_psn_owned_games,
-)
-from oneirodex.utils.store_ownership_xbox import (  # noqa: F401
-    connect_xbox_account,
-    disconnect_xbox_account,
-    get_xbox_api_token,
-    sync_xbox_owned_games,
-    xbox_live_ready,
-)
 from oneirodex.utils.store_ownership_common import (  # noqa: F401
     connect_store_account,
     disconnect_store_account,
@@ -59,8 +45,6 @@ from oneirodex.utils.store_ownership_common import (  # noqa: F401
     match_title_to_library_game,
     store_sync_mode,
     STORE_SYNC_MODE,
-    unofficial_store_opt_in,
-    UNOFFICIAL_OPT_IN_STORES,
     upsert_owned_title,
     VALID_STORES,
     _any_account_credential,
@@ -218,16 +202,6 @@ def import_amazon_csv(user_id: int, csv_text: str) -> dict:
     return import_store_csv(user_id, 'amazon', csv_text)
 
 
-def import_xbox_csv(user_id: int, csv_text: str) -> dict:
-    """Register-only Xbox ownership import (title ids / PFNs + names)."""
-    return import_store_csv(user_id, 'xbox', csv_text)
-
-
-def import_psn_csv(user_id: int, csv_text: str) -> dict:
-    """Register-only PlayStation ownership import (title ids + names)."""
-    return import_store_csv(user_id, 'psn', csv_text)
-
-
 def import_meta_quest_csv(user_id: int, csv_text: str) -> dict:
     """Register-only Meta/Quest ownership import (never downloads DRM titles)."""
     return import_store_csv(user_id, 'meta_quest', csv_text)
@@ -271,12 +245,7 @@ def get_ownership_summary(user_id: int) -> dict:
         ).scalar()
 
         mode = store_sync_mode(store)
-        unofficial = store in UNOFFICIAL_OPT_IN_STORES
         stores[store] = {
-            # INSP-42: an unofficial store says so, and whether the operator
-            # opted its live sync in; off means CSV snapshot and the UI says it.
-            'unofficial': unofficial,
-            'opt_in': (store in unofficial_store_opt_in()) if unofficial else None,
             'connected': account is not None,
             'external_account_id': account.external_account_id if account else None,
             'has_credential': bool(account.credential) if account else False,
@@ -295,9 +264,6 @@ def get_ownership_summary(user_id: int) -> dict:
         'has_gog_api_key': get_gog_api_token() is not None,
         'has_epic_api_key': get_epic_api_token() is not None,
         'has_amazon_api_key': get_amazon_api_token() is not None,
-        'has_xbox_api_key': get_xbox_api_token() is not None,
-        'has_psn_api_key': get_psn_api_token() is not None,
-        'unofficial_opt_in': sorted(unofficial_store_opt_in()),
         'stores': stores,
         'total_owned': total_owned,
         'total_matched': total_matched,

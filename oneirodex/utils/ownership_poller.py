@@ -33,14 +33,6 @@ _scheduler_started = False
 LIVE_SYNC_STORES = ('steam', 'gog', 'epic', 'amazon')
 
 
-def live_sync_stores() -> tuple[str, ...]:
-    """The always-live four plus whichever unofficial stores the operator
-    opted into (INSP-42 / G5). Read at call time, like the opt-in itself."""
-    from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
-
-    return LIVE_SYNC_STORES + tuple(sorted(unofficial_store_opt_in()))
-
-
 def _live_sync_handlers() -> dict:
     """store id -> how to check its credential and how to sync it.
 
@@ -79,34 +71,17 @@ def _live_sync_handlers() -> dict:
             'missing': 'no Amazon Nile/Heroic token configured',
         },
     }
-    # INSP-42: the unofficial stores enrol only while the operator has opted
-    # in (ENABLE_UNOFFICIAL_STORE_SYNC). Off by default -- decision gate G5.
-    from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
-
-    opted = unofficial_store_opt_in()
-    if 'xbox' in opted:
-        handlers['xbox'] = {
-            'credential': store_ownership.xbox_live_ready,
-            'sync': store_ownership.sync_xbox_owned_games,
-            'missing': 'no xbox-webapi token configured (or the package is not installed)',
-        }
-    if 'psn' in opted:
-        handlers['psn'] = {
-            'credential': store_ownership.psn_live_ready,
-            'sync': store_ownership.sync_psn_owned_games,
-            'missing': 'no PSN npsso configured (or psnawp is not installed)',
-        }
 
     # LIVE_SYNC_STORES is now read only by callers and tests, so nothing would
     # catch it drifting from the registry that actually runs. A tuple claiming a
     # store the registry cannot sync is the same false advertisement that made
     # the old fallthrough possible, so fail loudly rather than quietly polling
     # nothing.
-    if set(handlers) != set(live_sync_stores()):
+    if set(handlers) != set(LIVE_SYNC_STORES):
         raise RuntimeError(
-            'live_sync_stores() {} does not match the sync registry {} — '
+            'LIVE_SYNC_STORES {} does not match the sync registry {} — '
             'enrol a store by adding a handler, not by editing the tuple.'
-            .format(sorted(live_sync_stores()), sorted(handlers))
+            .format(sorted(LIVE_SYNC_STORES), sorted(handlers))
         )
 
     # And the *product* must not claim more than the poller can do. STORE_SYNC_MODE

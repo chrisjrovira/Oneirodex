@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, StringConstraints
 
 _RequiredSteamId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -27,26 +27,3 @@ class ConnectSteamBody(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     steam_id: _RequiredSteamId
-
-
-class XboxConnectBody(BaseModel):
-    """``POST /api/ownership/xbox`` (INSP-42). The credential is the JSON the
-    unofficial client's own ``xbox-authenticate`` wrote; stored on the member's
-    account, never logged. Register-only."""
-
-    model_config = ConfigDict(extra='forbid')
-
-    xuid: str | None = Field(default=None, max_length=64)
-    note: str | None = Field(default=None, max_length=120)
-    credential: str | dict | None = None
-
-
-class PsnConnectBody(BaseModel):
-    """``POST /api/ownership/psn`` (INSP-42). ``npsso`` is the member's own
-    session token; stored on their account, never logged. Register-only."""
-
-    model_config = ConfigDict(extra='forbid')
-
-    online_id: str | None = Field(default=None, max_length=64)
-    note: str | None = Field(default=None, max_length=120)
-    npsso: str | None = Field(default=None, max_length=256)

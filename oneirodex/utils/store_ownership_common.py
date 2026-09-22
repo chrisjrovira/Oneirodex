@@ -22,10 +22,7 @@ from oneirodex.utils.security import validate_user_outbound_http_url
 
 # meta_quest = register-only ownership (CSV); never downloads DRM titles.
 # amazon = live register via unofficial Nile/Heroic (IDs + names); never downloads.
-# xbox / psn = register-only, opt-in, unofficial (INSP-42): CSV always; live only
-#   when ENABLE_UNOFFICIAL_STORE_SYNC names the store. Never downloads.
-VALID_STORES = frozenset({'steam', 'gog', 'epic', 'amazon', 'meta_quest', 'xbox', 'psn'})
-UNOFFICIAL_OPT_IN_STORES = frozenset({'xbox', 'psn'})
+VALID_STORES = frozenset({'steam', 'gog', 'epic', 'amazon', 'meta_quest'})
 _CSV_ID_HEADERS = frozenset({
     'appid',
     'app_id',
@@ -40,31 +37,11 @@ _CSV_ID_HEADERS = frozenset({
     'asin',
     'amazon_id',
     'amzn_id',
-    'title_id',
-    'xbox_title_id',
-    'pfn',
-    'np_communication_id',
-    'psn_id',
     'name',
 })
 
 
-_NAME_MATCH_STORES = frozenset({'gog', 'epic', 'amazon', 'meta_quest', 'xbox', 'psn'})
-
-
-def unofficial_store_opt_in() -> frozenset[str]:
-    """Stores the operator has opted into live *unofficial* sync for (G5).
-
-    ``ENABLE_UNOFFICIAL_STORE_SYNC`` is a comma list (``xbox,psn``); ``all``
-    means both. Unset -- the default -- means CSV snapshot only, and the
-    product says so. Read live, so a test or a restart can change it.
-    """
-    raw = (os.getenv('ENABLE_UNOFFICIAL_STORE_SYNC') or '').strip().lower()
-    if not raw or raw in ('0', 'false', 'no', 'off'):
-        return frozenset()
-    if raw in ('1', 'true', 'yes', 'on', 'all'):
-        return UNOFFICIAL_OPT_IN_STORES
-    return frozenset(s.strip() for s in raw.split(',') if s.strip()) & UNOFFICIAL_OPT_IN_STORES
+_NAME_MATCH_STORES = frozenset({'gog', 'epic', 'amazon', 'meta_quest'})
 
 
 def is_ownership_sync_enabled() -> bool:
@@ -106,19 +83,12 @@ STORE_SYNC_MODE: dict[str, str] = {
     'epic': 'live',
     'amazon': 'live',
     'playnite': 'snapshot',
-    # xbox / psn: 'snapshot' here is the *default*; store_sync_mode() promotes
-    # them to 'live' only while ENABLE_UNOFFICIAL_STORE_SYNC names them.
-    'xbox': 'snapshot',
-    'psn': 'snapshot',
 }
 
 
 def store_sync_mode(store: str) -> str:
     """Snapshot unless we know otherwise — the safe direction to be wrong in."""
-    key = (store or '').lower()
-    if key in UNOFFICIAL_OPT_IN_STORES:
-        return 'live' if key in unofficial_store_opt_in() else 'snapshot'
-    return STORE_SYNC_MODE.get(key, 'snapshot')
+    return STORE_SYNC_MODE.get((store or '').lower(), 'snapshot')
 
 
 def get_gog_api_token() -> str | None:

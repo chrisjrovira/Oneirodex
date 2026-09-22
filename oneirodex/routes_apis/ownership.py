@@ -4,7 +4,7 @@ from oneirodex.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
-from oneirodex.schemas.ownership import ConnectSteamBody, PsnConnectBody, XboxConnectBody
+from oneirodex.schemas.ownership import ConnectSteamBody
 from oneirodex.utils.validation import validate_body
 
 from oneirodex.utils.store_ownership import (
@@ -17,16 +17,8 @@ from oneirodex.utils.store_ownership import (
     disconnect_gog_account,
     disconnect_steam_account,
     get_ownership_summary,
-    connect_psn_account,
-    connect_xbox_account,
-    disconnect_psn_account,
-    disconnect_xbox_account,
     import_amazon_csv,
     import_epic_csv,
-    import_psn_csv,
-    import_xbox_csv,
-    sync_psn_owned_games,
-    sync_xbox_owned_games,
     import_gog_csv,
     import_meta_quest_csv,
     import_steam_csv,
@@ -320,65 +312,6 @@ def sync_amazon():
         **result,
         'summary': get_ownership_summary(current_user.id),
     })
-
-
-def _unofficial_store_routes(store: str, connect, disconnect, sync, import_csv, body_model, label: str):
-    """connect / disconnect / sync / csv for one opt-in unofficial store (INSP-42).
-
-    Register-only. Sync says in one sentence when the operator has not opted
-    in or the optional client is not installed; CSV works regardless.
-    """
-
-    @apis_bp.route(f'/ownership/{store}', methods=['POST'], endpoint=f'connect_{store}')
-    @login_required
-    @validate_body(body_model)
-    def _connect(body):
-        if not is_ownership_sync_enabled():
-            return _feature_disabled_response()
-        data = body.model_dump(exclude_none=True)
-        account = connect(current_user.id, **data)
-        return api_ok({'account': account.to_dict(), 'summary': get_ownership_summary(current_user.id)}, status=201)
-
-    @apis_bp.route(f'/ownership/{store}', methods=['DELETE'], endpoint=f'disconnect_{store}')
-    @login_required
-    def _disconnect():
-        if not is_ownership_sync_enabled():
-            return _feature_disabled_response()
-        disconnect(current_user.id)
-        return api_ok({'summary': get_ownership_summary(current_user.id)})
-
-    @apis_bp.route(f'/ownership/{store}/sync', methods=['POST'], endpoint=f'sync_{store}')
-    @login_required
-    def _sync():
-        if not is_ownership_sync_enabled():
-            return _feature_disabled_response()
-        try:
-            result = sync(current_user.id)
-        except PermissionError as exc:
-            return api_error(str(exc), code='forbidden')
-        except ValueError as exc:
-            return api_error(str(exc), code='bad_request')
-        except Exception as exc:  # noqa: BLE001
-            return api_error(f'{label} sync failed: {type(exc).__name__}', code='bad_gateway')
-        return api_ok({**result, 'summary': get_ownership_summary(current_user.id)})
-
-    @apis_bp.route(f'/ownership/{store}/csv', methods=['POST'], endpoint=f'import_{store}_csv')
-    @login_required
-    def _csv():
-        if not is_ownership_sync_enabled():
-            return _feature_disabled_response()
-        csv_text = _read_csv_payload()
-        if not csv_text.strip():
-            return api_error('csv content required', code='bad_request')
-        try:
-            result = import_csv(current_user.id, csv_text)
-        except PermissionError as exc:
-            return api_error(str(exc), code='forbidden')
-        return api_ok({**result, 'summary': get_ownership_summary(current_user.id)})
-
-
-_unofficial_store_routes('xbox', connect_xbox_account, disconnect_xbox_account, sync_xbox_owned_games, import_xbox_csv, XboxConnectBody, 'Xbox')
-_unofficial_store_routes('psn', connect_psn_account, disconnect_psn_account, sync_psn_owned_games, import_psn_csv, PsnConnectBody, 'PlayStation')
 
 
 @apis_bp.route('/ownership/amazon/csv', methods=['POST'])
