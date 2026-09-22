@@ -277,12 +277,29 @@ def _cover_for_game(game) -> str | None:
         return None
 
 
+def _clone_parent_for_folder(folder: UnmatchedFolder, matched_game: Game | None) -> str | None:
+    """Parent set name when a reference DAT marks this folder's title as a clone (1G1R)."""
+    try:
+        from oneirodex.utils.set_completion import clone_parent_for
+
+        platform = getattr(getattr(matched_game, 'library', None), 'platform', None) if matched_game else None
+        platform = getattr(platform, 'name', platform)
+        parent = clone_parent_for(
+            library_platform=platform,
+            name=folder_basename(folder.folder_path) or None,
+        )
+        return parent or None
+    except Exception:  # noqa: BLE001 -- a glance field never breaks the row
+        return None
+
+
 def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | None) -> dict:
     """Build UI glance fields for a Duplicate unmatched row."""
     candidates = []
     match_reason = getattr(folder, 'match_reason', None)
     match_score = getattr(folder, 'match_score', None)
 
+    clone_of = None
     if matched_game is not None:
         dupe_thr = resolve_scan_match_policy().get('dupe_title_threshold')
         explanation = explain_duplicate_match(
@@ -295,6 +312,11 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
             match_reason = explanation.get('match_reason')
         if match_score is None:
             match_score = explanation.get('match_score')
+        # 1G1R (INSP-5): if an uploaded DAT lists this dump as a clone of the
+        # matched game's title, say so -- advisory, nothing is marked on it.
+        clone_of = _clone_parent_for_folder(folder, matched_game)
+        if clone_of and match_reason in (None, 'title_vs_folder', 'title_vs_library_name'):
+            match_reason = 'clone_of_owned_parent'
         candidates.append({
             'uuid': matched_game.uuid,
             'id': matched_game.id,
@@ -324,6 +346,7 @@ def _duplicate_compare_payload(folder: UnmatchedFolder, matched_game: Game | Non
     folder_disk = _unmatched_disk_meta_fields(folder)
     return {
         'id': folder.id,
+        'clone_of': clone_of,
         'folder_path': folder.folder_path,
         'status': folder.status,
         'library_uuid': folder.library_uuid,

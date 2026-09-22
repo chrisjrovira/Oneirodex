@@ -508,6 +508,9 @@ class ReferenceSetEntry(db.Model):
     )
     name = db.Column(db.String(512), nullable=False)
     normalized_name = db.Column(db.String(512), nullable=False)
+    # 1G1R (INSP-5): the parent set this entry is a clone of (`cloneof`), else
+    # NULL. "One game, one ROM" = entries with no parent.
+    parent_name = db.Column(db.String(512), nullable=True)
     crc = db.Column(db.String(16), nullable=True)
     md5 = db.Column(db.String(32), nullable=True)
     sha1 = db.Column(db.String(40), nullable=True)
