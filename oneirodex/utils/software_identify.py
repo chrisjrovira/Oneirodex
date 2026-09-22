@@ -356,6 +356,34 @@ def corroborate_igdb_with_catalogs(
     }
 
 
+def identify_agreement_min() -> int:
+    """How many independent sources must name the same title before a scan
+    auto-imports it (H1d, pass-8 finding). ``IDENTIFY_AGREEMENT_MIN``: 1 is
+    today's behaviour (a high-confidence IGDB match imports on its own); 2
+    requires one catalogue (Steam / GOG / Moby / TGDB unique-exact) to agree,
+    else the title goes to review. Never below 1."""
+    import os
+
+    raw = (os.environ.get('IDENTIFY_AGREEMENT_MIN') or '1').strip()
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return 1
+
+
+def agreement_count(catalog: dict | None, *, extra_signals: int = 0) -> int:
+    """Sources naming the IGDB title: IGDB itself, each agreeing catalogue row,
+    plus any extra signal the caller already has (a DAT / hash match)."""
+    agreed = (catalog or {}).get('agreed') or []
+    return 1 + len([row for row in agreed if isinstance(row, dict)]) + max(0, int(extra_signals or 0))
+
+
+def agreement_satisfied(catalog: dict | None, *, extra_signals: int = 0, minimum: int | None = None) -> bool:
+    """True when enough sources agree for an auto-import (see identify_agreement_min)."""
+    need = identify_agreement_min() if minimum is None else max(1, int(minimum))
+    return agreement_count(catalog, extra_signals=extra_signals) >= need
+
+
 def apply_catalog_identity_to_game(game, rows: list[dict] | None) -> None:
     """Fill-only Steam / Moby identity from agreeing catalog rows. Never a download URL."""
     for row in rows or []:
