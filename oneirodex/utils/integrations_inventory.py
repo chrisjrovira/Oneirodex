@@ -193,6 +193,28 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         notes='Optional Class D identify / covers (THEGAMESDB_API_KEY)',
     )
 
+    # INSP-35 -- keyless community list, read-only. `configured` means the
+    # daily fetch has landed at least once, so lookups can answer.
+    try:
+        from oneirodex.utils.anticheat_compat import status_summary as _anticheat_status
+
+        ac = _anticheat_status()
+    except Exception:  # noqa: BLE001
+        ac = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='anticheat_compat',
+        name='Anti-cheat reports',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(ac.get('configured')),
+        enabled=bool(ac.get('enabled')),
+        notes=(
+            f"Community anti-cheat compatibility, {ac.get('count', 0)} titles cached; one keyless fetch a day, reports not guarantees (ENABLE_ANTICHEAT_COMPAT)"
+            if ac.get('configured')
+            else 'Community anti-cheat compatibility; the daily fetch has not landed yet (ENABLE_ANTICHEAT_COMPAT)'
+        ),
+    )
+
     hltb_on = bool(settings and getattr(settings, 'enable_hltb_integration', True))
     add(
         id='hltb',

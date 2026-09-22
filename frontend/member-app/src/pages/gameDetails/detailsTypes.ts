@@ -11,6 +11,16 @@ export type DetailsRecord = Record<string, unknown>
  * server may omit are optional; the index signature keeps the payload's long
  * tail reachable without widening every access to `any`.
  */
+export type AnticheatStatus = 'supported' | 'running' | 'planned' | 'broken' | 'denied' | 'unknown'
+
+export interface AnticheatReport {
+  status: AnticheatStatus | string
+  anticheats?: string[] | null
+  reports?: number | null
+  source_url?: string | null
+  updated?: string | null
+}
+
 export interface DetailsGame {
   uuid: string
   name: string
@@ -57,6 +67,8 @@ export interface DetailsGame {
   urls?: DetailsRecord[] | null
   translation_patches?: DetailsRecord[] | null
   vr_compat?: 'native_vr' | 'injector_profile' | 'flat' | null
+  /** INSP-35 — community anti-cheat reports; null when the list is silent. */
+  anticheat?: AnticheatReport | null
   store_specs?: DetailsRecord | null
   is_admin?: boolean
   is_favorite?: boolean
