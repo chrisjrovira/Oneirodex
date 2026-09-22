@@ -126,6 +126,13 @@ def start_background_workers(app):
                 _record_handle(start_email_digest_scheduler(app))
             except Exception as exc:
                 logger.warning(f"[EMAIL DIGEST] Could not start: {exc}")
+            try:
+                # Community anti-cheat list (INSP-35): one fetch a day into the
+                # library volume; details read the cache, never the network.
+                from oneirodex.utils.anticheat_poller import start_anticheat_scheduler
+                _record_handle(start_anticheat_scheduler(app))
+            except Exception as exc:
+                logger.warning(f"[ANTICHEAT] Could not start: {exc}")
 
 
 def _record_handle(handle) -> None:
