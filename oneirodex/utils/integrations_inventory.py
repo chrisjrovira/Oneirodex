@@ -168,6 +168,22 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         configured=ra_ok,
         notes='Achievement sets matched by ROM hash; member progress read-only (RETROACHIEVEMENTS_USERNAME / _API_KEY)',
     )
+    try:
+        from oneirodex.utils.hash_identify import base_url as _hash_base, is_enabled as _hash_on
+
+        hash_on = bool(_hash_on())
+        hash_host = _hash_base()
+    except Exception:
+        hash_on, hash_host = False, ''
+    add(
+        id='hash_identify',
+        name='Hash identify',
+        category='metadata',
+        admin_href='/admin/integrations#metadata-providers',
+        configured=hash_on,
+        enabled=hash_on,
+        notes=f'Keyless community hash lookup ({hash_host or "unset"}) for console ROMs after an IGDB and local-DAT miss -- identity only, never a download (ENABLE_HASH_IDENTIFY, HASH_IDENTIFY_BASE_URL)',
+    )
     add(
         id='giantbomb',
         name='Giant Bomb',
