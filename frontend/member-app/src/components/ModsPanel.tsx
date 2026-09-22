@@ -78,19 +78,45 @@ export function ModsPanel({ gameUuid, canEdit = false }: { gameUuid: string; can
     }
   }
 
-  async function addFromCatalog(hit: ModHit) {
+  function draftFromHit(hit: ModHit, requires: string[] = []): ModDraft {
+    return {
+      name: hit.name,
+      version: hit.version,
+      source_url: hit.url,
+      loader: hit.loader,
+      notes: hit.summary ? `${hit.summary} (${hit.source})` : `from ${hit.source}`,
+      requires,
+    }
+  }
+
+  /** One action (INSP-38): the dependencies first, then the hit pointing at them. */
+  async function addFromCatalog(hit: ModHit, dependencies: ModHit[] = []) {
     setError('')
     try {
-      await createMod(gameUuid, {
-        name: hit.name,
-        version: hit.version,
-        source_url: hit.url,
-        loader: hit.loader,
-        notes: hit.summary ? `${hit.summary} (${hit.source})` : `from ${hit.source}`,
-      })
+      const requires: string[] = []
+      for (const dep of dependencies) {
+        const row = await createMod(gameUuid, draftFromHit(dep))
+        if (row?.id) requires.push(row.id)
+      }
+      await createMod(gameUuid, draftFromHit(hit, requires))
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not add the mod')
+    }
+  }
+
+  /** INSP-39: the librarian saw a newer version on the registry and says the row is on it now. */
+  async function noteUpdate(hit: ModHit) {
+    if (!hit.tracked_id || !hit.update_available) return
+    setError('')
+    try {
+      await updateMod(gameUuid, hit.tracked_id, {
+        version: hit.update_available,
+        latest_seen_version: hit.update_available,
+      })
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update the mod')
     }
   }
 
@@ -147,6 +173,15 @@ export function ModsPanel({ gameUuid, canEdit = false }: { gameUuid: string; can
         className="od-mods__status"
       />
 
+      {pack && pack.loader_conflicts.length > 0 ? (
+        <p className="od-mods__conflict" role="note">
+          Loader mismatch: the pack is set to <strong>{pack.default_loader}</strong> but{' '}
+          {pack.loader_conflicts.map((c) => `${c.name} (${c.loader})`).join(', ')}{' '}
+          {pack.loader_conflicts.length === 1 ? 'needs' : 'need'} a different loader. The companion
+          refuses to apply this set until the rows or the default agree.
+        </p>
+      ) : null}
+
       {canEdit && pack ? (
         <label className="od-mods__default">
           <span>Default loader for this game</span>
@@ -188,6 +223,14 @@ export function ModsPanel({ gameUuid, canEdit = false }: { gameUuid: string; can
                     </span>
                   ) : null}
                   {!mod.enabled ? <span className="od-mods__meta">disabled</span> : null}
+                  {mod.requires && mod.requires.length ? (
+                    <span className="od-mods__meta">
+                      needs{' '}
+                      {mod.requires
+                        .map((id) => mods.find((m) => m.id === id)?.name || id)
+                        .join(', ')}
+                    </span>
+                  ) : null}
                 </div>
                 {mod.notes ? <p className="od-mods__notes">{mod.notes}</p> : null}
                 <div className="od-mods__actions">
@@ -301,6 +344,7 @@ export function ModsPanel({ gameUuid, canEdit = false }: { gameUuid: string; can
           open={browsing}
           onClose={() => setBrowsing(false)}
           onAdd={addFromCatalog}
+          onNoteUpdate={noteUpdate}
         />
       ) : null}
     </section>
