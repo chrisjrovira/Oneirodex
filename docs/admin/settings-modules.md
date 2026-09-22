@@ -47,6 +47,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 | `ENABLE_FREE_GAMES` | on | News free-games poller + API |
 | `ENABLE_MOD_CATALOG` | on | *Browse catalogue* in a game's Mods panel: Thunderstore, Modrinth and GameBanana (keyless) plus Nexus Mods behind `NEXUS_API_KEY`, all read-only. A hit is a name, version, loader and registry page — never a file. Integrations lists the four plus CurseForge as *declined* |
 | `NEXUS_API_KEY` | unset | Personal key from your Nexus account page; turns on the Nexus tab (trending + latest for the game). Browse only — Nexus's terms forbid third-party download automation, and nothing here downloads |
+| `ENABLE_ANTICHEAT_COMPAT` | on | Community anti-cheat compatibility list, one keyless fetch a day into `static/library/anticheat/`; details show the status as *community reports*. `ANTICHEAT_FEED_URL` / `ANTICHEAT_CACHE_PATH` override the source and the file. Integrations lists it as **Anti-cheat reports**, configured once the first fetch has landed |
 | `ENABLE_EMAIL_DIGEST` | on | Scheduler on; members still opt in |
 | `ENABLE_LOGIN_RATE_LIMIT` | on | In-process login / password-reset rate limit |
 | `OIDC_ENABLED` | **off** | Also requires Admin → Integrations toggle |
@@ -231,6 +232,9 @@ binaries. Full guide: [theme-fonts-and-images.md](theme-fonts-and-images.md).
 | `ENABLE_FREE_GAMES` | News free-games poller + API (default on) |
 | `ENABLE_MOD_CATALOG` | Read-only mod registry browse (Thunderstore, Modrinth, GameBanana, Nexus) in the Mods panel (default on) |
 | `NEXUS_API_KEY` | Personal Nexus Mods key; browse only (unset = the Nexus tab says it needs a key) |
+| `ENABLE_ANTICHEAT_COMPAT` | Community anti-cheat list, daily fetch + details fact (default on) |
+| `ANTICHEAT_FEED_URL` | Where the list is fetched from (default: the public games.json) |
+| `ANTICHEAT_CACHE_PATH` | Where the fetched file lives (default `static/library/anticheat/games.json`) |
 | `FREE_GAMES_POLL_HOURS` | Free-games refresh interval (default 3) |
 | `ENABLE_EMAIL_DIGEST` | Batched digest scheduler (default on; members still opt in) |
 | `EMAIL_DIGEST_INTERVAL_HOURS` | Digest poll interval (default 24; clamp 1–168) |

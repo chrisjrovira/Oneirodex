@@ -1,0 +1,31 @@
+[
+  {
+    "name": "Rocket Fortress",
+    "slug": "rocket-fortress",
+    "status": "Denied",
+    "anticheats": ["Easy Anti-Cheat"],
+    "reference": "https://example.invalid/rocket-fortress",
+    "storeIds": {"steam": "440000", "epic": "rocket"},
+    "updates": [
+      {"name": "Dev statement", "reference": "https://example.invalid/statement", "date": "2025-03-01"},
+      {"name": "Still denied", "reference": "https://example.invalid/again", "date": "2026-01-10"}
+    ]
+  },
+  {
+    "name": "Quiet Fields",
+    "slug": "quiet-fields",
+    "status": "Supported",
+    "anticheats": ["BattlEye"],
+    "storeIds": {"steam": 550000},
+    "updates": []
+  },
+  {
+    "name": "Nameless Entry",
+    "slug": "nameless-entry",
+    "status": "Whatever",
+    "anticheats": "not-a-list",
+    "updates": "nope"
+  },
+  {"slug": "no-name-row", "status": "Running"},
+  "junk"
+]

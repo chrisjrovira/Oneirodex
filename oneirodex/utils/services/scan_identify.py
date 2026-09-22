@@ -42,6 +42,7 @@ from oneirodex.utils.fandom_alias import (
 from oneirodex.utils.match_scoring import select_best_match, rank_candidates
 from oneirodex.utils.match_proposal import (
     MATCH_REASON_CATALOG_DISAGREEMENT,
+    MATCH_REASON_INSUFFICIENT_AGREEMENT,
     build_match_proposal,
     write_match_proposal,
 )
@@ -55,6 +56,8 @@ from oneirodex.utils.rom_name_peel import (
 from oneirodex.utils.scan_match_settings import resolve_scan_match_policy
 from oneirodex.utils.metadata_providers import stage_d_source_ids
 from oneirodex.utils.software_identify import (
+    agreement_count,
+    agreement_satisfied,
     apply_catalog_identity_to_game,
     corroborate_igdb_with_catalogs,
     igdb_retry_title_from_store,
@@ -996,6 +999,42 @@ def retrieve_and_save_game(
                 'Unmatched',
                 library_uuid=library.uuid,
                 match_reason=MATCH_REASON_CATALOG_DISAGREEMENT,
+            )
+            return None
+        # H1d (pass-8 finding): with IDENTIFY_AGREEMENT_MIN >= 2 a title only
+        # IGDB named goes to review instead of importing. Default 1 keeps
+        # today's behaviour. Same proposal shape as the disagreement branch.
+        if not agreement_satisfied(catalog):
+            logger.info(
+                f"🛑 [H1d] Only {agreement_count(catalog)} source(s) agree on '{game_name}' "
+                f"(IGDB {selected_game.get('name')}) — writing Review proposal, not importing."
+            )
+            try:
+                proposal = build_match_proposal(
+                    game_name,
+                    high_confidence_candidates or [selected_game],
+                    steam_title=steam_title,
+                    confidence='high',
+                )
+                body = proposal.setdefault('proposal', {})
+                body['match_reason'] = MATCH_REASON_INSUFFICIENT_AGREEMENT
+                body['action'] = 'review'
+                body['agreement'] = {
+                    'igdb_name': selected_game.get('name'),
+                    'sources_agreeing': agreement_count(catalog),
+                    'agreed': catalog.get('agreed') or [],
+                }
+                write_match_proposal(full_disk_path, proposal)
+            except Exception as proposal_err:
+                logger.info(
+                    f"⚠️ [H1d] Failed to write agreement proposal for {full_disk_path}: {proposal_err}"
+                )
+            log_unmatched_folder(
+                scan_job_id,
+                full_disk_path,
+                'Unmatched',
+                library_uuid=library.uuid,
+                match_reason=MATCH_REASON_INSUFFICIENT_AGREEMENT,
             )
             return None
     else:
