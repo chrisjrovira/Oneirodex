@@ -526,9 +526,9 @@ async function runApplyModPackCommand(uuid: string): Promise<'ok' | 'busy' | 'er
       throw new Error(applied.error)
     }
     setStatus(
-      `Applied ${applied.appliedMods} mod pack(s) (${applied.filesApplied} file(s)) for ${uuid}.${
-        applied.loaderHint ? ` ${applied.loaderHint}` : ''
-      } WebRetro cannot load PC mods.`,
+      `Applied ${applied.appliedMods} mod pack(s) (${applied.filesApplied} file(s)) for ${uuid}${
+        applied.profileName ? ` — profile ${applied.profileName}` : ''
+      }.${applied.loaderHint ? ` ${applied.loaderHint}` : ''} WebRetro cannot load PC mods.`,
       'success',
     )
   } catch (error) {

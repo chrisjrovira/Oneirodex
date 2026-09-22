@@ -9,7 +9,21 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game
-from oneirodex.schemas.game_mods import ModPackBody, ModPackBulkBody, ModRowBody
+from oneirodex.schemas.game_mods import (
+    ModPackBody,
+    ModPackBulkBody,
+    ModProfileBody,
+    ModProfileImportBody,
+    ModRowBody,
+)
+from oneirodex.utils.game_mod_profiles import (
+    activate_profile,
+    create_profile,
+    delete_profile,
+    export_profile,
+    import_profile,
+    list_profiles,
+)
 from oneirodex.utils.game_mods import (
     create_mod,
     delete_mod,
@@ -194,6 +208,102 @@ def put_game_mods_bulk(game_uuid: str, body: ModPackBulkBody):
     if read_denied:
         return read_denied
     return api_ok({**save_mods(game_uuid, body.mods, default_loader=body.default_loader)})
+
+
+def _librarian_gate(game_uuid: str):
+    """Shared preamble for the librarian write routes: None when allowed."""
+    if not mods_enabled():
+        return _mods_disabled()
+    denied = _require_librarian()
+    if denied:
+        return denied
+    game = _game_or_404(game_uuid)
+    return _require_game_read(game)
+
+
+@apis_bp.route('/games/<game_uuid>/mods/profiles', methods=['GET'])
+@login_required
+def get_game_mod_profiles(game_uuid: str):
+    """Named mod sets (INSP-37) and which one is active."""
+    if not mods_enabled():
+        return _mods_disabled()
+    game = _game_or_404(game_uuid)
+    denied = _require_game_read(game)
+    if denied:
+        return denied
+    return api_ok({'game_uuid': game_uuid, **list_profiles(game_uuid)})
+
+
+@apis_bp.route('/games/<game_uuid>/mods/profiles', methods=['POST'])
+@login_required
+@validate_body(ModProfileBody)
+def post_game_mod_profile(game_uuid: str, body: ModProfileBody):
+    denied = _librarian_gate(game_uuid)
+    if denied:
+        return denied
+    try:
+        profile = create_profile(game_uuid, name=body.name, mod_ids=body.mod_ids)
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    return api_ok({'profile': profile, **list_profiles(game_uuid)}, status=201)
+
+
+@apis_bp.route('/games/<game_uuid>/mods/profiles/<profile_id>', methods=['DELETE'])
+@login_required
+def delete_game_mod_profile(game_uuid: str, profile_id: str):
+    denied = _librarian_gate(game_uuid)
+    if denied:
+        return denied
+    if not delete_profile(game_uuid, profile_id):
+        return api_error('Profile not found', code='not_found')
+    return api_ok({'id': profile_id, **list_profiles(game_uuid)})
+
+
+@apis_bp.route('/games/<game_uuid>/mods/profiles/<profile_id>/activate', methods=['POST'])
+@login_required
+def activate_game_mod_profile(game_uuid: str, profile_id: str):
+    """One-click enable set: the profile's rows on, every other row off."""
+    denied = _librarian_gate(game_uuid)
+    if denied:
+        return denied
+    try:
+        pack = activate_profile(game_uuid, profile_id)
+    except LookupError:
+        return api_error('Profile not found', code='not_found')
+    return api_ok({**pack})
+
+
+@apis_bp.route('/games/<game_uuid>/mods/profiles/<profile_id>/export', methods=['GET'])
+@login_required
+def export_game_mod_profile(game_uuid: str, profile_id: str):
+    """The shareable ``od-mod:`` code for a profile (any member who can read the game)."""
+    if not mods_enabled():
+        return _mods_disabled()
+    game = _game_or_404(game_uuid)
+    denied = _require_game_read(game)
+    if denied:
+        return denied
+    try:
+        code = export_profile(game_uuid, profile_id)
+    except LookupError:
+        return api_error('Profile not found', code='not_found')
+    return api_ok({'profile_id': profile_id, 'code': code})
+
+
+@apis_bp.route('/games/<game_uuid>/mods/profiles/import', methods=['POST'])
+@login_required
+@validate_body(ModProfileImportBody)
+def import_game_mod_profile(game_uuid: str, body: ModProfileImportBody):
+    """Create a profile from a code, matched against this pack; unknown mods
+    come back as ``missing`` and are never created."""
+    denied = _librarian_gate(game_uuid)
+    if denied:
+        return denied
+    try:
+        result = import_profile(game_uuid, body.code, name=body.name)
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    return api_ok({**result, **list_profiles(game_uuid)}, status=201)
 
 
 @apis_bp.route('/games/<game_uuid>/mods/pack', methods=['PATCH'])

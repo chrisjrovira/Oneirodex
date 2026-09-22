@@ -104,6 +104,42 @@ def _read_pack(path: str) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+# INSP-37 -- a named set of mod ids. Activating one flips `enabled` on every
+# row: in the set on, the rest off. Profiles reference rows by id; a row that
+# disappears just drops out of the set on the next read.
+_SAFE_PROFILE_ID = re.compile(r'^[A-Za-z0-9._-]{1,64}$')
+MAX_PROFILES = 32
+
+
+def _normalize_profile(row: Any, known_ids: set[str]) -> dict[str, Any] | None:
+    if not isinstance(row, dict):
+        return None
+    pid = str(row.get('id') or '').strip()
+    name = str(row.get('name') or '').strip()[:120]
+    if not pid or not _SAFE_PROFILE_ID.match(pid) or not name:
+        return None
+    raw_ids = row.get('mod_ids') if isinstance(row.get('mod_ids'), list) else []
+    mod_ids: list[str] = []
+    for value in raw_ids:
+        mid = str(value or '').strip()
+        if mid and mid in known_ids and mid not in mod_ids:
+            mod_ids.append(mid)
+    return {'id': pid, 'name': name, 'mod_ids': mod_ids}
+
+
+def _normalize_profiles(rows: Any, known_ids: set[str]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in rows if isinstance(rows, list) else []:
+        item = _normalize_profile(row, known_ids)
+        if item and item['id'] not in seen:
+            seen.add(item['id'])
+            out.append(item)
+        if len(out) >= MAX_PROFILES:
+            break
+    return out
+
+
 def load_mods(game_uuid: str) -> dict[str, Any]:
     data = _read_pack(_pack_path(game_uuid))
     mods = data.get('mods')
@@ -115,11 +151,18 @@ def load_mods(game_uuid: str) -> dict[str, Any]:
         if normalized:
             cleaned.append(normalized)
     cleaned.sort(key=lambda item: (item['load_order'], item['name'].lower()))
+    known = {row['id'] for row in cleaned}
+    profiles = _normalize_profiles(data.get('profiles'), known)
+    active = str(data.get('active_profile') or '').strip()
+    if active and not any(p['id'] == active for p in profiles):
+        active = ''
     return {
         'game_uuid': game_uuid,
         'default_loader': normalize_loader(data.get('default_loader')),
         'loaders': list(LOADERS),
         'mods': cleaned,
+        'profiles': profiles,
+        'active_profile': active,
     }
 
 
@@ -128,8 +171,11 @@ def save_mods(
     mods: list[dict[str, Any]],
     *,
     default_loader: str | None = None,
+    profiles: list[dict[str, Any]] | None = None,
+    active_profile: str | None = None,
 ) -> dict[str, Any]:
-    """Write the pack. ``default_loader`` ``None`` keeps what the pack had."""
+    """Write the pack. A ``None`` keyword keeps what the pack had for that
+    field (``default_loader``, ``profiles``, ``active_profile``)."""
     path = _pack_path(game_uuid)
     current = _read_pack(path)
     normalized: list[dict[str, Any]] = []
@@ -138,12 +184,19 @@ def save_mods(
         if item:
             normalized.append(item)
     normalized.sort(key=lambda item: (item['load_order'], item['name'].lower()))
+    known = {row['id'] for row in normalized}
     pack = {
         'game_uuid': game_uuid,
         'default_loader': normalize_loader(
             current.get('default_loader') if default_loader is None else default_loader
         ),
         'mods': normalized,
+        'profiles': _normalize_profiles(
+            current.get('profiles') if profiles is None else profiles, known
+        ),
+        'active_profile': str(
+            (current.get('active_profile') if active_profile is None else active_profile) or ''
+        ).strip(),
     }
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(pack, fh, indent=2)

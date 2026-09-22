@@ -14,12 +14,28 @@ export interface ModRow {
   loader: string
 }
 
+export interface ModProfile {
+  id: string
+  name: string
+  mod_ids: string[]
+}
+
 export interface ModPack {
   enabled: boolean
   game_uuid?: string
   default_loader: string
   loaders: string[]
   mods: ModRow[]
+  /** INSP-37 — named sets of mod ids, and which one was last activated. */
+  profiles: ModProfile[]
+  active_profile: string
+}
+
+export interface ModProfileImportResult {
+  profile: ModProfile
+  matched: number
+  missing: { name: string; version: string; loader: string; source_url: string }[]
+  suggested_default_loader: string
 }
 
 export interface ModHit {
@@ -71,6 +87,58 @@ export async function fetchMods(gameUuid: string): Promise<ModPack> {
     default_loader: String(data.default_loader || ''),
     loaders: Array.isArray(data.loaders) ? data.loaders.map(String) : [],
     mods: Array.isArray(data.mods) ? (data.mods as ModRow[]) : [],
+    profiles: Array.isArray(data.profiles) ? (data.profiles as ModProfile[]) : [],
+    active_profile: String(data.active_profile || ''),
+  }
+}
+
+export async function createModProfile(gameUuid: string, name: string, modIds?: string[]) {
+  const body: { name: string; mod_ids?: string[] } = { name }
+  if (modIds) body.mod_ids = modIds
+  return postJson(modsUrl(gameUuid, '/profiles'), body, { label: 'Could not save the profile' })
+}
+
+export async function deleteModProfile(gameUuid: string, profileId: string) {
+  return deleteJson(modsUrl(gameUuid, `/profiles/${encodeURIComponent(profileId)}`), undefined, {
+    label: 'Could not remove the profile',
+  })
+}
+
+export async function activateModProfile(gameUuid: string, profileId: string) {
+  return postJson(
+    modsUrl(gameUuid, `/profiles/${encodeURIComponent(profileId)}/activate`),
+    {},
+    {
+      label: 'Could not activate the profile',
+    },
+  )
+}
+
+export async function exportModProfile(gameUuid: string, profileId: string): Promise<string> {
+  const data = await getJson(
+    modsUrl(gameUuid, `/profiles/${encodeURIComponent(profileId)}/export`),
+    {
+      label: 'Could not export the profile',
+    },
+  )
+  return String(data?.code || '')
+}
+
+export async function importModProfile(
+  gameUuid: string,
+  code: string,
+  name?: string,
+): Promise<ModProfileImportResult> {
+  const body: { code: string; name?: string } = { code: code.trim() }
+  if (name) body.name = name
+  const data = await postJson(modsUrl(gameUuid, '/profiles/import'), body, {
+    label: 'Could not import the profile',
+  })
+  return {
+    profile: data?.profile as ModProfile,
+    matched: Number(data?.matched || 0),
+    missing: Array.isArray(data?.missing) ? data.missing : [],
+    suggested_default_loader: String(data?.suggested_default_loader || ''),
   }
 }
 
