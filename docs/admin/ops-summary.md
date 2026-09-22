@@ -38,6 +38,7 @@ Disk pressure alone never forces `overall: bad`/`warn` or `category: action`/`wa
 | `load_avg` | `{1, 5, 15}` load averages when OS exposes them; **`null` on Windows / denied hosts** |
 | `process` | App process `{pid, rss_bytes}` via psutil; **`null` when unavailable** |
 | `db_ping_ms` | Cheap `SELECT 1` latency (ms); **`null` when DB unreachable** |
+| `gpu` | INSP-44: `{source: 'nvml' \| 'reader', gpus: [{name, util_percent, mem_used, mem_total, temp_c}]}` — NVIDIA's own library when the optional `pynvml` package and a device exist, else a BYO LibreHardwareMonitor / HWiNFO-class JSON reader at `TELEMETRY_READER_URL` polled read-only; **`null` when neither answers** and the **GPU** tile reads *n/a*. Nothing bundled, no driver |
 
 ## `scans` key
 
