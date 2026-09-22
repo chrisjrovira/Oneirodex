@@ -286,6 +286,28 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         notes=f'Ownership register — mode={mq_mode}',
     )
 
+    # INSP-1 -- community save-location manifest, read-only. `configured` means
+    # the daily fetch built the index at least once.
+    try:
+        from oneirodex.utils.save_paths import status_summary as _sp_status
+
+        sp = _sp_status()
+    except Exception:  # noqa: BLE001
+        sp = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='save_paths',
+        name='Save locations',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(sp.get('configured')),
+        enabled=bool(sp.get('enabled')),
+        notes=(
+            f"Community save-location manifest, {sp.get('count', 0)} titles indexed; one keyless fetch a day, paths only -- nothing synced (ENABLE_SAVE_PATHS)"
+            if sp.get('configured')
+            else 'Community save-location manifest; the daily fetch has not landed yet (ENABLE_SAVE_PATHS)'
+        ),
+    )
+
     # --- Auth / mail / support ---
     smtp_ok = bool(settings and getattr(settings, 'smtp_server', None))
     add(

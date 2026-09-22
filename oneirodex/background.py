@@ -133,6 +133,13 @@ def start_background_workers(app):
                 _record_handle(start_anticheat_scheduler(app))
             except Exception as exc:
                 logger.warning(f"[ANTICHEAT] Could not start: {exc}")
+            try:
+                # Community save-location manifest (INSP-1): one fetch a day,
+                # compact index beside it; details read the index only.
+                from oneirodex.utils.save_paths_poller import start_save_paths_scheduler
+                _record_handle(start_save_paths_scheduler(app))
+            except Exception as exc:
+                logger.warning(f"[SAVE PATHS] Could not start: {exc}")
 
 
 def _record_handle(handle) -> None:
