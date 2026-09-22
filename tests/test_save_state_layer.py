@@ -214,3 +214,83 @@ def test_shell_never_auto_loads_a_pulled_state():
     must not come back: the member decides."""
     shell = (WEBRETRO / 'webretro.html').read_text(encoding='utf-8')
     assert 'Cloud saves restored (state loaded)' not in shell
+
+
+# --- Why no save ever reached the server, found live 2026-09-22 -------------
+#
+# He reported: "the badge doesnt update and loading manually does not load the
+# save state". Two separate faults, both proven in the browser against the live
+# box before these tests were written.
+
+
+def test_the_saves_listing_hands_the_play_room_a_csrf_token(client, db_session, configured_install):
+    """The room is a static file, so this listing is its only source of one.
+
+    `webretro.html` is served from /static and never rendered, so its
+    `<meta name="csrf-token">` is permanently empty, and the CSRF cookie is
+    HttpOnly. Every upload and delete the room attempted was therefore rejected
+    with "The CSRF token is missing" -- which is why the save list stayed empty
+    and the resume badge never moved.
+    """
+    user = _user(db_session)
+    library = _library(db_session)
+    game = _game(db_session, library)
+
+    _login(client, user)
+    body = client.get(f'/api/games/{game.uuid}/saves').get_json()
+    assert body['csrf_token'], 'the room has no other way to obtain a token'
+
+
+def test_the_room_sends_the_token_the_listing_gave_it():
+    shell = (WEBRETRO / 'webretro.html').read_text(encoding='utf-8')
+
+    # Remembered from the listing, and fetched on demand if a write comes first.
+    assert 'function rememberCsrf(' in shell
+    assert 'function withCsrf(' in shell
+    assert 'rememberCsrf(body.csrf_token)' in shell
+
+    # Both writing paths go through it rather than reading an empty meta tag.
+    for fn in ('function uploadSlot(', 'function deleteSlot('):
+        at = shell.index(fn)
+        body = shell[at:at + 900]
+        assert 'withCsrf()' in body, fn
+        assert "'X-CSRFToken': csrfToken()" not in body, fn
+
+
+def test_an_export_waits_for_the_state_to_stop_growing():
+    """The second fault: a save state that uploaded 8 bytes and would not load.
+
+    RetroArch writes the state's RZIP header immediately and compresses the
+    payload over the next second or three; webretro copies the file into
+    IndexedDB from its write callback, so a read taken straight after the save
+    command returns the header alone. The bridge used to accept the first
+    non-empty read.
+    """
+    bridge = (WEBRETRO / 'od-bridge.js').read_text(encoding='utf-8')
+
+    # Retries carry the previous length and stop only when it stops growing …
+    assert 'function exportWithRetries(done, attempt, lastLen)' in bridge
+    assert 'len <= seen' in bridge
+    # … and never settle on something too small to be a state.
+    assert 'MIN_STATE_BYTES' in bridge
+    assert 'bytes >= MIN_STATE_BYTES' in bridge
+    # The tail has to outlast the compression, not just the first frame.
+    assert 'EXPORT_DELAYS_MS = [200, 400, 800, 1200, 1600, 2000]' in bridge
+    # The file being written wins over the IndexedDB copy of it.
+    assert 'onDisk.length > state.length' in bridge
+    # A zero-length array must read as nothing, not as an empty base64 string.
+    assert 'if (!bytes.length) return null;' in bridge
+
+
+def test_the_shell_cache_key_moved_with_the_bridge():
+    """base.js / od-bridge.js are cached for an hour with no validator, so a
+    fix to either only reaches a returning member when this key changes -- and
+    the two files must agree or the room loads a mismatched pair."""
+    shell = (WEBRETRO / 'webretro.html').read_text(encoding='utf-8')
+    standalone = (WEBRETRO / 'standalone.html').read_text(encoding='utf-8')
+
+    key = shell.split("'&_gt=")[1].split("'")[0]
+    assert f'od-bridge.js?v={key}' in standalone
+    assert f'base.js?v={key}' in standalone
+    assert key != 'save-states-1', 'the key must move when the bridge does'
+
