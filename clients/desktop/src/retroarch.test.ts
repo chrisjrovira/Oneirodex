@@ -14,6 +14,7 @@ import {
   buildAiServiceSetupNote,
   buildRetroArchArgs,
   fetchCheatText,
+  inputFamilyArgs,
   resolveCheatStagePath,
   safeCheatFilename,
   shouldStageRetroArchCheat,
@@ -194,5 +195,46 @@ describe('retroarch companion helpers', () => {
     })
     expect(fetchImpl).not.toHaveBeenCalled()
     expect(invoke).not.toHaveBeenCalledWith('write_file_bytes', expect.anything())
+  })
+})
+
+describe('input family remaps (INSP-43)', () => {
+  it('appends a remap for spinner, lightgun and trackball only', () => {
+    expect(inputFamilyArgs('spinner')).toEqual([
+      '--appendconfig',
+      'input_remapping_path=oneirodex-spinner.rmp',
+    ])
+    expect(inputFamilyArgs('LightGun')).toEqual([
+      '--appendconfig',
+      'input_remapping_path=oneirodex-lightgun.rmp',
+    ])
+    expect(inputFamilyArgs('trackball')[1]).toContain('trackball')
+    expect(inputFamilyArgs('joystick')).toEqual([])
+    expect(inputFamilyArgs('dance mat')).toEqual([])
+    expect(inputFamilyArgs(null)).toEqual([])
+    expect(inputFamilyArgs(undefined)).toEqual([])
+  })
+
+  it('puts the family remap before caller args so an explicit one still wins', () => {
+    const args = buildRetroArchArgs({
+      core: 'mame_libretro.dll',
+      system: 'ARCADE',
+      romPath: 'D:/arcade/tempest.zip',
+      inputFamily: 'spinner',
+      extraArgs: ['--fullscreen'],
+    })
+    expect(args).toEqual([
+      '-L',
+      'mame_libretro.dll',
+      'D:/arcade/tempest.zip',
+      '--appendconfig',
+      'input_remapping_path=oneirodex-spinner.rmp',
+      '--fullscreen',
+    ])
+    expect(buildRetroArchArgs({ core: 'c', system: 'ARCADE', romPath: 'r' })).toEqual([
+      '-L',
+      'c',
+      'r',
+    ])
   })
 })

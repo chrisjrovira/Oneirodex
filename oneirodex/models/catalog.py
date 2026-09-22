@@ -120,6 +120,10 @@ class Game(db.Model):
     # `is_vr`. NULL = unknown; native_vr | injector_profile | flat. Catalogue
     # data for the ways-to-play rows -- never a shim, an installer or a path.
     vr_compat = db.Column(db.String(24), nullable=True)
+    # INSP-43 -- how the cabinet was driven: joystick | spinner | lightgun |
+    # trackball. The companion maps it to a RetroArch input remap so a spinner
+    # game does not launch bound like a stick game. NULL = unknown.
+    input_family = db.Column(db.String(16), nullable=True)
     date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     date_identified = db.Column(db.DateTime, nullable=True)
     steam_url = db.Column(db.String, nullable=True)

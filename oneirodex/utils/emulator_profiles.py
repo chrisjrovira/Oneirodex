@@ -7,7 +7,24 @@ from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import GlobalSettings
-from oneirodex.platform import Emulator, LibraryPlatform, platform_emulator_mapping
+from oneirodex.platform import (
+    ARCADE_COMPANION_CORES,
+    Emulator,
+    LibraryPlatform,
+    platform_emulator_mapping,
+)
+
+
+def _allowed_cores(platform_key: str) -> set[str]:
+    """Cores an operator may pick for a platform.
+
+    Normally the platform mapping. ARCADE is the exception (INSP-43): it is a
+    locked platform with an empty mapping on purpose, so its companion cores
+    live in their own list.
+    """
+    if platform_key == 'ARCADE':
+        return {e.value for e in ARCADE_COMPANION_CORES}
+    return {e.value for e in platform_emulator_mapping.get(LibraryPlatform[platform_key], [])}
 
 
 def _global_settings() -> GlobalSettings | None:
@@ -60,7 +77,7 @@ def set_emulator_profiles(profiles: dict[str, str | None]) -> dict[str, str]:
             next_map.pop(platform_key, None)
             continue
         core_value = str(core).strip()
-        allowed = {e.value for e in platform_emulator_mapping.get(LibraryPlatform[platform_key], [])}
+        allowed = _allowed_cores(platform_key)
         if core_value not in valid_cores or (allowed and core_value not in allowed):
             raise ValueError(f'Core {core_value} is not valid for {platform_key}')
         next_map[platform_key] = core_value
@@ -76,6 +93,9 @@ def resolve_emulators_for_platform(platform_name: str) -> dict:
     """Return default cores with optional preferred core first."""
     platform_enum = LibraryPlatform[platform_name]
     defaults = [e.value for e in platform_emulator_mapping.get(platform_enum, [])]
+    if platform_name.upper() == 'ARCADE':
+        # INSP-43 -- offered, never mapped; see ARCADE_COMPANION_CORES.
+        defaults = [e.value for e in ARCADE_COMPANION_CORES]
     preferred = get_emulator_profiles().get(platform_name.upper())
     ordered = list(defaults)
     if preferred and preferred in ordered:
