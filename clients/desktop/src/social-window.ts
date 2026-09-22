@@ -18,13 +18,19 @@ export const SOCIAL_POPUP = {
 /** Last URL loaded into the Tauri `social` label (for Server URL change detection). */
 let lastSocialUrl = ''
 
-/** Member SPA route for the stay-open Friends companion. */
-export function buildSocialCompanionUrl(baseUrl: string): string {
+/**
+ * Member SPA route for the stay-open Friends companion. With `gameUuid` the
+ * window also carries the overlay assists for that game (INSP-45): maps,
+ * guides, clips, a wiki — links only.
+ */
+export function buildSocialCompanionUrl(baseUrl: string, gameUuid?: string | null): string {
   const trimmed = baseUrl.trim()
   if (!trimmed) {
     return ''
   }
-  return joinUrl(trimmed, '/social-companion')
+  const base = joinUrl(trimmed, '/social-companion')
+  const uuid = (gameUuid || '').trim()
+  return uuid ? `${base}?game=${encodeURIComponent(uuid)}` : base
 }
 
 /** Test helper — reset module URL tracking between cases. */
@@ -107,8 +113,9 @@ function browserOpenFeatures(placement: SocialWindowPlacement): string {
  */
 export async function openSocialCompanionWindow(
   baseUrl: string,
+  gameUuid?: string | null,
 ): Promise<'opened' | 'focused' | 'browser'> {
-  const url = buildSocialCompanionUrl(baseUrl)
+  const url = buildSocialCompanionUrl(baseUrl, gameUuid)
   if (!url) {
     throw new Error('Set Server URL first, then open Friends.')
   }
