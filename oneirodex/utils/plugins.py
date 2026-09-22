@@ -52,6 +52,8 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('mods.catalog.gamebanana', 'GameBanana catalogue', 'mods', 'Browse long-tail UGC, read-only, no key, rate-limited (INSP-22)'),
     PluginInfo('mods.catalog.nexus', 'Nexus Mods catalogue', 'mods', 'Browse trending + latest behind NEXUS_API_KEY; never a download (INSP-22)'),
     PluginInfo('social.community_chat', 'Community chat link', 'social', 'BYO Stoat/Matrix deep-link'),
+    PluginInfo('notify.apprise', 'Apprise API push', 'notify', 'BYO Apprise API server: admin alerts, opt-in social kinds (INSP-6)'),
+    PluginInfo('notify.ntfy', 'ntfy push', 'notify', 'BYO ntfy topic: admin alerts, opt-in social kinds (INSP-6)'),
     PluginInfo('rtc.livekit', 'LiveKit voice', 'rtc', 'Optional household voice SFU (Wave 16)'),
     PluginInfo('remote_play.moonlight', 'Remote play', 'streaming', 'BYO Sunshine/Wolf Moonlight host'),
 ]
@@ -139,6 +141,10 @@ def _runtime_status_map() -> dict[str, str]:
     except Exception:
         status['emu.emulatorjs'] = 'available'
     try:
+        from oneirodex.utils.notification_bus import apprise_urls, ntfy_url
+
+        status['notify.apprise'] = 'configured' if apprise_urls() else 'available'
+        status['notify.ntfy'] = 'configured' if ntfy_url() else 'available'
         from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
         from oneirodex.utils.store_ownership_psn import client_available as psn_client
         from oneirodex.utils.store_ownership_xbox import client_available as xbox_client
