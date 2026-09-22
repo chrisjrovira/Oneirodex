@@ -3,16 +3,22 @@
 from pathlib import Path
 
 from flask import (
+    Blueprint,
+    current_app,
     jsonify,
+    redirect,
     render_template,
-    Blueprint, current_app, jsonify, redirect, request, send_from_directory,
+    request,
+    send_from_directory,
     url_for,
 )
 from flask_login import current_user, login_required
 
 from oneirodex import cache
+from oneirodex.utils.api_response import api_error
 from oneirodex.utils.browse_payload import build_browse_payload
 from oneirodex.utils.browse_query import run_browse_query
+from oneirodex.utils.filter_tree import FilterTreeError
 from oneirodex.utils.member_spa import render_member_spa
 from oneirodex.utils.processors import get_global_settings
 
@@ -44,7 +50,13 @@ def browse_games():
     (``frontend/member-app/src/api/browse.ts``) hits the raw URL, never
     ``url_for``. Moved off the retired ``'main'`` blueprint in wave A2.1f.
     """
-    result = run_browse_query(request.args, current_user)
+    try:
+        result = run_browse_query(request.args, current_user)
+    except FilterTreeError as exc:
+        # INSP-3. A filter we will not run has to say so: quietly dropping it
+        # would hand back the whole library and let the member read that as the
+        # answer to the question they asked.
+        return api_error(str(exc), code='bad_request', detail={'path': exc.path})
     return jsonify(build_browse_payload(result))
 
 

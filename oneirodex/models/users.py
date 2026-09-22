@@ -315,6 +315,62 @@ class DetailLayoutPreset(db.Model):
     def __repr__(self):
         return f"<DetailLayoutPreset {self.user_id}:{self.name}>"
 
+class SavedFilter(db.Model):
+    """A member's named filter: a nested AND/OR tree over the chip vocabulary.
+
+    The chip row can only mean *and*, so a question like "VR titles that are
+    behind, or anything imported this fortnight" had no expression at all. The
+    tree gives it one (see ``utils/filter_tree.py``), and naming it is what
+    makes it worth building twice -- a saved filter is also what a smart
+    collection is made of (INSP-29).
+
+    Per-member by design: one household member narrowing their own view should
+    not change what anyone else sees, which is the mistake the shared detail
+    layout made before presets were named.
+    """
+
+    __tablename__ = 'saved_filters'
+    __table_args__ = (
+        # The name is how a member picks one, so two of the same name would
+        # make the picker a coin toss.
+        db.UniqueConstraint('user_id', 'name', name='uq_saved_filter_user_name'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    name = db.Column(db.String(64), nullable=False)
+    tree = db.Column(JSONEncodedDict, nullable=False)
+    # A saved filter becomes a smart collection when it is worth a tile of its
+    # own; the flag lives here rather than in a second table because the row is
+    # the same row either way (INSP-29).
+    is_collection = db.Column(db.Boolean, nullable=False, default=False)
+    created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    user = db.relationship('User', backref='saved_filters')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'tree': self.tree,
+            'is_collection': bool(self.is_collection),
+            'created': self.created.isoformat() if self.created else None,
+            'updated': self.updated.isoformat() if self.updated else None,
+        }
+
+    def __repr__(self):
+        return f"<SavedFilter {self.user_id}:{self.name}>"
+
 class InviteToken(db.Model):
     __tablename__ = 'invite_tokens'
 
@@ -361,6 +417,7 @@ __all__ = [
     "Whitelist",
     "UserPreference",
     "DetailLayoutPreset",
+    "SavedFilter",
     "InviteToken",
     "UserAttractModeSettings",
 ]
