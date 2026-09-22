@@ -37,6 +37,23 @@ Admin → Integrations → **ROM reference sets (DAT)** (`/admin/reference_sets`
 
 Uploading the same platform+region **replaces** the previous set.
 
+## Repair preview (dry run)
+
+**INSP-24.** Set completion says what is missing; the repair preview on the same admin page says what the set disagrees with among the files you *do* own. Pick a platform (and one region, or all its sets), click **Preview repairs**, and read four buckets:
+
+| Bucket | Meaning | What you might do |
+|---|---|---|
+| **Hash matches, name differs** | The dump is exactly a set entry; the filename is not the set's name. | Rename by hand, or leave it — the catalogue already knows what it is. Never proposed for a `mame` set, whose files are named by machine short name the entry does not keep. |
+| **Name matches, hash differs** | The filename is a set title; the bytes are not that entry. | A bad dump, another revision, a header the set strips, or an overdump. Compare CRCs; re-dump or accept. |
+| **Clone-named files** | The file is a *clone* entry (parent/clone DATs), with whether the parent is owned. | Usually nothing — 1G1R completion already counts the parent once. |
+| **Not in the set** | Neither hash nor name is in the set. | Homebrew, a hack, a region the set does not cover — or the wrong DAT for the shelf. |
+
+Files that were never hashed and match a name are counted (*name-only*) but not listed — run **Rehash platform** first. Each bucket shows up to 200 rows (`limit` on the API, max 2000) with a *Showing the first N of M* line when truncated. It is a **report only**: nothing is renamed, moved or marked, on disk or in the catalogue.
+
+```bash
+curl -sS -b cookies.txt -H "Content-Type: application/json" -H "X-CSRFToken: $CSRF"   -d '{"library_platform":"NES","region":"USA","limit":50}'   "$BASE/api/reference-sets/repair-preview" | jq '.counts, .verified, .rename_candidates[:3]'
+```
+
 **Systems hub heatmap:** with `include_completion=1`, `/api/library_platforms` returns preferred `set_completion` plus `set_completion_regions` (all uploaded regions). The Systems page shows color chips per region when more than one DAT is present.
 
 API (admin):
