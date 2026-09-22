@@ -39,7 +39,10 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('emu.emulatorjs', 'EmulatorJS', 'emulator', 'Browser engine B — own shell + cores, operator-fetched (BP-2)'),
     PluginInfo('emu.retroarch', 'RetroArch', 'emulator', 'Native companion profiles'),
     PluginInfo('compat.anticheat', 'Anti-cheat reports', 'metadata', 'Community anti-cheat compatibility list, read-only; one keyless fetch a day (INSP-35)'),
+    PluginInfo('compat.save_paths', 'Save locations', 'metadata', 'Community save-location manifest, read-only; one keyless fetch a day (INSP-1)'),
     PluginInfo('achievements.retroachievements', 'RetroAchievements', 'emulator', 'Community achievement sets matched by ROM hash; member progress read-only (R1/R2)'),
+    PluginInfo('store.xbox', 'Xbox ownership', 'ownership', 'Register-only, opt-in, unofficial (xbox-webapi); CSV always (INSP-42)'),
+    PluginInfo('store.psn', 'PlayStation ownership', 'ownership', 'Register-only, opt-in, unofficial (psnawp); CSV always (INSP-42)'),
     PluginInfo('export.esde', 'ES-DE export', 'export', 'gamelist.xml packs'),
     PluginInfo('export.pegasus', 'Pegasus export', 'export', 'metadata.pegasus.txt'),
     PluginInfo('assist.packs', 'Assist packs', 'assists', 'Single-player companion toggles'),
@@ -49,6 +52,8 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('mods.catalog.gamebanana', 'GameBanana catalogue', 'mods', 'Browse long-tail UGC, read-only, no key, rate-limited (INSP-22)'),
     PluginInfo('mods.catalog.nexus', 'Nexus Mods catalogue', 'mods', 'Browse trending + latest behind NEXUS_API_KEY; never a download (INSP-22)'),
     PluginInfo('social.community_chat', 'Community chat link', 'social', 'BYO Stoat/Matrix deep-link'),
+    PluginInfo('notify.apprise', 'Apprise API push', 'notify', 'BYO Apprise API server: admin alerts, opt-in social kinds (INSP-6)'),
+    PluginInfo('notify.ntfy', 'ntfy push', 'notify', 'BYO ntfy topic: admin alerts, opt-in social kinds (INSP-6)'),
     PluginInfo('rtc.livekit', 'LiveKit voice', 'rtc', 'Optional household voice SFU (Wave 16)'),
     PluginInfo('remote_play.moonlight', 'Remote play', 'streaming', 'BYO Sunshine/Wolf Moonlight host'),
 ]
@@ -135,6 +140,29 @@ def _runtime_status_map() -> dict[str, str]:
         status['emu.emulatorjs'] = 'installed' if emulatorjs_installed() else 'available'
     except Exception:
         status['emu.emulatorjs'] = 'available'
+    try:
+        from oneirodex.utils.notification_bus import apprise_urls, ntfy_url
+
+        status['notify.apprise'] = 'configured' if apprise_urls() else 'available'
+        status['notify.ntfy'] = 'configured' if ntfy_url() else 'available'
+        from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
+        from oneirodex.utils.store_ownership_psn import client_available as psn_client
+        from oneirodex.utils.store_ownership_xbox import client_available as xbox_client
+
+        opted = unofficial_store_opt_in()
+        for sid, has_client in (('xbox', xbox_client()), ('psn', psn_client())):
+            if sid not in opted:
+                status[f'store.{sid}'] = 'disabled'
+            else:
+                status[f'store.{sid}'] = 'configured' if has_client else 'available'
+    except Exception:
+        pass
+        from oneirodex.utils.save_paths import status_summary as save_paths_status
+
+        sp = save_paths_status()
+        status['compat.save_paths'] = 'disabled' if not sp['enabled'] else ('configured' if sp['configured'] else 'available')
+    except Exception:
+        status['compat.save_paths'] = 'available'
     try:
         from oneirodex.utils.retroachievements import configured as ra_configured
 

@@ -46,3 +46,29 @@ test('the VR badge follows vr_compat and says when it is a community profile', (
   expect(kinds({ is_vr: false, vr_compat: 'flat' })).toHaveLength(0)
   expect(kinds({ is_vr: false })).toHaveLength(0)
 })
+
+test('a headset record adds the runtime and the profile page as a link — nothing more (INSP-40)', () => {
+  render(
+    <MemoryRouter>
+      <VrWayToPlayLine
+        vrCompat="injector_profile"
+        profiles={[
+          {
+            kind: 'injector',
+            runtime: 'openvr',
+            profile_url: 'https://example.invalid/profiles/title',
+            notes: 'Works with the community layer.',
+            source: 'community',
+          },
+        ]}
+      />
+    </MemoryRouter>,
+  )
+  expect(screen.getByText('OpenVR / SteamVR.')).toBeInTheDocument()
+  const link = screen.getByRole('link', { name: 'Community profile page' })
+  expect(link).toHaveAttribute('href', 'https://example.invalid/profiles/title')
+  expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+  expect(screen.getByText('Works with the community layer.')).toBeInTheDocument()
+  // A record for another kind does not leak onto this line
+  expect(screen.getByRole('link', { name: 'More like this' })).toBeInTheDocument()
+})

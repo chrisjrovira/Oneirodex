@@ -106,6 +106,28 @@ def game_indicates_vr(game):
 
 
 VR_COMPAT_VALUES = ('native_vr', 'injector_profile', 'flat')
+# INSP-43 -- cabinet control families the companion knows how to remap.
+INPUT_FAMILY_VALUES = ('joystick', 'spinner', 'lightgun', 'trackball')
+
+
+def game_input_family(game):
+    """Stored control family, or None. Never guessed from the title."""
+    value = getattr(game, 'input_family', None)
+    return value if value in INPUT_FAMILY_VALUES else None
+# INSP-40 -- a profile row's kind, as the vr_compat word it implies. Order is
+# the preference when several rows exist: a shipped VR mode beats a profile.
+VR_PROFILE_KIND_TO_COMPAT = {'native': 'native_vr', 'injector': 'injector_profile', 'flat': 'flat'}
+_VR_PROFILE_PREFERENCE = ('native', 'injector', 'flat')
+
+
+def game_vr_profile_compat(game):
+    """``vr_compat`` implied by the game's ``GameVrProfile`` rows, or None."""
+    rows = getattr(game, 'vr_profiles', None) or []
+    kinds = {getattr(r, 'kind', None) for r in rows}
+    for kind in _VR_PROFILE_PREFERENCE:
+        if kind in kinds:
+            return VR_PROFILE_KIND_TO_COMPAT[kind]
+    return None
 
 
 def game_vr_compat(game):
@@ -119,6 +141,9 @@ def game_vr_compat(game):
     stored = getattr(game, 'vr_compat', None)
     if stored in VR_COMPAT_VALUES:
         return stored
+    from_profile = game_vr_profile_compat(game)
+    if from_profile:
+        return from_profile
     return 'native_vr' if game_indicates_vr(game) else None
 
 
@@ -146,6 +171,8 @@ def game_card_flags(game):
     return {
         'is_vr': game_indicates_vr(game),
         'vr_compat': game_vr_compat(game),
+        # INSP-43 -- cabinet control family (arcade shelves); None when unknown
+        'input_family': game_input_family(game),
         # INSP-35 — community anti-cheat reports (None = the list is silent)
         'anticheat': _game_anticheat(game),
         'item_kind': kind,

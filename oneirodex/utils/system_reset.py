@@ -84,6 +84,7 @@ RESET_SCOPES: dict[str, tuple[str, ...]] = {
         'game_extras',
         'game_updates',
         'game_urls',
+        'game_vr_profiles',
         'game_related_media',
         'game_similarity',
         'game_servers',

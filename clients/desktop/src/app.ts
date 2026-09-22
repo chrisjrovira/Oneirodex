@@ -22,6 +22,7 @@ import {
 import { startClientHeartbeat, type HeartbeatScheduler } from './heartbeat.js'
 import { getInstallsDir } from './download.js'
 import { revealPathInOs } from './open-path.js'
+import { expandSavePath, hasSavePlaceholder, tauriResolvers } from './save-paths.js'
 import {
   fetchLibraryPreview,
   formatDesktopApiError,
@@ -367,6 +368,9 @@ async function handleConnect(): Promise<void> {
   renderLibrary()
   els.connectBtn.disabled = false
 }
+/** The game most recently launched from this seat — the overlay's subject (INSP-45). */
+let lastPlayedGameUuid: string | null = null
+
 async function runPlayAction(uuid: string): Promise<void> {
   if (!lifecycle || busyGames.has(uuid)) {
     return
@@ -377,6 +381,7 @@ async function runPlayAction(uuid: string): Promise<void> {
     setGameActivity(uuid, 'Launching…')
     renderLibrary()
     const { pid } = await kickoffLaunch(api, uuid)
+    lastPlayedGameUuid = uuid
     setGameActivity(uuid, `Playing (pid ${pid})`)
     renderLibrary()
     setStatus(`Launched ${uuid}.`, 'success')
@@ -391,7 +396,21 @@ async function runOpenPathCommand(
   rawPath: string,
   options: { select?: boolean; allowedRoots?: string[] } = {},
 ): Promise<'ok' | 'busy' | 'error'> {
-  const result = await revealPathInOs(rawPath, {
+  let target = rawPath
+  if (hasSavePlaceholder(rawPath)) {
+    // INSP-1: a save-location template from the community manifest — expand
+    // it for this PC, or say which placeholder this machine cannot fill.
+    const expanded = await expandSavePath(rawPath, await tauriResolvers())
+    if (!expanded.ok) {
+      setStatus(
+        `Cannot open that save folder here: ${expanded.missing} is not known on this PC.`,
+        'error',
+      )
+      return 'error'
+    }
+    target = expanded.path
+  }
+  const result = await revealPathInOs(target, {
     select: options.select,
     allowedRoots: options.allowedRoots,
   })
@@ -731,7 +750,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
       setStatus(blocked, 'error')
       return
     }
-    void openSocialCompanionWindow(base)
+    void openSocialCompanionWindow(base, lastPlayedGameUuid)
       .then((how) => {
         const { message, tone } = friendsOpenStatus(how, connectionMode)
         setStatus(message, tone)

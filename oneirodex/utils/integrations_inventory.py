@@ -286,6 +286,76 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         notes=f'Ownership register — mode={mq_mode}',
     )
 
+    # INSP-6 -- BYO notification bus. Configured = an endpoint is named.
+    try:
+        from oneirodex.utils.notification_bus import status_summary as _bus_status
+
+        bus = _bus_status()
+    except Exception:  # noqa: BLE001
+        bus = {'configured': False, 'apprise': 0, 'ntfy': False, 'social_to_bus': False}
+    add(
+        id='notify_bus',
+        name='Notification bus (Apprise API / ntfy)',
+        category='notify',
+        admin_href='/admin/integrations#notify',
+        configured=bool(bus.get('configured')),
+        enabled=bool(bus.get('configured')),
+        notes=(
+            f"{bus.get('apprise', 0)} Apprise endpoint(s), ntfy {'on' if bus.get('ntfy') else 'off'}; admin alerts ride the admin_notify_* flags, social kinds {'also pushed (NOTIFY_SOCIAL_TO_BUS)' if bus.get('social_to_bus') else 'in-app only'}. Test: POST /api/admin/notify-bus/test"
+            if bus.get('configured')
+            else 'Nothing bundled: name an Apprise API notify URL (NOTIFY_APPRISE_URLS) and/or an ntfy topic (NOTIFY_NTFY_URL) to push admin alerts to a phone'
+        ),
+    )
+
+    # INSP-42 -- unofficial, opt-in, register-only stores (G5: default off).
+    try:
+        from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
+        from oneirodex.utils.store_ownership_psn import client_available as _psn_client
+        from oneirodex.utils.store_ownership_xbox import client_available as _xbox_client
+
+        _opted = unofficial_store_opt_in()
+        for sid, label, pkg, has_client in (
+            ('xbox', 'Xbox', 'xbox-webapi', _xbox_client()),
+            ('psn', 'PlayStation Network', 'psnawp', _psn_client()),
+        ):
+            on = sid in _opted
+            add(
+                id=f'store_{sid}',
+                name=label,
+                category='ownership',
+                admin_href='/admin/integrations#ownership',
+                configured=on and has_client,
+                enabled=on,
+                notes=(
+                    f'Ownership register, live via the unofficial {pkg} client (installed: {"yes" if has_client else "no"}); IDs + names only, never a download'
+                    if on
+                    else f'Ownership register, CSV snapshot only. Live sync is opt-in: ENABLE_UNOFFICIAL_STORE_SYNC={sid} plus the optional {pkg} package'
+                ),
+            )
+    except Exception:  # noqa: BLE001
+        pass
+    # INSP-1 -- community save-location manifest, read-only. `configured` means
+    # the daily fetch built the index at least once.
+    try:
+        from oneirodex.utils.save_paths import status_summary as _sp_status
+
+        sp = _sp_status()
+    except Exception:  # noqa: BLE001
+        sp = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='save_paths',
+        name='Save locations',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(sp.get('configured')),
+        enabled=bool(sp.get('enabled')),
+        notes=(
+            f"Community save-location manifest, {sp.get('count', 0)} titles indexed; one keyless fetch a day, paths only -- nothing synced (ENABLE_SAVE_PATHS)"
+            if sp.get('configured')
+            else 'Community save-location manifest; the daily fetch has not landed yet (ENABLE_SAVE_PATHS)'
+        ),
+    )
+
     # --- Auth / mail / support ---
     smtp_ok = bool(settings and getattr(settings, 'smtp_server', None))
     add(

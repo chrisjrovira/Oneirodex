@@ -120,6 +120,10 @@ class Game(db.Model):
     # `is_vr`. NULL = unknown; native_vr | injector_profile | flat. Catalogue
     # data for the ways-to-play rows -- never a shim, an installer or a path.
     vr_compat = db.Column(db.String(24), nullable=True)
+    # INSP-43 -- how the cabinet was driven: joystick | spinner | lightgun |
+    # trackball. The companion maps it to a RetroArch input remap so a spinner
+    # game does not launch bound like a stick game. NULL = unknown.
+    input_family = db.Column(db.String(16), nullable=True)
     date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     date_identified = db.Column(db.DateTime, nullable=True)
     steam_url = db.Column(db.String, nullable=True)
@@ -491,6 +495,49 @@ class RetroAchievementsIndexEntry(db.Model):
     )
 
 
+class GameVrProfile(db.Model):
+    """How one title is played in a headset, as a record (INSP-40, v11 H3a).
+
+    One row per (game, kind): ``native`` (ships a VR mode), ``injector`` (a
+    community profile exists -- ``profile_url`` is *its page*), ``flat`` (no
+    VR; stream it). ``runtime`` names the OpenXR / OpenVR side when known.
+    Catalogue data and a deep link only: nothing here is a shim, an
+    installer or a path on disk. ``Game.vr_compat`` derives from these rows
+    when a librarian did not set it directly.
+    """
+
+    __tablename__ = 'game_vr_profiles'
+    __table_args__ = (
+        db.UniqueConstraint('game_uuid', 'kind', name='uq_game_vr_profiles_game_kind'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    game_uuid = db.Column(db.String(36), db.ForeignKey('games.uuid', ondelete='CASCADE'), nullable=False, index=True)
+    kind = db.Column(db.String(16), nullable=False)  # native | injector | flat
+    runtime = db.Column(db.String(16), nullable=True)  # openxr | openvr
+    profile_url = db.Column(db.String(2048), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    source = db.Column(db.String(32), nullable=False, default='librarian', server_default='librarian')  # librarian | community
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    game = db.relationship('Game', backref=db.backref('vr_profiles', lazy='selectin', cascade='all, delete-orphan'))
+
+    def to_dict(self) -> dict:
+        return {
+            'kind': self.kind,
+            'runtime': self.runtime,
+            'profile_url': self.profile_url,
+            'notes': self.notes or '',
+            'source': self.source or 'librarian',
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
 class ReferenceSetEntry(db.Model):
     """One game/ROM row from a reference DAT."""
 
@@ -660,6 +707,7 @@ __all__ = [
     "publisher_choices",
     "ReferenceSet",
     "ReferenceSetEntry",
+    "GameVrProfile",
     "RetroAchievementsIndexEntry",
     "IgdbPlatformRelease",
     "get_status_info",

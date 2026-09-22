@@ -3,6 +3,7 @@ import { AddToCollection } from '../../components/AddToCollection'
 import { ExternalStoreLinks } from '../../components/ExternalStoreLinks'
 import { Button } from '@oneirodex/ui'
 import { VrWayToPlayLine } from '../../components/VrWayToPlay'
+import { VrProfileEditor } from '../../components/VrProfileEditor'
 
 /** The three quick rows under the action bar: play/core, collections, freshness. */
 export function DetailsQuickRows({
@@ -68,8 +69,11 @@ export function DetailsQuickRows({
         <AddToCollection gameUuid={game.uuid} gameName={game.name} variant="inline" />
       </div>
 
-      {/* Rider R3: how this plays in VR, when known. */}
-      <VrWayToPlayLine vrCompat={game.vr_compat} />
+      {/* Rider R3: how this plays in VR, when known; INSP-40: the record behind it. */}
+      <VrWayToPlayLine vrCompat={game.vr_compat} profiles={game.vr_profiles} />
+      {game.can_edit ? (
+        <VrProfileEditor gameUuid={game.uuid} initial={game.vr_profiles || []} />
+      ) : null}
 
       <div className="od-details-page__quick-row">
         <ExternalStoreLinks

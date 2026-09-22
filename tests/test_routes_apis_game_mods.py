@@ -324,3 +324,56 @@ class TestModProfiles:
         assert client.post(f'{base}/profiles/public/activate', json={}).status_code == 403
         assert client.get(f'{base}/profiles/public/export').status_code == 200
         assert client.get(f'{base}/profiles').get_json()['profiles'][0]['id'] == 'public'
+
+
+class TestCompatAndUpdates:
+    """INSP-38 / INSP-39 / H2e: requires, the loader compat gate, update discovery."""
+
+    def test_requires_is_kept_pruned_and_conflicts_are_reported(self, client, librarian_user, sample_game, app, tmp_path):
+        from oneirodex.utils.game_mods import loader_conflicts
+
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        _login(client, librarian_user)
+        base = f'/api/games/{sample_game.uuid}/mods'
+        lib = client.post(base, json={'name': 'Lib', 'loader': 'bepinex'}).get_json()['mod']['id']
+        dep = client.post(base, json={'name': 'Dependent', 'loader': 'bepinex', 'requires': [lib, 'ghost']}).get_json()['mod']
+        assert dep['requires'] == [lib]  # unknown ids pruned
+        odd = client.post(base, json={'name': 'Odd one', 'loader': 'melonloader'}).get_json()['mod']['id']
+
+        client.patch(f'{base}/pack', json={'default_loader': 'bepinex'})
+        listing = client.get(base).get_json()
+        assert [c['id'] for c in listing['loader_conflicts']] == [odd]
+        assert listing['loader_conflicts'][0]['default_loader'] == 'bepinex'
+        assert loader_conflicts({'default_loader': 'none', 'mods': listing['mods']}) == []
+
+        # Disabling the odd row clears the conflict; deleting Lib prunes the dependency
+        client.patch(f'{base}/{odd}', json={'enabled': False})
+        assert client.get(base).get_json()['loader_conflicts'] == []
+        client.delete(f'{base}/{lib}')
+        rows = {m['id']: m for m in client.get(base).get_json()['mods']}
+        assert rows[dep['id']]['requires'] == []
+
+    def test_catalog_marks_tracked_rows_and_newer_versions(self, client, librarian_user, sample_game, app, tmp_path, monkeypatch):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from oneirodex.utils.mod_catalog import modrinth
+
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        monkeypatch.setenv('MOD_CATALOG_IN_TESTS', '1')
+        sample_game.name = 'Minecraft'
+        _login(client, librarian_user)
+        base = f'/api/games/{sample_game.uuid}/mods'
+        row = client.post(base, json={'name': 'Sodium', 'version': '1.20', 'source_url': 'https://modrinth.com/mod/sodium'}).get_json()['mod']
+        payload = {'hits': [
+            {'slug': 'sodium', 'title': 'Sodium', 'latest_version': '1.21.1', 'categories': ['fabric']},
+            {'slug': 'lithium', 'title': 'Lithium', 'latest_version': '0.12', 'categories': ['fabric']},
+        ]}
+        with patch.object(modrinth, 'safe_request', return_value=SimpleNamespace(status_code=200, json=lambda: payload)):
+            resp = client.get(f'{base}/catalog?source=modrinth')
+        hits = {h['name']: h for h in resp.get_json()['hits']}
+        assert hits['Sodium']['tracked_id'] == row['id'] and hits['Sodium']['update_available'] == '1.21.1'
+        assert 'tracked_id' not in hits['Lithium']
+        # Noting the update is an ordinary row write
+        patched = client.patch(f'{base}/{row["id"]}', json={'version': '1.21.1', 'latest_seen_version': '1.21.1'}).get_json()['mod']
+        assert patched['version'] == '1.21.1' and patched['latest_seen_version'] == '1.21.1'
