@@ -17,6 +17,9 @@ vi.mock('./install-store.js', () => ({
 import { invoke } from '@tauri-apps/api/core'
 import {
   fetchGameMods,
+  loaderLabel,
+  loaderRequirementHint,
+  requiredLoaders,
   fetchModsSummaryGameUuids,
   isModArchiveFilename,
   kickoffApplyModPack,
@@ -116,6 +119,59 @@ describe('apply_mods helpers', () => {
     )
     expect(result.mods).toHaveLength(1)
     expect(result.mods[0].source_url).toBe('https://x/hd.zip')
+    expect(result.mods[0].loader).toBe('')
+    expect(result.default_loader).toBe('')
+  })
+
+  it('reads loader on rows and the pack default, and says which loaders are needed (INSP-36)', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+        default_loader: 'bepinex',
+        mods: [
+          { id: 'm1', name: 'HD', source_url: 'https://x/hd.zip', enabled: true, load_order: 1 },
+          {
+            id: 'm2',
+            name: 'ML',
+            source_url: 'https://x/ml.zip',
+            enabled: true,
+            load_order: 2,
+            loader: 'melonloader',
+          },
+          {
+            id: 'm3',
+            name: 'Off',
+            source_url: 'https://x/off.zip',
+            enabled: false,
+            load_order: 3,
+            loader: 'smapi',
+          },
+          {
+            id: 'm4',
+            name: 'Manual',
+            source_url: 'https://x/m.zip',
+            enabled: true,
+            load_order: 4,
+            loader: 'manual',
+          },
+        ],
+      }),
+    })) as unknown as typeof fetch
+
+    const pack = await fetchGameMods(
+      { getBaseUrl: () => 'https://gt.example', getToken: () => 'gt_x_y' } as never,
+      'game-1',
+      { fetchImpl },
+    )
+    expect(pack.default_loader).toBe('bepinex')
+    expect(pack.mods[1].loader).toBe('melonloader')
+    expect(requiredLoaders(pack)).toEqual(['bepinex', 'melonloader'])
+    expect(loaderRequirementHint(pack)).toBe(
+      'Needs BepInEx, MelonLoader installed — not managed here.',
+    )
+    expect(loaderRequirementHint({ mods: [], default_loader: 'bepinex' })).toBeNull()
+    expect(loaderLabel('my-own-loader')).toBe('my-own-loader')
   })
 
   it('fetchModsSummaryGameUuids collects games with enabled mods', async () => {
@@ -212,7 +268,7 @@ describe('apply_mods helpers', () => {
       { fetchImpl },
     )
 
-    expect(result).toEqual({ ok: true, appliedMods: 1, filesApplied: 3 })
+    expect(result).toEqual({ ok: true, appliedMods: 1, filesApplied: 3, loaderHint: null })
     expect(invoke).toHaveBeenCalledWith('apply_staged_mod', {
       sourcePath: '/appdata/mods/game-42/m1/one.zip',
       installRoot: 'C:\\Oneirodex\\installs\\game-42',

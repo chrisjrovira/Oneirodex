@@ -20,7 +20,6 @@
   "oneirodex/routes_apis/emulator_cheats.py": 3,
   "oneirodex/routes_apis/game.py": 2,
   "oneirodex/routes_apis/game_batch.py": 4,
-  "oneirodex/routes_apis/game_mods_api.py": 3,
   "oneirodex/routes_apis/game_servers.py": 1,
   "oneirodex/routes_apis/imports_playnite.py": 1,
   "oneirodex/routes_apis/layouts.py": 2,
