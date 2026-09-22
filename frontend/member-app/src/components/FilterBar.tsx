@@ -7,6 +7,8 @@ import {
   parseItemKindFilter,
   toggleItemKindFilter,
 } from './ItemKindFilterChips'
+import { SavedFilterPanel } from './filterBuilder/SavedFilterPanel'
+import type { FilterNode } from '../api/savedFilters'
 
 const EMPTY_OPTIONS: Record<string, any[]> = {
   libraries: [],
@@ -170,6 +172,27 @@ export function FilterBar({
     [],
   )
 
+  const activeTree: FilterNode | null = (() => {
+    const raw = filters.filter_tree
+    if (typeof raw !== 'string' || !raw.trim()) return null
+    try {
+      return JSON.parse(raw) as FilterNode
+    } catch {
+      // A filter we cannot read is not one we should pretend is applied.
+      return null
+    }
+  })()
+
+  const applyTree = (tree: FilterNode | null) => {
+    const next = { ...filters }
+    if (tree) {
+      next.filter_tree = JSON.stringify(tree)
+    } else {
+      delete next.filter_tree
+    }
+    onApply(cleanFilters(next))
+  }
+
   const update = (event: any) => {
     setDraft((current: any) => ({
       ...current,
@@ -281,6 +304,13 @@ export function FilterBar({
             })}
           </div>
         </fieldset>
+
+        {/* INSP-3. The chip row above can only ever mean *and*; this is where a
+            member says "or" and keeps the result under a name. The tree rides
+            as one more filter value (`filter_tree`), so browse needs no new
+            plumbing, and applying one does not clear the chips -- someone who
+            built a tree and then taps a chip means both. */}
+        <SavedFilterPanel activeTree={activeTree} onApply={applyTree} t={t} />
       </div>
 
       <div className="library-filters__toolbar">
