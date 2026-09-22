@@ -21,11 +21,15 @@ export interface GameModRow {
   source_url: string
   enabled: boolean
   load_order: number
+  /** INSP-36 — the loader this mod needs (`bepinex`, `smapi`, …); `''` when unsaid. Read, never installed. */
+  loader: string
 }
 
 export interface GameModsResponse {
   enabled: boolean
   mods: GameModRow[]
+  /** Pack-level loader the librarian set; rows without their own inherit it in the hint. */
+  default_loader: string
 }
 
 const ZIP_EXTS = new Set(['.zip', '.7z'])
@@ -119,7 +123,7 @@ export async function fetchGameMods(
   const baseUrl = auth.getBaseUrl()
   const token = auth.getToken()
   if (!baseUrl || !token) {
-    return { enabled: false, mods: [] }
+    return { enabled: false, mods: [], default_loader: '' }
   }
   const fetchImpl = options.fetchImpl ?? fetch
   const response = await fetchImpl(
@@ -132,6 +136,7 @@ export async function fetchGameMods(
   const data = (await response.json().catch(() => ({}))) as {
     enabled?: boolean
     mods?: unknown
+    default_loader?: unknown
   }
   const mods = Array.isArray(data.mods)
     ? data.mods.flatMap((row) => {
@@ -151,11 +156,61 @@ export async function fetchGameMods(
             source_url: String(record.source_url || record.url || '').trim(),
             enabled: record.enabled !== false,
             load_order: Number(record.load_order) || 0,
+            loader: String(record.loader || '').trim(),
           },
         ]
       })
     : []
-  return { enabled: data.enabled !== false, mods }
+  return {
+    enabled: data.enabled !== false,
+    mods,
+    default_loader: String(data.default_loader || '').trim(),
+  }
+}
+
+const LOADER_LABELS: Record<string, string> = {
+  bepinex: 'BepInEx',
+  melonloader: 'MelonLoader',
+  smapi: 'SMAPI',
+  lovely: 'lovely',
+  forge: 'Forge',
+  fabric: 'Fabric',
+  quilt: 'Quilt',
+  neoforge: 'NeoForge',
+}
+
+/** Human name for a loader slug; unknown slugs are shown as typed. */
+export function loaderLabel(loader: string): string {
+  const key = (loader || '').trim().toLowerCase()
+  return LOADER_LABELS[key] || loader.trim()
+}
+
+/**
+ * The loaders the enabled mods need (INSP-36): each row's own `loader`, else the
+ * pack's `default_loader`. `manual` and `none` mean "no loader", and are dropped.
+ */
+export function requiredLoaders(pack: Pick<GameModsResponse, 'mods' | 'default_loader'>): string[] {
+  const seen = new Set<string>()
+  for (const mod of pack.mods) {
+    if (!mod.enabled) continue
+    const loader = (mod.loader || pack.default_loader || '').trim().toLowerCase()
+    if (!loader || loader === 'manual' || loader === 'none') continue
+    seen.add(loader)
+  }
+  return Array.from(seen)
+}
+
+/**
+ * One line for the apply flow: which loaders must already be installed. The
+ * companion applies mod files; it never installs a loader.
+ */
+export function loaderRequirementHint(
+  pack: Pick<GameModsResponse, 'mods' | 'default_loader'>,
+): string | null {
+  const loaders = requiredLoaders(pack)
+  if (loaders.length === 0) return null
+  const names = loaders.map(loaderLabel).join(', ')
+  return `Needs ${names} installed — not managed here.`
 }
 
 export async function fetchModsSummaryGameUuids(
@@ -287,7 +342,10 @@ export async function kickoffApplyModPack(
   auth: AuthStore,
   gameUuid: string,
   options: { fetchImpl?: typeof fetch } = {},
-): Promise<{ ok: true; appliedMods: number; filesApplied: number } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; appliedMods: number; filesApplied: number; loaderHint: string | null }
+  | { ok: false; error: string }
+> {
   if (!isTauriRuntime()) {
     return {
       ok: false,
@@ -303,6 +361,7 @@ export async function kickoffApplyModPack(
   if (enabled.length === 0) {
     return { ok: false, error: 'No enabled mods with source URLs' }
   }
+  const loaderHint = loaderRequirementHint(pack)
 
   const installs = await loadInstallsFromDisk()
   const install = installs[gameUuid]
@@ -328,5 +387,5 @@ export async function kickoffApplyModPack(
     filesApplied += applied.applied
   }
 
-  return { ok: true, appliedMods, filesApplied }
+  return { ok: true, appliedMods, filesApplied, loaderHint }
 }

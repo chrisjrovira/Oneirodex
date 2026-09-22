@@ -37,6 +37,34 @@ def _pack_path(game_uuid: str) -> str:
     return os.path.join(folder, 'mods.json')
 
 
+# INSP-36 -- the loader a mod needs. Suggested words, not a closed list: a
+# librarian can type a loader we never heard of and the row keeps it. The
+# desktop only *reads* this ("needs BepInEx installed -- not managed here");
+# nothing here installs a loader.
+LOADERS = (
+    'bepinex',
+    'melonloader',
+    'smapi',
+    'lovely',
+    'forge',
+    'fabric',
+    'quilt',
+    'neoforge',
+    'manual',
+    'none',
+)
+_LOADER_SAFE = re.compile(r'[^a-z0-9._+-]+')
+
+
+def normalize_loader(raw: Any) -> str:
+    """Lower-cased slug (``BepInEx 5`` -> ``bepinex-5``), at most 40 chars; ``''`` when unset."""
+    text = str(raw or '').strip().lower()
+    if not text:
+        return ''
+    text = _LOADER_SAFE.sub('-', text).strip('-')
+    return text[:40]
+
+
 def _normalize_mod_row(row: dict[str, Any], *, default_order: int) -> dict[str, Any] | None:
     if not isinstance(row, dict):
         return None
@@ -61,19 +89,24 @@ def _normalize_mod_row(row: dict[str, Any], *, default_order: int) -> dict[str, 
         'notes': str(row.get('notes') or ''),
         'enabled': bool(row.get('enabled', True)),
         'load_order': load_order,
+        'loader': normalize_loader(row.get('loader')),
     }
 
 
-def load_mods(game_uuid: str) -> dict[str, Any]:
-    path = _pack_path(game_uuid)
+def _read_pack(path: str) -> dict[str, Any]:
     if not os.path.isfile(path):
-        return {'game_uuid': game_uuid, 'mods': []}
+        return {}
     try:
         with open(path, 'r', encoding='utf-8') as fh:
             data = json.load(fh)
     except (OSError, ValueError):
-        return {'game_uuid': game_uuid, 'mods': []}
-    mods = data.get('mods') if isinstance(data, dict) else []
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def load_mods(game_uuid: str) -> dict[str, Any]:
+    data = _read_pack(_pack_path(game_uuid))
+    mods = data.get('mods')
     if not isinstance(mods, list):
         mods = []
     cleaned: list[dict[str, Any]] = []
@@ -82,21 +115,44 @@ def load_mods(game_uuid: str) -> dict[str, Any]:
         if normalized:
             cleaned.append(normalized)
     cleaned.sort(key=lambda item: (item['load_order'], item['name'].lower()))
-    return {'game_uuid': game_uuid, 'mods': cleaned}
+    return {
+        'game_uuid': game_uuid,
+        'default_loader': normalize_loader(data.get('default_loader')),
+        'loaders': list(LOADERS),
+        'mods': cleaned,
+    }
 
 
-def save_mods(game_uuid: str, mods: list[dict[str, Any]]) -> dict[str, Any]:
+def save_mods(
+    game_uuid: str,
+    mods: list[dict[str, Any]],
+    *,
+    default_loader: str | None = None,
+) -> dict[str, Any]:
+    """Write the pack. ``default_loader`` ``None`` keeps what the pack had."""
+    path = _pack_path(game_uuid)
+    current = _read_pack(path)
     normalized: list[dict[str, Any]] = []
     for index, row in enumerate(mods):
         item = _normalize_mod_row(row, default_order=index)
         if item:
             normalized.append(item)
     normalized.sort(key=lambda item: (item['load_order'], item['name'].lower()))
-    pack = {'game_uuid': game_uuid, 'mods': normalized}
-    path = _pack_path(game_uuid)
+    pack = {
+        'game_uuid': game_uuid,
+        'default_loader': normalize_loader(
+            current.get('default_loader') if default_loader is None else default_loader
+        ),
+        'mods': normalized,
+    }
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(pack, fh, indent=2)
     return load_mods(game_uuid)
+
+
+def set_default_loader(game_uuid: str, loader: str | None) -> dict[str, Any]:
+    pack = load_mods(game_uuid)
+    return save_mods(game_uuid, pack['mods'], default_loader=loader or '')
 
 
 def create_mod(game_uuid: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -115,6 +171,7 @@ def create_mod(game_uuid: str, payload: dict[str, Any]) -> dict[str, Any]:
             'notes': payload.get('notes'),
             'enabled': payload.get('enabled', True),
             'load_order': payload.get('load_order', next_order),
+            'loader': payload.get('loader'),
         },
         default_order=next_order,
     )
