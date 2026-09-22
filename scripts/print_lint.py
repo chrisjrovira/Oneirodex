@@ -58,6 +58,17 @@ SCRIPT_GLOB = "scripts/*.py"
 EXEMPT = {
     "oneirodex/updateschema.py",  # operator-run migration; progress print is UX
     "scripts/get_json_lint.py",  # CLI ratchet; stdout is the report
+    # The docs-capture tools. Each is operator-run against a throwaway
+    # instance, and its stdout *is* the deliverable: which surface was shot,
+    # which was skipped and why, which clip was written, which affordance the
+    # UI could not offer. Routing that through `logging` would put the report
+    # behind a level and a handler nobody configures for a one-shot script —
+    # the same reason `updateschema.py` and `get_json_lint.py` are here.
+    "scripts/capture_common.py",
+    "scripts/capture_docs_media.py",
+    "scripts/capture_howto_videos.py",
+    "scripts/render_readme_art.py",
+    "scripts/serve_capture.py",
 }
 
 

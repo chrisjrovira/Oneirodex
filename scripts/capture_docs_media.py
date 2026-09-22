@@ -1,325 +1,280 @@
 """
-Local media capture for docs (screenshots + short tour video).
+Stills for the README and the docs — every member and admin surface.
 
-Requires a running Oneirodex on BASE_URL (default http://127.0.0.1:5006)
-and Playwright Chromium (`pip install playwright && playwright install chromium`).
+Requires a running capture instance (`python scripts/serve_capture.py`) and
+Playwright Chromium. Writes `docs/media/screenshots/<name>.png` for each
+surface and syncs the README slots under `docs/assets/readme/`.
 
-Blocks long-lived SSE (`/api/activity/stream`) so a single-worker uvicorn
-does not stall during capture.
+    python scripts/capture_docs_media.py              # everything
+    python scripts/capture_docs_media.py library chat # a subset, by name
+    python scripts/capture_docs_media.py --list
 
-Usage:
-  python scripts/capture_docs_media.py
+Every shot passes `page_is_healthy()` first. A surface that renders an error,
+comes up empty or loads unstyled is **skipped and the file on disk left
+alone**, and the run exits 3 with the list — a run that hit a mid-capture 500
+once wrote "Internal Server Error" into the README hero and reported success.
+Treat non-zero as "pixels are stale", never as "done".
 """
 from __future__ import annotations
 
-import os
-import time
+import sys
 import urllib.request
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Callable
 
-from playwright.sync_api import TimeoutError as PwTimeout
 from playwright.sync_api import sync_playwright
 
-ROOT = Path(__file__).resolve().parents[1]
-SHOT_DIR = ROOT / "docs" / "media" / "screenshots"
-VIDEO_DIR = ROOT / "docs" / "media" / "video"
-README_ASSETS = ROOT / "docs" / "assets" / "readme"
-
-BASE = os.environ.get("CAPTURE_BASE_URL", "http://127.0.0.1:5006").rstrip("/")
-USER = os.environ.get("CAPTURE_USER", "admin")
-PASSWORD = os.environ.get("CAPTURE_PASS", "CaptureAdmin1!")
-
-
-# Text that means the page failed. A shot of one of these must never reach a
-# README slot — a broken frame shipped as product art is worse than a stale one.
-_ERROR_MARKERS = (
-    "internal server error",
-    "500 internal server",
-    "502 bad gateway",
-    "503 service unavailable",
-    "504 gateway",
-    "not found",
-    "traceback (most recent call last)",
-    "werkzeug debugger",
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from capture_common import (  # noqa: E402
+    BASE,
+    ROOT,
+    block_streams,
+    close_overlays,
+    goto,
+    login,
+    page_is_healthy,
 )
 
+SHOT_DIR = ROOT / "docs" / "media" / "screenshots"
+README_ASSETS = ROOT / "docs" / "assets" / "readme"
+VIEWPORT = {"width": 1600, "height": 900}
 
-def page_is_healthy(page) -> tuple[bool, str]:
-    """True when the page looks like real UI rather than an error.
 
-    Checked before every capture: a single 500 during a run would otherwise
-    overwrite good pixels with an error page and sync it straight to the README.
-    """
+@dataclass
+class Shot:
+    name: str                       # docs/media/screenshots/<name>.png
+    path: str                       # route to open
+    prepare: Callable | None = None # get the page into the state to photograph
+    full_page: bool = False
+    readme: tuple[str, ...] = field(default_factory=tuple)  # README slot filenames
+    settle_ms: int = 1_200
+
+
+# --------------------------------------------------------------------------
+# preparers — put a page in the state the shot is about
+# --------------------------------------------------------------------------
+
+def _click(page, selector: str, after_ms: int = 700) -> bool:
     try:
-        body = (page.inner_text("body", timeout=5_000) or "").strip()
-    except Exception as exc:  # noqa: BLE001
-        return False, f"could not read body ({type(exc).__name__})"
-
-    low = body.lower()
-    for marker in _ERROR_MARKERS:
-        # Short bodies only: "not found" legitimately appears in empty states.
-        if marker in low and len(body) < 600:
-            return False, f"error page ({marker!r})"
-    if len(body) < 40:
-        return False, f"page nearly empty ({len(body)} chars)"
-
-    # A page can be perfectly healthy in text and still be worthless as a
-    # screenshot. The whole `themes/default` tree went missing once — every
-    # `theme_asset` URL 404'd, every page rendered as raw unstyled HTML, and
-    # this gate passed the lot because the *words* were all present. A set of
-    # unstyled screenshots then shipped reporting "exit 0, no skips".
-    #
-    # Counting rules rather than checking for the <link> catches it properly:
-    # a stylesheet that 404s still appears in document.styleSheets, just empty.
-    try:
-        themed_rules = page.evaluate(
-            """() => [...document.styleSheets]
-                 .filter(s => (s.href || '').includes('/library/themes/'))
-                 .reduce((n, s) => {
-                   try { return n + s.cssRules.length } catch { return n }
-                 }, 0)"""
-        )
-    except Exception:  # noqa: BLE001
-        themed_rules = None
-
-    if themed_rules == 0:
-        return False, "theme stylesheets loaded but empty — page is unstyled"
-
-    return True, "ok"
-
-
-def _sync_readme(src: Path, dest_name: str) -> None:
-    """Copy a media shot into the canonical README slot."""
-    README_ASSETS.mkdir(parents=True, exist_ok=True)
-    dest = README_ASSETS / dest_name
-    dest.write_bytes(src.read_bytes())
-    print("readme:", dest)
-
-
-def _shot(page, name: str, also_readme: bool = False, readme_as: str | None = None) -> None:
-    SHOT_DIR.mkdir(parents=True, exist_ok=True)
-    path = SHOT_DIR / f"{name}.png"
-    page.screenshot(path=str(path), full_page=False, timeout=10_000)
-    print("shot:", path)
-    if also_readme or readme_as:
-        README_ASSETS.mkdir(parents=True, exist_ok=True)
-        dest_name = readme_as or f"{name}.png"
-        page.screenshot(
-            path=str(README_ASSETS / dest_name),
-            full_page=False,
-            timeout=10_000,
-        )
-        print("readme:", README_ASSETS / dest_name)
-
-
-def _goto(page, path: str, timeout: int = 20_000) -> bool:
-    url = f"{BASE}{path}"
-    try:
-        page.goto(url, wait_until="domcontentloaded", timeout=timeout)
-        page.wait_for_timeout(800)
-        # domcontentloaded is when the SPA shell exists, not when its data has
-        # arrived — News was captured mid-fetch showing "Loading…". Wait for
-        # the placeholder to go if one is on screen; a page that never shows
-        # it (or resolves to an error state) just falls through on timeout
-        # rather than failing the capture.
-        try:
-            loading = page.get_by_text("Loading…", exact=False).first
-            if loading.count() and loading.is_visible():
-                loading.wait_for(state="detached", timeout=10_000)
-                page.wait_for_timeout(400)
-        except Exception:  # noqa: BLE001
-            pass
-        print("ok", path, "->", page.url)
+        loc = page.locator(selector).first
+        loc.wait_for(state="visible", timeout=8_000)
+        loc.click(timeout=5_000)
+        page.wait_for_timeout(after_ms)
         return True
     except Exception as exc:  # noqa: BLE001
-        print("fail", path, type(exc).__name__, str(exc)[:160])
+        print(f"    prepare: no {selector} ({type(exc).__name__})")
         return False
 
 
-def login(page) -> None:
-    _goto(page, "/login")
-    page.fill("#username", USER)
-    page.fill("#password", PASSWORD)
-    page.locator('button[type="submit"], input[type="submit"]').first.click()
-    page.wait_for_load_state("domcontentloaded", timeout=20_000)
-    page.wait_for_timeout(1000)
-    print("after login:", page.url)
+def _role(page, role: str, name: str, after_ms: int = 700) -> bool:
+    try:
+        loc = page.get_by_role(role, name=name, exact=True).first
+        loc.wait_for(state="visible", timeout=8_000)
+        loc.click(timeout=5_000)
+        page.wait_for_timeout(after_ms)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        print(f"    prepare: no {role} {name!r} ({type(exc).__name__})")
+        return False
 
 
-def capture_tour(page) -> list[str]:
-    # (path, media name, full_page, optional README slot filenames)
-    pages = [
-        ("/library", "library-free-roms", False, ("screenshot-library.png", "hero-banner.png")),
-        ("/systems", "systems-platforms", False, ("screenshot-systems.png",)),
-        ("/chat", "chat-channels", False, ("screenshot-chat.png",)),
-        ("/discover", "discover", False, ()),
-        # UIR-7 pages. These carried hand-rolled tab strips that bar two now
-        # replaces, and none of them had ever been captured — so the docs could
-        # not show the chrome change on the pages where it is most visible.
-        ("/news", "news-sections", False, ()),
-        ("/calendar", "release-calendar", False, ()),
-        ("/admin/ops", "admin-ops-services", False, ()),
-        ("/admin/features", "admin-features", True, ()),
-        ("/admin/integrations", "admin-integrations", True, ()),
-        ("/libraries", "admin-libraries", True, ()),
-    ]
+def prep_filters(page) -> None:
+    _role(page, "button", "Filters", after_ms=1_200)
+
+
+def prep_game(page) -> None:
+    _click(page, 'a[href*="/game_details/"]', after_ms=2_200)
+
+
+def prep_chat(page) -> None:
+    _role(page, "button", "Chat", after_ms=1_400)
+    _role(page, "button", "Expand", after_ms=1_200)
+
+
+def prep_friends(page) -> None:
+    _role(page, "button", "Friends", after_ms=1_400)
+
+
+def prep_palette(page) -> None:
+    page.keyboard.press("Control+K")
+    page.wait_for_timeout(900)
+
+
+def prep_preferences(page) -> None:
+    if _click(page, 'button[aria-label="Account menu"]', after_ms=600):
+        _click(page, 'a[href="/settings_panel"]', after_ms=1_800)
+
+
+def prep_tile_menu(page) -> None:
+    _click(page, 'button[aria-label^="Open actions for"]', after_ms=900)
+
+
+def prep_ops(page) -> None:
+    try:
+        page.wait_for_selector("text=LiveKit", timeout=15_000)
+        page.wait_for_timeout(600)
+    except Exception as exc:  # noqa: BLE001
+        print("    ops wait:", type(exc).__name__)
+
+
+def prep_art(page) -> None:
+    try:
+        page.locator('input[placeholder="e.g. Chrono Trigger"]').first.fill("Cascade Seven")
+        page.wait_for_timeout(1_800)
+    except Exception as exc:  # noqa: BLE001
+        print("    art studio:", type(exc).__name__)
+
+
+def prep_add_shelf(page) -> None:
+    _role(page, "button", "Add shelf", after_ms=1_000)
+
+
+# --------------------------------------------------------------------------
+# the surfaces
+# --------------------------------------------------------------------------
+
+SHOTS: list[Shot] = [
+    # ---- member
+    Shot("library", "/library", readme=("screenshot-library.png",)),
+    Shot("library-filters", "/library", prep_filters, readme=("screenshot-filters.png",)),
+    Shot("library-tile-menu", "/library", prep_tile_menu),
+    Shot("game-details", "/library", prep_game, readme=("screenshot-game.png",), settle_ms=1_500),
+    Shot("game-details-full", "/library", prep_game, full_page=True, settle_ms=1_500),
+    Shot("discover", "/discover", readme=("screenshot-discover.png",), settle_ms=2_000),
+    Shot("systems-platforms", "/systems", readme=("screenshot-systems.png",), settle_ms=1_800),
+    Shot("systems-completion", "/systems/completion", settle_ms=1_800),
+    Shot("chat-channels", "/library", prep_chat, readme=("screenshot-chat.png",)),
+    Shot("friends-dock", "/library", prep_friends, readme=("screenshot-friends.png",)),
+    Shot("command-palette", "/library", prep_palette, readme=("command-palette.png",)),
+    Shot("preferences", "/library", prep_preferences, readme=("screenshot-preferences.png",)),
+    Shot("big-picture", "/big-picture", readme=("screenshot-big-picture.png",), settle_ms=2_000),
+    Shot("ways-to-play", "/ways-to-play", settle_ms=1_600),
+    Shot("collections", "/collections"),
+    Shot("wishlist", "/wishlist"),
+    Shot("favorites", "/favorites"),
+    Shot("downloads", "/downloads"),
+    Shot("updates", "/updates"),
+    Shot("release-calendar", "/calendar", settle_ms=1_800),
+    Shot("news-sections", "/news", settle_ms=2_200),
+    Shot("activity", "/activity"),
+    Shot("notifications", "/notifications"),
+    Shot("playtime", "/playtime"),
+    Shot("ownership", "/ownership"),
+    Shot("acquire", "/acquire"),
+    Shot("vr-browse", "/vr"),
+    Shot("help", "/help", full_page=False, settle_ms=1_600),
+    Shot("report-issue", "/report"),
+    Shot("api-tokens", "/tokens"),
+    # ---- admin
+    Shot("admin-dashboard", "/admin/dashboard", prep_ops, settle_ms=2_500),
+    Shot("admin-ops-services", "/admin/ops", prep_ops, readme=("screenshot-admin-ops.png",), settle_ms=2_500),
+    Shot("admin-libraries", "/libraries", readme=("screenshot-admin-libraries.png",), settle_ms=2_000),
+    Shot("admin-scan", "/scan_management", settle_ms=2_000),
+    Shot("admin-scan-jobs", "/scan_management?active_tab=jobs", settle_ms=2_000),
+    Shot("admin-unmatched", "/scan_management?active_tab=unmatched", settle_ms=2_000),
+    Shot("admin-discovery-sections", "/admin/discovery_sections", settle_ms=2_000),
+    Shot("admin-discovery-add-shelf", "/admin/discovery_sections", prep_add_shelf, settle_ms=2_000),
+    Shot("admin-settings", "/admin/settings", full_page=True, settle_ms=1_800),
+    Shot("admin-features", "/admin/features", full_page=True, settle_ms=1_800),
+    Shot("admin-integrations", "/admin/integrations", full_page=True, settle_ms=1_800),
+    Shot("admin-themes", "/admin/themes", settle_ms=1_800),
+    Shot("admin-users", "/admin/users", settle_ms=1_800),
+    Shot("admin-invites", "/admin/invites", settle_ms=1_800),
+    Shot("admin-support", "/admin/support", settle_ms=1_800),
+    Shot("admin-art-studio", "/admin/art_studio", prep_art, readme=("screenshot-art-studio.png",), settle_ms=1_800),
+    Shot("admin-emulator-profiles", "/admin/emulator_profiles", settle_ms=1_800),
+    Shot("admin-extensions", "/admin/extensions", settle_ms=1_800),
+    Shot("admin-announcements", "/admin/announcements", settle_ms=1_800),
+]
+
+
+def _sync_readme(src: Path, dest_name: str) -> None:
+    README_ASSETS.mkdir(parents=True, exist_ok=True)
+    dest = README_ASSETS / dest_name
+    dest.write_bytes(src.read_bytes())
+    print("    readme:", dest.relative_to(ROOT))
+
+
+def capture(page, shots: list[Shot]) -> list[str]:
     failures: list[str] = []
-    for path, name, full, readme_slots in pages:
-        if not _goto(page, path):
-            failures.append(f"{path} (navigation)")
+    for shot in shots:
+        print(f"[{shot.name}] {shot.path}")
+        close_overlays(page)
+        if not goto(page, shot.path, settle_ms=shot.settle_ms):
+            failures.append(f"{shot.name} (navigation)")
             continue
-        # The chat slide-out is global and survives navigation, so once the
-        # /chat shot expands it every later page is captured underneath it —
-        # discover.png had been a blank page behind an open chat panel. Close
-        # it before every shot rather than only after chat: any page can leave
-        # it open, and a stale panel is never what the shot is meant to show.
-        if path != "/chat":
+        # Global panels survive navigation; a page must not be photographed
+        # under one that an earlier shot opened.
+        close_overlays(page)
+        if shot.prepare is not None:
             try:
-                closer = page.locator('button[aria-label="Close chat"]').first
-                if closer.count() and closer.is_visible():
-                    closer.click(timeout=5_000)
-                    page.wait_for_timeout(600)
+                shot.prepare(page)
             except Exception as exc:  # noqa: BLE001
-                print("chat close:", exc)
-
+                print(f"    prepare failed: {type(exc).__name__}: {str(exc)[:100]}")
         healthy, why = page_is_healthy(page)
         if not healthy:
-            # Keep whatever is already on disk rather than replacing it with this.
-            print(f"SKIP {path}: {why} — existing {name}.png left untouched")
-            failures.append(f"{path} ({why})")
+            print(f"    SKIP: {why} — existing {shot.name}.png left untouched")
+            failures.append(f"{shot.name} ({why})")
             continue
-        if path == "/library":
-            # Default tile size leaves a sparse grid mostly empty on a small
-            # library. Push it up so the hero frame is filled by artwork.
-            try:
-                slider = page.locator('input[type="range"]').first
-                if slider.count() and slider.is_visible():
-                    slider.fill("85")
-                    page.wait_for_timeout(900)
-            except Exception as exc:  # noqa: BLE001
-                print("tile size:", exc)
-        if path == "/chat":
-            # Chat opens as a slide-out over the library; Expand gives it the
-            # full pane so the shot is of chat rather than half a dark grid.
-            try:
-                expand = page.locator('button:has-text("Expand")').first
-                if expand.count() and expand.is_visible():
-                    expand.click(timeout=5_000)
-                    page.wait_for_timeout(900)
-            except Exception as exc:  # noqa: BLE001
-                print("chat expand:", exc)
-        if path == "/admin/ops":
-            try:
-                page.wait_for_selector("text=LiveKit", timeout=15_000)
-                page.wait_for_timeout(500)
-            except Exception as exc:  # noqa: BLE001
-                print("ops wait:", exc)
-        if path == "/chat":
-            page.wait_for_timeout(1200)
         try:
             SHOT_DIR.mkdir(parents=True, exist_ok=True)
-            path_png = SHOT_DIR / f"{name}.png"
-            page.screenshot(path=str(path_png), full_page=full, timeout=15_000)
-            print("shot:", path_png)
-            for slot in readme_slots:
-                _sync_readme(path_png, slot)
-            # Keep legacy alias names for docs/media consumers
-            if name == "library-free-roms":
-                _sync_readme(path_png, "library-free-roms.png")
-            if name == "admin-ops-services":
-                _sync_readme(path_png, "admin-ops-services.png")
+            out = SHOT_DIR / f"{shot.name}.png"
+            page.screenshot(path=str(out), full_page=shot.full_page, timeout=20_000)
+            print("    shot:", out.relative_to(ROOT))
+            for slot in shot.readme:
+                _sync_readme(out, slot)
         except Exception as exc:  # noqa: BLE001
-            print("shot fail", name, exc)
-
-    if _goto(page, "/library") and page_is_healthy(page)[0]:
-        try:
-            page.keyboard.press("Control+K")
-            page.wait_for_timeout(700)
-            _shot(page, "command-palette", also_readme=True)
-            page.keyboard.press("Escape")
-        except Exception as exc:  # noqa: BLE001
-            print("palette fail", exc)
-
-    if failures:
-        print("\n!! captures skipped (pixels NOT refreshed):")
-        for item in failures:
-            print("   -", item)
+            print(f"    shot failed: {type(exc).__name__}")
+            failures.append(f"{shot.name} (screenshot)")
+        # Leave modals and menus closed for the next surface.
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(300)
     return failures
 
 
 def main() -> int:
-    SHOT_DIR.mkdir(parents=True, exist_ok=True)
-    VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+    args = sys.argv[1:]
+    if "--list" in args:
+        for s in SHOTS:
+            print(f"{s.name:28} {s.path}")
+        return 0
+    wanted = {a.lower() for a in args}
+    todo = [s for s in SHOTS if not wanted or s.name in wanted]
+    if not todo:
+        print("no matching shots; known:", ", ".join(s.name for s in SHOTS))
+        return 2
 
+    print("base:", BASE)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            viewport={"width": 1920, "height": 1080},
-            record_video_dir=str(VIDEO_DIR),
-            record_video_size={"width": 1920, "height": 1080},
-        )
-        # Prevent SSE / long-poll from pinning the single Flask worker.
-        context.route(
-            "**/api/activity/stream*",
-            lambda route: route.fulfill(
-                status=204,
-                body="",
-                headers={"content-type": "text/plain"},
-            ),
-        )
-        context.route(
-            "**/api/events/**",
-            lambda route: route.fulfill(status=204, body=""),
-        )
+        context = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+        block_streams(context)
         page = context.new_page()
         page.set_default_timeout(20_000)
-        skipped: list[str] = []
         try:
-            login(page)
-            skipped = capture_tour(page)
-            # dwell for video
-            _goto(page, "/library")
-            page.keyboard.press("Control+K")
-            page.wait_for_timeout(1200)
-            page.keyboard.press("Escape")
-            _goto(page, "/admin/ops")
-            page.wait_for_timeout(1500)
-            _goto(page, "/systems")
-            page.wait_for_timeout(1200)
-        except PwTimeout as exc:
-            print("timeout:", exc)
-            try:
-                _shot(page, "capture-error")
-            except Exception:  # noqa: BLE001
-                pass
-            return 1
+            if not login(page):
+                print("login failed — nothing captured")
+                return 1
+            failures = capture(page, todo)
         finally:
-            video_path = page.video.path() if page.video else None
             context.close()
             browser.close()
-            if video_path:
-                src = Path(video_path)
-                dest = VIDEO_DIR / "product-tour.webm"
-                if src.exists():
-                    if dest.exists():
-                        dest.unlink()
-                    src.rename(dest)
-                    print("video:", dest)
 
-    for probe in ("pulse", "awake"):
-        try:
-            with urllib.request.urlopen(f"{BASE}/{probe}", timeout=5) as resp:
-                (SHOT_DIR / f"{probe}.json").write_text(
-                    resp.read().decode("utf-8"), encoding="utf-8"
-                )
-                print(f"saved {probe}.json")
-        except Exception as exc:  # noqa: BLE001
-            print(f"{probe} failed:", exc)
+    if not wanted:
+        for probe in ("pulse", "awake"):
+            try:
+                with urllib.request.urlopen(f"{BASE}/{probe}", timeout=5) as resp:
+                    (SHOT_DIR / f"{probe}.json").write_text(resp.read().decode("utf-8"), encoding="utf-8")
+                    print(f"saved {probe}.json")
+            except Exception as exc:  # noqa: BLE001
+                print(f"{probe} failed:", exc)
 
-    print("done. shots in", SHOT_DIR)
-    if skipped:
-        # Non-zero so a partial run cannot be mistaken for a clean refresh.
-        print(f"INCOMPLETE: {len(skipped)} surface(s) not refreshed")
+    print(f"\ndone: {len(todo) - len(failures)}/{len(todo)} refreshed -> {SHOT_DIR}")
+    if failures:
+        print("!! not refreshed (pixels stale):")
+        for item in failures:
+            print("   -", item)
         return 3
     return 0
 

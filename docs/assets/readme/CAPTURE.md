@@ -1,129 +1,107 @@
-# Capture checklist (README / docs media)
+# Capture (README / docs media)
 
-Live pixels from local Playwright capture (`scripts/capture_docs_media.py`). Prefer **1920×1080**; dark default theme. Finals live under `docs/media/screenshots/`; README slots under `docs/assets/readme/` must stay in sync.
+Every screenshot, poster, banner and how-to clip under `docs/assets/readme/`
+and `docs/media/` is produced by four scripts against a **throwaway local
+instance**. Nothing here is a mock-up: if a surface cannot be photographed
+honestly it is skipped and the run says so.
 
-## README required (live only)
+| Script | Produces |
+|---|---|
+| [`scripts/serve_capture.py`](../../../scripts/serve_capture.py) | the instance: scratch DB `oneirodexcapture`, `.env.capture.local`, admin `admin` / member `mira`, five legal ROMs, Art-studio covers, two-voice chat history, uvicorn on `:5006` |
+| [`scripts/capture_docs_media.py`](../../../scripts/capture_docs_media.py) | stills → `docs/media/screenshots/*.png`, README slots → `docs/assets/readme/screenshot-*.png` + `command-palette.png`; `pulse.json` / `awake.json` |
+| [`scripts/capture_howto_videos.py`](../../../scripts/capture_howto_videos.py) | narrated clips → `docs/media/video/howto/howto-*.mp4` + `.vtt` + poster `.png`, `index.json`, and that folder's `README.md` with transcripts |
+| [`scripts/render_readme_art.py`](../../../scripts/render_readme_art.py) | `hero-banner.png` (Discover framed on the theme background), `h-*.svg` section headers, `card-*.svg` feature cards, `poster-*.png` video tiles — all from the theme tokens and the shared rail icons |
 
-| Shot | README slot | `docs/media/` source | Status |
-|---|---|---|---|
-| **Hero strip** | `hero-banner.png` | `/library` (same session) | **Recaptured 2026-09-01** — live Catalog Tile @ ~85% from HellfireNAS |
-| **Library + free ROMs** | `screenshot-library.png` | `library-free-roms.png` | **Recaptured 2026-09-01** — populated Tile grid (6,845 titles) |
-| **Systems** | `screenshot-systems.png` | `systems-platforms.png` | **Recaptured 2026-09-01** — Nintendo/Sony/Sega families expanded |
-| **Chat / Activity / Friends** | `screenshot-chat.png` | `/chat` (`chat-channels.png` in media) | **Recaptured 2026-09-01** — Chat expanded over Catalog (#general empty on live) |
+## Recipe
 
-Retired: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock previews; do not restore to README.
+```bash
+# 0. Build what will be photographed — a stale dist silently captures old UI.
+npm ci
+(cd frontend/api-client && npm run build)
+(cd frontend/member-app && npm run build)
+(cd frontend/admin-app  && npm run build)
 
-## Docs media (also captured)
+# 1. Sample ROMs (once): python scripts/fetch-free-roms.py  → data/games-capture/
 
-| Shot | File | Status |
+# 2. Bring the instance up (idempotent; --reset drops the scratch DB first).
+python scripts/serve_capture.py
+
+# 3. In another shell:
+python scripts/capture_docs_media.py          # stills; exit 3 = something was skipped
+python scripts/capture_howto_videos.py        # narrated clips; a subset by name works
+python scripts/render_readme_art.py           # hero, headers, cards, poster tiles
+```
+
+Requirements beyond `requirements-dev.txt`: Playwright Chromium, `edge-tts`
+(Microsoft neural voices, network), `imageio-ffmpeg` (bundled ffmpeg with
+libx264 / aac). Voice: `CAPTURE_VOICE` (default `en-US-AndrewMultilingualNeural`).
+Credentials: `CAPTURE_USER` / `CAPTURE_PASS` (default `admin` / `CaptureAdmin1!`).
+
+Never point capture at the real deploy `.env` — its paths are container-side
+and will not resolve on the host. `serve_capture.py` writes its own gitignored
+`.env.capture.local` with every outbound integration off, so capture never
+hits a store, an AI endpoint or the core CDN.
+
+## What the README uses
+
+| Slot | Source | Notes |
 |---|---|---|
-| **Ctrl/Cmd+K palette** | `command-palette.png` | Captured |
-| **Ops Services tile** | `admin-ops-services.png` | Captured — LiveKit · malware · companions · queues |
-| **Features** | `admin-features.png` | Captured |
-| **Integrations** | `admin-integrations.png` | Captured |
-| **Discover** | `discover.png` | **Still owed 2026-09-01** — live Discover stayed on Loading during capture; left prior file untouched |
-| **Admin libraries** | `admin-libraries.png` | Captured — **refresh needed** after W22-1 (unified Libraries & scans tabs · multi-select · force-delete) when `:5006` healthy |
-| **`/awake` JSON** | `awake.json` | Captured |
-| **`/pulse` JSON** | `pulse.json` | Captured |
-| **Product tour video** | `docs/media/video/product-tour.webm` | Captured |
-| **How-to videos (10)** | `docs/media/video/howto/howto-*.webm` | Captured 2026-08-05 — one worked example per section; index + honest gaps in [howto/README.md](../../media/video/howto/README.md) |
+| `hero-banner.png` | `screenshot-discover.png` composited by `render_readme_art.py` | real pixels in a frame on the token background |
+| `screenshot-library.png` | `/library`, tile slider pushed to 80 % | |
+| `screenshot-filters.png` | `/library` with Filters open | |
+| `screenshot-game.png` | first tile's game page | `game-details-full.png` in media is the full page |
+| `screenshot-discover.png` | `/discover` | |
+| `screenshot-systems.png` | `/systems` | |
+| `screenshot-chat.png` | Chat slide-out, expanded | two-author history |
+| `screenshot-friends.png` | Friends dock | |
+| `screenshot-big-picture.png` | `/big-picture` | |
+| `screenshot-preferences.png` | account menu → Preferences (modal) | `/settings_panel` is a fragment, not a page |
+| `screenshot-admin-ops.png` · `screenshot-admin-libraries.png` · `screenshot-art-studio.png` | admin surfaces | Ops waits for the LiveKit tile; every other admin page is in `docs/media/screenshots/` |
+| `command-palette.png` | Ctrl-K on `/library` | |
+| `poster-*.png` | the clip's poster frame + play badge + title strip | one per how-to |
+
+Retired for good: `hero-banner.jpg`, `screenshot-*.jpg` — illustrative mock
+previews from before capture existed. Do not restore them.
+
+## Gates
+
+- **Health gate** — every still and the end of every clip passes
+  `page_is_healthy()`: no error page, not near-empty, and the theme stylesheet
+  actually loaded (a page can have every word present and still be unstyled).
+  A failing surface is skipped, the existing file is left untouched, and the
+  stills run exits **3**. Treat non-zero as "pixels are stale", never as "done".
+- **Required steps** — a clip's subject step is `required`; if the UI cannot
+  do it, no file is written. Optional steps whose affordance is missing are
+  dropped from picture *and* narration.
+- **Global panels** — Chat and Friends survive navigation; both capture
+  scripts close them before every surface (`close_overlays`). A page was once
+  shot blank behind an open chat panel.
+
+## Known gaps in the sample data
+
+Five ROMs, no store keys, cores not fetched, LiveKit off. So: no related
+media, screenshots or trailers on any title; browser play is shown but not
+pressed; Voice / Screenshare are shown but no session joins; the release
+calendar and news are what a keyless install shows. Listed in
+[howto/README.md](../../media/video/howto/README.md) so nobody re-records
+expecting different footage. **Do not invent pixels** for these.
 
 ## Refresh rule (Docs owns)
 
-**Every commit/ship pass** that touches member or admin UI — or every wave pass when Docs is seated — **must** re-run capture (or copy freshest `docs/media/screenshots/` into readme slots) **before ship**. Do not ship README with stale or mock JPG frames.
+Every ship pass that touches member or admin UI re-runs the three capture
+scripts, then `render_readme_art.py`. The `docs-sync` skill lists this as a
+checklist item; the README says "every screenshot and clip on this page is
+live UI", and that sentence is the contract.
 
-Also useful later: Friends companion pop-out, voice lobby with LiveKit secrets.
+## Host notes
 
-## Local capture recipe
-
-1. Build SPAs: `frontend/member-app`, `frontend/admin-app` (`npm run build`).
-   **Do this first** — the dists are what get photographed, so a stale build
-   silently captures old UI.
-2. Fetch legal ROMs: `python scripts/fetch-free-roms.py` (see `samples/free-roms/`).
-3. Create a throwaway capture DB and env. **Never point capture at your real
-   deploy `.env`** — its paths are container-side (`/mnt/user/…`, `DATABASE_HOST=db`)
-   and will not resolve on the host:
-
-   ```bash
-   # .env.capture.local (gitignored)
-   SECRET_KEY=<generate one>
-   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/oneirodexcapture
-   DATA_FOLDER_GAMES=<repo>/data/games-capture
-   UPLOAD_FOLDER=<repo>/oneirodex/static/library
-   BASE_FOLDER_WINDOWS=Z:/
-   # keep outbound integrations off so capture never hits the network
-   ENABLE_FREE_GAMES=false
-   ENABLE_AI_ARTWORK=false
-   SCAN_CHECK_FRESHNESS=false
-   ```
-
-4. Seed: `python scripts/finish_capture_setup.py` · `python scripts/seed_capture_games.py`,
-   then create an admin matching `CAPTURE_USER` / `CAPTURE_PASS` (default
-   `admin` / `CaptureAdmin1!`).
-5. Give the instance representative content **using real product features**, not
-   hand-placed files:
-   - covers — `POST /admin/api/art-studio/batch-generate` (system-templated
-     placeholder covers). Without this every tile reads *"No cover art"* and the
-     hero looks like an empty install.
-   - a little chat history — `POST /api/chat/channels/<id>/messages`.
-   Both need the CSRF token from the `<meta name="csrf-token">` on an admin page,
-   sent as `X-CSRFToken`.
-6. Run the app **the way the launchers do** — initialization first, then workers:
-
-   ```python
-   from oneirodex.init_manager import run_complete_startup_initialization
-   run_complete_startup_initialization()      # otherwise /awake stays 503
-   uvicorn.run(asgi_app, host="127.0.0.1", port=5006)
-   ```
-
-   Starting uvicorn alone leaves `initialization.complete = false`, so `/awake`
-   returns 503 and the captured `awake.json` records a not-ready box.
-7. Capture:
-   - `python scripts/capture_docs_media.py` — stills + the product tour
-   - `python scripts/capture_howto_videos.py` — one how-to video per section
-     (`python scripts/capture_howto_videos.py library discover` for a subset)
-8. `capture_docs_media.py` writes canonical README slots automatically:
-   - `/library` → `screenshot-library.png` + `hero-banner.png` (+ `library-free-roms.png`)
-   - `/systems` → `screenshot-systems.png`
-   - `/chat` → `screenshot-chat.png`
-   - plus Ops/Features/palette under `docs/media/screenshots/`
-
-**Note:** Capture blocks `/api/activity/stream` so a single-worker uvicorn is not stalled by SSE. Login + Library must return 200 (not 500) before capture can refresh pixels.
-
-**Health gate (added 2026-08-05):** every surface is checked with
-`page_is_healthy()` before it is photographed. If a page renders an error or is
-near-empty, that shot is **skipped and the existing file left untouched**, and
-the run exits **3** with a list of what was not refreshed. This exists because a
-run that hit a mid-capture 500 wrote *"Internal Server Error"* into
-`screenshot-library.png` and `hero-banner.png` and reported success. Treat a
-non-zero exit as "pixels are stale", never as "done".
-
-**Former local flake (fixed 2026-09-06):** under Python 3.14 + asgiref, aborting
-a request mid-flight (navigation away, blocked SSE) could kill the WSGI→ASGI
-bridge with `RuntimeError: CurrentThreadExecutor already quit or is broken`,
-after which the worker 500s until restarted. `asgi.py` now bridges with a2wsgi
-(UID-052), which treats a disconnect as a disconnect. If a run still reports
-skips, restart the app and re-run — and say so, because that would be a new
-fault rather than this one.
-
-**2026-08-05 — capture unblocked and everything above re-shot.** `:5006` had been
-**BLOCKED (env)** since Wave 15; the blocker was that the only `.env` on the box
-is the Unraid deploy env (container-side paths). A throwaway local capture env
-plus a `oneirodexcapture` DB cleared it, and all README slots + docs media were
-re-captured from live pixels against freshly built SPA dists.
-
-Two things worth knowing before the next pass:
-
-* **Seed content first.** With no covers every tile reads *"No cover art"* and
-  the hero looks like an empty install. `POST /admin/api/art-studio/batch-generate`
-  gives real system-templated covers; a few seeded chat messages do the same for
-  `screenshot-chat.png`.
-* **A capture run can lie.** One run hit a mid-capture 500 and wrote
-  *"Internal Server Error"* into `screenshot-library.png` and `hero-banner.png`
-  while reporting success. Hence the health gate + non-zero exit described above.
-  Always check the exit code, and eyeball the hero before shipping.
-
-Still owed (needs data or config the capture box does not have): Calendar
-List/Month · News featured · play honesty / artistic rooms · Library
-typeahead / MISSING · Admin Extensions/Stock/Art Studio · Friends companion
-pop-out · voice lobby with LiveKit secrets. **Do not invent pixels** for these.
+- Windows / Git Bash: prefix any command that takes a `/route` argument with
+  `MSYS_NO_PATHCONV=1`, and set `PYTHONIOENCODING=utf-8` (the app prints an
+  emoji on startup).
+- The login page carries a hidden "Delete Game" submit button first in the
+  DOM; the scripts press Enter in the password field rather than clicking
+  the first submit.
+- `pydantic-core` on a shared interpreter drifts to 2.49.0; `create_app()`
+  refuses to import until it is back on the pinned 2.46.5.
+- Running the clip recorder and the stills capture at the same time against
+  the single-worker instance makes both time out. One at a time.

@@ -1,6 +1,6 @@
 # Preferences & themes
 
-> 🎬 Watch: [themes, icons & fonts](../media/video/howto/howto-preferences.webm) — [all how-to videos](../media/video/howto/README.md)
+> 🎬 Watch (narrated): [themes, rooms, icons & fonts](../media/video/howto/howto-preferences.mp4) — [all how-to videos, with transcripts](../media/video/howto/README.md)
 
 ## Open preferences
 

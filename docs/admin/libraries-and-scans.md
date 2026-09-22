@@ -1,6 +1,6 @@
 # Libraries & scans
 
-> 🎬 Watch: [libraries & scan management](../media/video/howto/howto-admin-libraries.webm) · [ops health](../media/video/howto/howto-admin-ops.webm) — [all how-to videos](../media/video/howto/README.md)
+> 🎬 Watch (narrated): [libraries & scans](../media/video/howto/howto-admin-libraries.mp4) · [ops health](../media/video/howto/howto-admin-ops.mp4) — [all how-to videos, with transcripts](../media/video/howto/README.md)
 
 Admin surfaces today are **Jinja** under `base_admin` (top bar), hosted inside the admin SPA shell (LHN + thin THN).
 
