@@ -14,10 +14,12 @@ from flask_login import login_user
 
 from oneirodex.models import Game, Library, User
 from oneirodex.platform import (
+    ARCADE_COMPANION_CORES,
     CATALOG_ONLY_PLATFORMS,
     Emulator,
     LibraryPlatform,
     arcade_core_override_configured,
+    mapped_core_ids,
     platform_emulator_mapping,
     play_mode_for_platform,
 )
@@ -64,10 +66,15 @@ def cabinet(db_session, tmp_path):
 
 
 def test_arcade_offers_cores_but_stays_catalog_until_one_is_chosen(app, db_session):
-    from oneirodex.utils.emulator_profiles import set_emulator_profiles
+    from oneirodex.utils.emulator_profiles import resolve_emulators_for_platform, set_emulator_profiles
 
-    # The cores exist so the picker has something to offer …
-    assert platform_emulator_mapping[LibraryPlatform.ARCADE] == [Emulator.MAME2003_PLUS, Emulator.MAME]
+    # The cores are offered to the operator …
+    assert ARCADE_COMPANION_CORES == (Emulator.MAME2003_PLUS, Emulator.MAME)
+    assert resolve_emulators_for_platform('ARCADE')['emulators'] == ['mame2003_plus', 'mame']
+    # … but never through the platform mapping: ARCADE is a locked, no-WASM
+    # platform, and a mapped core is what makes a browser session look possible.
+    assert platform_emulator_mapping[LibraryPlatform.ARCADE] == []
+    assert mapped_core_ids('ARCADE') == []
     assert 'ARCADE' in CATALOG_ONLY_PLATFORMS
     with app.app_context():
         assert arcade_core_override_configured() is False

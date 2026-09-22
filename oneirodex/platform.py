@@ -254,11 +254,7 @@ platform_emulator_mapping = {
     # LOCKED console leaf enums — catalog/companion honesty; never NEOCD for cart AES
     LibraryPlatform.NEOGEO: [],
     LibraryPlatform.SWITCH: [],
-    # INSP-43 (v11 H4b): the arcade shelf *is* the platform -- there is no MAME
-    # enum. These cores exist so an operator can choose one in Admin ->
-    # Emulators; until they do, ARCADE stays catalog-only (see
-    # ``arcade_core_override_configured``). No ROMs, no dumps, no set files.
-    LibraryPlatform.ARCADE: [Emulator.MAME2003_PLUS, Emulator.MAME],
+    LibraryPlatform.ARCADE: [],
     # Console-gaming leaf systems. Cores are companion/native — none of these
     # WASM builds ship in WebRetro yet, so browser play stays gated by
     # WEBRETR_INSTALLED_CORES rather than promising a session it cannot start.
@@ -387,6 +383,15 @@ def pcdos_browser_enabled() -> bool:
         return bool(current_app.config.get('ENABLE_PCDOS_BROWSER'))
     except Exception:
         return False
+
+
+# INSP-43 (v11 H4b): the arcade shelf *is* the platform -- there is no MAME
+# enum. These cores are offered to the operator in Admin -> Emulators, but
+# deliberately NOT through ``platform_emulator_mapping``: ARCADE is a locked,
+# no-WASM platform, and anything reading that mapping may conclude a browser
+# session is possible. Companion-only, chosen by hand, and until one is chosen
+# the shelf stays catalogue. No ROMs, no dumps, no set files.
+ARCADE_COMPANION_CORES = (Emulator.MAME2003_PLUS, Emulator.MAME)
 
 
 def arcade_core_override_configured() -> bool:
