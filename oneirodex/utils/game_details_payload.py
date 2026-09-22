@@ -265,6 +265,15 @@ def _pick_backdrop(candidates: dict, screenshots: list) -> str | None:
     return screenshots[0] if screenshots else None
 
 
+def _save_paths(game):
+    try:
+        from oneirodex.utils.save_paths import save_paths_for
+
+        return save_paths_for(game)
+    except Exception:  # noqa: BLE001 -- a row never breaks the details page
+        return None
+
+
 def build_game_details_payload(game, user) -> dict:
     """JSON-safe details payload. Disk paths only for admin viewers."""
     user_id = getattr(user, 'id', None) if user is not None else None
@@ -573,6 +582,8 @@ def build_game_details_payload(game, user) -> dict:
         **game_card_flags(game),
         # INSP-40 -- headset records behind the ways-to-play VR row (deep links only)
         'vr_profiles': [row.to_dict() for row in (getattr(game, 'vr_profiles', None) or [])],
+        # INSP-1 -- where the saves live (templated paths; the companion expands them)
+        'save_paths': _save_paths(game),
         **web_lifecycle_fields(
             game,
             updates_count=len(updates),

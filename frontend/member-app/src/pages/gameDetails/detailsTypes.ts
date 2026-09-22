@@ -75,6 +75,8 @@ export interface DetailsGame {
     notes: string
     source: 'librarian' | 'community'
   }[]
+  /** INSP-1 — where the saves live; templated paths the companion expands. null = manifest silent. */
+  save_paths?: SavePath[] | null
   /** INSP-35 — community anti-cheat reports; null when the list is silent. */
   anticheat?: AnticheatReport | null
   store_specs?: DetailsRecord | null
@@ -99,6 +101,12 @@ export interface DetailsGame {
 }
 
 /** One admin path row from `adminPathRows(game)`. */
+export interface SavePath {
+  path: string
+  os: 'windows' | 'linux' | 'mac' | string | null
+  store: string | null
+}
+
 export interface PathRow {
   label: string
   path: string
