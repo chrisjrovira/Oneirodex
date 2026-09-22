@@ -7,11 +7,11 @@ from flask_login import current_user, login_required
 from sqlalchemy import and_, exists, func, or_, select
 
 from oneirodex import db
-from oneirodex.models import Game, Image, PlayerPerspective, game_player_perspective_association
+from oneirodex.models import Game, GameVrProfile, Image, PlayerPerspective, game_player_perspective_association
 from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.auth import librarian_required
 from oneirodex.utils.validation import validate_body
-from oneirodex.schemas.vr import VrCompatBody
+from oneirodex.schemas.vr import VrCompatBody, VrProfileBody
 from oneirodex.utils.cover_url import resolve_cover_url
 from oneirodex.utils.functions import format_size
 from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_game
@@ -41,7 +41,17 @@ def _vr_games_query():
         or_(
             Game.vr_compat.in_(('native_vr', 'injector_profile')),
             and_(Game.vr_compat.is_(None), exists(_vr_perspective_link())),
+            # INSP-40: a headset record (native / injector) is evidence too
+            and_(Game.vr_compat.is_(None), exists(_vr_profile_link(('native', 'injector')))),
         )
+    )
+
+
+def _vr_profile_link(kinds: tuple[str, ...]):
+    return (
+        select(GameVrProfile.id)
+        .where(GameVrProfile.game_uuid == Game.uuid, GameVrProfile.kind.in_(kinds))
+        .correlate(Game)
     )
 
 
@@ -100,10 +110,27 @@ def vr_catalog():
     wanted = str(request.args.get('vr_compat') or '').strip().lower()
     if wanted == 'native_vr':
         query = query.where(
-            or_(Game.vr_compat == 'native_vr', and_(Game.vr_compat.is_(None), exists(_vr_perspective_link())))
+            or_(
+                Game.vr_compat == 'native_vr',
+                and_(Game.vr_compat.is_(None), exists(_vr_profile_link(('native',)))),
+                and_(
+                    Game.vr_compat.is_(None),
+                    ~exists(_vr_profile_link(('injector',))),
+                    exists(_vr_perspective_link()),
+                ),
+            )
         )
     elif wanted == 'injector_profile':
-        query = query.where(Game.vr_compat == 'injector_profile')
+        query = query.where(
+            or_(
+                Game.vr_compat == 'injector_profile',
+                and_(
+                    Game.vr_compat.is_(None),
+                    ~exists(_vr_profile_link(('native',))),
+                    exists(_vr_profile_link(('injector',))),
+                ),
+            )
+        )
     query = query.order_by(Game.name.asc())
 
     total = db.session.execute(
@@ -151,7 +178,93 @@ def vr_game_detail(game_uuid: str):
         'summary': game.summary,
         'size': size,
         'vr_compat': game_vr_compat(game),
+        'vr_profiles': [row.to_dict() for row in (game.vr_profiles or [])],
     })
+
+
+VR_PROFILE_KINDS = ('native', 'injector', 'flat')
+
+
+def _game_for_user(game_uuid: str):
+    game = db.session.execute(select(Game).filter_by(uuid=game_uuid)).scalars().first()
+    if not game:
+        return None, api_error('Game not found', code='not_found')
+    if not user_can_access_game(current_user, game):
+        return None, api_error('Forbidden', code='forbidden')
+    return game, None
+
+
+def _vr_profiles_payload(game) -> dict:
+    return {
+        'uuid': game.uuid,
+        'vr_profiles': [row.to_dict() for row in (game.vr_profiles or [])],
+        'vr_compat': game_vr_compat(game),
+        'vr_compat_stored': game.vr_compat,
+        'kinds': list(VR_PROFILE_KINDS),
+    }
+
+
+@apis_bp.route('/games/<game_uuid>/vr_profiles', methods=['GET'])
+@login_required
+def game_vr_profiles(game_uuid: str):
+    """The headset records for a title (INSP-40): kind, runtime, the profile
+    *page*, notes. Read by any member who can read the game."""
+    game, denied = _game_for_user(game_uuid)
+    if denied:
+        return denied
+    return api_ok(_vr_profiles_payload(game))
+
+
+@apis_bp.route('/games/<game_uuid>/vr_profiles/<kind>', methods=['PUT'])
+@login_required
+@librarian_required
+@validate_body(VrProfileBody)
+def game_vr_profile_put(game_uuid: str, kind: str, body: VrProfileBody):
+    """Create or replace the record for one kind. Deep link only -- the URL
+    is a page; Oneirodex never ships, installs or points at a shim."""
+    kind = (kind or '').strip().lower()
+    if kind not in VR_PROFILE_KINDS:
+        return api_error('kind must be native, injector or flat', code='bad_request', kinds=list(VR_PROFILE_KINDS))
+    game, denied = _game_for_user(game_uuid)
+    if denied:
+        return denied
+    row = next((r for r in (game.vr_profiles or []) if r.kind == kind), None)
+    if row is None:
+        row = GameVrProfile(game_uuid=game.uuid, kind=kind)
+        db.session.add(row)
+    row.runtime = body.runtime
+    row.profile_url = body.profile_url
+    row.notes = body.notes
+    row.source = body.source
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.warning('vr_profile save failed for %s/%s: %s', game_uuid, kind, exc)
+        return api_error("Couldn't save the VR profile.", code='internal')
+    db.session.refresh(game)
+    return api_ok({**_vr_profiles_payload(game), 'profile': row.to_dict()})
+
+
+@apis_bp.route('/games/<game_uuid>/vr_profiles/<kind>', methods=['DELETE'])
+@login_required
+@librarian_required
+def game_vr_profile_delete(game_uuid: str, kind: str):
+    game, denied = _game_for_user(game_uuid)
+    if denied:
+        return denied
+    row = next((r for r in (game.vr_profiles or []) if r.kind == (kind or '').strip().lower()), None)
+    if row is None:
+        return api_error('Profile not found', code='not_found')
+    db.session.delete(row)
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.warning('vr_profile delete failed for %s/%s: %s', game_uuid, kind, exc)
+        return api_error("Couldn't remove the VR profile.", code='internal')
+    db.session.refresh(game)
+    return api_ok(_vr_profiles_payload(game))
 
 
 @apis_bp.route('/games/<game_uuid>/vr_compat', methods=['PATCH'])

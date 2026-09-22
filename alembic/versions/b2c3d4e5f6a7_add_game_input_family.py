@@ -1,7 +1,7 @@
 """add games.input_family
 
 Revision ID: b2c3d4e5f6a7
-Revises: f1a2b3c4d5e6
+Revises: a1b2c3d4e5f6
 Create Date: 2026-09-22 09:00:00.000000
 
 INSP-43 (v11 H4b): how a cabinet was driven -- joystick / spinner / lightgun /
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 revision: str = 'b2c3d4e5f6a7'
-down_revision: Union[str, Sequence[str], None] = 'f1a2b3c4d5e6'
+down_revision: Union[str, Sequence[str], None] = 'a1b2c3d4e5f6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
