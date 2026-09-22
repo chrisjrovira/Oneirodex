@@ -88,6 +88,23 @@ def dist_asset_filter(_ctx, path):
 
     Same token as `theme_asset`: mtime and size, memoised per resolved path.
 
+    **Except for the JavaScript entry, which gets no token.** A `<script
+    type="module">` is a module *identity*, and the browser keys that identity
+    on the full URL including the query. The lazy route chunks import the entry
+    by its bare path (`import { g } from "../member-app.js"`), so a versioned
+    script tag and an unversioned chunk import are two different modules --
+    each with its own copy of every React context the entry defines. The
+    provider in copy one never reaches the hook in copy two, and any page
+    loaded lazily that calls `useViewer()` or `useShellConfig()` threw
+    "must be used within a <...Provider>" and unmounted the whole SPA: `/chat`,
+    `/calendar`, `/ways-to-play` and their neighbours rendered as a bare room
+    backdrop. Seen live on 2026-09-21 (two fetches of member-app.js, one with
+    `?v=` and one without).
+
+    Freshness for the entry is carried by `asgi.py` instead, which already
+    serves every unhashed `static/dist/` file `no-cache` for the caching half
+    of the same bug. The stylesheet keeps its token: CSS has no module graph.
+
     `@pass_context` for the same reason `theme_asset` needs it — every call site
     passes a literal, and Jinja folds a filter applied to a constant at compile
     time, which would bake one token in for the life of the process and undo the
@@ -95,6 +112,8 @@ def dist_asset_filter(_ctx, path):
     """
     root = Path(current_app.root_path) / 'static'
     target = root / 'dist' / path
+    if target.suffix.lower() in ('.js', '.mjs'):
+        return url_for('static', filename=f'dist/{path}')
     return url_for(
         'static',
         filename=f'dist/{path}',
