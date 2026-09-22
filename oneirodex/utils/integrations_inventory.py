@@ -307,6 +307,33 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         ),
     )
 
+    # INSP-42 -- unofficial, opt-in, register-only stores (G5: default off).
+    try:
+        from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
+        from oneirodex.utils.store_ownership_psn import client_available as _psn_client
+        from oneirodex.utils.store_ownership_xbox import client_available as _xbox_client
+
+        _opted = unofficial_store_opt_in()
+        for sid, label, pkg, has_client in (
+            ('xbox', 'Xbox', 'xbox-webapi', _xbox_client()),
+            ('psn', 'PlayStation Network', 'psnawp', _psn_client()),
+        ):
+            on = sid in _opted
+            add(
+                id=f'store_{sid}',
+                name=label,
+                category='ownership',
+                admin_href='/admin/integrations#ownership',
+                configured=on and has_client,
+                enabled=on,
+                notes=(
+                    f'Ownership register, live via the unofficial {pkg} client (installed: {"yes" if has_client else "no"}); IDs + names only, never a download'
+                    if on
+                    else f'Ownership register, CSV snapshot only. Live sync is opt-in: ENABLE_UNOFFICIAL_STORE_SYNC={sid} plus the optional {pkg} package'
+                ),
+            )
+    except Exception:  # noqa: BLE001
+        pass
     # INSP-1 -- community save-location manifest, read-only. `configured` means
     # the daily fetch built the index at least once.
     try:
