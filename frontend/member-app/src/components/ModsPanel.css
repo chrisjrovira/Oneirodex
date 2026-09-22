@@ -153,6 +153,69 @@
   align-self: flex-start;
 }
 
+/* Profiles (INSP-37) */
+
+.od-mods__profiles {
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.od-mods__profile-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.od-mods__profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.od-mods__profile[data-active='true'] .od-mods__name {
+  color: var(--od-accent);
+}
+
+.od-mods__profile .od-mods__actions {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+.od-mods__profile-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.od-mods__profile-form label {
+  flex: 1 1 12rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-mods__profile-form input {
+  font: inherit;
+  font-size: var(--od-font-md);
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
+}
+
 /* Catalogue drawer */
 
 .od-modcat__panel {
