@@ -189,3 +189,37 @@ def test_catalog_route_is_librarian_and_reports_status(client, app, live, librar
     with patch.object(modrinth, 'safe_request', side_effect=OSError('offline')):
         resp = client.get(f'{url}?source=modrinth')
     assert resp.get_json()['status'] == 'unavailable' and resp.get_json()['hits'] is None
+
+
+def test_thunderstore_follows_the_community_cursor(app, live):
+    """The community list is paginated at 100 — reading page one only meant the
+    source could never find Risk of Rain 2 and said *no data* for a title it
+    knows (found on the live box, 2026-09-22)."""
+    page1 = {
+        'pagination': {'next_link': 'https://thunderstore.io/api/experimental/community/?cursor=CURSOR2', 'previous_link': None},
+        'results': [{'identifier': 'tiny-rogues', 'name': 'Tiny Rogues'}],
+    }
+    page2 = {
+        'pagination': {'next_link': None, 'previous_link': 'x'},
+        'results': [{'identifier': 'riskofrain2', 'name': 'Risk of Rain 2'}, {'identifier': 'bad'}],
+    }
+    seen = []
+
+    def fake(method, url, **kw):
+        params = kw.get('params') or {}
+        if url.endswith('/api/experimental/community/'):
+            seen.append(params.get('cursor'))
+            return _resp(page1 if 'cursor' not in params else page2)
+        return _resp(PACKAGES)
+
+    with app.app_context(), patch.object(thunderstore, 'safe_request', side_effect=fake):
+        assert thunderstore.find_community('Risk of Rain 2')['identifier'] == 'riskofrain2'
+    assert seen == [None, 'CURSOR2']  # page one, then the cursor from next_link
+
+    # A cursor that never ends still stops (MAX_COMMUNITY_PAGES).
+    thunderstore._COMMUNITIES = None
+    forever = {'pagination': {'next_link': 'https://thunderstore.io/api/experimental/community/?cursor=X'}, 'results': []}
+    calls = []
+    with app.app_context(), patch.object(thunderstore, 'safe_request', side_effect=lambda m, u, **k: (calls.append(u), _resp(forever))[1]):
+        assert thunderstore.find_community('Anything') is None
+    assert len(calls) == thunderstore.MAX_COMMUNITY_PAGES
