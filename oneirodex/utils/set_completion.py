@@ -34,7 +34,13 @@ REGION_PREF_ORDER = (
     'OTHER',
 )
 VALID_REGIONS = frozenset(REGION_PREF_ORDER)
-VALID_SOURCES = frozenset({'nointro', 'redump', 'other'})
+# nointro / redump: cartridge and disc sets. tosec / mame (INSP-34, v11 H1b):
+# home-computer and arcade sets -- TOSEC names carry `(1991)(Publisher)(EU)[cr X]`
+# groups the peel already strips; MAME `machine` / softlist `software` nodes
+# keep the human title in <description>, the attribute is the short set name.
+VALID_SOURCES = frozenset({'nointro', 'redump', 'tosec', 'mame', 'other'})
+# Sources whose XML nodes name the title in <description> rather than name="".
+DESCRIPTION_TITLED_SOURCES = frozenset({'mame'})
 REGION_LABELS = {
     'USA': 'United States',
     'EUR': 'Europe',
@@ -128,6 +134,13 @@ def _rom_attrs_from_xml_game(node: ET.Element) -> dict[str, Any]:
             rom = child
             break
     if rom is None:
+        # MAME softlists nest <rom> under <part><dataarea>; take the first one
+        # anywhere below the node rather than treating the entry as hashless.
+        for desc in node.iter():
+            if desc is not node and desc.tag.rsplit('}', 1)[-1] == 'rom':
+                rom = desc
+                break
+    if rom is None:
         return {}
     size_raw = rom.attrib.get('size')
     try:
@@ -143,8 +156,9 @@ def _rom_attrs_from_xml_game(node: ET.Element) -> dict[str, Any]:
     }
 
 
-def parse_dat_xml(text: str) -> tuple[str, list[dict[str, Any]]]:
+def parse_dat_xml(text: str, *, source: str | None = None) -> tuple[str, list[dict[str, Any]]]:
     root = ET.fromstring(text)
+    prefer_description = (source or '').strip().lower() in DESCRIPTION_TITLED_SOURCES
 
     def local(tag: str) -> str:
         return tag.rsplit('}', 1)[-1]
@@ -177,13 +191,17 @@ def parse_dat_xml(text: str) -> tuple[str, list[dict[str, Any]]]:
     entries: list[dict[str, Any]] = []
     seen: set[str] = set()
     for node in list(datafile):
-        if local(node.tag) not in ('game', 'machine'):
+        if local(node.tag) not in ('game', 'machine', 'software'):
             continue
         name = (node.attrib.get('name') or '').strip()
+        desc = find_child(node, 'description')
+        desc_text = desc.text.strip() if desc is not None and desc.text else ''
+        # MAME (and softlists): name="pacman" is the set id, <description> the
+        # title a member would recognise. Match on the title, keep the id.
+        if prefer_description and desc_text:
+            name = desc_text
         if not name:
-            desc = find_child(node, 'description')
-            if desc is not None and desc.text:
-                name = desc.text.strip()
+            name = desc_text
         if not name:
             continue
         norm = normalize_set_title(name)
@@ -223,14 +241,14 @@ def parse_dat_clrmame(text: str) -> tuple[str, list[dict[str, Any]]]:
     return header_name, entries
 
 
-def parse_dat_bytes(raw: bytes | str) -> tuple[str, list[dict[str, Any]]]:
+def parse_dat_bytes(raw: bytes | str, *, source: str | None = None) -> tuple[str, list[dict[str, Any]]]:
     if isinstance(raw, bytes):
         text = raw.decode('utf-8', errors='replace')
     else:
         text = raw
     stripped = text.lstrip()
     if stripped.startswith('<'):
-        return parse_dat_xml(text)
+        return parse_dat_xml(text, source=source)
     header, entries = parse_dat_clrmame(text)
     if entries:
         return header, entries
@@ -274,7 +292,7 @@ def upsert_reference_set(
     platform = validate_library_platform(library_platform)
     region_n = normalize_region(region)
     source_n = normalize_source(source)
-    header_name, entries = parse_dat_bytes(dat_bytes)
+    header_name, entries = parse_dat_bytes(dat_bytes, source=source_n)
     if not entries:
         raise ValueError('DAT contained no game entries')
 
