@@ -400,9 +400,10 @@ def test_a_listing_tool_that_cannot_decode_falls_back_to_the_other(tmp_path, mon
             (cache / 'Game [!][NGCD-058].cue').write_bytes(b'')
             return CompletedProcess(cmdline, 2, stdout='', stderr='ERROR: Unsupported Method')
         used.append('bsdtar')
-        # bsdtar is handed no member arguments (the name is glob-ambiguous),
-        # so it extracts the archive whole.
-        assert '--' not in cmdline, 'glob-ambiguous members must not be passed as patterns'
+        # The member name is full of glob metacharacters, so it must reach
+        # bsdtar backslash-escaped -- raw, it reads as a character class and
+        # bsdtar answers "Not found in archive".
+        assert any(r'\[!\]' in arg for arg in cmdline), cmdline
         nested = cache / 'Game [!][NGCD-058]'
         nested.mkdir(exist_ok=True)
         (nested / 'Game [!][NGCD-058].cue').write_bytes(b'FILE "x.bin"')
@@ -513,4 +514,62 @@ def test_a_short_rarfile_read_is_refused(tmp_path, monkeypatch):
         extract_rom_from_rar(str(rar_path), str(cache), platform='NES')
     assert exc.value.code == 'extract_failed'
     assert not (cache / 'Hero.nes').exists()
+
+
+def test_one_damaged_track_does_not_cost_the_whole_cd_rip(tmp_path, monkeypatch):
+    """A CRC error on track 12 of 34 must not hide the cue sitting at member 34.
+
+    bsdtar stops the whole run on a damaged member, so the members listed after
+    it never land -- which is exactly where the cue lives in a NeoGeo CD rip.
+    The extractor drops the bad track and asks again for the rest.
+    """
+    from subprocess import CompletedProcess
+
+    rar_path = tmp_path / 'Aero [!][SW2].rar'
+    rar_path.write_bytes(b'fake-rar')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+    seven, tar = _fake_tools(tmp_path)
+    folder = 'Aero [!][SW2]'
+    cue = f'{folder}/Aero [!][SW2].cue'
+    good = f'{folder}/Aero (Track 11 of 34)[!][SW2].wav'
+    bad = f'{folder}/Aero (Track 12 of 34)[!][SW2].wav'
+    passes = []
+
+    def fake_run(cmdline, **kwargs):
+        if '-tf' in cmdline:
+            names = chr(10).join((good, bad, cue))
+            return CompletedProcess(cmdline, 0, stdout=names, stderr='')
+        # bsdtar receives the names backslash-escaped, so match on the
+        # unescaped form the way bsdtar itself would.
+        asked = [
+            arg.replace(chr(92), '')
+            for arg in cmdline
+            if 'Aero' in arg and arg != str(rar_path)
+        ]
+        passes.append(asked)
+        nested = cache / folder
+        nested.mkdir(exist_ok=True)
+        # bsdtar walks the archive in order and dies on the damaged track, so
+        # nothing listed after it is written.
+        for name in (good, bad, cue):
+            if not any(Path(name).name in arg for arg in asked):
+                continue
+            if name == bad:
+                return CompletedProcess(
+                    cmdline, 1, stdout='', stderr=f'bsdtar: {bad}: File CRC error',
+                )
+            (cache / name).write_bytes(b'REAL BYTES')
+        return CompletedProcess(cmdline, 0, stdout='', stderr='')
+
+    _no_rarfile(monkeypatch)
+    monkeypatch.setattr('oneirodex.utils.rom_archive.find_archive_extractors', lambda: {'bsdtar': tar})
+    monkeypatch.setattr('oneirodex.utils.rom_archive._run_extractor', fake_run)
+
+    path, name = resolve_playable_rom_path(str(rar_path), cache_dir=str(cache), platform='NEOGEO_CD')
+    assert name == 'Aero [!][SW2].cue'
+    assert Path(path).read_bytes() == b'REAL BYTES'
+    assert len(passes) == 2, 'should retry once, without the damaged track'
+    assert not any('Track 12' in arg for arg in passes[1]), passes[1]
+    assert not (cache / folder / Path(bad).name).exists()
 
