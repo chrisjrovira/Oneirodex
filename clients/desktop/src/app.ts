@@ -22,6 +22,7 @@ import {
 import { startClientHeartbeat, type HeartbeatScheduler } from './heartbeat.js'
 import { getInstallsDir } from './download.js'
 import { revealPathInOs } from './open-path.js'
+import { expandSavePath, hasSavePlaceholder, tauriResolvers } from './save-paths.js'
 import {
   fetchLibraryPreview,
   formatDesktopApiError,
@@ -395,7 +396,21 @@ async function runOpenPathCommand(
   rawPath: string,
   options: { select?: boolean; allowedRoots?: string[] } = {},
 ): Promise<'ok' | 'busy' | 'error'> {
-  const result = await revealPathInOs(rawPath, {
+  let target = rawPath
+  if (hasSavePlaceholder(rawPath)) {
+    // INSP-1: a save-location template from the community manifest — expand
+    // it for this PC, or say which placeholder this machine cannot fill.
+    const expanded = await expandSavePath(rawPath, await tauriResolvers())
+    if (!expanded.ok) {
+      setStatus(
+        `Cannot open that save folder here: ${expanded.missing} is not known on this PC.`,
+        'error',
+      )
+      return 'error'
+    }
+    target = expanded.path
+  }
+  const result = await revealPathInOs(target, {
     select: options.select,
     allowedRoots: options.allowedRoots,
   })

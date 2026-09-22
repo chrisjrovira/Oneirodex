@@ -94,6 +94,8 @@ A PC title the community anti-cheat list knows shows **Anti-cheat: Supported / R
 
 **What are the Assists links in the Friends window?**
 When the desktop companion launches a game and you open **Friends**, the window lists that game's assists: an interactive map, a guide, clips, and the PCGamingWiki page (PC titles get the wiki link even when nobody wrote a pack). They are **links**, opened in your browser — Oneirodex never reads the running game, never injects anything, and never changes a save or a file. A librarian curates the list per game; the policy stays single-player, offline-only.
+**Where are my saves for this PC game?**
+A PC title the community save-location manifest knows shows a **Save location** row on its details page — one templated path per OS (`<winAppData>/Studio/Game/Saves`), the same for every household PC. When the desktop companion is online, **Open save folder** asks it to expand the placeholders for *its* machine and reveal the folder; if a placeholder cannot be filled there (a store user id, an install that is not on that PC) it says so instead of guessing. It is the folder, not a backup: nothing is synced or copied.
 
 **Open path does nothing / doesn’t open Auto Scan.**  
 Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallback). It never jumps to Auto Scan. Pair the desktop companion Online and send a path your PC can see — [desktop-companion.md](desktop-companion.md).
