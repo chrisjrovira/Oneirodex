@@ -202,6 +202,9 @@ Gamepad-friendly browse at **More → Big Picture**. Esc exits; Attract opens tr
 
 `/vr` is headset-friendly browse (admin flag), **not Quest-only** — PSVR2/SteamVR use a desktop browser on the PC; Quest friends use the headset browser/PWA. Thin / headset seats have **no** install pipeline. See [controllers-and-vr.md](controllers-and-vr.md).
 
+**Which VR runtime, adapter or streamer do I need — and does Oneirodex install any of it?**
+None of it: Oneirodex records how a title plays and links to where the community keeps its profile; the runtime (SteamVR, Monado / WiVRn, a vendor link app), the OpenVR adapter (OpenComposite) and the streamer (Virtual Desktop, Steam Link, ALVR, WiVRn) are yours to install from their own projects. [runbooks/vr-byo-runtime.md](../runbooks/vr-byo-runtime.md) is the matrix: pick the runtime by OS and headset, add an adapter only when a title needs it, a streamer only for a standalone headset — and, for a Quest-class headset, the **wired USB network link** that measured 0.7 ms / ~756 Mbps against any Wi-Fi in the house.
+
 **Where do I see which devices are connected?**  
 Admin → Ops → **Companions** shows the count by kind and, under it, the device list: every companion, thin seat or browser shell that has sent a heartbeat, with its owner, version and last-seen time. *Online* means a heartbeat in the last 3 minutes.
 
