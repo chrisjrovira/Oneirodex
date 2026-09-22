@@ -90,7 +90,28 @@ def _normalize_mod_row(row: dict[str, Any], *, default_order: int) -> dict[str, 
         'enabled': bool(row.get('enabled', True)),
         'load_order': load_order,
         'loader': normalize_loader(row.get('loader')),
+        # INSP-38 -- ids of rows this one needs first; unknown ids drop on the
+        # next read (see _prune_requires). INSP-39 -- the newest version a
+        # registry showed for this row, so the panel can say "update: vX".
+        'requires': _id_list(row.get('requires')),
+        'latest_seen_version': str(row.get('latest_seen_version') or '')[:64],
     }
+
+
+def _id_list(raw: Any) -> list[str]:
+    out: list[str] = []
+    for value in raw if isinstance(raw, list) else []:
+        mid = str(value or '').strip()
+        if mid and mid not in out:
+            out.append(mid)
+    return out[:64]
+
+
+def _prune_requires(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    known = {row['id'] for row in rows}
+    for row in rows:
+        row['requires'] = [mid for mid in row.get('requires', []) if mid in known and mid != row['id']]
+    return rows
 
 
 def _read_pack(path: str) -> dict[str, Any]:
@@ -151,6 +172,7 @@ def load_mods(game_uuid: str) -> dict[str, Any]:
         if normalized:
             cleaned.append(normalized)
     cleaned.sort(key=lambda item: (item['load_order'], item['name'].lower()))
+    _prune_requires(cleaned)
     known = {row['id'] for row in cleaned}
     profiles = _normalize_profiles(data.get('profiles'), known)
     active = str(data.get('active_profile') or '').strip()
@@ -184,6 +206,7 @@ def save_mods(
         if item:
             normalized.append(item)
     normalized.sort(key=lambda item: (item['load_order'], item['name'].lower()))
+    _prune_requires(normalized)
     known = {row['id'] for row in normalized}
     pack = {
         'game_uuid': game_uuid,
@@ -201,6 +224,24 @@ def save_mods(
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(pack, fh, indent=2)
     return load_mods(game_uuid)
+
+
+# INSP-38 -- "no loader" words: a row saying one of these never conflicts.
+NO_LOADER = frozenset({'', 'manual', 'none'})
+
+
+def loader_conflicts(pack: dict[str, Any]) -> list[dict[str, str]]:
+    """Enabled rows whose loader disagrees with the pack default (both set,
+    neither a no-loader word). The apply gate reads this; the panel shows it."""
+    default = normalize_loader(pack.get('default_loader'))
+    if default in NO_LOADER:
+        return []
+    out: list[dict[str, str]] = []
+    for row in pack.get('mods', []):
+        loader = normalize_loader(row.get('loader'))
+        if row.get('enabled') and loader not in NO_LOADER and loader != default:
+            out.append({'id': row['id'], 'name': row['name'], 'loader': loader, 'default_loader': default})
+    return out
 
 
 def set_default_loader(game_uuid: str, loader: str | None) -> dict[str, Any]:
@@ -225,6 +266,8 @@ def create_mod(game_uuid: str, payload: dict[str, Any]) -> dict[str, Any]:
             'enabled': payload.get('enabled', True),
             'load_order': payload.get('load_order', next_order),
             'loader': payload.get('loader'),
+            'requires': payload.get('requires'),
+            'latest_seen_version': payload.get('latest_seen_version'),
         },
         default_order=next_order,
     )

@@ -48,6 +48,8 @@ class ModHit:
     downloads: int | None = None
     updated: str | None = None
     categories: list[str] = field(default_factory=list)
+    # INSP-38 -- names of packages this one needs, when the registry says so.
+    dependencies: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

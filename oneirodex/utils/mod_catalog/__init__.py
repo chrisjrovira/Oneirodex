@@ -34,6 +34,7 @@ __all__ = [
     'SOURCE_LABELS',
     'SOURCE_NOTES',
     'KEYED_SOURCES',
+    'annotate_tracked',
     'catalog_enabled',
     'source_configured',
     'catalog_search',
@@ -55,12 +56,29 @@ def source_configured(source: str) -> bool:
     return bool(check()) if callable(check) else True
 
 
+def annotate_tracked(hits: list[dict[str, Any]], tracked: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """INSP-39 -- for each hit already in the pack (same ``source_url``), add
+    ``tracked_id`` and ``update_available`` (the hit's version when it differs
+    from the row's). A registry's version is the freshness signal we have;
+    nothing here changes the row."""
+    by_url = {str(row.get('source_url') or '').rstrip('/'): row for row in tracked if row.get('source_url')}
+    for hit in hits:
+        row = by_url.get(str(hit.get('url') or '').rstrip('/'))
+        if row is None:
+            continue
+        hit['tracked_id'] = row['id']
+        hv, rv = str(hit.get('version') or ''), str(row.get('version') or '')
+        hit['update_available'] = hv if hv and rv and hv != rv else None
+    return hits
+
+
 def catalog_search(
     source: str,
     game_title: str,
     *,
     query: str = '',
     limit: int | None = None,
+    tracked: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """One envelope shape for the API: ``status`` is ``ok`` (hits, maybe
     none), ``unavailable`` (the source had no data -- off, offline, or no
@@ -91,9 +109,12 @@ def catalog_search(
             'hits': None,
             'note': f'{SOURCE_LABELS[module.SOURCE_ID]} had no data for this title -- no registry for it, or the service did not answer.',
         }
+    rows = [h.to_dict() for h in hits]
+    if tracked:
+        annotate_tracked(rows, tracked)
     return {
         'source': module.SOURCE_ID,
         'status': 'ok',
-        'hits': [h.to_dict() for h in hits],
-        'count': len(hits),
+        'hits': rows,
+        'count': len(rows),
     }

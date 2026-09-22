@@ -23,6 +23,8 @@ export interface GameModRow {
   load_order: number
   /** INSP-36 — the loader this mod needs (`bepinex`, `smapi`, …); `''` when unsaid. Read, never installed. */
   loader: string
+  /** INSP-38 — ids of rows this one needs staged first. */
+  requires: string[]
 }
 
 export interface GameModsResponse {
@@ -103,11 +105,52 @@ export function pickModFilename(sourceUrl: string, mod: GameModRow): string {
   return safeModFilename(`${mod.id}${ext || '.zip'}`)
 }
 
+/**
+ * Enabled rows with a source URL, by load order — and a row always after the
+ * rows it `requires` (INSP-38), so a dependency lands before its dependent
+ * whatever the librarian typed for load order. Cycles fall back to load order.
+ */
 export function sortEnabledMods(mods: GameModRow[]): GameModRow[] {
-  return mods
+  const base = mods
     .filter((row) => row.enabled && row.source_url.trim())
     .slice()
     .sort((a, b) => a.load_order - b.load_order || a.name.localeCompare(b.name))
+  const byId = new Map(base.map((row) => [row.id, row]))
+  const out: GameModRow[] = []
+  const placed = new Set<string>()
+  const visiting = new Set<string>()
+  const visit = (row: GameModRow) => {
+    if (placed.has(row.id) || visiting.has(row.id)) return
+    visiting.add(row.id)
+    for (const dep of row.requires || []) {
+      const target = byId.get(dep)
+      if (target) visit(target)
+    }
+    visiting.delete(row.id)
+    placed.add(row.id)
+    out.push(row)
+  }
+  base.forEach(visit)
+  return out
+}
+
+/** No-loader words: a row saying one of these never conflicts with the pack default. */
+const NO_LOADER = new Set(['', 'manual', 'none'])
+
+/**
+ * INSP-38 — enabled rows whose loader disagrees with the pack default. Apply
+ * refuses on these unless the caller overrides; a mod built for MelonLoader
+ * dropped into a BepInEx install does nothing at best.
+ */
+export function loaderConflicts(
+  pack: Pick<GameModsResponse, 'mods' | 'default_loader'>,
+): { id: string; name: string; loader: string }[] {
+  const def = (pack.default_loader || '').trim().toLowerCase()
+  if (NO_LOADER.has(def)) return []
+  return pack.mods
+    .filter((row) => row.enabled)
+    .map((row) => ({ id: row.id, name: row.name, loader: (row.loader || '').trim().toLowerCase() }))
+    .filter((row) => !NO_LOADER.has(row.loader) && row.loader !== def)
 }
 
 async function getModsDir(): Promise<string> {
@@ -161,6 +204,9 @@ export async function fetchGameMods(
             enabled: record.enabled !== false,
             load_order: Number(record.load_order) || 0,
             loader: String(record.loader || '').trim(),
+            requires: Array.isArray(record.requires)
+              ? (record.requires as unknown[]).map((v) => String(v)).filter(Boolean)
+              : [],
           },
         ]
       })
@@ -266,6 +312,27 @@ export async function fetchModsSummaryGameUuids(
   return { gameUuids: uuids, trackingEnabled: true }
 }
 
+/**
+ * INSP-39 — integrity: a staged file must be whole. An empty body, or a body
+ * shorter than the `Content-Length` the server declared, is refused before it
+ * is written, so a half download never reaches an install folder. The caller
+ * re-stages from `source_url` on the next apply — that is the repair.
+ */
+export function checkDownloadIntegrity(
+  buffer: ArrayBuffer,
+  declaredLength: string | null,
+  modName: string,
+): string | null {
+  if (buffer.byteLength === 0) {
+    return `mod download for ${modName} was empty`
+  }
+  const declared = declaredLength ? Number(declaredLength) : NaN
+  if (Number.isFinite(declared) && declared > 0 && buffer.byteLength < declared) {
+    return `mod download for ${modName} was short (${buffer.byteLength} of ${declared} bytes)`
+  }
+  return null
+}
+
 export async function stageModFromUrl(opts: {
   gameUuid: string
   mod: GameModRow
@@ -285,6 +352,14 @@ export async function stageModFromUrl(opts: {
       return { ok: false, error: `mod download ${response.status} (${opts.mod.name})` }
     }
     const buffer = await response.arrayBuffer()
+    const integrity = checkDownloadIntegrity(
+      buffer,
+      response.headers?.get?.('content-length') ?? null,
+      opts.mod.name,
+    )
+    if (integrity) {
+      return { ok: false, error: integrity }
+    }
     const modsDir = await getModsDir()
     const stageDir = resolveModStageDir(modsDir, opts.gameUuid, opts.mod.id)
     const filename = pickModFilename(url, opts.mod)
@@ -354,7 +429,7 @@ export function modApplyUiHint(connectionOnline: boolean): string {
 export async function kickoffApplyModPack(
   auth: AuthStore,
   gameUuid: string,
-  options: { fetchImpl?: typeof fetch } = {},
+  options: { fetchImpl?: typeof fetch; allowLoaderMismatch?: boolean } = {},
 ): Promise<
   | {
       ok: true
@@ -379,6 +454,14 @@ export async function kickoffApplyModPack(
   const enabled = sortEnabledMods(pack.mods)
   if (enabled.length === 0) {
     return { ok: false, error: 'No enabled mods with source URLs' }
+  }
+  const conflicts = loaderConflicts(pack)
+  if (conflicts.length > 0 && !options.allowLoaderMismatch) {
+    const names = conflicts.map((c) => `${c.name} (${c.loader})`).join(', ')
+    return {
+      ok: false,
+      error: `Loader mismatch — the pack is set to ${pack.default_loader} but ${names} need a different loader. Fix the rows or the default, or apply anyway from the row's menu.`,
+    }
   }
   const loaderHint = loaderRequirementHint(pack)
 

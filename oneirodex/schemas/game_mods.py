@@ -27,6 +27,8 @@ class ModRowBody(BaseModel):
     enabled: bool | None = None
     load_order: int | None = Field(default=None, ge=0, le=100000)
     loader: str | None = Field(default=None, max_length=64)
+    requires: list[str] | None = Field(default=None, max_length=64)
+    latest_seen_version: str | None = Field(default=None, max_length=64)
 
     def payload(self) -> dict[str, Any]:
         return self.model_dump(exclude_none=True)

@@ -16,7 +16,9 @@ vi.mock('./install-store.js', () => ({
 
 import { invoke } from '@tauri-apps/api/core'
 import {
+  checkDownloadIntegrity,
   fetchGameMods,
+  loaderConflicts,
   loaderLabel,
   loaderRequirementHint,
   requiredLoaders,
@@ -63,6 +65,132 @@ describe('apply_mods helpers', () => {
     expect(isModArchiveFilename('pack.zip')).toBe(true)
     expect(isModArchiveFilename('pack.7Z')).toBe(true)
     expect(isModArchiveFilename('readme.txt')).toBe(false)
+  })
+
+  it('places a required row before its dependent, whatever the load order says (INSP-38)', () => {
+    const rows = [
+      {
+        id: 'dep',
+        name: 'Dependent',
+        version: '',
+        source_url: 'https://x/d',
+        enabled: true,
+        load_order: 0,
+        loader: '',
+        requires: ['lib'],
+      },
+      {
+        id: 'lib',
+        name: 'Library',
+        version: '',
+        source_url: 'https://x/l',
+        enabled: true,
+        load_order: 5,
+        loader: '',
+        requires: [],
+      },
+      {
+        id: 'off',
+        name: 'Off',
+        version: '',
+        source_url: 'https://x/o',
+        enabled: false,
+        load_order: 1,
+        loader: '',
+        requires: [],
+      },
+      {
+        id: 'loop-a',
+        name: 'A',
+        version: '',
+        source_url: 'https://x/a',
+        enabled: true,
+        load_order: 9,
+        loader: '',
+        requires: ['loop-b'],
+      },
+      {
+        id: 'loop-b',
+        name: 'B',
+        version: '',
+        source_url: 'https://x/b',
+        enabled: true,
+        load_order: 8,
+        loader: '',
+        requires: ['loop-a'],
+      },
+    ]
+    // In a cycle, the first row's declared dependency still lands first.
+    expect(sortEnabledMods(rows).map((r) => r.id)).toEqual(['lib', 'dep', 'loop-a', 'loop-b'])
+  })
+
+  it('loaderConflicts lists enabled rows that disagree with the pack default', () => {
+    const pack = {
+      default_loader: 'bepinex',
+      mods: [
+        {
+          id: '1',
+          name: 'Fine',
+          version: '',
+          source_url: '',
+          enabled: true,
+          load_order: 0,
+          loader: 'bepinex',
+          requires: [],
+        },
+        {
+          id: '2',
+          name: 'Quiet',
+          version: '',
+          source_url: '',
+          enabled: true,
+          load_order: 0,
+          loader: '',
+          requires: [],
+        },
+        {
+          id: '3',
+          name: 'Manual',
+          version: '',
+          source_url: '',
+          enabled: true,
+          load_order: 0,
+          loader: 'manual',
+          requires: [],
+        },
+        {
+          id: '4',
+          name: 'Odd',
+          version: '',
+          source_url: '',
+          enabled: true,
+          load_order: 0,
+          loader: 'melonloader',
+          requires: [],
+        },
+        {
+          id: '5',
+          name: 'Off',
+          version: '',
+          source_url: '',
+          enabled: false,
+          load_order: 0,
+          loader: 'smapi',
+          requires: [],
+        },
+      ],
+    }
+    expect(loaderConflicts(pack).map((c) => c.id)).toEqual(['4'])
+    expect(loaderConflicts({ ...pack, default_loader: '' })).toEqual([])
+  })
+
+  it('checkDownloadIntegrity refuses empty and short bodies (INSP-39)', () => {
+    expect(checkDownloadIntegrity(new ArrayBuffer(0), null, 'X')).toMatch(/empty/)
+    expect(checkDownloadIntegrity(new ArrayBuffer(10), '20', 'X')).toMatch(
+      /short \(10 of 20 bytes\)/,
+    )
+    expect(checkDownloadIntegrity(new ArrayBuffer(20), '20', 'X')).toBeNull()
+    expect(checkDownloadIntegrity(new ArrayBuffer(20), 'nonsense', 'X')).toBeNull()
   })
 
   it('sorts enabled mods by load order', () => {
