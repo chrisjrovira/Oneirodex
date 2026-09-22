@@ -129,6 +129,30 @@ def test_dist_bundles_are_versioned_so_a_rebuild_is_visible(theme_app):
     assert not url.endswith('v=0'), 'token fell back to the missing-file value'
 
 
+def test_dist_js_entry_is_linked_at_its_bare_path(theme_app):
+    """The module entry must NOT carry a query string.
+
+    Lazy route chunks `import` the entry by its bare path. A `?v=` on the
+    `<script type="module">` made the browser evaluate the entry twice -- one
+    module per URL -- so the React contexts created in the entry existed twice,
+    and every lazily loaded page calling `useViewer()` / `useShellConfig()`
+    threw "must be used within a <...Provider>" and blanked the SPA (`/chat`,
+    `/calendar`, `/ways-to-play`). asgi.py serves the entry `no-cache`, so
+    freshness does not need the token; module identity forbids it.
+    """
+    dist = pathlib.Path(theme_app.root_path) / 'static' / 'dist' / 'member-app'
+    dist.mkdir(parents=True, exist_ok=True)
+    (dist / 'member-app.js').write_text('export const built = true', encoding='utf-8')
+
+    from oneirodex.routes_theme import dist_asset_filter
+
+    with theme_app.app_context(), theme_app.test_request_context('/'):
+        url = dist_asset_filter(None, 'member-app/member-app.js')
+
+    assert url.endswith('dist/member-app/member-app.js'), url
+    assert '?' not in url, f'module entry must be a single module identity: {url}'
+
+
 def test_dist_asset_is_not_constant_folded(theme_app):
     """Same trap as theme_asset: every call site passes a literal."""
     from jinja2 import nodes
