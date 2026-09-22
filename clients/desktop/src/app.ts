@@ -368,6 +368,9 @@ async function handleConnect(): Promise<void> {
   renderLibrary()
   els.connectBtn.disabled = false
 }
+/** The game most recently launched from this seat — the overlay's subject (INSP-45). */
+let lastPlayedGameUuid: string | null = null
+
 async function runPlayAction(uuid: string): Promise<void> {
   if (!lifecycle || busyGames.has(uuid)) {
     return
@@ -378,6 +381,7 @@ async function runPlayAction(uuid: string): Promise<void> {
     setGameActivity(uuid, 'Launching…')
     renderLibrary()
     const { pid } = await kickoffLaunch(api, uuid)
+    lastPlayedGameUuid = uuid
     setGameActivity(uuid, `Playing (pid ${pid})`)
     renderLibrary()
     setStatus(`Launched ${uuid}.`, 'success')
@@ -746,7 +750,7 @@ export async function mountApp(root: HTMLElement): Promise<void> {
       setStatus(blocked, 'error')
       return
     }
-    void openSocialCompanionWindow(base)
+    void openSocialCompanionWindow(base, lastPlayedGameUuid)
       .then((how) => {
         const { message, tone } = friendsOpenStatus(how, connectionMode)
         setStatus(message, tone)

@@ -1,0 +1,44 @@
+/* Companion overlay assists (INSP-45): a bookmark strip, never an injector. */
+
+.od-overlay-links {
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface) 90%, transparent);
+}
+
+.od-overlay-links__title {
+  margin: 0 0 0.4rem;
+  font-size: var(--od-font-md);
+  font-weight: 650;
+}
+
+.od-overlay-links__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.od-overlay-links__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.od-overlay-links__kind {
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--od-radius-pill);
+  border: 1px solid var(--od-border);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-overlay-links__note {
+  margin: 0.45rem 0 0;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
