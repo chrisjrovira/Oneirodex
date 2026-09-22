@@ -493,3 +493,122 @@
   border-radius: 0;
   background: none;
 }
+
+/* --- Filter builder (INSP-3) ---------------------------------------------
+ *
+ * A nested AND/OR tree needs to *look* nested, so a group indents its children
+ * behind a left rule: that rule is the only thing saying "these belong to the
+ * row above", and without it two sibling groups read as one flat list.
+ */
+.od-fb-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--od-space-2);
+  font-size: var(--od-font-sm);
+}
+
+.od-fb-panel--failed {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
+}
+
+.od-fb-saved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.od-fb-saved-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.od-fb-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--od-space-2);
+  padding: var(--od-space-2);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-md);
+  background: var(--od-surface-2);
+}
+
+.od-fb-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.od-fb-group-head,
+.od-fb-leaf,
+.od-fb-group-actions,
+.od-fb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.od-fb-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  /* The indent and the rule are what make nesting legible at a glance. */
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--od-border);
+}
+
+.od-fb-field,
+.od-fb-op,
+.od-fb-value,
+.od-fb-name {
+  min-height: var(--od-control-h);
+  padding: 0 0.45rem;
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius-sm);
+  background: var(--od-surface);
+  color: var(--od-text);
+  font-size: var(--od-font-sm);
+}
+
+.od-fb-name {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.od-fb-hint,
+.od-fb-count {
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
+}
+
+.od-fb-multi {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.od-fb-multi-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--od-text);
+  font-size: var(--od-font-xs);
+}
+
+/* The server names the part of the tree it would not run, so the builder can
+   point at that row instead of putting "invalid filter" above the whole form. */
+.od-fb-leaf[data-flagged='true'],
+.od-fb-group[data-flagged='true'] {
+  outline: 2px solid var(--od-accent);
+  outline-offset: 2px;
+  border-radius: var(--od-radius-sm);
+}
+
+.od-fb-problem {
+  color: var(--od-accent);
+  font-size: var(--od-font-xs);
+}

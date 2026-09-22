@@ -49,6 +49,9 @@ Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params 
 **When do “N games added” toasts show?**  
 When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. More than five toasts at once collapse to **N notifications** (inbox still has every row). Toasts are dismissible (×) on member and admin, including classic admin pages.
 
+**Can I filter for "this or that"?**  
+Yes — the Signals chips are always *and*, but **Filters → Build a filter** gives you groups that read All of / Any of / None of, nested if you need them. Name it and it comes back as a button. A saved filter is yours alone; it does not change what anyone else in the household sees. It can only use the same signals the chips offer, so it never reaches anything the catalog does not already know.
+
 **Where did the Game Catalog Filters column go?**  
 Two-bar chrome opens Filters from a **Filters** button on the catalog bar (popover with Apply · Clear · Done). There is no sticky left-hand Filters column to collapse.
 
