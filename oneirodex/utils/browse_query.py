@@ -41,7 +41,7 @@ from oneirodex.models import (
     user_game_status,
 )
 from oneirodex.platform import LibraryPlatform, platforms_for_play_mode
-from oneirodex.utils.browse_filters import apply_badge_filters
+from oneirodex.utils.browse_filters import apply_badge_filters, apply_filter_tree
 from oneirodex.utils.browse_pagination import normalize_page_size
 from oneirodex.utils.client_lifecycle import installed_game_uuids, load_lifecycle_map
 from oneirodex.utils.game_editions import normalize_title
@@ -158,6 +158,11 @@ def run_browse_query(args, user) -> BrowseQueryResult:
     if theme:
         query = query.filter(Game.themes.any(Theme.name == theme))
     query = apply_badge_filters(query, args, user=user)
+    # INSP-3: a saved filter's nested AND/OR tree, when one is in play.
+    # A FilterTreeError propagates to the route, which turns it into a 400
+    # naming the offending part -- a silently ignored filter would show the
+    # member a full library and let them think that was the answer.
+    query = apply_filter_tree(query, args, user=user)
 
     # One tile per title, not per row in one library.
     #

@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import and_, exists, false, or_, select
+from sqlalchemy import false
 
-from oneirodex.models import Game, GameUpdate, PlayerPerspective
+from oneirodex.models import Game
+from oneirodex.utils.filter_tree import (  # noqa: F401 -- window constants re-exported
+    FIELDS as TREE_FIELDS,
+    FilterTreeError,
+    NEW_IMPORT_WINDOW_DAYS,
+    RELEASE_WINDOW_DAYS,
+    compile_filter_tree,
+)
 from oneirodex.utils.item_kind import parse_item_kinds_param
 from oneirodex.utils.library_health import (
     PATH_STATUS_EMPTY,
     PATH_STATUS_MISSING,
     PATH_STATUS_OK,
 )
-from oneirodex.utils.lifecycle import FRESHNESS_BEHIND_STATUSES
-from oneirodex.utils.rom_language import needs_translation_sql_filter
-from oneirodex.utils.secondary_scrapers import VR_COMPAT_VALUES, VR_PERSPECTIVE_NAME
+from oneirodex.utils.secondary_scrapers import VR_COMPAT_VALUES
 
 _PATH_STATUS_ALLOWED = frozenset({
     PATH_STATUS_OK,
@@ -24,9 +29,10 @@ _PATH_STATUS_ALLOWED = frozenset({
     PATH_STATUS_EMPTY,
 })
 
-# Keep in sync with frontend/member-app/src/utils/badgeSignals.ts
-NEW_IMPORT_WINDOW_DAYS = 14
-RELEASE_WINDOW_DAYS = 30
+# NEW_IMPORT_WINDOW_DAYS / RELEASE_WINDOW_DAYS now live in filter_tree, beside
+# the clauses that read them, and are re-exported above because callers and
+# tests have always imported them from this module.
+# Keep both in sync with frontend/member-app/src/utils/badgeSignals.ts.
 
 _TRUTHY = frozenset({'1', 'true', 'yes', 'on'})
 
@@ -145,63 +151,47 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
 
     query = apply_name_filter(query, args)
 
-    if _flag(args, 'is_vr'):
-        query = query.filter(
-            Game.player_perspectives.any(PlayerPerspective.name == VR_PERSPECTIVE_NAME)
-        )
+    # Every chip is one leaf of the same vocabulary the filter tree speaks, so
+    # both compile through `filter_tree.FIELDS` rather than keeping a second
+    # copy of each predicate here that could drift from it.
+    ctx = {'user': user, 'now': clock}
+    for field in (
+        'is_vr',
+        'freshness_behind',
+        'has_updates',
+        'new_import',
+        'recent_release',
+        'needs_translation',
+        'path_missing',
+    ):
+        if _flag(args, field):
+            query = query.filter(TREE_FIELDS[field][2](True, ctx))
 
-    # Rider R3: `vr_compat=native_vr|injector_profile|flat`. `native_vr` also
-    # admits titles with no stored value whose perspectives say VR -- the same
-    # derivation the card flag uses, so the filter and the badge agree.
     vr_compat = str(args.get('vr_compat') or '').strip().lower()
     if vr_compat in VR_COMPAT_VALUES:
-        if vr_compat == 'native_vr':
-            query = query.filter(
-                or_(
-                    Game.vr_compat == 'native_vr',
-                    and_(
-                        Game.vr_compat.is_(None),
-                        Game.player_perspectives.any(PlayerPerspective.name == VR_PERSPECTIVE_NAME),
-                    ),
-                )
-            )
-        else:
-            query = query.filter(Game.vr_compat == vr_compat)
-
-    if _flag(args, 'freshness_behind'):
-        query = query.filter(Game.freshness_status.in_(tuple(FRESHNESS_BEHIND_STATUSES)))
-
-    if _flag(args, 'has_updates'):
-        update_exists = exists(
-            select(GameUpdate.id).where(GameUpdate.game_uuid == Game.uuid)
-        )
-        query = query.filter(
-            or_(
-                Game.freshness_status.in_(tuple(FRESHNESS_BEHIND_STATUSES)),
-                update_exists,
-            )
-        )
-
-    if _flag(args, 'new_import'):
-        cutoff = clock - timedelta(days=NEW_IMPORT_WINDOW_DAYS)
-        query = query.filter(
-            or_(
-                Game.date_identified >= cutoff,
-                and_(Game.date_identified.is_(None), Game.date_created >= cutoff),
-            )
-        )
-
-    if _flag(args, 'recent_release'):
-        cutoff = clock - timedelta(days=RELEASE_WINDOW_DAYS)
-        query = query.filter(Game.first_release_date >= cutoff)
-
-    if _flag(args, 'needs_translation'):
-        preferred = _preferred_locale_from_user(user)
-        query = query.filter(needs_translation_sql_filter(preferred))
-
-    if _flag(args, 'path_missing'):
-        query = query.filter(Game.path_status == PATH_STATUS_MISSING)
+        query = query.filter(TREE_FIELDS['vr_compat'][2](vr_compat, ctx))
 
     query = apply_item_kind_filter(query, args)
     query = apply_path_status_filter(query, args)
     return query
+
+
+def apply_filter_tree(query, args, *, user=None, now: datetime | None = None):
+    """Apply ``filter_tree=<json>`` when present (INSP-3).
+
+    Deliberately a *conjunct* beside the chips rather than a replacement: a
+    member who has built a tree and then taps a chip means both, and a tree
+    that silently discarded the chips would be the surprising reading.
+
+    Raises ``FilterTreeError`` -- the caller turns it into a 400 that says
+    which part of the filter is wrong.
+    """
+    raw = args.get('filter_tree') if hasattr(args, 'get') else None
+    if raw is None or not str(raw).strip():
+        return query
+    return query.filter(compile_filter_tree(raw, user=user, now=now))
+
+
+def filter_tree_error_detail(exc: FilterTreeError) -> str:
+    """One sentence a builder UI can put next to the offending row."""
+    return str(exc)

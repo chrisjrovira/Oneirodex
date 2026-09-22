@@ -137,6 +137,11 @@ RESET_SCOPES: dict[str, tuple[str, ...]] = {
         'user_content_filters',
         'user_attract_mode_settings',
         'user_discover_impressions',
+        # A saved filter is a member's own question about the library, keyed to
+        # their user row. It survives a catalog wipe on purpose -- the filter is
+        # a query, not a reference to particular games -- but it dies with the
+        # member, which the FK cascade already does and this states out loud.
+        'saved_filters',
         'game_collections',
         'game_collection_items',
         'play_sessions',
