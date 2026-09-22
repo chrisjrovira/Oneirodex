@@ -42,6 +42,25 @@ class ModPackBulkBody(BaseModel):
     default_loader: str | None = Field(default=None, max_length=64)
 
 
+class ModProfileBody(BaseModel):
+    """``POST /api/games/<uuid>/mods/profiles`` (INSP-37). ``mod_ids`` omitted
+    means "the rows enabled right now"."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    name: str = Field(min_length=1, max_length=120)
+    mod_ids: list[str] | None = Field(default=None, max_length=500)
+
+
+class ModProfileImportBody(BaseModel):
+    """``POST /api/games/<uuid>/mods/profiles/import`` -- an ``od-mod:`` code."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    code: str = Field(min_length=8, max_length=70000)
+    name: str | None = Field(default=None, max_length=120)
+
+
 class ModPackBody(BaseModel):
     """``PATCH /api/games/<uuid>/mods/pack`` -- pack-level fields only."""
 

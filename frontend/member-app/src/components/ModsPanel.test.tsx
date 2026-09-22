@@ -126,3 +126,68 @@ test('the drawer says when a registry had no data rather than showing an empty l
   expect(await screen.findByText('Modrinth had no data for this title.')).toBeTruthy()
   expect(screen.queryByRole('button', { name: 'Add to list' })).toBeNull()
 })
+
+test('profiles: a librarian saves the enabled set, activates it, and copies its code (INSP-37)', async () => {
+  const withProfile = {
+    ...PACK,
+    profiles: [{ id: 'vanilla', name: 'Vanilla+', mod_ids: ['m1'] }],
+    active_profile: '',
+  }
+  const calls: { url: string; method: string; body: unknown }[] = []
+  stubFetch(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input)
+    const method = (init?.method || 'GET').toUpperCase()
+    calls.push({ url, method, body: init?.body ? JSON.parse(String(init.body)) : undefined })
+    if (url.endsWith('/profiles/vanilla/export'))
+      return { ok: true, status: 200, json: async () => ({ ok: true, code: 'od-mod:abc' }) }
+    if (url.endsWith('/profiles/vanilla/activate'))
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ ...withProfile, active_profile: 'vanilla' }),
+      }
+    if (url.endsWith('/profiles') && method === 'POST')
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({ ok: true, profile: { id: 'x', name: 'X', mod_ids: [] } }),
+      }
+    return { ok: true, status: 200, json: async () => withProfile }
+  })
+  // user-event installs its own clipboard; read it back rather than stubbing.
+  const user = userEvent.setup()
+  render(<ModsPanel gameUuid="g1" canEdit />)
+  expect(await screen.findByText('Vanilla+')).toBeTruthy()
+  expect(screen.getByText('1 mod')).toBeTruthy()
+
+  await user.click(screen.getByRole('button', { name: 'Activate' }))
+  await waitFor(() =>
+    expect(calls.some((c) => c.url.endsWith('/profiles/vanilla/activate'))).toBe(true),
+  )
+
+  await user.click(screen.getByRole('button', { name: 'Copy code' }))
+  await waitFor(async () => expect(await navigator.clipboard.readText()).toBe('od-mod:abc'))
+  expect(await screen.findByRole('button', { name: 'Copied' })).toBeTruthy()
+
+  await user.type(screen.getByPlaceholderText('e.g. Vanilla+'), 'Everything')
+  await user.click(screen.getByRole('button', { name: 'Save profile' }))
+  await waitFor(() =>
+    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/profiles'))).toBe(true),
+  )
+  const post = calls.find((c) => c.method === 'POST' && c.url.endsWith('/profiles'))!
+  expect(post.body).toEqual({ name: 'Everything' })
+})
+
+test('profiles: a member sees the active profile and can copy, but has no Activate', async () => {
+  const withProfile = {
+    ...PACK,
+    profiles: [{ id: 'vanilla', name: 'Vanilla+', mod_ids: ['m1'] }],
+    active_profile: 'vanilla',
+  }
+  stubFetch(async () => ({ ok: true, status: 200, json: async () => withProfile }))
+  render(<ModsPanel gameUuid="g1" />)
+  expect(await screen.findByText(/active: Vanilla\+/)).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Copy code' })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: /Activate|Active/ })).toBeNull()
+  expect(screen.queryByText('Save profile')).toBeNull()
+})
