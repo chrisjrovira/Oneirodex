@@ -175,3 +175,54 @@ class TestGameModsApi:
         body = response.get_json()
         assert body['enabled'] is True
         assert any(row['game_uuid'] == sample_game.uuid for row in body['games'])
+
+
+class TestModLoader:
+    """INSP-36 / H2a: the loader a mod needs, on the row and as a pack default."""
+
+    def test_loader_normalises_and_pack_default_survives_row_writes(self, client, librarian_user, sample_game, app, tmp_path):
+        from oneirodex.utils.game_mods import LOADERS, normalize_loader
+
+        assert normalize_loader('BepInEx 5') == 'bepinex-5'
+        assert normalize_loader('  SMAPI ') == 'smapi'
+        assert normalize_loader(None) == ''
+        assert 'bepinex' in LOADERS and 'none' in LOADERS
+
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        _login(client, librarian_user)
+        base = f'/api/games/{sample_game.uuid}/mods'
+
+        listing = client.get(base).get_json()
+        assert listing['default_loader'] == '' and listing['loaders'] == list(LOADERS)
+
+        pack = client.patch(f'{base}/pack', json={'default_loader': 'BepInEx'})
+        assert pack.status_code == 200, pack.get_json()
+        assert pack.get_json()['default_loader'] == 'bepinex'
+
+        create = client.post(base, json={'name': 'Configuration Manager', 'loader': 'BepInEx', 'source_url': 'https://example.com/cm.zip'})
+        assert create.status_code == 201
+        mod = create.get_json()['mod']
+        assert mod['loader'] == 'bepinex'
+        mod_id = mod['id']
+
+        # A row write never clears the pack default; a partial update keeps the loader
+        patched = client.patch(f'{base}/{mod_id}', json={'enabled': False})
+        assert patched.get_json()['mod']['loader'] == 'bepinex'
+        listing = client.get(base).get_json()
+        assert listing['default_loader'] == 'bepinex'
+
+        # Bulk replace keeps the default when omitted, sets it when given
+        bulk = client.put(base, json={'mods': [{'id': 'x', 'name': 'X', 'loader': 'MelonLoader'}]})
+        assert bulk.status_code == 200
+        assert bulk.get_json()['default_loader'] == 'bepinex'
+        assert bulk.get_json()['mods'][0]['loader'] == 'melonloader'
+        bulk = client.put(base, json={'mods': [], 'default_loader': 'none'})
+        assert bulk.get_json()['default_loader'] == 'none'
+
+    def test_unknown_fields_are_refused(self, client, librarian_user, sample_game, app, tmp_path):
+        app.config['GAME_MODS_PATH'] = str(tmp_path)
+        _login(client, librarian_user)
+        base = f'/api/games/{sample_game.uuid}/mods'
+        assert client.post(base, json={'name': 'X', 'install': True}).status_code == 422
+        assert client.patch(f'{base}/pack', json={'mods': []}).status_code == 422
+        assert client.put(base, json={'mods': 'nope'}).status_code == 422

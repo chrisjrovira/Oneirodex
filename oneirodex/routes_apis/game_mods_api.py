@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from oneirodex.utils.api_response import api_error, api_ok
-from flask import jsonify, request
+from flask import jsonify
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from oneirodex import db
 from oneirodex.models import Game
+from oneirodex.schemas.game_mods import ModPackBody, ModPackBulkBody, ModRowBody
 from oneirodex.utils.game_mods import (
     create_mod,
     delete_mod,
@@ -16,8 +17,10 @@ from oneirodex.utils.game_mods import (
     load_mods,
     mods_enabled,
     save_mods,
+    set_default_loader,
     update_mod,
 )
+from oneirodex.utils.validation import validate_body
 from oneirodex.utils.library_acl import apply_game_access_filters, user_can_access_game
 from oneirodex.utils.rbac import is_librarian, normalize_role
 
@@ -85,7 +88,8 @@ def get_game_mods(game_uuid: str):
 
 @apis_bp.route('/games/<game_uuid>/mods', methods=['POST'])
 @login_required
-def post_game_mod(game_uuid: str):
+@validate_body(ModRowBody)
+def post_game_mod(game_uuid: str, body: ModRowBody):
     if not mods_enabled():
         return _mods_disabled()
     denied = _require_librarian()
@@ -95,7 +99,7 @@ def post_game_mod(game_uuid: str):
     read_denied = _require_game_read(game)
     if read_denied:
         return read_denied
-    data = request.get_json(silent=True) or {}
+    data = body.payload()
     try:
         created = create_mod(game_uuid, data)
     except ValueError as exc:
@@ -105,7 +109,8 @@ def post_game_mod(game_uuid: str):
 
 @apis_bp.route('/games/<game_uuid>/mods/<mod_id>', methods=['PUT', 'PATCH'])
 @login_required
-def patch_game_mod(game_uuid: str, mod_id: str):
+@validate_body(ModRowBody)
+def patch_game_mod(game_uuid: str, mod_id: str, body: ModRowBody):
     if not mods_enabled():
         return _mods_disabled()
     denied = _require_librarian()
@@ -115,7 +120,7 @@ def patch_game_mod(game_uuid: str, mod_id: str):
     read_denied = _require_game_read(game)
     if read_denied:
         return read_denied
-    data = request.get_json(silent=True) or {}
+    data = body.payload()
     try:
         updated = update_mod(game_uuid, mod_id, data)
     except LookupError:
@@ -144,7 +149,8 @@ def delete_game_mod(game_uuid: str, mod_id: str):
 
 @apis_bp.route('/games/<game_uuid>/mods', methods=['PUT'])
 @login_required
-def put_game_mods_bulk(game_uuid: str):
+@validate_body(ModPackBulkBody)
+def put_game_mods_bulk(game_uuid: str, body: ModPackBulkBody):
     """Replace the full mod list (librarian/admin)."""
     if not mods_enabled():
         return _mods_disabled()
@@ -155,6 +161,21 @@ def put_game_mods_bulk(game_uuid: str):
     read_denied = _require_game_read(game)
     if read_denied:
         return read_denied
-    data = request.get_json(silent=True) or {}
-    mods = data.get('mods') if isinstance(data.get('mods'), list) else []
-    return api_ok({**save_mods(game_uuid, mods)})
+    return api_ok({**save_mods(game_uuid, body.mods, default_loader=body.default_loader)})
+
+
+@apis_bp.route('/games/<game_uuid>/mods/pack', methods=['PATCH'])
+@login_required
+@validate_body(ModPackBody)
+def patch_game_mods_pack(game_uuid: str, body: ModPackBody):
+    """Pack-level fields (INSP-36): today only ``default_loader``."""
+    if not mods_enabled():
+        return _mods_disabled()
+    denied = _require_librarian()
+    if denied:
+        return denied
+    game = _game_or_404(game_uuid)
+    read_denied = _require_game_read(game)
+    if read_denied:
+        return read_denied
+    return api_ok({**set_default_loader(game_uuid, body.default_loader)})

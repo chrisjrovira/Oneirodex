@@ -243,7 +243,7 @@ binaries. Full guide: [theme-fonts-and-images.md](theme-fonts-and-images.md).
 
 ## Mods & household game servers
 
-- **`ENABLE_MOD_TRACKING`** (default on) — per-game mod registry at `/api/games/<uuid>/mods` (librarian/admin CRUD; members read; child read-only). Summary: `GET /api/mods/summary`.
+- **`ENABLE_MOD_TRACKING`** (default on) — per-game mod registry at `/api/games/<uuid>/mods` (librarian/admin CRUD; members read; child read-only). Summary: `GET /api/mods/summary`. Each row carries `id`, `name`, `version`, `source_url`, `notes`, `enabled`, `load_order` and — since INSP-36 — **`loader`**: the mod loader it needs (`bepinex`, `melonloader`, `smapi`, `lovely`, `forge`, `fabric`, `quilt`, `neoforge`, `manual`, `none` are the suggested words, any slug is kept). The pack has a `default_loader` rows inherit (`PATCH /api/games/<uuid>/mods/pack`, or `default_loader` on the bulk `PUT`). Bodies are validated (`422` on unknown fields). The companion only *reads* the loader — its apply result says *Needs BepInEx installed — not managed here*; nothing installs a loader.
 - **Game servers** — admin CRUD at `/api/game-servers`; members/children read join info only. Ops summary `services.game_servers` includes TCP/HTTP health chips; per-server status: `GET /api/game-servers/<uuid>/status`.
 
 Related: [libraries-and-scans.md](libraries-and-scans.md) · [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) · [oidc-sso.md](../runbooks/oidc-sso.md) · [troubleshooting.md](troubleshooting.md)
