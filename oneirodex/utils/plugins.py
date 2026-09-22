@@ -22,6 +22,7 @@ class PluginInfo:
 _BUILTIN: list[PluginInfo] = [
     PluginInfo('provider.igdb', 'IGDB', 'metadata', 'Primary game metadata provider'),
     PluginInfo('provider.steamgriddb', 'SteamGridDB', 'metadata', 'Cover / hero art'),
+    PluginInfo('provider.hash_identify', 'Hash identify', 'metadata', 'Keyless community hash lookup for console ROMs after an IGDB + DAT miss (INSP-31)'),
     PluginInfo('arr.native', 'Native indexers', 'acquire', 'Torznab/Newznab registry + curated presets'),
     PluginInfo('arr.prowlarr', 'Prowlarr', 'acquire', 'Optional BYO indexer manager hub'),
     PluginInfo('arr.jackett', 'Jackett', 'acquire', 'Optional BYO indexer proxy hub'),
@@ -97,6 +98,12 @@ def _runtime_status_map() -> dict[str, str]:
             status['social.community_chat'] = 'available'
     except Exception:
         status['social.community_chat'] = 'available'
+    try:
+        from oneirodex.utils.hash_identify import is_enabled as _hash_identify_enabled
+
+        status['provider.hash_identify'] = 'configured' if _hash_identify_enabled() else 'disabled'
+    except Exception:
+        status['provider.hash_identify'] = 'available'
     try:
         from oneirodex.utils.livekit_rtc import livekit_config, livekit_enabled
         cfg = livekit_config()
