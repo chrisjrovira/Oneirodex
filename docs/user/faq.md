@@ -91,6 +91,9 @@ When mod tracking is on, a game's details page lists the mods a librarian tracks
 **What does the Anti-cheat line on a details page mean?**  
 A PC title the community anti-cheat list knows shows **Anti-cheat: Supported / Running / Planned / Broken / Denied**, the anti-cheat's name, and a link to the report page. It is community reports, not a guarantee — *Denied* means the publisher has said no to Linux / Proton seats, and that a kernel anti-cheat title is one where mods, cheats or an injector risk a ban. Nothing on the page changes what Play or Download do. Titles the list does not know show no line; an admin can turn the whole row off with `ENABLE_ANTICHEAT_COMPAT=false`.
 
+**What are the Assists links in the Friends window?**
+When the desktop companion launches a game and you open **Friends**, the window lists that game's assists: an interactive map, a guide, clips, and the PCGamingWiki page (PC titles get the wiki link even when nobody wrote a pack). They are **links**, opened in your browser — Oneirodex never reads the running game, never injects anything, and never changes a save or a file. A librarian curates the list per game; the policy stays single-player, offline-only.
+
 **Open path does nothing / doesn’t open Auto Scan.**  
 Open path uses **OpenPathModal** → companion `open_path` (or clipboard fallback). It never jumps to Auto Scan. Pair the desktop companion Online and send a path your PC can see — [desktop-companion.md](desktop-companion.md).
 
