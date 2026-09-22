@@ -28,6 +28,7 @@ from oneirodex.utils.scan_queue import maybe_drain_scan_queue
 from oneirodex.utils.status import get_config_values, get_system_info
 from oneirodex.utils.system_stats import (
     get_cpu_usage,
+    get_gpu_usage,
     get_disk_usage,
     get_games_folder_usage,
     get_load_average,
@@ -547,6 +548,8 @@ def build_ops_summary(app_start_time):
                 'python': system_info.get('Python Version'),
                 'cpu': cpu,
                 'memory': memory,
+                # INSP-44: NVML or a BYO sensor reader; None when neither answers
+                'gpu': get_gpu_usage(),
                 'load_avg': get_load_average(),
                 'process': get_process_memory(),
                 'db_ping_ms': _db_ping_ms(),
