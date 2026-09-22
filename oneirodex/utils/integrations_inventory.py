@@ -212,7 +212,7 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
     # INSP-22 -- read-only mod registries. Keyless, so `configured` reads
     # "usable right now" (the flag is on), like the cascade sources above.
     try:
-        from oneirodex.utils.mod_catalog import SOURCE_LABELS, SOURCE_NOTES, catalog_enabled
+        from oneirodex.utils.mod_catalog import SOURCE_LABELS, SOURCE_NOTES, catalog_enabled, source_configured
 
         catalog_on = catalog_enabled()
         for sid, label in SOURCE_LABELS.items():
@@ -221,7 +221,7 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
                 name=f'{label} (mods)',
                 category='mods',
                 admin_href='/admin/integrations#mods',
-                configured=catalog_on,
+                configured=catalog_on and source_configured(sid),
                 enabled=catalog_on,
                 notes=f'{SOURCE_NOTES[sid]} Browse + deep link only; the companion stages the URL the librarian chose (ENABLE_MOD_CATALOG).',
             )

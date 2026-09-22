@@ -55,6 +55,8 @@ export interface ModDraft {
 export const MOD_CATALOG_SOURCES: { id: string; label: string }[] = [
   { id: 'thunderstore', label: 'Thunderstore' },
   { id: 'modrinth', label: 'Modrinth' },
+  { id: 'gamebanana', label: 'GameBanana' },
+  { id: 'nexus', label: 'Nexus Mods' },
 ]
 
 function modsUrl(gameUuid: string, tail = '') {
