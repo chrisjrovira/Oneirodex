@@ -57,6 +57,14 @@ export interface DetailsGame {
   urls?: DetailsRecord[] | null
   translation_patches?: DetailsRecord[] | null
   vr_compat?: 'native_vr' | 'injector_profile' | 'flat' | null
+  /** INSP-40 — headset records behind the VR line; deep links only. */
+  vr_profiles?: {
+    kind: 'native' | 'injector' | 'flat'
+    runtime: 'openxr' | 'openvr' | null
+    profile_url: string | null
+    notes: string
+    source: 'librarian' | 'community'
+  }[]
   store_specs?: DetailsRecord | null
   is_admin?: boolean
   is_favorite?: boolean

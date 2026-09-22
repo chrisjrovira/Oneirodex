@@ -1,0 +1,60 @@
+/* Headset record editor (INSP-40) — a record and a link, never a shim. */
+
+.od-vrprof__toggle {
+  align-self: flex-start;
+  font-size: var(--od-font-xs);
+}
+
+.od-vrprof {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.4rem 0 0.8rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px dashed var(--od-border);
+  max-width: 36rem;
+}
+
+.od-vrprof__lede {
+  margin: 0;
+  font-size: var(--od-font-sm);
+  line-height: 1.45;
+  color: var(--od-text-muted);
+}
+
+.od-vrprof label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-vrprof input,
+.od-vrprof select {
+  font: inherit;
+  font-size: var(--od-font-md);
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
+}
+
+.od-vrprof__error {
+  margin: 0;
+  font-size: var(--od-font-sm);
+  color: var(--od-danger);
+}
+
+.od-vrprof__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.od-vr-way__runtime,
+.od-vr-way__notes {
+  color: var(--od-text-muted);
+}
