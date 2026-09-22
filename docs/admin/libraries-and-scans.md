@@ -195,6 +195,15 @@ Depth does not recursively walk whole trees per title; per-game stalls were from
 
 **Not offered:** mega-lib / depth-3 family walk (API refuses). `scanThreadCount` remains under Server Settings / worker caps. **Post-ship:** Reset Themes **not** required for this API (UI shell already shipped).
 
+## Identify sources deferred (documented, not built)
+
+Two register items from the capability harvest were sized in H1 and deliberately **not** built. Each has a trigger; until it fires, the pipeline above is the whole story.
+
+| Item | What it would add | Why not now | Trigger that would schedule it |
+|---|---|---|---|
+| **INSP-33 — offline hash index** | A signature file (No-Intro / Redump class, hashes → title + platform) fetched once or shipped, so a **first scan on a disconnected box** still identifies console dumps with no provider reachable. Same lookup interface as `try_dat_hash_identify`, so it would slot in beside the uploaded DATs and before the keyless hash service (INSP-31, shipped H1a). | The uploaded-DAT path already gives an offline identify for any set the operator owns; the hash service covers the rest when the box is online. A bundled index is tens of MB per platform family and a redistribution question for the signature groups; a fetched one is INSP-31 with a cache. | A user report of a first scan on an air-gapped box, **or** the hash service going away. Then: `HASH_INDEX_PATH` pointing at an operator-supplied DAT bundle folder, walked by the existing parser — no new format. |
+| **INSP-7 — community ROM metadata as a Class D source** | Region art, manuals and arcade-era metadata from a community database with an operator account, for titles where IGDB is thin (arcade, obscure home computers). | Class D (account, ToS-bound) sources are opt-in only and each one is a `SourceSpec` plus a key to place; the hash service already proxies an IGDB id for most dumps, and the Art Studio stock packs cover the art gap for the themed rooms. Nothing in the current inventory is blocked on it. | An operator with the account asking for it, with the ToS read (scrape-free API, key in hand). Then: one `SourceSpec` in `metadata_cascade.py`, `CONSOLE_ORDER` only, plugin + inventory rows, `None` on any failure — the H1a shape. |
+
 ## Scanning filters
 
 Admin → Scan management → **Scan Filters** (also legacy `/admin/edit_filters`). One list, two behaviors:
