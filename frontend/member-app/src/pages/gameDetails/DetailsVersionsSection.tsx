@@ -1,5 +1,7 @@
 import type { DetailsGame, VersionActions, VersionRow } from './detailsTypes'
 import { queueClientCommand } from '../../api/clientCommands'
+import { ThinSeatNote } from '../../components/ThinSeatNote'
+import { seatCanUseCompanion } from '../../utils/seatMode'
 import {
   formatVersionSize,
   isVersionDownloadable,
@@ -50,14 +52,17 @@ export function DetailsVersionsSection({
           {versionActionStatus}
         </p>
       ) : null}
+      {!seatCanUseCompanion() ? <ThinSeatNote what="per-update download and apply" /> : null}
       <ul className="od-details-page__versions">
         {baseAndUpdates.map((row) => {
           const versionKey = `${row.kind}:${row.uuid}`
           const downloadKey = `download:${row.kind}:${row.uuid || 'base'}`
-          const canDownload = isVersionDownloadable(row)
+          const companionSeat = seatCanUseCompanion()
+          const canDownload = isVersionDownloadable(row) && companionSeat
           const pathMissing = isVersionPathMissing(row)
           const sizeLabel = formatVersionSize(row.size)
-          const canApply = Boolean(game.client_connected) && row.kind === 'update' && canDownload
+          const canApply =
+            companionSeat && Boolean(game.client_connected) && row.kind === 'update' && canDownload
           const applyBusy = busyVersionKey === versionKey
           const downloadBusy = busyVersionKey === downloadKey
           return (

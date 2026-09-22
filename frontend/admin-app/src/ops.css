@@ -607,6 +607,14 @@ body.od-shell-host .od-admin-main:has(.od-dash),
   font-size: var(--od-font-sm);
 }
 
+.od-ops-panel__subhead {
+  margin: 0.9rem 0 0.4rem;
+  font-size: var(--od-font-sm);
+  color: var(--od-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .od-ops-meters {
   display: grid;
   gap: 0.55rem;

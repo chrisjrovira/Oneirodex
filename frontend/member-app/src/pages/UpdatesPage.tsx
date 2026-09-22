@@ -4,6 +4,8 @@ import { fetchCalendar } from '../api/calendar'
 import { ContextBar } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import { queueClientCommand } from '../api/clientCommands'
+import { ThinSeatNote } from '../components/ThinSeatNote'
+import { seatCanUseCompanion } from '../utils/seatMode'
 import {
   addWantedUpdate,
   fetchStoreSearch,
@@ -382,12 +384,12 @@ export function UpdatesPage() {
                       ) : null}
                     </div>
                     <div className="od-updates__inbox-actions">
-                      {pack?.download_url ? (
+                      {pack?.download_url && seatCanUseCompanion() ? (
                         <a className="od-btn" href={pack.download_url}>
                           Download {pack.kind}
                         </a>
                       ) : null}
-                      {pack && game.client_connected ? (
+                      {pack && game.client_connected && seatCanUseCompanion() ? (
                         <Button
                           type="button"
                           disabled={busyKey === applyKey}

@@ -178,11 +178,15 @@ export function collectBadgeSignals(game: any, options: LooseProps = {}) {
     badges.push({ ...kindBadge })
   }
 
-  if (game.is_vr) {
+  // Rider R3: a stored injector profile earns the badge too; the title says which.
+  if (game.is_vr || game.vr_compat === 'native_vr' || game.vr_compat === 'injector_profile') {
     badges.push({
       kind: 'VR',
       label: 'VR',
-      title: 'Virtual Reality',
+      title:
+        game.vr_compat === 'injector_profile'
+          ? 'VR via a community injector profile (linked, never shipped)'
+          : 'Virtual Reality',
       tone: 'muted',
     })
   }

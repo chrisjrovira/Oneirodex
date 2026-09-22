@@ -116,6 +116,10 @@ class Game(db.Model):
     ra_hash = db.Column(db.String(32), nullable=True)
     ra_game_id = db.Column(db.Integer, nullable=True, index=True)
     ra_achievements = db.Column(db.Integer, nullable=True)
+    # Rider R3 (v11 H-T): how this title is played in VR, beside the derived
+    # `is_vr`. NULL = unknown; native_vr | injector_profile | flat. Catalogue
+    # data for the ways-to-play rows -- never a shim, an installer or a path.
+    vr_compat = db.Column(db.String(24), nullable=True)
     date_created = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     date_identified = db.Column(db.DateTime, nullable=True)
     steam_url = db.Column(db.String, nullable=True)

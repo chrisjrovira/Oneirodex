@@ -94,3 +94,22 @@
 .od-vr__meta {
   color: var(--od-text-muted);
 }
+
+/* Rider R3: way-to-play filter strip and the per-card note. */
+.od-vr__ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--od-space-2);
+  margin: 0 0 var(--od-space-4);
+}
+
+.od-vr__card-way {
+  display: block;
+  margin-top: var(--od-space-1);
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-vr-way {
+  margin: var(--od-space-2) 0;
+}

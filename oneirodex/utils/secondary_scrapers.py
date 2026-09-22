@@ -105,6 +105,23 @@ def game_indicates_vr(game):
     return perspectives_indicate_vr([getattr(p, 'name', None) for p in perspectives])
 
 
+VR_COMPAT_VALUES = ('native_vr', 'injector_profile', 'flat')
+
+
+def game_vr_compat(game):
+    """``vr_compat`` for cards and details (rider R3).
+
+    The stored value wins when a librarian set one. Otherwise a title whose
+    perspectives say VR is ``native_vr`` (the same fact `is_vr` reports), and
+    anything else is unknown (None) -- never a guessed ``flat``: a missing
+    injector profile is not evidence that none exists.
+    """
+    stored = getattr(game, 'vr_compat', None)
+    if stored in VR_COMPAT_VALUES:
+        return stored
+    return 'native_vr' if game_indicates_vr(game) else None
+
+
 def game_card_flags(game):
     """Flags used by library cards / browse JSON payloads."""
     from oneirodex.utils.item_kind import DEFAULT_ITEM_KIND, normalize_item_kind
@@ -119,6 +136,7 @@ def game_card_flags(game):
         multi = False
     return {
         'is_vr': game_indicates_vr(game),
+        'vr_compat': game_vr_compat(game),
         'item_kind': kind,
         # Alias for UI field maps that prefer content_kind wording
         'content_kind': kind,

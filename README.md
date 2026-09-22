@@ -83,7 +83,7 @@ Oneirodex is a **Flask + React** game library server you run at home (or on a NA
 - 🎫 In-app **Report issue** → admin Support inbox (+ GitHub Issues when configured)
 
 ### 🧩 Optional modules
-- 📡 *arr + hardlink pipeline · 🤖 Ollama AI assist · 🥽 VR / Quest PWA · 🔐 OIDC / Authentik SSO (opt-in)
+- 📡 *arr + hardlink pipeline · 🤖 Ollama AI assist · 🥽 **VR — any SteamVR / PSVR2-on-PC / Quest seat**: a headset-friendly `/vr` hub and honest *Plays in VR / community profile / plays flat* rows ([controllers-and-vr.md](docs/user/controllers-and-vr.md)) · 🔐 OIDC / Authentik SSO (opt-in)
 - 🖌️ **Generated cover art** against your own self-hosted A1111-compatible endpoint (AUTOMATIC1111 · SD.Next · Forge) — **off by default**, nothing leaves your network. GPU-less NAS: run SD.Next on a Windows box with a card via [`docker-compose.artwork-local.yml`](docker-compose.artwork-local.yml) — [artwork-gpu-workstation.md](docs/runbooks/artwork-gpu-workstation.md)
 - 🛡️ Login rate limit (app + [proxy runbook](docs/runbooks/login-rate-limit-proxy.md)) · malware scan (heuristics on by default; optional [ClamAV profile](docs/runbooks/docker-compose-deploy.md#clamav-malware-scan))
 - ⚙️ Most `ENABLE_*` modules **on** by default — OIDC, AI auto-apply, and hardlink apply stay off until you opt in ([settings-modules.md](docs/admin/settings-modules.md))

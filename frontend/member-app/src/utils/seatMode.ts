@@ -62,3 +62,14 @@ export function getSeatMode() {
 export function isThinSeat() {
   return getSeatMode() === 'thin'
 }
+
+/**
+ * Whether this seat may offer companion actions (queue an install / update /
+ * patch / open-path for the desktop companion). A thin seat may not — even when
+ * the member's companion is online somewhere, the seat in front of them cannot
+ * finish the job, and a button that queues work elsewhere reads as a button
+ * that does nothing (UID-061).
+ */
+export function seatCanUseCompanion() {
+  return !isThinSeat()
+}

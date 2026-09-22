@@ -1,110 +1,12 @@
-/** Platform family accents for Art Studio preview chrome (mirrors member-app). */
+/** Platform family accents for Art Studio preview chrome. Table + metadata come
+ * from `@oneirodex/ui` (T2); this file keeps only what Art Studio adds. */
+import { FAMILY_META, platformFamily } from '@oneirodex/ui'
+import type { PlatformFamily } from '@oneirodex/ui'
 
-const NINTENDO = new Set([
-  'NES',
-  'SNES',
-  'NGC',
-  'N64',
-  'GB',
-  'GBA',
-  'GBC',
-  'NDS',
-  'VB',
-  'WII',
-  'N3DS',
-  'SWITCH',
-  'WII_U',
-  'POKE_MINI',
-  'GAME_WATCH',
-])
-const SONY = new Set(['PSX', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'PSVITA'])
-const XBOX = new Set(['XBOX', 'X360', 'XONE', 'XSX'])
-const SEGA = new Set([
-  'SEGA_MD',
-  'SEGA_MS',
-  'SEGA_CD',
-  'SEGA_32X',
-  'SEGA_GG',
-  'SEGA_SATURN',
-  'SEGA_DC',
-  'SEGA_SG1000',
-  'SEGA_PICO',
-])
-const ATARI = new Set([
-  'ATARI_7800',
-  'ATARI_5200',
-  'ATARI_2600',
-  'LYNX',
-  'JAGUAR',
-  'PCE',
-  'PCFX',
-  'NGP',
-  'WS',
-  'COLECO',
-  'THREEDO',
-  'VECTREX',
-  'VICE_X64SC',
-  'VICE_X128',
-  'VICE_XVIC',
-  'VICE_XPLUS4',
-  'VICE_XPET',
-  'NEOGEO_CD',
-  'NEOGEO',
-  'INTV',
-  'CHAF',
-  'O2EM',
-  'ARCADE',
-  'SUPERGRAFX',
-  'PCE_CD',
-  'NGPC',
-  'SUPERVISION',
-  'GX4000',
-  'ASTROCADE',
-  'ARCADIA',
-  'CREATIVISION',
-  'ADVISION',
-  'STUDIO2',
-  'ACTIONMAX',
-  'DAPHNE',
-  'PINBALL',
-  'CD_I',
-  'JAGUAR_CD',
-])
-const PC = new Set([
-  'PCWIN',
-  'PCDOS',
-  'MAC',
-  'OTHER',
-  'AMIGA',
-  'AMIGA_CD32',
-  'MSX',
-  'ZX_SPECTRUM',
-  'CPC',
-  'ATARI_ST',
-  'APPLE_II',
-  'ATARI_8BIT',
-  'X68000',
-  'PC_98',
-  'BBC_MICRO',
-])
+export { platformFamily } from '@oneirodex/ui'
 
-const FAMILY_BY_PLATFORM = {
-  nintendo: NINTENDO,
-  sony: SONY,
-  xbox: XBOX,
-  sega: SEGA,
-  atari: ATARI,
-  pc: PC,
-}
-
-const FAMILY_META = {
-  nintendo: { family: 'nintendo', accent: '#e60012', label: 'Nintendo' },
-  sony: { family: 'sony', accent: '#0070d1', label: 'Sony' },
-  xbox: { family: 'xbox', accent: '#2fd67b', label: 'Xbox' },
-  sega: { family: 'sega', accent: '#1a66ff', label: 'Sega' },
-  atari: { family: 'atari', accent: '#f5a623', label: 'Retro' },
-  pc: { family: 'pc', accent: '#2fd67b', label: 'PC' },
-}
+/** Art Studio previews always paint an accent; the generic room uses the system green. */
+const PREVIEW_DEFAULT_ACCENT = '#2fd67b'
 
 /** Common systems for Art Studio selector (id → short label). */
 export const ART_STUDIO_SYSTEMS = [
@@ -150,22 +52,13 @@ export const ART_STUDIO_SYSTEMS = [
   { id: 'GAME_WATCH', label: 'Game & Watch' },
 ]
 
-type PlatformFamily = keyof typeof FAMILY_META
-
-export function platformFamily(platformId: unknown): PlatformFamily | null {
-  if (!platformId) return null
-  const id = String(platformId).toUpperCase()
-  for (const [family, members] of Object.entries(FAMILY_BY_PLATFORM)) {
-    if (members.has(id)) return family as PlatformFamily
-  }
-  return 'pc'
-}
-
 export function skinForPlatform(platformId: unknown) {
   if (!platformId) return null
   const family: PlatformFamily = platformFamily(platformId) || 'pc'
+  const meta = FAMILY_META[family]
   return {
-    ...FAMILY_META[family],
+    ...meta,
+    accent: meta.accent || PREVIEW_DEFAULT_ACCENT,
     platform: String(platformId).toUpperCase(),
   }
 }

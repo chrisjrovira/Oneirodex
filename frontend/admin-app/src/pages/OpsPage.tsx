@@ -9,7 +9,7 @@ import { defaultOpsLayout, OPS_STORAGE_KEY, opsWidgetMins } from '../components/
 import { formatScanJobCounters } from '../components/opsWidgets'
 import '../ops.css'
 import { DETAIL_PANEL_IDS } from './ops/opsColumns'
-import { buildOpsWidgets } from './ops/opsWidgetMap'
+import { buildOpsWidgets, type OpsDeviceRow } from './ops/opsWidgetMap'
 
 // Re-exported: this used to be defined here, and OpsPage.test.jsx imports it
 // from this module. Moving the definition without this would have broken a test
@@ -46,6 +46,7 @@ export function OpsPage() {
   const [manualRefreshing, setManualRefreshing] = useState(false)
   const [systemDetail, setSystemDetail] = useState<OpsSystemDetail>(null)
   const [recentLogs, setRecentLogs] = useState<Record<string, unknown>[] | null>(null)
+  const [devices, setDevices] = useState<OpsDeviceRow[] | null>(null)
   const [fullLogOpen, setFullLogOpen] = useState(false)
   const [fullLogEvents, setFullLogEvents] = useState<Record<string, unknown>[] | null>(null)
   const [fullLogLoading, setFullLogLoading] = useState(false)
@@ -132,6 +133,15 @@ export function OpsPage() {
         if (!cancelled) setRecentLogs(null)
       })
 
+    // TC-4: the device list behind the Companions tile.
+    getJson('/admin/api/ops/devices?limit=200')
+      .then((data) => {
+        if (!cancelled) setDevices(Array.isArray(data?.devices) ? data.devices : [])
+      })
+      .catch(() => {
+        if (!cancelled) setDevices(null)
+      })
+
     return () => {
       cancelled = true
     }
@@ -178,8 +188,16 @@ export function OpsPage() {
   )
 
   const widgets = useMemo(
-    () => buildOpsWidgets({ snapshot, presentDetailIds, systemDetail, recentLogs, openFullLog }),
-    [snapshot, presentDetailIds, systemDetail, recentLogs, openFullLog],
+    () =>
+      buildOpsWidgets({
+        snapshot,
+        presentDetailIds,
+        systemDetail,
+        recentLogs,
+        openFullLog,
+        devices,
+      }),
+    [snapshot, presentDetailIds, systemDetail, recentLogs, openFullLog, devices],
   )
 
   const visibleKey = useMemo(

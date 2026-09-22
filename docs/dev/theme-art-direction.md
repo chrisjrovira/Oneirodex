@@ -79,18 +79,13 @@ is what makes that reset actually regenerate rather than keep the stale copy.
 
 ## Still open
 
-- **E1** console-named theme packs (a pack per system family, not per decade).
+- ~~**E1** console-named theme packs (a pack per system family, not per decade).~~ **Done (v11 H-T, generator 40):** six `group: 'console'` presets — Cartridge red, Disc-tray blue, Signal green, Deep blue 16-bit, Woodgrain amber, Terminal teal — each the shell language of one family in the era room it lived in; names and copy describe the look, never a maker (Class A lock). Data only: `preset_themes_catalog.py` + `preset_themes_geometry.py`.
 - ~~**E2** loading motifs in full colour per console~~ — **done.** They are
   still `currentColor`, which was the right mechanism all along; what was
   missing is that `.od-loading-motif` read `--od-accent` instead of
   `--od-platform-accent`, so a Mega Drive cabinet span in the theme accent like
   everything else. `platformSkins` already sets that variable on `<html>` per
   system family, and the fallback keeps every non-system page unchanged.
-- ~~**E4** per-theme rail glyph drawings~~ — **partly done.** The glyphs are one
-  shared module now (`frontend/shared/src/railIcons.tsx`) instead of two copies
-  that had already drifted by a glyph, and they respond to the icon-pack tokens
-  (`--od-icon-stroke`, `--od-icon-linecap`, `--od-icon-fill`) a preset already
-  sets — which is per-theme treatment without redrawing twenty-three paths per
-  theme. Genuinely *redrawn* per-era glyph sets remain open.
+- ~~**E4** per-theme rail glyph drawings~~ — **done (v11 H-T).** First half: one shared `railIcons.tsx` restyled by the icon-pack tokens. Second half: `frontend/shared/src/railIconsEra.tsx` redraws the eight most-visible destinations (discover · library · systems · downloads · favorites · collections · playtime · chat) in three hands — *pixel* (wood den 80s, arcade cabinet), *rounded* (teen bedroom 90s, carpet den late 90s), *angular* (media centre 00s, desk). `RailIcon` prefers the era drawing when the theme is a decade room or system-family pack (`data-theme` `era-*` / `console-*`); colour cabinets and the default keep the shared set.
 - `platformSkins` is still duplicated member↔admin; `railIcons` no longer is.
 - Generated (AI) backdrops for the six rooms, per the section above.

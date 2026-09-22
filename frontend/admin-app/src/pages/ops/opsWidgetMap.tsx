@@ -22,11 +22,23 @@ import {
 import {
   COMPANION_KIND_COLUMNS,
   DETAIL_PANELS,
+  DEVICE_COLUMNS,
   DetailPanel,
   RECENT_ERROR_COLUMNS,
   SCAN_JOB_COLUMNS,
 } from './opsColumns'
 import { livekitLabel, type OpsSummary, type OpsSystemDetail } from '../OpsPage'
+
+export interface OpsDeviceRow {
+  device_id: string
+  device_kind: string
+  device_name?: string | null
+  client_version?: string | null
+  last_seen_at?: string | null
+  user_id?: number
+  user_name?: string | null
+  online: boolean
+}
 
 /* The Ops widget map, moved out of OpsPage's useMemo (v11 cycle, H-D.2). The
  * JSX is unchanged; the values it derives from the snapshot are derived here,
@@ -37,12 +49,15 @@ export function buildOpsWidgets({
   systemDetail,
   recentLogs,
   openFullLog,
+  devices = null,
 }: {
   snapshot: OpsSummary
   presentDetailIds: string[]
   systemDetail: OpsSystemDetail
   recentLogs: Record<string, unknown>[] | null
   openFullLog: () => void
+  /** `/admin/api/ops/devices` rows (TC-4); null while loading or unavailable. */
+  devices?: OpsDeviceRow[] | null
 }): Record<string, ReactNode> {
   const host = snapshot?.host
   const library = snapshot?.library
@@ -287,6 +302,24 @@ export function buildOpsWidgets({
                 columns={COMPANION_KIND_COLUMNS}
                 rows={kindRows}
                 getRowKey={(row) => row.kind}
+                toolbar={false}
+              />
+            )}
+            {/* TC-4: which devices, not just how many. A seat appears after its
+                first heartbeat with a device_kind; nothing here means none has. */}
+            <h3 className="od-ops-panel__subhead">Devices</h3>
+            {devices === null ? (
+              <p className="od-admin-lede">Device list unavailable.</p>
+            ) : devices.length === 0 ? (
+              <p className="od-admin-lede">
+                No devices have checked in yet. A companion, thin seat or browser shell appears here
+                after its first heartbeat.
+              </p>
+            ) : (
+              <DataTable
+                columns={DEVICE_COLUMNS}
+                rows={devices}
+                getRowKey={(row) => `${row.user_id ?? ''}:${row.device_id}`}
                 toolbar={false}
               />
             )}
