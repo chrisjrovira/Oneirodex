@@ -47,6 +47,8 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('mods.catalog.thunderstore', 'Thunderstore catalogue', 'mods', 'Browse BepInEx / MelonLoader communities, read-only, no key (INSP-22)'),
     PluginInfo('mods.catalog.modrinth', 'Modrinth catalogue', 'mods', 'Browse Minecraft mods, read-only, no key (INSP-22)'),
     PluginInfo('social.community_chat', 'Community chat link', 'social', 'BYO Stoat/Matrix deep-link'),
+    PluginInfo('notify.apprise', 'Apprise API push', 'notify', 'BYO Apprise API server: admin alerts, opt-in social kinds (INSP-6)'),
+    PluginInfo('notify.ntfy', 'ntfy push', 'notify', 'BYO ntfy topic: admin alerts, opt-in social kinds (INSP-6)'),
     PluginInfo('rtc.livekit', 'LiveKit voice', 'rtc', 'Optional household voice SFU (Wave 16)'),
     PluginInfo('remote_play.moonlight', 'Remote play', 'streaming', 'BYO Sunshine/Wolf Moonlight host'),
 ]
@@ -133,6 +135,13 @@ def _runtime_status_map() -> dict[str, str]:
         status['emu.emulatorjs'] = 'installed' if emulatorjs_installed() else 'available'
     except Exception:
         status['emu.emulatorjs'] = 'available'
+    try:
+        from oneirodex.utils.notification_bus import apprise_urls, ntfy_url
+
+        status['notify.apprise'] = 'configured' if apprise_urls() else 'available'
+        status['notify.ntfy'] = 'configured' if ntfy_url() else 'available'
+    except Exception:
+        pass
     try:
         from oneirodex.utils.retroachievements import configured as ra_configured
 

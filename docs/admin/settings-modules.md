@@ -45,6 +45,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 | `ENABLE_VR_BROWSE` | on | `/vr` catalogue |
 | `ENABLE_PCDOS_BROWSER` | on | Needs vendored dosbox WASM |
 | `ENABLE_FREE_GAMES` | on | News free-games poller + API |
+| `NOTIFY_APPRISE_URLS` / `NOTIFY_NTFY_URL` | unset | **Notification bus (INSP-6):** Apprise API notify URL(s) and/or an ntfy topic. Every admin alert that passes its `admin_notify_*` flag is also POSTed there (one event per alert); `NOTIFY_SOCIAL_TO_BUS=true` adds the social kinds (friend requests, mentions, DMs, free games), still gated by each member's own in-app preference. Test with `POST /api/admin/notify-bus/test`. Nothing bundled; a dead endpoint is logged once and never breaks the in-app notice. A per-member topic is sized in H-I |
 | `ENABLE_MOD_CATALOG` | on | *Browse catalogue* in a game's Mods panel: Thunderstore and Modrinth, read-only, keyless. A hit is a name, version, loader and registry page — never a file. Integrations lists both plus CurseForge as *declined* |
 | `ENABLE_ANTICHEAT_COMPAT` | on | Community anti-cheat compatibility list, one keyless fetch a day into `static/library/anticheat/`; details show the status as *community reports*. `ANTICHEAT_FEED_URL` / `ANTICHEAT_CACHE_PATH` override the source and the file. Integrations lists it as **Anti-cheat reports**, configured once the first fetch has landed |
 | `ENABLE_EMAIL_DIGEST` | on | Scheduler on; members still opt in |

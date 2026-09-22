@@ -286,6 +286,27 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         notes=f'Ownership register — mode={mq_mode}',
     )
 
+    # INSP-6 -- BYO notification bus. Configured = an endpoint is named.
+    try:
+        from oneirodex.utils.notification_bus import status_summary as _bus_status
+
+        bus = _bus_status()
+    except Exception:  # noqa: BLE001
+        bus = {'configured': False, 'apprise': 0, 'ntfy': False, 'social_to_bus': False}
+    add(
+        id='notify_bus',
+        name='Notification bus (Apprise API / ntfy)',
+        category='notify',
+        admin_href='/admin/integrations#notify',
+        configured=bool(bus.get('configured')),
+        enabled=bool(bus.get('configured')),
+        notes=(
+            f"{bus.get('apprise', 0)} Apprise endpoint(s), ntfy {'on' if bus.get('ntfy') else 'off'}; admin alerts ride the admin_notify_* flags, social kinds {'also pushed (NOTIFY_SOCIAL_TO_BUS)' if bus.get('social_to_bus') else 'in-app only'}. Test: POST /api/admin/notify-bus/test"
+            if bus.get('configured')
+            else 'Nothing bundled: name an Apprise API notify URL (NOTIFY_APPRISE_URLS) and/or an ntfy topic (NOTIFY_NTFY_URL) to push admin alerts to a phone'
+        ),
+    )
+
     # --- Auth / mail / support ---
     smtp_ok = bool(settings and getattr(settings, 'smtp_server', None))
     add(
