@@ -166,6 +166,34 @@ def _list_roms_via_bsdtar(archive_path: str, bsdtar: str) -> list[tuple[str, int
     return members
 
 
+def _extract_paths_for(cache_dir: str, targets: list[str]) -> list[str]:
+    """Where a target can land: flattened (7z -e) or nested (bsdtar)."""
+    out: list[str] = []
+    for target in targets:
+        out.append(os.path.join(cache_dir, Path(target).name))
+        out.append(os.path.join(cache_dir, target.replace('/', os.sep)))
+    return out
+
+
+def _extracted_bytes(cache_dir: str, targets: list[str], chosen: str) -> bool:
+    """True when the member we actually asked for arrived with bytes in it."""
+    for path in _extract_paths_for(cache_dir, [chosen]):
+        if os.path.isfile(path) and os.path.getsize(path) > 0:
+            return True
+    return False
+
+
+def _clear_empty_extracts(cache_dir: str, targets: list[str]) -> None:
+    """Remove the zero-byte husks a failed decode leaves, so the next tool
+    starts clean and a later run does not serve an empty ROM from cache."""
+    for path in _extract_paths_for(cache_dir, targets):
+        try:
+            if os.path.isfile(path) and os.path.getsize(path) == 0:
+                os.remove(path)
+        except OSError:
+            pass
+
+
 def _extract_members_via_7z(
     archive_path: str,
     cache_dir: str,
@@ -185,14 +213,29 @@ def _extract_members_via_7z(
         )
 
 
+# bsdtar matches member arguments as shell-style patterns, so a ROM named
+# `Game [!][NGCD-058].cue` asks it for a character class and it answers
+# "Not found in archive". There is no literal-match switch in bsdtar, so when a
+# target carries any of these we extract the archive whole and keep what we
+# wanted -- which for a .cue set is every track anyway.
+_GLOB_METACHARS = frozenset('*?[]')
+
+
+def _needs_whole_archive(members: list[str]) -> bool:
+    return any(any(ch in _GLOB_METACHARS for ch in name) for name in members)
+
+
 def _extract_members_via_bsdtar(
     archive_path: str,
     cache_dir: str,
     members: list[str],
     bsdtar: str,
 ) -> None:
-    cmdline = [bsdtar, '-xf', archive_path, '-C', cache_dir, '--', *members]
-    result = _run_extractor(cmdline)
+    whole = _needs_whole_archive(members)
+    cmdline = [bsdtar, '-xf', archive_path, '-C', cache_dir]
+    if not whole:
+        cmdline += ['--', *members]
+    result = _run_extractor(cmdline, timeout=900 if whole else 120)
     if result.returncode != 0:
         raise ArchiveRomError(
             'Failed to extract ROM with bsdtar',
@@ -264,12 +307,48 @@ def _extract_archive_via_cli(
 
     targets = _cue_companion_targets(members, chosen)
     os.makedirs(cache_dir, exist_ok=True)
+
+    # The tool that could *list* the archive is not necessarily the tool that
+    # can *decompress* it: a 7-Zip build without the RAR codec lists a RAR5
+    # happily and then writes zero-byte files ("Unsupported Method"). So try
+    # the listing tool, check it produced real bytes, and fall back to the
+    # other one rather than handing the member a truncated ROM.
+    attempts: list[tuple[str, object]] = []
     if tool_name == '7z' and seven:
-        _extract_members_via_7z(archive_path, cache_dir, targets, seven)
+        attempts.append(('7z', seven))
+        if bsdtar:
+            attempts.append(('bsdtar', bsdtar))
     elif bsdtar:
-        _extract_members_via_bsdtar(archive_path, cache_dir, targets, bsdtar)
-    else:
+        attempts.append(('bsdtar', bsdtar))
+        if seven:
+            attempts.append(('7z', seven))
+    if not attempts:
         raise _missing_extractor_error(archive_kind=archive_kind)
+
+    extract_error: ArchiveRomError | None = None
+    for name, tool in attempts:
+        try:
+            if name == '7z':
+                _extract_members_via_7z(archive_path, cache_dir, targets, str(tool))
+            else:
+                _extract_members_via_bsdtar(archive_path, cache_dir, targets, str(tool))
+        except ArchiveRomError as exc:
+            extract_error = exc
+            _clear_empty_extracts(cache_dir, targets)
+            continue
+        if _extracted_bytes(cache_dir, targets, chosen):
+            break
+        # Zero bytes on disk is a failed decode wearing a success's clothes.
+        extract_error = ArchiveRomError(
+            f'{name} produced an empty file for this {archive_kind} archive',
+            status_code=415,
+            code='extract_failed',
+            hint=f'{name} can list this archive but not decompress it (missing codec).',
+        )
+        _clear_empty_extracts(cache_dir, targets)
+    else:
+        if extract_error is not None:
+            raise extract_error
 
     # 7z -e already flattens; ensure companions land as basenames.
     for target in targets:
@@ -547,12 +626,23 @@ def extract_rom_from_rar(
             dest = os.path.join(cache_dir, safe_name)
             if os.path.isfile(dest) and os.path.getsize(dest) > 0:
                 return dest
+            expected = next((size for name, size in members if name == chosen), 0)
             with archive.open(chosen) as src, open(dest, 'wb') as out:
                 while True:
                     chunk = src.read(1024 * 1024)
                     if not chunk:
                         break
                     out.write(chunk)
+            # A backend that cannot decode this RAR returns a short stream
+            # rather than raising; a half ROM is worse than an honest failure.
+            if expected and os.path.getsize(dest) < expected:
+                os.remove(dest)
+                raise ArchiveRomError(
+                    'rar member came back short',
+                    status_code=415,
+                    code='extract_failed',
+                    hint='The configured rar backend cannot decode this archive.',
+                )
             for companion_name in _cue_companion_targets(members, chosen)[1:]:
                 companion_dest = os.path.join(cache_dir, Path(companion_name).name)
                 if os.path.isfile(companion_dest) and os.path.getsize(companion_dest) > 0:
