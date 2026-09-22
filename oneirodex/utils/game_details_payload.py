@@ -580,6 +580,8 @@ def build_game_details_payload(game, user) -> dict:
         'is_admin': is_admin,
         **browse_play_fields(game),
         **game_card_flags(game),
+        # INSP-40 -- headset records behind the ways-to-play VR row (deep links only)
+        'vr_profiles': [row.to_dict() for row in (getattr(game, 'vr_profiles', None) or [])],
         # INSP-1 -- where the saves live (templated paths; the companion expands them)
         'save_paths': _save_paths(game),
         **web_lifecycle_fields(
