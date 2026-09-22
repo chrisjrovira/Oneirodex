@@ -1,4 +1,12 @@
-# Optional extras -- installed on purpose, never by the base image.
+# Optional extras — installed on purpose, never by the base image.
+#
+# INSP-42 (v11 H4a): unofficial store clients for the opt-in ownership
+# registers. Register-only (IDs + names); Oneirodex never downloads a title.
+# Each is used only when ENABLE_UNOFFICIAL_STORE_SYNC names its store; without
+# the package the plugin reads "available" and the sync button says which
+# package to install. CSV import needs neither.
+xbox-webapi>=2.0
+psnawp>=2.0
 
 # INSP-44 (v11 H4c): NVIDIA management library bindings for the Ops GPU tile.
 # Only useful where the container can see an NVIDIA device; without it the
