@@ -9,7 +9,6 @@
   "oneirodex/routes_apis/account.py": 1,
   "oneirodex/routes_apis/ai_assist.py": 3,
   "oneirodex/routes_apis/ambient_lighting.py": 1,
-  "oneirodex/routes_apis/assists.py": 1,
   "oneirodex/routes_apis/challenge_solver.py": 1,
   "oneirodex/routes_apis/chat.py": 4,
   "oneirodex/routes_apis/chat_spaces_api.py": 4,
