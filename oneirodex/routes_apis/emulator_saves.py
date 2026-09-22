@@ -6,6 +6,7 @@ from io import BytesIO
 
 from oneirodex.utils.api_response import api_error, api_ok
 from flask import jsonify, request, send_file
+from flask_wtf.csrf import generate_csrf
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
@@ -38,6 +39,11 @@ def list_game_saves(game_uuid):
     return jsonify({
         'enabled': save_sync_enabled(),
         'game_uuid': game_uuid,
+        # The WebRetro room is a static file, so it has no rendered meta tag to
+        # read a CSRF token from and cannot see the HttpOnly cookie. Without
+        # this every save it tried to upload was rejected as "CSRF token is
+        # missing" -- silently, because the room only ever surfaced the status.
+        'csrf_token': generate_csrf(),
         'saves': [
             {**row.to_dict(), 'is_state': is_state_slot(row)}
             for row in list_saves(current_user.id, game_uuid)
