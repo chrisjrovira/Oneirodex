@@ -385,6 +385,34 @@ def pcdos_browser_enabled() -> bool:
         return False
 
 
+# INSP-43 (v11 H4b): the arcade shelf *is* the platform -- there is no MAME
+# enum. These cores are offered to the operator in Admin -> Emulators, but
+# deliberately NOT through ``platform_emulator_mapping``: ARCADE is a locked,
+# no-WASM platform, and anything reading that mapping may conclude a browser
+# session is possible. Companion-only, chosen by hand, and until one is chosen
+# the shelf stays catalogue. No ROMs, no dumps, no set files.
+ARCADE_COMPANION_CORES = (Emulator.MAME2003_PLUS, Emulator.MAME)
+
+
+def arcade_core_override_configured() -> bool:
+    """True when the operator picked an arcade core in Admin -> Emulators.
+
+    ARCADE ships catalog-only: MAME set handling is the operator's business
+    and promising Play with no core chosen would be a lie. Choosing a core is
+    the opt-in that turns the shelf into a companion-playable one.
+    """
+    try:
+        from flask import has_app_context
+
+        if not has_app_context():
+            return False
+        from oneirodex.utils.emulator_profiles import get_emulator_profiles
+
+        return bool((get_emulator_profiles() or {}).get('ARCADE'))
+    except Exception:  # noqa: BLE001 -- a settings hiccup keeps the honest default
+        return False
+
+
 def play_mode_for_platform(key: str | None) -> str:
     """browser | companion | catalog | none
 
@@ -394,6 +422,10 @@ def play_mode_for_platform(key: str | None) -> str:
     if not key:
         return 'none'
     if key in CATALOG_ONLY_PLATFORMS:
+        # INSP-43: the one platform whose lock an operator can lift, by
+        # configuring a core. Everything else in the set stays catalog.
+        if key == 'ARCADE' and arcade_core_override_configured():
+            return 'companion'
         return 'catalog'
     mapped = mapped_core_ids(key)
     has_wasm = bool(mapped) and any(core_is_browser_playable(c) for c in mapped)

@@ -5,51 +5,22 @@ import { StockPicker } from '../components/StockPicker'
 import { SystemMarksPanel } from '../components/SystemMarksPanel'
 import { getJson, postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
-import { ART_STUDIO_SYSTEMS, skinForPlatform, systemLabel } from '../components/platformSkins'
+import { skinForPlatform, systemLabel } from '../components/platformSkins'
 import { showToast } from '../utils/toast'
-
-type ArtStudioTab = 'studio' | 'stock' | 'marks' | 'images'
-
-interface PreviewVariant {
-  key: string
-  width: number
-  height: number
-  label: string
-  kind: string
-}
-
-interface MissingCoverGame {
-  uuid: string
-  name: string
-  issues?: { code?: string }[]
-}
-
-const PREVIEW_VARIANTS: PreviewVariant[] = [
-  { key: 'sm', width: 200, height: 300, label: '200×300', kind: 'tile' },
-  { key: 'md', width: 400, height: 600, label: '400×600', kind: 'tile' },
-  { key: 'wide', width: 960, height: 540, label: '960×540', kind: 'wide' },
-]
-
-const DEFAULT_TITLE_SCALE = 1.3
-const TITLE_SCALE_MIN = 0.85
-const TITLE_SCALE_MAX = 2
-
-const FALLBACK_ASSETS = [
-  {
-    key: 'cover',
-    label: 'Default cover',
-    path: '/static/newstyle/default_cover.jpg',
-    hint: 'Library tiles · missing covers',
-  },
-  {
-    key: 'library',
-    label: 'Default library',
-    path: '/static/newstyle/default_library.jpg',
-    hint: 'Wide / hero surfaces',
-  },
-]
-
-const PREVIEW_DEBOUNCE_MS = 420
+import {
+  DEFAULT_TITLE_SCALE,
+  FALLBACK_ASSETS,
+  PREVIEW_DEBOUNCE_MS,
+  PREVIEW_VARIANTS,
+  type ArtStudioTab,
+  type MissingCoverGame,
+  type PreviewVariant,
+} from './artStudio/artStudioModel'
+import { ArtStudioBatch } from './artStudio/ArtStudioBatch'
+import { ArtStudioControls } from './artStudio/ArtStudioControls'
+import { ArtStudioFallbacks } from './artStudio/ArtStudioFallbacks'
+import { ArtStudioStage } from './artStudio/ArtStudioStage'
+import { ArtStudioTabs } from './artStudio/ArtStudioTabs'
 
 function initialTab(): ArtStudioTab {
   if (typeof window === 'undefined') return 'studio'
@@ -463,44 +434,7 @@ export function ArtStudioPage() {
         )}
       </header>
 
-      <div className="od-art-tabs" role="tablist" aria-label="Art studio sections">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'studio'}
-          className={`od-art-tabs__btn${tab === 'studio' ? ' is-active' : ''}`}
-          onClick={() => selectTab('studio')}
-        >
-          Studio
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'stock'}
-          className={`od-art-tabs__btn${tab === 'stock' ? ' is-active' : ''}`}
-          onClick={() => selectTab('stock')}
-        >
-          Backup &amp; stock
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'marks'}
-          className={`od-art-tabs__btn${tab === 'marks' ? ' is-active' : ''}`}
-          onClick={() => selectTab('marks')}
-        >
-          System marks
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'images'}
-          className={`od-art-tabs__btn${tab === 'images' ? ' is-active' : ''}`}
-          onClick={() => selectTab('images')}
-        >
-          Pick &amp; queue
-        </button>
-      </div>
+      <ArtStudioTabs selectTab={selectTab} tab={tab} />
 
       {tab === 'images' ? <ImagesPage embedded /> : null}
 
@@ -513,36 +447,7 @@ export function ArtStudioPage() {
       {tab === 'stock' ? (
         <div className="od-art-stock-tab">
           <StockPicker onApplied={onStockApplied} showLibraryUuid />
-          <section
-            className="od-admin-panel od-art-studio-fallbacks"
-            aria-label="Current library defaults"
-          >
-            <div className="od-art-studio-fallbacks__head">
-              <div>
-                <h2 className="od-admin-panel-title">Current library defaults</h2>
-                <p className="od-admin-lede">
-                  Live fallback assets after apply. Hard-refresh member browsers to see updates.
-                </p>
-              </div>
-            </div>
-            <div className="od-art-studio-fallbacks__grid">
-              {FALLBACK_ASSETS.map((asset) => (
-                <figure key={asset.key} className="od-art-studio-fallbacks__card">
-                  <img
-                    src={`${asset.path}?v=${fallbackBust}`}
-                    alt={asset.label}
-                    onError={(e) => {
-                      e.currentTarget.style.visibility = 'hidden'
-                    }}
-                  />
-                  <figcaption>
-                    <strong>{asset.label}</strong>
-                    <span>{asset.hint}</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-          </section>
+          <ArtStudioFallbacks fallbackBust={fallbackBust} />
         </div>
       ) : null}
 
@@ -556,228 +461,44 @@ export function ArtStudioPage() {
           ) : null}
 
           <section className="od-art-studio od-art-studio--workspace" aria-label="Cover studio">
-            <div
-              className={`od-art-studio__stage${skin ? ` od-art-studio__stage--${skin.family}` : ''}`}
-              style={previewChromeStyle}
-              aria-busy={previewBusy}
-            >
-              {heroSrc ? (
-                <figure className="od-art-studio__hero">
-                  {previewArtistic ? (
-                    <span className="od-art-studio__mode-badge">Artistic</span>
-                  ) : null}
-                  <img
-                    src={heroSrc}
-                    alt={`${title || 'Cover'} preview ${activeVariant.label}`}
-                    width={activeVariant.width}
-                    height={activeVariant.height}
-                  />
-                  <figcaption>
-                    {activeVariant.label}
-                    {systemText ? ` · ${systemText}` : ''}
-                    {previewArtistic ? ' · artistic' : ''}
-                    {previewBusy ? ' · painting…' : ''}
-                  </figcaption>
-                </figure>
-              ) : (
-                <div className="od-art-studio__empty" data-testid="art-studio-empty">
-                  <div className="od-art-studio__empty-glow" aria-hidden="true" />
-                  <p className="od-art-studio__empty-title">
-                    {previewBusy ? 'Painting cover…' : 'Name a title to paint a cover'}
-                  </p>
-                  <p className="od-art-studio__empty-hint">
-                    Title-first atelier — Backend artistic compositions by default (motifs · bezels
-                    · watermark), not gray placeholders.
-                  </p>
-                </div>
-              )}
+            <ArtStudioStage
+              activeVariant={activeVariant}
+              heroSrc={heroSrc}
+              previewArtistic={previewArtistic}
+              previewBusy={previewBusy}
+              previewChromeStyle={previewChromeStyle}
+              previews={previews}
+              setVariantKey={setVariantKey}
+              skin={skin}
+              systemText={systemText}
+              title={title}
+            />
 
-              <div className="od-art-studio__thumbs" aria-label="Other tile sizes">
-                {PREVIEW_VARIANTS.filter(
-                  (v) => v.key !== activeVariant.key && v.kind === 'tile',
-                ).map((size) => {
-                  const src = previews[size.key]
-                  return (
-                    <button
-                      key={size.key}
-                      type="button"
-                      className="od-art-studio__thumb"
-                      onClick={() => setVariantKey(size.key)}
-                      title={`Show ${size.label}`}
-                    >
-                      {src ? (
-                        <img src={src} alt="" width={size.width} height={size.height} />
-                      ) : (
-                        <span>{size.label}</span>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="od-art-studio__controls">
-              <label className="od-art-studio__title-field">
-                <span className="od-art-studio__label">Title</span>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Chrono Trigger"
-                  maxLength={120}
-                  autoComplete="off"
-                  aria-describedby="od-art-title-hint"
-                />
-              </label>
-              <p id="od-art-title-hint" className="od-art-studio__hint">
-                Typing refreshes the live artistic preview. Generate writes the full size pack with
-                the same renderer.
-              </p>
-
-              <label>
-                <span className="od-art-studio__label">System / platform</span>
-                <select
-                  value={system}
-                  onChange={(e) => setSystem(e.target.value)}
-                  aria-label="System for art template"
-                >
-                  {ART_STUDIO_SYSTEMS.map((s) => (
-                    <option key={s.id || 'generic'} value={s.id}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {/* FEAT-D4 text overrides (UID-011). The renderer has always
-                  accepted these; there was simply no way to reach them, so the
-                  only answer to "the text is too small" was to change a default
-                  for every cover at once. */}
-              <fieldset className="od-art-studio__text">
-                <legend className="od-art-studio__label">Cover text</legend>
-
-                <label>
-                  <span className="od-art-studio__label">Headline</span>
-                  <input
-                    type="text"
-                    value={headline}
-                    onChange={(e) => setHeadline(e.target.value)}
-                    placeholder="Derived from the title"
-                    maxLength={120}
-                    autoComplete="off"
-                  />
-                </label>
-
-                <label>
-                  <span className="od-art-studio__label">Subtitle</span>
-                  <input
-                    type="text"
-                    value={subtitle}
-                    onChange={(e) => setSubtitle(e.target.value)}
-                    placeholder="Derived from the title"
-                    maxLength={120}
-                    autoComplete="off"
-                  />
-                </label>
-
-                <label>
-                  <span className="od-art-studio__label">
-                    Title size — {titleScale.toFixed(2)}×
-                  </span>
-                  <input
-                    type="range"
-                    min={TITLE_SCALE_MIN}
-                    max={TITLE_SCALE_MAX}
-                    step="0.05"
-                    value={titleScale}
-                    onChange={(e) => setTitleScale(Number(e.target.value))}
-                    aria-describedby="od-art-scale-hint"
-                  />
-                </label>
-                <p id="od-art-scale-hint" className="od-art-studio__hint">
-                  Clamped {TITLE_SCALE_MIN}×–{TITLE_SCALE_MAX}× by the renderer, which also refuses
-                  to overflow the canvas — the slider asks for a size, it does not override the fit.
-                  Leave the fields empty to keep the text derived from the title; an empty subtitle
-                  is kept as “no subtitle”.
-                </p>
-              </fieldset>
-
-              <fieldset className="od-art-studio__variants">
-                <legend className="od-art-studio__label">Preview size</legend>
-                <div className="od-art-studio__variant-row" role="group" aria-label="Preview size">
-                  {PREVIEW_VARIANTS.map((v) => (
-                    <button
-                      key={v.key}
-                      type="button"
-                      className={`od-art-studio__variant${variantKey === v.key ? ' is-active' : ''}`}
-                      aria-pressed={variantKey === v.key}
-                      onClick={() => setVariantKey(v.key)}
-                    >
-                      {v.label}
-                      <span className="od-art-studio__variant-kind">{v.kind}</span>
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-
-              <div className="od-admin-actions-row od-art-studio__primary-actions">
-                <button
-                  type="button"
-                  className="od-btn"
-                  disabled={!hasTitle || previewBusy}
-                  onClick={runPreview}
-                >
-                  {previewBusy ? 'Previewing…' : 'Preview'}
-                </button>
-                <button
-                  type="button"
-                  className="od-btn od-btn--primary"
-                  disabled={!hasTitle || busy === 'generate'}
-                  onClick={runGenerate}
-                >
-                  {busy === 'generate' ? 'Generating…' : 'Generate pack'}
-                </button>
-              </div>
-
-              <div className="od-art-studio__pack-actions">
-                {downloadZip ? (
-                  <a className="od-btn" href={downloadZip}>
-                    Download ZIP
-                  </a>
-                ) : (
-                  <Button disabled>Download ZIP</Button>
-                )}
-                <Button disabled={!packId || busy === 'apply-fallback'} onClick={applyFallback}>
-                  Set as fallback
-                </Button>
-              </div>
-
-              <label className="od-art-studio__uuid-field">
-                <span className="od-art-studio__label">Apply to game UUID</span>
-                <input
-                  type="text"
-                  value={gameUuid}
-                  onChange={(e) => setGameUuid(e.target.value)}
-                  placeholder="game uuid"
-                  disabled={!packId}
-                />
-              </label>
-              <button
-                type="button"
-                className="od-btn od-btn--primary"
-                disabled={!packId || !gameUuid.trim() || busy === 'apply-game'}
-                onClick={applyToGame}
-              >
-                Apply cover to game
-              </button>
-
-              {packId ? (
-                <p className="od-art-studio__pack-meta">
-                  Pack <code className="od-mono">{packId}</code> · tiles, wides, squares, hero under{' '}
-                  <code>static/library/generated/</code>
-                </p>
-              ) : null}
-            </div>
+            <ArtStudioControls
+              applyFallback={applyFallback}
+              applyToGame={applyToGame}
+              busy={busy}
+              downloadZip={downloadZip}
+              gameUuid={gameUuid}
+              hasTitle={hasTitle}
+              headline={headline}
+              packId={packId}
+              previewBusy={previewBusy}
+              runGenerate={runGenerate}
+              runPreview={runPreview}
+              setGameUuid={setGameUuid}
+              setHeadline={setHeadline}
+              setSubtitle={setSubtitle}
+              setSystem={setSystem}
+              setTitle={setTitle}
+              setTitleScale={setTitleScale}
+              setVariantKey={setVariantKey}
+              subtitle={subtitle}
+              system={system}
+              title={title}
+              titleScale={titleScale}
+              variantKey={variantKey}
+            />
           </section>
 
           <section
@@ -800,14 +521,14 @@ export function ArtStudioPage() {
                   for platform packs and stock motifs.
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
-                className="od-btn od-btn--primary"
+                variant="primary"
                 disabled={busy === 'regen-fallback'}
                 onClick={regenerateDefaults}
               >
                 {busy === 'regen-fallback' ? 'Regenerating…' : 'Regenerate defaults'}
-              </button>
+              </Button>
             </div>
             <div className="od-art-studio-fallbacks__grid">
               {FALLBACK_ASSETS.map((asset) => (
@@ -828,66 +549,17 @@ export function ArtStudioPage() {
             </div>
           </section>
 
-          <section className="od-admin-panel od-art-studio-batch">
-            <button
-              type="button"
-              className="od-art-studio-batch__toggle"
-              aria-expanded={batchOpen}
-              onClick={() => setBatchOpen((o) => !o)}
-            >
-              <h2 className="od-admin-panel-title">Batch placeholders for no-cover titles</h2>
-              <span aria-hidden="true">{batchOpen ? '▾' : '▸'}</span>
-            </button>
-            {batchOpen ? (
-              <>
-                <p className="od-admin-lede">
-                  Loads the library health sample, then applies procedural covers for checked titles
-                  via <code>POST /admin/api/art-studio/batch-generate</code>, falling back to{' '}
-                  <code>covers/batch/apply</code> (<code>policy=generate_only</code>) then per-title
-                  generate/apply.
-                </p>
-                <div className="od-admin-actions-row">
-                  <button
-                    type="button"
-                    className="od-btn"
-                    disabled={busy === 'missing'}
-                    onClick={loadMissing}
-                  >
-                    Load no-cover list
-                  </button>
-                  <button
-                    type="button"
-                    className="od-btn od-btn--primary"
-                    disabled={busy === 'batch' || !batchSelected.size}
-                    onClick={batchApplyPlaceholders}
-                  >
-                    Apply placeholders ({batchSelected.size})
-                  </button>
-                </div>
-                {missingCovers.length ? (
-                  <ul className="od-art-studio__batch-list">
-                    {missingCovers.map((g) => (
-                      <li key={g.uuid}>
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={batchSelected.has(g.uuid)}
-                            onChange={() => toggleBatch(g.uuid)}
-                          />
-                          {g.name} <code className="od-mono">{g.uuid}</code>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {batchLog ? (
-                  <pre className="od-art-studio__batch-log" aria-live="polite">
-                    {batchLog}
-                  </pre>
-                ) : null}
-              </>
-            ) : null}
-          </section>
+          <ArtStudioBatch
+            batchApplyPlaceholders={batchApplyPlaceholders}
+            batchLog={batchLog}
+            batchOpen={batchOpen}
+            batchSelected={batchSelected}
+            busy={busy}
+            loadMissing={loadMissing}
+            missingCovers={missingCovers}
+            setBatchOpen={setBatchOpen}
+            toggleBatch={toggleBatch}
+          />
         </>
       ) : null}
     </div>

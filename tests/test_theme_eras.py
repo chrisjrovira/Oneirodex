@@ -47,14 +47,18 @@ def test_picker_groups_decade_rooms_ahead_of_cabinets():
         + [('custom-pack', 'Household upload')]
     )
     groups = theme_picker_groups(choices)
-    assert [g['id'] for g in groups] == ['decade', 'cabinet', 'installed']
+    # E1 (v11 H-T): system families sit between the rooms and the cabinets.
+    assert [g['id'] for g in groups] == ['decade', 'console', 'cabinet', 'installed']
     decade_slugs = {item['slug'] for item in groups[0]['items']}
     assert 'era-80s' in decade_slugs
     assert 'era-90s' in decade_slugs
-    cabinet_slugs = {item['slug'] for item in groups[1]['items']}
+    console_slugs = {item['slug'] for item in groups[1]['items']}
+    assert console_slugs == {p['slug'] for p in PRESET_THEMES if p.get('group') == 'console'}
+    assert len(console_slugs) == 6
+    cabinet_slugs = {item['slug'] for item in groups[2]['items']}
     assert 'default' in cabinet_slugs
     assert 'aurora' in cabinet_slugs
-    assert groups[2]['items'][0]['slug'] == 'custom-pack'
+    assert groups[3]['items'][0]['slug'] == 'custom-pack'
 
 
 def test_era_css_and_atmosphere_are_wired_into_every_shell():

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getJson, postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import { MetricStrip } from '../components/opsWidgets'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 
 interface StorageStatus {
   helpers_enabled: boolean
@@ -237,24 +237,22 @@ export function StoragePage() {
           />
         </label>
         <div className="od-admin-actions-row">
-          <button
+          <Button
             type="button"
-            className="od-btn"
             onClick={() => runAction('preview')}
             disabled={previewDisabled}
             title={!helpersOn ? 'ENABLE_HARDLINK_HELPERS is off' : undefined}
           >
             Preview
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             onClick={() => runAction('apply')}
             disabled={applyDisabled}
             title={!allowApply ? 'ALLOW_HARDLINK_APPLY is off' : undefined}
           >
             Apply
-          </button>
+          </Button>
           <a className="od-btn" href="/admin/settings">
             Back to settings
           </a>

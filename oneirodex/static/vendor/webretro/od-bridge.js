@@ -5,11 +5,20 @@
 (function () {
   'use strict';
 
-  var EXPORT_DELAYS_MS = [250, 600, 1200];
+  /* RetroArch writes the state's 8-byte RZIP header immediately and then
+     compresses for a second or three before the payload lands, so the tail has
+     to outlast that. It exits early the moment the size settles, which on a
+     warm core is the second read (~0.6 s). */
+  var EXPORT_DELAYS_MS = [200, 400, 800, 1200, 1600, 2000];
+
+  /* Shorter than any real save state: an RZIP header alone is 20 bytes, and a
+     partial one -- which is exactly what a mid-write read returns -- is 8. */
+  var MIN_STATE_BYTES = 24;
 
   function b64FromU8(u8) {
     if (!u8) return null;
     var bytes = u8 instanceof Uint8Array ? u8 : new Uint8Array(u8);
+    if (!bytes.length) return null;
     var s = '';
     var chunk = 0x8000;
     for (var i = 0; i < bytes.length; i += chunk) {
@@ -73,12 +82,22 @@
     return Promise.all([stateP, saveP]).then(function (pair) {
       var state = pair[0];
       var saveArr = pair[1];
-      if (
-        !state &&
-        typeof FS !== 'undefined' &&
-        FS.analyzePath('/home/web_user/retroarch/userdata/states/rom.state').exists
-      ) {
-        state = FS.readFile('/home/web_user/retroarch/userdata/states/rom.state');
+      /* The file is what RetroArch is writing; IndexedDB is webretro's copy of
+         it, made from a write callback that can fire mid-write. Read both and
+         keep whichever is longer, rather than trusting the cache. */
+      var onDisk = null;
+      try {
+        if (
+          typeof FS !== 'undefined' &&
+          FS.analyzePath('/home/web_user/retroarch/userdata/states/rom.state').exists
+        ) {
+          onDisk = FS.readFile('/home/web_user/retroarch/userdata/states/rom.state');
+        }
+      } catch (eRead) {
+        onDisk = null;
+      }
+      if (onDisk && (!state || onDisk.length > state.length)) {
+        state = onDisk;
       }
       var sram = pickSramBytes(saveArr);
       return {
@@ -90,24 +109,40 @@
     });
   }
 
-  function exportWithRetries(done, attempt) {
+  /* Retry until the state stops GROWING, not until it first appears.
+
+     RetroArch writes rom.state through Emscripten's FS a piece at a time, and
+     webretro copies it into IndexedDB from the write callback -- so the first
+     copy is routinely the 8-byte RZIP header and nothing else. Accepting the
+     first non-empty read is how a save state came back 9 bytes long, uploaded
+     cleanly, showed up in the list, and then would not load. */
+  function exportWithRetries(done, attempt, lastLen) {
     var idx = attempt || 0;
+    var seen = lastLen || 0;
     var delay = EXPORT_DELAYS_MS[Math.min(idx, EXPORT_DELAYS_MS.length - 1)];
+    var isLast = idx >= EXPORT_DELAYS_MS.length - 1;
     window.setTimeout(function () {
       collectExportPayload()
         .then(function (payload) {
-          if ((payload.stateB64 || payload.sramB64) || idx >= EXPORT_DELAYS_MS.length - 1) {
+          var len = payload.stateB64 ? payload.stateB64.length : 0;
+          var bytes = Math.floor((len * 3) / 4);
+          // Settled = we have something, it stopped growing, and it is big
+          // enough to be a state rather than the header of one.
+          var settled =
+            (payload.sramB64 && !payload.stateB64) ||
+            (payload.stateB64 && len <= seen && bytes >= MIN_STATE_BYTES);
+          if (isLast || settled) {
             done(payload);
             return;
           }
-          exportWithRetries(done, idx + 1);
+          exportWithRetries(done, idx + 1, len);
         })
         .catch(function (err) {
-          if (idx >= EXPORT_DELAYS_MS.length - 1) {
+          if (isLast) {
             done({ ok: false, error: String(err && err.message ? err.message : err) });
             return;
           }
-          exportWithRetries(done, idx + 1);
+          exportWithRetries(done, idx + 1, seen);
         });
     }, delay);
   }

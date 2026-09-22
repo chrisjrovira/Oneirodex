@@ -318,6 +318,20 @@ jobs:
         working-directory: .
         run: node scripts/any_lint.mjs
 
+      # Raw `<button className="od-btn…">` ratchet. Every SPA button site moved
+      # onto <Button> from @oneirodex/ui in the v11 cycle; the baseline is
+      # empty, so any new hand-spelled od-btn button fails here.
+      - name: Run od-btn ratchet
+        working-directory: .
+        run: node scripts/od_btn_lint.mjs
+
+      # Component-size ratchet. Fourteen components over 600 lines were
+      # decomposed in the v11 cycle; a non-test .tsx may not exceed 600 (or
+      # its baseline) again.
+      - name: Run component-size ratchet
+        working-directory: .
+        run: node scripts/component_size_lint.mjs
+
   ops-glance-vitest:
     name: Ops-glance vitest
     # ops-glance ships in the Docker image (oneirodex/static/dist/ops-glance) but

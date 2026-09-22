@@ -288,25 +288,19 @@ export function QualityProfilesPage() {
               ))}
             </select>
           </label>
-          <button
-            type="button"
-            className="od-btn"
-            onClick={setActive}
-            disabled={!selectedId || busy}
-          >
+          <Button type="button" onClick={setActive} disabled={!selectedId || busy}>
             Set active
-          </button>
+          </Button>
           <Button onClick={createProfile} disabled={busy}>
             New
           </Button>
-          <button
+          <Button
             type="button"
-            className="od-btn"
             onClick={deleteProfile}
             disabled={busy || profiles.length <= 1 || !selectedId}
           >
             Delete
-          </button>
+          </Button>
         </div>
         <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">
           {status}
@@ -419,14 +413,9 @@ export function QualityProfilesPage() {
               aria-label="Test release title"
             />
           </label>
-          <button
-            type="button"
-            className="od-btn"
-            onClick={runScoreProbe}
-            disabled={!probeTitle.trim() || busy}
-          >
+          <Button type="button" onClick={runScoreProbe} disabled={!probeTitle.trim() || busy}>
             Score
-          </button>
+          </Button>
         </div>
         {probeResult ? (
           <p className="od-admin-lede od-admin-lede--flush" aria-live="polite">

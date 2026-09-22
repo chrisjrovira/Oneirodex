@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './DetailsMediaStage.css'
+import { Button } from '@oneirodex/ui'
 
 function prefersReducedMotion() {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -88,13 +89,13 @@ export function DetailsMediaStage({
           />
         ) : null}
         {isVideo && !showIframe ? (
-          <button
+          <Button
             type="button"
-            className="od-btn od-details-media__arm"
+            className="od-details-media__arm"
             onClick={() => setVideoArmed(true)}
           >
             Play trailer
-          </button>
+          </Button>
         ) : null}
         {!isVideo ? (
           <button
@@ -111,10 +112,9 @@ export function DetailsMediaStage({
         {items.length > 1 ? (
           <div className="od-details-media__thumbs">
             {items.map((item, index) => (
-              <button
+              <Button
                 key={item.key}
-                type="button"
-                className={`od-btn od-details-media__thumb${index === selected ? ' is-active' : ''}`}
+                className={`od-details-media__thumb${index === selected ? ' is-active' : ''}`}
                 aria-pressed={index === selected}
                 aria-label={
                   item.kind === 'video'
@@ -133,7 +133,7 @@ export function DetailsMediaStage({
                 ) : (
                   <img src={item.src} alt="" onError={() => onShotBroken(item.src)} />
                 )}
-              </button>
+              </Button>
             ))}
           </div>
         ) : null}

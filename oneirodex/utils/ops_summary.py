@@ -15,6 +15,7 @@ from oneirodex.models import (
     ScanJob,
     SystemEvents,
     UnmatchedFolder,
+    User,
 )
 from oneirodex.utils.game_servers import probe_server_health
 from oneirodex.utils.health_probes import build_readiness
@@ -27,6 +28,7 @@ from oneirodex.utils.scan_queue import maybe_drain_scan_queue
 from oneirodex.utils.status import get_config_values, get_system_info
 from oneirodex.utils.system_stats import (
     get_cpu_usage,
+    get_gpu_usage,
     get_disk_usage,
     get_games_folder_usage,
     get_load_average,
@@ -324,6 +326,43 @@ def _malware_pulse():
     }
 
 
+def list_client_devices(*, limit: int = 200) -> dict:
+    """Per-device rows behind the Ops "Companions" tile (TC-4, v11 H-T).
+
+    ``_companion_pulse`` answers "how many"; this answers "which" -- the
+    operator's device list. One row per ``ClientDevice`` (companion, thin
+    seat, browser shell), newest heartbeat first, with the owning user's name
+    and an ``online`` flag on the same window the tile uses, so the two never
+    disagree. A device shows up after its first heartbeat with a
+    ``device_kind``; a seat that never sent one is not a device here.
+    """
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(minutes=_COMPANION_ONLINE_MINUTES)
+    rows = db.session.execute(
+        select(ClientDevice, User.name)
+        .join(User, User.id == ClientDevice.user_id)
+        .order_by(ClientDevice.last_seen_at.desc())
+        .limit(max(1, min(int(limit or 200), 1000)))
+    ).all()
+    devices = []
+    for device, user_name in rows:
+        seen = device.last_seen_at
+        if seen is not None and seen.tzinfo is None:
+            seen = seen.replace(tzinfo=timezone.utc)
+        row = device.to_dict()
+        row.update({
+            'user_id': device.user_id,
+            'user_name': user_name,
+            'online': bool(seen and seen >= since),
+        })
+        devices.append(row)
+    return {
+        'devices': devices,
+        'count': len(devices),
+        'window_minutes': _COMPANION_ONLINE_MINUTES,
+    }
+
+
 def _companion_pulse():
     """Count companion devices seen recently via heartbeat + last-seen buckets."""
     now = datetime.now(timezone.utc)
@@ -509,6 +548,8 @@ def build_ops_summary(app_start_time):
                 'python': system_info.get('Python Version'),
                 'cpu': cpu,
                 'memory': memory,
+                # INSP-44: NVML or a BYO sensor reader; None when neither answers
+                'gpu': get_gpu_usage(),
                 'load_avg': get_load_average(),
                 'process': get_process_memory(),
                 'db_ping_ms': _db_ping_ms(),

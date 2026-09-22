@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 import { getJson, postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 
@@ -377,14 +377,14 @@ export function ArtworkPicker({
             maxLength={120}
           />
         </label>
-        <button
+        <Button
           type="button"
-          className="od-btn od-btn--primary"
+          variant="primary"
           disabled={busy === 'search' || (!query.trim() && !gameUuid)}
           onClick={runSearch}
         >
           {busy === 'search' ? 'Searching…' : 'Search'}
-        </button>
+        </Button>
       </div>
 
       <div className="od-artwork-picker__grid" role="list">

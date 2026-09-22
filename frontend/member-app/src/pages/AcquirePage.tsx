@@ -175,27 +175,25 @@ export function AcquirePage() {
               {status?.can_send ? (
                 <div className="od-updates__inbox-actions">
                   {CLIENT_BUTTONS.filter((c) => clients.has(c.id)).map((c) => (
-                    <button
+                    <Button
                       key={c.id}
                       type="button"
-                      className="od-btn"
                       disabled={busy}
                       onClick={() => void sendHit(hit, c.id)}
                     >
                       {c.label}
-                    </button>
+                    </Button>
                   ))}
                   {status.debrid_enabled
                     ? DEBRID_BUTTONS.map((d) => (
-                        <button
+                        <Button
                           key={d.id}
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           onClick={() => void sendHit(hit, d.id)}
                         >
                           {d.label}
-                        </button>
+                        </Button>
                       ))
                     : null}
                 </div>

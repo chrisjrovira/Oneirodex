@@ -4,6 +4,8 @@ import { fetchCalendar } from '../api/calendar'
 import { ContextBar } from '../chrome/ContextBar'
 import { RailIcon } from '../chrome/railIcons'
 import { queueClientCommand } from '../api/clientCommands'
+import { ThinSeatNote } from '../components/ThinSeatNote'
+import { seatCanUseCompanion } from '../utils/seatMode'
 import {
   addWantedUpdate,
   fetchStoreSearch,
@@ -382,22 +384,21 @@ export function UpdatesPage() {
                       ) : null}
                     </div>
                     <div className="od-updates__inbox-actions">
-                      {pack?.download_url ? (
+                      {pack?.download_url && seatCanUseCompanion() ? (
                         <a className="od-btn" href={pack.download_url}>
                           Download {pack.kind}
                         </a>
                       ) : null}
-                      {pack && game.client_connected ? (
-                        <button
+                      {pack && game.client_connected && seatCanUseCompanion() ? (
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busyKey === applyKey}
                           onClick={() => {
                             void applyPack(game, pack)
                           }}
                         >
                           {busyKey === applyKey ? 'Queuing…' : 'Apply with companion'}
-                        </button>
+                        </Button>
                       ) : null}
                       <Link className="od-btn" to={`/game_details/${game.uuid}`}>
                         Details
@@ -473,9 +474,8 @@ export function UpdatesPage() {
                     </div>
                     <div className="od-updates__inbox-actions">
                       {hit.matched_game_uuid ? (
-                        <button
+                        <Button
                           type="button"
-                          className="od-btn"
                           onClick={() => {
                             void addWantedUpdate({
                               game_uuid: hit.matched_game_uuid,
@@ -493,7 +493,7 @@ export function UpdatesPage() {
                           }}
                         >
                           Want pack
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
                   </div>

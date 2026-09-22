@@ -34,7 +34,13 @@ REGION_PREF_ORDER = (
     'OTHER',
 )
 VALID_REGIONS = frozenset(REGION_PREF_ORDER)
-VALID_SOURCES = frozenset({'nointro', 'redump', 'other'})
+# nointro / redump: cartridge and disc sets. tosec / mame (INSP-34, v11 H1b):
+# home-computer and arcade sets -- TOSEC names carry `(1991)(Publisher)(EU)[cr X]`
+# groups the peel already strips; MAME `machine` / softlist `software` nodes
+# keep the human title in <description>, the attribute is the short set name.
+VALID_SOURCES = frozenset({'nointro', 'redump', 'tosec', 'mame', 'other'})
+# Sources whose XML nodes name the title in <description> rather than name="".
+DESCRIPTION_TITLED_SOURCES = frozenset({'mame'})
 REGION_LABELS = {
     'USA': 'United States',
     'EUR': 'Europe',
@@ -128,6 +134,13 @@ def _rom_attrs_from_xml_game(node: ET.Element) -> dict[str, Any]:
             rom = child
             break
     if rom is None:
+        # MAME softlists nest <rom> under <part><dataarea>; take the first one
+        # anywhere below the node rather than treating the entry as hashless.
+        for desc in node.iter():
+            if desc is not node and desc.tag.rsplit('}', 1)[-1] == 'rom':
+                rom = desc
+                break
+    if rom is None:
         return {}
     size_raw = rom.attrib.get('size')
     try:
@@ -143,8 +156,9 @@ def _rom_attrs_from_xml_game(node: ET.Element) -> dict[str, Any]:
     }
 
 
-def parse_dat_xml(text: str) -> tuple[str, list[dict[str, Any]]]:
+def parse_dat_xml(text: str, *, source: str | None = None) -> tuple[str, list[dict[str, Any]]]:
     root = ET.fromstring(text)
+    prefer_description = (source or '').strip().lower() in DESCRIPTION_TITLED_SOURCES
 
     def local(tag: str) -> str:
         return tag.rsplit('}', 1)[-1]
@@ -175,24 +189,58 @@ def parse_dat_xml(text: str) -> tuple[str, list[dict[str, Any]]]:
             header_name = desc_el.text.strip()
 
     entries: list[dict[str, Any]] = []
-    seen: set[str] = set()
+    by_norm: dict[str, int] = {}
     for node in list(datafile):
-        if local(node.tag) not in ('game', 'machine'):
+        if local(node.tag) not in ('game', 'machine', 'software'):
             continue
         name = (node.attrib.get('name') or '').strip()
+        desc = find_child(node, 'description')
+        desc_text = desc.text.strip() if desc is not None and desc.text else ''
+        # MAME (and softlists): name="pacman" is the set id, <description> the
+        # title a member would recognise. Match on the title, keep the id.
+        if prefer_description and desc_text:
+            name = desc_text
         if not name:
-            desc = find_child(node, 'description')
-            if desc is not None and desc.text:
-                name = desc.text.strip()
+            name = desc_text
         if not name:
             continue
         norm = normalize_set_title(name)
-        if not norm or norm in seen:
+        if not norm:
             continue
-        seen.add(norm)
-        row = {'name': name, 'normalized_name': norm, **_rom_attrs_from_xml_game(node)}
+        parent = (node.attrib.get('cloneof') or node.attrib.get('romof') or '').strip() or None
+        row = {
+            'name': name,
+            'normalized_name': norm,
+            'parent_name': parent,
+            **_rom_attrs_from_xml_game(node),
+        }
+        # One row per title. When a DAT lists the same title for several
+        # regions, keep the one the household would want (REGION_PREF_ORDER),
+        # not whichever the file happened to list first -- that is the 1G1R
+        # region preference, applied at parse time so completion counts it once.
+        if norm in by_norm:
+            kept = entries[by_norm[norm]]
+            if _region_rank(name) < _region_rank(kept['name']):
+                entries[by_norm[norm]] = row
+            continue
+        by_norm[norm] = len(entries)
         entries.append(row)
     return header_name, entries
+
+
+def _region_rank(dat_name: str) -> int:
+    """Position of the entry's region in REGION_PREF_ORDER (unknown sorts last)."""
+    try:
+        from oneirodex.utils.rom_name_peel import parse_console_rom_label
+
+        region = parse_console_rom_label(dat_name).get('rom_region')
+    except Exception:  # noqa: BLE001
+        region = None
+    region = normalize_region(region) if region else None
+    try:
+        return REGION_PREF_ORDER.index(region) if region else len(REGION_PREF_ORDER)
+    except ValueError:
+        return len(REGION_PREF_ORDER)
 
 
 def parse_dat_clrmame(text: str) -> tuple[str, list[dict[str, Any]]]:
@@ -223,14 +271,14 @@ def parse_dat_clrmame(text: str) -> tuple[str, list[dict[str, Any]]]:
     return header_name, entries
 
 
-def parse_dat_bytes(raw: bytes | str) -> tuple[str, list[dict[str, Any]]]:
+def parse_dat_bytes(raw: bytes | str, *, source: str | None = None) -> tuple[str, list[dict[str, Any]]]:
     if isinstance(raw, bytes):
         text = raw.decode('utf-8', errors='replace')
     else:
         text = raw
     stripped = text.lstrip()
     if stripped.startswith('<'):
-        return parse_dat_xml(text)
+        return parse_dat_xml(text, source=source)
     header, entries = parse_dat_clrmame(text)
     if entries:
         return header, entries
@@ -274,7 +322,7 @@ def upsert_reference_set(
     platform = validate_library_platform(library_platform)
     region_n = normalize_region(region)
     source_n = normalize_source(source)
-    header_name, entries = parse_dat_bytes(dat_bytes)
+    header_name, entries = parse_dat_bytes(dat_bytes, source=source_n)
     if not entries:
         raise ValueError('DAT contained no game entries')
 
@@ -301,6 +349,7 @@ def upsert_reference_set(
                 set_id=ref.id,
                 name=entry['name'][:512],
                 normalized_name=entry['normalized_name'][:512],
+                parent_name=(entry.get('parent_name') or None) and str(entry['parent_name'])[:512],
                 crc=entry.get('crc'),
                 md5=entry.get('md5'),
                 sha1=entry.get('sha1'),
@@ -341,6 +390,66 @@ def _owned_identity(library_platform: str, user) -> dict[str, set[str]]:
     return {'titles': titles, 'crc': crcs, 'md5': md5s, 'sha1': sha1s}
 
 
+def preferred_entries(set_id: int) -> list[ReferenceSetEntry]:
+    """The 1G1R view of a set: parents only (INSP-5).
+
+    A DAT with parent/clone data lists every clone; completion should count
+    each *game* once, so clones drop out here. A set with no clone data (most
+    No-Intro uploads) is returned whole -- its region duplicates were already
+    collapsed to the household's preferred region at parse time.
+    """
+    rows = list(
+        db.session.execute(
+            select(ReferenceSetEntry).filter_by(set_id=set_id)
+        ).scalars().all()
+    )
+    if any(getattr(r, 'parent_name', None) for r in rows):
+        return [r for r in rows if not getattr(r, 'parent_name', None)]
+    return rows
+
+
+def clone_parent_for(
+    *,
+    library_platform: str | None,
+    crc: str | None = None,
+    md5: str | None = None,
+    sha1: str | None = None,
+    name: str | None = None,
+) -> str | None:
+    """Name of the parent set when these digests belong to a *clone* entry, else None.
+
+    Advisory only: the duplicate check reports `clone_of_owned_parent` so an
+    operator can see that a second dump of an owned game arrived; nothing is
+    marked or deleted on the strength of it.
+    """
+    key = (library_platform or '').strip().upper()
+    norm = normalize_set_title(name) if name else ''
+    if not key or not (crc or md5 or sha1 or norm):
+        return None
+    set_ids = [
+        row for row in db.session.execute(
+            select(ReferenceSet.id).filter_by(library_platform=key)
+        ).scalars().all()
+    ]
+    if not set_ids:
+        return None
+    conds = []
+    if crc:
+        conds.append(ReferenceSetEntry.crc == crc.lower())
+    if md5:
+        conds.append(ReferenceSetEntry.md5 == md5.lower())
+    if sha1:
+        conds.append(ReferenceSetEntry.sha1 == sha1.lower())
+    if norm:
+        conds.append(ReferenceSetEntry.normalized_name == norm)
+    hit = db.session.execute(
+        select(ReferenceSetEntry.parent_name)
+        .filter(ReferenceSetEntry.set_id.in_(set_ids), ReferenceSetEntry.parent_name.isnot(None), or_(*conds))
+        .limit(1)
+    ).scalar()
+    return hit or None
+
+
 def _match_entry(entry: ReferenceSetEntry, owned: dict[str, set[str]]) -> str | None:
     """Return match method name or None."""
     if entry.crc and entry.crc.lower() in owned['crc']:
@@ -370,11 +479,7 @@ def compute_set_completion(
     if not ref:
         return None
 
-    entries = list(
-        db.session.execute(
-            select(ReferenceSetEntry).filter_by(set_id=ref.id)
-        ).scalars().all()
-    )
+    entries = preferred_entries(ref.id)
     owned = _owned_identity(platform, user)
     matched: list[dict] = []
     missing: list[dict] = []
@@ -711,21 +816,33 @@ def try_dat_hash_identify(
             sha1=digest.get('sha1'),
         )
 
+    inner_digests: list[dict] = []
     if not hit:
         inner_digests = hash_archive_inner_primary_dumps(
             full_disk_path,
             platform=platform_key,
         )
-        if not inner_digests:
-            return None
-        resolved = _unique_hit_from_inner_digests(
-            library_platform=platform_key,
-            digests=inner_digests,
-        )
-        if not resolved:
-            return None
-        hit, digest = resolved
-        identify_via = 'inner_archive'
+        if inner_digests:
+            resolved = _unique_hit_from_inner_digests(
+                library_platform=platform_key,
+                digests=inner_digests,
+            )
+            if resolved:
+                hit, digest = resolved
+                identify_via = 'inner_archive'
+
+    if not hit:
+        # INSP-31 (v11 H1a): no local DAT knows this file -- ask the keyless
+        # community hash service, outer digest first, then the inner dumps.
+        # Same contract as a DAT hit (unique digest -> name); None on any miss.
+        from oneirodex.utils.hash_identify import hash_identify_hit
+
+        for candidate in ([digest] if digest else []) + list(inner_digests):
+            hit = hash_identify_hit(candidate, library_platform=platform_key)
+            if hit:
+                digest = candidate
+                identify_via = 'hash_service'
+                break
 
     if not hit or not digest:
         return None
@@ -734,10 +851,17 @@ def try_dat_hash_identify(
     method = hit.get('match_method') or 'hash'
     source = hit.get('source') or 'dat'
     via_note = 'inner archive dump, ' if identify_via == 'inner_archive' else ''
-    summary = (
-        f'Identified via reference DAT ({source}, {via_note}unique {method}). '
-        f'Set: {hit.get("set_name") or "unknown"}.'
-    )
+    if identify_via == 'hash_service':
+        igdb_note = f' IGDB #{hit["igdb_id"]}.' if hit.get('igdb_id') else ''
+        summary = (
+            f'Identified via the community hash service ({hit.get("set_name") or "unknown"}, '
+            f'unique {method}).{igdb_note}'
+        )
+    else:
+        summary = (
+            f'Identified via reference DAT ({source}, {via_note}unique {method}). '
+            f'Set: {hit.get("set_name") or "unknown"}.'
+        )
 
     def _stamp_hashes(game: Game) -> None:
         game.file_crc = digest.get('crc')

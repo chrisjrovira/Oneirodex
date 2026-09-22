@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { PageStatus } from './PageStatus'
 import { createPcCheat, deletePcCheat, fetchPcCheats } from '../api/pcCheats'
 import './PcCheatsPanel.css'
+import { Button } from '@oneirodex/ui'
 
 /**
  * PC cheat notes (FEAT-D2).
@@ -132,26 +133,28 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
                 <div className="od-pccheats__payload">
                   {/* Verbatim and monospaced — it gets typed or pasted exactly. */}
                   <code>{cheat.payload}</code>
-                  <button
+                  <Button
                     type="button"
-                    className="od-btn od-btn--ghost od-pccheats__copy"
+                    variant="ghost"
+                    className="od-pccheats__copy"
                     onClick={() => void copyPayload(cheat)}
                   >
                     {copied === cheat.id ? 'Copied' : 'Copy'}
-                  </button>
+                  </Button>
                 </div>
               ) : null}
 
               {cheat.notes ? <p className="od-pccheats__notes">{cheat.notes}</p> : null}
 
               {canEdit ? (
-                <button
+                <Button
                   type="button"
-                  className="od-btn od-btn--ghost od-pccheats__remove"
+                  variant="ghost"
+                  className="od-pccheats__remove"
                   onClick={() => void removeCheat(cheat.id)}
                 >
                   Remove
-                </button>
+                </Button>
               ) : null}
             </li>
           ))}
@@ -210,13 +213,9 @@ export function PcCheatsPanel({ gameUuid, cheatSurface, canEdit = false }: Loose
             />
           </label>
 
-          <button
-            type="submit"
-            className="od-btn od-btn--primary"
-            disabled={saving || !draft.label.trim()}
-          >
+          <Button type="submit" variant="primary" disabled={saving || !draft.label.trim()}>
             {saving ? 'Saving…' : 'Add cheat'}
-          </button>
+          </Button>
         </form>
       ) : null}
     </section>

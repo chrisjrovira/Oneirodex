@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { Modal } from '@oneirodex/ui'
 import { postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import './OpenPathModal.css'
+import { Button } from '@oneirodex/ui'
 
 async function copyPath(path: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
@@ -41,15 +43,8 @@ export function OpenPathModal({
   const [status, setStatus] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open) return undefined
-    setStatus(null)
-    closeRef.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose?.()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+    if (open) setStatus(null)
+  }, [open])
 
   if (!open || !path) return null
 
@@ -91,59 +86,49 @@ export function OpenPathModal({
   }
 
   return (
-    <div
+    <Modal
+      open
+      onClose={onClose}
+      labelledBy={titleId}
       className="od-open-path"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onClick={onClose}
+      panelClassName="od-open-path__panel"
+      initialFocusRef={closeRef}
     >
-      <div className="od-open-path__panel" onClick={(event) => event.stopPropagation()}>
-        <div className="od-open-path__toolbar">
-          <h2 id={titleId} className="od-open-path__title">
-            {label}
-          </h2>
-          <button
-            ref={closeRef}
-            type="button"
-            className="od-open-path__close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        {matchReason ? (
-          <p className="od-open-path__reason">
-            <strong>Match reason:</strong> {matchReason}
-          </p>
-        ) : null}
-        <p className="od-open-path__path">
-          <code>{path}</code>
-        </p>
-        <div className="od-open-path__actions">
-          <button
-            type="button"
-            className="od-btn od-btn--primary"
-            onClick={() => void handleCopy()}
-          >
-            Copy path
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={busy}
-            onClick={() => void handleOpenExplorer()}
-          >
-            {busy ? 'Opening…' : 'Open in file explorer'}
-          </button>
-        </div>
-        {status ? (
-          <p className="od-open-path__status" role="status">
-            {status}
-          </p>
-        ) : null}
+      <div className="od-open-path__toolbar">
+        <h2 id={titleId} className="od-open-path__title">
+          {label}
+        </h2>
+        <button
+          ref={closeRef}
+          type="button"
+          className="od-open-path__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ×
+        </button>
       </div>
-    </div>
+      {matchReason ? (
+        <p className="od-open-path__reason">
+          <strong>Match reason:</strong> {matchReason}
+        </p>
+      ) : null}
+      <p className="od-open-path__path">
+        <code>{path}</code>
+      </p>
+      <div className="od-open-path__actions">
+        <Button type="button" variant="primary" onClick={() => void handleCopy()}>
+          Copy path
+        </Button>
+        <Button type="button" disabled={busy} onClick={() => void handleOpenExplorer()}>
+          {busy ? 'Opening…' : 'Open in file explorer'}
+        </Button>
+      </div>
+      {status ? (
+        <p className="od-open-path__status" role="status">
+          {status}
+        </p>
+      ) : null}
+    </Modal>
   )
 }

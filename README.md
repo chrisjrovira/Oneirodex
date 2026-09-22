@@ -78,10 +78,12 @@ Every screenshot and clip on this page is **live UI** from a stock install seede
 - **Storefront Discover** — *Curated for you* and *Upcoming* shelves, hero and carousel layouts, **shelves as timed events** with start and end dates — [discover-sections.md](docs/admin/discover-sections.md)
 - ROM **set completeness** against your own No-Intro / Redump DATs, multi-region heatmap chips, language chips, preferred `en-US`, optional translation / patch catalog hooks — [reference-sets.md](docs/runbooks/reference-sets.md) · [translation-patches.md](docs/user/translation-patches.md)
 - **Related media** on a game — adaptations, tie-ins, soundtracks as context; never a tracker, never a download
+- **Keyless hash identify** for console ROMs after an IGDB and local-DAT miss, plus **TOSEC and MAME** reference sets and a **DAT repair preview** dry run — identity and reports only, never a download — [reference-sets.md](docs/runbooks/reference-sets.md)
 - Collections, wishlist, favourites, downloads, an updates inbox, the IGDB release calendar, news feeds
 
 **Household access**
 - Invite-based membership with quotas and a whitelist; parental / library ACL; roles admin · librarian · member · child
+- **Store ownership registers** — Steam / GOG / Epic / Amazon, plus unofficial opt-in Xbox and PlayStation; CSV import always works. A register of what you own, never a store download
 - Colour themes **and** independent icon packs (Outline · Filled · Duotone · Pixel · Soft · Mono); **decade rooms** as scenery; **era fonts** that ship with Oneirodex and install themselves on boot — [preferences-themes.md](docs/user/preferences-themes.md) · [theme-fonts-and-images.md](docs/admin/theme-fonts-and-images.md)
 - Mobile density: hamburger nav, stacked filters, Chat touch targets ≤ 900 px
 
@@ -89,6 +91,9 @@ Every screenshot and clip on this page is **live UI** from a stock install seede
 - Browser play via **WebRetro** (cloud save bridge · cheats) for supported systems; Play buttons appear only where the core and BIOS are actually ready — [browser-play.md](docs/user/browser-play.md) · [webretro-cores.md](docs/runbooks/webretro-cores.md) · [emulator-bios.md](docs/runbooks/emulator-bios.md)
 - **Desktop companion** (Tauri) for install / launch / updates, unsigned by default — [desktop-companion.md](docs/user/desktop-companion.md)
 - **Big Picture** for the TV, VR / Quest PWA, play rooms grouped by setting, PC cheat *notes* that never touch a binary
+- **An arcade path, opt-in** — choosing an arcade core is what lifts the catalogue-only lock, because promising Play with no core chosen would be a lie
+- **A Mods panel** per title: tracked mods with the loader each needs, profiles and a shareable code, and a read-only catalogue browse (Thunderstore · Modrinth · GameBanana · Nexus *browse only*). The companion stages; nothing here installs a loader
+- **Anti-cheat** and **save location** facts on PC pages, from community lists — reported, never guaranteed, and the save folder is opened, not copied
 
 **Social & support**
 - **Spaces** — servers with their own text *and* voice channels, household-wide or invite-only; presence, profiles, DMs, @mentions, reactions, threads — [social-and-voice.md](docs/user/social-and-voice.md)
@@ -99,11 +104,14 @@ Every screenshot and clip on this page is **live UI** from a stock install seede
 **Admin & ops**
 - Libraries & scans, scan jobs, unmatched, filters, release filters, extensions, image queue
 - Dashboard and **Ops** boards: services, queues, companions, watch folders, the log; `/pulse` and `/awake` probes — [ops-summary.md](docs/admin/ops-summary.md)
+- A **GPU tile** (NVIDIA NVML, or a BYO LibreHardwareMonitor / HWiNFO-class reader) and a **device list** of every companion, thin seat and shell that has sent a heartbeat — *n/a* when nothing answers, never a guess
 - **Art studio** — covers rendered locally from a title (motifs, bezels, initials), SteamGridDB / IGDB picker, backup and stock, system marks
 - Themes packs and Reset Themes, emulator profiles, settings modules — [settings-modules.md](docs/admin/settings-modules.md) · [themes-reset.md](docs/admin/themes-reset.md)
 
 **Optional modules** — most `ENABLE_*` modules are **on** by default; OIDC, AI auto-apply and hardlink apply stay **off** until you opt in
-- 📡 *arr + hardlink pipeline · 🤖 Ollama AI assist · 🥽 VR / Quest PWA · 🔐 OIDC / Authentik SSO
+- 📡 *arr + hardlink pipeline · 🤖 Ollama AI assist · 🔐 OIDC / Authentik SSO
+- 🥽 **VR — any SteamVR / PSVR2-on-PC / Quest seat**: a headset-friendly `/vr` hub, honest *Plays in VR / community profile / plays flat* rows and a per-title headset record ([controllers-and-vr.md](docs/user/controllers-and-vr.md)); the runtime, adapter and streamer stay yours — [vr-byo-runtime.md](docs/runbooks/vr-byo-runtime.md) says which does what
+- 🔔 **BYO notification bus** — fan in-app alerts out to an Apprise API server or an ntfy topic; nothing bundled, a dead endpoint never breaks the in-app notice
 - 🖌️ Generated cover art against **your own** A1111-compatible endpoint (AUTOMATIC1111 · SD.Next · Forge) — nothing leaves your network; GPU-less NAS? [artwork-gpu-workstation.md](docs/runbooks/artwork-gpu-workstation.md)
 - 🛡️ Login rate limit (app + [proxy runbook](docs/runbooks/login-rate-limit-proxy.md)) · malware scan — heuristics on by default, optional [ClamAV profile](docs/runbooks/docker-compose-deploy.md#clamav-malware-scan)
 

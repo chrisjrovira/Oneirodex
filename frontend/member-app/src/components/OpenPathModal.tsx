@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { queueClientCommand } from '../api/clientCommands'
+import { seatCanUseCompanion } from '../utils/seatMode'
 import { showToast } from '../utils/toast'
 import './OpenPathModal.css'
+import { Button, Modal } from '@oneirodex/ui'
 
 async function copyPath(path: any) {
   if (navigator.clipboard?.writeText) {
@@ -40,20 +41,8 @@ export function OpenPathModal({
   const [status, setStatus] = useState<any>(null)
 
   useEffect(() => {
-    if (!open) return undefined
-    setStatus(null)
-    closeRef.current?.focus()
-    const onKey = (event: any) => {
-      if (event.key === 'Escape') onClose?.()
-    }
-    document.addEventListener('keydown', onKey)
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = previous
-    }
-  }, [open, onClose])
+    if (open) setStatus(null)
+  }, [open])
 
   if (!open || !path) return null
 
@@ -72,13 +61,19 @@ export function OpenPathModal({
     setBusy(true)
     setStatus(null)
     try {
-      if (clientConnected) {
+      // TC-3: a thin seat never queues open-on-companion; the folder is not here.
+      if (clientConnected && seatCanUseCompanion()) {
         await queueClientCommand(gameUuid || '', 'open_path', { path, select: true })
         setStatus('Queued open in file explorer for companion')
         showToast('Queued open in file explorer', 'success')
         return
       }
       await copyPath(path)
+      if (!seatCanUseCompanion()) {
+        setStatus('Path copied — open it on the desktop companion; this seat only browses.')
+        showToast('Path copied', 'info')
+        return
+      }
       setStatus('Companion offline — path copied. Open it on the host.')
       showToast('Companion offline — path copied', 'info')
     } catch (err: any) {
@@ -99,68 +94,60 @@ export function OpenPathModal({
     }
   }
 
-  const node = (
-    <div
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      labelledBy={titleId}
       className="od-open-path"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onClick={onClose}
+      panelClassName="od-open-path__panel"
+      initialFocusRef={closeRef}
+      lockScroll
     >
-      <div className="od-open-path__panel" onClick={(event) => event.stopPropagation()}>
-        <div className="od-open-path__toolbar">
-          <h2 id={titleId} className="od-open-path__title">
-            {label}
-          </h2>
-          <button
-            ref={closeRef}
-            type="button"
-            className="od-open-path__close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        {matchReason ? (
-          <p className="od-open-path__reason">
-            <strong>Match reason:</strong> {matchReason}
-          </p>
-        ) : null}
-        <p className="od-open-path__path">
-          <code>{path}</code>
-        </p>
-        <div className="od-open-path__actions">
-          <button
-            type="button"
-            className="od-btn od-btn--primary"
-            onClick={() => void handleCopy()}
-          >
-            Copy path
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={busy}
-            onClick={() => void handleOpenExplorer()}
-            title={
-              clientConnected
-                ? 'Ask the desktop companion to reveal this folder'
-                : 'Companion offline — copies path instead'
-            }
-          >
-            {busy ? 'Opening…' : 'Open in file explorer'}
-          </button>
-        </div>
-        {status ? (
-          <p className="od-open-path__status" role="status">
-            {status}
-          </p>
-        ) : null}
+      <div className="od-open-path__toolbar">
+        <h2 id={titleId} className="od-open-path__title">
+          {label}
+        </h2>
+        <button
+          ref={closeRef}
+          type="button"
+          className="od-open-path__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ×
+        </button>
       </div>
-    </div>
+      {matchReason ? (
+        <p className="od-open-path__reason">
+          <strong>Match reason:</strong> {matchReason}
+        </p>
+      ) : null}
+      <p className="od-open-path__path">
+        <code>{path}</code>
+      </p>
+      <div className="od-open-path__actions">
+        <Button type="button" variant="primary" onClick={() => void handleCopy()}>
+          Copy path
+        </Button>
+        <Button
+          type="button"
+          disabled={busy}
+          onClick={() => void handleOpenExplorer()}
+          title={
+            clientConnected
+              ? 'Ask the desktop companion to reveal this folder'
+              : 'Companion offline — copies path instead'
+          }
+        >
+          {busy ? 'Opening…' : 'Open in file explorer'}
+        </Button>
+      </div>
+      {status ? (
+        <p className="od-open-path__status" role="status">
+          {status}
+        </p>
+      ) : null}
+    </Modal>
   )
-
-  if (typeof document === 'undefined') return node
-  return createPortal(node, document.body)
 }

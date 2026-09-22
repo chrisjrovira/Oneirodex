@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef } from 'react'
-import { Button } from '@oneirodex/ui'
+import { useId, useRef } from 'react'
+import { Button, Modal } from '@oneirodex/ui'
 import { SCAN_CONFLICT_COPY, SCAN_QUEUE_POLICY, type ScanQueuePolicy } from './scanQueuePolicy'
 import './ScanConflictModal.css'
 
@@ -24,72 +24,61 @@ export function ScanConflictModal({
   const titleId = useId()
   const queueRef = useRef<HTMLButtonElement | null>(null)
 
-  useEffect(() => {
-    if (!open) return undefined
-    queueRef.current?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !busy) onClose?.()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, busy, onClose])
-
   if (!open) return null
 
   return (
-    <div
+    <Modal
+      open
+      onClose={onClose}
+      labelledBy={titleId}
       className="od-scan-conflict"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      onClick={() => {
-        if (!busy) onClose?.()
-      }}
+      panelClassName="od-scan-conflict__panel"
+      initialFocusRef={queueRef}
+      closeOnEscape={!busy}
+      closeOnBackdrop={!busy}
     >
-      <div className="od-scan-conflict__panel" onClick={(event) => event.stopPropagation()}>
-        <div className="od-scan-conflict__toolbar">
-          <h2 id={titleId} className="od-scan-conflict__title">
-            {title}
-          </h2>
-          <button
-            type="button"
-            className="od-scan-conflict__close"
-            onClick={onClose}
-            disabled={busy}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        <p className="od-scan-conflict__lede">{lede}</p>
-        <div className="od-scan-conflict__choices">
-          <Button
-            ref={queueRef}
-            variant="primary"
-            className="od-scan-conflict__choice"
-            disabled={busy}
-            onClick={() => onChoose?.(SCAN_QUEUE_POLICY.QUEUE)}
-          >
-            {SCAN_CONFLICT_COPY.queueLabel}
-          </Button>
-          <p className="od-scan-conflict__hint">{SCAN_CONFLICT_COPY.queueHint}</p>
-          <Button
-            className="od-scan-conflict__choice od-scan-conflict__choice--force"
-            disabled={busy}
-            onClick={() => onChoose?.(SCAN_QUEUE_POLICY.FORCE)}
-          >
-            {SCAN_CONFLICT_COPY.forceLabel}
-          </Button>
-          <p className="od-scan-conflict__warn" role="note">
-            {SCAN_CONFLICT_COPY.forceWarning}
-          </p>
-        </div>
-        <div className="od-scan-conflict__actions">
-          <Button disabled={busy} onClick={onClose}>
-            {SCAN_CONFLICT_COPY.cancelLabel}
-          </Button>
-        </div>
+      <div className="od-scan-conflict__toolbar">
+        <h2 id={titleId} className="od-scan-conflict__title">
+          {title}
+        </h2>
+        <button
+          type="button"
+          className="od-scan-conflict__close"
+          onClick={onClose}
+          disabled={busy}
+          aria-label="Close"
+        >
+          ×
+        </button>
       </div>
-    </div>
+      <p className="od-scan-conflict__lede">{lede}</p>
+      <div className="od-scan-conflict__choices">
+        <Button
+          ref={queueRef}
+          variant="primary"
+          className="od-scan-conflict__choice"
+          disabled={busy}
+          onClick={() => onChoose?.(SCAN_QUEUE_POLICY.QUEUE)}
+        >
+          {SCAN_CONFLICT_COPY.queueLabel}
+        </Button>
+        <p className="od-scan-conflict__hint">{SCAN_CONFLICT_COPY.queueHint}</p>
+        <Button
+          className="od-scan-conflict__choice od-scan-conflict__choice--force"
+          disabled={busy}
+          onClick={() => onChoose?.(SCAN_QUEUE_POLICY.FORCE)}
+        >
+          {SCAN_CONFLICT_COPY.forceLabel}
+        </Button>
+        <p className="od-scan-conflict__warn" role="note">
+          {SCAN_CONFLICT_COPY.forceWarning}
+        </p>
+      </div>
+      <div className="od-scan-conflict__actions">
+        <Button disabled={busy} onClick={onClose}>
+          {SCAN_CONFLICT_COPY.cancelLabel}
+        </Button>
+      </div>
+    </Modal>
   )
 }

@@ -17,6 +17,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | Operators / Docker Compose | [runbooks/docker-compose-deploy.md](runbooks/docker-compose-deploy.md) — optional `--profile livekit` · `--profile clamav` · GPU art on a workstation: [artwork-gpu-workstation.md](runbooks/artwork-gpu-workstation.md) |
 | Operators / observability (optional) | [runbooks/observability-profile.md](runbooks/observability-profile.md) — Prometheus stub; Admin Ops is default |
 | Operators / LiveKit voice | [runbooks/livekit-unraid.md](runbooks/livekit-unraid.md) |
+| Households / VR runtime | [runbooks/vr-byo-runtime.md](runbooks/vr-byo-runtime.md) — OpenXR runtime · OpenVR adapter · streamers · the wired USB-NCM link (0.7 ms / ~756 Mbps on a Quest 2) · tweaks as documentation, never distributed |
 | Operators / achievements | [runbooks/retroachievements.md](runbooks/retroachievements.md) — match ROMs to community achievement sets (opt-in key); nothing played in the browser unlocks |
 | Maintainers / theme art | [dev/theme-art-direction.md](dev/theme-art-direction.md) — what a theme is beyond a hue: room art, the accent sentinel, and how a generated backdrop lands |
 | Operators / WebRetro cores | [runbooks/webretro-cores.md](runbooks/webretro-cores.md) · [admin/webretro-core-clauses.md](admin/webretro-core-clauses.md) (non-commercial clauses — not counsel) |
@@ -33,6 +34,7 @@ Root [README.md](../README.md) includes badges, feature tour, screenshots (`docs
 | CI gates (maintainers) | [dev/ci-gates.md](dev/ci-gates.md) — what each job gates, and the two owed (the `pytest-core` marker flip, the coverage floor). Replaces `ci-wishlist.md` |
 | Support triage (maintainers) | [dev/ui-debt-log.md](dev/ui-debt-log.md) · [dev/api-envelope-keeps.md](dev/api-envelope-keeps.md) |
 | Test harness (maintainers) | [dev/test-harness-2026-09-10.md](dev/test-harness-2026-09-10.md) — per-test SAVEPOINT isolation · savepoint-restart listener · `database` / `slow` markers · [dev/test-harness-2026-08-07.md](dev/test-harness-2026-08-07.md) (lock-storm) · [dev/test-harness-failures.md](dev/test-harness-failures.md) (Aug re-baseline — counts stale) · **[dev/test-suite-failures-2026-09-16.md](dev/test-suite-failures-2026-09-16.md)** — the current failures, named and grouped |
+| Admin Jinja → React (maintainers) | [dev/admin-jinja-inventory.md](dev/admin-jinja-inventory.md) — which admin pages still render server-side, their handlers and APIs, and the port order (H-D.5) |
 | Writing an API route (maintainers) | [dev/pydantic-adoption.md](dev/pydantic-adoption.md) — `@validate_body` request models · which routes are migrated · adoption backlog |
 | Maintainers / browser engines | [dev/browser-play-engines.md](dev/browser-play-engines.md) — WebRetro · Nostalgist/koin · EmulatorJS · webЯcade sidecar · [runbooks/emulatorjs.md](runbooks/emulatorjs.md) (install engine B) |
 | Reviewing the bundled W31 commit | [dev/w31-commit-attribution.md](dev/w31-commit-attribution.md) — which of `c6fd7bf7`'s 236 files are the security audit and which are the UI pass |

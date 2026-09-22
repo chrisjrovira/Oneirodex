@@ -19,7 +19,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/testSetup.js',
+    setupFiles: './src/testSetup.ts',
     // Matches member-app, and for the same reason: on a network-mounted
     // checkout module resolve+transform is charged to the test clock, so a
     // pure-logic test can cross the 5s default with no bug behind it —

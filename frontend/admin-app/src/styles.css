@@ -1679,6 +1679,18 @@ body.od-shell-host > #admin-legacy-content.od-admin-legacy:has(.od-admin-fill) {
   color: var(--od-warning);
 }
 
+/* TC-4 device list: a seat's heartbeat status. Good is the success token, muted
+   the same quiet text every other "not right now" state uses. */
+.od-badge--good {
+  background: color-mix(in srgb, var(--od-success) 25%, transparent);
+  color: var(--od-success);
+}
+
+.od-badge--muted {
+  background: color-mix(in srgb, var(--od-text-muted) 18%, transparent);
+  color: var(--od-text-muted);
+}
+
 .od-admin-panel-title {
   margin: 0 0 0.5rem;
   font-size: var(--od-font-base);

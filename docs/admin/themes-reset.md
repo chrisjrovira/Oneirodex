@@ -1,6 +1,6 @@
 # Themes & reset
 
-Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 39** in `oneirodex/utils/preset_themes.py` (39 = `.od-seg` wraps on narrow screens; 38 = per-console loading-motif colour; 37 = drawn room art per era; 36 = Library tools THN). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
+Themes live on the **library volume** (`/app/oneirodex/static/library/themes/...`), not only in the image. Source of truth for defaults: `oneirodex/setup/default_theme/`. Preset generation uses **`GENERATOR_VERSION` 41** in `oneirodex/utils/preset_themes.py` (41 = metadata-providers handler learns the hash-identify switch; 40 = six system-family presets; 39 = `.od-seg` wraps on narrow screens; 38 = per-console loading-motif colour; 37 = drawn room art per era; 36 = Library tools THN). **Reset Default Themes** after this bump — volume copies stay on the previous generator until you do.
 
 ## Default look
 
@@ -85,6 +85,8 @@ Or delete `themes/default` (and stale presets) under the library volume and rest
 | Drawn room art per era (`GENERATOR_VERSION` **37** — `art/era/<era>.svg` painted by `.od-era-scene`; one sentinel colour follows the accent) | Theme tree CSS/art → **library volume** | Rebuild **and** Reset Default Themes. |
 | Per-console loading-motif colour (`GENERATOR_VERSION` **38** — `.od-loading-motif` reads `--od-platform-accent`, falls back to the theme accent) | Theme tree CSS → **library volume** | Rebuild **and** Reset Default Themes. |
 | Segmented strips wrap (`GENERATOR_VERSION` **39** — `.od-seg` gets `flex-wrap`; a six-item strip no longer pushes Admin → Integrations sideways on a phone) | Theme tree CSS → **library volume** | Rebuild **and** Reset Default Themes. |
+| Hash-identify switch (`GENERATOR_VERSION` **41** — `admin_metadata_providers.js` on the volume reads a fourth checkbox, `mp_hash_identify`) | Theme tree JS → **library volume** | Rebuild **and** Reset Default Themes — without Reset the Integrations form shows the checkbox but the old handler never saves it. |
+| System-family presets (`GENERATOR_VERSION` **40** — six `group: 'console'` packs in `preset_themes_catalog.py`, their picker swatches in `form-components.css`; the fifteen existing presets are byte-identical) | Preset folders + theme tree CSS → **library volume** | Rebuild **and** Reset Default Themes — without Reset the six new folders do not exist on the volume and the picker offers themes that 404. |
 
 If a fresh Unraid pull looks half-applied (new play-skins room art shows but admin still looks old, or vice versa), check which of the two you skipped.
 

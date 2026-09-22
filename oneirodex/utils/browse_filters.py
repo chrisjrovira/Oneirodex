@@ -16,7 +16,7 @@ from oneirodex.utils.library_health import (
 )
 from oneirodex.utils.lifecycle import FRESHNESS_BEHIND_STATUSES
 from oneirodex.utils.rom_language import needs_translation_sql_filter
-from oneirodex.utils.secondary_scrapers import VR_PERSPECTIVE_NAME
+from oneirodex.utils.secondary_scrapers import VR_COMPAT_VALUES, VR_PERSPECTIVE_NAME
 
 _PATH_STATUS_ALLOWED = frozenset({
     PATH_STATUS_OK,
@@ -127,6 +127,7 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
 
     Params (any of):
       is_vr=1
+      vr_compat=…         — native_vr|injector_profile|flat (rider R3; native_vr also admits derived VR)
       freshness_behind=1  — OUT / ~ (behind | heuristic_behind)
       has_updates=1       — freshness behind OR local GameUpdate rows
       new_import=1        — date_identified/date_created within 14 days
@@ -148,6 +149,24 @@ def apply_badge_filters(query, args, *, user=None, now: datetime | None = None):
         query = query.filter(
             Game.player_perspectives.any(PlayerPerspective.name == VR_PERSPECTIVE_NAME)
         )
+
+    # Rider R3: `vr_compat=native_vr|injector_profile|flat`. `native_vr` also
+    # admits titles with no stored value whose perspectives say VR -- the same
+    # derivation the card flag uses, so the filter and the badge agree.
+    vr_compat = str(args.get('vr_compat') or '').strip().lower()
+    if vr_compat in VR_COMPAT_VALUES:
+        if vr_compat == 'native_vr':
+            query = query.filter(
+                or_(
+                    Game.vr_compat == 'native_vr',
+                    and_(
+                        Game.vr_compat.is_(None),
+                        Game.player_perspectives.any(PlayerPerspective.name == VR_PERSPECTIVE_NAME),
+                    ),
+                )
+            )
+        else:
+            query = query.filter(Game.vr_compat == vr_compat)
 
     if _flag(args, 'freshness_behind'):
         query = query.filter(Game.freshness_status.in_(tuple(FRESHNESS_BEHIND_STATUSES)))

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { confirmAction } from '@oneirodex/ui'
+import { confirmAction, Button } from '@oneirodex/ui'
 import { PageStatus } from '@oneirodex/ui'
 
 import { DataTable } from './DataTable'
@@ -155,13 +155,13 @@ export function ProposeLeafLibraries({
             autoComplete="off"
             disabled={loading || confirming}
           />
-          <button
+          <Button
             type="submit"
-            className="od-btn od-btn--accent"
+            className="od-btn--accent"
             disabled={loading || confirming || !root.trim()}
           >
             {loading ? 'Proposing…' : 'Propose'}
-          </button>
+          </Button>
         </div>
         <p className="od-propose-leaf__hint">
           Absolute path under allowed bases. Propose lists candidates only — create happens on
@@ -206,14 +206,14 @@ export function ProposeLeafLibraries({
               />
               Select all ({candidates.length})
             </label>
-            <button
+            <Button
               type="button"
-              className="od-btn od-btn--accent"
+              className="od-btn--accent"
               onClick={() => void onConfirm()}
               disabled={confirming || selectedCount === 0}
             >
               {confirming ? 'Creating…' : `Confirm create (${selectedCount})`}
-            </button>
+            </Button>
           </div>
 
           {/* Sorting and filtering a scan result is the point of this screen —

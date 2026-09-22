@@ -7,437 +7,31 @@ import { errorText } from '../utils/errorText'
 import {
   buildDupeCompare,
   folderBasename,
-  formatByteSize,
-  formatDiskDate,
   mergeDuplicateHits,
   normalizeMatchedGame,
   resolveSearchName,
-  type CompareSideData,
 } from './unmatchedDupe'
-import {
-  hasStageEHints,
-  normalizeStageECandidates,
-  normalizeStageEMeta,
-  stageEChipSources,
-  stageEMatchModeLabel,
-  stageESourceLabel,
-} from './stageECandidates'
+import { hasStageEHints } from './stageECandidates'
 import './DupeGlance.css'
 
-/** Loose unmatched/duplicate folder row — Backend field map, not fully typed. */
-export type UnmatchedFolderRow = Record<string, unknown>
+import type { UnmatchedFolderRow } from './dupeGlance/dupeGlanceTypes'
+import {
+  BadMatchReason,
+  DupeCompare,
+  FixLog,
+  SUGGESTED_KIND_LABELS,
+  StageECandidates,
+  TransformTrail,
+  formatMatchScore,
+  formatWhyUnmatched,
+  markKindsOrdered,
+  normalizeSuggestedKind,
+  normalizeTransforms,
+} from './dupeGlance/DupeCompare'
 
-const STATUS_FALLBACK: Record<string, string> = {
-  Duplicate:
-    'Another library game already uses this IGDB match and the folder title looks like the same game.',
-  Unmatched: 'Could not auto-match to IGDB (or IGDB already used by a different-titled folder).',
-  Ignore: 'Folder is ignored and will not be scanned.',
-  Pending: 'Awaiting classification.',
-}
-
-/** Machine codes from duplicate_check / scan → one-line librarian copy. */
-const MATCH_REASON_LABELS: Record<string, string> = {
-  same_path: 'Same on-disk path as an existing library game.',
-  title_vs_folder: 'Folder title closely matches an existing library game folder.',
-  title_vs_library_name: 'Folder title closely matches an existing library game name.',
-  title_below_threshold:
-    'IGDB hit exists, but the folder title differs too much to auto-mark as duplicate.',
-}
-
-const MARK_KINDS = [
-  { kind: 'experience', label: 'Mark as Soft title' },
-  { kind: 'emulator', label: 'Mark as Emulator' },
-  { kind: 'tool', label: 'Mark as Utility' },
-]
-
-const SUGGESTED_KIND_LABELS: Record<string, string> = {
-  experience: 'Soft title',
-  emulator: 'Emulator',
-  tool: 'Utility',
-  game: 'Game',
-}
-
-/** Normalize API `suggested_kind` (null-safe). Backend may omit until list enrichment lands. */
-function normalizeSuggestedKind(value: unknown): string | null {
-  if (value == null || value === '') return null
-  const kind = String(value).trim().toLowerCase()
-  return SUGGESTED_KIND_LABELS[kind] ? kind : null
-}
-
-/**
- * One-line “why unmatched?” explainer. Prefers Backend `why_unmatched` /
- * `unmatched_reason` when present; otherwise match_reason (+ suggested_kind).
- * Null-safe — returns null when nothing useful.
- */
-export function formatWhyUnmatched(row: UnmatchedFolderRow | null | undefined): string | null {
-  if (!row || typeof row !== 'object') return null
-
-  const summary =
-    (row.why_unmatched != null && String(row.why_unmatched).trim()) ||
-    (row.unmatched_reason != null && String(row.unmatched_reason).trim()) ||
-    ''
-  if (summary) return summary
-
-  const rawReason = row.match_reason == null ? '' : String(row.match_reason).trim()
-  let reason = ''
-  if (rawReason) {
-    const code = rawReason.toLowerCase()
-    reason = MATCH_REASON_LABELS[code] || rawReason
-  }
-
-  const suggestedKind = normalizeSuggestedKind(row.suggested_kind)
-  const suggestedLabel =
-    (row.suggested_kind_label != null && String(row.suggested_kind_label).trim()) ||
-    (suggestedKind ? SUGGESTED_KIND_LABELS[suggestedKind] : '')
-  const candidate =
-    row.suggested_candidate_name == null ? '' : String(row.suggested_candidate_name).trim()
-
-  if (suggestedLabel) {
-    const hint = candidate
-      ? `Scan suggests cataloging as ${suggestedLabel} (e.g. ${candidate}).`
-      : `Scan suggests cataloging as ${suggestedLabel}.`
-    if (reason) return `${reason} ${hint}`
-    if (row.status === 'Unmatched' || row.status === 'Pending') {
-      return `No IGDB game match. ${hint}`
-    }
-    return hint
-  }
-
-  if (reason) return reason
-  const status = row.status as string | undefined
-  if (status && STATUS_FALLBACK[status]) return STATUS_FALLBACK[status]
-  return null
-}
-
-/**
- * Format Backend `match_score` for display beside Why unmatched?
- * Null-safe — returns null when missing / non-numeric.
- * Values ≤1 shown to 2 decimals; 0–100 integers shown as whole numbers.
- */
-export function formatMatchScore(score: unknown): string | null {
-  if (score == null || score === '') return null
-  const n = Number(score)
-  if (!Number.isFinite(n)) return null
-  if (n > 1 && n <= 100) {
-    return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10)
-  }
-  return (Math.round(n * 100) / 100).toFixed(2)
-}
-
-/**
- * Ordered Stage A peel trail from Backend `transforms[]`.
- * Soft-degrades when missing / mid-rollout — returns [].
- * @returns {{ stage: string, before: string, after: string, reason: string }[]}
- */
-export interface TransformStep {
-  stage: string
-  before: string
-  after: string
-  reason: string
-}
-
-export function normalizeTransforms(row: UnmatchedFolderRow | null | undefined): TransformStep[] {
-  if (!row || typeof row !== 'object') return []
-  const raw = row.transforms
-  if (!Array.isArray(raw) || raw.length === 0) return []
-  return raw
-    .filter((step): step is Record<string, unknown> => step && typeof step === 'object')
-    .map((step) => ({
-      stage: step.stage == null ? '' : String(step.stage).trim(),
-      before: step.before == null ? '' : String(step.before),
-      after: step.after == null ? '' : String(step.after),
-      reason: step.reason == null ? '' : String(step.reason).trim(),
-    }))
-    .filter((step) => step.stage || step.before || step.after)
-}
-
-/** Compact expander: stage · before → after · reason (reason optional). */
-function TransformTrail({ transforms }: { transforms?: TransformStep[] }) {
-  const steps = Array.isArray(transforms) ? transforms : []
-  if (!steps.length) return null
-  return (
-    <details className="od-dupe-glance__transforms">
-      <summary className="od-dupe-glance__transforms-summary">
-        Name transform trail ({steps.length})
-      </summary>
-      <ol className="od-dupe-glance__transform-list">
-        {steps.map((step, index) => (
-          <li key={`${step.stage}-${index}`} className="od-dupe-glance__transform-step">
-            <span className="od-dupe-glance__transform-stage">{step.stage || '—'}</span>
-            <span className="od-dupe-glance__transform-pair">
-              <code>{step.before}</code>
-              <span aria-hidden="true"> → </span>
-              <code>{step.after}</code>
-            </span>
-            {step.reason ? (
-              <span className="od-dupe-glance__transform-reason">{step.reason}</span>
-            ) : null}
-          </li>
-        ))}
-      </ol>
-    </details>
-  )
-}
-
-/**
- * Quiet Stage E propose-only candidates (Moby / TheGamesDB).
- * Soft-degrades when list API has not flattened proposal fields yet.
- */
-function StageECandidates({ row }: { row: UnmatchedFolderRow | null | undefined }) {
-  if (!hasStageEHints(row)) return null
-  const candidates = normalizeStageECandidates(row)
-  const meta = normalizeStageEMeta(row)
-  const sources = stageEChipSources(candidates)
-  const chipDetail = sources.length ? sources.join(' · ') : 'catalog'
-  const title =
-    'Propose-only catalog hints after Stage D miss — not auto-matched. Use Fix search / Identify to apply.'
-  return (
-    <div className="od-dupe-glance__stage-e">
-      <span className="od-dupe-glance__stage-e-chip" title={title}>
-        Stage E · propose only · {chipDetail}
-      </span>
-      {candidates.length > 0 ? (
-        <details className="od-dupe-glance__stage-e-details">
-          <summary className="od-dupe-glance__stage-e-summary">
-            Stage E candidates ({candidates.length})
-          </summary>
-          <p className="od-dupe-glance__stage-e-note">
-            Catalog hints only — Identify to apply. Not auto-matched.
-          </p>
-          <ul className="od-dupe-glance__stage-e-list">
-            {candidates.map((hit, index) => {
-              const source = stageESourceLabel(hit.source)
-              const mode = stageEMatchModeLabel(hit.match_mode)
-              const label = hit.name || hit.id || 'Candidate'
-              return (
-                <li
-                  key={`${hit.source}-${hit.id || hit.name}-${index}`}
-                  className="od-dupe-glance__stage-e-hit"
-                >
-                  <span className="od-dupe-glance__stage-e-source">{source}</span>
-                  {hit.url ? (
-                    <a
-                      className="od-dupe-glance__stage-e-name"
-                      href={hit.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {label}
-                    </a>
-                  ) : (
-                    <span className="od-dupe-glance__stage-e-name">{label}</span>
-                  )}
-                  {mode ? <span className="od-dupe-glance__stage-e-mode">{mode}</span> : null}
-                </li>
-              )
-            })}
-          </ul>
-        </details>
-      ) : meta ? (
-        <p className="od-dupe-glance__stage-e-meta" title={title}>
-          {meta.match_reason || 'Stage E propose-only'} — Identify to apply.
-        </p>
-      ) : null}
-    </div>
-  )
-}
-
-function markKindsOrdered(suggestedKind: string | null) {
-  if (!suggestedKind) return MARK_KINDS
-  const preferred = MARK_KINDS.find((row) => row.kind === suggestedKind)
-  if (!preferred) return MARK_KINDS
-  return [preferred, ...MARK_KINDS.filter((row) => row.kind !== suggestedKind)]
-}
-
-const EMPTY_FIELD = '—'
-const EMPTY_FIELD_TITLE = 'Not provided by API yet'
-
-function CompareField({
-  label,
-  value,
-  emptyTitle = EMPTY_FIELD_TITLE,
-  children,
-}: {
-  label?: any
-  value?: any
-  emptyTitle?: string
-  children?: any
-}) {
-  const hasValue = value != null && String(value).trim() !== ''
-  return (
-    <div className="od-dupe-glance__compare-field">
-      <dt>{label}</dt>
-      <dd>
-        {children != null ? (
-          children
-        ) : hasValue ? (
-          <span>{value}</span>
-        ) : (
-          <span className="od-dupe-glance__compare-empty" title={emptyTitle}>
-            {EMPTY_FIELD}
-          </span>
-        )}
-      </dd>
-    </div>
-  )
-}
-
-function CompareSide({
-  side,
-  why,
-  onOpenPath,
-  pathLabel,
-}: {
-  side: CompareSideData | null
-  why?: string | null
-  onOpenPath?: (v: { path: unknown; label: string; matchReason?: string }) => void
-  pathLabel: string
-}) {
-  if (!side) {
-    return (
-      <div className="od-dupe-glance__compare-side od-dupe-glance__compare-side--empty">
-        <p className="od-dupe-glance__compare-missing">No library hit yet</p>
-      </div>
-    )
-  }
-  const sizeLabel = formatByteSize(side.size_bytes)
-  const dateLabel = formatDiskDate(side.mtime)
-  const score = formatMatchScore(side.match_score)
-  const path = side.path as string | undefined
-  const uuid = side.uuid as string | undefined
-  const coverUrl = side.cover_url as string | undefined
-  return (
-    <div className={`od-dupe-glance__compare-side od-dupe-glance__compare-side--${side.role}`}>
-      <div className="od-dupe-glance__compare-head">
-        {coverUrl ? (
-          <img
-            className="od-dupe-glance__dupe-thumb"
-            src={coverUrl}
-            alt=""
-            width={28}
-            height={36}
-          />
-        ) : side.role === 'library' ? (
-          <span
-            className="od-dupe-glance__dupe-thumb od-dupe-glance__dupe-thumb--empty"
-            aria-hidden="true"
-          />
-        ) : null}
-        <div className="od-dupe-glance__compare-head-text">
-          <span className="od-dupe-glance__compare-role">{side.label}</span>
-          {uuid ? (
-            <a
-              className="od-dupe-glance__dupe-title"
-              href={`/game_details/${encodeURIComponent(uuid)}`}
-            >
-              {side.name as ReactNode}
-            </a>
-          ) : (
-            <span className="od-dupe-glance__dupe-title">{side.name as ReactNode}</span>
-          )}
-          {score ? (
-            <span className="od-dupe-glance__match-score" title="Match confidence score">
-              {score}
-            </span>
-          ) : null}
-        </div>
-      </div>
-      <dl className="od-dupe-glance__compare-fields">
-        <CompareField label="Path">
-          {path ? (
-            <button
-              type="button"
-              className="od-dupe-glance__dupe-path"
-              onClick={() =>
-                onOpenPath?.({
-                  path,
-                  label: pathLabel,
-                  matchReason: why || undefined,
-                })
-              }
-            >
-              {path}
-            </button>
-          ) : (
-            <span className="od-dupe-glance__compare-empty" title={EMPTY_FIELD_TITLE}>
-              {EMPTY_FIELD}
-            </span>
-          )}
-        </CompareField>
-        <CompareField label="Size" value={sizeLabel} />
-        <CompareField label="Date" value={dateLabel} />
-        {uuid ? (
-          <CompareField label="UUID">
-            <code className="od-dupe-glance__dupe-uuid">{uuid}</code>
-          </CompareField>
-        ) : null}
-      </dl>
-    </div>
-  )
-}
-
-/**
- * Side-by-side Duplicate trail: this folder vs library hit (path · size · date).
- * Soft-degrades when size/date omitted by API.
- */
-function DupeCompare({
-  row,
-  onOpenPath,
-}: {
-  row: UnmatchedFolderRow
-  onOpenPath?: (v: { path: unknown; label: string; matchReason?: string }) => void
-}) {
-  const compare = buildDupeCompare(row)
-  if (!compare) return null
-  const why = formatWhyUnmatched(row)
-  return (
-    <div
-      className="od-dupe-glance__compare"
-      role="group"
-      aria-label="Duplicate side-by-side comparison"
-    >
-      <div className="od-dupe-glance__compare-banner">
-        <span className="od-dupe-glance__dupe-label">Compare</span>
-        <span className="od-dupe-glance__compare-banner-text">
-          Folder vs library game — path, size, and date when the API provides them
-        </span>
-      </div>
-      <div className="od-dupe-glance__compare-grid">
-        <CompareSide
-          side={compare.folder}
-          why={why}
-          onOpenPath={onOpenPath}
-          pathLabel="Unmatched folder"
-        />
-        <CompareSide
-          side={compare.library}
-          why={why}
-          onOpenPath={onOpenPath}
-          pathLabel="Library game path"
-        />
-      </div>
-    </div>
-  )
-}
-
-/**
- * Compare unmatched / duplicate folders at a glance with fix actions.
- * Open path stays in a modal callback — never navigates to Auto Scan.
- */
-// memo: DupeGlance does its own polling and its only prop is a stable setter, so
-// it must not re-render every time its parent (ScansPage) re-renders on a 4s scan
-// tick — that would re-lay-out its list and note <input> and make a password
-// manager re-scan the subtree each tick.
-interface BadMatchReason {
-  id: string
-  label: string
-}
-
-interface FixLog {
-  ok: boolean
-  message: string
-  detail?: unknown
-}
+export type { UnmatchedFolderRow } from './dupeGlance/dupeGlanceTypes'
+export type { TransformStep } from './dupeGlance/DupeCompare'
+export { formatMatchScore, formatWhyUnmatched, normalizeTransforms } from './dupeGlance/DupeCompare'
 
 export const DupeGlance = memo(function DupeGlance({
   onOpenPath,
@@ -723,39 +317,37 @@ export const DupeGlance = memo(function DupeGlance({
               ['library', 'Library'],
               ['platform', 'Platform'],
             ].map(([key, label]) => (
-              <button
+              <Button
                 key={key}
-                type="button"
-                className={`od-btn od-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
+                className={`od-dupe-glance__sort-btn${sortKey === key ? ' is-active' : ''}`}
                 aria-pressed={sortKey === key}
                 onClick={() => toggleSort(key)}
               >
                 {label}
                 {sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-              </button>
+              </Button>
             ))}
           </div>
           <Button onClick={() => void load()} disabled={loading}>
             Refresh
           </Button>
-          <button
+          <Button
             type="button"
-            className="od-btn od-btn--primary"
+            variant="primary"
             disabled={busy}
             onClick={() => void handleReclassify()}
             title="Downgrade false Duplicate rows when folder titles differ"
           >
             {busy && !busyFolderId ? 'Fixing…' : 'Fix false duplicates'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="od-btn"
             disabled={busy}
             onClick={() => void handleBackfillKindHints()}
             title="Fill missing Suggested kind chips from on-disk scan proposals (legacy rows)"
           >
             Backfill kind hints
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -799,9 +391,8 @@ export const DupeGlance = memo(function DupeGlance({
               return (
                 <li key={row.id as Key} className="od-dupe-glance__row">
                   <div className="od-dupe-glance__actions" role="toolbar" aria-label="Row actions">
-                    <button
+                    <Button
                       type="button"
-                      className="od-btn"
                       onClick={() =>
                         onOpenPath?.({
                           path: row.folder_path,
@@ -811,7 +402,7 @@ export const DupeGlance = memo(function DupeGlance({
                       }
                     >
                       Open path
-                    </button>
+                    </Button>
                     <a
                       className="od-btn"
                       href={`/add_game_manual?full_disk_path=${encodeURIComponent(String(row.folder_path || ''))}&library_uuid=${encodeURIComponent(String(row.library_uuid || ''))}&platform_name=${encodeURIComponent(String(row.platform_name || ''))}&platform_id=${encodeURIComponent(String(row.platform_id || ''))}&from_unmatched=true`}
@@ -821,10 +412,10 @@ export const DupeGlance = memo(function DupeGlance({
                     </a>
                     {canMarkKind(row.status)
                       ? markKinds.map(({ kind, label }) => (
-                          <button
+                          <Button
                             key={kind}
-                            type="button"
-                            className={`od-btn${suggestedKind === kind ? ' od-btn--primary is-suggested' : ''}`}
+                            variant={suggestedKind === kind ? 'primary' : 'default'}
+                            className={suggestedKind === kind ? 'is-suggested' : undefined}
                             disabled={busy}
                             title={
                               suggestedKind === kind
@@ -834,38 +425,35 @@ export const DupeGlance = memo(function DupeGlance({
                             onClick={() => void handleMarkKind(row, kind)}
                           >
                             {marking ? 'Saving…' : label}
-                          </button>
+                          </Button>
                         ))
                       : null}
                     {row.status === 'Duplicate' ? (
                       <>
-                        <button
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           title="Keep library game; clear this duplicate row"
                           onClick={() => void handleFix(row, 'merge')}
                         >
                           Merge
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           title="Reclassify as Unmatched"
                           onClick={() => void handleFix(row, 'keep')}
                         >
                           Keep
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           title="Ignore this duplicate"
                           onClick={() => void handleFix(row, 'ignore')}
                         >
                           Ignore
-                        </button>
+                        </Button>
                       </>
                     ) : null}
                     {badMatchReasons.length ? (
@@ -900,17 +488,16 @@ export const DupeGlance = memo(function DupeGlance({
                           onChange={(event) => setNoteText(event.target.value)}
                           {...PM_IGNORE}
                         />
-                        <button
+                        <Button
                           type="button"
-                          className="od-btn od-btn--primary"
+                          variant="primary"
                           disabled={busy || !noteText.trim()}
                           onClick={() => void submitBadMatch(row, 'other', noteText.trim())}
                         >
                           Save note
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="od-btn"
                           disabled={busy}
                           onClick={() => {
                             setNoteFor(null)
@@ -918,7 +505,7 @@ export const DupeGlance = memo(function DupeGlance({
                           }}
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </span>
                     ) : null}
                   </div>

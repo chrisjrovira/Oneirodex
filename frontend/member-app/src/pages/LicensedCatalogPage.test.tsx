@@ -1,0 +1,106 @@
+import { vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { LicensedCatalogPage } from './LicensedCatalogPage'
+import { ShellHarness } from '../testShell'
+
+function jsonResponse(body: any, status = 200): any {
+  const payload = JSON.stringify(body)
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: async () => body,
+    text: async () => payload,
+  })
+}
+
+const SAMPLE = {
+  ok: true,
+  library_platform: 'NES',
+  unique_titles: 2,
+  owned_titles: 1,
+  empty: false,
+  fetched_at: '2026-08-29T00:00:00+00:00',
+  note: 'Titles are IGDB main games.',
+  by_region: [
+    {
+      region_code: 'USA',
+      label: 'United States',
+      titles: 2,
+      owned: 1,
+      source: 'igdb',
+    },
+    {
+      region_code: 'FRA',
+      label: 'France',
+      titles: 0,
+      owned: 0,
+      source: 'dat_only',
+    },
+  ],
+}
+
+function renderPage(path: any, shellConfig = {}) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <ShellHarness shell={shellConfig}>
+        <LicensedCatalogPage />
+      </ShellHarness>
+    </MemoryRouter>,
+  )
+}
+
+beforeEach(() => {
+  global.fetch = vi.fn(() => jsonResponse(SAMPLE)) as unknown as typeof global.fetch
+})
+
+afterEach(() => {
+  delete (global as any).fetch
+})
+
+test('empty query asks the member to open the page from Systems', () => {
+  renderPage('/systems/catalog')
+  expect(screen.getByRole('heading', { name: 'Licensed catalog' })).toBeInTheDocument()
+  expect(screen.getByText(/Open this page from a Systems tile/i)).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Back to Systems' })).toHaveAttribute('href', '/systems')
+  expect(global.fetch).not.toHaveBeenCalled()
+})
+
+test('lists IGDB region counts and DAT-only honesty', async () => {
+  renderPage('/systems/catalog?library_platform=NES')
+  expect(await screen.findByText('United States (USA)')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'NES · licensed catalog' })).toBeInTheDocument()
+  expect(screen.getByText(/Titles are IGDB main games/)).toBeInTheDocument()
+  expect(screen.getByText('France (FRA)')).toBeInTheDocument()
+  expect(screen.getByText('DAT only')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Set completeness' })).toHaveAttribute(
+    'href',
+    '/systems/completion?library_platform=NES',
+  )
+})
+
+test('Retry reloads after a failed fetch', async () => {
+  const user = userEvent.setup()
+  vi.mocked(global.fetch)
+    .mockResolvedValueOnce(jsonResponse({ error: 'down' }, 502))
+    .mockResolvedValueOnce(jsonResponse(SAMPLE))
+
+  renderPage('/systems/catalog?library_platform=NES')
+  expect(await screen.findByRole('alert')).toHaveTextContent(/Unable to load licensed catalog/)
+  await user.click(screen.getByRole('button', { name: /Try again/i }))
+  expect(await screen.findByText('United States (USA)')).toBeInTheDocument()
+})
+
+test('new chrome moves identity into the bar', async () => {
+  renderPage('/systems/catalog?library_platform=NES', { enableNewChrome: true })
+  expect(await screen.findByText('1 / 2 titles in cache')).toBeInTheDocument()
+  // The identity is the bar's own <h1>, not a page header. It was a <span>
+  // until the a11y pass gave every route a real heading (f2723d11); the
+  // check that it is *not* a heading outlived that. Asserting the bar class
+  // keeps the original intent — the name moved into the bar — without
+  // reinstating "this route announces no heading at all".
+  const heading = screen.getByRole('heading', { name: 'NES · licensed catalog' })
+  expect(heading).toHaveClass('od-topbar__section')
+})

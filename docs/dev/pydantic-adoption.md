@@ -99,6 +99,7 @@ Flask blueprints (`/api` for `routes_apis/`).
 | `routes_apis/client.py` | `POST /api/client/lifecycle` (`client_lifecycle_post`) | `ClientLifecycleBody` |
 | `routes_apis/wanted.py` | `POST /api/updates/wanted` (`updates_wanted_add`) | `AddWantedBody` |
 | `routes_apis/wanted.py` | `POST /api/updates/wanted/fulfill` (`updates_wanted_fulfill`) | `FulfillWantedBody` |
+| `routes_apis/vr.py` | `PATCH /api/games/<uuid>/vr_compat` (`game_vr_compat_patch`) | `VrCompatBody` |
 | `routes_apis/storage.py` | `POST /api/storage/hardlink/preview` (`hardlink_preview`) | `HardlinkBody` |
 | `routes_apis/storage.py` | `POST /api/storage/hardlink/apply` (`hardlink_apply`) | `HardlinkBody` |
 | `routes_apis/game_servers.py` | `POST /api/game-servers` (`create_game_server`) | `CreateGameServerBody` |
@@ -175,7 +176,7 @@ Flask blueprints (`/api` for `routes_apis/`).
 
 Leave these until the contract can be preserved; do not force them.
 
-### `routes_apis/game.py`
+### `routes_apis/game.py` (batch routes in `game_batch.py` since H-D.4)
 
 - `games_batch_favorite` — **adopted** via `@validate_batch_body(BatchFavoriteBody, limit=100)`. Missing `favorite` / `uuids` is 422 with the partial-success keys; over-limit is still 400 from `_normalize_batch_uuids`; success `ok` is still "did every item succeed".
 - `games_batch_status`, `games_batch_wishlist`,
@@ -190,7 +191,7 @@ Leave these until the contract can be preserved; do not force them.
   is done in the body, not a decorator. Nothing to delete and validation must
   not run before the admin check.
 
-### `routes_apis/scan.py`
+### `routes_apis/scan.py` (+ `scan_unmatched.py`, `scan_unmatched_edit.py` since H-D.4)
 
 - The `unmatched_folders/batch/*` family (`batch_clear`, `batch_mark_kind`,
   `batch_fix`, `batch_amend`) — partial-success via `_parse_batch_ids`, whose
@@ -375,7 +376,7 @@ rest-of-package file.
 
 Highest-count files still to do, roughly in priority order:
 
-- `routes_apis/scan.py` (11) — **read on 2026-09-17, and not the batch
+- `routes_apis/scan.py` (11; since the H-D.4 split: `scan.py` 2 · `scan_unmatched.py` 2 · `scan_unmatched_edit.py` 7) — **read on 2026-09-17, and not the batch
   candidates this line used to claim.** Every one of the eleven is one of the
   shapes the flat helper cannot express without lying: dual-input
   (`start_library_scan` / `refresh_all_libraries` take `library_uuid`,
@@ -391,7 +392,7 @@ Highest-count files still to do, roughly in priority order:
   guard the view does not already have. **Leave this file at 11.** If a
   bespoke validator for the `ids|items` shape ever lands, revisit the batch
   five; the other six stay as they are.
-- `routes_apis/game.py` (6 remaining) — the other batch routes above;
+- `routes_apis/game.py` (6 remaining; since the H-D.4 split: `game_batch.py` 4 · `game.py` 2) — the other batch routes above;
   `move_game_to_library` needs the bespoke-message validator.
 - `routes_arr.py` (7 remaining) — GET+PUT, bulk text, dual-input apply.
 - `routes_apis/library_tools.py` (5 remaining — propose/import dual-input,

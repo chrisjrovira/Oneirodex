@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 import { loadingEllipsisFrame, loadingMessageBase } from './loadingStatusText.js'
+import { Button } from '@oneirodex/ui'
 
 /**
  * Shared loading / error / empty status for SPA pages — `@oneirodex/ui`.
@@ -171,9 +172,9 @@ export function PageStatus({
           {detail ? <p className="od-page-status__detail">{detail}</p> : null}
         </div>
         {onRetry ? (
-          <button type="button" className="od-btn od-btn--sm" onClick={onRetry}>
+          <Button type="button" size="sm" onClick={onRetry}>
             {retryLabel}
-          </button>
+          </Button>
         ) : null}
       </div>
     )

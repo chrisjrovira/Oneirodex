@@ -1,33 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageStatus } from '@oneirodex/ui'
 
 import { getJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import { DashboardBoard } from '../components/DashboardBoard'
-import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { OpsLogModal } from '../components/OpsLogModal'
 import { defaultOpsLayout, OPS_STORAGE_KEY, opsWidgetMins } from '../components/opsLayout'
-import {
-  LibraryHealthFactors,
-  formatScanJobCounters,
-  MeterBar,
-  MetricTile,
-  OpsStatusBanner,
-  companionKindRows,
-  formatBytes,
-  formatLibraryHealthHint,
-  formatLibraryHealthValue,
-  formatLibraryWatchDetail,
-  formatLibraryWatchStatus,
-  formatLoadAvg,
-  formatReadyz,
-  libraryHealthTone,
-  na,
-  normalizeLibraryHealth,
-  booleanTone,
-  usageTone,
-} from '../components/opsWidgets'
+import { formatScanJobCounters } from '../components/opsWidgets'
 import '../ops.css'
+import { DETAIL_PANEL_IDS } from './ops/opsColumns'
+import { buildOpsWidgets, type OpsDeviceRow } from './ops/opsWidgetMap'
 
 // Re-exported: this used to be defined here, and OpsPage.test.jsx imports it
 // from this module. Moving the definition without this would have broken a test
@@ -39,10 +21,10 @@ export { formatScanJobCounters }
  * Backend field map as DashboardPage's OpsSummary; not fully typed, consumers
  * read defensively with `?.` throughout.
  */
-type OpsSummary = any
-type OpsSystemDetail = any
+export type OpsSummary = any
+export type OpsSystemDetail = any
 
-function livekitLabel(livekit: OpsSummary) {
+export function livekitLabel(livekit: OpsSummary) {
   if (!livekit) return 'n/a'
   if (livekit.configured) {
     if (livekit.reachable === true) return 'reachable'
@@ -55,83 +37,6 @@ function livekitLabel(livekit: OpsSummary) {
 
 /** Panel id → heading. The ids are the keys of the /admin/api/ops/system
  *  payload, so a panel and its data cannot drift apart. */
-const DETAIL_PANELS: Record<string, string> = {
-  system: 'System',
-  database: 'Database',
-  logs: 'Logs',
-  config: 'Configuration',
-  theme_assets: 'Theme assets',
-}
-
-const DETAIL_PANEL_IDS = Object.keys(DETAIL_PANELS)
-
-const COMPANION_KIND_COLUMNS: DataTableColumn[] = [
-  { key: 'kind', label: 'Kind' },
-  { key: 'online', label: 'Online', align: 'right' },
-  { key: 'registered', label: 'Registered', align: 'right' },
-]
-
-const SCAN_JOB_COLUMNS: DataTableColumn[] = [
-  {
-    key: 'id',
-    label: 'Job',
-    render: (job) => <code>#{job.id_short || job.id}</code>,
-    value: (job) => job.id_short || job.id,
-  },
-  { key: 'library', label: 'Library', render: (job) => job.library || '—' },
-  { key: 'status', label: 'Status' },
-  {
-    key: 'progress',
-    label: 'Progress',
-    render: (job) => formatScanJobCounters(job),
-    value: (job) => Number(job.folders_success ?? 0) + Number(job.folders_failed ?? 0),
-  },
-  {
-    key: 'detail',
-    label: 'Detail',
-    render: (job) => {
-      if (job.error_message) {
-        return <span className="od-ops-table__error">{job.error_message}</span>
-      }
-      if (job.stalled) {
-        return <span className="od-ops-table__muted">No progress reported</span>
-      }
-      return <span className="od-ops-table__muted">{job.current_processing || '—'}</span>
-    },
-  },
-]
-
-const RECENT_ERROR_COLUMNS: DataTableColumn[] = [
-  { key: 'event_type', label: 'Type', render: (event) => <code>{event.event_type}</code> },
-  { key: 'text', label: 'Message' },
-]
-
-/**
- * A key/value block in the Ops console. Board drag replaces ↑↓ reorder.
- */
-function DetailPanel({ title, values }: { title: string; values?: Record<string, unknown> }) {
-  const entries = Object.entries(values || {})
-  if (entries.length === 0) return null
-
-  return (
-    <section className="od-ops-panel od-ops-panel--embedded">
-      <div className="od-ops-panel__head">
-        <h2>{title}</h2>
-      </div>
-      <table className="od-ops-table">
-        <tbody>
-          {entries.map(([key, value]) => (
-            <tr key={key}>
-              <td>{key}</td>
-              <td>{String(value)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
-  )
-}
-
 export function OpsPage() {
   const [snapshot, setSnapshot] = useState<OpsSummary>(null)
   const [error, setError] = useState<unknown>(null)
@@ -141,6 +46,7 @@ export function OpsPage() {
   const [manualRefreshing, setManualRefreshing] = useState(false)
   const [systemDetail, setSystemDetail] = useState<OpsSystemDetail>(null)
   const [recentLogs, setRecentLogs] = useState<Record<string, unknown>[] | null>(null)
+  const [devices, setDevices] = useState<OpsDeviceRow[] | null>(null)
   const [fullLogOpen, setFullLogOpen] = useState(false)
   const [fullLogEvents, setFullLogEvents] = useState<Record<string, unknown>[] | null>(null)
   const [fullLogLoading, setFullLogLoading] = useState(false)
@@ -227,6 +133,15 @@ export function OpsPage() {
         if (!cancelled) setRecentLogs(null)
       })
 
+    // TC-4: the device list behind the Companions tile.
+    getJson('/admin/api/ops/devices?limit=200')
+      .then((data) => {
+        if (!cancelled) setDevices(Array.isArray(data?.devices) ? data.devices : [])
+      })
+      .catch(() => {
+        if (!cancelled) setDevices(null)
+      })
+
     return () => {
       cancelled = true
     }
@@ -267,386 +182,23 @@ export function OpsPage() {
     return undefined
   }, [fullLogOpen, loadFullLog])
 
-  const host = snapshot?.host
-  const library = snapshot?.library
-  const scans = snapshot?.scans
-  const services = snapshot?.services
-  const issues = snapshot?.issues
-  const severity = issues?.overall || 'good'
-  const companions = services?.companions
-  const kindRows = companionKindRows(companions?.by_kind)
-  const lastSeen = companions?.last_seen
-
   const presentDetailIds = useMemo(
     () => DETAIL_PANEL_IDS.filter((id) => Object.keys(systemDetail?.[id] || {}).length > 0),
     [systemDetail],
   )
 
-  const widgets = useMemo(() => {
-    const map: Record<string, ReactNode> = {
-      status: (
-        <OpsStatusBanner severity={severity} items={issues?.items} ariaLabel="System status" />
-      ),
-      'm-cpu': (
-        <MetricTile
-          label="CPU"
-          value={na(host?.cpu?.percent, '%')}
-          hint={na(host?.cpu?.cores_logical, ' cores')}
-          tone={usageTone(host?.cpu?.percent)}
-        />
-      ),
-      'm-load': (
-        <MetricTile label="Load 1/5/15" value={formatLoadAvg(host?.load_avg)} hint="host" />
-      ),
-      'm-memory': (
-        <MetricTile
-          label="Memory"
-          value={na(host?.memory?.percent, '%')}
-          hint={
-            host?.memory
-              ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
-              : 'n/a'
-          }
-          tone={usageTone(host?.memory?.percent)}
-        />
-      ),
-      'm-rss': (
-        <MetricTile
-          label="Process RSS"
-          value={formatBytes(host?.process?.rss_bytes)}
-          hint={host?.process?.pid != null ? `pid ${host.process.pid}` : 'n/a'}
-        />
-      ),
-      'm-db': (
-        <MetricTile
-          label="DB ping"
-          value={host?.db_ping_ms != null ? `${host.db_ping_ms} ms` : 'n/a'}
-          hint="SELECT 1"
-          tone={usageTone(host?.db_ping_ms, { warn: 50, bad: 250 })}
-        />
-      ),
-      'm-awake': (
-        <MetricTile
-          label="Readyz"
-          value={formatReadyz(services?.awake)}
-          hint={na(services?.awake?.http_status)}
-          tone={booleanTone(services?.awake == null ? null : services?.awake?.http_status === 200)}
-        />
-      ),
-      'm-companions': (
-        <MetricTile
-          label="Companions"
-          value={`${companions?.online ?? 0} / ${companions?.registered ?? 0}`}
-          hint={`${lastSeen?.within_1h ?? 0} in 1h · ${lastSeen?.stale ?? 0} stale`}
-        />
-      ),
-      'm-disk': (
-        <MetricTile
-          label="Games disk"
-          value={na(host?.disk_games?.percent ?? host?.disk_base?.percent, '%')}
-          hint="volume use"
-          tone={usageTone(host?.disk_games?.percent ?? host?.disk_base?.percent)}
-        />
-      ),
-      'm-watch': (
-        <MetricTile
-          label="Library watch"
-          value={formatLibraryWatchStatus(services?.library_watch)}
-          hint={
-            services?.library_watch?.enabled
-              ? `${services.library_watch.roots ?? 0} roots · ${services.library_watch.pending_libraries ?? 0} pending`
-              : 'ONEIRODEX_LIBRARY_WATCH off'
-          }
-        />
-      ),
-      'm-health': (
-        <MetricTile
-          label="Library health"
-          value={formatLibraryHealthValue(library?.health)}
-          hint={formatLibraryHealthHint(library?.health)}
-          tone={libraryHealthTone(library?.health)}
-        />
-      ),
-      host: (
-        <section className="od-ops-panel od-ops-panel--embedded">
-          <h2>Host meters</h2>
-          {!host ? (
-            <p>{snapshot?.host_error || 'Host data unavailable.'}</p>
-          ) : (
-            <>
-              <p className="od-ops-panel__lede">
-                <strong>{host.hostname || 'Unknown host'}</strong>
-                {' · '}
-                {host.os || 'Unknown OS'} · {host.ip || 'No IP'}
-                {' · '}
-                up {host.uptime_system || 'n/a'} / app {host.uptime_app || 'n/a'}
-              </p>
-              <div className="od-ops-meters">
-                <MeterBar
-                  label="CPU"
-                  percent={host.cpu?.percent}
-                  detail={
-                    host.cpu?.cores_logical != null
-                      ? `${host.cpu.cores_logical} logical cores`
-                      : null
-                  }
-                />
-                <MeterBar
-                  label="Memory"
-                  percent={host.memory?.percent}
-                  detail={
-                    host.memory
-                      ? `${formatBytes(host.memory.used)} / ${formatBytes(host.memory.total)}`
-                      : null
-                  }
-                />
-                <MeterBar
-                  label="App disk"
-                  percent={host.disk_base?.percent}
-                  detail={
-                    host.disk_base
-                      ? `${formatBytes(host.disk_base.used)} / ${formatBytes(host.disk_base.total)}`
-                      : null
-                  }
-                />
-                <MeterBar
-                  label="Games disk"
-                  percent={host.disk_games?.percent}
-                  detail={
-                    host.disk_games
-                      ? `${formatBytes(host.disk_games.used)} / ${formatBytes(host.disk_games.total)}`
-                      : null
-                  }
-                />
-              </div>
-            </>
-          )}
-        </section>
-      ),
-      services: (
-        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--services">
-          <h2>Services</h2>
-          {!services ? (
-            <p>{snapshot?.services_error || 'Services data unavailable.'}</p>
-          ) : (
-            <div className="od-ops-panel__scroll">
-              <table className="od-ops-table od-ops-table--services">
-                <thead>
-                  <tr>
-                    <th>Service</th>
-                    <th>Status</th>
-                    <th>Detail</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Readyz</td>
-                    <td>{formatReadyz(services.awake)}</td>
-                    <td>
-                      {services.awake?.checks
-                        ? Object.entries(services.awake.checks)
-                            .map(
-                              ([k, v]) =>
-                                `${k}:${typeof v === 'object' ? (v as any)?.status || JSON.stringify(v) : v}`,
-                            )
-                            .join(' · ') || 'n/a'
-                        : 'n/a'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>LiveKit</td>
-                    <td>{livekitLabel(services.livekit)}</td>
-                    <td>{services.livekit?.error || '—'}</td>
-                  </tr>
-                  <tr>
-                    <td>Malware</td>
-                    <td>{services.malware?.enabled ? 'on' : 'off'}</td>
-                    <td>
-                      {services.malware?.enabled
-                        ? `ClamAV ${services.malware.clamav_reachable ? 'up' : 'down (heuristics only)'}`
-                        : '—'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Queues</td>
-                    <td>
-                      {services.queues?.scans_active ?? 0} active ·{' '}
-                      {services.queues?.scans_pending ?? 0} pending
-                    </td>
-                    <td>{services.queues?.downloads_open ?? 0} downloads open</td>
-                  </tr>
-                  <tr>
-                    <td>Library watch</td>
-                    <td>{formatLibraryWatchStatus(services.library_watch)}</td>
-                    <td>{formatLibraryWatchDetail(services.library_watch)}</td>
-                  </tr>
-                  {(services.game_servers?.servers || []).map((server: OpsSummary) => (
-                    <tr key={server.uuid || server.display_name}>
-                      <td>Game server · {server.display_name || 'unnamed'}</td>
-                      <td>
-                        {server.reachable === true
-                          ? 'reachable'
-                          : server.reachable === false
-                            ? 'unreachable'
-                            : 'n/a'}
-                      </td>
-                      <td>{server.error || server.method || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      ),
-      companions: (
-        <section className="od-ops-panel od-ops-panel--embedded">
-          <h2>Companions</h2>
-          {!companions ? (
-            <p>n/a</p>
-          ) : (
-            <>
-              <p className="od-ops-panel__lede">
-                Online {companions.online ?? 0} / {companions.registered ?? 0}
-                {' · '}
-                window {companions.window_minutes ?? 3}m{' · '}
-                newest {lastSeen?.newest ? new Date(lastSeen.newest).toLocaleString() : 'n/a'}
-                {' · '}
-                1h {lastSeen?.within_1h ?? 0} · 24h {lastSeen?.within_24h ?? 0} · stale{' '}
-                {lastSeen?.stale ?? 0}
-              </p>
-              {kindRows.length === 0 ? (
-                <p className="od-admin-lede">No registered companions by kind.</p>
-              ) : (
-                <DataTable
-                  columns={COMPANION_KIND_COLUMNS}
-                  rows={kindRows}
-                  getRowKey={(row) => row.kind}
-                  toolbar={false}
-                />
-              )}
-            </>
-          )}
-        </section>
-      ),
-      library: (
-        <section className="od-ops-panel od-ops-panel--embedded">
-          <h2>Library pulse</h2>
-          {!library ? (
-            <p>{snapshot?.library_error || 'Library data unavailable.'}</p>
-          ) : (
-            <>
-              <div className="od-ops-strip od-ops-strip--compact">
-                <MetricTile label="Libraries" value={na(library.libraries)} />
-                <MetricTile label="Games" value={na(library.games)} />
-                <MetricTile label="Unmatched" value={na(library.unmatched_folders)} />
-                <MetricTile label="Open downloads" value={na(library.download_requests_open)} />
-                <MetricTile
-                  label="Health"
-                  value={formatLibraryHealthValue(library.health)}
-                  hint={
-                    normalizeLibraryHealth(library.health)?.grade ||
-                    formatLibraryHealthHint(library.health)
-                  }
-                  tone={libraryHealthTone(library.health)}
-                />
-              </div>
-              <LibraryHealthFactors health={library.health} />
-            </>
-          )}
-        </section>
-      ),
-      scans: (
-        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--wide">
-          <h2>Scans</h2>
-          {!scans ? (
-            <p>{snapshot?.scans_error || 'Scan data unavailable.'}</p>
-          ) : (scans.jobs || []).length === 0 ? (
-            <p className="od-admin-lede">
-              {scans.active_count ?? 0} active
-              {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
-              {' · '}no recent jobs.
-            </p>
-          ) : (
-            <>
-              <p className="od-ops-panel__lede">
-                {scans.active_count ?? 0} active
-                {scans.queued_count != null ? <> · {scans.queued_count} queued</> : null}
-              </p>
-              <DataTable
-                columns={SCAN_JOB_COLUMNS}
-                rows={scans.jobs}
-                getRowKey={(job) => job.id}
-                toolbar={false}
-              />
-            </>
-          )}
-        </section>
-      ),
-      errors: (
-        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--wide">
-          <h2>Recent errors</h2>
-          {(snapshot?.recent_errors || []).length === 0 ? (
-            <p className="od-admin-lede">{snapshot?.recent_errors_error || 'No recent errors.'}</p>
-          ) : (
-            <DataTable
-              columns={RECENT_ERROR_COLUMNS}
-              rows={snapshot.recent_errors.slice(0, 8)}
-              getRowKey={(event) => event.id}
-              toolbar={false}
-            />
-          )}
-        </section>
-      ),
-    }
-
-    for (const id of presentDetailIds) {
-      map[`detail-${id}`] = <DetailPanel title={DETAIL_PANELS[id]} values={systemDetail[id]} />
-    }
-
-    if (recentLogs) {
-      map['recent-log'] = (
-        <section className="od-ops-panel od-ops-panel--embedded od-ops-panel--wide">
-          <div className="od-ops-panel__head">
-            <h2>Recent log</h2>
-            <button type="button" className="od-ops-log__full" onClick={openFullLog}>
-              Full log — filter by type, level and text
-            </button>
-          </div>
-          <DataTable
-            rows={recentLogs}
-            getRowKey={(row) => row.id}
-            emptyMessage="No system events recorded yet."
-            initialSort={{ key: 'timestamp', dir: 'desc' }}
-            dense
-            columns={[
-              {
-                key: 'timestamp',
-                label: 'When',
-                render: (row) => (row.timestamp ? new Date(row.timestamp).toLocaleString() : '—'),
-              },
-              { key: 'level', label: 'Level' },
-              { key: 'type', label: 'Type' },
-              { key: 'text', label: 'Event' },
-              {
-                key: 'user',
-                label: 'User',
-                render: (row) => row.user || '—',
-              },
-            ]}
-          />
-        </section>
-      )
-    }
-
-    return map
-    // `snapshot` subsumes host/library/scans/services/issues/severity/companions/
-    // kindRows/lastSeen — they are all pure `snapshot?.…` reads (see above), so
-    // listing them made this memo recompute on every render even though the data
-    // was identical. The 15s poll re-renders the page; without a tight dep list
-    // that rebuilt every Ops widget and, through DashboardBoard, re-ran a layout
-    // measure + ResizeObserver churn each tick.
-  }, [snapshot, presentDetailIds, systemDetail, recentLogs, openFullLog])
+  const widgets = useMemo(
+    () =>
+      buildOpsWidgets({
+        snapshot,
+        presentDetailIds,
+        systemDetail,
+        recentLogs,
+        openFullLog,
+        devices,
+      }),
+    [snapshot, presentDetailIds, systemDetail, recentLogs, openFullLog, devices],
+  )
 
   const visibleKey = useMemo(
     () =>

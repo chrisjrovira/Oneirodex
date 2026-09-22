@@ -5,9 +5,11 @@ from __future__ import annotations
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from oneirodex.utils.auth import admin_required
+
 from oneirodex import db
 from oneirodex.models import UserPreference
-from oneirodex.utils.api_response import api_ok
+from oneirodex.utils.api_response import api_error, api_ok
 from oneirodex.utils.notifications import list_notifications, mark_read, unread_count
 
 from . import apis_bp
@@ -88,3 +90,22 @@ def notifications_preferences():
             setattr(prefs, key, bool(data[key]))
     db.session.commit()
     return api_ok()
+
+
+@apis_bp.route('/admin/notify-bus/test', methods=['POST'])
+@login_required
+@admin_required
+def notify_bus_test():
+    """Send one test event to the configured Apprise API / ntfy endpoints
+    (INSP-6) and say what was delivered. No body; nothing is stored."""
+    from oneirodex.utils.notification_bus import emit, status_summary
+
+    status = status_summary()
+    if not status['configured']:
+        return api_error(
+            'No notification endpoint configured (NOTIFY_APPRISE_URLS / NOTIFY_NTFY_URL).',
+            code='bad_request',
+            **status,
+        )
+    sent = emit(kind='test', title='Oneirodex test notification', body='If you can read this, the notification bus reaches your device.')
+    return api_ok({'sent': sent, **status})

@@ -6,6 +6,7 @@ from oneirodex.utils.api_response import api_error, api_ok
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
+from oneirodex.schemas.reference_sets import RepairPreviewBody
 from oneirodex.utils.auth import admin_required
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.set_completion import (
@@ -18,6 +19,8 @@ from oneirodex.utils.set_completion import (
     upsert_reference_set,
     validate_library_platform,
 )
+from oneirodex.utils.set_repair import repair_preview
+from oneirodex.utils.validation import validate_body
 
 from . import apis_bp
 
@@ -110,6 +113,32 @@ def api_rehash_reference_platform():
         event_level='information',
     )
     return jsonify(result)
+
+
+@apis_bp.route('/reference-sets/repair-preview', methods=['POST'])
+@login_required
+@admin_required
+@validate_body(RepairPreviewBody)
+def api_reference_set_repair_preview(body: RepairPreviewBody):
+    """Dry-run DAT repair report (INSP-24): rename candidates, hash
+    mismatches, clone-named files, unknowns. Writes nothing."""
+    try:
+        report = repair_preview(
+            library_platform=body.library_platform,
+            region=body.region,
+            user=current_user,
+            limit=body.limit,
+        )
+    except ValueError as exc:
+        return api_error(str(exc), code='bad_request')
+    if report is None:
+        return api_error(
+            'No reference set for this platform' + (f'/{body.region}' if body.region else ''),
+            code='not_found',
+            library_platform=body.library_platform,
+            region=body.region,
+        )
+    return api_ok(report)
 
 
 @apis_bp.route('/set-completion', methods=['GET'])

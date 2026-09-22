@@ -119,6 +119,7 @@ paths are the thing to look at.
 | Friends window can’t install games | By design (least-privilege) | Use the main companion window |
 | Update never appears | Local registry not merged | Re-Connect companion; see [desktop-companion.md](desktop-companion.md) |
 | Leftover `.staging` folder | Interrupted update | Uninstall title in companion, or delete the staging folder |
+| My headset / thin client / companion is not in the operator's device list | It has not sent a heartbeat yet, or sent one without a `device_kind` | A seat appears in **Admin → Ops → Companions → Devices** after its first heartbeat: the companion once it is connected with a token; the thin shell (`device_kind=thin`) once a token is saved; a plain browser tab never registers — it is not a device. Offline means no heartbeat in the last 3 minutes, not a broken seat. |
 
 ## Report still needed?
 

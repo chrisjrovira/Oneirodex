@@ -71,6 +71,33 @@
     </div>
 
     <div class="mb-4">
+      <label class="form-label">DAT repair preview (dry run)</label>
+      <p class="text-muted small">
+        Compares the files you own on one platform with its reference set and lists
+        what the set disagrees with: hashes that match under another name, names that
+        match under another hash, clone-named files, and files the set never listed.
+        Report only &mdash; nothing is renamed, moved or marked. Rehash first so the
+        hash buckets have something to compare.
+      </p>
+      <div class="d-flex gap-2 flex-wrap">
+        <select class="form-select w-auto" id="repair-platform" aria-label="Platform">
+          {% for p in platforms %}
+          <option value="{{ p.id }}">{{ p.label }} ({{ p.id }})</option>
+          {% endfor %}
+        </select>
+        <select class="form-select w-auto" id="repair-region" aria-label="Region">
+          <option value="">All regions</option>
+          {% for r in regions %}
+          <option value="{{ r }}">{{ r }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-secondary" type="button" id="repair-btn">Preview repairs</button>
+      </div>
+      <p class="text-muted small mt-1" id="repair-status"></p>
+      <div id="repair-report" class="small" hidden></div>
+    </div>
+
+    <div class="mb-4">
       <label class="form-label">Refresh licensed catalog (IGDB release dates)</label>
       <p class="text-muted small">
         One platform per click. Counts main games IGDB lists with a regional

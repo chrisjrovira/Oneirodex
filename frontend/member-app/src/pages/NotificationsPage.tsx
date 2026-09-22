@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useShellConfig } from '@oneirodex/ui'
+import { useShellConfig, Button } from '@oneirodex/ui'
 import {
   fetchNotificationPreferences,
   fetchNotifications,
@@ -194,26 +194,27 @@ export function NotificationsPage() {
             </h2>
             <div className="od-notifications__inbox-actions">
               {prefs ? (
-                <button
-                  type="button"
-                  className={`od-btn od-btn--ghost od-btn--sm od-notifications__prefs-toggle${
-                    prefsOpen ? ' is-on' : ''
-                  }`}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`od-notifications__prefs-toggle${prefsOpen ? ' is-on' : ''}`}
                   aria-expanded={prefsOpen}
                   aria-controls="notifications-prefs"
                   onClick={() => setPrefsOpen((open) => !open)}
                 >
                   Preferences
-                </button>
+                </Button>
               ) : null}
-              <button
+              <Button
                 type="button"
-                className="od-btn od-btn--ghost od-btn--sm od-notifications__mark-all"
+                variant="ghost"
+                size="sm"
+                className="od-notifications__mark-all"
                 disabled={busy || unread === 0}
                 onClick={() => void markAll()}
               >
                 Mark all read
-              </button>
+              </Button>
             </div>
           </div>
           {prefs && prefsOpen ? (

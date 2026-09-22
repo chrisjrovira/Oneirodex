@@ -1,91 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, confirmAction } from '@oneirodex/ui'
-import { PageStatus } from '@oneirodex/ui'
+import { confirmAction } from '@oneirodex/ui'
 import { useSearchParams } from 'react-router-dom'
-import { ArtworkPicker } from '../components/ArtworkPicker'
-import { DataTable } from '../components/DataTable'
 import { deleteJson, getJson, postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import { ART_STUDIO_SYSTEMS } from '../components/platformSkins'
-
-interface ImageRow {
-  id: string
-  game_uuid?: string
-  game_name?: string
-  status?: string
-  is_downloaded?: boolean
-  file_missing?: boolean
-  local_url?: string
-  image_type?: string
-  failure_reason?: string
-  last_error?: string
-}
-
-interface ImageGroup {
-  name: string
-  uuid: string
-  items: ImageRow[]
-}
-
-interface GameHit {
-  uuid: string
-  name?: string
-}
-
-interface LibraryOption {
-  uuid: string
-  name?: string
-}
-
-interface Option {
-  id: string
-  label?: string
-}
-
-interface MissingCoverGame {
-  uuid: string
-  name?: string
-  score?: number
-  issues?: { code?: string }[]
-}
-
-/** Backend policy for “best available” mass cover apply. */
-const BEST_AVAILABLE_POLICY = 'sgdb_then_igdb_then_generate'
-
-/** Store/service labels useful as covers/batch `service` filters (library-name match). */
-const SERVICE_SOURCE_IDS = new Set(['steam', 'gog', 'epic', 'itch', 'meta_quest'])
-
-/** Locked image kind taxonomy (BE-DET-10) — keep in sync with oneirodex/utils/image_kinds.py. */
-const IMAGE_KIND_OPTIONS = [
-  { id: 'cover', label: 'Covers' },
-  { id: 'screenshot', label: 'Screenshots' },
-  { id: 'box', label: 'Box' },
-  { id: 'cart', label: 'Cart/disc label' },
-  { id: 'disc', label: 'Disc' },
-  { id: 'logo', label: 'Logo' },
-  { id: 'hero', label: 'Hero' },
-  { id: 'fanart', label: 'Fan art' },
-]
-
-function groupByGame(images: ImageRow[]): ImageGroup[] {
-  const groups = new Map<string, ImageGroup>()
-  for (const image of images) {
-    const key = image.game_uuid || 'unknown'
-    if (!groups.has(key)) {
-      groups.set(key, {
-        name: image.game_name || 'Unknown',
-        uuid: image.game_uuid || '',
-        items: [],
-      })
-    }
-    groups.get(key)!.items.push(image)
-  }
-  return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name))
-}
-
-function queueFailureText(image: ImageRow): string {
-  return image.failure_reason || image.last_error || ''
-}
+import {
+  BEST_AVAILABLE_POLICY,
+  SERVICE_SOURCE_IDS,
+  groupByGame,
+  type GameHit,
+  type ImageRow,
+  type LibraryOption,
+  type MissingCoverGame,
+  type Option,
+} from './images/imagesModel'
+import { ImagesMissingCoversPanel } from './images/ImagesMissingCoversPanel'
+import { ImagesQueuePanel } from './images/ImagesQueuePanel'
+import { ImagesSingleTitlePanel } from './images/ImagesSingleTitlePanel'
 
 export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
   const [params, setParams] = useSearchParams()
@@ -437,433 +368,59 @@ export function ImagesPage({ embedded = false }: { embedded?: boolean }) {
         </a>
       </div>
 
-      <section className="od-admin-panel od-admin-panel--stacked">
-        <h2 className="od-admin-panel-title">Single title</h2>
-        <div className="od-images-game-search">
-          <label className="od-images-game-search__field">
-            Find game in library
-            <input
-              type="search"
-              value={gameQuery}
-              onChange={(e) => setGameQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  searchGames()
-                }
-              }}
-              placeholder="Type a title…"
-            />
-          </label>
-          <Button onClick={searchGames}>Find</Button>
-          {gameUuid ? <Button onClick={() => syncGameParam('', '')}>Clear target</Button> : null}
-          {gameUuid ? (
-            <a className="od-btn" href={`/edit_game_images/${encodeURIComponent(gameUuid)}`}>
-              Classic edit images
-            </a>
-          ) : null}
-        </div>
-        {gameHits.length ? (
-          <ul className="od-images-game-hits">
-            {gameHits.map((g) => (
-              <li key={g.uuid}>
-                <button
-                  type="button"
-                  className="od-btn od-btn--ghost"
-                  onClick={() => {
-                    syncGameParam(g.uuid, g.name || '')
-                    setGameHits([])
-                    setGameQuery(g.name || '')
-                  }}
-                >
-                  {g.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+      <ImagesSingleTitlePanel
+        gameHits={gameHits}
+        gameName={gameName}
+        gameQuery={gameQuery}
+        gameUuid={gameUuid}
+        loadMissing={loadMissing}
+        loadQueue={loadQueue}
+        searchGames={searchGames}
+        setGameHits={setGameHits}
+        setGameQuery={setGameQuery}
+        syncGameParam={syncGameParam}
+      />
 
-        <ArtworkPicker
-          gameUuid={gameUuid}
-          gameName={gameName}
-          onApplied={() => {
-            loadQueue()
-            loadMissing()
-          }}
-        />
-      </section>
+      <ImagesQueuePanel
+        autoPick={autoPick}
+        downloadBatch={downloadBatch}
+        downloadOne={downloadOne}
+        gameUuid={gameUuid}
+        generateArtwork={generateArtwork}
+        groupToggle={groupToggle}
+        groups={groups}
+        images={images}
+        libraries={libraries}
+        libraryFilter={libraryFilter}
+        loadQueue={loadQueue}
+        loadingQueue={loadingQueue}
+        massSearch={massSearch}
+        pathStatus={pathStatus}
+        platformFilter={platformFilter}
+        platforms={platforms}
+        queueBusy={queueBusy}
+        queueError={queueError}
+        queueMsg={queueMsg}
+        removeOne={removeOne}
+        retryFailed={retryFailed}
+        serviceFilter={serviceFilter}
+        serviceOptions={serviceOptions}
+        setGroupToggle={setGroupToggle}
+        setLibraryFilter={setLibraryFilter}
+        setPlatformFilter={setPlatformFilter}
+        setServiceFilter={setServiceFilter}
+        setStatusFilter={setStatusFilter}
+        setTypeFilter={setTypeFilter}
+        statusFilter={statusFilter}
+        syncGameParam={syncGameParam}
+        typeFilter={typeFilter}
+      />
 
-      <section className="od-admin-panel od-admin-panel--stacked">
-        <h2 className="od-admin-panel-title">Mass image queue</h2>
-        <p className="od-admin-lede">
-          Filter pending/failed downloads, retry, and batch download. Library / platform / service
-          scope auto-pick and mass search for missing covers (SteamGridDB → IGDB → generate). Queue
-          list itself is not yet filterable by platform — needs Backend enrichment on{' '}
-          <code>image_queue_list</code>.
-        </p>
-
-        {pathStatus?.error ? (
-          <PageStatus
-            error={pathStatus.error}
-            errorMessage={
-              pathStatus.path
-                ? `IMAGE_SAVE_PATH: ${pathStatus.error} (${pathStatus.path})`
-                : `IMAGE_SAVE_PATH: ${pathStatus.error}`
-            }
-          />
-        ) : null}
-        <PageStatus error={queueError} />
-        {queueMsg ? (
-          <p className="od-admin-lede" aria-live="polite">
-            {queueMsg}
-          </p>
-        ) : null}
-
-        <div className="od-images-filters">
-          <label>
-            Status
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="all">All</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="downloaded">Downloaded</option>
-            </select>
-          </label>
-          <label>
-            Type
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-              <option value="all">All</option>
-              {IMAGE_KIND_OPTIONS.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Library (auto-pick / missing)
-            <select value={libraryFilter} onChange={(e) => setLibraryFilter(e.target.value)}>
-              <option value="">All libraries</option>
-              {libraries.map((lib) => (
-                <option key={lib.uuid} value={lib.uuid}>
-                  {lib.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Platform (auto-pick)
-            <select
-              value={platformFilter}
-              onChange={(e) => setPlatformFilter(e.target.value)}
-              aria-label="Platform filter for mass auto-pick"
-            >
-              <option value="">All platforms</option>
-              {platforms.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Service (auto-pick / search)
-            <select
-              value={serviceFilter}
-              onChange={(e) => setServiceFilter(e.target.value)}
-              aria-label="Service filter for mass cover tools"
-            >
-              <option value="">All services</option>
-              {serviceOptions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="od-images-filters__check">
-            <input
-              type="checkbox"
-              checked={groupToggle}
-              onChange={(e) => setGroupToggle(e.target.checked)}
-            />
-            Group by game
-          </label>
-        </div>
-
-        <div className="od-admin-actions-row">
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={() => downloadBatch(10)}
-          >
-            Download 10
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={() => downloadBatch(50)}
-          >
-            Download 50
-          </button>
-          <button
-            type="button"
-            className="od-btn od-btn--primary"
-            disabled={Boolean(queueBusy)}
-            onClick={retryFailed}
-          >
-            Retry failed
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={massSearch}
-            title="POST /admin/api/covers/batch/search"
-          >
-            {queueBusy === 'mass-search' ? 'Searching…' : 'Mass cover search'}
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={autoPick}
-            title={`POST /admin/api/covers/batch/apply policy=${BEST_AVAILABLE_POLICY}`}
-          >
-            {queueBusy === 'autopick' ? 'Auto-picking…' : 'Auto-pick best available'}
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy) || !gameUuid}
-            onClick={generateArtwork}
-            title={
-              gameUuid
-                ? 'POST /admin/api/artwork/generate — needs ENABLE_AI_ARTWORK + AI_ARTWORK_URL'
-                : 'Select a title above first'
-            }
-          >
-            {queueBusy === 'generate' ? 'Generating…' : 'Generate artwork'}
-          </button>
-          <button
-            type="button"
-            className="od-btn"
-            disabled={Boolean(queueBusy)}
-            onClick={loadQueue}
-          >
-            Refresh
-          </button>
-        </div>
-
-        {loadingQueue ? (
-          <PageStatus loading inline loadingMessage="Loading queue…" />
-        ) : images.length === 0 ? (
-          <p className="od-admin-lede">No images match these filters.</p>
-        ) : groups ? (
-          <div className="od-images-groups">
-            {groups.map((group) => {
-              const failed = group.items.filter((i) => i.status === 'failed').length
-              const pending = group.items.filter((i) => i.status === 'pending').length
-              return (
-                <div key={group.uuid || group.name} className="od-images-group">
-                  <div className="od-images-group__head">
-                    <div>
-                      <strong>{group.name}</strong> <code className="od-mono">{group.uuid}</code>
-                      {failed ? (
-                        <span className="od-badge od-badge--danger">{failed} failed</span>
-                      ) : null}
-                      {pending ? (
-                        <span className="od-badge od-badge--warn">{pending} pending</span>
-                      ) : null}
-                    </div>
-                    <button
-                      type="button"
-                      className="od-btn od-btn--ghost"
-                      onClick={() => syncGameParam(group.uuid, group.name)}
-                    >
-                      Open picker
-                    </button>
-                  </div>
-                  <ul className="od-images-group__list">
-                    {group.items.map((image) => (
-                      <QueueRow
-                        key={image.id}
-                        image={image}
-                        busy={queueBusy}
-                        onDownload={downloadOne}
-                        onDelete={removeOne}
-                      />
-                    ))}
-                  </ul>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          /* Flat mode is a real table (UX-C7): sortable + filterable like the
-             other admin pages, instead of an unsorted list you scroll. */
-          <DataTable
-            columns={[
-              {
-                key: 'thumb',
-                label: '',
-                sortable: false,
-                filterable: false,
-                render: (image) =>
-                  image.local_url ? (
-                    <img
-                      src={image.local_url}
-                      alt=""
-                      className="od-images-row__thumb"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span
-                      className="od-images-row__thumb od-images-row__thumb--empty"
-                      aria-hidden="true"
-                    />
-                  ),
-              },
-              { key: 'game_name', label: 'Game' },
-              { key: 'image_type', label: 'Kind' },
-              {
-                key: 'status',
-                label: 'Status',
-                value: (image) => image.status || (image.is_downloaded ? 'downloaded' : 'pending'),
-              },
-              {
-                key: 'failure',
-                label: 'Detail',
-                value: (image) =>
-                  queueFailureText(image) || (image.file_missing ? 'file missing' : ''),
-              },
-              {
-                key: 'actions',
-                label: '',
-                sortable: false,
-                filterable: false,
-                render: (image) => {
-                  const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending')
-                  return (
-                    <span className="od-images-row__actions">
-                      {status === 'pending' || status === 'failed' || image.file_missing ? (
-                        <button
-                          type="button"
-                          className="od-btn od-btn--ghost"
-                          disabled={Boolean(queueBusy)}
-                          onClick={() => downloadOne(image.id)}
-                        >
-                          {status === 'failed' || image.file_missing ? 'Retry' : 'Download'}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="od-btn od-btn--ghost"
-                        disabled={Boolean(queueBusy)}
-                        onClick={() => removeOne(image.id)}
-                      >
-                        Delete
-                      </button>
-                    </span>
-                  )
-                },
-              },
-            ]}
-            rows={images}
-            getRowKey={(image) => image.id}
-            emptyMessage="No images match these filters."
-            dense
-          />
-        )}
-      </section>
-
-      <section className="od-admin-panel od-admin-panel--stacked">
-        <h2 className="od-admin-panel-title">Missing covers (health)</h2>
-        <p className="od-admin-lede">
-          From <code>/api/health/library</code> worst list — open picker or generate placeholders in
-          Art studio. Full “missing cover” filter on the download queue needs Backend.
-        </p>
-        <PageStatus error={missingError} />
-        {!missingCovers.length && !missingError ? (
-          <p className="od-admin-lede">No missing-cover titles in the health sample.</p>
-        ) : (
-          <ul className="od-images-missing">
-            {missingCovers.map((g) => (
-              <li key={g.uuid}>
-                <button
-                  type="button"
-                  className="od-btn od-btn--ghost"
-                  onClick={() => syncGameParam(g.uuid, g.name || '')}
-                >
-                  {g.name}
-                </button>
-                <span className="od-admin-lede">score {g.score}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <ImagesMissingCoversPanel
+        missingCovers={missingCovers}
+        missingError={missingError}
+        syncGameParam={syncGameParam}
+      />
     </div>
-  )
-}
-
-function QueueRow({
-  image,
-  busy,
-  onDownload,
-  onDelete,
-  showGame = false,
-}: {
-  image: ImageRow
-  busy?: string
-  onDownload: (id: string) => void
-  onDelete: (id: string) => void
-  showGame?: boolean
-}) {
-  const status = image.status || (image.is_downloaded ? 'downloaded' : 'pending')
-  const failure = queueFailureText(image)
-  return (
-    <li className="od-images-row">
-      {image.local_url ? (
-        <img src={image.local_url} alt="" className="od-images-row__thumb" loading="lazy" />
-      ) : (
-        <span className="od-images-row__thumb od-images-row__thumb--empty" aria-hidden="true" />
-      )}
-      <div className="od-images-row__meta">
-        {showGame ? <strong>{image.game_name}</strong> : null}
-        <span>
-          {image.image_type} · {status}
-          {image.file_missing ? ' · file missing' : ''}
-          {failure ? (
-            <span className="od-images-row__error" title={failure}>
-              {' '}
-              — {failure}
-            </span>
-          ) : null}
-        </span>
-      </div>
-      <div className="od-images-row__actions">
-        {status === 'pending' || status === 'failed' || image.file_missing ? (
-          <button
-            type="button"
-            className="od-btn od-btn--ghost"
-            disabled={Boolean(busy)}
-            onClick={() => onDownload(image.id)}
-          >
-            {status === 'failed' || image.file_missing ? 'Retry' : 'Download'}
-          </button>
-        ) : null}
-        <button
-          type="button"
-          className="od-btn od-btn--ghost"
-          disabled={Boolean(busy)}
-          onClick={() => onDelete(image.id)}
-        >
-          Delete
-        </button>
-      </div>
-    </li>
   )
 }

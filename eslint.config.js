@@ -88,7 +88,7 @@ export default [
   {
     files: [
       'frontend/**/*.{test,spec}.{js,jsx}',
-      'frontend/**/testSetup.js',
+      'frontend/**/testSetup.{js,ts}',
       'frontend/**/vite.config.js',
       'frontend/**/*.config.{js,mjs}',
     ],
@@ -131,6 +131,7 @@ export default [
       'frontend/shared/**/*.{ts,tsx}',
       'frontend/ops-glance/**/*.{ts,tsx}',
       'frontend/member-app/**/*.{ts,tsx}',
+      'frontend/admin-app/**/*.{ts,tsx}',
     ],
     extends: [tseslint.configs.recommended],
     plugins: { react: reactPlugin, 'react-hooks': reactHooks },

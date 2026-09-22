@@ -201,16 +201,15 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
                     Download
                   </a>
                 ) : null}
-                <button
+                <Button
                   type="button"
-                  className="od-btn"
                   disabled={busy}
                   onClick={() => {
                     void handleDelete(row.name)
                   }}
                 >
                   Delete
-                </button>
+                </Button>
               </div>
             </li>
           ))}
@@ -291,9 +290,8 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
                   required={index === 0}
                 />
               </label>
-              <button
+              <Button
                 type="button"
-                className="od-btn"
                 disabled={codeRows.length <= 1 || busy}
                 aria-label={`Remove code row ${index + 1}`}
                 onClick={() => {
@@ -301,19 +299,18 @@ export function CheatsPanel({ gameUuid, playHref = null, cheatSurface = 'retroar
                 }}
               >
                 Remove
-              </button>
+              </Button>
             </div>
           ))}
         </div>
         <div className="od-cheats-panel__actions">
-          <button
+          <Button
             type="button"
-            className="od-btn"
             disabled={busy}
             onClick={() => setCodeRows((rows) => [...rows, emptyCodeRow()])}
           >
             Add code row
-          </button>
+          </Button>
           <Button type="submit" variant="primary" disabled={busy}>
             {busy ? 'Saving…' : 'Save cheat'}
           </Button>

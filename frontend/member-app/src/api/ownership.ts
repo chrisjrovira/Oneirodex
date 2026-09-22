@@ -100,3 +100,42 @@ export async function importCsv(store: any, { csv, file }: LooseProps = {}) {
 
   return postJson(url, { csv }, { label })
 }
+
+/** INSP-42 — Xbox / PlayStation: register-only, opt-in, unofficial. CSV always; live only when the server opted in. */
+export async function connectXbox(
+  xuid: string | null | undefined,
+  { credential }: { credential?: string } = {},
+) {
+  return postJson(
+    '/api/ownership/xbox',
+    { ...(xuid ? { note: String(xuid) } : {}), ...(credential ? { credential } : {}) },
+    { label: 'connect_xbox' },
+  )
+}
+
+export async function disconnectXbox() {
+  return deleteJson('/api/ownership/xbox', undefined, { label: 'disconnect_xbox' })
+}
+
+export async function syncXbox() {
+  return postJson('/api/ownership/xbox/sync', {}, { label: 'sync_xbox' })
+}
+
+export async function connectPsn(
+  onlineId: string | null | undefined,
+  { npsso }: { npsso?: string } = {},
+) {
+  return postJson(
+    '/api/ownership/psn',
+    { ...(onlineId ? { online_id: String(onlineId) } : {}), ...(npsso ? { npsso } : {}) },
+    { label: 'connect_psn' },
+  )
+}
+
+export async function disconnectPsn() {
+  return deleteJson('/api/ownership/psn', undefined, { label: 'disconnect_psn' })
+}
+
+export async function syncPsn() {
+  return postJson('/api/ownership/psn/sync', {}, { label: 'sync_psn' })
+}

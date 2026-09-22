@@ -168,6 +168,22 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         configured=ra_ok,
         notes='Achievement sets matched by ROM hash; member progress read-only (RETROACHIEVEMENTS_USERNAME / _API_KEY)',
     )
+    try:
+        from oneirodex.utils.hash_identify import base_url as _hash_base, is_enabled as _hash_on
+
+        hash_on = bool(_hash_on())
+        hash_host = _hash_base()
+    except Exception:
+        hash_on, hash_host = False, ''
+    add(
+        id='hash_identify',
+        name='Hash identify',
+        category='metadata',
+        admin_href='/admin/integrations#metadata-providers',
+        configured=hash_on,
+        enabled=hash_on,
+        notes=f'Keyless community hash lookup ({hash_host or "unset"}) for console ROMs after an IGDB and local-DAT miss -- identity only, never a download (ENABLE_HASH_IDENTIFY, HASH_IDENTIFY_BASE_URL)',
+    )
     add(
         id='giantbomb',
         name='Giant Bomb',
@@ -191,6 +207,56 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         admin_href='/admin/integrations#thegamesdb',
         configured=tgdb_key,
         notes='Optional Class D identify / covers (THEGAMESDB_API_KEY)',
+    )
+
+    # INSP-22 -- read-only mod registries. Keyless, so `configured` reads
+    # "usable right now" (the flag is on), like the cascade sources above.
+    try:
+        from oneirodex.utils.mod_catalog import SOURCE_LABELS, SOURCE_NOTES, catalog_enabled, source_configured
+
+        catalog_on = catalog_enabled()
+        for sid, label in SOURCE_LABELS.items():
+            add(
+                id=f'mod_catalog_{sid}',
+                name=f'{label} (mods)',
+                category='mods',
+                admin_href='/admin/integrations#mods',
+                configured=catalog_on and source_configured(sid),
+                enabled=catalog_on,
+                notes=f'{SOURCE_NOTES[sid]} Browse + deep link only; the companion stages the URL the librarian chose (ENABLE_MOD_CATALOG).',
+            )
+    except Exception:  # noqa: BLE001
+        pass
+    add(
+        id='mod_catalog_curseforge',
+        name='CurseForge (mods)',
+        category='mods',
+        admin_href='/admin/integrations#mods',
+        configured=False,
+        enabled=False,
+        notes='Declined: its API terms forbid third-party download automation and require a key per app; Modrinth covers the same games without either.',
+    )
+
+    # INSP-35 -- keyless community list, read-only. `configured` means the
+    # daily fetch has landed at least once, so lookups can answer.
+    try:
+        from oneirodex.utils.anticheat_compat import status_summary as _anticheat_status
+
+        ac = _anticheat_status()
+    except Exception:  # noqa: BLE001
+        ac = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='anticheat_compat',
+        name='Anti-cheat reports',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(ac.get('configured')),
+        enabled=bool(ac.get('enabled')),
+        notes=(
+            f"Community anti-cheat compatibility, {ac.get('count', 0)} titles cached; one keyless fetch a day, reports not guarantees (ENABLE_ANTICHEAT_COMPAT)"
+            if ac.get('configured')
+            else 'Community anti-cheat compatibility; the daily fetch has not landed yet (ENABLE_ANTICHEAT_COMPAT)'
+        ),
     )
 
     hltb_on = bool(settings and getattr(settings, 'enable_hltb_integration', True))
@@ -218,6 +284,76 @@ def build_integrations_inventory() -> list[dict[str, Any]]:
         admin_href='/admin/integrations#meta_quest',
         configured=mq_mode != 'off',
         notes=f'Ownership register — mode={mq_mode}',
+    )
+
+    # INSP-6 -- BYO notification bus. Configured = an endpoint is named.
+    try:
+        from oneirodex.utils.notification_bus import status_summary as _bus_status
+
+        bus = _bus_status()
+    except Exception:  # noqa: BLE001
+        bus = {'configured': False, 'apprise': 0, 'ntfy': False, 'social_to_bus': False}
+    add(
+        id='notify_bus',
+        name='Notification bus (Apprise API / ntfy)',
+        category='notify',
+        admin_href='/admin/integrations#notify',
+        configured=bool(bus.get('configured')),
+        enabled=bool(bus.get('configured')),
+        notes=(
+            f"{bus.get('apprise', 0)} Apprise endpoint(s), ntfy {'on' if bus.get('ntfy') else 'off'}; admin alerts ride the admin_notify_* flags, social kinds {'also pushed (NOTIFY_SOCIAL_TO_BUS)' if bus.get('social_to_bus') else 'in-app only'}. Test: POST /api/admin/notify-bus/test"
+            if bus.get('configured')
+            else 'Nothing bundled: name an Apprise API notify URL (NOTIFY_APPRISE_URLS) and/or an ntfy topic (NOTIFY_NTFY_URL) to push admin alerts to a phone'
+        ),
+    )
+
+    # INSP-42 -- unofficial, opt-in, register-only stores (G5: default off).
+    try:
+        from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
+        from oneirodex.utils.store_ownership_psn import client_available as _psn_client
+        from oneirodex.utils.store_ownership_xbox import client_available as _xbox_client
+
+        _opted = unofficial_store_opt_in()
+        for sid, label, pkg, has_client in (
+            ('xbox', 'Xbox', 'xbox-webapi', _xbox_client()),
+            ('psn', 'PlayStation Network', 'psnawp', _psn_client()),
+        ):
+            on = sid in _opted
+            add(
+                id=f'store_{sid}',
+                name=label,
+                category='ownership',
+                admin_href='/admin/integrations#ownership',
+                configured=on and has_client,
+                enabled=on,
+                notes=(
+                    f'Ownership register, live via the unofficial {pkg} client (installed: {"yes" if has_client else "no"}); IDs + names only, never a download'
+                    if on
+                    else f'Ownership register, CSV snapshot only. Live sync is opt-in: ENABLE_UNOFFICIAL_STORE_SYNC={sid} plus the optional {pkg} package'
+                ),
+            )
+    except Exception:  # noqa: BLE001
+        pass
+    # INSP-1 -- community save-location manifest, read-only. `configured` means
+    # the daily fetch built the index at least once.
+    try:
+        from oneirodex.utils.save_paths import status_summary as _sp_status
+
+        sp = _sp_status()
+    except Exception:  # noqa: BLE001
+        sp = {'enabled': False, 'configured': False, 'count': 0}
+    add(
+        id='save_paths',
+        name='Save locations',
+        category='metadata',
+        admin_href='/admin/integrations#metadata',
+        configured=bool(sp.get('configured')),
+        enabled=bool(sp.get('enabled')),
+        notes=(
+            f"Community save-location manifest, {sp.get('count', 0)} titles indexed; one keyless fetch a day, paths only -- nothing synced (ENABLE_SAVE_PATHS)"
+            if sp.get('configured')
+            else 'Community save-location manifest; the daily fetch has not landed yet (ENABLE_SAVE_PATHS)'
+        ),
     )
 
     # --- Auth / mail / support ---

@@ -35,6 +35,31 @@ export interface RetroArchProfile {
   apiBase?: string
   /** Optional AI Service overlay hint (config in RetroArch UI; CLI does not set URL reliably) */
   aiTranslate?: RetroArchAiTranslateHint
+  /**
+   * INSP-43 — how the cabinet was driven (`joystick` | `spinner` | `lightgun`
+   * | `trackball`). Selects a per-family RetroArch input remap so a spinner
+   * game does not launch bound like a stick game. Unknown families and
+   * `joystick` use RetroArch's own defaults.
+   */
+  inputFamily?: string | null
+}
+
+/** Remap file RetroArch loads per family; `joystick` needs none. */
+export const INPUT_FAMILY_REMAPS: Record<string, string> = {
+  spinner: 'oneirodex-spinner.rmp',
+  lightgun: 'oneirodex-lightgun.rmp',
+  trackball: 'oneirodex-trackball.rmp',
+}
+
+/**
+ * Extra RetroArch arguments for a control family. Returns `[]` for joystick,
+ * an unknown word or nothing at all — the companion never invents a binding
+ * it was not told about.
+ */
+export function inputFamilyArgs(inputFamily?: string | null): string[] {
+  const key = (inputFamily || '').trim().toLowerCase()
+  const remap = INPUT_FAMILY_REMAPS[key]
+  return remap ? ['--appendconfig', `input_remapping_path=${remap}`] : []
 }
 
 /**
@@ -90,6 +115,9 @@ export function buildAiServiceSetupNote(hint?: RetroArchAiTranslateHint): string
 
 export function buildRetroArchArgs(profile: RetroArchProfile): string[] {
   const args = ['-L', profile.core, profile.romPath]
+  // INSP-43 — the cabinet's control family, before any caller-supplied args
+  // so an explicit extraArg still wins.
+  args.push(...inputFamilyArgs(profile.inputFamily))
   if (profile.extraArgs?.length) {
     args.push(...profile.extraArgs)
   }

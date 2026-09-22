@@ -28,10 +28,31 @@ Admin → Integrations → **ROM reference sets (DAT)** (`/admin/reference_sets`
 |---|---|
 | Library platform | Same enum as Systems (`NES`, `SNES`, …) |
 | Region | `USA` `EUR` `JPN` `BRA` `KOR` `AUS` `GBR` `FRA` `DEU` `ESP` `CHN` `WORLD` `OTHER`. `PAL` still stores as `EUR`. France/Germany/Spain/UK are for a regional DAT you upload — they are not IGDB `release_dates.region` values. |
-| Source | `nointro` / `redump` / `other` |
-| File | XML `datafile` or ClrMamePro text `.dat` |
+| Source | `nointro` / `redump` / `tosec` / `mame` / `other` |
+| File | XML `datafile` (No-Intro, Redump, TOSEC, MAME `-listxml`, MAME softlist `softwarelist`) or ClrMamePro text `.dat` |
+
+**TOSEC and MAME (INSP-34):** a TOSEC set for a home computer (`AMIGA`, `C64`, `ZX_SPECTRUM`, `CPC`, …) uploads like any other — its `(1991)(Publisher)(EU)[cr Group]` groups are stripped by the same title peel the scanner uses, so two dumps of one game collapse onto one title; pick region **WORLD** unless the set is region-split. A MAME `-listxml` or softlist for **ARCADE** (no `MAME` platform — the arcade shelf *is* the platform) is titled by each machine's `<description>` (*Pac-Man (Midway)*), not its short set name (`pacman`); the first `<rom>` under the machine or its `<part>/<dataarea>` carries the hashes. A CRC shared by several machines (clone sets reusing a ROM) is *ambiguous* for identify and never auto-creates a game.
+
+**One game, one ROM (INSP-5):** the parser keeps one row per title. When a DAT lists the same title for several regions, the row kept is the household's preferred region (USA → EUR → JPN → … → WORLD → OTHER), not whichever the file listed first. When a DAT carries parent/clone data (`cloneof`, MAME and No-Intro P/C sets), the clone's parent is stored on the entry and **set completion counts parents only** — each game once. A dump the DAT marks as a clone of a title already in the library shows *Reference DAT lists this dump as a clone of a game already in the library* on its Duplicate row (`clone_of` names the parent set) — advisory; nothing is marked or deleted on it.
 
 Uploading the same platform+region **replaces** the previous set.
+
+## Repair preview (dry run)
+
+**INSP-24.** Set completion says what is missing; the repair preview on the same admin page says what the set disagrees with among the files you *do* own. Pick a platform (and one region, or all its sets), click **Preview repairs**, and read four buckets:
+
+| Bucket | Meaning | What you might do |
+|---|---|---|
+| **Hash matches, name differs** | The dump is exactly a set entry; the filename is not the set's name. | Rename by hand, or leave it — the catalogue already knows what it is. Never proposed for a `mame` set, whose files are named by machine short name the entry does not keep. |
+| **Name matches, hash differs** | The filename is a set title; the bytes are not that entry. | A bad dump, another revision, a header the set strips, or an overdump. Compare CRCs; re-dump or accept. |
+| **Clone-named files** | The file is a *clone* entry (parent/clone DATs), with whether the parent is owned. | Usually nothing — 1G1R completion already counts the parent once. |
+| **Not in the set** | Neither hash nor name is in the set. | Homebrew, a hack, a region the set does not cover — or the wrong DAT for the shelf. |
+
+Files that were never hashed and match a name are counted (*name-only*) but not listed — run **Rehash platform** first. Each bucket shows up to 200 rows (`limit` on the API, max 2000) with a *Showing the first N of M* line when truncated. It is a **report only**: nothing is renamed, moved or marked, on disk or in the catalogue.
+
+```bash
+curl -sS -b cookies.txt -H "Content-Type: application/json" -H "X-CSRFToken: $CSRF"   -d '{"library_platform":"NES","region":"USA","limit":50}'   "$BASE/api/reference-sets/repair-preview" | jq '.counts, .verified, .rename_candidates[:3]'
+```
 
 **Systems hub heatmap:** with `include_completion=1`, `/api/library_platforms` returns preferred `set_completion` plus `set_completion_regions` (all uploaded regions). The Systems page shows color chips per region when more than one DAT is present.
 

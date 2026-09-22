@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 import { postJson } from '../api/adminApi'
 import { errorText } from '../utils/errorText'
 import { showToast } from '../utils/toast'
@@ -226,14 +226,9 @@ export function StockPicker({
           <h2 className="od-admin-panel-title">{heading}</h2>
           <p className="od-admin-lede">{lede}</p>
         </div>
-        <button
-          type="button"
-          className="od-btn"
-          disabled={loading || Boolean(busy)}
-          onClick={loadCatalog}
-        >
+        <Button type="button" disabled={loading || Boolean(busy)} onClick={loadCatalog}>
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* The `status` line below is progress text for one action, not a page
@@ -352,31 +347,25 @@ export function StockPicker({
           </figure>
           <div className="od-stock-picker__actions">
             {!selected.generated ? (
-              <button
-                type="button"
-                className="od-btn"
-                disabled={Boolean(busy)}
-                onClick={generateSelected}
-              >
+              <Button type="button" disabled={Boolean(busy)} onClick={generateSelected}>
                 {busy === 'generate' ? 'Generating…' : 'Generate pack'}
-              </button>
+              </Button>
             ) : null}
-            <button
+            <Button
               type="button"
-              className="od-btn od-btn--primary"
+              variant="primary"
               disabled={Boolean(busy)}
               onClick={() => applySelected('fallback')}
             >
               {busy === 'fallback' ? 'Applying…' : 'Use as library default'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="od-btn"
               disabled={Boolean(busy)}
               onClick={() => applySelected('fallback')}
             >
               {busy === 'fallback' ? 'Applying…' : 'Set fallback'}
-            </button>
+            </Button>
             {showLibraryUuid ? (
               <>
                 <label className="od-stock-picker__uuid">
@@ -389,14 +378,13 @@ export function StockPicker({
                     autoComplete="off"
                   />
                 </label>
-                <button
+                <Button
                   type="button"
-                  className="od-btn"
                   disabled={Boolean(busy) || !libraryUuid.trim()}
                   onClick={() => applySelected('library')}
                 >
                   {busy === 'library' ? 'Applying…' : 'Apply to library'}
-                </button>
+                </Button>
               </>
             ) : null}
           </div>

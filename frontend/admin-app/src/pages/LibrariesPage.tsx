@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageStatus } from '@oneirodex/ui'
+import { PageStatus, Button } from '@oneirodex/ui'
 import { getJson } from '../api/adminApi'
 import { DataTable } from '../components/DataTable'
 import { ImportLeafLibraries } from '../components/ImportLeafLibraries'
@@ -49,14 +49,14 @@ export function LibrariesPage() {
       </p>
       <div className="od-admin-panel">
         <div className="od-admin-panel__toolbar">
-          <button
+          <Button
             type="button"
-            className="od-btn od-btn--accent"
+            className="od-btn--accent"
             onClick={() => void startRefreshAll()}
             disabled={refreshing}
           >
             {refreshing ? 'Refreshing…' : 'Refresh all libraries'}
-          </button>
+          </Button>
           <p className="od-admin-lede od-admin-lede--tight">
             Re-scans each library’s last scan folder. When a scan is already running, choose{' '}
             <strong>Queue</strong> (default) or <strong>Force run now</strong>.
@@ -94,9 +94,9 @@ export function LibrariesPage() {
                 label: 'Scan',
                 sortable: false,
                 render: (lib) => (
-                  <button
+                  <Button
                     type="button"
-                    className="od-btn od-btn--sm"
+                    size="sm"
                     disabled={scanBusyKey === lib.uuid || !lib.last_scan_folder}
                     title={
                       lib.last_scan_folder
@@ -112,7 +112,7 @@ export function LibrariesPage() {
                     }
                   >
                     {scanBusyKey === lib.uuid ? 'Starting…' : 'Scan'}
-                  </button>
+                  </Button>
                 ),
               },
             ]}

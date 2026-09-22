@@ -22,6 +22,9 @@ SUGGESTED_KIND_LABELS = {
 
 # W34 — folder/catalog unique-exact title disagrees with the IGDB hit.
 MATCH_REASON_CATALOG_DISAGREEMENT = 'catalog_disagreement'
+# H1d (pass-8 finding): an IGDB match nobody else corroborated, when the operator
+# asked for agreement from at least N sources before an auto-import.
+MATCH_REASON_INSUFFICIENT_AGREEMENT = 'insufficient_agreement'
 
 # Deterministic one-liners for UI "Why unmatched?" (no DB / disk I/O).
 MATCH_REASON_SUMMARIES = {
@@ -31,6 +34,8 @@ MATCH_REASON_SUMMARIES = {
     'title_below_threshold': 'IGDB already used by a differently titled folder',
     'cross_system': 'Same IGDB id exists on a different system — not a duplicate',
     'region_mismatch': 'Same system, different ROM region — not a duplicate',
+    # 1G1R (INSP-5): the reference DAT says this dump is a clone of a title already held.
+    'clone_of_owned_parent': 'Reference DAT lists this dump as a clone of a game already in the library',
     # W22-M5 — UPDATE packaging / bare update-package folders
     'update_package_folder': (
         'Folder name looks like an update or patch package, not a separate game title.'
@@ -40,6 +45,9 @@ MATCH_REASON_SUMMARIES = {
     ),
     MATCH_REASON_CATALOG_DISAGREEMENT: (
         'Steam or MobyGames unique-exact title matches the folder, not the IGDB hit'
+    ),
+    MATCH_REASON_INSUFFICIENT_AGREEMENT: (
+        'Only IGDB named this title; the scan asks for a second source to agree before importing'
     ),
 }
 

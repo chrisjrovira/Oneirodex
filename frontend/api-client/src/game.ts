@@ -16,7 +16,8 @@ export interface EditionsResponse {
   editions?: Array<{ [key: string]: unknown }>
   /** Store / trailer links merged across every visible copy. */
   urls?: Array<{ [key: string]: unknown }>
-  tags?: string[]
+  /** Plain labels or `{ label, kind }` chips — the popup accepts both. */
+  tags?: Array<string | { label?: string; kind?: string }>
   /** Household members who played or favourited it (share-activity). */
   friends?: Array<{ [key: string]: unknown }>
   [key: string]: unknown

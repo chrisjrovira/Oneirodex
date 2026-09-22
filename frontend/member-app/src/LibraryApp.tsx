@@ -1,14 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useShellConfig, useViewer } from '@oneirodex/ui'
-import {
-  batchAddToWishlist,
-  batchCheckFreshness,
-  batchRefreshImages,
-  batchSetFavorite,
-  batchSetPlayStatus,
-} from './api/batchActions'
 import { fetchBrowseGames } from './api/browse'
 import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
 import { SystemBackdrop } from './chrome/SystemBackdrop'
@@ -28,10 +21,11 @@ import { LibrarySelectionBar } from './components/LibrarySelectionBar'
 import { PageStatus } from './components/PageStatus'
 import { PaginationBar } from './components/PaginationBar'
 import { createTranslator } from './i18n'
-import { batchItemUuids, summarizeBatchOutcome } from './utils/batchOutcome'
+import { useLibraryBatchActions } from './library/useLibraryBatchActions'
+import { useLibrarySelection } from './library/useLibrarySelection'
+import type { BrowseResult } from './library/libraryTypes'
 import { CATALOG_LAYOUTS, useCatalogLayout } from './utils/catalogLayout'
 import { readLibraryFilters, writeLibraryFilters } from './utils/cookies'
-import { showToast } from './utils/toast'
 
 /**
  * Why the catalog is empty — three situations, three sentences (UID-043).
@@ -166,18 +160,26 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
       ...filtersFromSearchParams(searchParams),
     }),
   )
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<BrowseResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<any>(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [selectedIds, setSelectedIds] = useState(() => new Set<string>())
-  /** UUIDs known to have a pending wishlist request (session + batch skips). */
-  const [wishlistPendingIds, setWishlistPendingIds] = useState<Set<any>>(() => new Set())
-  const [selectionBusy, setSelectionBusy] = useState(false)
-  const [wishlistAvailable, setWishlistAvailable] = useState(true)
-  const [playStatusAvailable, setPlayStatusAvailable] = useState(true)
-  const [refreshImagesAvailable, setRefreshImagesAvailable] = useState(true)
-  const selectionAnchorRef = useRef<any>(null)
+  const { selectedIds, clearSelection, selectPage, handleSelectionToggle } =
+    useLibrarySelection(result)
+  const {
+    favoriteByUuid,
+    wishlistPendingIds,
+    selectionBusy,
+    wishlistAvailable,
+    playStatusAvailable,
+    refreshImagesAvailable,
+    runBatchFavorite,
+    runBatchFreshness,
+    runBatchWishlist,
+    runBatchPlayStatus,
+    runBatchRefreshImages,
+  } = useLibraryBatchActions({ result, setResult, selectedIds, canBatchRefreshImages, t })
+  const pages = Math.max(result?.pages ?? 1, 1)
 
   useEffect(() => {
     const fromUrl = filtersFromSearchParams(searchParams)
@@ -255,35 +257,13 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
         return
       }
       if (selectedIds.size > 0) {
-        setSelectedIds(new Set())
-        selectionAnchorRef.current = null
+        clearSelection()
         return
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [selectedIds.size])
-
-  const clearSelection = () => {
-    setSelectedIds(new Set())
-    selectionAnchorRef.current = null
-  }
-
-  const selectPage = () => {
-    const pageGames = result?.games ?? []
-    if (pageGames.length === 0) {
-      return
-    }
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      for (const game of pageGames) {
-        if (game?.uuid) {
-          next.add(game.uuid)
-        }
-      }
-      return next
-    })
-  }
+  }, [selectedIds.size, clearSelection])
 
   const retry = () => {
     setRetryCount((count) => count + 1)
@@ -314,254 +294,6 @@ export function LibraryApp({ initialConfig }: LooseProps = {}) {
     }
   }
 
-  const handleSelectionToggle = (uuid: any, opts: LooseProps = {}) => {
-    const games = result?.games ?? []
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-
-      if (opts.range && games.length > 0) {
-        const anchor = selectionAnchorRef.current
-        const endIndex = games.findIndex((game: any) => game.uuid === uuid)
-        const startIndex = anchor ? games.findIndex((game: any) => game.uuid === anchor) : endIndex
-        if (endIndex >= 0 && startIndex >= 0) {
-          const from = Math.min(startIndex, endIndex)
-          const to = Math.max(startIndex, endIndex)
-          for (let i = from; i <= to; i += 1) {
-            next.add(games[i].uuid)
-          }
-          selectionAnchorRef.current = uuid
-          return next
-        }
-      }
-
-      if (opts.checked === true) {
-        next.add(uuid)
-      } else if (opts.checked === false) {
-        next.delete(uuid)
-      } else if (opts.fromLongPress || opts.additive) {
-        next.add(uuid)
-      } else if (next.has(uuid)) {
-        next.delete(uuid)
-      } else {
-        next.add(uuid)
-      }
-
-      selectionAnchorRef.current = uuid
-      return next
-    })
-  }
-
-  const favoriteByUuid = useMemo(() => {
-    const map: LooseProps = {}
-    for (const game of result?.games ?? []) {
-      map[game.uuid] = Boolean(game.is_favorite)
-    }
-    return map
-  }, [result])
-
-  const applyFavoriteResults = (uuids: any, favorite: any) => {
-    const idSet = new Set(uuids)
-    setResult((prev: any) => {
-      if (!prev?.games) {
-        return prev
-      }
-      return {
-        ...prev,
-        games: prev.games.map((game: any) =>
-          idSet.has(game.uuid) ? { ...game, is_favorite: favorite } : game,
-        ),
-      }
-    })
-  }
-
-  const applyPlayStatusResults = (updatedRows: any, status: any) => {
-    const byUuid = new Map()
-    if (Array.isArray(updatedRows)) {
-      for (const row of updatedRows) {
-        if (typeof row === 'string' && row) {
-          byUuid.set(row, status)
-          continue
-        }
-        if (row && typeof row === 'object' && typeof row.uuid === 'string') {
-          byUuid.set(row.uuid, row.status !== undefined ? row.status : status)
-        }
-      }
-    }
-    if (byUuid.size === 0) {
-      return
-    }
-    setResult((prev: any) => {
-      if (!prev?.games) {
-        return prev
-      }
-      return {
-        ...prev,
-        games: prev.games.map((game: any) =>
-          byUuid.has(game.uuid) ? { ...game, user_status: byUuid.get(game.uuid) || '' } : game,
-        ),
-      }
-    })
-  }
-
-  const runBatchFavorite = async (favorite: any) => {
-    const uuids = Array.from(selectedIds)
-    if (uuids.length === 0 || selectionBusy) {
-      return
-    }
-    setSelectionBusy(true)
-    try {
-      const outcome = await batchSetFavorite(uuids, favorite, { favoriteByUuid })
-      applyFavoriteResults(batchItemUuids(outcome.updated), favorite)
-      const summary = summarizeBatchOutcome(outcome, {
-        actionLabel: favorite ? t('Favorites') : t('Unfavorite'),
-        t,
-      })
-      showToast(summary.message, summary.tone)
-    } catch (err: any) {
-      showToast(err?.message || t('Favorite update failed'), 'error')
-    } finally {
-      setSelectionBusy(false)
-    }
-  }
-
-  const runBatchFreshness = async () => {
-    const uuids = Array.from(selectedIds)
-    if (uuids.length === 0 || selectionBusy) {
-      return
-    }
-    setSelectionBusy(true)
-    try {
-      const outcome = await batchCheckFreshness(uuids)
-      const updatedRows = outcome.updated || outcome.results || []
-      if (Array.isArray(updatedRows) && updatedRows.length > 0) {
-        const byUuid = new Map(
-          updatedRows.filter((row) => row && row.uuid).map((row) => [row.uuid, row]),
-        )
-        if (byUuid.size > 0) {
-          setResult((prev: any) => {
-            if (!prev?.games) {
-              return prev
-            }
-            return {
-              ...prev,
-              games: prev.games.map((game: any) => {
-                const row = byUuid.get(game.uuid)
-                if (!row) {
-                  return game
-                }
-                return {
-                  ...game,
-                  freshness_status: row.status ?? row.freshness_status ?? game.freshness_status,
-                  freshness_confidence:
-                    row.confidence ?? row.freshness_confidence ?? game.freshness_confidence,
-                }
-              }),
-            }
-          })
-        }
-      }
-      const summary = summarizeBatchOutcome(outcome, {
-        actionLabel: t('Freshness'),
-        t,
-      })
-      showToast(summary.message, summary.tone)
-    } catch (err: any) {
-      showToast(err?.message || t('Freshness refresh failed'), 'error')
-    } finally {
-      setSelectionBusy(false)
-    }
-  }
-
-  const runBatchWishlist = async (remove = false) => {
-    const uuids = Array.from(selectedIds)
-    if (uuids.length === 0 || selectionBusy || !wishlistAvailable) {
-      return
-    }
-    setSelectionBusy(true)
-    try {
-      const outcome = await batchAddToWishlist(uuids, {
-        action: remove ? 'remove' : 'add',
-      })
-      const touched = new Set([
-        ...batchItemUuids(outcome.updated),
-        ...(outcome.skipped || [])
-          .filter((row: any) => row?.reason === 'already_pending' && row.uuid)
-          .map((row: any) => row.uuid),
-      ])
-      if (touched.size) {
-        setWishlistPendingIds((prev) => {
-          const next = new Set(prev)
-          touched.forEach((uuid) => {
-            if (remove) next.delete(uuid)
-            else next.add(uuid)
-          })
-          return next
-        })
-      }
-      const summary = summarizeBatchOutcome(outcome, {
-        actionLabel: remove ? t('Remove from wishlist') : t('Wishlist'),
-        t,
-      })
-      showToast(summary.message, summary.tone)
-    } catch (err: any) {
-      if (err?.unavailable) {
-        setWishlistAvailable(false)
-      }
-      showToast(err?.message || t('Wishlist update failed'), 'error')
-    } finally {
-      setSelectionBusy(false)
-    }
-  }
-
-  const runBatchPlayStatus = async (status: any) => {
-    const uuids = Array.from(selectedIds)
-    if (uuids.length === 0 || selectionBusy || !playStatusAvailable) {
-      return
-    }
-    setSelectionBusy(true)
-    try {
-      const outcome = await batchSetPlayStatus(uuids, status)
-      applyPlayStatusResults(outcome.updated, status)
-      const summary = summarizeBatchOutcome(outcome, {
-        actionLabel: t('Play status'),
-        t,
-      })
-      showToast(summary.message, summary.tone)
-    } catch (err: any) {
-      if (err?.unavailable) {
-        setPlayStatusAvailable(false)
-      }
-      showToast(err?.message || t('Play status update failed'), 'error')
-    } finally {
-      setSelectionBusy(false)
-    }
-  }
-
-  const runBatchRefreshImages = async () => {
-    const uuids = Array.from(selectedIds)
-    if (uuids.length === 0 || selectionBusy || !canBatchRefreshImages || !refreshImagesAvailable) {
-      return
-    }
-    setSelectionBusy(true)
-    try {
-      const outcome = await batchRefreshImages(uuids)
-      const summary = summarizeBatchOutcome(outcome, {
-        actionLabel: t('Refresh covers'),
-        successVerb: 'queued',
-        t,
-      })
-      showToast(summary.message, summary.tone)
-    } catch (err: any) {
-      if (err?.unavailable) {
-        setRefreshImagesAvailable(false)
-      }
-      showToast(err?.message || t('Cover refresh failed'), 'error')
-    } finally {
-      setSelectionBusy(false)
-    }
-  }
-
-  const pages = Math.max(result?.pages ?? 1, 1)
   const games = result?.games ?? []
   const showSkeleton = loading && !result
   const showRefreshing = loading && Boolean(result)

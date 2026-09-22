@@ -128,6 +128,21 @@
                 return fromCookie;
             }
 
+            /* This page is served from /static, so its meta tag is empty and
+               the CSRF cookie is HttpOnly -- there is nothing here to read.
+               The saves listing hands the token over instead; remember it, and
+               fetch the listing once if a write comes first. */
+            function rememberCsrf(token) {
+                if (!token) return;
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta) meta.setAttribute('content', token);
+            }
+
+            function withCsrf() {
+                if (csrfToken()) return Promise.resolve(csrfToken());
+                return listSaves().then(function () { return csrfToken(); });
+            }
+
             function b64ToBlob(b64, filename) {
                 var bin = atob(b64);
                 var bytes = new Uint8Array(bin.length);
@@ -513,22 +528,26 @@
                 });
             }
 
-            function waitUntilReady(attemptsLeft, requireMain) {
+            /* Optional: called on each retry so a long wait can say what it is
+               waiting for instead of showing one frozen line. */
+            function waitUntilReady(attemptsLeft, requireMain, onWait) {
                 return callEmu('od-ping', {}, 2000).then(function (res) {
                     var ok = res.ready && (!requireMain || res.mainCompleted);
                     if (ok) return res;
                     if (attemptsLeft <= 0) throw new Error(requireMain ? 'Emulator not started' : 'ROM not ready');
+                    if (onWait) onWait(attemptsLeft);
                     return new Promise(function (resolve) {
                         window.setTimeout(resolve, 1000);
                     }).then(function () {
-                        return waitUntilReady(attemptsLeft - 1, requireMain);
+                        return waitUntilReady(attemptsLeft - 1, requireMain, onWait);
                     });
                 }).catch(function (err) {
                     if (attemptsLeft <= 0) throw err;
+                    if (onWait) onWait(attemptsLeft);
                     return new Promise(function (resolve) {
                         window.setTimeout(resolve, 1000);
                     }).then(function () {
-                        return waitUntilReady(attemptsLeft - 1, requireMain);
+                        return waitUntilReady(attemptsLeft - 1, requireMain, onWait);
                     });
                 });
             }
@@ -545,19 +564,21 @@
                 var body = new FormData();
                 body.append('file', blob, filename);
                 body.append('slot', slot);
-                return fetch('/api/games/' + encodeURIComponent(guid) + '/saves', {
+                return withCsrf().then(function (token) {
+                    return fetch('/api/games/' + encodeURIComponent(guid) + '/saves', {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: { 'X-CSRFToken': csrfToken() },
+                    headers: { 'X-CSRFToken': token },
                     body: body,
                     // keepalive: the auto-state on quit must survive the
                     // navigation that follows it (browsers cap this at 64 KiB
                     // in flight; states are usually well under).
                     keepalive: !!(opts && opts.keepalive),
-                }).then(function (r) {
-                    return r.json().then(function (j) {
-                        if (!r.ok) throw new Error(j.error || 'Upload failed');
-                        return j;
+                    }).then(function (r) {
+                        return r.json().then(function (j) {
+                            if (!r.ok) throw new Error(j.error || 'Upload failed');
+                            return j;
+                        });
                     });
                 });
             }
@@ -630,6 +651,7 @@
                 }).then(function (r) {
                     if (!r.ok) return [];
                     return r.json().then(function (body) {
+                        rememberCsrf(body.csrf_token);
                         return Array.isArray(body.saves) ? body.saves : [];
                     });
                 }).catch(function () {
@@ -638,10 +660,12 @@
             }
 
             function deleteSlot(slot) {
-                return fetch('/api/games/' + encodeURIComponent(guid) + '/saves/' + encodeURIComponent(slot), {
-                    method: 'DELETE',
-                    credentials: 'same-origin',
-                    headers: { 'X-CSRFToken': csrfToken() },
+                return withCsrf().then(function (token) {
+                    return fetch('/api/games/' + encodeURIComponent(guid) + '/saves/' + encodeURIComponent(slot), {
+                        method: 'DELETE',
+                        credentials: 'same-origin',
+                        headers: { 'X-CSRFToken': token },
+                    });
                 }).then(function (r) {
                     if (!r.ok) throw new Error('Delete failed');
                 });
@@ -683,7 +707,7 @@
                 if (Date.now() - lastAutoSaveAt < 15000) return Promise.resolve(null);
                 return exportAndUpload(
                     AUTO_SLOT,
-                    Object.assign({ attempts: 1, exportTimeout: 2500 }, opts || {})
+                    Object.assign({ attempts: 1, exportTimeout: 9000 }, opts || {})
                 ).then(function (result) {
                     lastAutoSaveAt = Date.now();
                     return result;
@@ -829,8 +853,19 @@
                 if (!guid) return Promise.resolve();
                 setStatus('Checking for saves…');
                 // Prefer mainCompleted so we don't contend with WASM/ROM I/O; fall back if Start is gated.
-                return waitUntilReady(45, true).catch(function () {
-                    return waitUntilReady(15, false);
+                //
+                // This wait is long on purpose (a cold core on a weak box takes
+                // a while), but it used to show one frozen line for up to three
+                // minutes — so a core that never started looked exactly like a
+                // server that never answered. Say which step we are on instead.
+                var saidWaiting = false;
+                function noteWaiting() {
+                    if (saidWaiting) return;
+                    saidWaiting = true;
+                    setStatus('Waiting for the core to start before checking saves…');
+                }
+                return waitUntilReady(45, true, noteWaiting).catch(function () {
+                    return waitUntilReady(15, false, noteWaiting);
                 }).then(function () {
                     return new Promise(function (resolve) {
                         whenIdle(resolve, 8000);
@@ -924,7 +959,7 @@
                 frame.src = path + '?core=' + encodeURIComponent(queries.core || '') +
                     '&rom=' + encodeURIComponent(apiUrl + queries.guid) +
                     '&nobundle=1' +
-                    '&_gt=save-states-1';
+                    '&_gt=save-states-4';
                 node.appendChild(frame);
                 return frame;
             }

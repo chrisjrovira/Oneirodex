@@ -58,6 +58,9 @@ function isSource(entry) {
   if (!(entry.endsWith('.ts') || entry.endsWith('.tsx'))) return false
   if (entry.endsWith('.d.ts')) return false
   if (entry.includes('.test.') || entry.includes('.spec.')) return false
+  // Test harness modules (vitest setup, the provider harness, the fetch stub)
+  // are test code that happens not to carry `.test.` in the name.
+  if (/^test[A-Z]/.test(entry)) return false
   if (entry === 'loose.d.ts') return false // the alias's own declaration
   return true
 }

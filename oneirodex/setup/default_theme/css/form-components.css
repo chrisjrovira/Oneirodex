@@ -546,6 +546,13 @@ input[type="checkbox"] {
 .theme-swatch-era-00s { --od-swatch-fill: #3f9bff; background: var(--od-swatch-fill); }
 .theme-swatch-era-arcade { --od-swatch-fill: #ff2d6f; background: var(--od-swatch-fill); }
 .theme-swatch-era-desk { --od-swatch-fill: #5ef08a; background: var(--od-swatch-fill); }
+/* E1 system-family packs (generator 40). */
+.theme-swatch-console-cartridge { --od-swatch-fill: #e60012; background: var(--od-swatch-fill); }
+.theme-swatch-console-disc { --od-swatch-fill: #0070d1; background: var(--od-swatch-fill); }
+.theme-swatch-console-signal { --od-swatch-fill: #3ddb7a; background: var(--od-swatch-fill); }
+.theme-swatch-console-deepblue { --od-swatch-fill: #1a66ff; background: var(--od-swatch-fill); }
+.theme-swatch-console-woodgrain { --od-swatch-fill: #f5a623; background: var(--od-swatch-fill); }
+.theme-swatch-console-terminal { --od-swatch-fill: #14b8a6; background: var(--od-swatch-fill); }
 
 /* Icon pack picker — orthogonal to color themes; previews use .od-icon + data-icon-pack.
    Mirrors the theme swatch grid: the <select> is a visually-hidden form-data

@@ -1,6 +1,7 @@
-"""Request models for ``oneirodex/routes_apis/scan.py``.
+"""Request models for ``oneirodex/routes_apis/scan.py`` and its H-D.4 siblings
+``scan_unmatched.py`` / ``scan_unmatched_edit.py``.
 
-Nothing is adopted here yet. The JSON routes in ``scan.py`` are almost all
+Nothing is adopted here yet. The JSON routes in those modules are almost all
 librarian/admin batch endpoints that:
 
 * return partial-success bodies via ``_parse_batch_ids`` whose rejection

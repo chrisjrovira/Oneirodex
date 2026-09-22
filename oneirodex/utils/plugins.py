@@ -22,6 +22,7 @@ class PluginInfo:
 _BUILTIN: list[PluginInfo] = [
     PluginInfo('provider.igdb', 'IGDB', 'metadata', 'Primary game metadata provider'),
     PluginInfo('provider.steamgriddb', 'SteamGridDB', 'metadata', 'Cover / hero art'),
+    PluginInfo('provider.hash_identify', 'Hash identify', 'metadata', 'Keyless community hash lookup for console ROMs after an IGDB + DAT miss (INSP-31)'),
     PluginInfo('arr.native', 'Native indexers', 'acquire', 'Torznab/Newznab registry + curated presets'),
     PluginInfo('arr.prowlarr', 'Prowlarr', 'acquire', 'Optional BYO indexer manager hub'),
     PluginInfo('arr.jackett', 'Jackett', 'acquire', 'Optional BYO indexer proxy hub'),
@@ -37,12 +38,22 @@ _BUILTIN: list[PluginInfo] = [
     PluginInfo('emu.webretro', 'WebRetro', 'emulator', 'Browser WASM cores + cloud save bridge'),
     PluginInfo('emu.emulatorjs', 'EmulatorJS', 'emulator', 'Browser engine B — own shell + cores, operator-fetched (BP-2)'),
     PluginInfo('emu.retroarch', 'RetroArch', 'emulator', 'Native companion profiles'),
+    PluginInfo('compat.anticheat', 'Anti-cheat reports', 'metadata', 'Community anti-cheat compatibility list, read-only; one keyless fetch a day (INSP-35)'),
+    PluginInfo('compat.save_paths', 'Save locations', 'metadata', 'Community save-location manifest, read-only; one keyless fetch a day (INSP-1)'),
     PluginInfo('achievements.retroachievements', 'RetroAchievements', 'emulator', 'Community achievement sets matched by ROM hash; member progress read-only (R1/R2)'),
+    PluginInfo('store.xbox', 'Xbox ownership', 'ownership', 'Register-only, opt-in, unofficial (xbox-webapi); CSV always (INSP-42)'),
+    PluginInfo('store.psn', 'PlayStation ownership', 'ownership', 'Register-only, opt-in, unofficial (psnawp); CSV always (INSP-42)'),
     PluginInfo('export.esde', 'ES-DE export', 'export', 'gamelist.xml packs'),
     PluginInfo('export.pegasus', 'Pegasus export', 'export', 'metadata.pegasus.txt'),
     PluginInfo('assist.packs', 'Assist packs', 'assists', 'Single-player companion toggles'),
     PluginInfo('mods.tracking', 'Mod tracking', 'mods', 'Per-game community mod lists'),
+    PluginInfo('mods.catalog.thunderstore', 'Thunderstore catalogue', 'mods', 'Browse BepInEx / MelonLoader communities, read-only, no key (INSP-22)'),
+    PluginInfo('mods.catalog.modrinth', 'Modrinth catalogue', 'mods', 'Browse Minecraft mods, read-only, no key (INSP-22)'),
+    PluginInfo('mods.catalog.gamebanana', 'GameBanana catalogue', 'mods', 'Browse long-tail UGC, read-only, no key, rate-limited (INSP-22)'),
+    PluginInfo('mods.catalog.nexus', 'Nexus Mods catalogue', 'mods', 'Browse trending + latest behind NEXUS_API_KEY; never a download (INSP-22)'),
     PluginInfo('social.community_chat', 'Community chat link', 'social', 'BYO Stoat/Matrix deep-link'),
+    PluginInfo('notify.apprise', 'Apprise API push', 'notify', 'BYO Apprise API server: admin alerts, opt-in social kinds (INSP-6)'),
+    PluginInfo('notify.ntfy', 'ntfy push', 'notify', 'BYO ntfy topic: admin alerts, opt-in social kinds (INSP-6)'),
     PluginInfo('rtc.livekit', 'LiveKit voice', 'rtc', 'Optional household voice SFU (Wave 16)'),
     PluginInfo('remote_play.moonlight', 'Remote play', 'streaming', 'BYO Sunshine/Wolf Moonlight host'),
 ]
@@ -97,6 +108,12 @@ def _runtime_status_map() -> dict[str, str]:
     except Exception:
         status['social.community_chat'] = 'available'
     try:
+        from oneirodex.utils.hash_identify import is_enabled as _hash_identify_enabled
+
+        status['provider.hash_identify'] = 'configured' if _hash_identify_enabled() else 'disabled'
+    except Exception:
+        status['provider.hash_identify'] = 'available'
+    try:
         from oneirodex.utils.livekit_rtc import livekit_config, livekit_enabled
         cfg = livekit_config()
         if livekit_enabled() and cfg['url'] and cfg['api_key'] and cfg['api_secret']:
@@ -124,11 +141,51 @@ def _runtime_status_map() -> dict[str, str]:
     except Exception:
         status['emu.emulatorjs'] = 'available'
     try:
+        from oneirodex.utils.notification_bus import apprise_urls, ntfy_url
+
+        status['notify.apprise'] = 'configured' if apprise_urls() else 'available'
+        status['notify.ntfy'] = 'configured' if ntfy_url() else 'available'
+        from oneirodex.utils.store_ownership_common import unofficial_store_opt_in
+        from oneirodex.utils.store_ownership_psn import client_available as psn_client
+        from oneirodex.utils.store_ownership_xbox import client_available as xbox_client
+
+        opted = unofficial_store_opt_in()
+        for sid, has_client in (('xbox', xbox_client()), ('psn', psn_client())):
+            if sid not in opted:
+                status[f'store.{sid}'] = 'disabled'
+            else:
+                status[f'store.{sid}'] = 'configured' if has_client else 'available'
+    except Exception:
+        pass
+        from oneirodex.utils.save_paths import status_summary as save_paths_status
+
+        sp = save_paths_status()
+        status['compat.save_paths'] = 'disabled' if not sp['enabled'] else ('configured' if sp['configured'] else 'available')
+    except Exception:
+        status['compat.save_paths'] = 'available'
+    try:
         from oneirodex.utils.retroachievements import configured as ra_configured
 
         status['achievements.retroachievements'] = 'configured' if ra_configured() else 'available'
     except Exception:
         status['achievements.retroachievements'] = 'available'
+    try:
+        from oneirodex.utils.mod_catalog import catalog_enabled, source_configured, source_ids
+
+        for sid in source_ids():
+            if not catalog_enabled():
+                status[f'mods.catalog.{sid}'] = 'disabled'
+            else:
+                status[f'mods.catalog.{sid}'] = 'configured' if source_configured(sid) else 'available'
+    except Exception:
+        pass
+    try:
+        from oneirodex.utils.anticheat_compat import status_summary as anticheat_status
+
+        ac = anticheat_status()
+        status['compat.anticheat'] = 'disabled' if not ac['enabled'] else ('configured' if ac['configured'] else 'available')
+    except Exception:
+        status['compat.anticheat'] = 'available'
     return status
 
 
