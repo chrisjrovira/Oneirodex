@@ -45,6 +45,7 @@ Product modules default **on**. Disable during **setup → Features**, under **A
 | `ENABLE_VR_BROWSE` | on | `/vr` catalogue |
 | `ENABLE_PCDOS_BROWSER` | on | Needs vendored dosbox WASM |
 | `ENABLE_FREE_GAMES` | on | News free-games poller + API |
+| `ENABLE_MOD_CATALOG` | on | *Browse catalogue* in a game's Mods panel: Thunderstore and Modrinth, read-only, keyless. A hit is a name, version, loader and registry page — never a file. Integrations lists both plus CurseForge as *declined* |
 | `ENABLE_ANTICHEAT_COMPAT` | on | Community anti-cheat compatibility list, one keyless fetch a day into `static/library/anticheat/`; details show the status as *community reports*. `ANTICHEAT_FEED_URL` / `ANTICHEAT_CACHE_PATH` override the source and the file. Integrations lists it as **Anti-cheat reports**, configured once the first fetch has landed |
 | `ENABLE_EMAIL_DIGEST` | on | Scheduler on; members still opt in |
 | `ENABLE_LOGIN_RATE_LIMIT` | on | In-process login / password-reset rate limit |
@@ -228,6 +229,7 @@ binaries. Full guide: [theme-fonts-and-images.md](theme-fonts-and-images.md).
 | `ENABLE_VR_BROWSE` | Member VR catalogue |
 | `DAT_HASH_INNER_ARCHIVE` | Open zip/7z/rar and hash the inner dump when the outer archive hash misses (default on) |
 | `ENABLE_FREE_GAMES` | News free-games poller + API (default on) |
+| `ENABLE_MOD_CATALOG` | Read-only mod registry browse (Thunderstore, Modrinth) in the Mods panel (default on) |
 | `ENABLE_ANTICHEAT_COMPAT` | Community anti-cheat list, daily fetch + details fact (default on) |
 | `ANTICHEAT_FEED_URL` | Where the list is fetched from (default: the public games.json) |
 | `ANTICHEAT_CACHE_PATH` | Where the fetched file lives (default `static/library/anticheat/games.json`) |
@@ -247,7 +249,7 @@ binaries. Full guide: [theme-fonts-and-images.md](theme-fonts-and-images.md).
 
 ## Mods & household game servers
 
-- **`ENABLE_MOD_TRACKING`** (default on) — per-game mod registry at `/api/games/<uuid>/mods` (librarian/admin CRUD; members read; child read-only). Summary: `GET /api/mods/summary`. Each row carries `id`, `name`, `version`, `source_url`, `notes`, `enabled`, `load_order` and — since INSP-36 — **`loader`**: the mod loader it needs (`bepinex`, `melonloader`, `smapi`, `lovely`, `forge`, `fabric`, `quilt`, `neoforge`, `manual`, `none` are the suggested words, any slug is kept). The pack has a `default_loader` rows inherit (`PATCH /api/games/<uuid>/mods/pack`, or `default_loader` on the bulk `PUT`). Bodies are validated (`422` on unknown fields). The companion only *reads* the loader — its apply result says *Needs BepInEx installed — not managed here*; nothing installs a loader.
+- **`ENABLE_MOD_TRACKING`** (default on) — per-game mod registry at `/api/games/<uuid>/mods` (librarian/admin CRUD; members read; child read-only). Summary: `GET /api/mods/summary`. Each row carries `id`, `name`, `version`, `source_url`, `notes`, `enabled`, `load_order` and — since INSP-36 — **`loader`**: the mod loader it needs (`bepinex`, `melonloader`, `smapi`, `lovely`, `forge`, `fabric`, `quilt`, `neoforge`, `manual`, `none` are the suggested words, any slug is kept). The pack has a `default_loader` rows inherit (`PATCH /api/games/<uuid>/mods/pack`, or `default_loader` on the bulk `PUT`). Bodies are validated (`422` on unknown fields). The companion only *reads* the loader — its apply result says *Needs BepInEx installed — not managed here*; nothing installs a loader. The details page has a **Mods** panel: everyone sees the tracked list; a librarian gets the default loader, an add form and **Browse catalogue** — `GET /api/games/<uuid>/mods/catalog?source=thunderstore|modrinth&q=` (librarian). The answer says `status: ok` with hits, or `status: unavailable` with `hits: null` and a note when the registry had no data — never a silent empty list. *Add to list* files the hit through the ordinary `POST` with the registry page as `source_url`.
 - **Game servers** — admin CRUD at `/api/game-servers`; members/children read join info only. Ops summary `services.game_servers` includes TCP/HTTP health chips; per-server status: `GET /api/game-servers/<uuid>/status`.
 
 Related: [libraries-and-scans.md](libraries-and-scans.md) · [docker-compose-deploy.md](../runbooks/docker-compose-deploy.md) · [oidc-sso.md](../runbooks/oidc-sso.md) · [troubleshooting.md](troubleshooting.md)

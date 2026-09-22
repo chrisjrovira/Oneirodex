@@ -1,0 +1,198 @@
+/* Tracked mods (MOD-3 / INSP-36 / INSP-22) — a list to read, never an installer. */
+
+.od-mods {
+  margin: 0 0 1.25rem;
+}
+
+.od-mods__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.od-mods h2 {
+  margin: 0 0 0.35rem;
+  font-size: var(--od-font-base);
+}
+
+.od-mods__lede,
+.od-modcat__lede {
+  margin: 0 0 0.7rem;
+  font-size: var(--od-font-sm);
+  line-height: 1.45;
+  color: var(--od-text-muted);
+}
+
+.od-mods__muted,
+.od-modcat__muted {
+  margin: 0;
+  font-size: var(--od-font-md);
+  color: var(--od-text-muted);
+}
+
+.od-mods__default {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  margin: 0 0 0.7rem;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-mods__list,
+.od-modcat__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.od-mods__item,
+.od-modcat__item {
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px solid var(--od-border);
+  background: color-mix(in srgb, var(--od-surface) 90%, transparent);
+}
+
+.od-mods__item[data-enabled='false'] {
+  opacity: 0.65;
+}
+
+.od-mods__row,
+.od-modcat__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.55rem;
+}
+
+.od-mods__name,
+.od-modcat__name {
+  font-size: var(--od-font-md);
+}
+
+.od-mods__meta,
+.od-modcat__meta {
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-mods__loader,
+.od-modcat__loader {
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--od-radius-pill);
+  background: color-mix(in srgb, var(--od-accent) 18%, transparent);
+  font-size: var(--od-font-xs);
+  letter-spacing: 0.02em;
+}
+
+.od-mods__notes,
+.od-modcat__summary {
+  margin: 0.4rem 0 0;
+  font-size: var(--od-font-sm);
+  line-height: 1.45;
+  color: var(--od-text-muted);
+}
+
+.od-mods__actions,
+.od-modcat__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.od-mods__link,
+.od-modcat__link {
+  font-size: var(--od-font-xs);
+}
+
+.od-mods__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--od-radius-lg);
+  border: 1px dashed var(--od-border);
+}
+
+.od-mods__form-title {
+  margin: 0;
+  font-size: var(--od-font-md);
+  font-weight: 650;
+}
+
+.od-mods__form label,
+.od-modcat__search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  font-size: var(--od-font-xs);
+  color: var(--od-text-muted);
+}
+
+.od-mods__form input,
+.od-mods__default input,
+.od-modcat__search input {
+  font: inherit;
+  font-size: var(--od-font-md);
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--od-radius-sm);
+  border: 1px solid var(--od-border);
+  background: var(--od-surface-2);
+  color: var(--od-text);
+}
+
+.od-mods__form button {
+  align-self: flex-start;
+}
+
+/* Catalogue drawer */
+
+.od-modcat__panel {
+  max-width: 44rem;
+  width: min(44rem, 100%);
+}
+
+.od-modcat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.od-modcat__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.od-modcat__title {
+  margin: 0;
+  font-size: var(--od-font-lg);
+}
+
+.od-modcat__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.od-modcat__sources {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.od-modcat__search {
+  flex: 1 1 12rem;
+}

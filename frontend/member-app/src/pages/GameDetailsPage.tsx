@@ -7,6 +7,7 @@ import { CheatsPanel } from '../components/CheatsPanel'
 import { SavedStatesPanel } from '../components/SavedStatesPanel'
 import { AchievementsPanel } from '../components/AchievementsPanel'
 import { PcCheatsPanel } from '../components/PcCheatsPanel'
+import { ModsPanel } from '../components/ModsPanel'
 import { RelatedMediaStrip } from '../components/RelatedMediaStrip'
 import { GameActionBar } from '../components/GameActionBar'
 import { OpenPathModal } from '../components/OpenPathModal'
@@ -413,6 +414,10 @@ export function GameDetailsPage() {
           cheatSurface={game.cheat_surface}
           canEdit={Boolean(game.can_edit)}
         />
+
+        {/* MOD-3 list + INSP-36 loader + INSP-22 browse. Self-gates: hidden when
+          tracking is off or there is nothing to show and nobody who could add. */}
+        <ModsPanel gameUuid={game.uuid} canEdit={Boolean(game.can_edit)} />
 
         <DetailsExtrasSection
           game={game}
