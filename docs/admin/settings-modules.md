@@ -232,7 +232,6 @@ binaries. Full guide: [theme-fonts-and-images.md](theme-fonts-and-images.md).
 | `ENABLE_FREE_GAMES` | News free-games poller + API (default on) |
 | `ENABLE_MOD_CATALOG` | Read-only mod registry browse (Thunderstore, Modrinth, GameBanana, Nexus) in the Mods panel (default on) |
 | `NEXUS_API_KEY` | Personal Nexus Mods key; browse only (unset = the Nexus tab says it needs a key) |
-| `ENABLE_MOD_CATALOG` | Read-only mod registry browse (Thunderstore, Modrinth) in the Mods panel (default on) |
 | `ENABLE_ANTICHEAT_COMPAT` | Community anti-cheat list, daily fetch + details fact (default on) |
 | `ANTICHEAT_FEED_URL` | Where the list is fetched from (default: the public games.json) |
 | `ANTICHEAT_CACHE_PATH` | Where the fetched file lives (default `static/library/anticheat/games.json`) |
