@@ -816,21 +816,33 @@ def try_dat_hash_identify(
             sha1=digest.get('sha1'),
         )
 
+    inner_digests: list[dict] = []
     if not hit:
         inner_digests = hash_archive_inner_primary_dumps(
             full_disk_path,
             platform=platform_key,
         )
-        if not inner_digests:
-            return None
-        resolved = _unique_hit_from_inner_digests(
-            library_platform=platform_key,
-            digests=inner_digests,
-        )
-        if not resolved:
-            return None
-        hit, digest = resolved
-        identify_via = 'inner_archive'
+        if inner_digests:
+            resolved = _unique_hit_from_inner_digests(
+                library_platform=platform_key,
+                digests=inner_digests,
+            )
+            if resolved:
+                hit, digest = resolved
+                identify_via = 'inner_archive'
+
+    if not hit:
+        # INSP-31 (v11 H1a): no local DAT knows this file -- ask the keyless
+        # community hash service, outer digest first, then the inner dumps.
+        # Same contract as a DAT hit (unique digest -> name); None on any miss.
+        from oneirodex.utils.hash_identify import hash_identify_hit
+
+        for candidate in ([digest] if digest else []) + list(inner_digests):
+            hit = hash_identify_hit(candidate, library_platform=platform_key)
+            if hit:
+                digest = candidate
+                identify_via = 'hash_service'
+                break
 
     if not hit or not digest:
         return None
@@ -839,10 +851,17 @@ def try_dat_hash_identify(
     method = hit.get('match_method') or 'hash'
     source = hit.get('source') or 'dat'
     via_note = 'inner archive dump, ' if identify_via == 'inner_archive' else ''
-    summary = (
-        f'Identified via reference DAT ({source}, {via_note}unique {method}). '
-        f'Set: {hit.get("set_name") or "unknown"}.'
-    )
+    if identify_via == 'hash_service':
+        igdb_note = f' IGDB #{hit["igdb_id"]}.' if hit.get('igdb_id') else ''
+        summary = (
+            f'Identified via the community hash service ({hit.get("set_name") or "unknown"}, '
+            f'unique {method}).{igdb_note}'
+        )
+    else:
+        summary = (
+            f'Identified via reference DAT ({source}, {via_note}unique {method}). '
+            f'Set: {hit.get("set_name") or "unknown"}.'
+        )
 
     def _stamp_hashes(game: Game) -> None:
         game.file_crc = digest.get('crc')

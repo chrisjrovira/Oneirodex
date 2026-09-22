@@ -6,7 +6,8 @@
   'use strict';
 
   const ENDPOINT = '/api/admin/integrations/metadata-providers';
-  const PROVIDERS = ['steam', 'gog', 'epic'];
+  // hash_identify (INSP-31, generator 41): identify-only, same switch shape.
+  const PROVIDERS = ['steam', 'gog', 'epic', 'hash_identify'];
 
   function checkbox(id) {
     return document.getElementById('mp_' + id);
