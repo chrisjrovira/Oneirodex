@@ -22,6 +22,9 @@ SUGGESTED_KIND_LABELS = {
 
 # W34 — folder/catalog unique-exact title disagrees with the IGDB hit.
 MATCH_REASON_CATALOG_DISAGREEMENT = 'catalog_disagreement'
+# H1d (pass-8 finding): an IGDB match nobody else corroborated, when the operator
+# asked for agreement from at least N sources before an auto-import.
+MATCH_REASON_INSUFFICIENT_AGREEMENT = 'insufficient_agreement'
 
 # Deterministic one-liners for UI "Why unmatched?" (no DB / disk I/O).
 MATCH_REASON_SUMMARIES = {
@@ -40,6 +43,9 @@ MATCH_REASON_SUMMARIES = {
     ),
     MATCH_REASON_CATALOG_DISAGREEMENT: (
         'Steam or MobyGames unique-exact title matches the folder, not the IGDB hit'
+    ),
+    MATCH_REASON_INSUFFICIENT_AGREEMENT: (
+        'Only IGDB named this title; the scan asks for a second source to agree before importing'
     ),
 }
 
