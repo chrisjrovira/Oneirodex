@@ -14,6 +14,7 @@ export const OPS_METRIC_IDS = [
   'cpu',
   'load',
   'memory',
+  'gpu',
   'rss',
   'db',
   'awake',

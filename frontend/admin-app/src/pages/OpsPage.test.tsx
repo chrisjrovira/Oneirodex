@@ -696,3 +696,58 @@ test('OpsPage Full log opens a modal instead of navigating away', async () => {
       .mock.calls.some(([url]: any) => String(url).includes('/admin/api/ops/logs?limit=200')),
   ).toBe(true)
 })
+
+test('OpsPage GPU tile reads n/a without a source and the first GPU with one (INSP-44)', async () => {
+  const base = mockOpsSummary()
+  const withGpu = {
+    ...base,
+    host: {
+      ...base.host,
+      gpu: {
+        source: 'reader',
+        gpus: [
+          {
+            name: 'NVIDIA GeForce RTX 2080',
+            util_percent: 57,
+            mem_used: 3e9,
+            mem_total: 8e9,
+            temp_c: 61,
+          },
+        ],
+      },
+    },
+  }
+  let payload: Record<string, unknown> = mockOpsSummary()
+  globalThis.fetch = vi.fn(async (url) => {
+    if (String(url).includes('/admin/api/ops/summary')) {
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        text: async function () {
+          return JSON.stringify(await this.json())
+        },
+        json: async () => payload,
+      }
+    }
+    const ancillary = ancillaryOpsResponse(url)
+    if (ancillary) return ancillary
+    throw new Error(`unexpected fetch ${url}`)
+  }) as unknown as typeof globalThis.fetch
+
+  const first = render(<OpsPage />)
+  expect(await screen.findByRole('heading', { name: 'Library pulse' })).toBeInTheDocument()
+  let strip = screen.getByLabelText('Key metrics')
+  expect(strip).toHaveTextContent(/GPU/)
+  expect(strip).toHaveTextContent(/no NVML or reader/)
+  first.unmount()
+
+  payload = withGpu
+  render(<OpsPage />)
+  expect(await screen.findByRole('heading', { name: 'Library pulse' })).toBeInTheDocument()
+  strip = screen.getByLabelText('Key metrics')
+  expect(strip).toHaveTextContent(/57%/)
+  expect(strip).toHaveTextContent(/RTX 2080/)
+  expect(strip).toHaveTextContent(/61°C/)
+  expect(strip).toHaveTextContent(/\(reader\)/)
+})
