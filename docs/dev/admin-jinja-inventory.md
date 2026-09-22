@@ -46,7 +46,7 @@ exists or is one small PR away. Ordered by handler size.
 | `features_settings` (116) | `od_admin_features.js` (39) | form route + `/api/admin/challenge-solver/*` | — |
 | `admin_help` (294) | `od_admin_help.js` (58) | static content (no API) | — (HelpPage is member-side) |
 | `admin_manage_downloads` (83) | `od_admin_downloads.js` (62) | server-rendered table + `/api/delete_download/<id>` | — |
-| `admin_reference_sets` (133) | `od_admin_reference_sets.js` (68) | `/api/reference-sets/rehash`, `/api/licensed-catalog/refresh` (+ server-rendered table) | — |
+| `admin_reference_sets` (160) | `od_admin_reference_sets.js` (172) | `/api/reference-sets/rehash`, `/api/reference-sets/repair-preview`, `/api/licensed-catalog/refresh` (+ server-rendered table) | — |
 | `emulator_profiles` (32, `legacy`) | `od_admin_emulator_profiles.js` (68) | `/api/emulator-profiles` | **`EmulatorsPage` — done** (the firmware / RA / pilot island moved in with it) |
 | `ai_assist` (77) | `od_admin_ai_assist.js` (75) | `/api/ai/config`, `/status`, `/triage`, `/apply-triage`, `/doctor-notes` | route stub |
 | `admin_manage_igdb_settings` (33) · `admin_manage_smtp_settings` (40) | `admin_manage_igdb_settings.js` · `admin_manage_smtp_settings.js` (+ `password_visibility.js`) | form routes | `IntegrationsPage` (inventory only) |
