@@ -462,6 +462,11 @@ def build_game_details_payload(game, user) -> dict:
 
     role = normalize_role(getattr(user, 'role', None) if user is not None else None)
     is_admin = role == 'admin'
+    # The page has read `game.can_edit` since the cheats panel shipped, but the
+    # payload never sent it -- so every librarian control on Details (cheats,
+    # mods, the headset record) was gated on `undefined` and could not appear.
+    # Librarian or above, the same rule the routes behind those controls apply.
+    can_edit = role_at_least(role, 'librarian')
     # Librarians/admins who can Edit Images also see full server disk paths.
     show_disk_paths = bool(user is not None and role_at_least(role, 'librarian'))
     payload = {
@@ -578,6 +583,7 @@ def build_game_details_payload(game, user) -> dict:
         'status_label': status_label,
         'playtime': playtime,
         'is_admin': is_admin,
+        'can_edit': can_edit,
         **browse_play_fields(game),
         **game_card_flags(game),
         # INSP-40 -- headset records behind the ways-to-play VR row (deep links only)
