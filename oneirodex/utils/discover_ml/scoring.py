@@ -13,7 +13,8 @@ from collections import defaultdict
 from sqlalchemy import select
 
 from oneirodex import db
-from oneirodex.models import Game, UserGameProgress, user_favorites
+from oneirodex.models import Game, UserGameProgress, user_favorites, user_game_status
+from oneirodex.utils.play_status import WONT_PLAY
 
 from .impressions import damping_for
 from .profile import game_facets, load_profile
@@ -29,6 +30,16 @@ def already_engaged(user_id) -> set[str]:
 
     A "for you" row that shows what you already favourited or played is not a
     recommendation, it is a mirror.
+
+    It also covers titles marked **Won't play** (INSP-4). That status has been
+    recordable for a long time and nothing read it, so a member could say no to
+    a game and keep being offered it -- the single most irritating thing a
+    recommender can do, because it looks like not listening.
+
+    Suppressing the title is as far as this goes on purpose. One "won't play"
+    is not evidence against its whole genre, and letting a single no reweigh
+    every facet it touches would quietly narrow the shelves on the strength of
+    one click.
     """
     engaged = {
         row[0]
@@ -43,6 +54,15 @@ def already_engaged(user_id) -> set[str]:
         for row in db.session.execute(
             select(UserGameProgress.game_uuid).where(
                 UserGameProgress.user_id == user_id
+            )
+        ).all()
+    )
+    engaged.update(
+        row[0]
+        for row in db.session.execute(
+            select(user_game_status.c.game_uuid).where(
+                user_game_status.c.user_id == user_id,
+                user_game_status.c.status == WONT_PLAY,
             )
         ).all()
     )

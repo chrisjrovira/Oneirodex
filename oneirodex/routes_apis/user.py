@@ -1,5 +1,6 @@
 # /oneirodex/routes_apis/user.py
 from oneirodex.utils.api_response import api_error, api_ok
+from oneirodex.utils.play_status import PLAY_STATUS_VALUES
 from oneirodex.utils.avatar import DEFAULT_AVATAR
 from flask import jsonify, request, url_for
 from flask_login import login_required, current_user
@@ -330,7 +331,7 @@ def set_game_status(game_uuid):
     status = data.get('status', '').strip()
 
     # Validate status
-    valid_statuses = ['unplayed', 'unfinished', 'beaten', 'completed', 'null', '']
+    valid_statuses = sorted(PLAY_STATUS_VALUES)
     if status not in valid_statuses:
         return api_error('Invalid status value', code='bad_request')
 
