@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from sqlalchemy import delete, select
 
 from oneirodex import db
+from oneirodex.utils.play_status import FINISHED_STATUSES
 from oneirodex.models import (
     DownloadRequest,
     Game,
@@ -94,7 +95,7 @@ def collect_signals(user_id, *, now=None) -> dict[str, float]:
     finished = db.session.execute(
         select(user_game_status.c.game_uuid, user_game_status.c.updated_at).where(
             user_game_status.c.user_id == user_id,
-            user_game_status.c.status.in_(('beaten', 'completed')),
+            user_game_status.c.status.in_(FINISHED_STATUSES),
         )
     ).all()
     for game_uuid, updated_at in finished:

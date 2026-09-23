@@ -19,6 +19,7 @@ from oneirodex.models import (
 )
 from oneirodex.schemas.game import BatchFavoriteBody
 from oneirodex.utils.api_response import api_error, api_ok
+from oneirodex.utils.play_status import PLAY_STATUS_VALUES
 from oneirodex.utils.background import run_in_background
 from oneirodex.utils.event_logging import log_system_event
 from oneirodex.utils.rbac import can_request_games, librarian_required
@@ -36,7 +37,9 @@ BATCH_FRESHNESS_MAX = 50
 BATCH_WISHLIST_MAX = 50
 BATCH_REFRESH_IMAGES_MAX = 20
 FRESHNESS_STALE_SECONDS = 86400
-BATCH_STATUS_VALUES = frozenset({'unplayed', 'unfinished', 'beaten', 'completed', ''})
+# INSP-4/21: `null` (Won't play) was missing here, so the multi-select bar
+# could set four of the five statuses and silently refused the fifth.
+BATCH_STATUS_VALUES = PLAY_STATUS_VALUES
 
 
 def _normalize_batch_uuids(raw, *, max_size: int) -> tuple[list[str] | None, dict | None, int]:

@@ -49,6 +49,11 @@ Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params 
 **When do “N games added” toasts show?**  
 When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. More than five toasts at once collapse to **N notifications** (inbox still has every row). Toasts are dismissible (×) on member and admin, including classic admin pages.
 
+**I marked a game "Won’t play" and Discover keeps suggesting it.**  
+Fixed. The status was recorded but nothing read it, so the recommendations never took the hint. A title you mark **Won’t play** is now left out of the personal rows on Discover — yours only, so it does not change what anyone else in the household sees. Clearing a status is not the same as saying no: *no opinion* leaves the title in the running. You can also set it on several titles at once now from the multi-select bar, which previously offered four of the five statuses and quietly refused this one.
+
+_One "won’t play" only removes that title — it is not read as a verdict on its whole genre, so saying no to one platformer will not empty the shelf of platformers._
+
 **What is a smart collection?**  
 A saved filter that also shows up as a shelf on **Collections**. A normal shelf holds the games you put in it; a smart one holds whatever currently matches its filter, so it stays current on its own as titles come and go. Tick **Show on Collections** when you save a filter. It is yours — it does not appear for anyone else in the household.
 

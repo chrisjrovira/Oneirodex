@@ -229,3 +229,15 @@ test('batchRefreshImages rejects over max before fetch', async () => {
   })
   expect(fetchMock).not.toHaveBeenCalled()
 })
+
+test("the batch bar offers every status the tile menu does, including Won't play", async () => {
+  const { BATCH_PLAY_STATUS_OPTIONS } = await import('./batchActions')
+  const { STATUS_OPTIONS } = await import('../components/gameCard/playStatus')
+
+  // INSP-4/21: the bar was missing `null`, so marking a run of titles you will
+  // not play meant clicking each one — and the backend refused it anyway.
+  const batch = BATCH_PLAY_STATUS_OPTIONS.map((o: { value: string }) => o.value).sort()
+  const single = STATUS_OPTIONS.map((o) => o.value).sort()
+  expect(batch).toEqual(single)
+  expect(batch).toContain('null')
+})

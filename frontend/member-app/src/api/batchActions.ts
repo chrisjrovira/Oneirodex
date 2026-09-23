@@ -25,6 +25,10 @@ export const BATCH_PLAY_STATUS_OPTIONS = [
   { value: 'unfinished', label: 'Unfinished' },
   { value: 'beaten', label: 'Beaten' },
   { value: 'completed', label: 'Completed' },
+  // INSP-4/21: the fifth status the single-tile menu has always offered. The
+  // backend refused it in bulk until now, so marking a run of titles you will
+  // not play meant clicking each one.
+  { value: 'null', label: "Won't play" },
   { value: '', label: 'Clear' },
 ]
 
