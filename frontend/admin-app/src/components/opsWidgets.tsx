@@ -212,6 +212,65 @@ export function MetricTile({
   )
 }
 
+export interface OpsBuild {
+  version?: string | null
+  commit?: string | null
+  built_at?: string | null
+  schema_revision?: string | null
+  schema_head?: string | null
+  /** `null` = could not tell, which is not the same as "nothing pending". */
+  migration_pending?: boolean | null
+  generator_version?: number | null
+}
+
+/** Short, local, and dropped entirely when the stamp is absent. */
+function builtAtLabel(value?: string | null): string {
+  if (!value) return ''
+  const when = new Date(value)
+  if (Number.isNaN(when.getTime())) return ''
+  return when.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
+/**
+ * What is running, and is it what shipped?
+ *
+ * One component for both boards — the Dashboard and Ops keep independent
+ * widget maps over one payload, and two hand-rolled copies of this would be
+ * two places to disagree about the thing whose entire job is to be
+ * authoritative.
+ *
+ * `migration_pending` is the loud line. The schema revision on its own is a
+ * hex string nobody can check by eye; the comparison against the revision this
+ * code expects is what turns it into an answer.
+ */
+export function BuildTile({ build }: { build?: OpsBuild | null }) {
+  if (!build) {
+    return <MetricTile label="Build" value="n/a" hint="build data unavailable" tone="na" />
+  }
+
+  const pending = build.migration_pending
+  const tone = pending === true ? 'action' : pending === false ? 'good' : 'na'
+  const stamp = [build.commit, builtAtLabel(build.built_at)].filter(Boolean).join(' · ')
+
+  return (
+    <div className={`od-ops-metric od-ops-metric--${tone}`}>
+      <div className="od-ops-metric__label">Build</div>
+      <div className="od-ops-metric__value">{build.version || 'n/a'}</div>
+      {/* Absent rather than invented: a hand-built image has no commit and
+          says so, the way the GPU tile reads n/a with no reader. */}
+      <div className="od-ops-metric__hint">{stamp || 'no build stamp'}</div>
+      <div className="od-ops-metric__hint">
+        {pending === true
+          ? `migration pending — schema ${build.schema_revision || '?'} , code wants ${build.schema_head || '?'}`
+          : pending === false
+            ? `schema ${build.schema_revision} · up to date`
+            : 'schema unknown'}
+      </div>
+      <div className="od-ops-metric__hint">themes generator {build.generator_version ?? 'n/a'}</div>
+    </div>
+  )
+}
+
 export function MetricStrip({
   items = [],
   label = 'Key metrics',

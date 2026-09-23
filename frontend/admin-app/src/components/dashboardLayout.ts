@@ -18,6 +18,8 @@ export const DASHBOARD_STORAGE_KEY = 'od-admin-dashboard-layout-v4'
 export const DASHBOARD_MAX_Y = 48
 
 export const DASHBOARD_METRIC_IDS = [
+  // First: after a deploy this is the tile an operator came to read.
+  'build',
   'libraries',
   'games',
   'health',

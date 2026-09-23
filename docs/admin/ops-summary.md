@@ -40,6 +40,21 @@ Disk pressure alone never forces `overall: bad`/`warn` or `category: action`/`wa
 | `db_ping_ms` | Cheap `SELECT 1` latency (ms); **`null` when DB unreachable** |
 | `gpu` | INSP-44: `{source: 'nvml' \| 'reader', gpus: [{name, util_percent, mem_used, mem_total, temp_c}]}` — NVIDIA's own library when the optional `pynvml` package and a device exist, else a BYO LibreHardwareMonitor / HWiNFO-class JSON reader at `TELEMETRY_READER_URL` polled read-only; **`null` when neither answers** and the **GPU** tile reads *n/a*. Nothing bundled, no driver |
 
+## `build` key — what is running, and is it what shipped
+
+| Field | Meaning |
+|---|---|
+| `version` | The product version, read from the tracked `VERSION` file (one source; a test asserts `app_version` agrees with it) |
+| `commit` / `built_at` | The commit the image was built from and when, stamped at build time by `scripts/ops/unraid_ship_update_now.py`. **`null` for a hand-built image** — the tile reads *no build stamp* rather than guessing |
+| `schema_revision` | What the database is actually stamped at (`alembic_version`) |
+| `schema_head` | What *this code* expects, read from the migration scripts. `null` when the chain has branched, which is worth seeing rather than hiding behind `heads[0]` |
+| `migration_pending` | `schema_revision != schema_head`. **`null` means "could not tell"**, which is deliberately not `false` — the one wrong answer here would be a reassuring one at the moment an operator is checking |
+| `generator_version` | `GENERATOR_VERSION`, the theme-asset counter that decides whether Reset Themes has work to do |
+
+Collected by `oneirodex/utils/build_identity.py` and **memoised for the process lifetime** — none of it can change while the process runs, since `init_manager` applies migrations at startup, so a migration implies a restart. Every field degrades to `null` and nothing raises: an Ops tile reading *n/a* is honest, one that takes the 15-second poll down with it is not.
+
+Rendered by the **Build** tile on both Admin → Dashboard and Admin → Ops (`BuildTile` in `frontend/admin-app/src/components/opsWidgets.tsx` — one component, because two copies of the thing whose job is to be authoritative is two places to disagree).
+
 ## `scans` key
 
 Built by `oneirodex.utils.ops_summary._scan_snapshot`. Poll-friendly (~15s) glance for Unraid library scans — counters come from atomic `bump_scan_job_progress`.

@@ -14,6 +14,12 @@ export COMPOSE_FILE=docker-compose.yml
 GIT="git -c safe.directory={REPO}"
 echo '=== HEAD ==='
 $GIT log -1 --oneline
+# Stamp the image with the commit it was built from and when. Without this the
+# running container cannot say which code it is, which is the whole reason the
+# Ops build tile exists.
+export ONEIRODEX_BUILD_SHA="$($GIT rev-parse --short HEAD)"
+export ONEIRODEX_BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "=== stamping $ONEIRODEX_BUILD_SHA at $ONEIRODEX_BUILT_AT ==="
 echo '=== compose up --build (livekit clamav challenge) ==='
 docker compose --profile livekit --profile clamav --profile challenge up -d --build
 echo '=== awake ==='

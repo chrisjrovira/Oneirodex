@@ -17,6 +17,7 @@ from oneirodex.models import (
     UnmatchedFolder,
     User,
 )
+from oneirodex.utils.build_identity import build_identity
 from oneirodex.utils.game_servers import probe_server_health
 from oneirodex.utils.health_probes import build_readiness
 from oneirodex.utils.livekit_rtc import livekit_config, livekit_enabled
@@ -569,6 +570,7 @@ def build_ops_summary(app_start_time):
     library, library_error = _section('library', _library_pulse)
     recent_errors_data, recent_errors_error = _section('recent errors', _recent_errors)
     services, services_error = _section('services', _services_snapshot)
+    build, build_error = _section('build', build_identity)
 
     host = host_data['host'] if host_data else None
     disk_base = host_data['disk_base'] if host_data else None
@@ -617,6 +619,10 @@ def build_ops_summary(app_start_time):
         } if scans else None,
         'library': library,
         'services': services,
+        # What is actually running, and whether the migration that shipped with
+        # it has run. Before this there was no way to answer either from inside
+        # the product after a deploy.
+        'build': build,
         'recent_errors': recent_errors,
     }
     for section_name, error in (
@@ -625,6 +631,7 @@ def build_ops_summary(app_start_time):
         ('scans', scans_error),
         ('library', library_error),
         ('services', services_error),
+        ('build', build_error),
         ('recent_errors', recent_errors_error),
     ):
         if error:

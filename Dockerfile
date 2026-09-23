@@ -46,9 +46,18 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Build identity. Unset is a supported state -- a hand-built image reads
+# "n/a" on the Ops tile rather than claiming a commit it cannot know.
+ARG ONEIRODEX_BUILD_SHA=""
+ARG ONEIRODEX_BUILT_AT=""
+ENV ONEIRODEX_BUILD_SHA=$ONEIRODEX_BUILD_SHA \
+    ONEIRODEX_BUILT_AT=$ONEIRODEX_BUILT_AT
+
 LABEL org.opencontainers.image.title="Oneirodex" \
       org.opencontainers.image.description="Self-hosted household game library" \
-      org.opencontainers.image.source="https://github.com/chrisjrovira/oneirodex"
+      org.opencontainers.image.source="https://github.com/chrisjrovira/oneirodex" \
+      org.opencontainers.image.revision="$ONEIRODEX_BUILD_SHA" \
+      org.opencontainers.image.created="$ONEIRODEX_BUILT_AT"
 
 # Install system dependencies (bash required by entrypoint/start scripts).
 # libarchive-tools (bsdtar) and p7zip-full (7z) give rarfile a working
