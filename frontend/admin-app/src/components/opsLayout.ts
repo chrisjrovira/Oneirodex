@@ -11,6 +11,7 @@ import {
 export const OPS_STORAGE_KEY = 'od-admin-ops-layout-v1'
 
 export const OPS_METRIC_IDS = [
+  'build',
   'cpu',
   'load',
   'memory',

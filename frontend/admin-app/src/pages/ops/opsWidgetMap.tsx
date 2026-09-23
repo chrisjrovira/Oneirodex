@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { DataTable } from '../../components/DataTable'
 import {
+  BuildTile,
   LibraryHealthFactors,
   MeterBar,
   MetricTile,
@@ -113,6 +114,7 @@ export function buildOpsWidgets({
         tone={host?.gpu ? usageTone(host.gpu.gpus?.[0]?.util_percent) : 'na'}
       />
     ),
+    'm-build': <BuildTile build={snapshot?.build} />,
     'm-rss': (
       <MetricTile
         label="Process RSS"

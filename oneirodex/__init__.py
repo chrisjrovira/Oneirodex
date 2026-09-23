@@ -26,7 +26,27 @@ login_manager = LoginManager()
 cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
 csrf = CSRFProtect()
 app_start_time = datetime.now()
-app_version = '1.0.0'
+
+
+def _read_version() -> str:
+    """The product version, from the tracked ``VERSION`` file at the repo root.
+
+    It used to be a literal here while ``VERSION`` sat beside it holding the
+    same string and nothing read it -- two sources that agreed only as long as
+    somebody remembered to change both. The literal stays as the fallback for a
+    checkout or image that lost the file; ``tests/test_build_identity.py``
+    asserts the two agree so they cannot drift again.
+    """
+    try:
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'VERSION')
+        with open(path, encoding='utf-8') as handle:
+            text = handle.read().strip()
+        return text or '1.0.0'
+    except OSError:
+        return '1.0.0'
+
+
+app_version = _read_version()
 
 
 def create_app(config_object=None):

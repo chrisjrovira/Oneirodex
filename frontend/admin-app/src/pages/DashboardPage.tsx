@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { DashboardBoard } from '../components/DashboardBoard'
 import { Page } from '../components/Page'
 import {
+  BuildTile,
   MeterBar,
   MetricTile,
   OpsStatusBanner,
@@ -133,6 +134,7 @@ export function DashboardPage() {
   const widgets = useMemo(
     () => ({
       status: <OpsStatusBanner severity={severity} items={issues?.items} ariaLabel="Health" />,
+      'm-build': <BuildTile build={summary?.build} />,
       'm-libraries': (
         <MetricTile
           label="Libraries"
