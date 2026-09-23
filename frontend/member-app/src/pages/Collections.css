@@ -226,3 +226,30 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Smart collections (INSP-29): saved filters shown as shelves. Sits above the
+   hand-made shelves because it is the shorter list and the newer idea; the
+   whole block is absent when a member has none. */
+.od-smart-collections {
+  margin-bottom: var(--od-space-4);
+}
+
+.od-smart-collections__head {
+  margin: 0;
+  font-size: var(--od-font-md);
+}
+
+.od-smart-collections__lede {
+  margin: 0.2rem 0 0.6rem;
+  color: var(--od-text-muted);
+  font-size: var(--od-font-sm);
+}
+
+.od-smart-collections__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--od-space-2);
+}

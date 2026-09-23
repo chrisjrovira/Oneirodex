@@ -612,3 +612,12 @@
   color: var(--od-accent);
   font-size: var(--od-font-xs);
 }
+
+/* INSP-29: a saved filter can also be a tile on the Collections page. */
+.od-fb-collection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--od-text-muted);
+  font-size: var(--od-font-xs);
+}

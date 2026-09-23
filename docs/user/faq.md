@@ -49,6 +49,9 @@ Inside Library Filters: UPDATE · MISSING · NEW · LANG — same browse params 
 **When do “N games added” toasts show?**  
 When a library scan **finishes** (or is cancelled after titles landed), not while it is still running. Watch/import still group into a short digest. More than five toasts at once collapse to **N notifications** (inbox still has every row). Toasts are dismissible (×) on member and admin, including classic admin pages.
 
+**What is a smart collection?**  
+A saved filter that also shows up as a shelf on **Collections**. A normal shelf holds the games you put in it; a smart one holds whatever currently matches its filter, so it stays current on its own as titles come and go. Tick **Show on Collections** when you save a filter. It is yours — it does not appear for anyone else in the household.
+
 **Can I filter for "this or that"?**  
 Yes — the Signals chips are always *and*, but **Filters → Build a filter** gives you groups that read All of / Any of / None of, nested if you need them. Name it and it comes back as a button. A saved filter is yours alone; it does not change what anyone else in the household sees. It can only use the same signals the chips offer, so it never reaches anything the catalog does not already know.
 
