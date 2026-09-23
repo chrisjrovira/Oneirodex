@@ -426,9 +426,9 @@
     "any-alias": 1
   },
   "frontend/member-app/src/LibraryApp.tsx": {
-    "any-alias": 3,
-    "any-annotation": 14,
-    "any-generic": 2
+    "any-alias": 2,
+    "any-generic": 2,
+    "any-annotation": 12
   },
   "frontend/member-app/src/pages/AcquirePage.tsx": {
     "any-annotation": 10,

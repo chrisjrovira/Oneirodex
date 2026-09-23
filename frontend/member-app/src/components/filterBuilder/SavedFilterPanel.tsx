@@ -44,6 +44,10 @@ export function SavedFilterPanel({
   const [tree, setTree] = useState<FilterNode>(activeTree ?? EMPTY_TREE)
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  // INSP-29: a smart collection is this same row with a tile on the
+  // Collections page, which is why it is a flag here rather than a second
+  // kind of thing to build and keep in step.
+  const [asCollection, setAsCollection] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [count, setCount] = useState<number | null>(null)
   const [problem, setProblem] = useState('')
@@ -100,8 +104,12 @@ export function SavedFilterPanel({
     try {
       const row =
         editingId === null
-          ? await createSavedFilter(name.trim(), tree)
-          : await updateSavedFilter(editingId, { name: name.trim(), tree })
+          ? await createSavedFilter(name.trim(), tree, asCollection)
+          : await updateSavedFilter(editingId, {
+              name: name.trim(),
+              tree,
+              is_collection: asCollection,
+            })
       setSaved((rows) => [...rows.filter((r) => r.id !== row.id), row].sort(byName))
       setEditingId(row.id)
       setProblem('')
@@ -152,6 +160,7 @@ export function SavedFilterPanel({
                 setTree(row.tree)
                 setName(row.name)
                 setEditingId(row.id)
+                setAsCollection(row.is_collection)
                 onApply(row.tree)
               }}
             >
@@ -204,6 +213,14 @@ export function SavedFilterPanel({
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
+            <label className="od-fb-collection">
+              <input
+                type="checkbox"
+                checked={asCollection}
+                onChange={(event) => setAsCollection(event.target.checked)}
+              />
+              {t('Show on Collections')}
+            </label>
             <Button variant="secondary" size="sm" disabled={busy || !name.trim()} onClick={save}>
               {editingId === null ? t('Save') : t('Update')}
             </Button>

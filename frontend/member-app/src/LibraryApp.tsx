@@ -7,6 +7,7 @@ import { applyPlatformSkin, clearPlatformSkin } from './chrome/platformSkins'
 import { SystemBackdrop } from './chrome/SystemBackdrop'
 import { usesNewChrome } from './chrome/usesNewChrome'
 import { BADGE_FILTER_PARAMS, badgeFiltersFromSearchParams } from './components/BadgeFilterChips'
+import { filtersFromSearchParams, searchParamsHaveLibraryFilters } from './libraryQueryParams'
 import {
   ITEM_KIND_FILTER_CHIPS,
   itemKindFromSearchParams,
@@ -72,60 +73,6 @@ function EmptyState({ initialConfig, t }: LooseProps) {
   }
 
   return <p>{t('No games match the current filters.')}</p>
-}
-
-function filtersFromSearchParams(searchParams: any) {
-  const next: LooseProps = {
-    ...badgeFiltersFromSearchParams(searchParams),
-    ...itemKindFromSearchParams(searchParams),
-  }
-  const libraryPlatform = searchParams.get('library_platform')
-  if (libraryPlatform) {
-    next.library_platform = libraryPlatform
-  }
-  const playMode = searchParams.get('play_mode')
-  if (playMode) {
-    next.play_mode = playMode
-  }
-  const genre = searchParams.get('genre')
-  if (genre) {
-    next.genre = genre
-  }
-  const theme = searchParams.get('theme')
-  if (theme) {
-    next.theme = theme
-  }
-  const gameMode = searchParams.get('game_mode')
-  if (gameMode) {
-    next.game_mode = gameMode
-  }
-  const perspective = searchParams.get('player_perspective')
-  if (perspective) {
-    next.player_perspective = perspective
-  }
-  const name = (searchParams.get('name') || searchParams.get('q') || '').trim()
-  if (name) {
-    next.name = name
-  }
-  return next
-}
-
-function searchParamsHaveLibraryFilters(searchParams: any) {
-  if (
-    searchParams.has('library_platform') ||
-    searchParams.has('play_mode') ||
-    searchParams.has('genre') ||
-    searchParams.has('theme') ||
-    searchParams.has('game_mode') ||
-    searchParams.has('player_perspective') ||
-    searchParams.has('item_kind') ||
-    searchParams.has('content_kind') ||
-    searchParams.has('name') ||
-    searchParams.has('q')
-  ) {
-    return true
-  }
-  return BADGE_FILTER_PARAMS.some((param) => searchParams.has(param))
 }
 
 export function LibraryApp({ initialConfig }: LooseProps = {}) {

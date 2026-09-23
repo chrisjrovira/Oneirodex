@@ -5,6 +5,7 @@ import { confirmAction, useResource, useShellConfig } from '@oneirodex/ui'
 import { ContextBar, Popover } from '../chrome/ContextBar'
 import { createCollection, deleteCollection, fetchCollections } from '../api/collections'
 import { PageStatus } from '../components/PageStatus'
+import { SmartCollections } from '../components/SmartCollections'
 import './Collections.css'
 
 // Stable identity so the optimistic create / delete writes below target the
@@ -207,6 +208,11 @@ export function CollectionsPage() {
             </form>
           </>
         )}
+
+        {/* INSP-29 — saved filters that asked to be shelves. Renders nothing
+            when there are none, so the page is unchanged until a member makes
+            one. */}
+        <SmartCollections />
 
         <PageStatus
           loading={loading}
